@@ -17,7 +17,7 @@ from pasta_eln.database.models.orm_model_base import OrmModelBase
 
 # Mock class to test DatabaseModelBase
 class MockOrmModel(OrmModelBase):
-  __tablename__ = "mock_table"
+  __tablename__ = 'mock_table'
   id: Mapped[int] = mapped_column(primary_key=True)
   name: Mapped[Optional[str]]
   data: Mapped[Optional[dict[str, Any]]]
@@ -35,14 +35,14 @@ class MockOrmModel(OrmModelBase):
 
 class TestDatabaseOrmModelBase:
   @pytest.mark.parametrize(
-    "instance, expected_output",
+    'instance, expected_output',
     [
-      pytest.param(MockOrmModel(1, "Test", {"key": "value"}),
-                   [("id", 1), ("name", "Test"), ("data", {"key": "value"})],
-                   id="happy_path_with_valid_data"),
-      pytest.param(MockOrmModel(0, "", {}),
-                   [("id", 0), ("name", ""), ("data", {})],
-                   id="edge_case_with_empty_values"),
+      pytest.param(MockOrmModel(1, 'Test', {'key': 'value'}),
+                   [('id', 1), ('name', 'Test'), ('data', {'key': 'value'})],
+                   id='happy_path_with_valid_data'),
+      pytest.param(MockOrmModel(0, '', {}),
+                   [('id', 0), ('name', ''), ('data', {})],
+                   id='edge_case_with_empty_values'),
     ]
   )
   def test_iter_method(self, instance, expected_output):
@@ -53,10 +53,10 @@ class TestDatabaseOrmModelBase:
     assert result == expected_output
 
   @pytest.mark.parametrize(
-    "cls, expected_columns",
+    'cls, expected_columns',
     [
-      pytest.param(MockOrmModel, ["id", "name", "data"], id="happy_path_with_mock_class"),
-      pytest.param(OrmModelBase, [], id="base_class_with_no_columns"),
+      pytest.param(MockOrmModel, ['id', 'name', 'data'], id='happy_path_with_mock_class'),
+      pytest.param(OrmModelBase, [], id='base_class_with_no_columns'),
     ]
   )
   def test_get_table_columns(self, cls, expected_columns):

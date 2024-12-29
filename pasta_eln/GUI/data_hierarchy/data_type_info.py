@@ -41,11 +41,11 @@ class DataTypeInfo:
         This constructor sets up the initial state of the DataTypeInfo instance by initializing its attributes.
         The attributes include datatype, title, IRI, icon, and shortcut, all set to their default values.
     """
-    self._datatype: str | None = ""
-    self._title: str | None = ""
-    self._iri: str | None = ""
-    self._icon: str | None = ""
-    self._shortcut: str | None = ""
+    self._datatype: str | None = ''
+    self._title: str | None = ''
+    self._iri: str | None = ''
+    self._icon: str | None = ''
+    self._shortcut: str | None = ''
 
   @property
   def datatype(self) -> str | None:

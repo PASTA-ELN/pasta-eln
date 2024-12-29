@@ -175,7 +175,7 @@ class TreeView(QTreeView):
     self.comm.formDoc.emit(doc)
     docNew = self.comm.backend.db.getDoc(docID)
     item.setText(docNew['name'])
-    item.setData(item.data() | {"docType":docNew['type'], "gui":docNew['gui']})
+    item.setData(item.data() | {'docType':docNew['type'], 'gui':docNew['gui']})
     item.emitDataChanged()  #force redraw (resizing and repainting) of this item only
     return
 
@@ -210,7 +210,7 @@ class TreeView(QTreeView):
         if Path(path).is_file():
           files.append(path)
         else:
-          files +=   list(Path(path).rglob("*"))                                                             # type: ignore[arg-type]
+          files +=   list(Path(path).rglob('*'))                                                             # type: ignore[arg-type]
           folders += [x[0] for x in os.walk(path)]
       docID = item.data()['hierStack'].split('/')[-1]
       doc = self.comm.backend.db.getDoc(docID)

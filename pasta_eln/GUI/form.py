@@ -112,7 +112,7 @@ class Form(QDialog):
         if key == '.name' and '_ids' not in self.doc:
           setattr(self, elementName, QLineEdit(self.doc['name']))
           getattr(self, elementName).setStyleSheet(self.comm.palette.get('secondaryText','color'))
-          getattr(self, elementName).setValidator(QRegularExpressionValidator("[\\w\\ .-]+"))
+          getattr(self, elementName).setValidator(QRegularExpressionValidator('[\\w\\ .-]+'))
           formL.addRow('Name', getattr(self, elementName))
           self.allUserElements.append(('name','LineEdit'))
         elif key == '.tags':
@@ -129,7 +129,7 @@ class Form(QDialog):
           self.otherChoices = QComboBox()   #part/combobox that allow user to select
           self.otherChoices.setEditable(True)
           self.otherChoices.setMaximumWidth(100)
-          self.otherChoices.setValidator(QRegularExpressionValidator("[a-z]\\w+"))
+          self.otherChoices.setValidator(QRegularExpressionValidator('[a-z]\\w+'))
           self.otherChoices.setIconSize(QSize(0,0))
           self.otherChoices.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
           tagsBarMainL.addWidget(self.otherChoices)
@@ -274,7 +274,7 @@ class Form(QDialog):
     IconButton('fa5s.poll-h',      self, [Command.FORM_SHOW_DOC], buttonLineL, 'Show all information',
                style='border-width:1')
     saveBtn = TextButton('Save',             self, [Command.FORM_SAVE],     buttonLineL, 'Save changes')
-    saveBtn.setShortcut("Ctrl+Return")
+    saveBtn.setShortcut('Ctrl+Return')
     TextButton('Cancel',           self, [Command.FORM_CANCEL],   buttonLineL, 'Discard changes')
     if self.flagNewDoc: #new dataset
       TextButton('Save && Next', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Save this and handle next')
@@ -470,7 +470,7 @@ class Form(QDialog):
               others = others[others['id']!=self.doc['id']] # filter data frame by own id
             othersList = [createDirName(str(i),'x0', 0) for i in others['name']] #create names
             while createDirName(self.doc['name'],'x0', 0) in othersList:
-              if re.search(r"_\d+$", self.doc['name']) is None:
+              if re.search(r'_\d+$', self.doc['name']) is None:
                 self.doc['name'] += '_1'
               else:
                 self.doc['name'] = '_'.join(self.doc['name'].split('_')[:-1])+'_'+str(int(self.doc['name'].split('_')[-1])+1)
@@ -497,7 +497,7 @@ class Form(QDialog):
           if guiType=='ComboBox':
             valueNew = getattr(self, elementName).currentText()
             dataNew  = getattr(self, elementName).currentData()  #if docID is stored in currentData
-            if ((dataNew is not None and re.search(r"^[a-z\-]-[a-z0-9]{32}$",dataNew) is not None)
+            if ((dataNew is not None and re.search(r'^[a-z\-]-[a-z0-9]{32}$',dataNew) is not None)
                 or dataNew==''):
               self.doc[key] = dataNew
             elif valueNew!='- no link -' or dataNew is None:
@@ -508,7 +508,7 @@ class Form(QDialog):
           self.doc[key]=''
           print('Is this really needed?')
         else:
-          print("**ERROR dialogForm unknown value type",key, valueOld)
+          print('**ERROR dialogForm unknown value type',key, valueOld)
       # new key-value pairs
       keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]# type: ignore[attr-defined]
       keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
@@ -570,7 +570,7 @@ class Form(QDialog):
       keyLabel = QLineEdit('')
       keyLabel.setPlaceholderText('key')
       keyLabel.setToolTip('Key (leave empty to delete key-value pair)')
-      keyLabel.setValidator(QRegularExpressionValidator("[a-zA-Z0-9]\\S+"))
+      keyLabel.setValidator(QRegularExpressionValidator('[a-zA-Z0-9]\\S+'))
       value = QLineEdit('')
       value.setPlaceholderText('value')
       self.keyValueListL.addRow(keyLabel, value)

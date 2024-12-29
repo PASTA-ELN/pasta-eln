@@ -42,9 +42,9 @@ def mock_database_api():
   with patch('pasta_eln.dataverse.database_api.DatabaseAPI') as mock:
     mock_instance = mock.return_value
     mock_instance.get_config_model.return_value = ConfigModel(_id=12345678,
-                                                              dataverse_login_info={"server_url": "http://valid.url",
-                                                                                    "api_token": "test_token",
-                                                                                    "dataverse_id": "test_dataverse_id"},
+                                                              dataverse_login_info={'server_url': 'http://valid.url',
+                                                                                    'api_token': 'test_token',
+                                                                                    'dataverse_id': 'test_dataverse_id'},
                                                               parallel_uploads_count=1, project_upload_items={},
                                                               metadata={})
     yield mock_instance
@@ -65,8 +65,8 @@ def mock_config_dialog(qtbot, mocker, mock_message_box, mock_webbrowser, mock_da
 class TestConfigDialog:
 
   # Success path test
-  @pytest.mark.parametrize("server_url,api_token,dataverse_id", [
-    ('http://valid.url', "test_token", "test_dataverse_id"),
+  @pytest.mark.parametrize('server_url,api_token,dataverse_id', [
+    ('http://valid.url', 'test_token', 'test_dataverse_id'),
   ])
   def test_config_dialog_init_success_path(self, mocker, mock_database_api, mock_dataverse_client, mock_message_box,
                                            server_url, api_token,
@@ -98,7 +98,7 @@ class TestConfigDialog:
     mock_db_ctor.assert_called_once()
     config_dialog.db_api.initialize_database.assert_called_once()
     mock_database_api.get_config_model.assert_called_once()
-    mock_regex.assert_called_once_with("\\S*")
+    mock_regex.assert_called_once_with('\\S*')
     mock_validator.assert_called_once_with(mock_regex.return_value)
     config_dialog.dataverseServerLineEdit.setValidator.assert_called_once_with(mock_validator.return_value)
 
@@ -135,11 +135,11 @@ class TestConfigDialog:
     # Act & Assert
     with pytest.raises(ConfigError) as exc_info:
       ConfigDialog()  # Attempt to initialize the dialog
-    assert "Config not found, Corrupt installation!" in str(exc_info.value)
+    assert 'Config not found, Corrupt installation!' in str(exc_info.value)
 
   # Edge case: Empty dataverse login info
-  @pytest.mark.parametrize("server_url,api_token,dataverse_id", [
-    pytest.param("", "", "", id="empty_login_info"),
+  @pytest.mark.parametrize('server_url,api_token,dataverse_id', [
+    pytest.param('', '', '', id='empty_login_info'),
   ])
   def test_config_dialog_init_edge_empty_login_info(self, mocker, mock_database_api, mock_dataverse_client,
                                                     mock_message_box, server_url,
@@ -171,31 +171,31 @@ class TestConfigDialog:
     config_dialog.dataverseLineEdit.setText.assert_called_once_with(dataverse_id)
 
   # Parametrized test for update_dataverse_server method
-  @pytest.mark.parametrize("test_id, server_url",
-                           [("success_path_valid_url", "http://valid.url"), ("edge_case_empty_string", ""),
-                            ("error_case_invalid_url", "not_a_url")])
+  @pytest.mark.parametrize('test_id, server_url',
+                           [('success_path_valid_url', 'http://valid.url'), ('edge_case_empty_string', ''),
+                            ('error_case_invalid_url', 'not_a_url')])
   def test_update_dataverse_server(self, mock_config_dialog, test_id, server_url):
     # Act
     mock_config_dialog.update_dataverse_server(server_url)
 
     # Assert
-    assert mock_config_dialog.config_model.dataverse_login_info["server_url"] == server_url
+    assert mock_config_dialog.config_model.dataverse_login_info['server_url'] == server_url
 
   # Parametrized test for update_api_token method
-  @pytest.mark.parametrize("test_id, api_token",
-                           [("success_path_valid_token", "valid_token"), ("edge_case_empty_string", ""),
-                            ("error_case_special_chars", "!@#$%^&*()")])
+  @pytest.mark.parametrize('test_id, api_token',
+                           [('success_path_valid_token', 'valid_token'), ('edge_case_empty_string', ''),
+                            ('error_case_special_chars', '!@#$%^&*()')])
   def test_update_api_token(self, mock_config_dialog, test_id, api_token):
 
     # Act
     mock_config_dialog.update_api_token(api_token)
 
     # Assert
-    assert mock_config_dialog.config_model.dataverse_login_info["api_token"] == api_token
+    assert mock_config_dialog.config_model.dataverse_login_info['api_token'] == api_token
 
-  @pytest.mark.parametrize("test_id, input_data, expected_output",
-                           [("success_path_1", "12345", "12345"), ("success_path_2", "67890", "67890"),
-                            ("edge_case_empty", "", ""), ("edge_case_none", None, ""),  # Add more test cases as needed
+  @pytest.mark.parametrize('test_id, input_data, expected_output',
+                           [('success_path_1', '12345', '12345'), ('success_path_2', '67890', '67890'),
+                            ('edge_case_empty', '', ''), ('edge_case_none', None, ''),  # Add more test cases as needed
                             ])
   def test_update_dataverse_line_edit(self, mocker, mock_config_dialog, test_id, input_data, expected_output):
     # Arrange
@@ -209,21 +209,21 @@ class TestConfigDialog:
     mock_config_dialog.dataverseListComboBox.currentData.assert_called_once_with(QtCore.Qt.ItemDataRole.UserRole)
     assert mock_config_dialog.dataverseLineEdit.text() == expected_output, f"Test failed for {test_id}"
 
-  @pytest.mark.parametrize("new_value, test_id",
-                           [("12345", "success_path_numeric"), ("new_dataverse", "success_path_alpha"),
-                            ("dv_2023_01", "success_path_alphanumeric"), ("", "edge_case_empty_string")])
+  @pytest.mark.parametrize('new_value, test_id',
+                           [('12345', 'success_path_numeric'), ('new_dataverse', 'success_path_alpha'),
+                            ('dv_2023_01', 'success_path_alphanumeric'), ('', 'edge_case_empty_string')])
   def test_update_dataverse_id(self, mock_config_dialog, new_value, test_id):
     # Arrange
-    original_value = mock_config_dialog.config_model.dataverse_login_info.get("dataverse_id", "")
+    original_value = mock_config_dialog.config_model.dataverse_login_info.get('dataverse_id', '')
 
     # Act
     mock_config_dialog.update_dataverse_id(new_value)
 
     # Assert
-    assert mock_config_dialog.config_model.dataverse_login_info["dataverse_id"] == new_value
+    assert mock_config_dialog.config_model.dataverse_login_info['dataverse_id'] == new_value
 
   # Parametrized test for save_config method
-  @pytest.mark.parametrize("test_id", [("success_path_save_config")])
+  @pytest.mark.parametrize('test_id', [('success_path_save_config')])
   def test_save_config(self, mock_config_dialog, test_id, mock_message_box):
     # Arrange
     mock_config_dialog.db_api.update_model = MagicMock()
@@ -232,19 +232,19 @@ class TestConfigDialog:
     mock_config_dialog.save_config()
 
     # Assert
-    mock_config_dialog.logger.info.assert_called_once_with("Saving config..")
+    mock_config_dialog.logger.info.assert_called_once_with('Saving config..')
     mock_config_dialog.db_api.save_config_model.assert_called_once_with(mock_config_dialog.config_model)
 
   # Parametrized test cases
-  @pytest.mark.parametrize("server_text, token_text, expected_click, test_id", [
+  @pytest.mark.parametrize('server_text, token_text, expected_click, test_id', [
     # Happy path tests
-    ("http://example.com", "valid_token", True, "success_path_valid_inputs"),
-    ("https://dataverse.org", "another_valid_token", True, "success_path_different_inputs"),
+    ('http://example.com', 'valid_token', True, 'success_path_valid_inputs'),
+    ('https://dataverse.org', 'another_valid_token', True, 'success_path_different_inputs'),
 
     # Edge cases
-    ("", "token_without_server", False, "edge_case_no_server"),
-    ("http://example.com", "", False, "edge_case_no_token"),
-    ("", "", False, "edge_case_no_inputs"),
+    ('', 'token_without_server', False, 'edge_case_no_server'),
+    ('http://example.com', '', False, 'edge_case_no_token'),
+    ('', '', False, 'edge_case_no_inputs'),
   ])
   def test_show(self, mocker, mock_config_dialog, server_text, token_text, expected_click, test_id):
     # Arrange

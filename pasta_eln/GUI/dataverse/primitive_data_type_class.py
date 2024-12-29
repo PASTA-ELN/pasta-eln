@@ -66,16 +66,16 @@ class PrimitiveDataTypeClass(DataTypeClass):
 
     """
     new_primitive_entry_layout = self.context.main_vertical_layout.findChild(QVBoxLayout,
-                                                                             "primitiveVerticalLayout")
+                                                                             'primitiveVerticalLayout')
     if not isinstance(new_primitive_entry_layout, QVBoxLayout):
-      self.logger.error("Failed to find primitiveVerticalLayout!")
+      self.logger.error('Failed to find primitiveVerticalLayout!')
       return
     value_template = self.context.meta_field.get('valueTemplate')
-    first_value = str(value_template[0]) if value_template else ""
+    first_value = str(value_template[0]) if value_template else ''
     self.populate_primitive_horizontal_layout(
       new_primitive_entry_layout,
       self.context.meta_field.get('typeName', ''),
-      "",
+      '',
       first_value)
 
   def populate_entry(self) -> None:
@@ -99,11 +99,11 @@ class PrimitiveDataTypeClass(DataTypeClass):
         This method saves changes to the meta_field based on the type and class information.
         It retrieves the primitiveVerticalLayout and updates the meta_field value accordingly.
     """
-    self.logger.info("Saving changes to meta_field for type, name: %s, class: %s",
+    self.logger.info('Saving changes to meta_field for type, name: %s, class: %s',
                      self.context.meta_field.get('typeName'),
                      self.context.meta_field.get('typeClass'))
     primitive_vertical_layout = self.context.main_vertical_layout.findChild(QVBoxLayout,
-                                                                            "primitiveVerticalLayout")
+                                                                            'primitiveVerticalLayout')
     if primitive_vertical_layout is None:
       return
     if isinstance(primitive_vertical_layout, QVBoxLayout):
@@ -111,13 +111,13 @@ class PrimitiveDataTypeClass(DataTypeClass):
         self.context.meta_field['value'].clear()
         for widget_pos in range(primitive_vertical_layout.count()):
           text = get_primitive_line_edit_text_value(primitive_vertical_layout, widget_pos)
-          if text and text != "No Value":
+          if text and text != 'No Value':
             self.context.meta_field['value'].append(text)
       else:
         text = get_primitive_line_edit_text_value(primitive_vertical_layout, 0)
-        self.context.meta_field['value'] = text if text != "No Value" else ""
+        self.context.meta_field['value'] = text if text != 'No Value' else ''
     else:
-      self.logger.error("Failed to find primitiveVerticalLayout!")
+      self.logger.error('Failed to find primitiveVerticalLayout!')
 
   def populate_primitive_entry(self) -> None:
     """
@@ -131,20 +131,20 @@ class PrimitiveDataTypeClass(DataTypeClass):
 
     """
     type_value = self.context.meta_field.get('value')
-    type_name = self.context.meta_field.get('typeName', "")
+    type_name = self.context.meta_field.get('typeName', '')
     value_template = self.context.meta_field.get('valueTemplate')
 
-    self.logger.info("Populating new entry of type primitive, name: %s", type_name)
+    self.logger.info('Populating new entry of type primitive, name: %s', type_name)
 
     new_primitive_entry_layout = QVBoxLayout()
-    new_primitive_entry_layout.setObjectName("primitiveVerticalLayout")
+    new_primitive_entry_layout.setObjectName('primitiveVerticalLayout')
     if self.context.meta_field.get('multiple') and isinstance(type_value, list):
-      template_first = value_template[0] if isinstance(value_template, list) else ""
+      template_first = value_template[0] if isinstance(value_template, list) else ''
       if not type_value:
         self.populate_primitive_horizontal_layout(
           new_primitive_entry_layout,
           type_name,
-          "",
+          '',
           template_first)
       else:
         for value in type_value:
@@ -157,8 +157,8 @@ class PrimitiveDataTypeClass(DataTypeClass):
       self.populate_primitive_horizontal_layout(
         new_primitive_entry_layout,
         type_name,
-        type_value or "",
-        value_template if isinstance(value_template, str) else "",
+        type_value or '',
+        value_template if isinstance(value_template, str) else '',
         False)
     self.context.main_vertical_layout.addLayout(new_primitive_entry_layout)
 
@@ -186,7 +186,7 @@ class PrimitiveDataTypeClass(DataTypeClass):
 
     """
     new_primitive_entry_horizontal_layout = QHBoxLayout()
-    new_primitive_entry_horizontal_layout.setObjectName("primitiveHorizontalLayout")
+    new_primitive_entry_horizontal_layout.setObjectName('primitiveHorizontalLayout')
     new_primitive_entry_horizontal_layout.addWidget(
       create_date_time_widget(type_name, type_value, self.context.parent_frame, type_value_template)
       if is_date_time_type(type_name) else

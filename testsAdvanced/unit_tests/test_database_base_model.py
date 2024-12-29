@@ -15,10 +15,10 @@ from pasta_eln.database.models.base_model import BaseModel
 
 class TestDatabaseBaseModel:
   # Success path tests with various realistic test values
-  @pytest.mark.parametrize("test_id, _id", [
-    ("Success01", "123"),
-    ("Success02", None),
-    ("Success03", "unique-id"),
+  @pytest.mark.parametrize('test_id, _id', [
+    ('Success01', '123'),
+    ('Success02', None),
+    ('Success03', 'unique-id'),
   ])
   def test_base_model_init_success_path(self, test_id, _id):
     # Arrange
@@ -30,8 +30,8 @@ class TestDatabaseBaseModel:
     assert model._id == _id
 
   # Various edge cases
-  @pytest.mark.parametrize("test_id, _id", [
-    ("EC01", "",),  # Empty strings
+  @pytest.mark.parametrize('test_id, _id', [
+    ('EC01', '',),  # Empty strings
   ])
   def test_base_model_init_edge_cases(self, test_id, _id):
     # Arrange
@@ -43,9 +43,9 @@ class TestDatabaseBaseModel:
     assert model._id == _id
 
   # Various error cases
-  @pytest.mark.parametrize("test_id, _id, expected_exception", [
-    ("ERR01", object(), IncorrectParameterError),
-    ("ERR02", ["123"], IncorrectParameterError),
+  @pytest.mark.parametrize('test_id, _id, expected_exception', [
+    ('ERR01', object(), IncorrectParameterError),
+    ('ERR02', ['123'], IncorrectParameterError),
   ])
   def test_base_model_init_error_cases(self, test_id, _id, expected_exception):
     # Arrange
@@ -55,9 +55,9 @@ class TestDatabaseBaseModel:
       BaseModel(_id=_id)
 
   # Test __iter__ method
-  @pytest.mark.parametrize("test_id, _id, expected_output", [
-    ("ITER01", "123", [('id', '123')]),
-    ("ITER02", None, [('id', None)]),
+  @pytest.mark.parametrize('test_id, _id, expected_output', [
+    ('ITER01', '123', [('id', '123')]),
+    ('ITER02', None, [('id', None)]),
   ])
   def test_base_model_iter(self, test_id, _id, expected_output):
     # Arrange
@@ -70,9 +70,9 @@ class TestDatabaseBaseModel:
     assert output == expected_output
 
   # Test property and setter for id
-  @pytest.mark.parametrize("test_id, initial_id, new_id", [
-    ("PROP01", "123", "456"),
-    ("PROP02", None, "new-id"),
+  @pytest.mark.parametrize('test_id, initial_id, new_id', [
+    ('PROP01', '123', '456'),
+    ('PROP02', None, 'new-id'),
   ])
   def test_base_model_id_property_and_setter(self, test_id, initial_id, new_id):
     # Arrange
@@ -85,9 +85,9 @@ class TestDatabaseBaseModel:
     assert model.id == new_id
 
   # Test deleter for id
-  @pytest.mark.parametrize("test_id, initial_id", [
-    ("DEL01", "123"),
-    ("DEL02", "delete-me"),
+  @pytest.mark.parametrize('test_id, initial_id', [
+    ('DEL01', '123'),
+    ('DEL02', 'delete-me'),
   ])
   def test_base_model_id_deleter(self, test_id, initial_id):
     # Arrange

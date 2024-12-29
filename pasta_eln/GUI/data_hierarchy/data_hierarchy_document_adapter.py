@@ -48,23 +48,23 @@ class DataHierarchyDocumentAdapter:
       meta = {
         meta_class or 'default': [
           {
-            "name": item.name,
-            "query": item.query,
-            "mandatory": item.mandatory == 'T',
-            "unit": item.unit,
-            "IRI": item.IRI,
-            "list": item.meta_list
+            'name': item.name,
+            'query': item.query,
+            'mandatory': item.mandatory == 'T',
+            'unit': item.unit,
+            'IRI': item.IRI,
+            'list': item.meta_list
           } for item in list(group)] for meta_class, group in itertools.groupby(data.definitions, lambda x: x.doc_class)
       }
     return {
       data.doc_type: {
-        "IRI": data.IRI,
-        "attachments": [],
-        "title": data.title,
-        "icon": data.icon,
-        "shortcut": data.shortcut,
-        "view": data.view,
-        "meta": meta,
+        'IRI': data.IRI,
+        'attachments': [],
+        'title': data.title,
+        'icon': data.icon,
+        'shortcut': data.shortcut,
+        'view': data.view,
+        'meta': meta,
       }
     }
 
@@ -90,27 +90,27 @@ class DataHierarchyDocumentAdapter:
     items: list[DataHierarchyModel] = []
     for key, value in data.items():
       definitions: list[DataHierarchyDefinitionModel] = []
-      for meta_key, meta_value in value.get("meta", {}).items():
+      for meta_key, meta_value in value.get('meta', {}).items():
         definitions.extend(
           DataHierarchyDefinitionModel(
             doc_type=key,
-            doc_class="" if meta_key == "default" else meta_key,
+            doc_class='' if meta_key == 'default' else meta_key,
             index=str(item_index),
-            name=item.get("name", None),
-            query=item.get("query", None),
-            mandatory='T' if item.get("mandatory", False) else 'F',
-            unit=item.get("unit"),
-            meta_list=item.get("list", []),
-            IRI=item.get("IRI"),
+            name=item.get('name', None),
+            query=item.get('query', None),
+            mandatory='T' if item.get('mandatory', False) else 'F',
+            unit=item.get('unit'),
+            meta_list=item.get('list', []),
+            IRI=item.get('IRI'),
           ) for item_index, item in enumerate(meta_value))
       items.append(
         DataHierarchyModel(
           doc_type=key,
-          IRI=value.get("IRI", None),
-          title=value.get("title", None),
-          icon=value.get("icon", None),
-          shortcut=value.get("shortcut", None),
-          view=value.get("view", None),
+          IRI=value.get('IRI', None),
+          title=value.get('title', None),
+          icon=value.get('icon', None),
+          shortcut=value.get('shortcut', None),
+          view=value.get('view', None),
           definitions=definitions
         ))
     return items

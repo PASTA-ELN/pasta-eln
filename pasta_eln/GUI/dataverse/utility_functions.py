@@ -70,9 +70,9 @@ def add_delete_button(parent_frame: QFrame,
       It is connected to a lambda function that calls the 'delete' function with the parent QBoxLayout as an argument.
   """
   delete_push_button = create_push_button(
-    "Delete",
-    "deletePushButton",
-    "Delete this particular entry.",
+    'Delete',
+    'deletePushButton',
+    'Delete this particular entry.',
     parent_frame,
     parent,
     delete_layout_and_contents)
@@ -95,9 +95,9 @@ def add_clear_button(parent_frame: QFrame,
       with the parent QBoxLayout as an argument.
   """
   button = create_push_button(
-    "Clear",
-    "clearPushButton",
-    "Clear this particular entry.",
+    'Clear',
+    'clearPushButton',
+    'Clear this particular entry.',
     parent_frame,
     parent,
     clear_layout_widgets,
@@ -129,15 +129,15 @@ def create_date_time_widget(type_name: str,
 
   """
   date_time_edit = QDateTimeEdit(parent=parent_frame)
-  date_time_edit.setSpecialValueText("No Value")
-  date_time_edit.setMinimumDate(QDate.fromString("0100-01-01", 'yyyy-MM-dd'))
+  date_time_edit.setSpecialValueText('No Value')
+  date_time_edit.setMinimumDate(QDate.fromString('0100-01-01', 'yyyy-MM-dd'))
   adjusted_name = adjust_type_name(type_name)
   date_time_edit.setToolTip(
     f"Enter the {adjusted_name} value here. e.g. {template_value}, Minimum possible date is 0100-01-02")
   date_time_edit.setObjectName(f"{type_name}DateTimeEdit")
   date_time_edit.setDate(QDate.fromString(type_value, 'yyyy-MM-dd')
                          if type_value and type_value != 'No Value'
-                         else QDate.fromString("0001-01-01", 'yyyy-MM-dd'))
+                         else QDate.fromString('0001-01-01', 'yyyy-MM-dd'))
   date_time_edit.setDisplayFormat('yyyy-MM-dd')
   return date_time_edit
 
@@ -213,9 +213,9 @@ def clear_layout_widgets(layout: QBoxLayout) -> None:
       if isinstance(widget, QLineEdit):
         widget.clear()
       elif isinstance(widget, QComboBox):
-        widget.setCurrentText("No Value")
+        widget.setCurrentText('No Value')
       elif isinstance(widget, QDateTimeEdit):
-        widget.setDate(QDate.fromString("01/01/0001", "dd/MM/yyyy"))
+        widget.setDate(QDate.fromString('01/01/0001', 'dd/MM/yyyy'))
 
 
 def delete_layout_and_contents(layout: QBoxLayout) -> None:

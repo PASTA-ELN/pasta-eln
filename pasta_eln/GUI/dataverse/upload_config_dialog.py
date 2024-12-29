@@ -67,7 +67,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     self.data_hierarchy_types: list[str] = get_data_hierarchy_types(self.db_api.get_data_hierarchy_models())
     self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Save).clicked.connect(self.save_ui)
     (self.numParallelComboBox.currentTextChanged[str]
-     .connect(lambda num: setattr(self.config_model, "parallel_uploads_count", int(num))))
+     .connect(lambda num: setattr(self.config_model, 'parallel_uploads_count', int(num))))
     self.load_ui()
 
   def load_ui(self) -> None:
@@ -78,10 +78,10 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
         This method loads the UI for the UploadConfigDialog.
         It retrieves the config model from the database and sets up the UI elements based on the model data.
     """
-    self.logger.info("Loading data and initializing UI...")
+    self.logger.info('Loading data and initializing UI...')
     self.config_model = self.db_api.get_config_model()
     if self.config_model is None:
-      self.logger.error("Failed to load config model!")
+      self.logger.error('Failed to load config model!')
       return
     for widget_pos in reversed(range(self.projectItemsVerticalLayout.count())):
       self.projectItemsVerticalLayout.itemAt(widget_pos).widget().setParent(None)
@@ -124,9 +124,9 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
         It retrieves the current settings from the UI elements and updates the configuration model.
         It then emits the config_reloaded signal to notify other components of the updated configuration.
     """
-    self.logger.info("Saving config model...")
+    self.logger.info('Saving config model...')
     if self.config_model is None:
-      self.logger.error("Failed to load config model!")
+      self.logger.error('Failed to load config model!')
       return
     self.db_api.save_config_model(self.config_model)
     self.config_reloaded.emit()

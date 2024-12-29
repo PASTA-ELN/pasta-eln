@@ -41,7 +41,7 @@ class ElabFTWApi:
         response = requests.get('https://www.google.com', headers={'Content-type': 'application/json'}, timeout=60)
         print('**ERROR not an elab-ftw server')
       except requests.ConnectionError:
-        print("**ERROR: cannot connect to google. You are not online")
+        print('**ERROR: cannot connect to google. You are not online')
         self.url = ''
         self.headers = {}
     return
@@ -287,7 +287,7 @@ class ElabFTWApi:
     url = f"{self.url}{entryType}/{identifier}/uploads/{elabData['id']}?format='binary'"
     response = requests.get(url, **self.param)
     if response.status_code == 200:
-      if elabData["real_name"]== "do_not_change.json":
+      if elabData['real_name']== 'do_not_change.json':
         return json.loads(response.content.decode('utf-8'))
       print('**ERROR I do not know what to do')
     print(elabData,response.status_code, url)

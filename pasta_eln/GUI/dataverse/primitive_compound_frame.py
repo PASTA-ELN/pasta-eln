@@ -91,7 +91,7 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase, MetadataFr
         - For any other 'typeClass' value, it logs an error for unknown typeClass.
 
     """
-    self.logger.info("Loading UI for %s", self.meta_field)
+    self.logger.info('Loading UI for %s', self.meta_field)
     self.data_type.populate_entry()
 
   def add_button_click_handler(self) -> None:
@@ -106,11 +106,11 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase, MetadataFr
             - For any other 'typeClass' value, it logs an error for unknown typeClass.
 
     """
-    self.logger.info("Adding new entry of type %s, name: %s",
+    self.logger.info('Adding new entry of type %s, name: %s',
                      self.meta_field.get('typeClass', ''),
                      self.meta_field.get('typeName', ''))
     if not self.meta_field.get('multiple'):
-      self.logger.error("Add operation not supported for non-multiple entries")
+      self.logger.error('Add operation not supported for non-multiple entries')
       return
     self.data_type.add_new_entry()
 
@@ -128,7 +128,7 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase, MetadataFr
         - For 'compound' type, it updates the 'value' attribute of the meta_field based on the 'valueTemplate'.
         - For any other 'typeClass' value, it logs an error for unsupported typeClass.
     """
-    self.logger.info("Saving changes to meta_field for type, name: %s, class: %s",
+    self.logger.info('Saving changes to meta_field for type, name: %s, class: %s',
                      self.meta_field.get('typeName'),
                      self.meta_field.get('typeClass'))
     self.data_type.save_modifications()

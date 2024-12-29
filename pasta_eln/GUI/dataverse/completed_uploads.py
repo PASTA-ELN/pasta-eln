@@ -75,19 +75,19 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     Args:
         self: Represents the instance of the class.
     """
-    self.logger.info("Loading completed uploads..")
+    self.logger.info('Loading completed uploads..')
     self.clear_ui()
     self.next_page = 1
     result = self.db_api.get_paginated_models(UploadModel,
                                               filter_term=self.filterTermLineEdit.text(),
                                               page_number=self.next_page,
-                                              order_by_column="finished_date_time")
+                                              order_by_column='finished_date_time')
     for upload in result:
       if isinstance(upload, UploadModel):
         widget = self.get_completed_upload_task_widget(upload)
         self.completedUploadsVerticalLayout.addWidget(widget)
       else:
-        self.logger.error("Incorrect type in queried models!")
+        self.logger.error('Incorrect type in queried models!')
 
   def clear_ui(self) -> None:
     """
@@ -116,7 +116,7 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     completed_task_frame = QFrame()
     completed_task_ui = Ui_CompletedUploadTaskFrame()
     completed_task_ui.setupUi(completed_task_frame)
-    completed_task_ui.projectNameLabel.setText(textwrap.fill(upload.project_name or "", 45, max_lines=1))
+    completed_task_ui.projectNameLabel.setText(textwrap.fill(upload.project_name or '', 45, max_lines=1))
     completed_task_ui.projectNameLabel.setToolTip(
       f"{completed_task_ui.projectNameLabel.toolTip()}\n{upload.project_name}")
     completed_task_ui.statusLabel.setText(upload.status)
@@ -125,41 +125,41 @@ class CompletedUploads(Ui_CompletedUploadsForm):
       case UploadStatusValues.Queued.name | UploadStatusValues.Uploading.name:
         self.set_completed_task_properties(
           completed_task_ui,
-          "Waiting..",
-          "",
-          "Waiting..",
-          "Waiting..")
+          'Waiting..',
+          '',
+          'Waiting..',
+          'Waiting..')
       case UploadStatusValues.Finished.name:
         url_tooltip = f"{completed_task_ui.dataverseUrlLabel.toolTip()}\n{upload.dataverse_url}"
 
         self.set_completed_task_properties(
           completed_task_ui,
-          get_formatted_dataverse_url(upload.dataverse_url or ""),
+          get_formatted_dataverse_url(upload.dataverse_url or ''),
           url_tooltip,
-          upload.created_date_time or "",
-          upload.finished_date_time or "")
+          upload.created_date_time or '',
+          upload.finished_date_time or '')
       case UploadStatusValues.Cancelled.name:
         self.set_completed_task_properties(
           completed_task_ui,
-          "NA",
-          "",
-          "NA",
-          "NA")
+          'NA',
+          '',
+          'NA',
+          'NA')
       case _:  # Error or Warning
         self.set_completed_task_properties(
           completed_task_ui,
-          "Error state..",
-          "",
-          "Error state..",
-          "Error state..")
+          'Error state..',
+          '',
+          'Error state..',
+          'Error state..')
     return completed_task_frame
 
   def set_completed_task_properties(self,
                                     completed_task_ui: Ui_CompletedUploadTaskFrame,
-                                    dataverse_url: str = "",
-                                    dataverse_url_tooltip: str = "",
-                                    started_date_time: str = "",
-                                    finished_date_time: str = "") -> None:
+                                    dataverse_url: str = '',
+                                    dataverse_url_tooltip: str = '',
+                                    started_date_time: str = '',
+                                    finished_date_time: str = '') -> None:
     """
     Sets the properties of the completed task UI.
 
@@ -195,7 +195,7 @@ class CompletedUploads(Ui_CompletedUploadsForm):
         self: Represents the instance of the class.
     """
 
-    self.logger.info("Showing completed uploads..")
+    self.logger.info('Showing completed uploads..')
     self.load_ui()
     self.instance.show()
 
@@ -220,7 +220,7 @@ class CompletedUploads(Ui_CompletedUploadsForm):
       models = self.db_api.get_paginated_models(UploadModel,
                                                 filter_term=self.filterTermLineEdit.text(),
                                                 page_number=self.next_page,
-                                                order_by_column="finished_date_time")
+                                                order_by_column='finished_date_time')
       for upload in models:
         if isinstance(upload, UploadModel):
           widget = self.get_completed_upload_task_widget(upload)

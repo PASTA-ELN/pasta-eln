@@ -16,12 +16,12 @@ from pasta_eln.GUI.dataverse.data_type_class_context import DataTypeClassContext
 
 class TestDataTypeClassContext:
   @pytest.mark.parametrize(
-    "main_vertical_layout, add_push_button, parent_frame, meta_field",
+    'main_vertical_layout, add_push_button, parent_frame, meta_field',
     [
-      (MagicMock(spec=QVBoxLayout), MagicMock(spec=QPushButton), MagicMock(spec=QFrame), {"key": "value"}),
-      (MagicMock(spec=QVBoxLayout), MagicMock(spec=QPushButton), MagicMock(spec=QFrame), {"another_key": 123}),
+      (MagicMock(spec=QVBoxLayout), MagicMock(spec=QPushButton), MagicMock(spec=QFrame), {'key': 'value'}),
+      (MagicMock(spec=QVBoxLayout), MagicMock(spec=QPushButton), MagicMock(spec=QFrame), {'another_key': 123}),
     ],
-    ids=["valid_case_1", "valid_case_2"]
+    ids=['valid_case_1', 'valid_case_2']
   )
   def test_data_type_class_context_success_path(self, main_vertical_layout, add_push_button, parent_frame, meta_field):
     # Act
@@ -34,18 +34,18 @@ class TestDataTypeClassContext:
     assert context.meta_field == meta_field
 
   @pytest.mark.parametrize(
-    "main_vertical_layout, add_push_button, parent_frame, meta_field, expected_exception, expected_message",
+    'main_vertical_layout, add_push_button, parent_frame, meta_field, expected_exception, expected_message',
     [
-      (None, MagicMock(spec=QPushButton), MagicMock(spec=QFrame), {"key": "value"}, ValueError,
-       "main_vertical_layout must be a QVBoxLayout!"),
-      (MagicMock(spec=QVBoxLayout), None, MagicMock(spec=QFrame), {"key": "value"}, ValueError,
-       "add_push_button must be a QPushButton!"),
-      (MagicMock(spec=QVBoxLayout), MagicMock(spec=QPushButton), None, {"key": "value"}, ValueError,
-       "parent_frame must be a QFrame!"),
+      (None, MagicMock(spec=QPushButton), MagicMock(spec=QFrame), {'key': 'value'}, ValueError,
+       'main_vertical_layout must be a QVBoxLayout!'),
+      (MagicMock(spec=QVBoxLayout), None, MagicMock(spec=QFrame), {'key': 'value'}, ValueError,
+       'add_push_button must be a QPushButton!'),
+      (MagicMock(spec=QVBoxLayout), MagicMock(spec=QPushButton), None, {'key': 'value'}, ValueError,
+       'parent_frame must be a QFrame!'),
       (MagicMock(spec=QVBoxLayout), MagicMock(spec=QPushButton), MagicMock(spec=QFrame), None, ValueError,
-       "meta_field must be a dict!"),
+       'meta_field must be a dict!'),
     ],
-    ids=["invalid_main_vertical_layout", "invalid_add_push_button", "invalid_parent_frame", "invalid_meta_field"]
+    ids=['invalid_main_vertical_layout', 'invalid_add_push_button', 'invalid_parent_frame', 'invalid_meta_field']
   )
   def test_data_type_class_context_error_cases(self, main_vertical_layout, add_push_button, parent_frame, meta_field,
                                                expected_exception, expected_message):

@@ -42,13 +42,13 @@ class TerminologyLookupService:
 
     """
     if not search_term or search_term.isspace():
-      self.logger.error("Invalid null search term!")
+      self.logger.error('Invalid null search term!')
       return []
-    self.logger.info("Searching for term: %s", search_term)
+    self.logger.info('Searching for term: %s', search_term)
     self.http_client.session_request_errors.clear()  # Clear the list of request errors before the lookup
     current_path = realpath(join(getcwd(), dirname(__file__)))
     results = list[dict[str, Any]]()
-    with open(join(current_path, "terminology_lookup_config.json"), encoding="utf-8") as config_file:
+    with open(join(current_path, 'terminology_lookup_config.json'), encoding='utf-8') as config_file:
       for lookup_service in load(config_file):
         lookup_service['request_params'][lookup_service['search_term_key']] = search_term
         web_result = await self.http_client.get(lookup_service['url'], lookup_service['request_params'])
@@ -57,7 +57,7 @@ class TerminologyLookupService:
                                              lookup_service):
             results.append(result)
         else:
-          self.logger.error("Error while querying the lookup service: %s, Reason: %s, Status: %s, Error: %s",
+          self.logger.error('Error while querying the lookup service: %s, Reason: %s, Status: %s, Error: %s',
                             lookup_service.get('name'),
                             web_result.get('reason'),
                             web_result.get('status'),
@@ -81,15 +81,15 @@ class TerminologyLookupService:
     if (not search_term or
         not web_result or
         not lookup_service):
-      self.logger.error("Invalid search term or web result or lookup service!")
+      self.logger.error('Invalid search term or web result or lookup service!')
       return {}
-    self.logger.info("Searching term: %s for online service: %s",
+    self.logger.info('Searching term: %s for online service: %s',
                      search_term,
                      lookup_service['name'])
     retrieved_results: dict[str, Any] = {
-      "name": lookup_service['name'],
-      "search_term": search_term,
-      "results": []
+      'name': lookup_service['name'],
+      'search_term': search_term,
+      'results': []
     }
 
     # Get mandatory attributes
@@ -105,17 +105,17 @@ class TerminologyLookupService:
     results = reduce(lambda d, key: d.get(key) if d else None, result_keys,  # type: ignore[arg-type, return-value]
                      web_result)
     for item in results or []:
-      description = reduce(lambda d, key: d.get(key) if d else "", desc_keys, item)  # type: ignore[attr-defined]
+      description = reduce(lambda d, key: d.get(key) if d else '', desc_keys, item)  # type: ignore[attr-defined]
       is_duplicate = (item[duplicate_ontology_key]  # type: ignore[operator]
                       in duplicate_ontology_names) if duplicate_ontology_key else False
       if (description
           and description != skip_desc
           and not is_duplicate):
-        retrieved_results["results"].append(
+        retrieved_results['results'].append(
           {
-            "iri": f"{lookup_service['iri_prefix']}{item[id_key]}"
+            'iri': f"{lookup_service['iri_prefix']}{item[id_key]}"
             if lookup_service.get('iri_prefix') else item[id_key],
-            "information": ",".join(description) if isinstance(description, list)
+            'information': ','.join(description) if isinstance(description, list)
             else description
           }
         )

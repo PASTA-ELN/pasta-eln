@@ -76,7 +76,7 @@ class TestUploadConfigDialog:
     mock_super_init.assert_called_once_with()
     mock_logger.getLogger.assert_called_once_with('pasta_eln.GUI.dataverse.upload_config_dialog.UploadConfigDialog')
     mock_dialog.assert_called_once_with()
-    assert dialog.instance == mock_dialog.return_value, "Dialog instance should be set to the mock dialog"
+    assert dialog.instance == mock_dialog.return_value, 'Dialog instance should be set to the mock dialog'
     mock_setup_ui.assert_called_once_with(dialog.instance)
     mock_db_api.assert_called_once()
     mock_load_ui.assert_called_once()
@@ -90,13 +90,13 @@ class TestUploadConfigDialog:
     dialog.buttonBox.button.return_value.clicked.connect.assert_called_once_with(dialog.save_ui)
 
   @pytest.mark.parametrize(
-    "config_doc_id, data_hierarchy_types, parallel_uploads_count, projects_items_layout_count, expected_check_states", [
+    'config_doc_id, data_hierarchy_types, parallel_uploads_count, projects_items_layout_count, expected_check_states', [
       # Test ID: Success-Path-1
       ('config-id-1', ['Type1', 'Type2'], 3, 2, [True, True]),
       # Test ID: Success-Path-2
       ('config-id-2', ['Type3'], 1, 3, [False]),
       # Add more test cases as needed
-    ], ids=["Success-Path-1", "Success-Path-2"])
+    ], ids=['Success-Path-1', 'Success-Path-2'])
   def test_load_ui_success_path(self, mocker, mock_dialog, mock_config_model, config_doc_id,
                                 data_hierarchy_types, parallel_uploads_count, projects_items_layout_count,
                                 expected_check_states):
@@ -113,7 +113,7 @@ class TestUploadConfigDialog:
     mock_dialog.load_ui(mock_dialog)
 
     # Assert
-    mock_dialog.logger.info.assert_called_once_with("Loading data and initializing UI...")
+    mock_dialog.logger.info.assert_called_once_with('Loading data and initializing UI...')
     mock_dialog.db_api.get_config_model.assert_called_once()
     mock_dialog.numParallelComboBox.setCurrentText.assert_called_once_with(str(parallel_uploads_count))
     for pos in range(projects_items_layout_count):
@@ -126,11 +126,11 @@ class TestUploadConfigDialog:
       mock_check_box.return_value.stateChanged.connect.assert_called()
 
   # Parametrized test for error cases
-  @pytest.mark.parametrize("config_doc_id, error_message", [
+  @pytest.mark.parametrize('config_doc_id, error_message', [
     # Test ID: Error-Case-1
-    ('config-id-1', "Failed to load config model!"),
+    ('config-id-1', 'Failed to load config model!'),
     # Add more test cases as needed
-  ], ids=["Error-Case-1"])
+  ], ids=['Error-Case-1'])
   def test_load_ui_error_cases(self, mock_dialog, mock_config_model, config_doc_id, error_message):
     # Arrange
     mock_dialog.db_api.get_config_model.return_value = None
@@ -144,21 +144,21 @@ class TestUploadConfigDialog:
     mock_dialog.logger.error.assert_called_once_with(error_message)
 
   @pytest.mark.parametrize(
-    "state, project_item_name, expected",
+    'state, project_item_name, expected',
     [
-      (Qt.CheckState.Checked.value, "Item1", True),
-      (Qt.CheckState.Unchecked.value, "Item2", False),
-      (Qt.CheckState.Unchecked.value, "Item5", False),
+      (Qt.CheckState.Checked.value, 'Item1', True),
+      (Qt.CheckState.Unchecked.value, 'Item2', False),
+      (Qt.CheckState.Unchecked.value, 'Item5', False),
       # Edge cases could include unusual but valid project item names
-      (Qt.CheckState.Checked.value, "", True),
-      (Qt.CheckState.Checked.value, " ", True),
+      (Qt.CheckState.Checked.value, '', True),
+      (Qt.CheckState.Checked.value, ' ', True),
       # Error cases are not applicable here as the function does not handle errors
     ], ids=[
-      "success-path-checked",
-      "success-path-unchecked1",
-      "success-path-unchecked2",
-      "edge-case-empty-string",
-      "edge-case-space"
+      'success-path-checked',
+      'success-path-unchecked1',
+      'success-path-unchecked2',
+      'edge-case-empty-string',
+      'edge-case-space'
     ]
   )
   def test_check_box_changed_callback(self, mock_dialog, mock_config_model, state, project_item_name, expected):
@@ -171,29 +171,29 @@ class TestUploadConfigDialog:
 
     # Assert
     assert (mock_config_model.project_upload_items.get(project_item_name) == expected
-            ), "Test failed for check_box_changed_callback"
+            ), 'Test failed for check_box_changed_callback'
 
   @pytest.mark.parametrize(
-    "test_id, setup_logger, expected_log_info, expected_log_error, expect_callback", [
+    'test_id, setup_logger, expected_log_info, expected_log_error, expect_callback', [
       # Success path test with realistic test values
-      ("success_case_1", "Saving config model...", "Saving config model...", None, True),
+      ('success_case_1', 'Saving config model...', 'Saving config model...', None, True),
 
       # Error case: config_model is None
       (
-          "error_no_config_model", "Failed to load config model!", None, "Failed to load config model!", False),
+          'error_no_config_model', 'Failed to load config model!', None, 'Failed to load config model!', False),
     ])
   def test_save_ui(self, mocker, mock_dialog, mock_config_model, test_id, setup_logger, expected_log_info,
                    expected_log_error,
                    expect_callback):
     # Arrange
     mock_dialog.config_reloaded = mocker.MagicMock()
-    mock_dialog.config_model = None if test_id == "error_no_config_model" else mock_config_model
+    mock_dialog.config_model = None if test_id == 'error_no_config_model' else mock_config_model
 
     # Act
     mock_dialog.save_ui()
 
     # Assert
-    mock_dialog.logger.info.assert_called_with("Saving config model...")
+    mock_dialog.logger.info.assert_called_with('Saving config model...')
     if expected_log_info:
       mock_dialog.logger.info.assert_called_with(expected_log_info)
     if expected_log_error:
@@ -207,8 +207,8 @@ class TestUploadConfigDialog:
     else:
       mock_dialog.db_api.save_config_model.assert_not_called()
 
-  @pytest.mark.parametrize("test_id", [
-    ("success_case_1")
+  @pytest.mark.parametrize('test_id', [
+    ('success_case_1')
   ])
   def test_show(self, test_id, mock_dialog):
     # Arrange

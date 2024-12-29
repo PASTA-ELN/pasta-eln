@@ -52,12 +52,12 @@ class DatabaseAPI:
     super().__init__()
     self.config_model_id: int = 1
     self.logger: logging.Logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    self.dataverse_db_name: str = ".pastaELN_dataverse"
-    self.pasta_db_name: str = "pastaELN"
+    self.dataverse_db_name: str = '.pastaELN_dataverse'
+    self.pasta_db_name: str = 'pastaELN'
     db_info: dict[str, str] = get_db_info(self.logger)
     db_path: str | None = db_info.get('database_path')
     if db_path is None:
-      raise log_and_create_error(self.logger, Error, "Database path is None!")
+      raise log_and_create_error(self.logger, Error, 'Database path is None!')
     self.db_api: BaseDatabaseApi = BaseDatabaseApi(
       f"{Path.home()}/{self.dataverse_db_name}.db",
       f"{db_path}/{self.pasta_db_name}.db"
@@ -81,11 +81,11 @@ class DatabaseAPI:
                 ValueError: If the data is None.
                 TypeError: If the data is not an instance of UploadModel or ConfigModel.
     """
-    self.logger.info("Creating model: %s", data)
+    self.logger.info('Creating model: %s', data)
     if data is None:
-      raise log_and_create_error(self.logger, ValueError, "Data cannot be None!")
+      raise log_and_create_error(self.logger, ValueError, 'Data cannot be None!')
     if not isinstance(data, (UploadModel, ConfigModel)):
-      raise log_and_create_error(self.logger, TypeError, "Data must be an UploadModel or ConfigModel!")
+      raise log_and_create_error(self.logger, TypeError, 'Data must be an UploadModel or ConfigModel!')
     return self.db_api.insert_model(data)
 
   def update_model(self, data: UploadModel | ConfigModel) -> None:
@@ -102,11 +102,11 @@ class DatabaseAPI:
                 ValueError: If the data is None.
                 TypeError: If the data is not an instance of UploadModel or ConfigModel.
     """
-    self.logger.info("Updating model document: %s", data)
+    self.logger.info('Updating model document: %s', data)
     if data is None:
-      raise log_and_create_error(self.logger, ValueError, "Data cannot be None!")
+      raise log_and_create_error(self.logger, ValueError, 'Data cannot be None!')
     if not isinstance(data, (UploadModel, ConfigModel)):
-      raise log_and_create_error(self.logger, TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
+      raise log_and_create_error(self.logger, TypeError, 'Data must be an UploadModel, ConfigModel, or ProjectModel!')
     self.db_api.update_model(data)
 
   def get_models(self, model_type: Type[UploadModel | ConfigModel | DataHierarchyModel | ProjectModel]) -> list[
@@ -128,7 +128,7 @@ class DatabaseAPI:
             Raises:
                 TypeError: If the model type is not provided or unsupported.
     """
-    self.logger.info("Retrieving models of type: %s", model_type)
+    self.logger.info('Retrieving models of type: %s', model_type)
     match model_type():
       case UploadModel() | ConfigModel() | DataHierarchyModel():
         return self.db_api.get_models(model_type)  # type: ignore
@@ -167,7 +167,7 @@ class DatabaseAPI:
                 DatabaseError: If the page number or limit is less than 1.
     """
 
-    self.logger.info("Retrieving paginated models of type: %s, filter_term: %s, bookmark: %s, limit: %s",
+    self.logger.info('Retrieving paginated models of type: %s, filter_term: %s, bookmark: %s, limit: %s',
                      model_type,
                      filter_term,
                      page_number,
@@ -204,7 +204,7 @@ class DatabaseAPI:
         TypeError: If the model type is unsupported.
     """
 
-    self.logger.info("Retrieving last page number of type: %s, limit: %s", model_type, limit)
+    self.logger.info('Retrieving last page number of type: %s, limit: %s', model_type, limit)
     match model_type():
       case UploadModel() | ConfigModel() | DataHierarchyModel():
         row_count = self.db_api.get_models_count(model_type)
@@ -235,11 +235,11 @@ class DatabaseAPI:
         TypeError: If the model type is unsupported.
         ValueError: If the model ID is None.
     """
-    self.logger.info("Retrieving model with id: %s, type: %s", model_id, model_type)
+    self.logger.info('Retrieving model with id: %s, type: %s', model_id, model_type)
     if model_type not in (UploadModel, ProjectModel, ConfigModel):
       raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
     if model_id is None:
-      raise log_and_create_error(self.logger, ValueError, "model_id cannot be None")
+      raise log_and_create_error(self.logger, ValueError, 'model_id cannot be None')
     return self.db_api.get_model(model_id,
                                  model_type)
 
@@ -258,22 +258,22 @@ class DatabaseAPI:
         DatabaseError: If the model ID is empty or if there is an error during
         the database retrieval process.
     """
-    self.logger.info("Retrieving config model...")
+    self.logger.info('Retrieving config model...')
     config_model = self.get_model(self.config_model_id, ConfigModel)
     if config_model is None or not isinstance(config_model, ConfigModel):
-      self.logger.error("Fatal error, Failed to load config model!")
+      self.logger.error('Fatal error, Failed to load config model!')
       return None
     if not isinstance(config_model.dataverse_login_info, dict):
-      self.logger.error("Fatal Error, Invalid dataverse login info!")
+      self.logger.error('Fatal Error, Invalid dataverse login info!')
       return None
-    api_token = config_model.dataverse_login_info.get("api_token")
+    api_token = config_model.dataverse_login_info.get('api_token')
     if self.encrypt_key and api_token:
-      config_model.dataverse_login_info["api_token"] = decrypt_data(self.logger, self.encrypt_key, api_token)
+      config_model.dataverse_login_info['api_token'] = decrypt_data(self.logger, self.encrypt_key, api_token)
     if not self.encrypt_key and api_token:
       self.logger.warning(
-        "No encryption key found. Hence if any API key exists, it will be removed and the user needs to re-enter it.")
-      config_model.dataverse_login_info["api_token"] = None
-      config_model.dataverse_login_info["dataverse_id"] = None
+        'No encryption key found. Hence if any API key exists, it will be removed and the user needs to re-enter it.')
+      config_model.dataverse_login_info['api_token'] = None
+      config_model.dataverse_login_info['dataverse_id'] = None
       self.update_model(config_model)
     return config_model
 
@@ -291,19 +291,19 @@ class DatabaseAPI:
         ValueError: If the config model is invalid.
         DatabaseError: If there is no encryption key found.
     """
-    self.logger.info("Saving config model...")
+    self.logger.info('Saving config model...')
     if (not config_model
         or not isinstance(config_model, ConfigModel)
         or not isinstance(config_model.dataverse_login_info, dict)):
-      self.logger.error("Invalid config model!")
+      self.logger.error('Invalid config model!')
       return
     if not self.encrypt_key:
       raise log_and_create_error(self.logger, ValueError,
-                                 "Fatal Error, No encryption key found! Make sure to initialize the database!")
-    if api_token := config_model.dataverse_login_info["api_token"]:
-      config_model.dataverse_login_info["api_token"] = encrypt_data(self.logger, self.encrypt_key, api_token)
-    if server_url := config_model.dataverse_login_info["server_url"]:
-      config_model.dataverse_login_info["server_url"] = server_url.strip("/").strip("\\")
+                                 'Fatal Error, No encryption key found! Make sure to initialize the database!')
+    if api_token := config_model.dataverse_login_info['api_token']:
+      config_model.dataverse_login_info['api_token'] = encrypt_data(self.logger, self.encrypt_key, api_token)
+    if server_url := config_model.dataverse_login_info['server_url']:
+      config_model.dataverse_login_info['server_url'] = server_url.strip('/').strip('\\')
     self.update_model(config_model)
 
   def get_data_hierarchy_models(self) -> list[DataHierarchyModel] | None:
@@ -319,10 +319,10 @@ class DatabaseAPI:
     Raises:
         SQLAlchemyError: If there is an error during the database retrieval process.
     """
-    self.logger.info("Retrieving data hierarchy...")
+    self.logger.info('Retrieving data hierarchy...')
     results = self.db_api.get_models(DataHierarchyModel)
     if not results:
-      self.logger.warning("Data hierarchy items not found!")
+      self.logger.warning('Data hierarchy items not found!')
       return results  # type: ignore[return-value]
     return results  # type: ignore[return-value]
 
@@ -336,7 +336,7 @@ class DatabaseAPI:
     Raises:
         SQLAlchemyError: If there is an error during the database initialization process.
     """
-    self.logger.info("Initializing database for dataverse module...")
+    self.logger.info('Initializing database for dataverse module...')
     self.db_api.create_and_init_database()
     if self.db_api.get_model(self.config_model_id, ConfigModel) is None:
       self.initialize_config_document()
@@ -352,13 +352,13 @@ class DatabaseAPI:
         FileNotFoundError: If the configuration file cannot be found.
         JSONDecodeError: If there is an error decoding the JSON file.
     """
-    self.logger.info("Initializing and saving the config model...")
+    self.logger.info('Initializing and saving the config model...')
     data_hierarchy_types: list[str] = get_data_hierarchy_types(self.get_data_hierarchy_models())
     model = ConfigModel(_id=self.config_model_id, parallel_uploads_count=3,
-                        dataverse_login_info={"server_url": "", "api_token": "", "dataverse_id": ""},
+                        dataverse_login_info={'server_url': '', 'api_token': '', 'dataverse_id': ''},
                         project_upload_items={data_type: True for data_type in data_hierarchy_types})
     current_path = realpath(join(getcwd(), dirname(__file__)))
-    with open(join(current_path, "dataset-create-new-all-default-fields.json"), encoding="utf-8") as config_file:
+    with open(join(current_path, 'dataset-create-new-all-default-fields.json'), encoding='utf-8') as config_file:
       model.metadata = load(config_file)
     set_template_values(self.logger, model.metadata or {})
     set_authors(self.logger, model.metadata or {})

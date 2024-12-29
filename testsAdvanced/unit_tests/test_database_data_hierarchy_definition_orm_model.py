@@ -15,7 +15,7 @@ from pasta_eln.database.models.data_hierarchy_definition_orm_model import DataHi
 
 
 # Setup an in-memory SQLite database for testing
-@pytest.fixture(scope="module")
+@pytest.fixture(scope='module')
 def db_session():
   engine = create_engine('sqlite:///:memory:')
   DataHierarchyDefinitionOrmModel.metadata.create_all(engine)
@@ -28,14 +28,14 @@ def db_session():
 class TestDatabaseDataHierarchyDefinitionOrmModel:
 
   @pytest.mark.parametrize(
-    "doc_type, doc_class, index, name, query, unit, IRI, mandatory, meta_list, expected_columns",
+    'doc_type, doc_class, index, name, query, unit, IRI, mandatory, meta_list, expected_columns',
     [
-      ("type1", "class1", "index1", "name1", "query1", "unit1", "IRI1", "mandatory1", "meta_list1",
-       ["doc_type", "doc_class", "index", "name", "query", "unit", "IRI", "mandatory", "meta_list"]),
-      ("type2", None, None, None, None, None, None, None, None,
-       ["doc_type", "doc_class", "index", "name", "query", "unit", "IRI", "mandatory", "meta_list"]),
+      ('type1', 'class1', 'index1', 'name1', 'query1', 'unit1', 'IRI1', 'mandatory1', 'meta_list1',
+       ['doc_type', 'doc_class', 'index', 'name', 'query', 'unit', 'IRI', 'mandatory', 'meta_list']),
+      ('type2', None, None, None, None, None, None, None, None,
+       ['doc_type', 'doc_class', 'index', 'name', 'query', 'unit', 'IRI', 'mandatory', 'meta_list']),
     ],
-    ids=["all_fields_provided", "only_primary_keys_provided"]
+    ids=['all_fields_provided', 'only_primary_keys_provided']
   )
   def test_data_hierarchy_definition_orm_model(self, db_session, doc_type, doc_class, index, name, query, unit, IRI,
                                                mandatory, meta_list, expected_columns):
@@ -67,13 +67,13 @@ class TestDatabaseDataHierarchyDefinitionOrmModel:
     assert DataHierarchyDefinitionOrmModel.get_table_columns() == expected_columns
 
   @pytest.mark.parametrize(
-    "doc_type, doc_class, index",
+    'doc_type, doc_class, index',
     [
-      (None, "class1", "index1"),
-      ("type1", None, "index1"),
-      ("type1", "class1", None),
+      (None, 'class1', 'index1'),
+      ('type1', None, 'index1'),
+      ('type1', 'class1', None),
     ],
-    ids=["missing_doc_type", "missing_doc_class", "missing_index"]
+    ids=['missing_doc_type', 'missing_doc_class', 'missing_index']
   )
   def test_data_hierarchy_definition_orm_model_primary_key_constraints(self, db_session, doc_type, doc_class, index):
     # Act & Assert

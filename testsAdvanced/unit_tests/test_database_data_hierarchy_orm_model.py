@@ -13,17 +13,17 @@ from pasta_eln.database.models.data_hierarchy_orm_model import DataHierarchyOrmM
 
 class TestDatabaseOrmDataHierarchyModel:
   @pytest.mark.parametrize(
-    "doc_type, IRI, title, icon, shortcut, view, expected_columns",
+    'doc_type, IRI, title, icon, shortcut, view, expected_columns',
     [
       # Happy path test cases
-      ("type1", "http://example.com/iri1", "Title 1", "icon1.png", "Ctrl+1", "view1",
+      ('type1', 'http://example.com/iri1', 'Title 1', 'icon1.png', 'Ctrl+1', 'view1',
        ['doc_type', 'IRI', 'title', 'icon', 'shortcut', 'view', 'definitions']),
-      ("type2", None, "Title 2", None, None, "view2",
+      ('type2', None, 'Title 2', None, None, 'view2',
        ['doc_type', 'IRI', 'title', 'icon', 'shortcut', 'view', 'definitions']),
 
       # Edge cases
-      ("", "", "", "", "", "", ['doc_type', 'IRI', 'title', 'icon', 'shortcut', 'view', 'definitions']),
-      ("type3", "http://example.com/iri3", "Title 3", "icon3.png", "Ctrl+3", None,
+      ('', '', '', '', '', '', ['doc_type', 'IRI', 'title', 'icon', 'shortcut', 'view', 'definitions']),
+      ('type3', 'http://example.com/iri3', 'Title 3', 'icon3.png', 'Ctrl+3', None,
        ['doc_type', 'IRI', 'title', 'icon', 'shortcut', 'view', 'definitions']),
 
       # Error cases
@@ -31,10 +31,10 @@ class TestDatabaseOrmDataHierarchyModel:
       # If there were constraints, we would test invalid inputs here
     ],
     ids=[
-      "happy_path_all_fields",
-      "happy_path_some_none",
-      "edge_case_empty_strings",
-      "edge_case_none_view",
+      'happy_path_all_fields',
+      'happy_path_some_none',
+      'edge_case_empty_strings',
+      'edge_case_none_view',
     ]
   )
   def test_get_table_columns(self, doc_type, IRI, title, icon, shortcut, view, expected_columns):

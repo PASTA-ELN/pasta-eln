@@ -81,7 +81,7 @@ def http_client_mock(mocker) -> AsyncHttpClient:
 def dataverse_client_mock(mocker) -> DataverseClient:
   mocker.patch('pasta_eln.dataverse.client.logging.getLogger')
   mocker.patch('pasta_eln.dataverse.client.AsyncHttpClient')
-  return DataverseClient("test_url", "test_token")
+  return DataverseClient('test_url', 'test_token')
 
 
 @fixture()
@@ -107,21 +107,21 @@ def key_not_found_exception(request) -> KeyNotFoundException:
 @fixture()
 def table_model() -> TableViewModel:
   base_model = TableViewModel()
-  base_model.setObjectName("TableViewModel")
+  base_model.setObjectName('TableViewModel')
   return base_model
 
 
 @fixture()
 def metadata_table_model() -> MetadataTableViewModel:
   metadata_model = MetadataTableViewModel()
-  metadata_model.setObjectName("MetadataTableViewModel")
+  metadata_model.setObjectName('MetadataTableViewModel')
   return metadata_model
 
 
 @fixture()
 def attachments_table_model() -> AttachmentsTableViewModel:
   attachments_model = AttachmentsTableViewModel()
-  attachments_model.setObjectName("AttachmentsTableViewModel")
+  attachments_model.setObjectName('AttachmentsTableViewModel')
   return attachments_model
 
 
@@ -149,7 +149,7 @@ def iri_delegate() -> IriColumnDelegate:
 def data_hierarchy_doc_mock(mocker) -> MagicMock:
   mock_doc = mocker.MagicMock()
   mock_doc_content = read_json('data_hierarchy_document.json')
-  mocker.patch.object(mock_doc, "__len__", lambda x, y: len(mock_doc_content))
+  mocker.patch.object(mock_doc, '__len__', lambda x, y: len(mock_doc_content))
   mock_doc.__getitem__.side_effect = mock_doc_content.__getitem__
   mock_doc.__setitem__.side_effect = mock_doc_content.__setitem__
   mock_doc.__contains__.side_effect = mock_doc_content.__contains__
@@ -201,12 +201,12 @@ def iri_lookup_web_results_name_mock() -> dict:
 
 @fixture()
 def metadata_column_names():
-  return {0: "name", 1: "query", 2: "list", 3: "unit", 4: "IRI", 5: "mandatory"}
+  return {0: 'name', 1: 'query', 2: 'list', 3: 'unit', 4: 'IRI', 5: 'mandatory'}
 
 
 @fixture()
 def attachments_column_names():
-  return {0: "description", 1: "type"}
+  return {0: 'description', 1: 'type'}
 
 
 @fixture()
@@ -220,7 +220,7 @@ def lookup_iri_action(mocker) -> LookupIriAction:
   return LookupIriAction(mock_parent)
 
 
-@fixture(scope="module")
+@fixture(scope='module')
 def pasta_gui(request) -> tuple[Union[QApplication, QCoreApplication, None], MainWindow, QtBot]:
   app, image_viewer = mainGUI()
   qtbot = QtBot(app)

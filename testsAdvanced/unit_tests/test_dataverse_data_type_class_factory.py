@@ -33,11 +33,11 @@ def factory(context):
 
 class TestDataTypeClassFactory:
 
-  @pytest.mark.parametrize("class_name, expected_type", [
+  @pytest.mark.parametrize('class_name, expected_type', [
     (DataTypeClassName.PRIMITIVE, PrimitiveDataTypeClass),
     (DataTypeClassName.COMPOUND, CompoundDataTypeClass),
     (DataTypeClassName.CONTROLLED_VOCAB, ControlledVocabularyDataTypeClass)
-  ], ids=["primitive", "compound", "controlled_vocab"])
+  ], ids=['primitive', 'compound', 'controlled_vocab'])
   def test_make_data_type_class(self, factory, class_name, expected_type):
     # Act
     result = factory.make_data_type_class(class_name)
@@ -45,11 +45,11 @@ class TestDataTypeClassFactory:
     # Assert
     assert isinstance(result, expected_type)
 
-  @pytest.mark.parametrize("class_name", [
-    "INVALID_CLASS_NAME",
+  @pytest.mark.parametrize('class_name', [
+    'INVALID_CLASS_NAME',
     None,
     123
-  ], ids=["invalid_string", "none", "integer"])
+  ], ids=['invalid_string', 'none', 'integer'])
   def test_make_data_type_class_invalid(self, factory, class_name):
     # Act & Assert
     with pytest.raises(ValueError) as exc_info:

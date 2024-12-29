@@ -23,18 +23,18 @@ def mock_task():
   task = MagicMock(spec=GenericTaskObject)
   task.cancel = MagicMock()
   task.cleanup = MagicMock()
-  task.id = "test_task_id"
+  task.id = 'test_task_id'
   return task
 
 
 class TestDataverseTaskThreadExtension:
 
-  @pytest.mark.parametrize("test_id, task, exception", [# Success path tests with various realistic test values
-    ("success", MagicMock(spec=GenericTaskObject), None),
+  @pytest.mark.parametrize('test_id, task, exception', [# Success path tests with various realistic test values
+    ('success', MagicMock(spec=GenericTaskObject), None),
 
     # Error cases might include initializing with invalid task objects
     # Again, without more context on what constitutes an invalid task, this is speculative
-    ("error", MagicMock(spec=GenericTaskObject), ThreadError("Invalid task object")), ])
+    ('error', MagicMock(spec=GenericTaskObject), ThreadError('Invalid task object')), ])
   def test_task_thread_extension_initialization(self, mocker, test_id, task, exception):
     # Arrange & Act
     mock_thread = MagicMock(spec=QThread)
@@ -42,7 +42,7 @@ class TestDataverseTaskThreadExtension:
     mocker.patch('pasta_eln.dataverse.task_thread_extension.QtCore.QThread', return_value=mock_thread)
     mock_get_logger = mocker.patch('pasta_eln.dataverse.task_thread_extension.logging.getLogger',
                                    return_value=mock_logger)
-    if test_id == "error":
+    if test_id == 'error':
       task.moveToThread.side_effect = exception
 
       with pytest.raises(ThreadError):
@@ -51,16 +51,16 @@ class TestDataverseTaskThreadExtension:
       extension = TaskThreadExtension(task)
 
     # Assert
-    if test_id == "success":
+    if test_id == 'success':
       mock_thread.start.assert_called_once()
       assert extension.task == task
       assert isinstance(extension.worker_thread, QThread)
       # Assuming moveToThread will be called inside the __init__, we should check it
       task.moveToThread.assert_called_once_with(extension.worker_thread)
-      mock_get_logger.assert_called_once_with("pasta_eln.dataverse.task_thread_extension.TaskThreadExtension")
+      mock_get_logger.assert_called_once_with('pasta_eln.dataverse.task_thread_extension.TaskThreadExtension')
 
   # Parametrized test for the success path
-  @pytest.mark.parametrize("test_id", ["success_path_1"])
+  @pytest.mark.parametrize('test_id', ['success_path_1'])
   def test_task_thread_extension_success_path(self, mocker, mock_task, test_id):
     # Arrange
     mock_thread = MagicMock(spec=QThread)
@@ -80,9 +80,9 @@ class TestDataverseTaskThreadExtension:
     mock_logger.info.assert_called_once_with('Quitting task thread extension, Task id: %s', 'test_task_id')
 
   # Parametrized test for error cases
-  @pytest.mark.parametrize("test_id, exception, expected_behavior",
-                           [("error_case_invalid_task", ValueError, "handle_error"),
-                             ("error_case_thread_error", RuntimeError, "handle_error")])
+  @pytest.mark.parametrize('test_id, exception, expected_behavior',
+                           [('error_case_invalid_task', ValueError, 'handle_error'),
+                             ('error_case_thread_error', RuntimeError, 'handle_error')])
   def test_task_thread_extension_error_cases(self, mocker, mock_task, test_id, exception, expected_behavior):
     # Arrange
     mock_thread = MagicMock(spec=QThread)

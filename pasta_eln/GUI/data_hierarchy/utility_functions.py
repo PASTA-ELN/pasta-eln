@@ -53,22 +53,22 @@ def adjust_data_hierarchy_data_to_v4(data_hierarchy_types: dict[str, Any]) -> No
     return None
   for type_structure in data_hierarchy_types.values():
     # Adjustments previous versions <= v3.0
-    type_structure.setdefault("attachments", [])
-    properties = type_structure.get("prop")
+    type_structure.setdefault('attachments', [])
+    properties = type_structure.get('prop')
     if properties is None:
-      properties = {"default": []}
-      type_structure["prop"] = properties
+      properties = {'default': []}
+      type_structure['prop'] = properties
     if not isinstance(properties, dict):
-      type_structure["prop"] = {"default": properties}
+      type_structure['prop'] = {'default': properties}
     # Adjustments for v4.0
-    if "prop" in type_structure:
+    if 'prop' in type_structure:
       # replace "meta" with "prop" only if it does not exist
-      type_structure.setdefault("meta", type_structure["prop"])
-      del type_structure["prop"]
-    if "label" in type_structure:
-      type_structure.setdefault("title", type_structure["label"])
-      del type_structure["label"]
-    type_structure.setdefault("title", "")
+      type_structure.setdefault('meta', type_structure['prop'])
+      del type_structure['prop']
+    if 'label' in type_structure:
+      type_structure.setdefault('title', type_structure['label'])
+      del type_structure['label']
+    type_structure.setdefault('title', '')
   return None
 
 
@@ -90,13 +90,13 @@ def show_message(message: str,
   """
   if message:
     msg_box = QMessageBox()
-    msg_box.setWindowTitle("Data Hierarchy Editor")
+    msg_box.setWindowTitle('Data Hierarchy Editor')
     msg_box.setTextFormat(Qt.TextFormat.RichText)
     msg_box.setIcon(icon)
     msg_box.setText(message)
     msg_box.setStandardButtons(standard_buttons)
     msg_box.setDefaultButton(default_button)
-    qt_msgbox_label: QLabel | object = msg_box.findChild(QLabel, "qt_msgbox_label")
+    qt_msgbox_label: QLabel | object = msg_box.findChild(QLabel, 'qt_msgbox_label')
     if isinstance(qt_msgbox_label, QLabel):
       width = qt_msgbox_label.fontMetrics().boundingRect(qt_msgbox_label.text()).width()
       qt_msgbox_label.setFixedWidth(width)
@@ -113,7 +113,7 @@ def get_types_for_display(types: list[str]) -> list[str]:
   Returns: Return the list of types after converting all structural types
 
   """
-  name_prefix = "Structure level "
+  name_prefix = 'Structure level '
   return [
     name.replace('x', name_prefix) if is_structural_level(name) else name
     for name in types
@@ -129,7 +129,7 @@ def adapt_type(title: str) -> str:
   Returns: Adapted title in the needed format
 
   """
-  return {"Structure level 0": "x0", "Structure level 1": "x1"}.get(title, title)
+  return {'Structure level 0': 'x0', 'Structure level 1': 'x1'}.get(title, title)
 
 
 def is_structural_level(title: str) -> bool:
@@ -141,7 +141,7 @@ def is_structural_level(title: str) -> bool:
   Returns: True/False
 
   """
-  return title in {"x0", "x1"}
+  return title in {'x0', 'x1'}
 
 
 def generate_data_hierarchy_type(type_info: DataTypeInfo) -> dict[str, Any]:
@@ -154,14 +154,14 @@ def generate_data_hierarchy_type(type_info: DataTypeInfo) -> dict[str, Any]:
 
   """
   return {
-    "IRI": type_info.iri,
-    "title": type_info.title,
-    "icon": type_info.icon,
-    "shortcut": type_info.shortcut,
-    "meta": {
-      "default": generate_required_metadata()
+    'IRI': type_info.iri,
+    'title': type_info.title,
+    'icon': type_info.icon,
+    'shortcut': type_info.shortcut,
+    'meta': {
+      'default': generate_required_metadata()
     },
-    "attachments": []
+    'attachments': []
   }
 
 
@@ -173,14 +173,14 @@ def generate_required_metadata() -> list[dict[str, Any]]:
   """
   return [
     {
-      "name": "name",
-      "query": "What is the name of the metadata?",
-      "mandatory": True
+      'name': 'name',
+      'query': 'What is the name of the metadata?',
+      'mandatory': True
     },
     {
-      "name": "tags",
-      "query": "What are the tags associated with this metadata?",
-      "mandatory": False
+      'name': 'tags',
+      'query': 'What are the tags associated with this metadata?',
+      'mandatory': False
     }
   ]
 
@@ -215,10 +215,10 @@ def check_data_hierarchy_types(data_hierarchy_types: dict[str, Any]) -> tuple[
   types_with_missing_metadata: dict[str, dict[str, list[str]]] = {}
   types_with_duplicate_metadata: dict[str, dict[str, list[str]]] = {}
   for type_name, type_value in data_hierarchy_types.items():
-    type_name = type_name.replace("x", "Structure level ") \
+    type_name = type_name.replace('x', 'Structure level ') \
       if is_structural_level(type_name) \
       else type_name
-    if type_value.get("meta"):
+    if type_value.get('meta'):
       # Check if all required meta-data are present in the default metadata group
       set_types_missing_required_metadata(type_name, type_value, types_with_missing_metadata)
       # Check if all meta-data have a name
@@ -243,16 +243,16 @@ def set_types_missing_required_metadata(type_name: str,
   """
   if not type_name:
     return
-  if default_metadata := type_value.get("meta").get("default"):  # type: ignore[union-attr]
-    names_in_default_group = [item.get("name") for item in default_metadata]
-    required_metadata = ["name", "tags"]
+  if default_metadata := type_value.get('meta').get('default'):  # type: ignore[union-attr]
+    names_in_default_group = [item.get('name') for item in default_metadata]
+    required_metadata = ['name', 'tags']
     for req_metadata in required_metadata:
       if req_metadata not in names_in_default_group:
         if type_name not in types_with_missing_metadata:
           types_with_missing_metadata[type_name] = {}
-        if "default" not in types_with_missing_metadata[type_name]:
-          types_with_missing_metadata[type_name]["default"] = []
-        types_with_missing_metadata[type_name]["default"].append(req_metadata)
+        if 'default' not in types_with_missing_metadata[type_name]:
+          types_with_missing_metadata[type_name]['default'] = []
+        types_with_missing_metadata[type_name]['default'].append(req_metadata)
 
 
 def set_types_without_name_in_metadata(type_name: str,
@@ -270,9 +270,9 @@ def set_types_without_name_in_metadata(type_name: str,
   """
   if not type_name:
     return
-  for group, metadata in type_value.get("meta").items():  # type: ignore[union-attr]
+  for group, metadata in type_value.get('meta').items():  # type: ignore[union-attr]
     if metadata:
-      names = [item.get("name") for item in metadata]
+      names = [item.get('name') for item in metadata]
       if not all(name and not name.isspace() for name in names):
         if type_name not in types_with_null_name_metadata:
           types_with_null_name_metadata[type_name] = []
@@ -294,17 +294,17 @@ def set_types_with_duplicate_metadata(type_name: str,
   """
   if not type_name:
     return
-  metadata_copy = copy.deepcopy(type_value.get("meta"))
-  for group, metadata in type_value.get("meta").items():  # type: ignore[union-attr]
+  metadata_copy = copy.deepcopy(type_value.get('meta'))
+  for group, metadata in type_value.get('meta').items():  # type: ignore[union-attr]
     # Check if any duplicate metadata within the same group
-    names: list[str] = list(filter(None, [item.get("name") for item in metadata] if metadata else []))
+    names: list[str] = list(filter(None, [item.get('name') for item in metadata] if metadata else []))
     duplicates: list[str] = [name for name in names if names.count(name) > 1]
     set_duplicates(types_with_duplicate_metadata, type_name, duplicates, group)
     metadata_copy.pop(group)  # type: ignore[union-attr]
     for neighbour_group, neighbour_metadata in metadata_copy.items():  # type: ignore[union-attr]
       # Get all duplicate names after filtering away the empty strings
-      duplicates = list({item.get("name") for item in metadata}.intersection(
-        [item.get("name") for item in neighbour_metadata]))
+      duplicates = list({item.get('name') for item in metadata}.intersection(
+        [item.get('name') for item in neighbour_metadata]))
       duplicates = list(filter(None, duplicates))
       set_duplicates(types_with_duplicate_metadata, type_name, duplicates, group, neighbour_group)
 
@@ -313,7 +313,7 @@ def set_duplicates(types_with_duplicate_metadata: dict[str, dict[str, list[str]]
                    type_name: str,
                    duplicates: list[str],
                    group: str,
-                   neighbour_group: str = "") -> None:
+                   neighbour_group: str = '') -> None:
   """
   Set duplicates in types_with_duplicate_metadata
   Args:
@@ -353,16 +353,16 @@ def get_missing_metadata_message(types_with_missing_metadata: dict[str, dict[str
   Returns (str): Html formatted message
 
   """
-  message = ""
+  message = ''
   if (not types_with_missing_metadata
       and not types_with_null_name_metadata
       and not types_with_duplicate_metadata):
     return message
-  message += "<html>"
+  message += '<html>'
   message = get_missing_required_metadata_formatted_message(message, types_with_missing_metadata)
   message = get_duplicate_metadata_formatted_message(message, types_with_duplicate_metadata)
   message = get_empty_metadata_name_formatted_message(message, types_with_null_name_metadata)
-  message += "</html>"
+  message += '</html>'
   return message
 
 
@@ -378,12 +378,12 @@ def get_empty_metadata_name_formatted_message(message: str,
 
   """
   if types_with_null_name_metadata:
-    message += "<b>Missing metadata names:</b><ul>"
+    message += '<b>Missing metadata names:</b><ul>'
     for type_name, groups_list in types_with_null_name_metadata.items():
       for group in groups_list:
         message += (f"<li>Type: <i style=\"color:Crimson\">{type_name}</i>&nbsp;&nbsp;"
                     f"Metadata Group: <i style=\"color:Crimson\">{group}</i></li>")
-    message += "</ul>"
+    message += '</ul>'
   return message
 
 
@@ -400,14 +400,14 @@ def get_missing_required_metadata_formatted_message(message: str,
 
   """
   if types_with_missing_metadata:
-    message += "<b>Missing required metadata: </b><ul>"
+    message += '<b>Missing required metadata: </b><ul>'
     for type_name, groups in types_with_missing_metadata.items():
       for group, metadata in groups.items():
         for metadata_name in metadata:
           message += (f"<li>Type: <i style=\"color:Crimson\">{type_name}</i>&nbsp;&nbsp;"
                       f"Metadata Group: <i style=\"color:Crimson\">{group}</i>&nbsp;&nbsp;"
                       f"Metadata Name: <i style=\"color:Crimson\">{metadata_name}</i></li>")
-    message += "</ul>"
+    message += '</ul>'
   return message
 
 
@@ -423,14 +423,14 @@ def get_duplicate_metadata_formatted_message(message: str,
 
   """
   if types_with_duplicate_metadata:
-    message += "<b>Duplicate metadata found: </b><ul>"
+    message += '<b>Duplicate metadata found: </b><ul>'
     for type_name, duplicate in types_with_duplicate_metadata.items():
       for metadata_name, groups in duplicate.items():
         for group in groups:
           message += (f"<li>Type: <i style=\"color:Crimson\">{type_name}</i>&nbsp;&nbsp;"
                       f"Metadata Group: <i style=\"color:Crimson\">{group}</i>&nbsp;&nbsp;"
                       f"Metadata Name: <i style=\"color:Crimson\">{metadata_name}</i></li>")
-    message += "</ul>"
+    message += '</ul>'
   return message
 
 

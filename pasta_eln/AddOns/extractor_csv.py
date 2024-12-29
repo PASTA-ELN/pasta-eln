@@ -58,7 +58,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
       plt.plot(data.iloc[:,0], data.iloc[:,1],'o-')
     except Exception:
       plt.plot([0,1], [0,1],'o-')
-      plt.text(0.5, 0.5, "ERROR: unclear csv file")
+      plt.text(0.5, 0.5, 'ERROR: unclear csv file')
   plt.xlabel('time [sec]')
   plt.ylabel('value [m]')                                                    # the units are an example for this tutorial and should be changed
   try:

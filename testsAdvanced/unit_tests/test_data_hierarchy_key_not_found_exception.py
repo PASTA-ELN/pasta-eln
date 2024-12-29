@@ -18,7 +18,7 @@ class TestDataHierarchyKeyNotFoundException(object):
                            indirect=True)
   def test_data_hierarchy_config_document_null_exception(self,
                                                          key_not_found_exception: key_not_found_exception):
-    assert str(key_not_found_exception) or key_not_found_exception.message == "error thrown", \
-      "key_not_found_exception should return error thrown"
+    assert str(key_not_found_exception) or key_not_found_exception.message == 'error thrown', \
+      'key_not_found_exception should return error thrown'
     assert key_not_found_exception.detailed_errors == {'error1': 'error1', 'error2': 'error2'}, \
-      "key_not_found_exception.detailed_errors should return error1 and error2"
+      'key_not_found_exception.detailed_errors should return error1 and error2'

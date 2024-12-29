@@ -69,9 +69,9 @@ class DataUploadTask(GenericTaskObject):
     self.dataverse_client: DataverseClient | None = None
     self.upload_model: UploadModel | None = None
     self.config_model: ConfigModel | None = None
-    self.dataverse_id: str = ""
-    self.dataverse_api_token: str = ""
-    self.dataverse_server_url: str = ""
+    self.dataverse_id: str = ''
+    self.dataverse_api_token: str = ''
+    self.dataverse_server_url: str = ''
     self.metadata: dict[str, Any] = {}
 
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
@@ -177,18 +177,18 @@ class DataUploadTask(GenericTaskObject):
     self.upload_model = UploadModel(project_name=self.project_name,
                                     status=UploadStatusValues.Queued.name,
                                     log=f"Upload initiated for project {self.project_name} at {datetime.now().isoformat()}\n",
-                                    created_date_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                    created_date_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                                     project_doc_id=self.project_doc_id)
     self.upload_model = self.db_api.create_model(self.upload_model)  # type: ignore[assignment]
-    self.logger.info("Upload model created: %s", self.upload_model)
+    self.logger.info('Upload model created: %s', self.upload_model)
     # Read config and get the login information along with the metadata
     self.config_model = self.db_api.get_config_model()
     if self.config_model is None:
-      raise ConfigError("Config model not found/Invalid Login Information.")
+      raise ConfigError('Config model not found/Invalid Login Information.')
     login_info = self.config_model.dataverse_login_info or {}
-    self.dataverse_server_url = login_info.get("server_url", "")
-    self.dataverse_api_token = login_info.get("api_token", "")
-    self.dataverse_id = login_info.get("dataverse_id", "")
+    self.dataverse_server_url = login_info.get('server_url', '')
+    self.dataverse_api_token = login_info.get('api_token', '')
+    self.dataverse_id = login_info.get('dataverse_id', '')
     self.metadata = self.config_model.metadata or {}
     self.dataverse_client = DataverseClient(self.dataverse_server_url, self.dataverse_api_token, 60)
 
@@ -201,7 +201,7 @@ class DataUploadTask(GenericTaskObject):
     """
     self.progress_thread.finalize.emit()
     if self.upload_model:
-      self.upload_model.finished_date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+      self.upload_model.finished_date_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     self.update_changed_status(status)
     self.finish.emit()
 
@@ -220,7 +220,7 @@ class DataUploadTask(GenericTaskObject):
     # Get the saved metadata from the database
     # and adjust it to the required format for invoking the dataverse client method
     metadata_adjusted = get_flattened_metadata(self.metadata)
-    metadata_adjusted["title"] = self.upload_model.project_name  # Set the title to the PASTA project name
+    metadata_adjusted['title'] = self.upload_model.project_name  # Set the title to the PASTA project name
     result = asyncio.run(self.dataverse_client.create_and_publish_dataset(self.dataverse_id, metadata_adjusted))
     if (isinstance(result, dict) and
         'identifier' in result and
@@ -246,7 +246,7 @@ class DataUploadTask(GenericTaskObject):
     """
     if self.dataverse_client is None:
       return False
-    self.update_log("Step 3: Checking if dataset is unlocked after the publish operation..", self.logger.info)
+    self.update_log('Step 3: Checking if dataset is unlocked after the publish operation..', self.logger.info)
     unlocked = False
     for _ in range(10):
       result = asyncio.run(self.dataverse_client.get_dataset_locks(persistent_id))
@@ -285,11 +285,11 @@ class DataUploadTask(GenericTaskObject):
     result = asyncio.run(self.dataverse_client.upload_file(persistent_id,
                                                            eln_file_path,
                                                            f"Generated ELN file for the project: {self.upload_model.project_name}",
-                                                           ["ELN"]))
+                                                           ['ELN']))
     if (isinstance(result, dict)
         and 'file_upload_result' in result
         and 'dataset_publish_result' in result):
-      dataset_publish_result = result["dataset_publish_result"]
+      dataset_publish_result = result['dataset_publish_result']
       file_pid = f"{dataset_publish_result.get('protocol')}:{dataset_publish_result.get('authority')}/{dataset_publish_result.get('identifier')}"
       self.update_log(f'ELN File uploaded successfully, generated file PID: {file_pid}', self.logger.info)
     else:
@@ -353,7 +353,7 @@ class DataUploadTask(GenericTaskObject):
     """
     if self.cancelled:
       self.update_log(
-        "User cancelled the upload, hence finalizing the upload!",
+        'User cancelled the upload, hence finalizing the upload!',
         self.logger.info,
       )
       self.finalize_upload_task(UploadStatusValues.Cancelled.name)
@@ -372,8 +372,8 @@ class DataUploadTask(GenericTaskObject):
     """
     self.update_log(f"Step 1: Generating ELN file for project: {self.project_name}", self.logger.info)
     if self.config_model is None or self.config_model.project_upload_items is None:
-      self.update_log("Config model or project_upload_items is not set!", self.logger.error)
-      return ""
+      self.update_log('Config model or project_upload_items is not set!', self.logger.error)
+      return ''
     eln_file = join(tmp_dir, f"{''.join(x for x in self.project_name if x.isalnum())}.eln")
     Path(eln_file).touch()
     data_types = [
@@ -386,5 +386,5 @@ class DataUploadTask(GenericTaskObject):
     except Exception as e:
       self.update_log(f"Error while exporting ELN file for project:"
                       f" {self.project_name}, error: {e}", self.logger.error)
-      eln_file = ""
+      eln_file = ''
     return eln_file

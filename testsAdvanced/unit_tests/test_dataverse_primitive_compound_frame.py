@@ -45,28 +45,28 @@ def mock_logger():
 @pytest.fixture
 def mock_primitive_compound_frame(mocker, mock_logger, mock_data_type_class_factory, mock_data_type_class, mock_qframe):
   mocker.patch(
-    "pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi")
+    'pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi')
   mocker.patch.object(PrimitiveCompoundFrame, 'addPushButton', MagicMock(spec=QPushButton), create=True)
   mocker.patch.object(PrimitiveCompoundFrame, 'mainVerticalLayout', MagicMock(spec=QVBoxLayout), create=True)
-  frame = PrimitiveCompoundFrame({"typeClass": "primitive", "multiple": False, "value": "test_value"})
+  frame = PrimitiveCompoundFrame({'typeClass': 'primitive', 'multiple': False, 'value': 'test_value'})
   mocker.resetall()
   yield frame
 
 
 class TestDataversePrimitiveCompoundFrame:
 
-  @pytest.mark.parametrize("meta_field, expected_type_class", [
-    ({"typeClass": "primitive"}, DataTypeClassName("primitive")),
-    ({"typeClass": "compound"}, DataTypeClassName("compound")),
-    ({"typeClass": "controlledVocabulary"}, DataTypeClassName("controlledVocabulary")),
-  ], ids=["type_class_primitive", "type_class_compound", "type_class_controlledVocabulary"])
+  @pytest.mark.parametrize('meta_field, expected_type_class', [
+    ({'typeClass': 'primitive'}, DataTypeClassName('primitive')),
+    ({'typeClass': 'compound'}, DataTypeClassName('compound')),
+    ({'typeClass': 'controlledVocabulary'}, DataTypeClassName('controlledVocabulary')),
+  ], ids=['type_class_primitive', 'type_class_compound', 'type_class_controlledVocabulary'])
   def test_primitive_compound_frame_initialization(self, mocker, mock_logger, mock_data_type_class_factory,
                                                    mock_data_type_class, mock_qframe, meta_field, expected_type_class):
     # Arrange
     mock_setup_ui = mocker.patch(
-      "pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi")
+      'pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi')
     mock_metadata_frame_init = mocker.patch(
-      "pasta_eln.GUI.dataverse.metadata_frame_base.MetadataFrame.__init__")
+      'pasta_eln.GUI.dataverse.metadata_frame_base.MetadataFrame.__init__')
     mock_data_type_class_context = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.DataTypeClassContext',
                                                 MagicMock(spec=DataTypeClassContext))
     mocker.patch.object(PrimitiveCompoundFrame, 'addPushButton', MagicMock(spec=QPushButton), create=True)
@@ -92,19 +92,19 @@ class TestDataversePrimitiveCompoundFrame:
     frame.addPushButton.clicked.connect.assert_called_once_with(frame.add_button_click_handler)
     frame.load_ui.assert_called_once()
 
-  @pytest.mark.parametrize("meta_field, expected_error", [
+  @pytest.mark.parametrize('meta_field, expected_error', [
     ({}, KeyError),
-    ({"typeClass": ""}, ValueError),
-    ({"typeClass": None}, ValueError),
-  ], ids=["empty_meta_field", "empty_type_class", "none_type_class"])
+    ({'typeClass': ''}, ValueError),
+    ({'typeClass': None}, ValueError),
+  ], ids=['empty_meta_field', 'empty_type_class', 'none_type_class'])
   def test_primitive_compound_frame_initialization_edge_cases(self, mocker, mock_logger, mock_data_type_class_factory,
                                                               mock_data_type_class, mock_qframe, meta_field,
                                                               expected_error):
     # Arrange
     mocker.patch(
-      "pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi")
+      'pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi')
     mocker.patch(
-      "pasta_eln.GUI.dataverse.metadata_frame_base.MetadataFrame.__init__")
+      'pasta_eln.GUI.dataverse.metadata_frame_base.MetadataFrame.__init__')
     mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.DataTypeClassContext',
                  MagicMock(spec=DataTypeClassContext))
     mocker.patch.object(PrimitiveCompoundFrame, 'addPushButton', MagicMock(spec=QPushButton), create=True)
@@ -115,16 +115,16 @@ class TestDataversePrimitiveCompoundFrame:
     with pytest.raises(expected_error):
       PrimitiveCompoundFrame(meta_field)
 
-  @pytest.mark.parametrize("meta_field", [
-    ({"typeClass": "InvalidTypeClass"}),
-  ], ids=["invalid_type_class"])
+  @pytest.mark.parametrize('meta_field', [
+    ({'typeClass': 'InvalidTypeClass'}),
+  ], ids=['invalid_type_class'])
   def test_primitive_compound_frame_initialization_error_cases(self, mocker, mock_logger, mock_data_type_class_factory,
                                                                mock_data_type_class, mock_qframe, meta_field):
     # Arrange
     mocker.patch(
-      "pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi")
+      'pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi')
     mocker.patch(
-      "pasta_eln.GUI.dataverse.metadata_frame_base.MetadataFrame.__init__")
+      'pasta_eln.GUI.dataverse.metadata_frame_base.MetadataFrame.__init__')
     mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.DataTypeClassContext',
                  MagicMock(spec=DataTypeClassContext))
     mocker.patch.object(PrimitiveCompoundFrame, 'addPushButton', MagicMock(spec=QPushButton), create=True)
@@ -135,16 +135,16 @@ class TestDataversePrimitiveCompoundFrame:
       PrimitiveCompoundFrame(meta_field)
 
   @pytest.mark.parametrize(
-    "meta_field, expected_log_message",
+    'meta_field, expected_log_message',
     [
-      ({"typeClass": "primitive", "multiple": False, "value": "test_value"},
+      ({'typeClass': 'primitive', 'multiple': False, 'value': 'test_value'},
        "Loading UI for {'typeClass': 'primitive', 'multiple': False, 'value': 'test_value'}"),
-      ({"typeClass": "compound", "multiple": True, "value": []},
+      ({'typeClass': 'compound', 'multiple': True, 'value': []},
        "Loading UI for {'typeClass': 'compound', 'multiple': True, 'value': []}"),
-      ({"typeClass": "unknown", "multiple": False, "value": None},
+      ({'typeClass': 'unknown', 'multiple': False, 'value': None},
        "Loading UI for {'typeClass': 'unknown', 'multiple': False, 'value': None}")
     ],
-    ids=["primitive_single", "compound_multiple_empty", "unknown_type"]
+    ids=['primitive_single', 'compound_multiple_empty', 'unknown_type']
   )
   def test_load_ui(self, mock_primitive_compound_frame, meta_field, expected_log_message):
     # Arrange
@@ -156,20 +156,20 @@ class TestDataversePrimitiveCompoundFrame:
     mock_primitive_compound_frame.load_ui()
 
     # Assert
-    mock_primitive_compound_frame.logger.info.assert_called_once_with("Loading UI for %s", meta_field)
+    mock_primitive_compound_frame.logger.info.assert_called_once_with('Loading UI for %s', meta_field)
     mock_primitive_compound_frame.data_type.populate_entry.assert_called_once()
 
   @pytest.mark.parametrize(
-    "meta_field, expected_log_message",
+    'meta_field, expected_log_message',
     [
-      ({"typeClass": "primitive", "multiple": True, "typeName": "test_name"},
-       "Adding new entry of type primitive, name: test_name"),
-      ({"typeClass": "compound", "multiple": False, "typeName": "test_name"},
-       "Adding new entry of type compound, name: test_name"),
-      ({"typeClass": "unknown", "multiple": True, "typeName": "test_name"},
-       "Adding new entry of type unknown, name: test_name")
+      ({'typeClass': 'primitive', 'multiple': True, 'typeName': 'test_name'},
+       'Adding new entry of type primitive, name: test_name'),
+      ({'typeClass': 'compound', 'multiple': False, 'typeName': 'test_name'},
+       'Adding new entry of type compound, name: test_name'),
+      ({'typeClass': 'unknown', 'multiple': True, 'typeName': 'test_name'},
+       'Adding new entry of type unknown, name: test_name')
     ],
-    ids=["primitive_multiple", "compound_single", "unknown_type"]
+    ids=['primitive_multiple', 'compound_single', 'unknown_type']
   )
   def test_add_button_click_handler(self, mock_primitive_compound_frame, meta_field, expected_log_message):
     # Arrange
@@ -179,26 +179,26 @@ class TestDataversePrimitiveCompoundFrame:
     mock_primitive_compound_frame.add_button_click_handler()
 
     # Assert
-    mock_primitive_compound_frame.logger.info.assert_called_with("Adding new entry of type %s, name: %s",
+    mock_primitive_compound_frame.logger.info.assert_called_with('Adding new entry of type %s, name: %s',
                                                                  meta_field.get('typeClass', ''),
                                                                  meta_field.get('typeName', ''))
     if not meta_field.get('multiple'):
       mock_primitive_compound_frame.logger.error.assert_called_with(
-        "Add operation not supported for non-multiple entries")
+        'Add operation not supported for non-multiple entries')
     else:
       mock_primitive_compound_frame.data_type.add_new_entry.assert_called_once()
 
   @pytest.mark.parametrize(
-    "meta_field, expected_log_message",
+    'meta_field, expected_log_message',
     [
-      ({"typeClass": "primitive", "typeName": "test_name"},
-       "Saving changes to meta_field for type, name: test_name, class: primitive"),
-      ({"typeClass": "compound", "typeName": "test_name"},
-       "Saving changes to meta_field for type, name: test_name, class: compound"),
-      ({"typeClass": "unknown", "typeName": "test_name"},
-       "Saving changes to meta_field for type, name: test_name, class: unknown")
+      ({'typeClass': 'primitive', 'typeName': 'test_name'},
+       'Saving changes to meta_field for type, name: test_name, class: primitive'),
+      ({'typeClass': 'compound', 'typeName': 'test_name'},
+       'Saving changes to meta_field for type, name: test_name, class: compound'),
+      ({'typeClass': 'unknown', 'typeName': 'test_name'},
+       'Saving changes to meta_field for type, name: test_name, class: unknown')
     ],
-    ids=["primitive", "compound", "unknown_type"]
+    ids=['primitive', 'compound', 'unknown_type']
   )
   def test_save_modifications(self, mock_primitive_compound_frame, meta_field, expected_log_message):
     # Arrange
@@ -209,6 +209,6 @@ class TestDataversePrimitiveCompoundFrame:
 
     # Assert
     mock_primitive_compound_frame.logger.info.assert_called_with(
-      "Saving changes to meta_field for type, name: %s, class: %s", meta_field.get('typeName'),
+      'Saving changes to meta_field for type, name: %s, class: %s', meta_field.get('typeName'),
       meta_field.get('typeClass'))
     mock_primitive_compound_frame.data_type.save_modifications.assert_called_once()

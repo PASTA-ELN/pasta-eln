@@ -13,16 +13,16 @@ from pasta_eln.GUI.dataverse.data_type_class_names import DataTypeClassName
 
 class TestDataTypeClassName:
   @pytest.mark.parametrize(
-    "data_type, expected_str",
+    'data_type, expected_str',
     [
-      (DataTypeClassName.PRIMITIVE, "primitive"),
-      (DataTypeClassName.COMPOUND, "compound"),
-      (DataTypeClassName.CONTROLLED_VOCAB, "controlledVocabulary"),
+      (DataTypeClassName.PRIMITIVE, 'primitive'),
+      (DataTypeClassName.COMPOUND, 'compound'),
+      (DataTypeClassName.CONTROLLED_VOCAB, 'controlledVocabulary'),
     ],
     ids=[
-      "primitive_str",
-      "compound_str",
-      "controlled_vocab_str"
+      'primitive_str',
+      'compound_str',
+      'controlled_vocab_str'
     ]
   )
   def test_data_type_class_name_str(self, data_type, expected_str):
@@ -33,16 +33,16 @@ class TestDataTypeClassName:
     assert result == expected_str
 
   @pytest.mark.parametrize(
-    "data_type, expected_value",
+    'data_type, expected_value',
     [
-      (DataTypeClassName.PRIMITIVE, "primitive"),
-      (DataTypeClassName.COMPOUND, "compound"),
-      (DataTypeClassName.CONTROLLED_VOCAB, "controlledVocabulary"),
+      (DataTypeClassName.PRIMITIVE, 'primitive'),
+      (DataTypeClassName.COMPOUND, 'compound'),
+      (DataTypeClassName.CONTROLLED_VOCAB, 'controlledVocabulary'),
     ],
     ids=[
-      "primitive_value",
-      "compound_value",
-      "controlled_vocab_value"
+      'primitive_value',
+      'compound_value',
+      'controlled_vocab_value'
     ]
   )
   def test_data_type_class_name_value(self, data_type, expected_value):
@@ -53,16 +53,16 @@ class TestDataTypeClassName:
     assert result == expected_value
 
   @pytest.mark.parametrize(
-    "invalid_value",
+    'invalid_value',
     [
-      "simple",
-      "complex",
-      "vocabulary",
+      'simple',
+      'complex',
+      'vocabulary',
     ],
     ids=[
-      "invalid_simple",
-      "invalid_complex",
-      "invalid_vocabulary"
+      'invalid_simple',
+      'invalid_complex',
+      'invalid_vocabulary'
     ]
   )
   def test_data_type_class_name_invalid(self, invalid_value):

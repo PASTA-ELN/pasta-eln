@@ -74,23 +74,23 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
     if f'{dirName}/ro-crate-metadata.json' not in files:
       print('**ERROR: ro-crate does not exist in folder. EXIT')
       return '**ERROR: ro-crate does not exist in folder. EXIT',{}
-    graph = json.loads(elnFile.read(f'{dirName}/ro-crate-metadata.json'))["@graph"]
+    graph = json.loads(elnFile.read(f'{dirName}/ro-crate-metadata.json'))['@graph']
     listAllTypes = [i['@type'] for i in graph if isinstance(i['@type'],str)]
     statistics['types'] = {i:listAllTypes.count(i) for i in listAllTypes}
 
     #find information from master node
-    rocrateNode = [i for i in graph if i["@id"].endswith("ro-crate-metadata.json")][0]
+    rocrateNode = [i for i in graph if i['@id'].endswith('ro-crate-metadata.json')][0]
     if 'sdPublisher' in rocrateNode:
       publisherNode = rocrateNode['sdPublisher']
       if 'name' not in publisherNode:
-        publisherNode = [i for i in graph if i["@id"]==rocrateNode['sdPublisher']['@id']][0]
+        publisherNode = [i for i in graph if i['@id']==rocrateNode['sdPublisher']['@id']][0]
       elnName = publisherNode['name']
     logging.info('Import %s', elnName)
     if not projID:
-      return "FAILURE: YOU CANNOT IMPORT AS PROJECT IF NON PASTA-ELN FILE",{}
+      return 'FAILURE: YOU CANNOT IMPORT AS PROJECT IF NON PASTA-ELN FILE',{}
     backend.changeHierarchy(projID)
     childrenStack = [0]
-    mainNode    = [i for i in graph if i["@id"]=="./"][0]
+    mainNode    = [i for i in graph if i['@id']=='./'][0]
     # clean subchildren from mainNode: see https://github.com/TheELNConsortium/TheELNFileFormat/issues/98
     parentNodes = {i['@id'] for i in mainNode['hasPart']}
     for nodeAny in graph:
@@ -192,7 +192,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       """
       addedDocs = 1
       if not isinstance(part, dict): #leave these tests in since other .elns might do funky stuff
-        print("**ERROR in part",part)
+        print('**ERROR in part',part)
         return 0
       # print('\nProcess: '+part['@id'])
       # find next node to process
@@ -221,12 +221,12 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
       if fullPath is not None and f'{dirName}/{elnID}' in elnFile.namelist():  #Copy file onto hard disk
-        target = open(fullPath, "wb")
+        target = open(fullPath, 'wb')
         source = elnFile.open(f'{dirName}/{elnID}')
         with source, target:  #extract one file to its target directly
           shutil.copyfileobj(source, target)
       # FOR ALL ELNs
-      if elnName == "PASTA ELN":
+      if elnName == 'PASTA ELN':
         docType = doc['type']
       else:
         if dataType.lower()=='dataset':
@@ -241,7 +241,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       try:
         docID = backend.addData(docType, doc)['id']
       except Exception:
-        print("============= ERROR OCCURRED ============")
+        print('============= ERROR OCCURRED ============')
         print(json.dumps(doc,indent=2),'\n')
         print(traceback.format_exc())
         docID = None
@@ -310,7 +310,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       """
       # create node properties
       docDB = backend.db.getDoc(node.id)
-      docELN:dict[str,Any] = {"encodingFormat": "text/markdown"}
+      docELN:dict[str,Any] = {'encodingFormat': 'text/markdown'}
       docSupp = {}
       for key, value in docDB.items():
         if key in pasta2json:
@@ -462,7 +462,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       authorNodes.append({'@id':authorID})
     masterNodeRoot:dict[str,Any] = {'@id': './', '@type': 'Dataset', 'hasPart': [{'@id':i} for i in masterParts],
         'name': 'Exported from PASTA ELN', 'description': 'Exported content from PASTA ELN',
-        'license':"https://creativecommons.org/licenses/by-nc-sa/4.0/", 'datePublished':datetime.now().isoformat()}
+        'license':'https://creativecommons.org/licenses/by-nc-sa/4.0/', 'datePublished':datetime.now().isoformat()}
     if authorNodes:
       masterNodeRoot = masterNodeRoot | {'creator': authorNodes}
     graphMaster.append(masterNodeRoot)

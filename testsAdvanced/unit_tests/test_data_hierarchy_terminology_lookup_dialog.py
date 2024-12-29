@@ -71,33 +71,33 @@ class TestDataHierarchyTerminologyLookupDialog(object):
                                     return_value=mock_realpath)
     mock_accepted_callback = mocker.MagicMock()
 
-    dialog = TerminologyLookupDialog("default", mock_accepted_callback)
+    dialog = TerminologyLookupDialog('default', mock_accepted_callback)
     mock_q_dialog_constructor.assert_called_once_with()
     mock_base_setup.assert_called_once_with(mock_dialog)
     mock_get_logger.assert_called_once_with(
       'pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.TerminologyLookupDialog')
-    assert dialog.instance is mock_dialog, "dialog instance should be returned"
-    assert dialog.logger is mock_logger, "logger should be set"
+    assert dialog.instance is mock_dialog, 'dialog instance should be returned'
+    assert dialog.logger is mock_logger, 'logger should be set'
 
     assert mock_os_path_dir_name.call_args.args[0].endswith(
       'pasta_eln/GUI/data_hierarchy/terminology_lookup_dialog.py'), \
-      "directory name should contain pasta-eln/src/pasta_eln/GUI/data_hierarchy/terminology_lookup_dialog.py"
+      'directory name should contain pasta-eln/src/pasta_eln/GUI/data_hierarchy/terminology_lookup_dialog.py'
     mock_os_path_get_cwd.assert_called_once_with()
     mock_os_path_join.assert_any_call(mock_cd, mock_dir_name)
     mock_os_realpath.assert_called_once_with(mock_join)
-    mock_os_path_join.assert_any_call(mock_realpath, "../../Resources/Icons")
-    mock_os_path_join.assert_any_call(mock_join, "wikipedia.png")
-    mock_os_path_join.assert_any_call(mock_join, "wikidata.png")
-    mock_os_path_join.assert_any_call(mock_join, "ols.png")
-    mock_os_path_join.assert_any_call(mock_join, "tib.png")
-    assert mock_pixmap_constructor.call_count == 4, "pixmap should be created 4 times"
+    mock_os_path_join.assert_any_call(mock_realpath, '../../Resources/Icons')
+    mock_os_path_join.assert_any_call(mock_join, 'wikipedia.png')
+    mock_os_path_join.assert_any_call(mock_join, 'wikidata.png')
+    mock_os_path_join.assert_any_call(mock_join, 'ols.png')
+    mock_os_path_join.assert_any_call(mock_join, 'tib.png')
+    assert mock_pixmap_constructor.call_count == 4, 'pixmap should be created 4 times'
     mock_pixmap_constructor.assert_has_calls(
       [mocker.call(mock_join),
        mocker.call(mock_join),
        mocker.call(mock_join),
        mocker.call(mock_join)])
 
-    assert mock_pixmap_scaled_to_width.call_count == 4, "pixmap should be scaled 4 times"
+    assert mock_pixmap_scaled_to_width.call_count == 4, 'pixmap should be scaled 4 times'
     mock_pixmap_scaled_to_width.assert_has_calls([
       mocker.call(50),
       mocker.call(50),
@@ -107,23 +107,23 @@ class TestDataHierarchyTerminologyLookupDialog(object):
     mock_error_console_text_edit_hide.aassert_called_once_with()
     mock_terminology_lookup_service.assert_called_once_with()
     assert dialog.icons_pixmap == {
-      "wikipedia": mock_pixmap,
-      "wikidata": mock_pixmap,
-      "ontology_lookup_service": mock_pixmap,
-      "tib_terminology_service": mock_pixmap,
-    }, "Icon images should be set"
+      'wikipedia': mock_pixmap,
+      'wikidata': mock_pixmap,
+      'ontology_lookup_service': mock_pixmap,
+      'tib_terminology_service': mock_pixmap,
+    }, 'Icon images should be set'
     mock_accepted_connect.assert_any_call(dialog.set_selected_iris)
     mock_accepted_connect.assert_any_call(mock_accepted_callback)
     dialog.terminologySearchPushButton.clicked.connect.assert_any_call(dialog.terminology_search_button_clicked)
-    assert dialog.selected_iris == [], "selected_iris should be initialized to empty list"
-    dialog.terminologyLineEdit.setText.assert_called_once_with("default")
+    assert dialog.selected_iris == [], 'selected_iris should be initialized to empty list'
+    dialog.terminologyLineEdit.setText.assert_called_once_with('default')
 
   def test_terminology_lookup_dialog_show_should_do_as_expected(self,
                                                                 mocker,
                                                                 terminology_lookup_dialog_mock: terminology_lookup_dialog_mock):
     mock_show = mocker.patch.object(terminology_lookup_dialog_mock.instance, 'show')
     mock_set_window_modality = mocker.patch.object(terminology_lookup_dialog_mock.instance, 'setWindowModality')
-    assert terminology_lookup_dialog_mock.show() is None, "show should return None"
+    assert terminology_lookup_dialog_mock.show() is None, 'show should return None'
     mock_set_window_modality.assert_called_once_with(QtCore.Qt.ApplicationModal)
     mock_show.assert_called_once_with()
 
@@ -159,8 +159,8 @@ class TestDataHierarchyTerminologyLookupDialog(object):
       terminology_lookup_dialog_mock.scrollAreaContentsVerticalLayout, 'addWidget')
 
     assert terminology_lookup_dialog_mock.add_scroll_area_entry(mock_pixmap,
-                                                                "Checkbox Text",
-                                                                "Checkbox Tooltip") is None, "show should return None"
+                                                                'Checkbox Text',
+                                                                'Checkbox Tooltip') is None, 'show should return None'
     mock_entry_layout_constructor.assert_called_once_with()
     mock_entry_widget_constructor.assert_called_once_with()
     mock_entry_layout_add_widget.asser_called_anytime(mock_entry_checkbox)
@@ -169,8 +169,8 @@ class TestDataHierarchyTerminologyLookupDialog(object):
     mock_entry_layout_add_stretch.asser_called_once_with(1)
     mock_entry_widget_set_layout.assert_called_once_with(mock_layout)
     mock_scroll_area_layout_add_widget.assert_called_once_with(mock_entry_widget)
-    mock_cb_set_tool_tip.assert_called_once_with("Checkbox Tooltip")
-    mock_logger_info.assert_called_once_with("Adding entry to scroll area, checkbox_text: %s", "Checkbox Text")
+    mock_cb_set_tool_tip.assert_called_once_with('Checkbox Tooltip')
+    mock_logger_info.assert_called_once_with('Adding entry to scroll area, checkbox_text: %s', 'Checkbox Text')
 
   def test_clear_scroll_area_should_do_as_expected(self,
                                                    mocker,
@@ -188,7 +188,7 @@ class TestDataHierarchyTerminologyLookupDialog(object):
     mock_get_widget = mocker.patch.object(item_layout, 'widget', return_value=mock_widget)
     mock_set_parent = mocker.patch.object(mock_widget, 'setParent')
 
-    assert terminology_lookup_dialog_mock.clear_scroll_area() is None, "show should return None"
+    assert terminology_lookup_dialog_mock.clear_scroll_area() is None, 'show should return None'
     mock_scroll_area_layout_count.assert_called_once_with()
     mock_item_at.assert_has_calls(
       [mocker.call(4), mocker.call(3), mocker.call(2), mocker.call(1), mocker.call(0)])
@@ -196,9 +196,9 @@ class TestDataHierarchyTerminologyLookupDialog(object):
       [mocker.call(), mocker.call(), mocker.call(), mocker.call(), mocker.call()])
     mock_set_parent.assert_has_calls(
       [mocker.call(None), mocker.call(None), mocker.call(None), mocker.call(None), mocker.call(None)])
-    mock_logger_info.assert_called_once_with("Clearing scroll area..")
+    mock_logger_info.assert_called_once_with('Clearing scroll area..')
 
-  @pytest.mark.parametrize("search_term, results_fixture_name", [
+  @pytest.mark.parametrize('search_term, results_fixture_name', [
     ('pasta', 'retrieved_iri_results_pasta_mock'),
     ('science', 'retrieved_iri_results_science_mock'),
     ('name', 'retrieved_iri_results_name_mock')
@@ -226,10 +226,10 @@ class TestDataHierarchyTerminologyLookupDialog(object):
 
     mock_pixmap = mocker.MagicMock()
     mocker.patch.object(terminology_lookup_dialog_mock, 'icons_pixmap', {
-      "wikipedia": mock_pixmap,
-      "wikidata": mock_pixmap,
-      "ontology_lookup_service": mock_pixmap,
-      "tib_terminology_service": mock_pixmap,
+      'wikipedia': mock_pixmap,
+      'wikidata': mock_pixmap,
+      'ontology_lookup_service': mock_pixmap,
+      'tib_terminology_service': mock_pixmap,
     }, create=True)
     mock_do_loop = mocker.MagicMock()
     mocker.patch.object(mock_terminology_service, 'do_lookup', return_value=mock_do_loop)
@@ -238,7 +238,7 @@ class TestDataHierarchyTerminologyLookupDialog(object):
                                        return_value=mock_event_loop)
     mock_run_until_complete = mocker.patch.object(mock_event_loop, 'run_until_complete',
                                                   return_value=retrieved_iri_results)
-    assert terminology_lookup_dialog_mock.terminology_search_button_clicked() is None, "show should return None"
+    assert terminology_lookup_dialog_mock.terminology_search_button_clicked() is None, 'show should return None'
     mock_logger_info.assert_called_once_with('Terminology search initiated for term: %s..', search_term)
     mock_terminology_line_edit_text.assert_called_once_with()
     mock_reset_ui.assert_called_once_with()
@@ -273,12 +273,12 @@ class TestDataHierarchyTerminologyLookupDialog(object):
     mocker.patch.object(terminology_lookup_dialog_mock, 'terminologyLineEdit', mock_terminology_line_edit, create=True)
     mocker.patch.object(mock_terminology_service.http_client, 'session_request_errors', None)
     mock_terminology_line_edit_text = mocker.patch.object(mock_terminology_line_edit, 'text',
-                                                          return_value="search_term")
+                                                          return_value='search_term')
 
     mock_do_loop = mocker.MagicMock()
     mocker.patch.object(mock_terminology_service, 'do_lookup', return_value=mock_do_loop)
     mocker.patch.object(mock_terminology_service.http_client, 'session_request_errors',
-                        ["error1", "error2", "error3", "error4"])
+                        ['error1', 'error2', 'error3', 'error4'])
     mock_event_loop = mocker.MagicMock()
     mock_get_event_loop = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.get_event_loop',
                                        return_value=mock_event_loop)
@@ -288,15 +288,15 @@ class TestDataHierarchyTerminologyLookupDialog(object):
                                                             'setText')
     mock_clear_error_console_set_visible = mocker.patch.object(terminology_lookup_dialog_mock.errorConsoleTextEdit,
                                                                'setVisible')
-    assert terminology_lookup_dialog_mock.terminology_search_button_clicked() is None, "show should return None"
-    mock_logger_info.assert_called_once_with('Terminology search initiated for term: %s..', "search_term")
+    assert terminology_lookup_dialog_mock.terminology_search_button_clicked() is None, 'show should return None'
+    mock_logger_info.assert_called_once_with('Terminology search initiated for term: %s..', 'search_term')
     mock_terminology_line_edit_text.assert_called_once_with()
     mock_reset_ui.assert_called_once_with()
     mock_bar_set_value.assert_any_call(5)
     mock_get_event_loop.assert_called_once_with()
     mock_run_until_complete.assert_called_once_with(mock_do_loop)
     mock_bar_set_value.assert_any_call(100)
-    mock_clear_error_console_set_text.assert_called_once_with('\n'.join(["error1", "error2", "error3", "error4"]))
+    mock_clear_error_console_set_text.assert_called_once_with('\n'.join(['error1', 'error2', 'error3', 'error4']))
     mock_clear_error_console_set_visible.assert_called_once_with(True)
     assert mock_bar_set_value.call_count == 2, f"progress_bar_set_value should be called {2} times"
     assert mock_bar_get_value.call_count == 0, f"progress_bar_get_value should be called {0} times"
@@ -313,8 +313,8 @@ class TestDataHierarchyTerminologyLookupDialog(object):
                                                                'setVisible')
     mock_clear_bar_set_value = mocker.patch.object(terminology_lookup_dialog_mock.searchProgressBar, 'setValue')
 
-    assert terminology_lookup_dialog_mock.reset_ui() is None, "reset_ui should return None"
-    mock_logger_info.assert_called_once_with("Resetting UI..")
+    assert terminology_lookup_dialog_mock.reset_ui() is None, 'reset_ui should return None'
+    mock_logger_info.assert_called_once_with('Resetting UI..')
     mock_clear_bar_set_value.assert_called_once_with(0)
     mock_clear_scroll_area.assert_called_once_with()
     mock_clear_error_console_clear.assert_called_once_with()
@@ -346,8 +346,8 @@ class TestDataHierarchyTerminologyLookupDialog(object):
     mocker.patch.object(terminology_lookup_dialog_mock.scrollAreaContentsVerticalLayout, 'itemAt',
                         lambda x: mock_widgets[x])
 
-    assert terminology_lookup_dialog_mock.set_selected_iris() is None, "set_selected_iris should return None"
-    mock_logger_info.assert_called_once_with("Set IRIs: %s", terminology_lookup_dialog_mock.selected_iris)
+    assert terminology_lookup_dialog_mock.set_selected_iris() is None, 'set_selected_iris should return None'
+    mock_logger_info.assert_called_once_with('Set IRIs: %s', terminology_lookup_dialog_mock.selected_iris)
     mock_range.assert_called_once_with(2)
     mock_widgets[0].widget.assert_called_once_with()
     mock_widgets[1].widget.assert_called_once_with()

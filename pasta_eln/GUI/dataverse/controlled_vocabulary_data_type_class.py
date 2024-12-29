@@ -63,8 +63,8 @@ class ControlledVocabularyDataTypeClass(DataTypeClass):
       self.add_new_vocab_entry(value_template, value_template[0] if value_template else None)
     else:
       self.add_new_vocab_entry(
-        ["No Value", value_template] if value_template else ["No Value"],
-        value_template or "No Value"
+        ['No Value', value_template] if value_template else ['No Value'],
+        value_template or 'No Value'
       )
 
   def populate_entry(self) -> None:
@@ -75,7 +75,7 @@ class ControlledVocabularyDataTypeClass(DataTypeClass):
         This method populates the entry with the current value of the controlled vocabulary.
     """
     value_block = self.context.meta_field.get('value')
-    value_template = self.context.meta_field.get("valueTemplate")
+    value_template = self.context.meta_field.get('valueTemplate')
     if self.context.meta_field.get('multiple'):
       if value_block:
         for value in value_block:
@@ -84,8 +84,8 @@ class ControlledVocabularyDataTypeClass(DataTypeClass):
         self.add_new_vocab_entry(value_template, None)
     else:
       self.add_new_vocab_entry(
-        ["No Value", value_template] if value_template else ["No Value"],
-        value_block or "No Value"
+        ['No Value', value_template] if value_template else ['No Value'],
+        value_block or 'No Value'
       )
 
   def save_modifications(self) -> None:
@@ -97,16 +97,16 @@ class ControlledVocabularyDataTypeClass(DataTypeClass):
     """
     if self.context.meta_field.get('multiple'):
       self.save_multiple_entries()
-      self.logger.info("Saved multiple entry modifications successfully, value: %s", self.context.meta_field)
+      self.logger.info('Saved multiple entry modifications successfully, value: %s', self.context.meta_field)
     elif layout := self.context.main_vertical_layout.findChild(QHBoxLayout,
-                                                               "vocabHorizontalLayout"):
+                                                               'vocabHorizontalLayout'):
       if not isinstance(layout, QHBoxLayout):
-        self.logger.error("vocabHorizontalLayout not found!")
+        self.logger.error('vocabHorizontalLayout not found!')
         return
       self.save_single_entry(layout)
-      self.logger.info("Saved single entry modification successfully, value: %s", self.context.meta_field)
+      self.logger.info('Saved single entry modification successfully, value: %s', self.context.meta_field)
     else:
-      self.logger.warning("Failed to save modifications, no layout found.")
+      self.logger.warning('Failed to save modifications, no layout found.')
 
   def save_single_entry(self, layout: QHBoxLayout) -> None:
     """
@@ -119,13 +119,13 @@ class ControlledVocabularyDataTypeClass(DataTypeClass):
     """
     if combo_box := layout.itemAt(0).widget():
       if not isinstance(combo_box, QComboBox):
-        self.logger.error("Combo box not found!")
+        self.logger.error('Combo box not found!')
         return
       current_text = combo_box.currentText()
       self.context.meta_field['value'] = current_text if current_text and current_text != 'No Value' else None
     else:
       self.context.meta_field['value'] = None
-      self.logger.error("Combo box not found!")
+      self.logger.error('Combo box not found!')
 
   def save_multiple_entries(self) -> None:
     """
@@ -136,7 +136,7 @@ class ControlledVocabularyDataTypeClass(DataTypeClass):
     """
     value = self.context.meta_field.get('value')
     if not isinstance(value, list):
-      self.logger.error("Value is not a list")
+      self.logger.error('Value is not a list')
       return
     value.clear()
     for layout_pos in reversed(range(self.context.main_vertical_layout.count())):
@@ -168,12 +168,12 @@ class ControlledVocabularyDataTypeClass(DataTypeClass):
         The delete button is connected to the delete_layout_and_contents function to handle deletion of the entry.
     """
     new_vocab_entry_layout = QHBoxLayout()
-    new_vocab_entry_layout.setObjectName("vocabHorizontalLayout")
+    new_vocab_entry_layout.setObjectName('vocabHorizontalLayout')
     combo_box = QComboBox(parent=self.context.parent_frame)
-    combo_box.setObjectName("vocabComboBox")
-    combo_box.setToolTip("Select the controlled vocabulary.")
+    combo_box.setObjectName('vocabComboBox')
+    combo_box.setToolTip('Select the controlled vocabulary.')
     combo_box.addItems(controlled_vocabulary or [])
-    combo_box.setCurrentText(value or "")
+    combo_box.setCurrentText(value or '')
     new_vocab_entry_layout.addWidget(combo_box)
     add_clear_button(self.context.parent_frame, new_vocab_entry_layout)
     add_delete_button(self.context.parent_frame, new_vocab_entry_layout)

@@ -184,7 +184,7 @@ class Sidebar(QWidget):
     elif command[0] is Command.SHOW_FOLDER:
       self.comm.changeProject.emit(command[1], command[2])
     else:
-      print("**ERROR sidebar menu unknown:",command)
+      print('**ERROR sidebar menu unknown:',command)
     return
 
 

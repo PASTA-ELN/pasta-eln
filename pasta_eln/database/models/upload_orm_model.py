@@ -23,7 +23,7 @@ class UploadOrmModel(OrmModelBase):
   creation date, finished date, log, and dataverse URL. It provides a method to
   retrieve the names of the table columns for database operations.
   """
-  __tablename__ = "upload"
+  __tablename__ = 'upload'
   id: Mapped[int] = mapped_column(primary_key=True)
   data_type: Mapped[Optional[str]]
   project_name: Mapped[Optional[str]]
@@ -45,5 +45,5 @@ class UploadOrmModel(OrmModelBase):
     Returns:
         list[str]: A list of column names for the upload table.
     """
-    return ["id", "data_type", "project_name", "project_doc_id", "status", "created_date_time", "finished_date_time",
-            "log", "dataverse_url"]
+    return ['id', 'data_type', 'project_name', 'project_doc_id', 'status', 'created_date_time', 'finished_date_time',
+            'log', 'dataverse_url']

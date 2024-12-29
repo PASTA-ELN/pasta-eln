@@ -84,9 +84,9 @@ def camelCase(text:str) -> str:
   Returns:
     str: camel case of that string: CamelCaseString
   """
-  if re.match(r"^[\w-]+\.[\w]+$", text):
+  if re.match(r'^[\w-]+\.[\w]+$', text):
     return text.replace(' ','_')
-  return re.sub(r"(_|-)+", ' ', text).title().replace(' ','').replace('*','')
+  return re.sub(r'(_|-)+', ' ', text).title().replace(' ','').replace('*','')
 
 
 def createDirName(name:str, docType:str, thisChildNumber:int) -> str:

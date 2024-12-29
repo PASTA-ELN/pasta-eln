@@ -11,7 +11,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 class Ui_ProjectItemFrame(object):
   def setupUi(self, ProjectItemFrame):
-    ProjectItemFrame.setObjectName("ProjectItemFrame")
+    ProjectItemFrame.setObjectName('ProjectItemFrame')
     ProjectItemFrame.resize(1009, 50)
     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed)
     sizePolicy.setHorizontalStretch(0)
@@ -22,28 +22,28 @@ class Ui_ProjectItemFrame(object):
     ProjectItemFrame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
     ProjectItemFrame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
     self.horizontalLayout_2 = QtWidgets.QHBoxLayout(ProjectItemFrame)
-    self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+    self.horizontalLayout_2.setObjectName('horizontalLayout_2')
     self.horizontalLayout = QtWidgets.QHBoxLayout()
-    self.horizontalLayout.setObjectName("horizontalLayout")
+    self.horizontalLayout.setObjectName('horizontalLayout')
     self.projectCheckBox = QtWidgets.QCheckBox(parent=ProjectItemFrame)
     self.projectCheckBox.setMinimumSize(QtCore.QSize(0, 0))
     self.projectCheckBox.setMaximumSize(QtCore.QSize(50, 16777215))
     self.projectCheckBox.setLayoutDirection(QtCore.Qt.LayoutDirection.LeftToRight)
-    self.projectCheckBox.setText("")
-    self.projectCheckBox.setObjectName("projectCheckBox")
+    self.projectCheckBox.setText('')
+    self.projectCheckBox.setObjectName('projectCheckBox')
     self.horizontalLayout.addWidget(self.projectCheckBox)
     self.projectNameLabel = QtWidgets.QLabel(parent=ProjectItemFrame)
     self.projectNameLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
     self.projectNameLabel.setWordWrap(True)
-    self.projectNameLabel.setObjectName("projectNameLabel")
+    self.projectNameLabel.setObjectName('projectNameLabel')
     self.horizontalLayout.addWidget(self.projectNameLabel)
     self.modifiedDateTimeLabel = QtWidgets.QLabel(parent=ProjectItemFrame)
     self.modifiedDateTimeLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
-    self.modifiedDateTimeLabel.setObjectName("modifiedDateTimeLabel")
+    self.modifiedDateTimeLabel.setObjectName('modifiedDateTimeLabel')
     self.horizontalLayout.addWidget(self.modifiedDateTimeLabel)
     self.projectDocIdLabel = QtWidgets.QLabel(parent=ProjectItemFrame)
-    self.projectDocIdLabel.setText("")
-    self.projectDocIdLabel.setObjectName("projectDocIdLabel")
+    self.projectDocIdLabel.setText('')
+    self.projectDocIdLabel.setObjectName('projectDocIdLabel')
     self.horizontalLayout.addWidget(self.projectDocIdLabel)
     self.horizontalLayout_2.addLayout(self.horizontalLayout)
 
@@ -52,16 +52,16 @@ class Ui_ProjectItemFrame(object):
 
   def retranslateUi(self, ProjectItemFrame):
     _translate = QtCore.QCoreApplication.translate
-    ProjectItemFrame.setWindowTitle(_translate("ProjectItemFrame", "Frame"))
-    ProjectItemFrame.setToolTip(_translate("ProjectItemFrame", "PASTA project which can be uploaded to dataverse."))
-    self.projectCheckBox.setToolTip(_translate("ProjectItemFrame", "Select the project before initiating the upload process."))
-    self.projectNameLabel.setToolTip(_translate("ProjectItemFrame", "Name of the PASTA project to be uploaded."))
-    self.projectNameLabel.setText(_translate("ProjectItemFrame", "Project Name"))
-    self.modifiedDateTimeLabel.setToolTip(_translate("ProjectItemFrame", "Last modified time of the PASTA project."))
-    self.modifiedDateTimeLabel.setText(_translate("ProjectItemFrame", "2024-01-16T10:52:15Z"))
+    ProjectItemFrame.setWindowTitle(_translate('ProjectItemFrame', 'Frame'))
+    ProjectItemFrame.setToolTip(_translate('ProjectItemFrame', 'PASTA project which can be uploaded to dataverse.'))
+    self.projectCheckBox.setToolTip(_translate('ProjectItemFrame', 'Select the project before initiating the upload process.'))
+    self.projectNameLabel.setToolTip(_translate('ProjectItemFrame', 'Name of the PASTA project to be uploaded.'))
+    self.projectNameLabel.setText(_translate('ProjectItemFrame', 'Project Name'))
+    self.modifiedDateTimeLabel.setToolTip(_translate('ProjectItemFrame', 'Last modified time of the PASTA project.'))
+    self.modifiedDateTimeLabel.setText(_translate('ProjectItemFrame', '2024-01-16T10:52:15Z'))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
     ProjectItemFrame = QtWidgets.QFrame()

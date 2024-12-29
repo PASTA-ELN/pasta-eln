@@ -73,7 +73,7 @@ class TableViewModel(QAbstractTableModel):
     Returns: None
 
     """
-    self.logger.info("Table Data updated..")
+    self.logger.info('Table Data updated..')
     self.data_set = updated_table_data
     self.layoutChanged.emit()
 
@@ -179,9 +179,9 @@ class TableViewModel(QAbstractTableModel):
     try:
       data_deleted = self.data_set.pop(position)
     except IndexError:
-      self.logger.warning("Invalid position: {%s}", position)
+      self.logger.warning('Invalid position: {%s}', position)
       return None
-    self.logger.info("Deleted (row: {%s}, data: {%s})...", position, data_deleted)
+    self.logger.info('Deleted (row: {%s}, data: {%s})...', position, data_deleted)
     self.layoutChanged.emit()
     return None
 
@@ -199,14 +199,14 @@ class TableViewModel(QAbstractTableModel):
     try:
       data_to_be_pushed = self.data_set.pop(position)
     except IndexError:
-      self.logger.warning("Invalid position: {%s}", position)
+      self.logger.warning('Invalid position: {%s}', position)
       return None
     shift_position = position - 1
     shift_position = max(shift_position, 0)
     self.data_set.insert(shift_position, data_to_be_pushed)
-    self.logger.info("Reordered the data, Actual position: {%s}, "
-                     "New Position: {%s}, "
-                     "data: {%s})", position,
+    self.logger.info('Reordered the data, Actual position: {%s}, '
+                     'New Position: {%s}, '
+                     'data: {%s})', position,
                      shift_position,
                      data_to_be_pushed)
     self.layoutChanged.emit()
@@ -219,7 +219,7 @@ class TableViewModel(QAbstractTableModel):
 
     """
     if self.data_set is not None:
-      self.logger.info("Added new row...")
+      self.logger.info('Added new row...')
       self.data_set.insert(len(self.data_set), {})
       self.layoutChanged.emit()
     return None

@@ -19,9 +19,9 @@ class DataTypeClassName(Enum):
       This enumeration defines the names of different data type classes such as primitive, compound, and controlled vocabulary.
 
   """
-  PRIMITIVE = "primitive"
-  COMPOUND = "compound"
-  CONTROLLED_VOCAB = "controlledVocabulary"
+  PRIMITIVE = 'primitive'
+  COMPOUND = 'compound'
+  CONTROLLED_VOCAB = 'controlledVocabulary'
 
   def __str__(self) -> str:
     """

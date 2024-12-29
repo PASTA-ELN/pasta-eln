@@ -34,16 +34,16 @@ class DataTypeClassContext:
     if isinstance(main_vertical_layout, QVBoxLayout):
       self.main_vertical_layout = main_vertical_layout
     else:
-      raise ValueError("main_vertical_layout must be a QVBoxLayout!")
+      raise ValueError('main_vertical_layout must be a QVBoxLayout!')
     if isinstance(add_push_button, QPushButton):
       self.add_push_button = add_push_button
     else:
-      raise ValueError("add_push_button must be a QPushButton!")
+      raise ValueError('add_push_button must be a QPushButton!')
     if isinstance(parent_frame, QFrame):
       self.parent_frame = parent_frame
     else:
-      raise ValueError("parent_frame must be a QFrame!")
+      raise ValueError('parent_frame must be a QFrame!')
     if isinstance(meta_field, dict):
       self.meta_field = meta_field
     else:
-      raise ValueError("meta_field must be a dict!")
+      raise ValueError('meta_field must be a dict!')

@@ -33,7 +33,7 @@ def data_context():
 
 @pytest.fixture
 def mock_primitive_data_type_class(mocker, data_context):
-  mocker.patch("pasta_eln.GUI.dataverse.primitive_data_type_class.logging.getLogger")
+  mocker.patch('pasta_eln.GUI.dataverse.primitive_data_type_class.logging.getLogger')
   return PrimitiveDataTypeClass(data_context)
 
 
@@ -41,24 +41,24 @@ class TestPrimitiveDataTypeClass:
 
   def test_init_success(self, mocker, data_context):
     # Arrange
-    mock_get_logger = mocker.patch("pasta_eln.GUI.dataverse.primitive_data_type_class.logging.getLogger")
+    mock_get_logger = mocker.patch('pasta_eln.GUI.dataverse.primitive_data_type_class.logging.getLogger')
     # Act
     instance = PrimitiveDataTypeClass(data_context)
 
     # Assert
-    mock_get_logger.assert_called_with("pasta_eln.GUI.dataverse.primitive_data_type_class.PrimitiveDataTypeClass")
+    mock_get_logger.assert_called_with('pasta_eln.GUI.dataverse.primitive_data_type_class.PrimitiveDataTypeClass')
     assert isinstance(instance, PrimitiveDataTypeClass)
     assert instance.context == data_context
     assert instance.logger == mock_get_logger.return_value
 
   @pytest.mark.parametrize(
-    "context, expected_exception",
+    'context, expected_exception',
     [
       (None, TypeError),
       # Add more edge cases if needed
     ],
     ids=[
-      "none_context",
+      'none_context',
       # Add more unique IDs for each test case
     ]
   )
@@ -68,13 +68,13 @@ class TestPrimitiveDataTypeClass:
       PrimitiveDataTypeClass(context)
 
   @pytest.mark.parametrize(
-    "context, expected_exception",
+    'context, expected_exception',
     [
-      ("invalid_context", TypeError),
+      ('invalid_context', TypeError),
       # Add more error cases if needed
     ],
     ids=[
-      "string_context",
+      'string_context',
       # Add more unique IDs for each test case
     ]
   )
@@ -84,47 +84,47 @@ class TestPrimitiveDataTypeClass:
       PrimitiveDataTypeClass(context)
 
   @pytest.mark.parametrize(
-    "meta_field, expected_calls",
+    'meta_field, expected_calls',
     [
       # Success path with single value
       (
           {'value': 'test_value', 'typeName': 'test_type', 'valueTemplate': 'template'},
-          [("test_type", "test_value", "template", False)]
+          [('test_type', 'test_value', 'template', False)]
       ),
       # Success path with multiple values
       (
           {'value': ['value1', 'value2'], 'typeName': 'test_type', 'valueTemplate': ['template1', 'template2'],
            'multiple': True},
-          [("test_type", "value1", "template1"), ("test_type", "value2", "template1")]
+          [('test_type', 'value1', 'template1'), ('test_type', 'value2', 'template1')]
       ),
       # Edge case with empty value list
       (
           {'value': [], 'typeName': 'test_type', 'valueTemplate': ['template1'], 'multiple': True},
-          [("test_type", "", "template1")]
+          [('test_type', '', 'template1')]
       ),
       # Edge case with no valueTemplate
       (
           {'value': 'test_value', 'typeName': 'test_type'},
-          [("test_type", "test_value", "", False)]
+          [('test_type', 'test_value', '', False)]
       ),
       # Error case with non-list value for multiple
       (
           {'value': 'test_value', 'typeName': 'test_type', 'valueTemplate': 'template', 'multiple': True},
-          [("test_type", "test_value", "template", False)]
+          [('test_type', 'test_value', 'template', False)]
       ),
     ],
     ids=[
-      "single_value",
-      "multiple_values",
-      "empty_value_list",
-      "no_value_template",
-      "non_list_value_for_multiple"
+      'single_value',
+      'multiple_values',
+      'empty_value_list',
+      'no_value_template',
+      'non_list_value_for_multiple'
     ]
   )
   def test_populate_primitive_entry(self, mocker, mock_primitive_data_type_class, meta_field, expected_calls):
     # Arrange
     mock_primitive_data_type_class.populate_primitive_horizontal_layout = MagicMock()
-    mock_qv_box_layout = mocker.patch("pasta_eln.GUI.dataverse.primitive_data_type_class.QVBoxLayout")
+    mock_qv_box_layout = mocker.patch('pasta_eln.GUI.dataverse.primitive_data_type_class.QVBoxLayout')
     mock_primitive_data_type_class.context.meta_field = meta_field
 
     # Act
@@ -132,9 +132,9 @@ class TestPrimitiveDataTypeClass:
 
     # Assert
     mock_primitive_data_type_class.logger.info.assert_called_once_with(
-      "Populating new entry of type primitive, name: %s", meta_field.get('typeName'))
+      'Populating new entry of type primitive, name: %s', meta_field.get('typeName'))
     mock_qv_box_layout.assert_called_once()
-    mock_qv_box_layout.return_value.setObjectName.assert_called_once_with("primitiveVerticalLayout")
+    mock_qv_box_layout.return_value.setObjectName.assert_called_once_with('primitiveVerticalLayout')
     assert mock_primitive_data_type_class.populate_primitive_horizontal_layout.call_count == len(expected_calls)
     for call, expected in zip(mock_primitive_data_type_class.populate_primitive_horizontal_layout.call_args_list,
                               expected_calls):
@@ -143,31 +143,31 @@ class TestPrimitiveDataTypeClass:
     mock_primitive_data_type_class.context.main_vertical_layout.addLayout.assert_called_once_with(
       mock_qv_box_layout.return_value)
 
-  @pytest.mark.parametrize("meta_field, widget_texts, expected_value", [
+  @pytest.mark.parametrize('meta_field, widget_texts, expected_value', [
     # Happy path: single value
-    ({"typeName": "testType", "typeClass": "testClass", "multiple": False, "value": []}, ["Test Value"], "Test Value"),
+    ({'typeName': 'testType', 'typeClass': 'testClass', 'multiple': False, 'value': []}, ['Test Value'], 'Test Value'),
     # Happy path: multiple values
-    ({"typeName": "testType", "typeClass": "testClass", "multiple": True, "value": []}, ["Value 1", "Value 2"],
-     ["Value 1", "Value 2"]),
+    ({'typeName': 'testType', 'typeClass': 'testClass', 'multiple': True, 'value': []}, ['Value 1', 'Value 2'],
+     ['Value 1', 'Value 2']),
     # Edge case: single value with "No Value"
-    ({"typeName": "testType", "typeClass": "testClass", "multiple": False, "value": []}, ["No Value"], ""),
+    ({'typeName': 'testType', 'typeClass': 'testClass', 'multiple': False, 'value': []}, ['No Value'], ''),
     # Edge case: multiple values with "No Value"
-    ({"typeName": "testType", "typeClass": "testClass", "multiple": True, "value": []}, ["No Value", "Value 2"],
-     ["Value 2"]),
+    ({'typeName': 'testType', 'typeClass': 'testClass', 'multiple': True, 'value': []}, ['No Value', 'Value 2'],
+     ['Value 2']),
     # Error case: primitive_vertical_layout is None
-    ({"typeName": "testType", "typeClass": "testClass", "multiple": False, "value": []}, None, None),
+    ({'typeName': 'testType', 'typeClass': 'testClass', 'multiple': False, 'value': []}, None, None),
   ], ids=[
-    "single_value",
-    "multiple_values",
-    "single_value_no_value",
-    "multiple_values_with_no_value",
-    "primitive_vertical_layout_none"
+    'single_value',
+    'multiple_values',
+    'single_value_no_value',
+    'multiple_values_with_no_value',
+    'primitive_vertical_layout_none'
   ])
   def test_save_modifications(self, mocker, mock_primitive_data_type_class, data_context, meta_field, widget_texts,
                               expected_value):
     # Arrange
     mock_get_primitive_line_edit_text_value = mocker.patch(
-      "pasta_eln.GUI.dataverse.primitive_data_type_class.get_primitive_line_edit_text_value")
+      'pasta_eln.GUI.dataverse.primitive_data_type_class.get_primitive_line_edit_text_value')
     data_context.meta_field = meta_field
     primitive_vertical_layout = MagicMock(spec=QVBoxLayout) if widget_texts is not None else None
     if primitive_vertical_layout:
@@ -182,7 +182,7 @@ class TestPrimitiveDataTypeClass:
 
     # Assert
     mock_primitive_data_type_class.context.main_vertical_layout.findChild.assert_called_once_with(QVBoxLayout,
-                                                                                                  "primitiveVerticalLayout")
+                                                                                                  'primitiveVerticalLayout')
     if widget_texts is not None:
       if meta_field['multiple']:
         primitive_vertical_layout.count.assert_called_once()
@@ -192,30 +192,30 @@ class TestPrimitiveDataTypeClass:
     else:
       assert data_context.meta_field['value'] == []
       if primitive_vertical_layout:
-        primitive_vertical_layout.logger.error.assert_called_once_with("Failed to find primitiveVerticalLayout!")
+        primitive_vertical_layout.logger.error.assert_called_once_with('Failed to find primitiveVerticalLayout!')
 
   @pytest.mark.parametrize(
-    "layout_exists, layout_type, value_template, type_name, expected_log_call",
+    'layout_exists, layout_type, value_template, type_name, expected_log_call',
     [
       # Happy path tests
-      (True, QVBoxLayout, ["template1"], "type1", None),
-      (True, QVBoxLayout, ["template2"], "type2", None),
+      (True, QVBoxLayout, ['template1'], 'type1', None),
+      (True, QVBoxLayout, ['template2'], 'type2', None),
 
       # Edge cases
-      (True, QVBoxLayout, [""], "", None),
-      (True, QVBoxLayout, [], "", None),
+      (True, QVBoxLayout, [''], '', None),
+      (True, QVBoxLayout, [], '', None),
 
       # Error cases
-      (False, QVBoxLayout, ["template1"], "type1", "Failed to find primitiveVerticalLayout!"),
-      (True, QBoxLayout, ["template1"], "type1", "Failed to find primitiveVerticalLayout!"),
+      (False, QVBoxLayout, ['template1'], 'type1', 'Failed to find primitiveVerticalLayout!'),
+      (True, QBoxLayout, ['template1'], 'type1', 'Failed to find primitiveVerticalLayout!'),
     ],
     ids=[
-      "happy_path_template1_type1",
-      "happy_path_template2_type2",
-      "edge_case_empty_template_empty_type",
-      "edge_case_no_template_empty_type",
-      "error_case_layout_not_found",
-      "error_case_wrong_layout_type",
+      'happy_path_template1_type1',
+      'happy_path_template2_type2',
+      'edge_case_empty_template_empty_type',
+      'edge_case_no_template_empty_type',
+      'error_case_layout_not_found',
+      'error_case_wrong_layout_type',
     ]
   )
   def test_add_new_entry(self, mock_primitive_data_type_class, layout_exists, layout_type, value_template, type_name,
@@ -242,16 +242,16 @@ class TestPrimitiveDataTypeClass:
       mock_primitive_data_type_class.populate_primitive_horizontal_layout.assert_called_once_with(
         mock_primitive_data_type_class.context.main_vertical_layout.findChild.return_value,
         type_name,
-        "",
-        value_template[0] if value_template else ""
+        '',
+        value_template[0] if value_template else ''
       )
 
   @pytest.mark.parametrize(
-    "meta_field, expected_disabled",
+    'meta_field, expected_disabled',
     [
-      param({"multiple": False}, True, id="multiple_false"),
-      param({"multiple": True}, False, id="multiple_true"),
-      param({}, True, id="multiple_missing"),
+      param({'multiple': False}, True, id='multiple_false'),
+      param({'multiple': True}, False, id='multiple_true'),
+      param({}, True, id='multiple_missing'),
     ],
     ids=lambda x: x[-1]
   )
@@ -271,10 +271,10 @@ class TestPrimitiveDataTypeClass:
     mock_primitive_data_type_class.populate_primitive_entry.assert_called_once()
 
   @pytest.mark.parametrize(
-    "meta_field",
+    'meta_field',
     [
-      param({"multiple": None}, id="multiple_none"),
-      param({"multiple": "unexpected_string"}, id="multiple_unexpected_string"),
+      param({'multiple': None}, id='multiple_none'),
+      param({'multiple': 'unexpected_string'}, id='multiple_unexpected_string'),
     ],
     ids=lambda param: param[-1]
   )
@@ -294,11 +294,11 @@ class TestPrimitiveDataTypeClass:
     mock_primitive_data_type_class.populate_primitive_entry.assert_called_once()
 
   @pytest.mark.parametrize(
-    "meta_field",
+    'meta_field',
     [
-      param({"multiple": 123}, id="multiple_integer"),
-      param({"multiple": []}, id="multiple_list"),
-      param({"multiple": {}}, id="multiple_dict"),
+      param({'multiple': 123}, id='multiple_integer'),
+      param({'multiple': []}, id='multiple_list'),
+      param({'multiple': {}}, id='multiple_dict'),
     ],
     ids=lambda param: param[-1]
   )
@@ -318,15 +318,15 @@ class TestPrimitiveDataTypeClass:
     mock_primitive_data_type_class.populate_primitive_entry.assert_called_once()
 
   @pytest.mark.parametrize(
-    "type_name, type_value, type_value_template, enable_delete_button, expected_widget_type",
+    'type_name, type_value, type_value_template, enable_delete_button, expected_widget_type',
     [
-      param("datetime", "2023-10-01T12:00:00", "2023-10-01T12:00:00", True, "QDateTimeEdit",
-            id="success_path_datetime"),
-      param("string", "test_value", "default_value", True, "QLineEdit", id="success_path_string"),
-      param("datetime", "2023-10-01T12:00:00", "2023-10-01T12:00:00", False, "QDateTimeEdit",
-            id="disable_delete_button"),
-      param("string", "", "", True, "QLineEdit", id="empty_string_value"),
-      param("datetime", "", "", True, "QDateTimeEdit", id="empty_datetime_value"),
+      param('datetime', '2023-10-01T12:00:00', '2023-10-01T12:00:00', True, 'QDateTimeEdit',
+            id='success_path_datetime'),
+      param('string', 'test_value', 'default_value', True, 'QLineEdit', id='success_path_string'),
+      param('datetime', '2023-10-01T12:00:00', '2023-10-01T12:00:00', False, 'QDateTimeEdit',
+            id='disable_delete_button'),
+      param('string', '', '', True, 'QLineEdit', id='empty_string_value'),
+      param('datetime', '', '', True, 'QDateTimeEdit', id='empty_datetime_value'),
     ],
     ids=lambda x: x[-1]
   )
@@ -334,14 +334,14 @@ class TestPrimitiveDataTypeClass:
                                                 type_value_template,
                                                 enable_delete_button, expected_widget_type):
     # Arrange
-    mock_qh_box_layout = mocker.patch("pasta_eln.GUI.dataverse.primitive_data_type_class.QHBoxLayout")
-    mock_is_date_time_type = mocker.patch("pasta_eln.GUI.dataverse.primitive_data_type_class.is_date_time_type",
+    mock_qh_box_layout = mocker.patch('pasta_eln.GUI.dataverse.primitive_data_type_class.QHBoxLayout')
+    mock_is_date_time_type = mocker.patch('pasta_eln.GUI.dataverse.primitive_data_type_class.is_date_time_type',
                                           return_value='date' in type_name or 'time' in type_name)
     mock_create_date_time_widget = mocker.patch(
-      "pasta_eln.GUI.dataverse.primitive_data_type_class.create_date_time_widget")
-    mock_add_clear_button = mocker.patch("pasta_eln.GUI.dataverse.primitive_data_type_class.add_clear_button")
-    mock_add_delete_button = mocker.patch("pasta_eln.GUI.dataverse.primitive_data_type_class.add_delete_button")
-    mock_create_line_edit = mocker.patch("pasta_eln.GUI.dataverse.primitive_data_type_class.create_line_edit")
+      'pasta_eln.GUI.dataverse.primitive_data_type_class.create_date_time_widget')
+    mock_add_clear_button = mocker.patch('pasta_eln.GUI.dataverse.primitive_data_type_class.add_clear_button')
+    mock_add_delete_button = mocker.patch('pasta_eln.GUI.dataverse.primitive_data_type_class.add_delete_button')
+    mock_create_line_edit = mocker.patch('pasta_eln.GUI.dataverse.primitive_data_type_class.create_line_edit')
     mock_new_primitive_entry_layout = MagicMock(spec=QBoxLayout)
 
     # Act
@@ -353,7 +353,7 @@ class TestPrimitiveDataTypeClass:
 
     # Assert
     mock_qh_box_layout.assert_called_once()
-    mock_qh_box_layout.return_value.setObjectName.assert_called_once_with("primitiveHorizontalLayout")
+    mock_qh_box_layout.return_value.setObjectName.assert_called_once_with('primitiveHorizontalLayout')
     mock_new_primitive_entry_layout.addLayout.assert_called_once_with(mock_qh_box_layout.return_value)
     mock_is_date_time_type.assert_called_once_with(type_name)
     mock_qh_box_layout.return_value.addWidget.assert_called_once_with(

@@ -121,7 +121,7 @@ class MainDialog(Ui_MainDialogBase):
         widget = self.get_project_widget(project)
         self.projectsScrollAreaVerticalLayout.addWidget(widget)
 
-  def get_upload_widget(self, project_name: str = "") -> dict[str, QFrame | Ui_UploadWidgetFrame]:
+  def get_upload_widget(self, project_name: str = '') -> dict[str, QFrame | Ui_UploadWidgetFrame]:
     """
     Creates the upload widget for a project.
 
@@ -146,7 +146,7 @@ class MainDialog(Ui_MainDialogBase):
     upload_widget_ui.logConsoleTextEdit.hide()
     upload_widget_ui.showLogPushButton.clicked.connect(lambda: self.show_hide_log(upload_widget_ui.showLogPushButton))
     upload_widget_ui.modelIdLabel.hide()
-    return {"base": base_frame, "widget": upload_widget_ui}
+    return {'base': base_frame, 'widget': upload_widget_ui}
 
   def get_project_widget(self, project: ProjectModel) -> QWidget:
     """
@@ -168,14 +168,14 @@ class MainDialog(Ui_MainDialogBase):
                     If the project model date is not in expected ISO format.
     """
     if not isinstance(project, ProjectModel):
-      raise ValueError("Project model must be an instance of ProjectModel!")
+      raise ValueError('Project model must be an instance of ProjectModel!')
     project_widget_frame = QtWidgets.QFrame()
     project_widget_ui = Ui_ProjectItemFrame()
     project_widget_ui.setupUi(project_widget_frame)
-    project_widget_ui.projectNameLabel.setText(textwrap.fill(project.name or "", width=80, max_lines=1))
+    project_widget_ui.projectNameLabel.setText(textwrap.fill(project.name or '', width=80, max_lines=1))
     project_widget_ui.projectNameLabel.setToolTip(project.name)
     project_widget_ui.modifiedDateTimeLabel.setText(
-      datetime.datetime.fromisoformat(project.date_modified or "").strftime("%Y-%m-%d %H:%M:%S"))
+      datetime.datetime.fromisoformat(project.date_modified or '').strftime('%Y-%m-%d %H:%M:%S'))
     project_widget_ui.projectDocIdLabel.hide()
     project_widget_ui.projectDocIdLabel.setText(project.id)
     return project_widget_frame
@@ -191,18 +191,18 @@ class MainDialog(Ui_MainDialogBase):
 
     """
     if not self.check_if_minimal_metadata_present():
-      self.logger.warning("Minimum metadata not present. Please add all needed metadata and then retry!")
+      self.logger.warning('Minimum metadata not present. Please add all needed metadata and then retry!')
       return
     for widget_pos in range(self.projectsScrollAreaVerticalLayout.count()):
       project_widget = self.projectsScrollAreaVerticalLayout.itemAt(widget_pos).widget()
-      if project_widget.findChild(QtWidgets.QCheckBox, name="projectCheckBox").isChecked():
+      if project_widget.findChild(QtWidgets.QCheckBox, name='projectCheckBox').isChecked():
         upload_widget = self.get_upload_widget(
-          project_widget.findChild(QtWidgets.QLabel, name="projectNameLabel").toolTip())
-        self.uploadQueueVerticalLayout.addWidget(upload_widget["base"])
-        widget = upload_widget["widget"]
+          project_widget.findChild(QtWidgets.QLabel, name='projectNameLabel').toolTip())
+        self.uploadQueueVerticalLayout.addWidget(upload_widget['base'])
+        widget = upload_widget['widget']
         if not isinstance(widget, Ui_UploadWidgetFrame):
           continue
-        project_id = project_widget.findChild(QtWidgets.QLabel, name="projectDocIdLabel").text()
+        project_id = project_widget.findChild(QtWidgets.QLabel, name='projectDocIdLabel').text()
         task_thread = TaskThreadExtension(
           DataUploadTask(widget.uploadProjectLabel.toolTip(),  # label text may be truncated,
                          #  but the tooltip contains the full project name
@@ -229,7 +229,7 @@ class MainDialog(Ui_MainDialogBase):
     """
     for widget_pos in reversed(range(self.uploadQueueVerticalLayout.count())):
       project_widget = self.uploadQueueVerticalLayout.itemAt(widget_pos).widget()
-      status_text = project_widget.findChild(QtWidgets.QLabel, name="statusLabel").text()
+      status_text = project_widget.findChild(QtWidgets.QLabel, name='statusLabel').text()
       if (status_text in [
         UploadStatusValues.Finished.name,
         UploadStatusValues.Error.name,
@@ -252,7 +252,7 @@ class MainDialog(Ui_MainDialogBase):
     """
     for widget_pos in range(self.projectsScrollAreaVerticalLayout.count()):
       project_widget = self.projectsScrollAreaVerticalLayout.itemAt(widget_pos).widget()
-      project_widget.findChild(QtWidgets.QCheckBox, name="projectCheckBox").setChecked(checked)
+      project_widget.findChild(QtWidgets.QCheckBox, name='projectCheckBox').setChecked(checked)
 
   def show_configure_upload(self) -> None:
     """
@@ -320,16 +320,16 @@ class MainDialog(Ui_MainDialogBase):
 
     """
     frame = button.parent()
-    log_console_text_edit = frame.findChild(QtWidgets.QTextEdit, name="logConsoleTextEdit")
+    log_console_text_edit = frame.findChild(QtWidgets.QTextEdit, name='logConsoleTextEdit')
     if isinstance(log_console_text_edit, QtWidgets.QTextEdit):
       if log_console_text_edit.isHidden():
         log_console_text_edit.show()
       else:
         log_console_text_edit.hide()
-      id_label = frame.findChild(QtWidgets.QLabel, name="modelIdLabel")
-      if upload_model_id := id_label.text() if isinstance(id_label, QtWidgets.QLabel) else "":
+      id_label = frame.findChild(QtWidgets.QLabel, name='modelIdLabel')
+      if upload_model_id := id_label.text() if isinstance(id_label, QtWidgets.QLabel) else '':
         model = self.db_api.get_model(upload_model_id, UploadModel)
-        log_console_text_edit.setText(model.log if isinstance(model, UploadModel) else "")
+        log_console_text_edit.setText(model.log if isinstance(model, UploadModel) else '')
 
   def check_if_minimal_metadata_present(self) -> bool:
     """
@@ -343,20 +343,20 @@ class MainDialog(Ui_MainDialogBase):
         It returns True if minimal metadata is present, and False otherwise.
         If minimal metadata is missing, it displays a warning message to the user.
     """
-    self.logger.info("Checking if minimal metadata is present...")
+    self.logger.info('Checking if minimal metadata is present...')
     config_model = self.db_api.get_config_model()
     metadata_exists = False
     if config_model is None:
-      self.logger.error("Failed to load config model!")
+      self.logger.error('Failed to load config model!')
       return metadata_exists
     if isinstance(config_model, ConfigModel) and isinstance(config_model.metadata, dict):
       if missing_metadata := check_if_minimal_metadata_exists(self.logger,
                                                               config_model.metadata,
                                                               False):
         message = get_formatted_message(missing_metadata)
-        metadata_exists = message == ""
+        metadata_exists = message == ''
         if not metadata_exists:
-          self.show_message(self.instance, "Missing Minimal Metadata", message)
+          self.show_message(self.instance, 'Missing Minimal Metadata', message)
     return metadata_exists
 
   def check_if_dataverse_is_configured(self) -> tuple[bool, str]:
@@ -370,20 +370,20 @@ class MainDialog(Ui_MainDialogBase):
     Returns:
         tuple[bool, str]: A tuple containing a boolean indicating success and a message string.
     """
-    self.logger.info("Checking if dataverse is configured..")
+    self.logger.info('Checking if dataverse is configured..')
     config_model = self.db_api.get_config_model()
     if config_model is None or config_model.dataverse_login_info is None:
-      self.logger.error("Failed to load config model!")
-      return False, "Failed to load config model!"
-    server_url = config_model.dataverse_login_info["server_url"]
-    api_token = config_model.dataverse_login_info["api_token"]
-    dataverse_id = config_model.dataverse_login_info["dataverse_id"]
+      self.logger.error('Failed to load config model!')
+      return False, 'Failed to load config model!'
+    server_url = config_model.dataverse_login_info['server_url']
+    api_token = config_model.dataverse_login_info['api_token']
+    dataverse_id = config_model.dataverse_login_info['dataverse_id']
     success, _ = check_login_credentials(self.logger, api_token, server_url)
     if not success:
-      return False, "Please re-enter the correct API token / server URL via the configuration dialog."
+      return False, 'Please re-enter the correct API token / server URL via the configuration dialog.'
     if success := success and check_if_dataverse_exists(
         self.logger, api_token, server_url, dataverse_id):
-      return success, "Dataverse configured successfully!"
+      return success, 'Dataverse configured successfully!'
     else:
       return False, f"Please re-enter the correct dataverse ID via the configuration dialog, Saved id: {dataverse_id} is incorrect!"
 
@@ -398,7 +398,7 @@ class MainDialog(Ui_MainDialogBase):
     Args:
         self: The instance of the class.
     """
-    self.logger.info("Show MainDialog UI..")
+    self.logger.info('Show MainDialog UI..')
     if self.is_dataverse_configured[0]:
       self.instance.show()
     else:
@@ -429,9 +429,9 @@ class MainDialog(Ui_MainDialogBase):
     msg_box.setWindowTitle(title)
     msg_box.setIcon(icon or QMessageBox.Icon.Warning)
     msg_box.setText(message)
-    qt_msgbox_label: QLabel | object = msg_box.findChild(QLabel, "qt_msgbox_label")
+    qt_msgbox_label: QLabel | object = msg_box.findChild(QLabel, 'qt_msgbox_label')
     if not isinstance(qt_msgbox_label, QLabel):
-      self.logger.error("Failed to find message box label!")
+      self.logger.error('Failed to find message box label!')
       return
     width = qt_msgbox_label.fontMetrics().boundingRect(qt_msgbox_label.text()).width()
     qt_msgbox_label.setFixedWidth(width)

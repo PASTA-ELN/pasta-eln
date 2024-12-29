@@ -51,7 +51,7 @@ class UploadModel(BaseModel):
                status: str | None = None,
                created_date_time: str | None = None,
                finished_date_time: str | None = None,
-               log: str | None = "",
+               log: str | None = '',
                dataverse_url: str | None = None):
     """
     Initializes an upload model object.
@@ -359,7 +359,7 @@ class UploadModel(BaseModel):
     """
     if not isinstance(value, str | None):
       raise IncorrectParameterError(f"Expected string type for log but got {type(value)}")
-    if value != "" and self._log is not None:
+    if value != '' and self._log is not None:
       self._log += value if isinstance(value, str) and value.endswith('\n') else f"{value}\n"
 
   @log.deleter

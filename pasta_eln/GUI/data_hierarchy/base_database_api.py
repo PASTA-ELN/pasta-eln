@@ -50,7 +50,7 @@ class BaseDatabaseApi:
     Raises:
         IncorrectParameterError: If the provided database path is not a string.
     """
-    self.logger = logging.getLogger("sqlalchemy.engine")
+    self.logger = logging.getLogger('sqlalchemy.engine')
     self.logger.setLevel(logging.INFO)
     if isinstance(pasta_project_group_db_path, str):
       self.db_url = f"sqlite:///{pasta_project_group_db_path}"
@@ -67,7 +67,7 @@ class BaseDatabaseApi:
     Raises:
         SQLAlchemyError: If there is an issue with creating the tables in the database.
     """
-    self.logger.info("Creating and binding table for db : %s",
+    self.logger.info('Creating and binding table for db : %s',
                      self.db_url)
     engine = create_engine(self.db_url)
     (OrmModelBase.metadata.tables[DataHierarchyOrmModel.__tablename__]
@@ -92,9 +92,9 @@ class BaseDatabaseApi:
     Raises:
         Error: If the model_doc_type is empty.
     """
-    self.logger.info("Retrieving DataHierarchyModel with doctype: %s", model_doc_type)
+    self.logger.info('Retrieving DataHierarchyModel with doctype: %s', model_doc_type)
     if not model_doc_type:
-      raise log_and_create_error(self.logger, Error, "Model Doc Type cannot be empty!")
+      raise log_and_create_error(self.logger, Error, 'Model Doc Type cannot be empty!')
     engine = create_engine(self.db_url)
     with Session(engine) as session:
       db_model = session.get(DataHierarchyOrmModel, model_doc_type)
@@ -114,7 +114,7 @@ class BaseDatabaseApi:
     Returns:
         list[DataHierarchyModel]: A list of DataHierarchyModel instances retrieved from the database.
     """
-    self.logger.info("Retrieving data_hierarchy_models from database")
+    self.logger.info('Retrieving data_hierarchy_models from database')
     stmt = select(DataHierarchyOrmModel)
     engine = create_engine(self.db_url)
     with Session(engine) as session:
@@ -137,7 +137,7 @@ class BaseDatabaseApi:
     Raises:
         Exception: If there is an error during the database operation.
     """
-    self.logger.info("Populating DataHierarchyModel with data: %s in database: %s",
+    self.logger.info('Populating DataHierarchyModel with data: %s in database: %s',
                      data_model,
                      self.db_url)
     engine = create_engine(self.db_url)
@@ -162,15 +162,15 @@ class BaseDatabaseApi:
     Raises:
         Error: If the model's document type is empty or if the model does not exist in the database.
     """
-    self.logger.info("Updating data model with doc_type: %s", data_model.doc_type)
+    self.logger.info('Updating data model with doc_type: %s', data_model.doc_type)
     if not data_model.doc_type:
-      raise log_and_create_error(self.logger, Error, "Model doc_type cannot be empty!")
+      raise log_and_create_error(self.logger, Error, 'Model doc_type cannot be empty!')
     engine = create_engine(self.db_url)
     with Session(engine) as session:
       db_model = OrmModelAdapter.get_orm_data_hierarchy_model(data_model)
       if not (session.get(DataHierarchyOrmModel,
                           db_model.doc_type)):
-        raise log_and_create_error(self.logger, Error, "Model does not exist in database!")
+        raise log_and_create_error(self.logger, Error, 'Model does not exist in database!')
       session.merge(db_model)
       session.commit()
 
@@ -190,9 +190,9 @@ class BaseDatabaseApi:
     Raises:
         Error: If the model_doc_type is empty.
     """
-    self.logger.info("Retrieving data_hierarchy_model with doctype: %s", model_doc_type)
+    self.logger.info('Retrieving data_hierarchy_model with doctype: %s', model_doc_type)
     if not model_doc_type:
-      raise log_and_create_error(self.logger, Error, "Model Doc Type cannot be empty!")
+      raise log_and_create_error(self.logger, Error, 'Model Doc Type cannot be empty!')
     engine = create_engine(self.db_url)
     with Session(engine) as session:
       return isinstance(session.get(DataHierarchyOrmModel, model_doc_type), DataHierarchyOrmModel)

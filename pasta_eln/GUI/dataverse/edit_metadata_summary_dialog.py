@@ -50,7 +50,7 @@ class EditMetadataSummaryDialog(Ui_EditMetadataSummaryDialog):
     """
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     if not callable(save_config_callback):
-      raise TypeError("save_config_callback must be callable.")
+      raise TypeError('save_config_callback must be callable.')
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.instance.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)

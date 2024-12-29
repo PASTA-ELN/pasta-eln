@@ -1,10 +1,10 @@
 from typing import Any, List
 from typing_extensions import Final
 
-NO_SKIP_OPTION: Final[str] = "--no-skip"
+NO_SKIP_OPTION: Final[str] = '--no-skip'
 
 def pytest_addoption(parser):
-    parser.addoption(NO_SKIP_OPTION, action="store_true", default=False, help="also run skipped tests")
+    parser.addoption(NO_SKIP_OPTION, action='store_true', default=False, help='also run skipped tests')
 
 def pytest_collection_modifyitems(config,
                                   items: List[Any]):

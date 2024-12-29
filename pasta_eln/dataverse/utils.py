@@ -82,21 +82,21 @@ def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
   """
   config = PastaConfigReaderFactory.get_instance().config
   if config is None:
-    raise log_and_create_error(logger, ConfigError, "Config file not found, Corrupt installation!")
+    raise log_and_create_error(logger, ConfigError, 'Config file not found, Corrupt installation!')
   if 'authors' not in config:
-    raise log_and_create_error(logger, ConfigError, "Incorrect config file, authors not found!")
+    raise log_and_create_error(logger, ConfigError, 'Incorrect config file, authors not found!')
   author_field = next(
     f for f in metadata['datasetVersion']['metadataBlocks']['citation']['fields'] if f['typeName'] == 'author')
   authors_list = author_field.get('value')
   if authors_list is None:
-    raise log_and_create_error(logger, ConfigError, "Incorrect config file, authors value should be found!")
+    raise log_and_create_error(logger, ConfigError, 'Incorrect config file, authors value should be found!')
   template_list = author_field.get('valueTemplate', [{}])
   template = template_list[0] if isinstance(template_list, list) and template_list else {}
   authors_list.clear()
   for author in config['authors']:
     author_copy = copy.deepcopy(template)
     author_copy['authorName']['value'] = ', '.join(filter(None, [author['last'], author['first']]))
-    author_copy['authorIdentifierScheme']['value'] = "ORCID"
+    author_copy['authorIdentifierScheme']['value'] = 'ORCID'
     author_copy['authorIdentifier']['value'] = author['orcid']
     author_copy['authorAffiliation']['value'] = ', '.join([o['organization'] for o in author['organizations']])
     authors_list.append(author_copy)
@@ -157,18 +157,18 @@ def set_template_values(logger: Logger, metadata: dict[str, Any]) -> None:
       {'datasetVersion': {'metadataBlocks': {'citation': {'fields': [{'typeClass': 'primitive', 'multiple': False, 'value': '', 'valueTemplate': 'Example'}]}}}}
   """
   if not metadata:
-    logger.warning("Empty metadata, make sure the metadata is loaded correctly...")
+    logger.warning('Empty metadata, make sure the metadata is loaded correctly...')
     return
   for _, metablock in metadata['datasetVersion']['metadataBlocks'].items():
     for field in metablock['fields']:
       match field['typeClass']:
-        case "primitive":
+        case 'primitive':
           set_field_template_value(field)
-        case "controlledVocabulary":
+        case 'controlledVocabulary':
           set_field_template_value(field)
           if field['multiple']:
-            field['valueTemplate'].insert(0, "No Value")
-        case "compound":
+            field['valueTemplate'].insert(0, 'No Value')
+        case 'compound':
           field['valueTemplate'] = field['value'].copy()
           field['value'].clear()
         case _:
@@ -202,7 +202,7 @@ def set_field_template_value(field: dict[str, Any]) -> None:
   else:
     field['valueTemplate'] = field.get('value')
     if 'value' in field:
-      field['value'] = ""
+      field['value'] = ''
 
 
 def check_if_minimal_metadata_exists(logger: Logger,
@@ -229,7 +229,7 @@ def check_if_minimal_metadata_exists(logger: Logger,
 
   """
   if not metadata:
-    logger.warning("Empty metadata, make sure the metadata is loaded correctly...")
+    logger.warning('Empty metadata, make sure the metadata is loaded correctly...')
     return None
   missing_information: dict[str, list[str]] = {
     'title': [],
@@ -240,11 +240,11 @@ def check_if_minimal_metadata_exists(logger: Logger,
   }
   check_if_field_value_not_null(get_citation_field(metadata, 'title'),
                                 missing_information,
-                                "title",
+                                'title',
                                 check_title)
   check_if_field_value_not_null(get_citation_field(metadata, 'subject'),
                                 missing_information,
-                                "subject")
+                                'subject')
   check_if_compound_field_value_is_missing(
     get_citation_field(metadata, 'author'),
     'author',
@@ -364,11 +364,11 @@ def get_encrypt_key(logger: Logger) -> tuple[bool, bytes]:
   Returns:
       tuple[bool, bytes]: A tuple containing a boolean indicating whether the key exists and the encryption key itself.
   """
-  logger.info("Getting dataverse encrypt key..")
+  logger.info('Getting dataverse encrypt key..')
   config = PastaConfigReaderFactory.get_instance().config
   key_exists = False
   if 'dataverseEncryptKey' not in config:
-    logger.warning("Dataverse encrypt key does not exist, hence generating a new key..")
+    logger.warning('Dataverse encrypt key does not exist, hence generating a new key..')
     config['dataverseEncryptKey'] = b64encode(Fernet.generate_key()).decode('ascii')
     write_pasta_config_file(logger, config)
   else:
@@ -394,19 +394,19 @@ def encrypt_data(logger: Logger, encrypt_key: bytes | None, data: str | None) ->
       str | None: The encrypted data as a string, or None if either the encrypt_key or data is None.
   """
   if encrypt_key is None or data is None:
-    logger.warning("encrypt_key/data cannot be None")
+    logger.warning('encrypt_key/data cannot be None')
     return None
   try:
     fernet = Fernet(encrypt_key)
     data = fernet.encrypt(data.encode('ascii')).decode('ascii')
   except InvalidToken as e:
-    logger.error("Invalid token: %s", e)
+    logger.error('Invalid token: %s', e)
     return None
   except ValueError as e:
-    logger.error("Value error: %s", e)
+    logger.error('Value error: %s', e)
     return None
   except AttributeError as e:
-    logger.error("AttributeError: %s", e)
+    logger.error('AttributeError: %s', e)
     return None
   return data
 
@@ -428,19 +428,19 @@ def decrypt_data(logger: Logger, encrypt_key: bytes | None, data: str | None) ->
       str | None: The decrypted data as a string, or None if either the encrypt_key or data is None.
   """
   if encrypt_key is None or data is None:
-    logger.warning("encrypt_key/data cannot be None")
+    logger.warning('encrypt_key/data cannot be None')
     return None
   try:
     fernet = Fernet(encrypt_key)
     data = fernet.decrypt(data.encode('ascii')).decode('ascii')
   except InvalidToken as e:
-    logger.error("Invalid token: %s", e)
+    logger.error('Invalid token: %s', e)
     return None
   except ValueError as e:
-    logger.error("Value error: %s", e)
+    logger.error('Value error: %s', e)
     return None
   except AttributeError as e:
-    logger.error("AttributeError: %s", e)
+    logger.error('AttributeError: %s', e)
     return None
   return data
 
@@ -459,8 +459,8 @@ def write_pasta_config_file(logger: Logger, config_data: dict[str, Any]) -> None
   """
   config_file_name = join(Path.home(), '.pastaELN_v3.json')
   if not exists(config_file_name):
-    raise log_and_create_error(logger, ConfigError, "Config file not found, Corrupt installation!")
-  logger.info("Writing config file: %s", config_file_name)
+    raise log_and_create_error(logger, ConfigError, 'Config file not found, Corrupt installation!')
+  logger.info('Writing config file: %s', config_file_name)
   with open(config_file_name, 'w', encoding='utf-8') as conf_file:
     dump(config_data, conf_file, ensure_ascii=False, indent=4)
 
@@ -501,23 +501,23 @@ def check_login_credentials(logger: Logger, api_token: str, server_url: str) -> 
       tuple[bool, str]: A tuple containing a boolean indicating if the login credentials are valid
       and a message describing the result.
   """
-  logger.info("Checking if login info is valid, server_url: %s", server_url)
+  logger.info('Checking if login info is valid, server_url: %s', server_url)
   dataverse_client = DataverseClient(server_url, api_token)
   event_loop = get_event_loop()
   success, message = event_loop.run_until_complete(dataverse_client.check_if_dataverse_server_reachable())
   if success:
     token_valid = event_loop.run_until_complete(dataverse_client.check_if_api_token_is_valid())
     if token_valid:
-      result = True, "Data server is reachable and token is valid"
+      result = True, 'Data server is reachable and token is valid'
     else:
-      result = False, "Data server is reachable but token is invalid"
-      logger.warning("Data server is reachable but API token is invalid!")
+      result = False, 'Data server is reachable but token is invalid'
+      logger.warning('Data server is reachable but API token is invalid!')
   elif 'Unauthorized' in message:
-    result = False, "Data server is reachable but API token is invalid"
-    logger.warning("Data server is reachable but API token is invalid: %s", message)
+    result = False, 'Data server is reachable but API token is invalid'
+    logger.warning('Data server is reachable but API token is invalid: %s', message)
   else:
-    result = False, "Data server is not reachable"
-    logger.warning("Data server is not reachable: %s", message)
+    result = False, 'Data server is not reachable'
+    logger.warning('Data server is not reachable: %s', message)
   return result
 
 
@@ -534,16 +534,16 @@ def check_if_dataverse_exists(logger: Logger, api_token: str, server_url: str, d
   Returns:
       bool: True if the Dataverse exists, False otherwise.
   """
-  logger.info("Checking if login info is valid, server_url: %s", server_url)
+  logger.info('Checking if login info is valid, server_url: %s', server_url)
   dataverse_client = DataverseClient(server_url, api_token)
   event_loop = get_event_loop()
   info = event_loop.run_until_complete(dataverse_client.get_dataverse_info(dataverse_id))
   result = False
   if isinstance(info, dict):
-    result = (info.get("id", None) is not None
-              and info.get("alias", None) == dataverse_id)
+    result = (info.get('id', None) is not None
+              and info.get('alias', None) == dataverse_id)
   else:
-    logger.warning("Data verse with id %s does not exist, Server message: %s", dataverse_id, info)
+    logger.warning('Data verse with id %s does not exist, Server message: %s', dataverse_id, info)
   return result
 
 
@@ -581,8 +581,8 @@ def clear_value(items: dict[str, Any] | None = None) -> None:
   if items is None:
     return
   for item in items.values():
-    if item and "value" in item:
-      item["value"] = None
+    if item and 'value' in item:
+      item['value'] = None
 
 
 def is_date_time_type(type_name: str) -> bool:
@@ -601,7 +601,7 @@ def is_date_time_type(type_name: str) -> bool:
 
   """
   return any(
-    map(type_name.lower().__contains__, ["date", "time"]))
+    map(type_name.lower().__contains__, ['date', 'time']))
 
 
 def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
@@ -620,12 +620,12 @@ def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
       metadata items grouped by their corresponding metadata names.
   """
   if not any(missing_metadata.values()):
-    return ""
+    return ''
   name_mapping = {
     'author': 'Author',
-    'datasetContact': "Dataset Contact",
-    'dsDescription': "Dataset Description",
-    'subject': "Subject"
+    'datasetContact': 'Dataset Contact',
+    'dsDescription': 'Dataset Description',
+    'subject': 'Subject'
   }
   message = (
     "<html><p><i>Goto 'Edit Metadata' dialog, select 'Minimal' metadata list, enter the below given missing information and retry the upload!</i></p>"
@@ -635,8 +635,8 @@ def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
       message += f"<br></br><b><i>{name_mapping[metadata_name]}:</i></b><ul>"
       for missing in missing_list:
         message += f"<i style=\"color:Crimson\"><li>{missing}</li></i>"
-      message += "</ul>"
-  message += "</html>"
+      message += '</ul>'
+  message += '</html>'
   return message
 
 
@@ -668,12 +668,12 @@ def get_formatted_metadata_message(metadata: dict[str, Any]) -> str:
       '<html>...</html>'
   """
 
-  message = "<html>"
+  message = '<html>'
   if metadata['datasetVersion']['license']:
     message += "<b style=\"color:Black\">License Metadata:</b><ul>"
     message += f"<li style=\"color:Gray\">Name: <i>{metadata['datasetVersion']['license']['name']}</i></li>"
     message += f"<li style=\"color:Gray\">URI: <i>{metadata['datasetVersion']['license']['uri']}</i></li>"
-    message += "</ul>"
+    message += '</ul>'
   for _, metablock in metadata['datasetVersion']['metadataBlocks'].items():
     message += f"<b style=\"color:Black\">{metablock['displayName']}:</b><ul>"
     has_value = False
@@ -681,31 +681,31 @@ def get_formatted_metadata_message(metadata: dict[str, Any]) -> str:
       if field['value']:
         has_value = has_value or len(field['value']) > 0
         message += f"<b style=\"color:#737373\"><li>{adjust_type_name(field['typeName'])}:</li></b><ul>"
-        if field["multiple"] and field["typeClass"] == "compound":
+        if field['multiple'] and field['typeClass'] == 'compound':
           for index, field_value in enumerate(field['value']):
             message += f"<li style=\"color:Gray\">Item {index + 1}:</li><ul>"
             for _, value in field_value.items():
               message += f"<li style=\"color:Gray\">{adjust_type_name(value['typeName'])}: <i>{value['value']}</li></i>"
-            message += "</ul>"
-          message += "</ul>"
-        elif not field["multiple"] and field["typeClass"] == "compound":
+            message += '</ul>'
+          message += '</ul>'
+        elif not field['multiple'] and field['typeClass'] == 'compound':
           for _, value in field['value'].items():
             message += f"<li style=\"color:Gray\">{adjust_type_name(value['typeName'])}: <i>{value['value']}</li></i>"
-          message += "</ul>"
-        elif field["multiple"] and field["typeClass"] == "controlledVocabulary":
+          message += '</ul>'
+        elif field['multiple'] and field['typeClass'] == 'controlledVocabulary':
           for field_value in field['value']:
             message += f"<i style=\"color:Gray\"><li>{field_value}</li></i>"
-          message += "</ul>"
-        elif field["multiple"] and field["typeClass"] == "primitive":
+          message += '</ul>'
+        elif field['multiple'] and field['typeClass'] == 'primitive':
           for field_value in field['value']:
             message += f"<i style=\"color:Gray\"><li>{field_value}</li></i>"
-          message += "</ul>"
+          message += '</ul>'
         else:
           message += f"<i style=\"color:Gray\"><li>{field['value']}</li></i></ul>"
     if not has_value:
       message += "<li style=\"color:#737373\">No Value</li></ul>"
-    message += "</ul>"
-  message += "</html>"
+    message += '</ul>'
+  message += '</html>'
   return message
 
 
@@ -724,11 +724,11 @@ def get_formatted_dataverse_url(dataverse_url: str) -> str:
       str: The formatted Dataverse URL in HTML structure.
   """
 
-  formatted_dataverse_url = ""
+  formatted_dataverse_url = ''
   if dataverse_url:
-    if "persistentId=" not in dataverse_url:
+    if 'persistentId=' not in dataverse_url:
       return formatted_dataverse_url
-    persistent_id = dataverse_url.split("persistentId=", 1)[1]
+    persistent_id = dataverse_url.split('persistentId=', 1)[1]
     formatted_dataverse_url = (
       f"<html><head/><body><p>Dataverse URL: "
       f"<a href='{dataverse_url}'>"
@@ -758,11 +758,11 @@ def get_data_hierarchy_types(data_hierarchy: list[DataHierarchyModel] | None) ->
   data_hierarchy_types = []
   for data_model in data_hierarchy:
     if (data_model and data_model.doc_type
-        and data_model.doc_type not in ("x0", "x1")):
+        and data_model.doc_type not in ('x0', 'x1')):
       type_capitalized = data_model.doc_type.capitalize()
       if type_capitalized not in data_hierarchy_types:
         data_hierarchy_types.append(type_capitalized)
-  data_hierarchy_types.append("Unidentified")
+  data_hierarchy_types.append('Unidentified')
   return data_hierarchy_types
 
 
@@ -788,25 +788,25 @@ def get_db_info(logger: Logger) -> dict[str, str]:
   project_groups = config.get('projectGroups')
   if not def_project_group_name or not project_groups:
     raise log_and_create_error(logger, ConfigError,
-                               "Incorrect config file, defaultProjectGroup/projectGroups not found!")
+                               'Incorrect config file, defaultProjectGroup/projectGroups not found!')
   main_group = project_groups.get(def_project_group_name)
   if not main_group:
     raise log_and_create_error(logger, ConfigError,
-                               "Incorrect config file, defaultProjectGroup not found in projectGroups!")
+                               'Incorrect config file, defaultProjectGroup not found in projectGroups!')
   local_info = main_group.get('local')
   if not local_info:
     raise log_and_create_error(logger, ConfigError,
-                               "Incorrect config file, user or password not found!")
+                               'Incorrect config file, user or password not found!')
   db_path = local_info.get('path')
   db_name = local_info.get('database')
   if db_name and db_path:
     return {
-      "database_path": db_path,
-      "database_name": db_name
+      'database_path': db_path,
+      'database_name': db_name
     }
   else:
     raise log_and_create_error(logger, ConfigError,
-                               "Incorrect config file, database name/path not found!")
+                               'Incorrect config file, database name/path not found!')
 
 
 def generate_project_join_statement(model_id: str | None) -> Executable:
@@ -830,8 +830,8 @@ def generate_project_join_statement(model_id: str | None) -> Executable:
   """
   properties_objective_aliased = aliased(PropertiesOrmModel)
   properties_status_aliased = aliased(PropertiesOrmModel)
-  where_condition = and_(MainOrmModel.type == "x0",
-                         MainOrmModel.id == model_id) if model_id else MainOrmModel.type == "x0"
+  where_condition = and_(MainOrmModel.type == 'x0',
+                         MainOrmModel.id == model_id) if model_id else MainOrmModel.type == 'x0'
   return (select(
     MainOrmModel,
     properties_status_aliased.value,
@@ -841,7 +841,7 @@ def generate_project_join_statement(model_id: str | None) -> Executable:
     properties_objective_aliased,
     and_(
       MainOrmModel.id == properties_objective_aliased.id,
-      properties_objective_aliased.key == ".objective",
+      properties_objective_aliased.key == '.objective',
     ),
     isouter=True,
   ).join_from(
@@ -849,7 +849,7 @@ def generate_project_join_statement(model_id: str | None) -> Executable:
     properties_status_aliased,
     and_(
       MainOrmModel.id == properties_status_aliased.id,
-      properties_status_aliased.key == ".status",
+      properties_status_aliased.key == '.status',
     ),
     isouter=True,
   ))

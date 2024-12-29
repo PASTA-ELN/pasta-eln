@@ -46,7 +46,7 @@ class CreateTypeDialog(TypeDialog):
     super().__init__(accepted_callback, rejected_callback)
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.data_hierarchy_types: dict[str, Any] = {}
-    self.instance.setWindowTitle("Create new type")
+    self.instance.setWindowTitle('Create new type')
 
   def accepted_callback(self) -> None:
     """
@@ -63,11 +63,11 @@ class CreateTypeDialog(TypeDialog):
     if not self.validate_type_info():
       return
     if self.data_hierarchy_types is None:
-      self.logger.error("Null data_hierarchy_types, erroneous app state")
-      raise GenericException("Null data_hierarchy_types, erroneous app state", {})
+      self.logger.error('Null data_hierarchy_types, erroneous app state')
+      raise GenericException('Null data_hierarchy_types, erroneous app state', {})
     if self.type_info.datatype in self.data_hierarchy_types:
       self.logger.error(
-        "Type (datatype: {%s} displayed title: {%s}) cannot be added since it exists in DB already....",
+        'Type (datatype: {%s} displayed title: {%s}) cannot be added since it exists in DB already....',
         self.type_info.datatype,
         self.type_info.title
       )
@@ -75,8 +75,8 @@ class CreateTypeDialog(TypeDialog):
         f"Type (datatype: {self.type_info.datatype} displayed title: {self.type_info.title}) cannot be added since it exists in DB already....",
         QMessageBox.Icon.Warning)
     else:
-      self.logger.info("User created a new type and added "
-                       "to the data_hierarchy document: Datatype: {%s}, Displayed Title: {%s}",
+      self.logger.info('User created a new type and added '
+                       'to the data_hierarchy document: Datatype: {%s}, Displayed Title: {%s}',
                        self.type_info.datatype,
                        self.type_info.title)
       if isinstance(self.type_info.datatype, str):
@@ -108,7 +108,7 @@ class CreateTypeDialog(TypeDialog):
     self.data_hierarchy_types = data_hierarchy_types
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   import sys
 
   app = QtWidgets.QApplication(sys.argv)

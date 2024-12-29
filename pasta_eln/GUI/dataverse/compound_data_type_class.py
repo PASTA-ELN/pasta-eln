@@ -61,13 +61,13 @@ class CompoundDataTypeClass(DataTypeClass):
       self: The instance of the compound data type class.
     """
     new_compound_entry_layout = QHBoxLayout()
-    new_compound_entry_layout.setObjectName("compoundHorizontalLayout")
+    new_compound_entry_layout.setObjectName('compoundHorizontalLayout')
     value_template = self.context.meta_field.get('valueTemplate', [{}])[0]
     for type_val in value_template.values():
       if (not isinstance(type_val, dict)
           or 'typeName' not in type_val
           or 'value' not in type_val):
-        self.logger.warning("Invalid type value in valueTemplate: %s", type_val)
+        self.logger.warning('Invalid type value in valueTemplate: %s', type_val)
         continue
       type_name = type_val['typeName']
       type_value = type_val['value']
@@ -120,9 +120,9 @@ class CompoundDataTypeClass(DataTypeClass):
     else:
       self.context.meta_field['value'] = {}
       compound_horizontal_layout = self.context.main_vertical_layout.findChild(QHBoxLayout,
-                                                                               "compoundHorizontalLayout")
+                                                                               'compoundHorizontalLayout')
       if not isinstance(compound_horizontal_layout, QHBoxLayout):
-        self.logger.error("Compound horizontal layout not found")
+        self.logger.error('Compound horizontal layout not found')
         return
       value_template = self.context.meta_field.get('valueTemplate')
       value_template = value_template if isinstance(value_template, dict) else {}
@@ -155,10 +155,10 @@ class CompoundDataTypeClass(DataTypeClass):
     layout_items_count = compound_horizontal_layout.count()
     for widget_pos in range(layout_items_count):
       widget = compound_horizontal_layout.itemAt(widget_pos).widget()
-      name = widget.objectName().removesuffix("LineEdit").removesuffix("DateTimeEdit")
+      name = widget.objectName().removesuffix('LineEdit').removesuffix('DateTimeEdit')
       if name in empty_entry:
         text = widget.text()  # type: ignore[attr-defined]
-        empty_entry[name]['value'] = text if text and text != 'No Value' else ""
+        empty_entry[name]['value'] = text if text and text != 'No Value' else ''
         update_needed = bool(update_needed or empty_entry[name]['value'])
     if update_needed:
       if isinstance(self.context.meta_field['value'], dict):
@@ -190,7 +190,7 @@ class CompoundDataTypeClass(DataTypeClass):
 
     """
     new_compound_entry_layout = QHBoxLayout()
-    new_compound_entry_layout.setObjectName("compoundHorizontalLayout")
+    new_compound_entry_layout.setObjectName('compoundHorizontalLayout')
     for compound_type_name, compound_type in compound_entry.items():
       template_value = template_entry.get(compound_type_name, {}).get('value') if template_entry else None
       new_compound_entry_layout.addWidget(

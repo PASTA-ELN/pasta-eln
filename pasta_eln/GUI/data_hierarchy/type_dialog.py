@@ -89,9 +89,9 @@ class TypeDialog(Ui_TypeDialogBase):
 
     # Restricts the title input to allow anything except x or space
     # as the first character which is reserved for structural level
-    self.typeLineEdit.setValidator(QRegularExpressionValidator(QRegularExpression("(?=^[^Ax])(?=[^ ]*)")))
+    self.typeLineEdit.setValidator(QRegularExpressionValidator(QRegularExpression('(?=^[^Ax])(?=[^ ]*)')))
     self.iconComboBox.completer().setCompletionMode(QtWidgets.QCompleter.CompletionMode.PopupCompletion)
-    self.set_iri_lookup_action("")
+    self.set_iri_lookup_action('')
 
   def accepted_callback(self) -> None:
     """
@@ -240,7 +240,7 @@ class TypeDialog(Ui_TypeDialogBase):
         font_collection (str): The name of the font collection from which to populate icons.
     """
     if not font_collection or font_collection not in self.qta_icons.icon_names:
-      self.logger.warning("Invalid font collection!")
+      self.logger.warning('Invalid font collection!')
       return
     self.iconComboBox.addItem(self.qta_icons.icon_names[font_collection][0])
     for item in self.qta_icons.icon_names[font_collection][1:]:

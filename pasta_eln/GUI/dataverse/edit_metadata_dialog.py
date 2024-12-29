@@ -78,10 +78,10 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     self.metadata = copy.deepcopy(self.config_model.metadata)
     self.metadata_types = self.get_metadata_types()
     self.minimal_metadata = [
-      {"name": "subject", "displayName": "Subject"},
-      {"name": "author", "displayName": "Author"},
-      {"name": "datasetContact", "displayName": "Dataset contact"},
-      {"name": "dsDescription", "displayName": "Ds Description"}
+      {'name': 'subject', 'displayName': 'Subject'},
+      {'name': 'author', 'displayName': 'Author'},
+      {'name': 'datasetContact', 'displayName': 'Dataset contact'},
+      {'name': 'dsDescription', 'displayName': 'Ds Description'}
     ]
 
     # Connect slots
@@ -104,10 +104,10 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
         dict[str, list[dict[str, str]]]: The metadata types mapping.
 
     """
-    self.logger.info("Loading metadata types mapping...")
+    self.logger.info('Loading metadata types mapping...')
     metadata_types_mapping: dict[str, list[dict[str, str]]] = {}
     if not self.metadata:
-      self.logger.error("Failed to load metadata model!")
+      self.logger.error('Failed to load metadata model!')
       return metadata_types_mapping
     for _, metablock in self.metadata['datasetVersion']['metadataBlocks'].items():
       if metablock['displayName'] not in metadata_types_mapping:
@@ -138,16 +138,16 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     for widget_pos in reversed(range(self.metadataScrollVerticalLayout.count())):
       self.metadataScrollVerticalLayout.itemAt(widget_pos).widget().setParent(None)
     if not self.metadata:
-      self.logger.error("Failed to load metadata model!")
+      self.logger.error('Failed to load metadata model!')
       return
     if new_metadata_type := self.typesComboBox.currentData(QtCore.Qt.ItemDataRole.UserRole):
-      self.logger.info("Loading %s metadata type...", new_metadata_type)
+      self.logger.info('Loading %s metadata type...', new_metadata_type)
       dataset = self.metadata.get('datasetVersion', {})
       metadata_blocks = dataset.get('metadataBlocks', {})
       for _, metablock in metadata_blocks.items():
         for field in metablock['fields']:
           if field['typeName'] == new_metadata_type:
-            self.logger.info("Loading %s metadata type of class: %s...",
+            self.logger.info('Loading %s metadata type of class: %s...',
                              field['typeName'],
                              field['typeClass'])
             if self.metadata_frame:
@@ -185,15 +185,15 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
         selection (str): The selected view option ("Minimal" or "Full").
 
     """
-    self.logger.info("Toggled to %s view...", selection)
+    self.logger.info('Toggled to %s view...', selection)
     match selection:
-      case "Minimal":
+      case 'Minimal':
         self.metadataBlockComboBox.hide()
         self.typesComboBox.clear()
         for meta_type in self.minimal_metadata:
           self.typesComboBox.addItem(meta_type['displayName'],
                                      userData=meta_type['name'])
-      case "Full":
+      case 'Full':
         self.metadataBlockComboBox.show()
         self.metadataBlockComboBox.clear()
         self.metadataBlockComboBox.addItems(self.metadata_types.keys())
@@ -206,13 +206,13 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     It adds items to combo boxes, sets text in line edits, and configures the UI based on the metadata.
 
     """
-    self.logger.info("Loading UI...")
+    self.logger.info('Loading UI...')
     self.metadata = copy.deepcopy(self.config_model.metadata)
     self.metadata_types = self.get_metadata_types()
 
     self.metadataBlockComboBox.clear()
     self.minimalFullComboBox.clear()
-    self.minimalFullComboBox.addItems(["Full", "Minimal"])
+    self.minimalFullComboBox.addItems(['Full', 'Minimal'])
     dataset_version = self.metadata.get('datasetVersion', {})  # type: ignore[union-attr]
     dataset_license = dataset_version.get('license', {})
     self.licenseNameLineEdit.setText(dataset_license.get('name', ''))
@@ -225,7 +225,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     Saves the changes made in the UI to the metadata, updates the metadata in the config model,
     and displays the updated metadata in the summary dialog.
     """
-    self.logger.info("Saving Config Model...")
+    self.logger.info('Saving Config Model...')
     if self.metadata_frame:
       self.metadata_frame.save_modifications()
     message = get_formatted_metadata_message(self.metadata or {})
@@ -261,7 +261,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
         name (str): The new license name to update in the metadata.
     """
     if self.metadata:
-      self.metadata['datasetVersion']['license'].update({"name": name})
+      self.metadata['datasetVersion']['license'].update({'name': name})
 
   def update_license_uri(self, uri: str) -> None:
     """
@@ -271,7 +271,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
         uri (str): The new license URI to update in the metadata.
     """
     if self.metadata:
-      self.metadata['datasetVersion']['license'].update({"uri": uri})
+      self.metadata['datasetVersion']['license'].update({'uri': uri})
 
   def reload_config(self) -> None:
     """
@@ -280,12 +280,12 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     Explanation:
         This method reloads the config model from the database.
     """
-    self.logger.info("Reloading config model...")
+    self.logger.info('Reloading config model...')
     self.config_model = self.db_api.get_model(self.db_api.config_model_id,
                                               ConfigModel)  # type: ignore[assignment]
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   import sys
 
   app = QtWidgets.QApplication(sys.argv)

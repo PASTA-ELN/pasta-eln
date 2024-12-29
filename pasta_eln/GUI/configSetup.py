@@ -72,7 +72,7 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration of preferences is acceptable' )
         self.text1.setMarkdown(self.mainText)
       else:
-        button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repair the configuration.",
+        button = QMessageBox.question(self, 'PASTA-ELN configuration', 'Do you want to create/repair the configuration.',
                                       QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
         if button == QMessageBox.StandardButton.Yes:
           dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
@@ -85,7 +85,7 @@ class ConfigurationSetup(QWidget):
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)
       #Shortcut
-      button = QMessageBox.question(self, "Create shortcut", "Do you want to create the shortcut for PASTA-ELN on desktop?",
+      button = QMessageBox.question(self, 'Create shortcut', 'Do you want to create the shortcut for PASTA-ELN on desktop?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
         createShortcut()
@@ -94,7 +94,7 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to NOT add a shortcut' )
       self.text1.setMarkdown(self.mainText)
       #Example data
-      button = QMessageBox.question(self, "Example data", exampleDataString,
+      button = QMessageBox.question(self, 'Example data', exampleDataString,
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
         self.progress1.show()

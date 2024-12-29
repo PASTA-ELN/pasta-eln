@@ -47,7 +47,7 @@ class CLI_Mixin:
       return 'Warning: pasta.outputHierarchy No project selected'
     hierString = ' '.join(self.hierStack)
     hierarchy = self.db.getHierarchy(hierString)
-    return "".join('  '*node.depth + node.name + ' | ' + '/'.join(node.docType) + (f' | {node.id}' if addID else '') +'\n'
+    return ''.join('  '*node.depth + node.name + ' | ' + '/'.join(node.docType) + (f' | {node.id}' if addID else '') +'\n'
                    for node in PreOrderIter(hierarchy) if node.docType[0].startswith('x') or not onlyHierarchy)
 
 

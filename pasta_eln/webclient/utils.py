@@ -57,67 +57,67 @@ def handle_http_client_exception(wrapped: Callable[..., Any]) -> Callable[..., A
     try:
       return await wrapped(self, *args, **kwargs)
     except AsyncTimeoutError as e:
-      url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
+      url = kwargs['base_url'] if 'base_url' in kwargs else args[0]
       error = f"Client session request timeout for url ({url}) with error: {e}"
       self.logger.error(error)
       self.session_request_errors.append(error)
       return {}
     except CancelledError as e:
-      url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
+      url = kwargs['base_url'] if 'base_url' in kwargs else args[0]
       error = f"Client session request cancelled for url ({url}) with error: {e}"
       self.logger.error(error)
       self.session_request_errors.append(error)
       return {}
     except InvalidStateError as e:
-      url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
+      url = kwargs['base_url'] if 'base_url' in kwargs else args[0]
       error = f"Client session request in invalid state for url ({url}) with error: {e}"
       self.logger.error(error)
       self.session_request_errors.append(error)
       return {}
     except IncompleteReadError as e:
-      url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
+      url = kwargs['base_url'] if 'base_url' in kwargs else args[0]
       error = f"Client session request incomplete read for url ({url}) with error: {e}"
       self.logger.error(error)
       self.session_request_errors.append(error)
       return {}
     except LimitOverrunError as e:
-      url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
+      url = kwargs['base_url'] if 'base_url' in kwargs else args[0]
       error = f"Client session request limit overrun for url ({url}) with error: {e}"
       self.logger.error(error)
       self.session_request_errors.append(error)
       return {}
     except TypeError as e:
-      url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
+      url = kwargs['base_url'] if 'base_url' in kwargs else args[0]
       error = f"Client session type error for url ({url}) with error: {e}"
       self.logger.error(error)
       self.session_request_errors.append(error)
       return {}
     except ClientConnectorError as e:
-      url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
+      url = kwargs['base_url'] if 'base_url' in kwargs else args[0]
       error = f"ClientConnectorError for url ({url}) with error: {e}"
       self.logger.error(error)
       self.session_request_errors.append(error)
       return {}
     except InvalidURL as e:
-      url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
+      url = kwargs['base_url'] if 'base_url' in kwargs else args[0]
       error = f"Client session InvalidURL for url ({url}) with error: {e}"
       self.logger.error(error)
       self.session_request_errors.append(error)
       return {}
     except JSONDecodeError as e:
-      url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
+      url = kwargs['base_url'] if 'base_url' in kwargs else args[0]
       error = f"Client session JSONDecodeError for url ({url}) with error: {e}"
       self.logger.error(error)
       self.session_request_errors.append(error)
       return {}
     except AssertionError as e:
-      url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
+      url = kwargs['base_url'] if 'base_url' in kwargs else args[0]
       error = f"Client session AssertionError for url ({url}) with error: {e}"
       self.logger.error(error)
       self.session_request_errors.append(error)
       return {}
     except ValueError as e:
-      url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
+      url = kwargs['base_url'] if 'base_url' in kwargs else args[0]
       error = f"Client session ValueError for url ({url}) with error: {e}"
       self.logger.error(error)
       self.session_request_errors.append(error)

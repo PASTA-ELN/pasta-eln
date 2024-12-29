@@ -32,10 +32,10 @@ class AttachmentsTableViewModel(TableViewModel):
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.data_set = []
     self.data_name_map = {
-      0: "description",
-      1: "type",
-      2: "delete",
-      3: "re-order"
+      0: 'description',
+      1: 'type',
+      2: 'delete',
+      3: 're-order'
     }
     self.column_widths: dict[int, int] = {
       0: 300,  # Location column width

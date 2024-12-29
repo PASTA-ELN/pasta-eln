@@ -287,7 +287,7 @@ class Project(QWidget):
       module      = importlib.import_module(command[1])
       module.main(self.comm.backend, self.projID, self)
     else:
-      print("**ERROR project menu unknown:",command)
+      print('**ERROR project menu unknown:',command)
     return
 
 
@@ -367,7 +367,7 @@ class Project(QWidget):
     hierStack = '/'.join([i.id for i in nodeHier.ancestors]+[nodeHier.id])
     gui = nodeHier.gui
     nodeTree = QStandardItem(nodeHier.name)
-    nodeTree.setData({"hierStack":hierStack, "docType":nodeHier.docType, "gui":gui})
+    nodeTree.setData({'hierStack':hierStack, 'docType':nodeHier.docType, 'gui':gui})
     if nodeHier.id[0]=='x':
       nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
     else:

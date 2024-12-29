@@ -78,7 +78,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     self.database = DatabaseAPI()
     self.data_hierarchy_document: Any = self.database.get_data_hierarchy_document()
     if not self.data_hierarchy_document:
-      raise DocumentNullException("Null data_hierarchy document in db instance", {})
+      raise DocumentNullException('Null data_hierarchy document in db instance', {})
 
     # Instantiates metadata & attachment table models along with the column delegates
     self.metadata_table_data_model = MetadataTableViewModel()
@@ -147,7 +147,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       KeyNotFoundException: Raised when passed in argument @new_type_selected is not found in data_hierarchy_types
 
     """
-    self.logger.info("New type selected in UI: {%s}", new_type_selected)
+    self.logger.info('New type selected in UI: {%s}', new_type_selected)
     self.clear_ui()
     new_type_selected = adapt_type(new_type_selected)
     self.type_changed_signal.emit(new_type_selected)
@@ -157,7 +157,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
                                    f"not found in data_hierarchy_types", {})
       selected_type = self.data_hierarchy_types.get(new_type_selected, {})
       # Get the metadata for the selected type and store the list in selected_type_metadata
-      self.selected_type_metadata = selected_type.get("meta", {})
+      self.selected_type_metadata = selected_type.get('meta', {})
 
       # Gets the attachment data from selected type and set it in table view
       self.attachments_table_data_model.update(selected_type.get('attachments', {}))
@@ -176,7 +176,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
 
     Returns: Nothing
     """
-    self.logger.info("New metadata group selected in UI: {%s}", new_selected_metadata_group)
+    self.logger.info('New metadata group selected in UI: {%s}', new_selected_metadata_group)
     if new_selected_metadata_group and self.selected_type_metadata:
       # Update the metadata table as per the selected metadata group from combobox
       self.metadata_table_data_model.update(self.selected_type_metadata.get(new_selected_metadata_group))
@@ -188,16 +188,16 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     """
     new_group = self.addMetadataGroupLineEdit.text()
     if not new_group:
-      show_message("Enter non-null/valid metadata group name!!.....", QMessageBox.Icon.Warning)
+      show_message('Enter non-null/valid metadata group name!!.....', QMessageBox.Icon.Warning)
       return None
     if not self.data_hierarchy_loaded or self.data_hierarchy_types is None:
-      show_message("Load the data hierarchy data first....", QMessageBox.Icon.Warning)
+      show_message('Load the data hierarchy data first....', QMessageBox.Icon.Warning)
       return None
     if new_group in self.selected_type_metadata.keys():
-      show_message("Metadata group already exists....", QMessageBox.Icon.Warning)
+      show_message('Metadata group already exists....', QMessageBox.Icon.Warning)
       return None
     # Add the new group to the metadata list and refresh the group combo box
-    self.logger.info("User added new metadata group: {%s}", new_group)
+    self.logger.info('User added new metadata group: {%s}', new_group)
     self.selected_type_metadata[new_group] = []
     self.metadataGroupComboBox.clear()
     self.metadataGroupComboBox.addItems(list(self.selected_type_metadata.keys()))
@@ -211,10 +211,10 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     """
     selected_group = self.metadataGroupComboBox.currentText()
     if self.selected_type_metadata is None:
-      show_message("Load the data hierarchy data first....", QMessageBox.Icon.Warning)
+      show_message('Load the data hierarchy data first....', QMessageBox.Icon.Warning)
       return None
     if selected_group and selected_group in self.selected_type_metadata.keys():
-      self.logger.info("User deleted the selected metadata group: {%s}", selected_group)
+      self.logger.info('User deleted the selected metadata group: {%s}', selected_group)
       self.selected_type_metadata.pop(selected_group)
       self.metadataGroupComboBox.clear()
       self.typeMetadataTableView.model().update([])
@@ -235,7 +235,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     current_type = self.typeComboBox.currentText()
     current_type = adapt_type(current_type)
     if modified_type_displayed_title is not None and current_type in self.data_hierarchy_types:
-      self.data_hierarchy_types.get(current_type, {})["title"] = modified_type_displayed_title
+      self.data_hierarchy_types.get(current_type, {})['title'] = modified_type_displayed_title
 
   def update_type_iri(self,
                       modified_iri: str) -> None:
@@ -250,7 +250,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     current_type = self.typeComboBox.currentText()
     current_type = adapt_type(current_type)
     if modified_iri is not None and current_type in self.data_hierarchy_types:
-      self.data_hierarchy_types.get(current_type, {})["IRI"] = modified_iri
+      self.data_hierarchy_types.get(current_type, {})['IRI'] = modified_iri
 
   def delete_selected_type(self) -> None:
     """
@@ -261,13 +261,13 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     selected_type = self.typeComboBox.currentText()
     selected_type = adapt_type(selected_type)
     if not self.data_hierarchy_loaded:
-      show_message("Load the data hierarchy data first....", QMessageBox.Icon.Warning)
+      show_message('Load the data hierarchy data first....', QMessageBox.Icon.Warning)
       return
     if self.data_hierarchy_types is None or self.data_hierarchy_document is None:
-      show_message("Load the data hierarchy data first....", QMessageBox.Icon.Warning)
+      show_message('Load the data hierarchy data first....', QMessageBox.Icon.Warning)
       return
     if selected_type and selected_type in self.data_hierarchy_types:
-      self.logger.info("User deleted the selected type: {%s}", selected_type)
+      self.logger.info('User deleted the selected type: {%s}', selected_type)
       self.data_hierarchy_types.pop(selected_type)
       self.typeComboBox.clear()
       self.typeComboBox.addItems(get_types_for_display(list(self.data_hierarchy_types.keys())))
@@ -297,7 +297,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
         self: The instance of the class.
     """
     if not isinstance(self.data_hierarchy_types, dict):
-      show_message("Load the data hierarchy data first....", QMessageBox.Icon.Warning)
+      show_message('Load the data hierarchy data first....', QMessageBox.Icon.Warning)
       return
     self.typeComboBox.clear()
     self.typeComboBox.addItems(get_types_for_display(list(self.data_hierarchy_types.keys())))
@@ -346,7 +346,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     Returns: Nothing
     """
     if self.data_hierarchy_types is None or not self.data_hierarchy_loaded:
-      show_message("Load the data hierarchy data first...", QMessageBox.Icon.Warning)
+      show_message('Load the data hierarchy data first...', QMessageBox.Icon.Warning)
       return
     self.create_type_dialog.set_data_hierarchy_types(self.data_hierarchy_types)
     self.create_type_dialog.show()
@@ -357,7 +357,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     Returns: Nothing
     """
     if self.data_hierarchy_types is None or not self.data_hierarchy_loaded:
-      show_message("Load the data hierarchy data first...", QMessageBox.Icon.Warning)
+      show_message('Load the data hierarchy data first...', QMessageBox.Icon.Warning)
       return
     current_type = self.typeComboBox.currentText()
     current_type = adapt_type(current_type)
@@ -370,7 +370,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     Set up the slots for the UI elements of data hierarchy editor
     Returns: Nothing
     """
-    self.logger.info("Setting up slots for the editor..")
+    self.logger.info('Setting up slots for the editor..')
     # Slots for the buttons
     self.addMetadataRowPushButton.clicked.connect(self.metadata_table_data_model.add_data_row)
     self.addAttachmentPushButton.clicked.connect(self.attachments_table_data_model.add_data_row)
@@ -407,9 +407,9 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     Returns:
 
     """
-    self.logger.info("User loaded the data hierarchy data in UI")
+    self.logger.info('User loaded the data hierarchy data in UI')
     if self.data_hierarchy_document is None:
-      raise GenericException("Null data_hierarchy_document, erroneous app state", {})
+      raise GenericException('Null data_hierarchy_document, erroneous app state', {})
     # Load the data_hierarchy types from the db document
     for data in self.data_hierarchy_document:
       if isinstance(self.data_hierarchy_document[data], dict):
@@ -426,7 +426,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     """
     Save the modified data hierarchy document data in database
     """
-    self.logger.info("User clicked the save button..")
+    self.logger.info('User clicked the save button..')
     types_with_missing_metadata, types_with_null_name_metadata, types_with_duplicate_metadata \
       = check_data_hierarchy_types(self.data_hierarchy_types)
     if (types_with_missing_metadata
@@ -447,7 +447,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       self.data_hierarchy_document[type_name] = type_structure
     # Save the modified document
     self.database.save_data_hierarchy_document(self.data_hierarchy_document)
-    show_message("Data hierarchy saved successfully...", QMessageBox.Icon.Information)
+    show_message('Data hierarchy saved successfully...', QMessageBox.Icon.Information)
 
   def show_hide_attachments_table(self) -> None:
     """

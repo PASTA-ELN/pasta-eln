@@ -16,7 +16,7 @@ from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 
 @pytest.fixture
 def qta_icons_factory(mocker):
-  mocker.patch("pasta_eln.GUI.data_hierarchy.qtaicons_factory.logging")
+  mocker.patch('pasta_eln.GUI.data_hierarchy.qtaicons_factory.logging')
   iconic_mock = mocker.MagicMock()
   iconic_mock.charmap = {
     'fa': ['value1', 'value2'],
@@ -30,15 +30,15 @@ def qta_icons_factory(mocker):
     'ri': ['value11', 'value19'],
     'msc': ['value12', 'value20'],
   }
-  mocker.patch("pasta_eln.GUI.data_hierarchy.qtaicons_factory.qta._resource", {"iconic": iconic_mock})
+  mocker.patch('pasta_eln.GUI.data_hierarchy.qtaicons_factory.qta._resource', {'iconic': iconic_mock})
   return QTAIconsFactory.get_instance()
 
 
 class TestDataHierarchyQTAIconsFactory:
 
-  @pytest.mark.parametrize("description", [
-    pytest.param("First call to get_instance", id="first_call"),
-    pytest.param("Subsequent call to get_instance", id="subsequent_call"),
+  @pytest.mark.parametrize('description', [
+    pytest.param('First call to get_instance', id='first_call'),
+    pytest.param('Subsequent call to get_instance', id='subsequent_call'),
   ])
   def test_get_instance_singleton_behavior(self, description):
     # Act
@@ -46,20 +46,20 @@ class TestDataHierarchyQTAIconsFactory:
     instance2 = QTAIconsFactory.get_instance()
 
     # Assert
-    assert instance1 is instance2, "get_instance should return the same instance on subsequent calls"
+    assert instance1 is instance2, 'get_instance should return the same instance on subsequent calls'
 
-  @pytest.mark.parametrize("description", [
-    pytest.param("Check instance type", id="check_instance_type"),
+  @pytest.mark.parametrize('description', [
+    pytest.param('Check instance type', id='check_instance_type'),
   ])
   def test_get_instance_type(self, description):
     # Act
     instance = QTAIconsFactory.get_instance()
 
     # Assert
-    assert isinstance(instance, QTAIconsFactory), "get_instance should return an instance of YourClassName"
+    assert isinstance(instance, QTAIconsFactory), 'get_instance should return an instance of YourClassName'
 
-  @pytest.mark.parametrize("description", [
-    pytest.param("Check instance attribute existence", id="check_instance_attribute"),
+  @pytest.mark.parametrize('description', [
+    pytest.param('Check instance attribute existence', id='check_instance_attribute'),
   ])
   def test_get_instance_attribute_existence(self, description):
     # Arrange
@@ -72,25 +72,25 @@ class TestDataHierarchyQTAIconsFactory:
     assert has_instance_attr, "Class should have '_instance' attribute after get_instance is called"
 
   @pytest.mark.parametrize(
-    "has_instance",
+    'has_instance',
     [
       (True),
       (False)
     ],
-    ids=["instance_attribute_exists_but_not_initialized", "instance_attribute_does_not_exist"]
+    ids=['instance_attribute_exists_but_not_initialized', 'instance_attribute_does_not_exist']
   )
   def test_init(self, mocker, has_instance):
     mocker.resetall()
     if has_instance:
       QTAIconsFactory._instance = None
     else:
-      delattr(QTAIconsFactory, "_instance")
-    mock_logging = mocker.patch("pasta_eln.GUI.data_hierarchy.qtaicons_factory.logging")
+      delattr(QTAIconsFactory, '_instance')
+    mock_logging = mocker.patch('pasta_eln.GUI.data_hierarchy.qtaicons_factory.logging')
     mock_set_icon_names = mocker.patch(
-      "pasta_eln.GUI.data_hierarchy.qtaicons_factory.QTAIconsFactory.set_icon_names")
+      'pasta_eln.GUI.data_hierarchy.qtaicons_factory.QTAIconsFactory.set_icon_names')
 
     instance = QTAIconsFactory.get_instance()
-    mock_logging.getLogger.assert_called_once_with("pasta_eln.GUI.data_hierarchy.qtaicons_factory.QTAIconsFactory")
+    mock_logging.getLogger.assert_called_once_with('pasta_eln.GUI.data_hierarchy.qtaicons_factory.QTAIconsFactory')
     mock_set_icon_names.assert_called_once()
 
     assert instance.icon_names == {}
@@ -103,13 +103,13 @@ class TestDataHierarchyQTAIconsFactory:
       assert instance is qta_icons_factory
 
   @pytest.mark.parametrize(
-    "font_collections, expected",
+    'font_collections, expected',
     [
       (['fa', 'fa5'], {'fa': ['No value', 'fa.value1', 'fa.value2'], 'fa5': ['No value', 'fa5.value3', 'fa5.value4']}),
       (['mdi'], {'mdi': ['No value', 'mdi.value8', 'mdi.value16']}),
       ([], {}),
     ],
-    ids=["two_collections", "one_collection", "empty_collection"]
+    ids=['two_collections', 'one_collection', 'empty_collection']
   )
   def test_set_icon_names(self, qta_icons_factory, font_collections, expected):
     # Arrange
@@ -124,12 +124,12 @@ class TestDataHierarchyQTAIconsFactory:
     assert qta_icons_factory._icons_initialized
 
   @pytest.mark.parametrize(
-    "font_collections, expected_exception",
+    'font_collections, expected_exception',
     [
       (None, IncorrectParameterError),
-      ("not_a_list", IncorrectParameterError),
+      ('not_a_list', IncorrectParameterError),
     ],
-    ids=["None_type", "string_type"]
+    ids=['None_type', 'string_type']
   )
   def test_font_collections_setter_invalid(self, qta_icons_factory, font_collections, expected_exception):
     # Act & Assert
@@ -137,12 +137,12 @@ class TestDataHierarchyQTAIconsFactory:
       qta_icons_factory.font_collections = font_collections
 
   @pytest.mark.parametrize(
-    "icon_names, expected_exception",
+    'icon_names, expected_exception',
     [
       (None, IncorrectParameterError),
-      ("not_a_dict", IncorrectParameterError),
+      ('not_a_dict', IncorrectParameterError),
     ],
-    ids=["None_type", "string_type"]
+    ids=['None_type', 'string_type']
   )
   def test_icon_names_setter_invalid(self, qta_icons_factory, icon_names, expected_exception):
     # Act & Assert
@@ -166,16 +166,16 @@ class TestDataHierarchyQTAIconsFactory:
       qta_icons_factory.set_icon_names()
 
     # Assert
-    mock_warning.assert_called_once_with("Icons already initialized!")
+    mock_warning.assert_called_once_with('Icons already initialized!')
 
   def test_set_icon_names_no_font_maps(self, mocker, qta_icons_factory):
     # Arrange
     qta_icons_factory.logger = mocker.MagicMock()
     qta_icons_factory._icons_initialized = False
-    mocker.patch("pasta_eln.GUI.data_hierarchy.qtaicons_factory.qta._resource", {"iconic": MagicMock(charmap=None)})
+    mocker.patch('pasta_eln.GUI.data_hierarchy.qtaicons_factory.qta._resource', {'iconic': MagicMock(charmap=None)})
 
     # Act
     qta_icons_factory.set_icon_names()
 
     # Assert
-    qta_icons_factory.logger.warning.assert_called_once_with("font_maps could not be found!")
+    qta_icons_factory.logger.warning.assert_called_once_with('font_maps could not be found!')

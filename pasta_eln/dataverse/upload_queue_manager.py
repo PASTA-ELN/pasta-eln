@@ -60,7 +60,7 @@ class UploadQueueManager(GenericTaskObject):
         This method retrieves the number of concurrent uploads from the database and sets it as the value for the
         number_of_concurrent_uploads attribute.
     """
-    self.logger.info("Resetting number of concurrent uploads..")
+    self.logger.info('Resetting number of concurrent uploads..')
     self.config_model = self.db_api.get_config_model()
     self.number_of_concurrent_uploads = self.config_model.parallel_uploads_count if self.config_model else None
 
@@ -76,7 +76,7 @@ class UploadQueueManager(GenericTaskObject):
         upload_task_thread (TaskThreadExtension): The thread task to be added to the upload queue.
 
     """
-    self.logger.info("Adding thread task to upload queue, id: %s", upload_task_thread.task.id)
+    self.logger.info('Adding thread task to upload queue, id: %s', upload_task_thread.task.id)
     self.upload_queue.append(upload_task_thread)
     upload_task_thread.task.finish.connect(lambda: self.remove_from_queue(upload_task_thread))
 
@@ -92,7 +92,7 @@ class UploadQueueManager(GenericTaskObject):
         upload_task_thread (TaskThreadExtension): The thread task to be removed from the upload queue.
 
     """
-    self.logger.info("Removing thread task from upload queue, id: %s", upload_task_thread.task.id)
+    self.logger.info('Removing thread task from upload queue, id: %s', upload_task_thread.task.id)
     if upload_task_thread in self.upload_queue:
       self.upload_queue.remove(upload_task_thread)
     if upload_task_thread in self.running_queue:
@@ -109,7 +109,7 @@ class UploadQueueManager(GenericTaskObject):
         It iterates over the upload queue
         and starts the tasks if the running queue is not full and the task is not canceled.
     """
-    self.logger.info("Starting upload queue..")
+    self.logger.info('Starting upload queue..')
     super().start_task()
     while not self.cancelled:
       if self.number_of_concurrent_uploads and len(self.running_queue) < self.number_of_concurrent_uploads:
@@ -132,7 +132,7 @@ class UploadQueueManager(GenericTaskObject):
         This method performs the cleanup of the upload manager by calling the super-class's cleanup method
         and emptying the upload queue.
     """
-    self.logger.info("Cleaning up upload manager..")
+    self.logger.info('Cleaning up upload manager..')
     super().cleanup()
     self.empty_upload_queue()
 
@@ -143,7 +143,7 @@ class UploadQueueManager(GenericTaskObject):
     Explanation:
         This method empties the upload queue by quitting each upload task thread and clearing the upload queue.
     """
-    self.logger.info("Emptying upload queue..")
+    self.logger.info('Emptying upload queue..')
     for upload_task_thread in self.upload_queue:
       upload_task_thread.worker_thread.quit()
     self.upload_queue.clear()
@@ -159,7 +159,7 @@ class UploadQueueManager(GenericTaskObject):
     Args:
         self: The instance of the UploadQueueManager.
     """
-    self.logger.info("Removing cancelled tasks from the queue..")
+    self.logger.info('Removing cancelled tasks from the queue..')
     cancelled_tasks = [upload_task_thread for upload_task_thread in self.upload_queue if
                        upload_task_thread.task.cancelled]
     for upload_task_thread in cancelled_tasks:
@@ -173,7 +173,7 @@ class UploadQueueManager(GenericTaskObject):
         This method cancels the upload queue by calling the super-class's cancel_task method.
         It emits the cancel signal for each task in the running queue and empties the upload queue.
     """
-    self.logger.info("Cancelling upload manager..")
+    self.logger.info('Cancelling upload manager..')
     super().cancel_task()
     # Cancel all the tasks in the pool and remove them all from the queue
     self.cancel_all_queued_tasks_and_empty_queue()
@@ -189,7 +189,7 @@ class UploadQueueManager(GenericTaskObject):
     Args:
         self: The instance of the class.
     """
-    self.logger.info("Cancelling upload queue and the empty the upload queue..")
+    self.logger.info('Cancelling upload queue and the empty the upload queue..')
     for upload_task_thread in self.upload_queue:
       upload_task_thread.task.cancel.emit()
     if self.upload_queue:

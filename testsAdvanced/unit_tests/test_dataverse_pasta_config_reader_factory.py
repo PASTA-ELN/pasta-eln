@@ -49,7 +49,7 @@ def mock_open_file():
 
 @pytest.fixture
 def mock_load():
-  with patch('pasta_eln.dataverse.pasta_config_reader_factory.load', return_value={"key": "value"}) as mock_load:
+  with patch('pasta_eln.dataverse.pasta_config_reader_factory.load', return_value={'key': 'value'}) as mock_load:
     yield mock_load
 
 
@@ -70,10 +70,10 @@ def application():
 
 
 class TestDataversePastaConfigReaderFactory:
-  @pytest.mark.parametrize("file_exists, expected_connect_call", [
+  @pytest.mark.parametrize('file_exists, expected_connect_call', [
     (True, True),  # file exists, should connect signal
     (False, False),  # file does not exist, should not connect signal
-  ], ids=["file_exists", "file_does_not_exist"])
+  ], ids=['file_exists', 'file_does_not_exist'])
   def test_init_file_watcher_connection(self, mocker, mock_file_system_watcher, mock_exists,
                                         file_exists,
                                         expected_connect_call):
@@ -95,9 +95,9 @@ class TestDataversePastaConfigReaderFactory:
       mock_fs_watcher_instance.fileChanged.connect.assert_not_called()
     mock_read_pasta_config.assert_called_once()
 
-  @pytest.mark.parametrize("config_file_name", [
+  @pytest.mark.parametrize('config_file_name', [
     ('/mock/path/.pastaELN_v3.json'),
-  ], ids=["default_config_path"])
+  ], ids=['default_config_path'])
   def test_init_config_file_name(self, mocker, config_file_name):
     # Arrange
     mocker.patch('pasta_eln.dataverse.pasta_config_reader_factory.Path.home', return_value=Path('/mock/path'))
@@ -123,28 +123,28 @@ class TestDataversePastaConfigReaderFactory:
     assert config_reader.config_file_name == '/mock/path/.pastaELN_v3.json'
 
   @pytest.mark.parametrize(
-    "file_exists, file_content, expected_config, raises_exception, exception",
+    'file_exists, file_content, expected_config, raises_exception, exception',
     [
       # Happy path test cases
-      param(True, '{"key": "value"}', {"key": "value"}, False, None, id="valid_json"),
-      param(True, '{"another_key": 123}', {"another_key": 123}, False, None, id="valid_json_with_number"),
+      param(True, '{"key": "value"}', {'key': 'value'}, False, None, id='valid_json'),
+      param(True, '{"another_key": 123}', {'another_key': 123}, False, None, id='valid_json_with_number'),
 
       # Edge cases
-      param(True, '{}', {}, False, None, id="empty_json"),
-      param(True, '{"nested": {"key": "value"}}', {"nested": {"key": "value"}}, False, None, id="nested_json"),
+      param(True, '{}', {}, False, None, id='empty_json'),
+      param(True, '{"nested": {"key": "value"}}', {'nested': {'key': 'value'}}, False, None, id='nested_json'),
 
       # Error cases
-      param(False, '', None, True, ConfigError, id="file_not_exist"),
-      param(True, 'invalid_json', None, True, NameError, id="invalid_json_format"),
+      param(False, '', None, True, ConfigError, id='file_not_exist'),
+      param(True, 'invalid_json', None, True, NameError, id='invalid_json_format'),
     ],
     ids=lambda x: x[-1]
   )
   def test_read_pasta_config(self, pasta_config_reader, file_exists, file_content, expected_config, raises_exception,
                              exception):
     # Arrange
-    with patch("pasta_eln.dataverse.pasta_config_reader_factory.exists", return_value=file_exists), \
-        patch("builtins.open", mock_open(read_data=file_content)), \
-        patch("pasta_eln.dataverse.pasta_config_reader_factory.load",
+    with patch('pasta_eln.dataverse.pasta_config_reader_factory.exists', return_value=file_exists), \
+        patch('builtins.open', mock_open(read_data=file_content)), \
+        patch('pasta_eln.dataverse.pasta_config_reader_factory.load',
               side_effect=lambda f: eval(file_content) if file_content else None):
 
       # Act
@@ -157,13 +157,13 @@ class TestDataversePastaConfigReaderFactory:
       # Assert
       if not raises_exception:
         assert pasta_config_reader.config == expected_config
-        pasta_config_reader.logger.info.assert_any_call("Reading config file: %s", pasta_config_reader.config_file_name)
+        pasta_config_reader.logger.info.assert_any_call('Reading config file: %s', pasta_config_reader.config_file_name)
 
   def test_singleton_instance(self, mocker, tmp_path):
     # Arrange
     PastaConfigReaderFactory._instance = None
     config_file = tmp_path / '.pastaELN_v3.json'
-    config_file.write_text(json.dumps({"key": "value"}))
+    config_file.write_text(json.dumps({'key': 'value'}))
 
     # Act
     with mocker.patch('pasta_eln.dataverse.pasta_config_reader_factory.Path.home', return_value=tmp_path):
@@ -174,21 +174,21 @@ class TestDataversePastaConfigReaderFactory:
     assert instance1 is instance2
 
   @pytest.mark.parametrize(
-    "initial_config, expected_config",
+    'initial_config, expected_config',
     [
       # Success path tests
-      param({"key1": "value1"}, {"key1": "value1"}, id="success_path_single_key"),
-      param({"key1": "value1", "key2": "value2"}, {"key1": "value1", "key2": "value2"},
-            id="success_path_multiple_keys"),
-      param(None, None, id="success_path_none_config"),
+      param({'key1': 'value1'}, {'key1': 'value1'}, id='success_path_single_key'),
+      param({'key1': 'value1', 'key2': 'value2'}, {'key1': 'value1', 'key2': 'value2'},
+            id='success_path_multiple_keys'),
+      param(None, None, id='success_path_none_config'),
 
       # Edge cases
-      param({}, {}, id="edge_case_empty_dict"),
-      param({"key": None}, {"key": None}, id="edge_case_none_value"),
-      param({"": "value"}, {"": "value"}, id="edge_case_empty_key"),
+      param({}, {}, id='edge_case_empty_dict'),
+      param({'key': None}, {'key': None}, id='edge_case_none_value'),
+      param({'': 'value'}, {'': 'value'}, id='edge_case_empty_key'),
 
       # Error cases
-      param(None, None, id="error_case_no_config_attribute"),
+      param(None, None, id='error_case_no_config_attribute'),
     ],
     ids=lambda x: x[2]
   )
@@ -204,7 +204,7 @@ class TestDataversePastaConfigReaderFactory:
 
   def test_config_deleter(self, pasta_config_reader):
     # Arrange
-    pasta_config_reader.config = {"key": "value"}
+    pasta_config_reader.config = {'key': 'value'}
 
     # Act
     del pasta_config_reader.config
@@ -218,14 +218,14 @@ class TestDataversePastaConfigReaderFactory:
     loop = QEventLoop()
     timer = QtCore.QTimer()
     config_file = tmp_path / '.pastaELN_v3.json'
-    config_file.write_text(json.dumps({"key": "value"}))
+    config_file.write_text(json.dumps({'key': 'value'}))
     mocker.patch('pasta_eln.dataverse.pasta_config_reader_factory.Path.home', return_value=tmp_path)
 
     def close_config_file():
       config_file.write_text(json.dumps(
         {
-          "key1": "value1",
-          "key2": "value2"
+          'key1': 'value1',
+          'key2': 'value2'
         }
       ))
       loop.quit()
@@ -234,7 +234,7 @@ class TestDataversePastaConfigReaderFactory:
     instance1 = PastaConfigReaderFactory.get_instance()
 
     # Assert
-    assert instance1.config == {"key": "value"}
+    assert instance1.config == {'key': 'value'}
 
     # Act
     timer.timeout.connect(close_config_file)
@@ -252,12 +252,12 @@ class TestDataversePastaConfigReaderFactory:
 
     # Assert
     assert instance1.config == {
-      "key1": "value1",
-      "key2": "value2"
+      'key1': 'value1',
+      'key2': 'value2'
     }
     assert instance2.config == {
-      "key1": "value1",
-      "key2": "value2"
+      'key1': 'value1',
+      'key2': 'value2'
     }
 
   def test_config_modified_with_multiple_modifications(self, mocker, application, tmp_path):
@@ -268,20 +268,20 @@ class TestDataversePastaConfigReaderFactory:
     loop = QEventLoop()
     timer = QtCore.QTimer()
     config_file = tmp_path / '.pastaELN_v3.json'
-    config_file.write_text(json.dumps({"key": "value"}))
+    config_file.write_text(json.dumps({'key': 'value'}))
     mocker.patch('pasta_eln.dataverse.pasta_config_reader_factory.Path.home', return_value=tmp_path)
     configs = [
-      {"key1": "value1", "key2": "value2"},
-      {"key3": "value3"},
-      {"key1": "value1", "key3": "value3"},
-      {"key1": "value1", "key2": "value2", "key3": "value3"},
-      {"key1": "value1", "key2": "value2", "key3": "value3", "key4": "value4"},
-      {"key1": "value1", "key2": "value2", "key3": "value3", "key4": "value4", "key5": "value5"},
-      {"key1": "value1", "key2": "value2", "key3": "value3", "key4": "value4", "key5": "value5", "key6": "value6"},
-      {"key1": "value1", "key2": "value2", "key3": "value3", "key4": "value4", "key5": "value5", "key6": "value6",
-       "key7": "value7"},
-      {"key1": "value1", "key2": "value2", "key3": "value3", "key4": "value4", "key5": "value5", "key6": "value6",
-       "key7": "value7", "key8": "value8"}
+      {'key1': 'value1', 'key2': 'value2'},
+      {'key3': 'value3'},
+      {'key1': 'value1', 'key3': 'value3'},
+      {'key1': 'value1', 'key2': 'value2', 'key3': 'value3'},
+      {'key1': 'value1', 'key2': 'value2', 'key3': 'value3', 'key4': 'value4'},
+      {'key1': 'value1', 'key2': 'value2', 'key3': 'value3', 'key4': 'value4', 'key5': 'value5'},
+      {'key1': 'value1', 'key2': 'value2', 'key3': 'value3', 'key4': 'value4', 'key5': 'value5', 'key6': 'value6'},
+      {'key1': 'value1', 'key2': 'value2', 'key3': 'value3', 'key4': 'value4', 'key5': 'value5', 'key6': 'value6',
+       'key7': 'value7'},
+      {'key1': 'value1', 'key2': 'value2', 'key3': 'value3', 'key4': 'value4', 'key5': 'value5', 'key6': 'value6',
+       'key7': 'value7', 'key8': 'value8'}
     ]
 
     def modify_config_file(config):
@@ -311,18 +311,18 @@ class TestDataversePastaConfigReaderFactory:
     assert instance2.config in configs
 
   @pytest.mark.parametrize(
-    "config_file_path, file_exists, expected_remove_call, expected_add_call",
+    'config_file_path, file_exists, expected_remove_call, expected_add_call',
     [
-      ("valid_path_1", True, True, True),  # happy path
-      ("valid_path_2", True, True, True),  # happy path
-      ("non_existent_path", False, False, False),  # edge case: file does not exist
-      ("", False, False, False),  # edge case: empty path
+      ('valid_path_1', True, True, True),  # happy path
+      ('valid_path_2', True, True, True),  # happy path
+      ('non_existent_path', False, False, False),  # edge case: file does not exist
+      ('', False, False, False),  # edge case: empty path
     ],
     ids=[
-      "happy_path_valid_path_1",
-      "happy_path_valid_path_2",
-      "edge_case_non_existent_path",
-      "edge_case_empty_path",
+      'happy_path_valid_path_1',
+      'happy_path_valid_path_2',
+      'edge_case_non_existent_path',
+      'edge_case_empty_path',
     ]
   )
   def test_config_file_changed(self, mocker, pasta_config_reader, config_file_path, file_exists, expected_remove_call,

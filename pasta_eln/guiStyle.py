@@ -402,7 +402,7 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
     labelL.addWidget(text, stretch=1)
   else:
     dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
-    docID = ""
+    docID = ''
     if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
         not isinstance(dataHierarchyItems[0]['list'], list):                #choice among docType
       table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list']) # type: ignore[attr-defined]

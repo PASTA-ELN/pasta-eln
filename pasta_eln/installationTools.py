@@ -179,7 +179,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if backend.cwd is not None:
     data2DirName = backend.basePath/backend.cwd
   else:
-    return "**ERROR: backend is incorrect"
+    return '**ERROR: backend is incorrect'
   backend.addData('x1',    {'name': 'This is an example subtask',     'comment': 'Random comment 1'})
   if callbackPercent is not None:
     callbackPercent(9)
@@ -194,7 +194,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if backend.cwd is not None:
     dataDirName = backend.basePath/backend.cwd
   else:
-    return "**ERROR: backend is incorrect"
+    return '**ERROR: backend is incorrect'
   backend.changeHierarchy(None)
   outputString(outputFormat,'info',backend.outputHierarchy(addID=True))
   if callbackPercent is not None:
@@ -240,10 +240,10 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   df = backend.db.getView('viewDocType/instrument')
   idInstrument = df[df['name']=='Big instrument']['id'].values[0]
   idSensor = df[df['name']=='Sensor']['id'].values[0]
-  backend.db.initAttachment(idInstrument, "Right side of instrument", 'instrument/extension')
-  backend.db.addAttachment(idInstrument, "Right side of instrument",
+  backend.db.initAttachment(idInstrument, 'Right side of instrument', 'instrument/extension')
+  backend.db.addAttachment(idInstrument, 'Right side of instrument',
          {'date':datetime.now().isoformat(),'remark':'Worked well','docID':idSensor,'user':'nobody'})
-  backend.db.addAttachment(idInstrument, "Right side of instrument",
+  backend.db.addAttachment(idInstrument, 'Right side of instrument',
          {'date':datetime.now().isoformat(),'remark':'Service','docID':'','user':'nobody'})
   outputString(outputFormat,'info',backend.output('instrument'))
 
@@ -343,7 +343,7 @@ def createShortcut() -> None:
     import winshell
     from win32com.client import Dispatch
     shell = Dispatch('WScript.Shell')
-    shortcut = shell.CreateShortCut( os.path.join(winshell.desktop(), "pastaELN.lnk") )
+    shortcut = shell.CreateShortCut( os.path.join(winshell.desktop(), 'pastaELN.lnk') )
     if env := os.environ.get('CONDA_PREFIX', ''):
       env = env.split('\\')[-1]  #just the env name
       user = os.getlogin()
@@ -353,7 +353,7 @@ def createShortcut() -> None:
         fBat.write(batContent)
       shortcut.Targetpath = batLocation
     else:
-      shortcut.Targetpath = r"python -m pasta_eln.gui"
+      shortcut.Targetpath = r'python -m pasta_eln.gui'
     shortcut.WorkingDirectory = str(Path.home())
     shortcut.IconLocation = str(Path(__file__).parent/'Resources'/'Icons'/'favicon64.ico')
     shortcut.save()

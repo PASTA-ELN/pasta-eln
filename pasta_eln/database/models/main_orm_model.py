@@ -22,14 +22,14 @@ class MainOrmModel(OrmModelBase):
   including fields for ID, name, user, type, creation date, modification date, and comments.
   It provides a method to retrieve the names of the table columns for database operations.
   """
-  __tablename__ = "main"
+  __tablename__ = 'main'
 
   id: Mapped[str] = mapped_column(primary_key=True)
   name: Mapped[Optional[str]]
   user: Mapped[Optional[str]]
   type: Mapped[Optional[str]]
-  date_created: Mapped[Optional[str]] = mapped_column("dateCreated")
-  date_modified: Mapped[Optional[str]] = mapped_column("dateModified")
+  date_created: Mapped[Optional[str]] = mapped_column('dateCreated')
+  date_modified: Mapped[Optional[str]] = mapped_column('dateModified')
   comment: Mapped[Optional[str]]
 
   @classmethod
@@ -43,4 +43,4 @@ class MainOrmModel(OrmModelBase):
     Returns:
         list[str]: A list of column names for the main project table.
     """
-    return ["id", "name", "user", "type", "date_created", "date_modified", "comment"]
+    return ['id', 'name', 'user', 'type', 'date_created', 'date_modified', 'comment']

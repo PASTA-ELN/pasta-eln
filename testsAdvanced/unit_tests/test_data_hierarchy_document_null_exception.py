@@ -18,6 +18,6 @@ class TestDataHierarchyDocumentNullException(object):
                            indirect=True)
   def test_data_hierarchy_config_document_null_exception(self, doc_null_exception: doc_null_exception, request):
     assert str(
-      doc_null_exception) or doc_null_exception.message == "error thrown", "doc_null_exception) should return error thrown"
+      doc_null_exception) or doc_null_exception.message == 'error thrown', 'doc_null_exception) should return error thrown'
     assert doc_null_exception.detailed_errors == {'error1': 'error1',
-                                                  'error2': 'error2'}, "doc_null_exception.detailed_errors should return error1 and error2"
+                                                  'error2': 'error2'}, 'doc_null_exception.detailed_errors should return error1 and error2'

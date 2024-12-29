@@ -62,7 +62,7 @@ class MainWindow(QMainWindow):
 
     # Menubar
     menu = self.menuBar()
-    projectMenu = menu.addMenu("&Project")
+    projectMenu = menu.addMenu('&Project')
     Action('&Export project to .eln',        self, [Command.EXPORT],         projectMenu)
     Action('&Import .eln',                   self, [Command.IMPORT],         projectMenu)
     projectMenu.addSeparator()
@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
     # Action('&Upload to Dataverse',           self, [Command.DATAVERSE_MAIN], projectMenu)
     Action('&Exit',                          self, [Command.EXIT],           projectMenu)
 
-    viewMenu = menu.addMenu("&Lists")
+    viewMenu = menu.addMenu('&Lists')
     if hasattr(self.backend, 'db'):
       for docType, docLabel in self.comm.backend.db.dataHierarchy('', 'title'):
         if docType[0] == 'x' and docType[1] != '0':
@@ -84,8 +84,8 @@ class MainWindow(QMainWindow):
       Action('&Tags',                        self, [Command.VIEW, '_tags_'], viewMenu, shortcut='Ctrl+T')
       Action('&Unidentified',                self, [Command.VIEW, '-'],      viewMenu, shortcut='Ctrl+U')
 
-    systemMenu = menu.addMenu("Project &group")
-    changeProjectGroups = systemMenu.addMenu("&Change project group")
+    systemMenu = menu.addMenu('Project &group')
+    changeProjectGroups = systemMenu.addMenu('&Change project group')
     if hasattr(self.backend, 'configuration'):                            # not case in fresh install
       for name in self.backend.configuration['projectGroups'].keys():
         Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
@@ -98,7 +98,7 @@ class MainWindow(QMainWindow):
     systemMenu.addSeparator()
     Action('&Verify database',               self, [Command.VERIFY_DB],       systemMenu, shortcut='Ctrl+?')
 
-    helpMenu = menu.addMenu("&Help")
+    helpMenu = menu.addMenu('&Help')
     Action('&Website',                       self, [Command.WEBSITE],         helpMenu)
     Action('Shortcuts',                      self, [Command.SHORTCUTS],       helpMenu)
     systemMenu.addSeparator()
@@ -223,7 +223,7 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.RESTART:
       restart()
     else:
-      print("**ERROR gui menu unknown:", command)
+      print('**ERROR gui menu unknown:', command)
     return
 
 

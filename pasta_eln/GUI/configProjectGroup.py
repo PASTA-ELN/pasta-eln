@@ -45,7 +45,7 @@ class ProjectGroup(QDialog):
     self.selectGroup.currentTextChanged.connect(self.changeProjectGroup)
     self.formL.addWidget(self.selectGroup, 0, 0)
     self.groupTextField = QLineEdit()
-    self.groupTextField.setValidator(QRegularExpressionValidator("\\w{3,}"))
+    self.groupTextField.setValidator(QRegularExpressionValidator('\\w{3,}'))
     self.comboboxActive = True
 
     newButton = IconButton('fa5s.plus',    self, [Command.NEW], tooltip='New project group')
@@ -161,16 +161,16 @@ class ProjectGroup(QDialog):
 
     #cases
     if command[0] is Command.CHANGE_DIR:
-      answer = QFileDialog.getExistingDirectory(self, "Specify new data directory")
+      answer = QFileDialog.getExistingDirectory(self, 'Specify new data directory')
       if not answer:
         return
       if [i for i in Path(answer).iterdir() if i.name=='pastaELN.db']:
-        button = QMessageBox.question(self, "Question", "Do you want to use existing PASTA ELN data?",
+        button = QMessageBox.question(self, 'Question', 'Do you want to use existing PASTA ELN data?',
                                       QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
         if button == QMessageBox.StandardButton.No:
           return
       elif list(Path(answer).iterdir()):
-        button = QMessageBox.question(self, "Question", "Do you want to use folder, which is not empty? This is not recommended.",
+        button = QMessageBox.question(self, 'Question', 'Do you want to use folder, which is not empty? This is not recommended.',
                                       QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
         if button == QMessageBox.StandardButton.No:
           return
@@ -178,10 +178,10 @@ class ProjectGroup(QDialog):
       self.directoryLabel.setText(f'Data directory: {answer}')
 
     elif command[0] is Command.CHANGE_ADDON:
-      answer = QFileDialog.getExistingDirectory(self, "Specify new add-on directory")
+      answer = QFileDialog.getExistingDirectory(self, 'Specify new add-on directory')
       if not answer:
         return
-      button = QMessageBox.question(self, "Question", "Do you want to copy the add-ons from the old directory (recommended)?",
+      button = QMessageBox.question(self, 'Question', 'Do you want to copy the add-ons from the old directory (recommended)?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
         print(config['addOnDir'] ,answer)
@@ -210,7 +210,7 @@ class ProjectGroup(QDialog):
         self.row3Button.setStyleSheet('background: #FF0000')
 
     elif command[0] is Command.TEST_API_HELP:
-      link = f'OR go to {config["remote"]["url"][:-7]}ucp.php?tab=4\n\n' if config["remote"].get("url",'') else ''
+      link = f'OR go to {config["remote"]["url"][:-7]}ucp.php?tab=4\n\n' if config['remote'].get('url','') else ''
       showMessage(self, 'Help', '### How to get an api key to access the server:\nOn the elabFTW server:\n1. go to the USER SYMBOL\n2. User-(Control) panel\n3. API KEYS\n\n'\
                   f'{link}'\
                   '1. Specify a name: e.g. "pasta_eln"\n2. change the permissions to "Read/Write"\n3. click "Generate new API key"\n\nCopy-paste that key into the text box on the right-hand-side')
@@ -229,7 +229,7 @@ class ProjectGroup(QDialog):
           # success
           self.row4Button2.setStyleSheet('background: #00FF00')
           self.elabApi   = ElabFTWApi(url, config['remote']['key'])
-          response = self.elabApi.readEntry("items?q=category%3AProjectGroup&archived=on")
+          response = self.elabApi.readEntry('items?q=category%3AProjectGroup&archived=on')
           self.serverPG = {(i['title'],i['id'],i['canread'],i['canwrite']) for i in response}
           self.serverProjectGroupLabel.addItems([i[0] for i in self.serverPG])
         else:
@@ -272,7 +272,7 @@ class ProjectGroup(QDialog):
       self.selectGroup.setCurrentIndex(0)
 
     else:
-      print("Got some button, without definition", command)
+      print('Got some button, without definition', command)
     return
 
 

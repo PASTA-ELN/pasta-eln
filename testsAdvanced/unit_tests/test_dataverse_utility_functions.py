@@ -35,16 +35,16 @@ def create_layout():
 
 class TestDataverseUtilityFunctions:
   @pytest.mark.parametrize(
-    "button_display_text, object_name, tooltip, expected_text, expected_object_name, expected_tooltip",
+    'button_display_text, object_name, tooltip, expected_text, expected_object_name, expected_tooltip',
     [
-      ("Click Me", "btnClickMe", "Click this button",
-       "Click Me", "btnClickMe", "Click this button"),
-      ("Submit", "btnSubmit", "Submit your data", "Submit",
-       "btnSubmit", "Submit your data"),
-      ("Cancel", "btnCancel", "Cancel the operation",
-       "Cancel", "btnCancel", "Cancel the operation"),
+      ('Click Me', 'btnClickMe', 'Click this button',
+       'Click Me', 'btnClickMe', 'Click this button'),
+      ('Submit', 'btnSubmit', 'Submit your data', 'Submit',
+       'btnSubmit', 'Submit your data'),
+      ('Cancel', 'btnCancel', 'Cancel the operation',
+       'Cancel', 'btnCancel', 'Cancel the operation'),
     ],
-    ids=["click_me_button", "submit_button", "cancel_button"]
+    ids=['click_me_button', 'submit_button', 'cancel_button']
   )
   def test_create_push_button(self, mocker, button_display_text, object_name, tooltip,
                               expected_text, expected_object_name, expected_tooltip):
@@ -76,45 +76,45 @@ class TestDataverseUtilityFunctions:
     push_button.clicked.connect.assert_called_once()
 
   @pytest.mark.parametrize(
-    "widget_specs, expected_values",
+    'widget_specs, expected_values',
     [
       # Success path tests
       pytest.param(
         [QLineEdit, QComboBox, QDateTimeEdit],
-        ["", "No Value", QDate.fromString("01/01/0001", "dd/MM/yyyy")],
-        id="happy_path_all_widgets"
+        ['', 'No Value', QDate.fromString('01/01/0001', 'dd/MM/yyyy')],
+        id='happy_path_all_widgets'
       ),
       pytest.param(
         [QLineEdit],
-        [""],
-        id="happy_path_qlineedit_only"
+        [''],
+        id='happy_path_qlineedit_only'
       ),
       pytest.param(
         [QComboBox],
-        ["No Value"],
-        id="happy_path_qcombobox_only"
+        ['No Value'],
+        id='happy_path_qcombobox_only'
       ),
       pytest.param(
         [QDateTimeEdit],
-        [QDate.fromString("01/01/0001", "dd/MM/yyyy")],
-        id="happy_path_qdatetimeedit_only"
+        [QDate.fromString('01/01/0001', 'dd/MM/yyyy')],
+        id='happy_path_qdatetimeedit_only'
       ),
       # Edge cases
       pytest.param(
         [],
         [],
-        id="edge_case_empty_layout"
+        id='edge_case_empty_layout'
       ),
       pytest.param(
         [None],
         [None],
-        id="edge_case_none_widget"
+        id='edge_case_none_widget'
       ),
       # Error cases
       pytest.param(
         [QLineEdit, QComboBox, QDateTimeEdit],
         None,
-        id="error_case_none_layout"
+        id='error_case_none_layout'
       ),
     ]
   )
@@ -123,7 +123,7 @@ class TestDataverseUtilityFunctions:
     widgets = [mocker.MagicMock(spec=widget_spec) if widget_spec is not None else None for widget_spec in widget_specs]
     for widget in widgets:
       if widget is not None:
-        mocker.patch.object(widget, "widget", create=True)
+        mocker.patch.object(widget, 'widget', create=True)
         widget.widget.return_value = widget
     layout = mocker.MagicMock(spec=QVBoxLayout) if expected_values is not None else None
     if layout:
@@ -167,9 +167,9 @@ class TestDataverseUtilityFunctions:
 
     # Assert
     mock_create_push_button(
-      "Delete",
-      "deletePushButton",
-      "Delete this particular vocabulary entry.",
+      'Delete',
+      'deletePushButton',
+      'Delete this particular vocabulary entry.',
       parent_frame,
       parent_layout,
       delete_layout_and_contents)
@@ -187,21 +187,21 @@ class TestDataverseUtilityFunctions:
 
     # Assert
     mock_create_push_button(
-      "Clear",
-      "clearPushButton",
-      "Clear this particular vocabulary entry.",
+      'Clear',
+      'clearPushButton',
+      'Clear this particular vocabulary entry.',
       parent_frame,
       parent_layout,
       clear_layout_widgets)
     parent_layout.addWidget.assert_called_once_with(mock_create_push_button.return_value)
 
   @pytest.mark.parametrize(
-    "test_id, num_widgets",
+    'test_id, num_widgets',
     [
-      ("success_path_1_widget", 1),  # ID: success_path_1_widget
-      ("success_path_multiple_widgets", 3),  # ID: success_path_multiple_widgets
-      ("success_path_no_widgets", 0),  # ID: success_path_no_widgets
-      ("edge_case_no_layout", 0),  # ID: edge_case_no_layout
+      ('success_path_1_widget', 1),  # ID: success_path_1_widget
+      ('success_path_multiple_widgets', 3),  # ID: success_path_multiple_widgets
+      ('success_path_no_widgets', 0),  # ID: success_path_no_widgets
+      ('edge_case_no_layout', 0),  # ID: edge_case_no_layout
     ]
   )
   def test_delete_layout_and_contents(self, mocker, test_id, num_widgets):
@@ -210,13 +210,13 @@ class TestDataverseUtilityFunctions:
     widgets = [mocker.MagicMock() for _ in range(num_widgets)]
     layout.itemAt = lambda pos: widgets[pos]
     layout.count.return_value = len(widgets)
-    layout = None if test_id == "edge_case_no_layout" else layout
+    layout = None if test_id == 'edge_case_no_layout' else layout
 
     # Act
     delete_layout_and_contents(layout)
 
     # Assert
-    if test_id == "edge_case_no_layout":
+    if test_id == 'edge_case_no_layout':
       for widget in widgets:
         widget.widget.return_value.setParent.assert_not_called()
     else:
@@ -226,35 +226,35 @@ class TestDataverseUtilityFunctions:
         widget.widget.return_value.setParent.assert_called_once_with(None)
 
   @pytest.mark.parametrize(
-    "type_name, type_value, template_value, expected_date, expected_tooltip, expected_object_name",
+    'type_name, type_value, template_value, expected_date, expected_tooltip, expected_object_name',
     [
       # Success path tests
-      ("start", "2023-01-01", "2023-01-01", QDate(2023, 1, 1),
-       "Enter the start value here. e.g. 2023-01-01, Minimum possible date is 0100-01-02", "startDateTimeEdit"),
-      ("end", "2022-12-31", "2022-12-31", QDate(2022, 12, 31),
-       "Enter the end value here. e.g. 2022-12-31, Minimum possible date is 0100-01-02", "endDateTimeEdit"),
+      ('start', '2023-01-01', '2023-01-01', QDate(2023, 1, 1),
+       'Enter the start value here. e.g. 2023-01-01, Minimum possible date is 0100-01-02', 'startDateTimeEdit'),
+      ('end', '2022-12-31', '2022-12-31', QDate(2022, 12, 31),
+       'Enter the end value here. e.g. 2022-12-31, Minimum possible date is 0100-01-02', 'endDateTimeEdit'),
 
       # Edge cases
-      ("start", "0100-01-02", None, QDate(100, 1, 2),
-       "Enter the start value here. e.g. None, Minimum possible date is 0100-01-02", "startDateTimeEdit"),
+      ('start', '0100-01-02', None, QDate(100, 1, 2),
+       'Enter the start value here. e.g. None, Minimum possible date is 0100-01-02', 'startDateTimeEdit'),
       (
-          "end", "No Value", None, QDate(1, 1, 1),
-          "Enter the end value here. e.g. None, Minimum possible date is 0100-01-02",
-          "endDateTimeEdit"),
+          'end', 'No Value', None, QDate(1, 1, 1),
+          'Enter the end value here. e.g. None, Minimum possible date is 0100-01-02',
+          'endDateTimeEdit'),
 
       # Error cases
-      ("start", "", None, QDate(1, 1, 1), "Enter the start value here. e.g. None, Minimum possible date is 0100-01-02",
-       "startDateTimeEdit"),
-      ("end", "invalid-date", None, QDate(1, 1, 1),
-       "Enter the end value here. e.g. None, Minimum possible date is 0100-01-02", "endDateTimeEdit"),
+      ('start', '', None, QDate(1, 1, 1), 'Enter the start value here. e.g. None, Minimum possible date is 0100-01-02',
+       'startDateTimeEdit'),
+      ('end', 'invalid-date', None, QDate(1, 1, 1),
+       'Enter the end value here. e.g. None, Minimum possible date is 0100-01-02', 'endDateTimeEdit'),
     ],
     ids=[
-      "success_path_start_date",
-      "success_path_end_date",
-      "edge_case_min_date",
-      "edge_case_no_value",
-      "error_case_empty_string",
-      "error_case_invalid_date",
+      'success_path_start_date',
+      'success_path_end_date',
+      'edge_case_min_date',
+      'edge_case_no_value',
+      'error_case_empty_string',
+      'error_case_invalid_date',
     ]
   )
   def test_create_date_time_widget(self, mocker, type_name, type_value, template_value, expected_date, expected_tooltip,
@@ -270,9 +270,9 @@ class TestDataverseUtilityFunctions:
 
     # Assert
     mock_date_time_edit.assert_called_once_with(parent=parent_frame)
-    mock_date_time_edit.return_value.setSpecialValueText.assert_called_once_with("No Value")
+    mock_date_time_edit.return_value.setSpecialValueText.assert_called_once_with('No Value')
     mock_date_time_edit.return_value.setMinimumDate.assert_called_once_with(
-      QDate.fromString("0100-01-01", 'yyyy-MM-dd'))
+      QDate.fromString('0100-01-01', 'yyyy-MM-dd'))
     mock_adjust_type_name.assert_called_once_with(type_name)
     mock_date_time_edit.return_value.setToolTip.assert_called_once_with(
       f"Enter the {mock_adjust_type_name.return_value} value here. e.g. {template_value}, Minimum possible date is 0100-01-02"
@@ -281,38 +281,38 @@ class TestDataverseUtilityFunctions:
     mock_date_time_edit.return_value.setDate.assert_called_once_with(
       QDate.fromString(type_value, 'yyyy-MM-dd')
       if type_value and type_value != 'No Value'
-      else QDate.fromString("0001-01-01", 'yyyy-MM-dd')
+      else QDate.fromString('0001-01-01', 'yyyy-MM-dd')
     )
     mock_date_time_edit.return_value.setDisplayFormat.assert_called_once_with('yyyy-MM-dd')
     assert date_time_edit == mock_date_time_edit.return_value
 
   @pytest.mark.parametrize(
-    "type_name, type_value, template_value, expected_placeholder, expected_tooltip, expected_object_name, expected_text",
+    'type_name, type_value, template_value, expected_placeholder, expected_tooltip, expected_object_name, expected_text',
     [
       # Success path tests
-      ("username", "john_doe", "example_user", "Enter the username here.",
-       "Enter the username value here. e.g. example_user", "usernameLineEdit", "john_doe"),
-      ("email", "john@example.com", "example@example.com", "Enter the email here.",
-       "Enter the email value here. e.g. example@example.com", "emailLineEdit", "john@example.com"),
+      ('username', 'john_doe', 'example_user', 'Enter the username here.',
+       'Enter the username value here. e.g. example_user', 'usernameLineEdit', 'john_doe'),
+      ('email', 'john@example.com', 'example@example.com', 'Enter the email here.',
+       'Enter the email value here. e.g. example@example.com', 'emailLineEdit', 'john@example.com'),
 
       # Edge cases
-      ("", "", "", "Enter the  here.", "Enter the  value here. e.g. ", "LineEdit", ""),
-      ("a" * 100, "b" * 100, "c" * 100, "Enter the " + "a" * 100 + " here.",
-       "Enter the " + "a" * 100 + " value here. e.g. " + "c" * 100, "a" * 100 + "LineEdit", "b" * 100),
+      ('', '', '', 'Enter the  here.', 'Enter the  value here. e.g. ', 'LineEdit', ''),
+      ('a' * 100, 'b' * 100, 'c' * 100, 'Enter the ' + 'a' * 100 + ' here.',
+       'Enter the ' + 'a' * 100 + ' value here. e.g. ' + 'c' * 100, 'a' * 100 + 'LineEdit', 'b' * 100),
 
       # Error cases
-      ("username", None, "example_user", "Enter the username here.", "Enter the username value here. e.g. example_user",
-       "usernameLineEdit", ""),  # type_value is None
-      (None, "john_doe", "example_user", "Enter the None here.", "Enter the None value here. e.g. example_user",
-       "NoneLineEdit", "john_doe"),  # type_name is None
+      ('username', None, 'example_user', 'Enter the username here.', 'Enter the username value here. e.g. example_user',
+       'usernameLineEdit', ''),  # type_value is None
+      (None, 'john_doe', 'example_user', 'Enter the None here.', 'Enter the None value here. e.g. example_user',
+       'NoneLineEdit', 'john_doe'),  # type_name is None
     ],
     ids=[
-      "success_path_username",
-      "success_path_email",
-      "edge_case_empty_strings",
-      "edge_case_long_strings",
-      "error_case_type_value_none",
-      "error_case_type_name_none",
+      'success_path_username',
+      'success_path_email',
+      'edge_case_empty_strings',
+      'edge_case_long_strings',
+      'error_case_type_value_none',
+      'error_case_type_name_none',
     ]
   )
   def test_create_line_edit(self, mocker, type_name, type_value, template_value, expected_placeholder, expected_tooltip,
@@ -338,18 +338,18 @@ class TestDataverseUtilityFunctions:
     mock_line_edit.return_value.setObjectName.assert_called_once_with(f"{type_name}LineEdit")
     mock_line_edit.return_value.setText.assert_called_once_with(expected_text)
 
-  @pytest.mark.parametrize("text_value, widget_pos, layout_type, expected", [
-    param("test", 0, 'QHBoxLayout', "test", id="success_path_1"),
-    param("another test", 0, 'QHBoxLayout', "another test", id="success_path_2"),
-    param("", 0, 'QHBoxLayout', "", id="empty_string"),
-    param("edge case", 1, 'QHBoxLayout', "", id="invalid_widget_pos"),
-    param("wrong layout", 0, 'QBoxLayout', "", id="wrong_layout_type"),
-    param("no widget", 0, 'QHBoxLayout', "", id="no_widget_in_layout"),
+  @pytest.mark.parametrize('text_value, widget_pos, layout_type, expected', [
+    param('test', 0, 'QHBoxLayout', 'test', id='success_path_1'),
+    param('another test', 0, 'QHBoxLayout', 'another test', id='success_path_2'),
+    param('', 0, 'QHBoxLayout', '', id='empty_string'),
+    param('edge case', 1, 'QHBoxLayout', '', id='invalid_widget_pos'),
+    param('wrong layout', 0, 'QBoxLayout', '', id='wrong_layout_type'),
+    param('no widget', 0, 'QHBoxLayout', '', id='no_widget_in_layout'),
   ], ids=lambda x: x[-1])
   def test_get_primitive_line_edit_text_value(self, create_layout, text_value, widget_pos, layout_type, expected):
     # Arrange
     v_layout, widget_pos = create_layout(text_value, widget_pos, layout_type,
-                                         is_widget_valid=text_value not in ["edge case", "no widget"])
+                                         is_widget_valid=text_value not in ['edge case', 'no widget'])
 
     # Act
     result = get_primitive_line_edit_text_value(v_layout, widget_pos)

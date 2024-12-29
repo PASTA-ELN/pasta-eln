@@ -66,20 +66,20 @@ class TestStringMethods(unittest.TestCase):
       self.assertIn(line, output.split('\n'))
 
     output = self.be.output('procedure')
-    self.assertEqual(output.split('\n')[0][:78], "name           | tag | comment | content                                  | id")
-    self.assertEqual(output.split('\n')[2][:59], "Example_SOP.md | v1  |         | # Put sample in instrument")
+    self.assertEqual(output.split('\n')[0][:78], 'name           | tag | comment | content                                  | id')
+    self.assertEqual(output.split('\n')[2][:59], 'Example_SOP.md | v1  |         | # Put sample in instrument')
 
     output = self.be.output('sample')
-    self.assertEqual(output.split('\n')[0][:101], "name           | tag | chemistry | comment                                  | qrCode             | id")
-    self.assertEqual(output.split('\n')[2][:101], "Example sample | nan | A2B2C3    | this sample has multiple groups of me... | 13214124, 99698708 | s-")
+    self.assertEqual(output.split('\n')[0][:101], 'name           | tag | chemistry | comment                                  | qrCode             | id')
+    self.assertEqual(output.split('\n')[2][:101], 'Example sample | nan | A2B2C3    | this sample has multiple groups of me... | 13214124, 99698708 | s-')
 
     output = self.be.output('instrument')
-    self.assertEqual(output.split('\n')[0][:81], "name           | tag | comment                                  | vendor    | id ")
+    self.assertEqual(output.split('\n')[0][:81], 'name           | tag | comment                                  | vendor    | id ')
     self.assertIn('Big instrument |     | Instrument onto which attachments can... | Company A | i-', output)
     self.assertIn('        Sensor |     | Attachment that increases functionali... | Company B | i-', output)
 
     output = self.be.output('measurement')
-    self.assertEqual(output.split('\n')[0][:179], "name                                     | tag | comment                                  | type                         | image | sample | procedure                          | id")
+    self.assertEqual(output.split('\n')[0][:179], 'name                                     | tag | comment                                  | type                         | image | sample | procedure                          | id')
     self.assertIn('https://upload.wikimedia.org/wikipedi... | _3  | - Remote image from wikipedia. Used f... |            measurement/image | True  | nan    | p-', output)
     self.assertIn('simple.csv |     | # These .csv files use the simple con... | measurement/csv/linesAndDots | True  | nan    |                                nan | m-', output)
     self.assertIn('simple.png |     | # File with two locations', output)

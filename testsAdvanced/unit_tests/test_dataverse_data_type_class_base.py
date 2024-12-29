@@ -36,13 +36,13 @@ def valid_context(mocker):
 class TestConcreteDataTypeClass:
 
   @pytest.mark.parametrize(
-    "context, expected_exception",
+    'context, expected_exception',
     [
       ('valid_context', None),
       (None, TypeError),
-      ("invalid_context", TypeError),
+      ('invalid_context', TypeError),
     ],
-    ids=["valid_context", "none_context", "string_context"]
+    ids=['valid_context', 'none_context', 'string_context']
   )
   def test_init(self, context, expected_exception, request):
     # Act and Assert
@@ -54,13 +54,13 @@ class TestConcreteDataTypeClass:
       assert instance.context == request.getfixturevalue(context)
 
   @pytest.mark.parametrize(
-    "args, kwargs, expected_type",
+    'args, kwargs, expected_type',
     [
       ((), {}, ConcreteDataTypeClass),
       ((1, 2, 3), {}, ConcreteDataTypeClass),
-      ((), {"key": "value"}, ConcreteDataTypeClass),
+      ((), {'key': 'value'}, ConcreteDataTypeClass),
     ],
-    ids=["no_args", "positional_args", "keyword_args"]
+    ids=['no_args', 'positional_args', 'keyword_args']
   )
   def test_new(self, args, kwargs, expected_type):
     # Act

@@ -20,7 +20,7 @@ def couchDB2SQLite(userName:str='', password:str='', database:str='', path:str='
     path     (str): path to location of sqlite file
   """
   headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
-  headers["Content-Type"] = "application/json"
+  headers['Content-Type'] = 'application/json'
   # get arguments if not given
   location = '127.0.0.1'
   if not userName:
@@ -61,7 +61,7 @@ def couchDB2SQLite(userName:str='', password:str='', database:str='', path:str='
       date = docAttach['-date'] if '-date' in docAttach else docAttach['date'] if 'date' in docAttach else att
       if '-client' in docAttach:
         del docAttach['-client']
-      db.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, date, json.dumps(docAttach)])
+      db.cursor.execute('INSERT INTO changes VALUES (?,?,?)', [docID, date, json.dumps(docAttach)])
       db.connection.commit()
   return
 
@@ -111,7 +111,7 @@ def translateV2_V3(path:str='') -> None:
     if aPath == path or 'StandardOperatingProcedures' in aPath:
       continue
     if '.id_pastaELN.json' not in files:
-      print("**ERROR** id file does NOT exist:", aPath,'\n   ',' '.join(files))
+      print('**ERROR** id file does NOT exist:', aPath,'\n   ',' '.join(files))
     with open(Path(aPath)/'.id_pastaELN.json','r', encoding='utf-8') as fIn:
       doc = json.load(fIn)
     docNew, _ = translateDoc(doc, aPath)
@@ -164,7 +164,7 @@ def repairPropertiesDot(projectGroup:str='') -> None:
       if idx==0:
         print(traceback.format_exc())
   db.connection.commit()
-  print("Done")
+  print('Done')
   return
 
 
@@ -216,7 +216,7 @@ def main() -> None:
     elif command == 'q':
       break
     else:
-      print("Unknown command or incomplete entries.")
+      print('Unknown command or incomplete entries.')
 
 
 if __name__ ==  '__main__':

@@ -49,13 +49,13 @@ class EditTypeDialog(TypeDialog):
     """
     super().__init__(accepted_callback, rejected_callback)
     self.selected_data_hierarchy_type: dict[str, Any] = {}
-    self.selected_data_hierarchy_type_name: str = ""
-    self.instance.setWindowTitle("Edit existing type")
+    self.selected_data_hierarchy_type_name: str = ''
+    self.instance.setWindowTitle('Edit existing type')
     self.typeLineEdit.setDisabled(True)
-    self.typeLineEdit.setToolTip("Changing type title disabled for edits!")
-    self.typeDisplayedTitleLineEdit.setToolTip(self.typeDisplayedTitleLineEdit.toolTip().replace("Enter", "Modify"))
-    self.iriLineEdit.setToolTip(self.iriLineEdit.toolTip().replace("Enter", "Modify"))
-    self.shortcutLineEdit.setToolTip(self.shortcutLineEdit.toolTip().replace("Enter", "Modify"))
+    self.typeLineEdit.setToolTip('Changing type title disabled for edits!')
+    self.typeDisplayedTitleLineEdit.setToolTip(self.typeDisplayedTitleLineEdit.toolTip().replace('Enter', 'Modify'))
+    self.iriLineEdit.setToolTip(self.iriLineEdit.toolTip().replace('Enter', 'Modify'))
+    self.shortcutLineEdit.setToolTip(self.shortcutLineEdit.toolTip().replace('Enter', 'Modify'))
     self.iconComboBox.currentIndexChanged[int].connect(self.set_icon)
     self.typeLineEdit.textChanged[str].connect(self.type_changed)
 
@@ -69,14 +69,14 @@ class EditTypeDialog(TypeDialog):
     super().show()
     self.typeLineEdit.setText(self.selected_data_hierarchy_type_name)
     if not self.selected_data_hierarchy_type:
-      self.logger.warning("Invalid data type: {%s}", self.selected_data_hierarchy_type)
+      self.logger.warning('Invalid data type: {%s}', self.selected_data_hierarchy_type)
       return
-    self.iriLineEdit.setText(self.selected_data_hierarchy_type.get("IRI") or "")
-    self.typeDisplayedTitleLineEdit.setText(self.selected_data_hierarchy_type.get("title") or "")
-    self.shortcutLineEdit.setText(self.selected_data_hierarchy_type.get("shortcut") or "")
-    icon = self.selected_data_hierarchy_type.get("icon") or ""
-    self.iconFontCollectionComboBox.setCurrentText(icon.split(".")[0] if icon else "")
-    self.iconComboBox.setCurrentText(self.selected_data_hierarchy_type.get("icon") or "No value")
+    self.iriLineEdit.setText(self.selected_data_hierarchy_type.get('IRI') or '')
+    self.typeDisplayedTitleLineEdit.setText(self.selected_data_hierarchy_type.get('title') or '')
+    self.shortcutLineEdit.setText(self.selected_data_hierarchy_type.get('shortcut') or '')
+    icon = self.selected_data_hierarchy_type.get('icon') or ''
+    self.iconFontCollectionComboBox.setCurrentText(icon.split('.')[0] if icon else '')
+    self.iconComboBox.setCurrentText(self.selected_data_hierarchy_type.get('icon') or 'No value')
 
   def accepted_callback(self) -> None:
     """
@@ -94,7 +94,7 @@ class EditTypeDialog(TypeDialog):
         f"displayed title: {self.type_info.title}) does not exists!!....",
         QMessageBox.Icon.Warning)
     else:
-      self.logger.info("User updated the existing type: Datatype: {%s}, Displayed Title: {%s}",
+      self.logger.info('User updated the existing type: Datatype: {%s}, Displayed Title: {%s}',
                        self.type_info.datatype,
                        self.type_info.title)
       updated_type = generate_data_hierarchy_type(self.type_info)
@@ -114,10 +114,10 @@ class EditTypeDialog(TypeDialog):
         new_index (int): The index at which to set the icon.
     """
     if new_index < 0:
-      self.logger.warning("Invalid index: {%s}", new_index)
+      self.logger.warning('Invalid index: {%s}', new_index)
       return
     new_icon_name = self.iconComboBox.currentText()
-    if new_icon_name and new_icon_name != "No value":
+    if new_icon_name and new_icon_name != 'No value':
       self.iconComboBox.setItemIcon(new_index, qta.icon(new_icon_name))
 
   def type_changed(self, new_data_type: str) -> None:
@@ -132,9 +132,9 @@ class EditTypeDialog(TypeDialog):
         new_data_type (str): The new data type selected by the user.
     """
     if not new_data_type:
-      self.logger.warning("Invalid data type: {%s}", new_data_type)
+      self.logger.warning('Invalid data type: {%s}', new_data_type)
       return
-    disable_if_structural = new_data_type in {"x0", "x1"}
+    disable_if_structural = new_data_type in {'x0', 'x1'}
     self.shortcutLineEdit.setDisabled(disable_if_structural)
     self.iconComboBox.setDisabled(disable_if_structural)
     self.iconFontCollectionComboBox.setDisabled(disable_if_structural)
@@ -167,7 +167,7 @@ class EditTypeDialog(TypeDialog):
     self.selected_data_hierarchy_type_name = datatype
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   import sys
 
   app = QtWidgets.QApplication(sys.argv)

@@ -40,15 +40,15 @@ class Details(QScrollArea):
     self.metaDetailsW, self.metaDetailsL  = widgetAndLayout('V', self.mainL)
     self.metaDetailsW.setMaximumWidth(self.width())
     self.btnVendor = TextButton('Vendor metadata', self, [Command.SHOW, 'Vendor'], self.mainL, \
-                                'Show / hide vendor metadata', checkable=True, style="margin-top: 15px")
+                                'Show / hide vendor metadata', checkable=True, style='margin-top: 15px')
     self.metaVendorW, self.metaVendorL = widgetAndLayout('V', self.mainL)
     self.metaVendorW.setMaximumWidth(self.width())
     self.btnUser = TextButton('User metadata', self, [Command.SHOW, 'User'], self.mainL, \
-                              'Show / hide user metadata', checkable=True, style="margin-top: 15px")
+                              'Show / hide user metadata', checkable=True, style='margin-top: 15px')
     self.metaUserW, self.metaUserL     = widgetAndLayout('V', self.mainL)
     self.metaUserW.setMaximumWidth(self.width())
     self.btnDatabase = TextButton('ELN details', self, [Command.SHOW,'Database'], self.mainL, \
-                                  'Show / hide database details', checkable= True, style="margin-top: 15px")
+                                  'Show / hide database details', checkable= True, style='margin-top: 15px')
     self.metaDatabaseW, self.metaDatabaseL = widgetAndLayout('V', self.mainL)
     self.metaDatabaseW.setMaximumWidth(self.width())
     self.mainL.addStretch(1)
@@ -156,7 +156,7 @@ class Details(QScrollArea):
         self.comm.changeTable.emit('','')
         self.comm.changeDetails.emit(self.doc['id'])
     else:
-      print("**ERROR details command unknown:",command)
+      print('**ERROR details command unknown:',command)
     return
 
 

@@ -57,7 +57,7 @@ class Backend(CLI_Mixin):
         ConfigError: If the configuration file does not exist.
     """
     if not exists(self.configFileName):
-      raise TypeError("Config file not found, Corrupt installation!")
+      raise TypeError('Config file not found, Corrupt installation!')
     with open(self.configFileName, 'r', encoding='utf-8') as confFile:
       self.configuration = json.load(confFile)
 
@@ -77,7 +77,7 @@ class Backend(CLI_Mixin):
       self.fsWatcher.removePath(configFilePath)
       self.fsWatcher.addPath(configFilePath)
 
-  def initialize(self, defaultProjectGroup:str="") -> None:
+  def initialize(self, defaultProjectGroup:str='') -> None:
     """
     initialize or reinitialize server and define database
 
@@ -394,7 +394,7 @@ class Backend(CLI_Mixin):
                 childNum += 1
             newPath = '/'.join(path.split('/')[:-1])+'/'+createDirName(doc['name'],doc['type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
             if (self.basePath/newPath).exists():                     #can be either file or directory
-              print("**ERROR new path should not exist",newPath)
+              print('**ERROR new path should not exist',newPath)
             else:
               (self.basePath/path).rename(self.basePath/newPath)
           self.db.updateBranch(doc['id'], 0, childNum, hierStack, newPath)
@@ -468,7 +468,7 @@ class Backend(CLI_Mixin):
           try:
             f.write(urlRequest.read())
           except Exception:
-            print("Error saving downloaded file to temporary disk")
+            print('Error saving downloaded file to temporary disk')
     else:
       if filePath.is_absolute():
         filePath = filePath.relative_to(self.basePath)
@@ -743,12 +743,12 @@ class Backend(CLI_Mixin):
               #   with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
               #     docDB   = self.db.getDoc( docDisk['id'] )
               #     json.dump(docDB, fOut)
-    orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ":/" not in i and i!='*']  #paths can be files or directories
+    orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ':/' not in i and i!='*']  #paths can be files or directories
     orphans+= [i for i in pathsInDB_folder if not (self.basePath/i).exists() ]
     if orphans:
       output += outputString(outputStyle,'error','bch01: These files of database not on filesystem(3):\n  - '+'\n  - '.join(orphans))
     if not minimal:
       output += outputString(outputStyle,'h2','File summary')
     if outputStyle == 'text':
-      output += "Success\n" if not orphans and count==0 else "Failure (* can be auto-repaired)\n"
+      output += 'Success\n' if not orphans and count==0 else 'Failure (* can be auto-repaired)\n'
     return output

@@ -83,15 +83,15 @@ class QTAIconsFactory:
     """
     self._icon_names = {fc: [] for fc in self.font_collections}
     if self._icons_initialized:
-      self.logger.warning("Icons already initialized!")
+      self.logger.warning('Icons already initialized!')
       return
     qta._instance()  # pylint: disable=W0212
     font_maps = qta._resource['iconic'].charmap  # pylint: disable=W0212
     if font_maps is None or not font_maps:
-      self.logger.warning("font_maps could not be found!")
+      self.logger.warning('font_maps could not be found!')
       return
     for fc in self._font_collections:
-      self._icon_names[fc].append("No value")
+      self._icon_names[fc].append('No value')
       for iconName in font_maps[fc]:
         icon_name = f'{fc}.{iconName}'
         self._icon_names[fc].append(icon_name)

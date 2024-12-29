@@ -88,7 +88,7 @@ class ReorderColumnDelegate(QStyledItemDelegate):
     """
     if is_click_within_bounds(event, option):
       row = index.row()
-      self.logger.info("Re-order signal emitted for the position: {%s} in the table..", row)
+      self.logger.info('Re-order signal emitted for the position: {%s} in the table..', row)
       self.re_order_signal.emit(row)
       return True
     return False

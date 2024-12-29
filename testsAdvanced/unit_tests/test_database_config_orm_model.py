@@ -13,40 +13,40 @@ from pasta_eln.database.models.config_orm_model import ConfigOrmModel
 
 class TestDatabaseConfigOrmModell:
   @pytest.mark.parametrize(
-    "project_upload_items, parallel_uploads_count, dataverse_login_info, metadata_info, expected_columns",
+    'project_upload_items, parallel_uploads_count, dataverse_login_info, metadata_info, expected_columns',
     [
       # Happy path test cases
       pytest.param(
-        {"key": "value"}, 5, {"username": "user"}, {"meta": "data"},
-        ["id", "project_upload_items", "parallel_uploads_count", "dataverse_login_info", "metadata_info"],
-        id="happy_path_all_fields"
+        {'key': 'value'}, 5, {'username': 'user'}, {'meta': 'data'},
+        ['id', 'project_upload_items', 'parallel_uploads_count', 'dataverse_login_info', 'metadata_info'],
+        id='happy_path_all_fields'
       ),
       pytest.param(
         None, None, None, None,
-        ["id", "project_upload_items", "parallel_uploads_count", "dataverse_login_info", "metadata_info"],
-        id="happy_path_none_fields"
+        ['id', 'project_upload_items', 'parallel_uploads_count', 'dataverse_login_info', 'metadata_info'],
+        id='happy_path_none_fields'
       ),
       # Edge case test cases
       pytest.param(
         {}, 0, {}, {},
-        ["id", "project_upload_items", "parallel_uploads_count", "dataverse_login_info", "metadata_info"],
-        id="edge_case_empty_dicts_and_zero"
+        ['id', 'project_upload_items', 'parallel_uploads_count', 'dataverse_login_info', 'metadata_info'],
+        id='edge_case_empty_dicts_and_zero'
       ),
       pytest.param(
-        {"nested": {"key": "value"}}, 1, {"user": "name"}, {"meta": "info"},
-        ["id", "project_upload_items", "parallel_uploads_count", "dataverse_login_info", "metadata_info"],
-        id="edge_case_nested_dicts"
+        {'nested': {'key': 'value'}}, 1, {'user': 'name'}, {'meta': 'info'},
+        ['id', 'project_upload_items', 'parallel_uploads_count', 'dataverse_login_info', 'metadata_info'],
+        id='edge_case_nested_dicts'
       ),
       # Error case test cases
       pytest.param(
-        "not_a_dict", 5, {"username": "user"}, {"meta": "data"},
-        ["id", "project_upload_items", "parallel_uploads_count", "dataverse_login_info", "metadata_info"],
-        id="error_case_invalid_project_upload_items"
+        'not_a_dict', 5, {'username': 'user'}, {'meta': 'data'},
+        ['id', 'project_upload_items', 'parallel_uploads_count', 'dataverse_login_info', 'metadata_info'],
+        id='error_case_invalid_project_upload_items'
       ),
       pytest.param(
-        {"key": "value"}, "not_an_int", {"username": "user"}, {"meta": "data"},
-        ["id", "project_upload_items", "parallel_uploads_count", "dataverse_login_info", "metadata_info"],
-        id="error_case_invalid_parallel_uploads_count"
+        {'key': 'value'}, 'not_an_int', {'username': 'user'}, {'meta': 'data'},
+        ['id', 'project_upload_items', 'parallel_uploads_count', 'dataverse_login_info', 'metadata_info'],
+        id='error_case_invalid_parallel_uploads_count'
       ),
     ]
   )
@@ -67,4 +67,4 @@ class TestDatabaseConfigOrmModell:
 
     # Assert
     assert result == expected_columns
-    assert model_instance.__tablename__ == "config"
+    assert model_instance.__tablename__ == 'config'

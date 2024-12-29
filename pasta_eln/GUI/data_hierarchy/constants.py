@@ -19,4 +19,4 @@ ATTACHMENT_TABLE_DELETE_COLUMN_INDEX = 2
 ATTACHMENT_TABLE_REORDER_COLUMN_INDEX = 3
 
 # Help page URL
-DATA_HIERARCHY_HELP_PAGE_URL = "https://pasta-eln.github.io/pasta-eln/data_hierarchy_configuration.html"
+DATA_HIERARCHY_HELP_PAGE_URL = 'https://pasta-eln.github.io/pasta-eln/data_hierarchy_configuration.html'

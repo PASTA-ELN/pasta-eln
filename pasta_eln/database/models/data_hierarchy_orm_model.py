@@ -23,8 +23,8 @@ class DataHierarchyOrmModel(OrmModelBase):
   including fields for document type, IRI, title, icon, shortcut, and view. It provides
   a method to retrieve the names of the table columns for database operations.
   """
-  __tablename__ = "dataHierarchy"
-  doc_type: Mapped[str] = mapped_column("docType", primary_key=True)
+  __tablename__ = 'dataHierarchy'
+  doc_type: Mapped[str] = mapped_column('docType', primary_key=True)
   IRI: Mapped[Optional[str]]
   title: Mapped[Optional[str]]
   icon: Mapped[Optional[str]]
@@ -32,7 +32,7 @@ class DataHierarchyOrmModel(OrmModelBase):
   view: Mapped[Optional[str]]
   definitions = relationship(
     DataHierarchyDefinitionOrmModel,
-    primaryjoin="DataHierarchyDefinitionOrmModel.doc_type==DataHierarchyOrmModel.doc_type",
+    primaryjoin='DataHierarchyDefinitionOrmModel.doc_type==DataHierarchyOrmModel.doc_type',
     foreign_keys='DataHierarchyDefinitionOrmModel.doc_type'
   )
 
@@ -47,4 +47,4 @@ class DataHierarchyOrmModel(OrmModelBase):
     Returns:
         list[str]: A list of column names for the data hierarchy table.
     """
-    return ["doc_type", "IRI", "title", "icon", "shortcut", "view", "definitions"]
+    return ['doc_type', 'IRI', 'title', 'icon', 'shortcut', 'view', 'definitions']

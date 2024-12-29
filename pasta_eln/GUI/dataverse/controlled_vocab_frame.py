@@ -83,7 +83,7 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase, MetadataFram
     Args:
         self: The instance of the class.
     """
-    self.logger.info("Loading controlled vocabulary frame ui..")
+    self.logger.info('Loading controlled vocabulary frame ui..')
     self.data_type.populate_entry()
 
   def add_button_click_handler(self) -> None:
@@ -97,7 +97,7 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase, MetadataFram
     Args:
         self: The instance of the class.
     """
-    self.logger.info("Adding new vocabulary entry, value: %s", self.meta_field)
+    self.logger.info('Adding new vocabulary entry, value: %s', self.meta_field)
     self.data_type.add_new_entry()
 
   def save_modifications(self) -> None:

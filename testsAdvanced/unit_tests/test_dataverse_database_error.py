@@ -14,16 +14,16 @@ from pasta_eln.database.error import Error
 
 class TestDataverseDatabaseError:
 
-  @pytest.mark.parametrize("test_id, message, detailed_errors, expected_message, expected_detailed_errors",
+  @pytest.mark.parametrize('test_id, message, detailed_errors, expected_message, expected_detailed_errors',
                            [# Happy path tests with various realistic test values
-                             ("success", "Connection failed", {"code": "CONN_ERR"}, "Connection failed",
-                              {"code": "CONN_ERR"}), (
-                           "success", "Query execution aborted", {"query": "SELECT *"}, "Query execution aborted",
-                           {"query": "SELECT *"}),
+                             ('success', 'Connection failed', {'code': 'CONN_ERR'}, 'Connection failed',
+                              {'code': 'CONN_ERR'}), (
+                           'success', 'Query execution aborted', {'query': 'SELECT *'}, 'Query execution aborted',
+                           {'query': 'SELECT *'}),
 
                              # Edge cases
-                             ("edge_empty_message", "", {}, "", {}),
-                             ("edge_empty_detailed_errors", "Missing data", {}, "Missing data", {}), ])
+                             ('edge_empty_message', '', {}, '', {}),
+                             ('edge_empty_detailed_errors', 'Missing data', {}, 'Missing data', {}), ])
   def test_database_error_initialization(self, test_id, message, detailed_errors, expected_message,
                                          expected_detailed_errors):
     # Act

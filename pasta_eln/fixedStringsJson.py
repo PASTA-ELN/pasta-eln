@@ -3,66 +3,66 @@ from typing import Any, Union
 
 defaultDocTypes: list[list[str]] = [
   #docType,       PURL, title,          icon,                   shortcut, view
-  ["x0",          "",  "Projects",     "",                     "space", "name,tags,.status,.objective,comment"],
-  ["x1",          "",  "Folders",      "",                      "",     ""],
-  ["measurement", "",  "Measurements", "fa5s.thermometer-half", "m",    "name,tags,comment,type,image,.sample,.procedure"],
-  ["sample",      "",  "Samples",      "fa5s.vial",             "s",    "name,tags,.chemistry,comment,qrCodes"],
-  ["procedure",   "",  "Procedures",   "fa5s.list-ol",          "p",    "name,tags,comment,content"],
-  ["instrument",  "",  "Instruments",  "ri.scales-2-line",      "i",    "name,tags,comment,.vendor"]
+  ['x0',          '',  'Projects',     '',                     'space', 'name,tags,.status,.objective,comment'],
+  ['x1',          '',  'Folders',      '',                      '',     ''],
+  ['measurement', '',  'Measurements', 'fa5s.thermometer-half', 'm',    'name,tags,comment,type,image,.sample,.procedure'],
+  ['sample',      '',  'Samples',      'fa5s.vial',             's',    'name,tags,.chemistry,comment,qrCodes'],
+  ['procedure',   '',  'Procedures',   'fa5s.list-ol',          'p',    'name,tags,comment,content'],
+  ['instrument',  '',  'Instruments',  'ri.scales-2-line',      'i',    'name,tags,comment,.vendor']
 ]
 
 defaultSchema: list[list[Union[str,int]]] = [
   #docType,            group,index,key,        unit, mandatory, list
-  ["x0",                  "", 0,   "name",      "",   "T",       ""],
-  ["x0",                  "", 1,   "tags",      "",   "",        ""],
-  ["x0",                  "", 2,   "status",    "",   "",        "active,paused,passive,finished"],
-  ["x0",                  "", 3,   "objective", "",   "",        ""],
-  ["x0",                  "", 4,   "comment",   "",   "",        ""],
-  ["x1",                  "", 0,   "name",      "",   "T",       ""],
-  ["x1",                  "", 1,   "tags",      "",   "",        ""],
-  ["x1",                  "", 2,   "comment",   "",   "",        ""],
-  ["measurement",         "", 0,   "name",      "",   "T",       ""],
-  ["measurement",         "", 1,   "tags",      "",   "",        ""],
-  ["measurement",         "", 2,   "comment",   "",   "",        ""],
-  ["measurement",         "", 3,   "sample",    "",   "",        "sample"],
-  ["measurement",         "", 4,   "procedure", "",   "",        "procedure"],
-  ["sample",              "", 0,   "name",      "",   "T",       ""],
-  ["sample",              "", 1,   "tags",      "",   "",        ""],
-  ["sample",              "", 2,   "chemistry", "",   "",        ""],
-  ["sample",              "", 3,   "comment",   "",   "",        ""],
-  ["sample",              "", 4,   "qrCodes",   "",   "",        ""],
-  ["sample",      "geometry", 0,   "height",    "mm", "",        ""],
-  ["sample",      "geometry", 1,   "width",     "mm", "",        ""],
-  ["sample",      "geometry", 2,   "length",    "mm", "",        ""],
-  ["procedure",           "", 0,   "name",      "",   "T",       ""],
-  ["procedure",           "", 1,   "tags",      "",   "",        ""],
-  ["procedure",           "", 2,   "comment",   "",   "",        ""],
-  ["procedure",           "", 3,   "content",   "",   "",        ""],
-  ["instrument",          "", 0,   "name",      "",   "T",       ""],
-  ["instrument",          "", 1,   "tags",      "",   "",        ""],
-  ["instrument",          "", 2,   "comment",   "",   "",        ""],
-  ["instrument",          "", 3,   "vendor",    "",   "",        ""],
-  ["instrument/extension","", 0,   "name",      "",   "T",       ""],
-  ["instrument/extension","", 1,   "tags",      "",   "",        ""],
-  ["instrument/extension","", 2,   "comment",   "",   "",        ""],
-  ["instrument/extension","", 3,   "vendor",    "",   "",        ""]
+  ['x0',                  '', 0,   'name',      '',   'T',       ''],
+  ['x0',                  '', 1,   'tags',      '',   '',        ''],
+  ['x0',                  '', 2,   'status',    '',   '',        'active,paused,passive,finished'],
+  ['x0',                  '', 3,   'objective', '',   '',        ''],
+  ['x0',                  '', 4,   'comment',   '',   '',        ''],
+  ['x1',                  '', 0,   'name',      '',   'T',       ''],
+  ['x1',                  '', 1,   'tags',      '',   '',        ''],
+  ['x1',                  '', 2,   'comment',   '',   '',        ''],
+  ['measurement',         '', 0,   'name',      '',   'T',       ''],
+  ['measurement',         '', 1,   'tags',      '',   '',        ''],
+  ['measurement',         '', 2,   'comment',   '',   '',        ''],
+  ['measurement',         '', 3,   'sample',    '',   '',        'sample'],
+  ['measurement',         '', 4,   'procedure', '',   '',        'procedure'],
+  ['sample',              '', 0,   'name',      '',   'T',       ''],
+  ['sample',              '', 1,   'tags',      '',   '',        ''],
+  ['sample',              '', 2,   'chemistry', '',   '',        ''],
+  ['sample',              '', 3,   'comment',   '',   '',        ''],
+  ['sample',              '', 4,   'qrCodes',   '',   '',        ''],
+  ['sample',      'geometry', 0,   'height',    'mm', '',        ''],
+  ['sample',      'geometry', 1,   'width',     'mm', '',        ''],
+  ['sample',      'geometry', 2,   'length',    'mm', '',        ''],
+  ['procedure',           '', 0,   'name',      '',   'T',       ''],
+  ['procedure',           '', 1,   'tags',      '',   '',        ''],
+  ['procedure',           '', 2,   'comment',   '',   '',        ''],
+  ['procedure',           '', 3,   'content',   '',   '',        ''],
+  ['instrument',          '', 0,   'name',      '',   'T',       ''],
+  ['instrument',          '', 1,   'tags',      '',   '',        ''],
+  ['instrument',          '', 2,   'comment',   '',   '',        ''],
+  ['instrument',          '', 3,   'vendor',    '',   '',        ''],
+  ['instrument/extension','', 0,   'name',      '',   'T',       ''],
+  ['instrument/extension','', 1,   'tags',      '',   '',        ''],
+  ['instrument/extension','', 2,   'comment',   '',   '',        ''],
+  ['instrument/extension','', 3,   'vendor',    '',   '',        '']
 ]
 
 defaultDefinitions = [
-  ["name",            "What is the name this item?",                                    ""],
-  ["tags",            "What are the tags?",                                             ""],
-  ["status",          "What is the project status",                                     ""],
-  ["objective",       "What is the objective?",                                         ""],
-  ["comment",         "What are the comments?",                                         ""],
-  ["content",         "What is procedure (Markdown possible; autofill if file given)?", ""],
-  ["vendor",          "Who is the vendor?",                                             ""],
-  ["sample",          "Which sample was used?",                                         ""],
-  ["procedure",       "Which procedure was used?",                                      ""],
-  ["chemistry",       "What is its chemical composition?",                              ""],
-  ["qrCodes",         "",                                                               ""],
-  ["geometry.width",  "Sample width",                                                   ""],
-  ["geometry.length", "Sample length",                                                  ""],
-  ["geometry.height", "Sample height",                         "https://schema.org/height"]
+  ['name',            'What is the name this item?',                                    ''],
+  ['tags',            'What are the tags?',                                             ''],
+  ['status',          'What is the project status',                                     ''],
+  ['objective',       'What is the objective?',                                         ''],
+  ['comment',         'What are the comments?',                                         ''],
+  ['content',         'What is procedure (Markdown possible; autofill if file given)?', ''],
+  ['vendor',          'Who is the vendor?',                                             ''],
+  ['sample',          'Which sample was used?',                                         ''],
+  ['procedure',       'Which procedure was used?',                                      ''],
+  ['chemistry',       'What is its chemical composition?',                              ''],
+  ['qrCodes',         '',                                                               ''],
+  ['geometry.width',  'Sample width',                                                   ''],
+  ['geometry.length', 'Sample length',                                                  ''],
+  ['geometry.height', 'Sample height',                         'https://schema.org/height']
 ]
 
 defaultDataHierarchyNode: list[dict[str, str]] = [
@@ -74,42 +74,42 @@ defaultDataHierarchyNode: list[dict[str, str]] = [
 CONF_FILE_NAME = '.pastaELN.json'
 
 defaultConfiguration: dict[str, Any] = {
-  "defaultProjectGroup": "research",
-  "userID": "$os.getlogin()$",
-  "version": 0,
-  "qrPrinter": {},
-  "authors": [{"first": "", "last": "", "title": "", "email": "", "orcid": "",
-               "organizations": [{"organization": "", "rorid": ""}]}],
-  "GUI": {},
-  "projectGroups": {}
+  'defaultProjectGroup': 'research',
+  'userID': '$os.getlogin()$',
+  'version': 0,
+  'qrPrinter': {},
+  'authors': [{'first': '', 'last': '', 'title': '', 'email': '', 'orcid': '',
+               'organizations': [{'organization': '', 'rorid': ''}]}],
+  'GUI': {},
+  'projectGroups': {}
 }
 
 # level 1: type of property
 #   within each: array of 3: description, default, all_choices
 configurationGUI: dict[str, Any] = {
-  "general": {
-    "theme": ["Theme",
-              "none",
-              ["dark_amber", "dark_blue", "dark_cyan", "dark_lightgreen", "dark_pink", "dark_purple", "dark_red", \
-               "dark_teal", "dark_yellow", "light_amber", "light_blue", "light_cyan", "light_lightgreen", \
-               "light_pink", "light_purple", "light_red", "light_teal", "light_yellow", "none"]],
-    "loggingLevel": ["Logging level (more->less)", "INFO", ["DEBUG", "INFO", "WARNING", "ERROR"]],
-    "autosave": ["Autosave entries in form", "No", ["Yes", "No"]],
-    "showProjectBtn": ["Show project button on top-left", "Yes", ["Yes", "No"]]
+  'general': {
+    'theme': ['Theme',
+              'none',
+              ['dark_amber', 'dark_blue', 'dark_cyan', 'dark_lightgreen', 'dark_pink', 'dark_purple', 'dark_red', \
+               'dark_teal', 'dark_yellow', 'light_amber', 'light_blue', 'light_cyan', 'light_lightgreen', \
+               'light_pink', 'light_purple', 'light_red', 'light_teal', 'light_yellow', 'none']],
+    'loggingLevel': ['Logging level (more->less)', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR']],
+    'autosave': ['Autosave entries in form', 'No', ['Yes', 'No']],
+    'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']]
   },
-  "dimensions": {
-    "sidebarWidth": ["Sidebar width", 280, [220, 280, 340]],
-    "maxTableColumnWidth": ["Maximum column width in tables", 400, [300, 400, 500, 600]],
-    "imageSizeDetails": ["Image size in details view and form", 600, [300, 400, 500, 600]],
-    "imageWidthProject": ["Image width in project view", 300, [200, 250, 300, 350, 400]],
-    "maxProjectLeafHeight": ["Maximum height of item in project view", 250, [200, 250, 300, 400]],
-    "widthContent": ["Width of procedures in project view", 600, [400, 500, 600, 700]],
-    "docTypeOffset": ["Offset of document type in project view", 500, [400, 500, 600, 700]],
-    "frameSize": ["Frame width around items in project view", 6, [4, 6, 8, 10]],
+  'dimensions': {
+    'sidebarWidth': ['Sidebar width', 280, [220, 280, 340]],
+    'maxTableColumnWidth': ['Maximum column width in tables', 400, [300, 400, 500, 600]],
+    'imageSizeDetails': ['Image size in details view and form', 600, [300, 400, 500, 600]],
+    'imageWidthProject': ['Image width in project view', 300, [200, 250, 300, 350, 400]],
+    'maxProjectLeafHeight': ['Maximum height of item in project view', 250, [200, 250, 300, 400]],
+    'widthContent': ['Width of procedures in project view', 600, [400, 500, 600, 700]],
+    'docTypeOffset': ['Offset of document type in project view', 500, [400, 500, 600, 700]],
+    'frameSize': ['Frame width around items in project view', 6, [4, 6, 8, 10]],
   }
 }
 
-SQLiteTranslationDict = {"'":"&prime;"}
+SQLiteTranslationDict = {"'":'&prime;'}
 SQLiteTranslation     = str.maketrans(SQLiteTranslationDict)
 
 minimalDocInForm = {'tags':[], 'comment':'', '':{}}

@@ -11,13 +11,13 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 class Ui_PrimitiveCompoundControlledFrameBase(object):
   def setupUi(self, PrimitiveCompoundControlledFrameBase):
-    PrimitiveCompoundControlledFrameBase.setObjectName("PrimitiveCompoundControlledFrameBase")
+    PrimitiveCompoundControlledFrameBase.setObjectName('PrimitiveCompoundControlledFrameBase')
     PrimitiveCompoundControlledFrameBase.resize(1345, 101)
     PrimitiveCompoundControlledFrameBase.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
     self.verticalLayout = QtWidgets.QVBoxLayout(PrimitiveCompoundControlledFrameBase)
-    self.verticalLayout.setObjectName("verticalLayout")
+    self.verticalLayout.setObjectName('verticalLayout')
     self.mainVerticalLayout = QtWidgets.QVBoxLayout()
-    self.mainVerticalLayout.setObjectName("mainVerticalLayout")
+    self.mainVerticalLayout.setObjectName('mainVerticalLayout')
     self.addPushButton = QtWidgets.QPushButton(parent=PrimitiveCompoundControlledFrameBase)
     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
     sizePolicy.setHorizontalStretch(0)
@@ -25,7 +25,7 @@ class Ui_PrimitiveCompoundControlledFrameBase(object):
     sizePolicy.setHeightForWidth(self.addPushButton.sizePolicy().hasHeightForWidth())
     self.addPushButton.setSizePolicy(sizePolicy)
     self.addPushButton.setMinimumSize(QtCore.QSize(100, 0))
-    self.addPushButton.setObjectName("addPushButton")
+    self.addPushButton.setObjectName('addPushButton')
     self.mainVerticalLayout.addWidget(self.addPushButton)
     self.verticalLayout.addLayout(self.mainVerticalLayout)
 
@@ -34,13 +34,13 @@ class Ui_PrimitiveCompoundControlledFrameBase(object):
 
   def retranslateUi(self, PrimitiveCompoundControlledFrameBase):
     _translate = QtCore.QCoreApplication.translate
-    PrimitiveCompoundControlledFrameBase.setWindowTitle(_translate("PrimitiveCompoundControlledFrameBase", "Frame"))
-    PrimitiveCompoundControlledFrameBase.setToolTip(_translate("PrimitiveCompoundControlledFrameBase", "Set the compound type for metadata block."))
-    self.addPushButton.setToolTip(_translate("PrimitiveCompoundControlledFrameBase", "Add a new compound entry to the list."))
-    self.addPushButton.setText(_translate("PrimitiveCompoundControlledFrameBase", "Add"))
+    PrimitiveCompoundControlledFrameBase.setWindowTitle(_translate('PrimitiveCompoundControlledFrameBase', 'Frame'))
+    PrimitiveCompoundControlledFrameBase.setToolTip(_translate('PrimitiveCompoundControlledFrameBase', 'Set the compound type for metadata block.'))
+    self.addPushButton.setToolTip(_translate('PrimitiveCompoundControlledFrameBase', 'Add a new compound entry to the list.'))
+    self.addPushButton.setText(_translate('PrimitiveCompoundControlledFrameBase', 'Add'))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
     PrimitiveCompoundControlledFrameBase = QtWidgets.QFrame()

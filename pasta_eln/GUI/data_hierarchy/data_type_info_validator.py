@@ -41,6 +41,6 @@ class DataTypeInfoValidator:
     if not isinstance(data_type_info, DataTypeInfo):
       raise TypeError(f"Expected DataTypeInfo type for data_type_info but got {type(data_type_info)}!")
     if not data_type_info.datatype:
-      raise ValueError("Data type property is required!")
+      raise ValueError('Data type property is required!')
     if not data_type_info.title:
-      raise ValueError("Displayed title property is required!")
+      raise ValueError('Displayed title property is required!')

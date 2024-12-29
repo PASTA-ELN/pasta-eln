@@ -27,16 +27,16 @@ def qframe_instance(mocker):
 
 class TestDataverseMetadataFrame:
   @pytest.mark.parametrize(
-    "args, kwargs, expected_type",
+    'args, kwargs, expected_type',
     [
       ((), {}, ConcreteMetadataFrame),
       ((1, 2, 3), {}, ConcreteMetadataFrame),
-      ((), {"key": "value"}, ConcreteMetadataFrame),
+      ((), {'key': 'value'}, ConcreteMetadataFrame),
     ],
     ids=[
-      "no_args_no_kwargs",
-      "with_args_no_kwargs",
-      "no_args_with_kwargs",
+      'no_args_no_kwargs',
+      'with_args_no_kwargs',
+      'no_args_with_kwargs',
     ]
   )
   def test_metadata_frame_new(self, args, kwargs, expected_type):
@@ -54,14 +54,14 @@ class TestDataverseMetadataFrame:
     assert instance.instance == qframe_instance
 
   @pytest.mark.parametrize(
-    "method_name",
+    'method_name',
     [
-      "load_ui",
-      "save_modifications",
+      'load_ui',
+      'save_modifications',
     ],
     ids=[
-      "load_ui_method",
-      "save_modifications_method",
+      'load_ui_method',
+      'save_modifications_method',
     ]
   )
   def test_abstract_methods_implementation(self, qframe_instance, method_name):

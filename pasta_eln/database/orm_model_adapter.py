@@ -213,5 +213,5 @@ class OrmModelAdapter:
     model_dict = dict(model)
     model_dict.pop('id')
     meta_list = model_dict.pop('meta_list')
-    model_dict['meta_list'] = ",".join(meta_list) if meta_list and isinstance(meta_list, list) else ''
+    model_dict['meta_list'] = ','.join(meta_list) if meta_list and isinstance(meta_list, list) else ''
     return DataHierarchyDefinitionOrmModel(**model_dict)

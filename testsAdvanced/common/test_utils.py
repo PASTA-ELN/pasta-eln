@@ -84,10 +84,10 @@ def get_test_data_path(executing_path: str,
   Returns:
 
   """
-  if os.path.exists(os.path.join(executing_path, "testsAdvanced", "test_data")):
-    test_data_path = os.path.join(executing_path, "testsAdvanced", "test_data", test_file)
+  if os.path.exists(os.path.join(executing_path, 'testsAdvanced', 'test_data')):
+    test_data_path = os.path.join(executing_path, 'testsAdvanced', 'test_data', test_file)
   else:
-    test_data_path = os.path.join(executing_path, "..//test_data", test_file)
+    test_data_path = os.path.join(executing_path, '..//test_data', test_file)
   import pathlib
   if not os.path.exists(pathlib.Path(test_data_path).parent):
     os.makedirs(pathlib.Path(test_data_path).parent)

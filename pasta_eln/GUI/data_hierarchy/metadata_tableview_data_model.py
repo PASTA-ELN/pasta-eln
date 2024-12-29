@@ -34,14 +34,14 @@ class MetadataTableViewModel(TableViewModel):
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.data_set = []
     self.data_name_map = {
-      0: "name",
-      1: "query",
-      2: "list",
-      3: "unit",
-      4: "IRI",
-      5: "mandatory",
-      6: "delete",
-      7: "re-order"
+      0: 'name',
+      1: 'query',
+      2: 'list',
+      3: 'unit',
+      4: 'IRI',
+      5: 'mandatory',
+      6: 'delete',
+      7: 're-order'
     }
     self.header_values: list[str] = list(self.data_name_map.values())
     self.column_widths: dict[int, int] = {
@@ -93,7 +93,7 @@ class MetadataTableViewModel(TableViewModel):
     if (index.isValid()
         and index.column() == METADATA_TABLE_LIST_COLUMN_INDEX):
       data = super().data(index, role)
-      return ",".join(data) \
+      return ','.join(data) \
         if isinstance(data, list) \
         else data
     return super().data(index, role)

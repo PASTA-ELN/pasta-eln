@@ -166,15 +166,15 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
             line = line.replace('"""','')
             header.append(line)
             continue
-          if "if" in line and "#:" in line:
+          if 'if' in line and '#:' in line:
             if verboseDebug: print('line', line)
-            specialType = line.split("==")[1].split(":")[0].strip(" '"+'"')
+            specialType = line.split('==')[1].split(':')[0].strip(" '"+'"')
             if verboseDebug: print('  special',specialType)
             extractorsThis[specialType] = line.split('#:')[1].strip()
             ifInFile = True
-          elif "else:" in line and "#:" in line:
+          elif 'else:' in line and '#:' in line:
             print('**ERROR there should not be an else in the code')
-          elif "return" in line and 'recipe' in line and not ifInFile:
+          elif 'return' in line and 'recipe' in line and not ifInFile:
             if verboseDebug: print('line', line)
             if line.count('recipe')==1:
               linePart = line.split('recipe')[1].strip()
@@ -298,7 +298,7 @@ def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
   """
   def dot_splitter(flat_key:str) -> tuple[str, ...]:
     """ split using the . symbol """
-    keys = tuple(flat_key.split("."))
+    keys = tuple(flat_key.split('.'))
     return keys
 
   def nested_set_dict(d:dict[str,Any], keys:tuple[str, ...], value:Any) -> None:

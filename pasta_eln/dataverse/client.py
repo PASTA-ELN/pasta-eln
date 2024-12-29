@@ -50,14 +50,14 @@ class DataverseClient:
     Returns:
       True if the token has expired, False otherwise
     """
-    self.logger.info("Checking token expiry, Server: %s", self.server_url)
+    self.logger.info('Checking token expiry, Server: %s', self.server_url)
     resp = await self.http_client.get(
       f"{self.server_url}/api/users/token",
       request_headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token})
     if not resp and self.http_client.session_request_errors:
       return False
-    if resp["status"] == 200 and resp["reason"] == 'OK':
-      expiry_message = resp["result"].get('data').get('message')
+    if resp['status'] == 200 and resp['reason'] == 'OK':
+      expiry_message = resp['result'].get('data').get('message')
       expiry_time_string = expiry_message.replace(f"Token {self.api_token} expires on ", '')
       expiry_time = datetime.strptime(expiry_time_string, '%Y-%m-%d %H:%M:%S.%f')
       return expiry_time < datetime.now()
@@ -74,15 +74,15 @@ class DataverseClient:
     Returns:
         str | Any: The new API token or any error message if the token recreation fails.
     """
-    self.logger.info("Recreate token, Server: %s", self.server_url)
+    self.logger.info('Recreate token, Server: %s', self.server_url)
     resp = await self.http_client.post(
       f"{self.server_url}/api/users/token/recreate",
       request_headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token})
     if not resp and self.http_client.session_request_errors:
       return self.http_client.session_request_errors
-    if resp["status"] == 200 and resp["reason"] == 'OK':
-      token_message = resp["result"].get('data').get('message')
-      return token_message.replace("New token for dataverseAdmin is ", '')
+    if resp['status'] == 200 and resp['reason'] == 'OK':
+      token_message = resp['result'].get('data').get('message')
+      return token_message.replace('New token for dataverseAdmin is ', '')
     error = (f"Error recreating the token, Server: {self.server_url}, "
              f"Reason: {resp['reason']}, Info: {resp['result']}")
     self.logger.error(error)
@@ -123,15 +123,15 @@ class DataverseClient:
     """
 
     dv_json = {
-      "name": dv_name,
-      "alias": dv_alias,
-      "dataverseContacts": dv_contact_email_list,
-      "affiliation": dv_affiliation,
-      "description": dv_description,
-      "dataverseType": dv_type
+      'name': dv_name,
+      'alias': dv_alias,
+      'dataverseContacts': dv_contact_email_list,
+      'affiliation': dv_affiliation,
+      'description': dv_description,
+      'dataverseType': dv_type
     }
 
-    self.logger.info("Creating dataverse, Server: %s Alias: %s", self.server_url, dv_alias)
+    self.logger.info('Creating dataverse, Server: %s Alias: %s', self.server_url, dv_alias)
     # Create the data-verse
     resp = await self.http_client.post(
       f"{self.server_url}/api/dataverses/{dv_parent}",
@@ -139,14 +139,14 @@ class DataverseClient:
       data=dumps(dv_json))
     if not resp and self.http_client.session_request_errors:
       return self.http_client.session_request_errors
-    if resp["status"] == 201 and resp["reason"] == 'Created':  # Success
+    if resp['status'] == 201 and resp['reason'] == 'Created':  # Success
       pub_resp = await self.http_client.post(
         f"{self.server_url}/api/dataverses/{resp['result'].get('data').get('alias')}/actions/:publish",
         request_headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
       if not pub_resp and self.http_client.session_request_errors:
         return self.http_client.session_request_errors
-      if pub_resp["status"] == 200 and pub_resp["reason"] == 'OK':
-        return pub_resp["result"].get('data')
+      if pub_resp['status'] == 200 and pub_resp['reason'] == 'OK':
+        return pub_resp['result'].get('data')
       error = (f"Error publishing dataverse, "
                f"Server: {self.server_url}, "
                f"Status: {pub_resp['status']}, "
@@ -169,16 +169,16 @@ class DataverseClient:
     Returns (tuple(bool, Any)):
       A tuple of (is_reachable, a message) is returned
     """
-    self.logger.info("Check if data-verse is reachable, Server: %s", self.server_url)
+    self.logger.info('Check if data-verse is reachable, Server: %s', self.server_url)
     resp = await self.http_client.get(
       f"{self.server_url}/api/info/version",
       request_headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token})
     if not resp and self.http_client.session_request_errors:
       return False, self.http_client.session_request_errors
-    is_reachable = (resp["status"] == 200
-                    and resp["reason"] == 'OK'
-                    and resp["result"].get('data').get('version') is not None)
-    return (is_reachable, "Dataverse is reachable") \
+    is_reachable = (resp['status'] == 200
+                    and resp['reason'] == 'OK'
+                    and resp['result'].get('data').get('version') is not None)
+    return (is_reachable, 'Dataverse is reachable') \
       if is_reachable \
       else (is_reachable,
             f"Dataverse isn't reachable, "
@@ -203,11 +203,11 @@ class DataverseClient:
     Returns:
         bool: True if the API token is valid, False otherwise.
     """
-    self.logger.info("Check if API token is valid, Server: %s", self.server_url)
+    self.logger.info('Check if API token is valid, Server: %s', self.server_url)
     resp = await self.http_client.get(
       f"{self.server_url}/api/users/token",
       request_headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token})
-    status = resp.get("status")
+    status = resp.get('status')
     return (bool(resp) and status is not None
             and status not in [401, 403, 500])
 
@@ -218,25 +218,25 @@ class DataverseClient:
     Returns:
       A dictionary of dataverses (identifier & title) for successful request, otherwise the error message is returned.
     """
-    self.logger.info("Getting dataverse list for server: %s", self.server_url)
+    self.logger.info('Getting dataverse list for server: %s', self.server_url)
     resp: dict[str, Any] = await self.http_client.get(
       f"{self.server_url}/dvn/api/data-deposit/v1.1/swordv2/service-document",
       request_headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token},
       auth=BasicAuth(self.api_token, ''))
     if not resp and self.http_client.session_request_errors:
       return self.http_client.session_request_errors
-    if resp["status"] == 200 and resp["reason"] == "OK":
-      element_tree: ElementTree = ElementTree(fromstring(resp["result"]))
+    if resp['status'] == 200 and resp['reason'] == 'OK':
+      element_tree: ElementTree = ElementTree(fromstring(resp['result']))
       dataverse_list: list[dict[str, str]] = []
       for element in element_tree.getroot().findall(
-          ".//{http://www.w3.org/2007/app}collection"):
-        title = element.find(".//{http://www.w3.org/2005/Atom}title")
+          './/{http://www.w3.org/2007/app}collection'):
+        title = element.find('.//{http://www.w3.org/2005/Atom}title')
         if title is not None:
-          title_val = title.text if title.text is not None else ""
+          title_val = title.text if title.text is not None else ''
           dataverse_list.append(
             {
-              "id": element.attrib["href"].split('/')[-1],
-              "title": title_val
+              'id': element.attrib['href'].split('/')[-1],
+              'title': title_val
             }
           )
       dataverse_list.sort(key=lambda x: x['title'])
@@ -260,15 +260,15 @@ class DataverseClient:
     Returns (dict[Any, Any] | Any):
       A dictionary of dataverse contents for successful request, otherwise the error message is returned.
     """
-    self.logger.info("Retrieving dataverse contents, Server: %s, Dataverse identifier: %s", self.server_url,
+    self.logger.info('Retrieving dataverse contents, Server: %s, Dataverse identifier: %s', self.server_url,
                      identifier)
     resp = await self.http_client.get(
       f"{self.server_url}/api/dataverses/{identifier}/contents",
       request_headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token})
     if not resp and self.http_client.session_request_errors:
       return self.http_client.session_request_errors
-    if resp["status"] == 200 and resp["reason"] == 'OK':
-      return resp["result"].get("data")
+    if resp['status'] == 200 and resp['reason'] == 'OK':
+      return resp['result'].get('data')
     error = (f"Error retrieving the contents for data verse, "
              f"Id: {identifier}, "
              f"Reason: {resp['reason']}, "
@@ -287,17 +287,17 @@ class DataverseClient:
     Returns (str):
       Dataverse size in bytes for successful request, otherwise the error message is returned.
     """
-    self.logger.info("Retrieving dataverse size, Server: %s, Dataverse identifier: %s", self.server_url, identifier)
+    self.logger.info('Retrieving dataverse size, Server: %s, Dataverse identifier: %s', self.server_url, identifier)
     resp = await self.http_client.get(
       f"{self.server_url}/api/dataverses/{identifier}/storagesize",
       request_headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token})
     if not resp and self.http_client.session_request_errors:
       return self.http_client.session_request_errors
-    if resp["status"] == 200 and resp["reason"] == 'OK':
-      return (resp["result"]
-              .get("data")
-              .get("message")
-              .replace("Total size of the files stored in this dataverse: ", ""))
+    if resp['status'] == 200 and resp['reason'] == 'OK':
+      return (resp['result']
+              .get('data')
+              .get('message')
+              .replace('Total size of the files stored in this dataverse: ', ''))
     error = (f"Error retrieving the size for data verse, "
              f"Id: {identifier}, "
              f"Reason: {resp['reason']}, "
@@ -318,14 +318,14 @@ class DataverseClient:
         str | Any: The data associated with the dataverse if the request is successful, otherwise an error message.
     """
 
-    self.logger.info("Retrieving dataverse info, Server: %s, Dataverse identifier: %s", self.server_url, identifier)
+    self.logger.info('Retrieving dataverse info, Server: %s, Dataverse identifier: %s', self.server_url, identifier)
     resp = await self.http_client.get(
       f"{self.server_url}/api/dataverses/{identifier}",
       request_headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token})
     if not resp and self.http_client.session_request_errors:
       return self.http_client.session_request_errors
-    if resp["status"] == 200 and resp["reason"] == 'OK':
-      return resp["result"].get("data")
+    if resp['status'] == 200 and resp['reason'] == 'OK':
+      return resp['result'].get('data')
     error = (f"Error retrieving the info for data verse, "
              f"Id: {identifier}, "
              f"Reason: {resp['reason']}, "
@@ -351,9 +351,9 @@ class DataverseClient:
     Returns:
       A dictionary of dataset metadata with the persistent identifier for successful request, otherwise the error message is returned.
     """
-    self.logger.info("Creating dataset, Alias: %s on server: %s", ds_metadata["title"], self.server_url)
+    self.logger.info('Creating dataset, Alias: %s on server: %s', ds_metadata['title'], self.server_url)
     current_path = realpath(join(getcwd(), dirname(__file__)))
-    with open(join(current_path, "dataset-create-new-all-default-fields.json"), encoding="utf-8") as config_file:
+    with open(join(current_path, 'dataset-create-new-all-default-fields.json'), encoding='utf-8') as config_file:
       metadata = load(config_file)
       if 'license' in ds_metadata:
         metadata['datasetVersion']['license'] = ds_metadata['license']
@@ -375,16 +375,16 @@ class DataverseClient:
         json=metadata)
       if not resp and self.http_client.session_request_errors:
         return self.http_client.session_request_errors
-      if resp["status"] == 201 and resp["reason"] == 'Created':
+      if resp['status'] == 201 and resp['reason'] == 'Created':
         # Request to publish the dataset
         resp = await self.http_client.post(
           f"{self.server_url}/api/datasets/:persistentId/actions/:publish",
-          request_params={'persistentId': resp["result"].get('data').get('persistentId'), 'type': 'major'},
+          request_params={'persistentId': resp['result'].get('data').get('persistentId'), 'type': 'major'},
           request_headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
         if not resp and self.http_client.session_request_errors:
           return self.http_client.session_request_errors
-        if resp["status"] == 200 and resp["reason"] == 'OK':
-          return resp.get("result").get("data")
+        if resp['status'] == 200 and resp['reason'] == 'OK':
+          return resp.get('result').get('data')
         error = (f"Error publishing dataset, "
                  f"Alias: {ds_metadata['title']}, "
                  f"Server: {self.server_url},  "
@@ -422,12 +422,12 @@ class DataverseClient:
       } for successful request, otherwise the error message is returned.
     """
 
-    self.logger.info("Uploading file: %s to Dataset: %s on server: %s",
+    self.logger.info('Uploading file: %s to Dataset: %s on server: %s',
                      df_file_path,
                      ds_pid,
                      self.server_url)
     filename = basename(df_file_path)
-    metadata = dumps({"description": df_description, "categories": df_categories})
+    metadata = dumps({'description': df_description, 'categories': df_categories})
     data = FormData(quote_fields=False)
     with open(df_file_path, 'rb') as file_stream:
       data.add_field('file',
@@ -444,7 +444,7 @@ class DataverseClient:
         timeout=0)
       if not resp and self.http_client.session_request_errors:
         return self.http_client.session_request_errors
-      if resp["status"] == 200 and resp["reason"] == 'OK':
+      if resp['status'] == 200 and resp['reason'] == 'OK':
         # Request to publish the dataset
         pub_resp = await self.http_client.post(
           f"{self.server_url}/api/datasets/:persistentId/actions/:publish",
@@ -452,7 +452,7 @@ class DataverseClient:
           request_headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
         if not pub_resp and self.http_client.session_request_errors:
           return self.http_client.session_request_errors
-        if pub_resp["status"] == 200 and pub_resp["reason"] == 'OK':
+        if pub_resp['status'] == 200 and pub_resp['reason'] == 'OK':
           return {
             'file_upload_result': resp.get('result').get('data'),
             'dataset_publish_result': pub_resp.get('result').get('data')
@@ -474,7 +474,7 @@ class DataverseClient:
   @handle_dataverse_exception_async
   async def get_dataset_info_json(self,
                                   ds_persistent_id: str,
-                                  version: str = ":latest-published") -> dict[Any, Any] | Any:
+                                  version: str = ':latest-published') -> dict[Any, Any] | Any:
     """
     Fetch JSON representation of a dataset.
     Args:
@@ -490,7 +490,7 @@ class DataverseClient:
     Returns:
       JSON representation of the dataset for successful request, otherwise the error message is returned.
     """
-    self.logger.info("Fetching JSON representation of a dataset: %s for server: %s", ds_persistent_id,
+    self.logger.info('Fetching JSON representation of a dataset: %s for server: %s', ds_persistent_id,
                      self.server_url)
     resp = await self.http_client.get(
       f"{self.server_url}/api/datasets/:persistentId/versions/{version}?persistentId={ds_persistent_id}",
@@ -498,7 +498,7 @@ class DataverseClient:
       request_headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
     if not resp and self.http_client.session_request_errors:
       return self.http_client.session_request_errors
-    if resp["status"] == 200 and resp["reason"] == 'OK':
+    if resp['status'] == 200 and resp['reason'] == 'OK':
       return resp.get('result').get('data')
     error = (f"Error fetching JSON representation of dataset: {ds_persistent_id} "
              f"on server: {self.server_url}, "
@@ -518,7 +518,7 @@ class DataverseClient:
     Returns:
       Version list for the dataset for successful request, otherwise the error message is returned.
     """
-    self.logger.info("Fetching version list for dataset: %s for server: %s", ds_persistent_id,
+    self.logger.info('Fetching version list for dataset: %s for server: %s', ds_persistent_id,
                      self.server_url)
     resp = await self.http_client.get(
       f"{self.server_url}/api/datasets/:persistentId/versions?persistentId={ds_persistent_id}",
@@ -526,7 +526,7 @@ class DataverseClient:
       request_headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
     if not resp and self.http_client.session_request_errors:
       return self.http_client.session_request_errors
-    if resp["status"] == 200 and resp["reason"] == 'OK':
+    if resp['status'] == 200 and resp['reason'] == 'OK':
       return resp.get('result').get('data')
     error = (f"Error fetching version list for dataset: {ds_persistent_id} "
              f"on server: {self.server_url}, "
@@ -551,7 +551,7 @@ class DataverseClient:
     Returns:
         dict[Any, Any] | Any: A dictionary containing the locks information if successful, or an error message.
     """
-    self.logger.info("Fetching locks for dataset: %s for server: %s", ds_persistent_id,
+    self.logger.info('Fetching locks for dataset: %s for server: %s', ds_persistent_id,
                      self.server_url)
     resp = await self.http_client.get(
       f"{self.server_url}/api/datasets/:persistentId/locks?persistentId={ds_persistent_id}",
@@ -559,7 +559,7 @@ class DataverseClient:
       request_headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
     if not resp and self.http_client.session_request_errors:
       return self.http_client.session_request_errors
-    if resp["status"] == 200 and resp["reason"] == 'OK':
+    if resp['status'] == 200 and resp['reason'] == 'OK':
       return {'locks': resp.get('result').get('data')}
     error = (f"Error fetching locks for dataset: {ds_persistent_id} "
              f"on server: {self.server_url}, "
@@ -571,7 +571,7 @@ class DataverseClient:
   @handle_dataverse_exception_async
   async def get_dataset_files(self,
                               ds_persistent_id: str,
-                              version: str = ":latest-published") -> dict[Any, Any] | Any:
+                              version: str = ':latest-published') -> dict[Any, Any] | Any:
     """
     Fetch the file list for dataset.
     Args:
@@ -587,7 +587,7 @@ class DataverseClient:
     Returns:
       File list for the dataset for successful request, otherwise the error message is returned.
     """
-    self.logger.info("Fetching file list for dataset: %s for server: %s",
+    self.logger.info('Fetching file list for dataset: %s for server: %s',
                      ds_persistent_id,
                      self.server_url)
     resp = await self.http_client.get(
@@ -596,7 +596,7 @@ class DataverseClient:
       request_headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
     if not resp and self.http_client.session_request_errors:
       return self.http_client.session_request_errors
-    if resp["status"] == 200 and resp["reason"] == 'OK':
+    if resp['status'] == 200 and resp['reason'] == 'OK':
       return resp.get('result').get('data')
     error = (f"Error fetching file list for dataset: {ds_persistent_id} "
              f"on server: {self.server_url}, "
@@ -608,7 +608,7 @@ class DataverseClient:
   @handle_dataverse_exception_async
   async def get_dataset_metadata_block(self,
                                        ds_persistent_id: str,
-                                       version: str = ":latest-published") -> dict[Any, Any] | Any:
+                                       version: str = ':latest-published') -> dict[Any, Any] | Any:
     """
     Fetch the metadata block for dataset.
     Args:
@@ -624,7 +624,7 @@ class DataverseClient:
     Returns:
       Metadata block for the dataset for successful request, otherwise the error message is returned.
     """
-    self.logger.info("Fetching Metadata-block for dataset: %s for server: %s",
+    self.logger.info('Fetching Metadata-block for dataset: %s for server: %s',
                      ds_persistent_id,
                      self.server_url)
     resp = await self.http_client.get(
@@ -633,7 +633,7 @@ class DataverseClient:
       request_headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
     if not resp and self.http_client.session_request_errors:
       return self.http_client.session_request_errors
-    if resp["status"] == 200 and resp["reason"] == 'OK':
+    if resp['status'] == 200 and resp['reason'] == 'OK':
       return resp.get('result').get('data')
     error = (f"Error fetching metadata block for dataset: {ds_persistent_id} "
              f"on server: {self.server_url}, "
@@ -653,7 +653,7 @@ class DataverseClient:
     Returns:
       Message for successful request, otherwise the error message is returned.
     """
-    self.logger.info("Deleting empty dataverse, Server: %s, identifier: %s",
+    self.logger.info('Deleting empty dataverse, Server: %s, identifier: %s',
                      self.server_url,
                      dv_identifier)
     resp = await self.http_client.delete(
@@ -661,8 +661,8 @@ class DataverseClient:
       request_headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token})
     if not resp and self.http_client.session_request_errors:
       return self.http_client.session_request_errors
-    if resp["status"] == 200 and resp["reason"] == 'OK':
-      return resp.get("result").get("data").get("message")
+    if resp['status'] == 200 and resp['reason'] == 'OK':
+      return resp.get('result').get('data').get('message')
     error = (f"Error deleting dataverse, "
              f"Id: {dv_identifier}, on server: {self.server_url}, "
              f"Reason: {resp['reason']}, "
@@ -683,7 +683,7 @@ class DataverseClient:
     Returns:
       Message for successful request, otherwise the error message is returned.
     """
-    self.logger.info("Deleting published dataset, Server: %s, Dataset: %s",
+    self.logger.info('Deleting published dataset, Server: %s, Dataset: %s',
                      self.server_url,
                      ds_persistent_id)
     resp = await self.http_client.delete(
@@ -692,8 +692,8 @@ class DataverseClient:
       request_headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token})
     if not resp and self.http_client.session_request_errors:
       return self.http_client.session_request_errors
-    if resp["status"] == 200 and resp["reason"] == 'OK':
-      return resp["result"].get("data").get("message")
+    if resp['status'] == 200 and resp['reason'] == 'OK':
+      return resp['result'].get('data').get('message')
     error = (f"Error deleting dataset, "
              f"Server: {self.server_url}, "
              f"Id: {ds_persistent_id}, "
@@ -715,7 +715,7 @@ class DataverseClient:
     Returns:
       Message for successful request, otherwise the error message is returned.
     """
-    self.logger.info("Deleting dataverse, Server: %s, Dataverse Id: %s",
+    self.logger.info('Deleting dataverse, Server: %s, Dataverse Id: %s',
                      self.server_url,
                      dv_identifier)
     contents = await self.get_dataverse_contents(dv_identifier)
@@ -726,8 +726,8 @@ class DataverseClient:
       elif content.get('type') == 'dataverse':
         await self.delete_non_empty_dataverse(content.get('id'))
       else:
-        self.logger.error("Unknown content type: %s "
-                          "while deleting dataverse: %s on server: %s ",
+        self.logger.error('Unknown content type: %s '
+                          'while deleting dataverse: %s on server: %s ',
                           content.type,
                           dv_identifier,
                           self.server_url)
@@ -736,8 +736,8 @@ class DataverseClient:
       request_headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token})
     if not resp and self.http_client.session_request_errors:
       return self.http_client.session_request_errors
-    if resp["status"] == 200 and resp["reason"] == 'OK':
-      return resp["result"].get("data").get("message")
+    if resp['status'] == 200 and resp['reason'] == 'OK':
+      return resp['result'].get('data').get('message')
     error = (f"Error deleting dataverse, "
              f"Id: {dv_identifier}, "
              f"Reason: {resp['reason']}, "

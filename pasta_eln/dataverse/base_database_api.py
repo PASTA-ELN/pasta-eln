@@ -101,7 +101,7 @@ class BaseDatabaseApi:
     Raises:
         SQLAlchemyError: If there is an error during the database creation process.
     """
-    self.logger.info("Creating database at the location : %s",
+    self.logger.info('Creating database at the location : %s',
                      self.db_url_map[DatabaseNames.DataverseDatabase])
     engine = create_engine(self.db_url_map[DatabaseNames.DataverseDatabase])
     (OrmModelBase.metadata.tables[ConfigOrmModel.__tablename__]
@@ -133,7 +133,7 @@ class BaseDatabaseApi:
     Raises:
         SQLAlchemyError: If there is an error during the database insertion process.
     """
-    self.logger.info("Populating document with data: %s in database: %s",
+    self.logger.info('Populating document with data: %s in database: %s',
                      data_model,
                      self.db_url_map[DatabaseNames.DataverseDatabase])
     engine = create_engine(self.db_url_map[DatabaseNames.DataverseDatabase])
@@ -166,9 +166,9 @@ class BaseDatabaseApi:
     Raises:
         DatabaseError: If the model ID is empty or if the model type is not found.
     """
-    self.logger.info("Retrieving data model with id: %s, type: %s", model_id, model_type)
+    self.logger.info('Retrieving data model with id: %s, type: %s', model_id, model_type)
     if not model_id:
-      raise log_and_create_error(self.logger, Error, "Model ID cannot be empty!")
+      raise log_and_create_error(self.logger, Error, 'Model ID cannot be empty!')
 
     match model_type():
       case UploadModel() | ConfigModel() | DataHierarchyModel():
@@ -179,7 +179,7 @@ class BaseDatabaseApi:
       case ProjectModel():
         return self.get_project_model(model_id) if isinstance(model_id, str) else None
       case _:
-        raise log_and_create_error(self.logger, Error, "Model type not found!")
+        raise log_and_create_error(self.logger, Error, 'Model type not found!')
 
   def get_models(self, model_type: Type[UploadModel | ConfigModel | DataHierarchyModel]) -> list[
     Union[UploadModel, ConfigModel, DataHierarchyModel]]:
@@ -202,9 +202,9 @@ class BaseDatabaseApi:
         DatabaseError: If the model type is not provided or if there is an error
         during the database retrieval process.
     """
-    self.logger.info("Retrieving models from database, type: %s", model_type)
+    self.logger.info('Retrieving models from database, type: %s', model_type)
     if not model_type:
-      raise log_and_create_error(self.logger, Error, "Model Type cannot be empty!")
+      raise log_and_create_error(self.logger, Error, 'Model Type cannot be empty!')
     stmt = select(self.model_mapping[model_type])
     engine = create_engine(self.model_db_url_map[model_type])
     with Session(engine) as session:
@@ -224,7 +224,7 @@ class BaseDatabaseApi:
     Raises:
         SQLAlchemyError: If there is an error during the database retrieval process.
     """
-    self.logger.info("Retrieving projects from database: %s", DatabaseNames.PastaProjectGroupDatabase)
+    self.logger.info('Retrieving projects from database: %s', DatabaseNames.PastaProjectGroupDatabase)
     engine = create_engine(self.db_url_map[DatabaseNames.PastaProjectGroupDatabase])
     statement = generate_project_join_statement(None)
     with Session(engine) as session:
@@ -247,11 +247,11 @@ class BaseDatabaseApi:
         DatabaseError: If the model ID is empty or if there is an error during
         the database retrieval process.
     """
-    self.logger.info("Retrieving project from database: %s, model id: %s",
+    self.logger.info('Retrieving project from database: %s, model id: %s',
                      DatabaseNames.PastaProjectGroupDatabase,
                      model_id)
     if not model_id:
-      raise log_and_create_error(self.logger, Error, "Model ID cannot be empty!")
+      raise log_and_create_error(self.logger, Error, 'Model ID cannot be empty!')
     engine = create_engine(self.db_url_map[DatabaseNames.PastaProjectGroupDatabase])
     statement = generate_project_join_statement(model_id)
     with Session(engine) as session:
@@ -275,16 +275,16 @@ class BaseDatabaseApi:
         the database during the update process.
     """
     model_type = type(data_model)
-    self.logger.info("Updating data model with id: %s, type: %s", data_model.id,
+    self.logger.info('Updating data model with id: %s, type: %s', data_model.id,
                      model_type)
     if not data_model.id:
-      raise log_and_create_error(self.logger, Error, "Model ID cannot be empty!")
+      raise log_and_create_error(self.logger, Error, 'Model ID cannot be empty!')
     engine = create_engine(self.model_db_url_map[model_type])
     with Session(engine) as session:
       db_model = self.to_orm_converter_map[model_type](data_model)
       if not (session.get(type(db_model),
                           db_model.id)):
-        raise log_and_create_error(self.logger, Error, "Model does not exist in database!")
+        raise log_and_create_error(self.logger, Error, 'Model does not exist in database!')
       session.merge(db_model)
       session.commit()
 
@@ -319,9 +319,9 @@ class BaseDatabaseApi:
         DatabaseError: If the page number or limit is less than 1.
     """
     if page_number < 1:
-      raise log_and_create_error(self.logger, Error, "Page number cannot be less than 1!")
+      raise log_and_create_error(self.logger, Error, 'Page number cannot be less than 1!')
     if limit < 1:
-      raise log_and_create_error(self.logger, Error, "Limit cannot be less than 1!")
+      raise log_and_create_error(self.logger, Error, 'Limit cannot be less than 1!')
     engine = create_engine(self.model_db_url_map[model_type])
     query = select(self.model_mapping[model_type]).limit(limit).offset((page_number - 1) * limit)
     with Session(engine) as session:

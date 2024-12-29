@@ -45,15 +45,15 @@ def controlled_vocab_frame(qtbot, mocker):
 
 
 class TestControlledVocabFrame:
-  @pytest.mark.parametrize("test_id, meta_field", [
+  @pytest.mark.parametrize('test_id, meta_field', [
     (
-        "success_multiple_values_init_primitve",
-        {"multiple": True, 'typeClass': 'primitive', "typeName": "testType", "value": ["entry1", "entry2"],
-         "valueTemplate": ["entry1", "entry2", "entry3"]}),
+        'success_multiple_values_init_primitve',
+        {'multiple': True, 'typeClass': 'primitive', 'typeName': 'testType', 'value': ['entry1', 'entry2'],
+         'valueTemplate': ['entry1', 'entry2', 'entry3']}),
     (
-        "success_multiple_values_init_compound",
-        {"multiple": True, 'typeClass': 'compound', "typeName": "testType", "value": ["entry1", "entry2"],
-         "valueTemplate": ["entry1", "entry2", "entry3"]})
+        'success_multiple_values_init_compound',
+        {'multiple': True, 'typeClass': 'compound', 'typeName': 'testType', 'value': ['entry1', 'entry2'],
+         'valueTemplate': ['entry1', 'entry2', 'entry3']})
   ])
   def test_init(self, mocker, qtbot, test_id, meta_field):
     # Arrange
@@ -71,7 +71,7 @@ class TestControlledVocabFrame:
 
     # Assert
     assert frame is not None
-    mock_get_logger.assert_called_once_with("pasta_eln.GUI.dataverse.controlled_vocab_frame.ControlledVocabFrame")
+    mock_get_logger.assert_called_once_with('pasta_eln.GUI.dataverse.controlled_vocab_frame.ControlledVocabFrame')
     mock_frame_constructor.assert_called_once_with()
     mock_meta_frame_constructor.assert_called_once_with(frame.instance)
     mock_super_setup_ui.assert_called_once_with(frame.instance)
@@ -87,42 +87,42 @@ class TestControlledVocabFrame:
     mock_load_ui.assert_called_once()
 
   @pytest.mark.parametrize(
-    "logger_info_call_count, data_type_call_count",
+    'logger_info_call_count, data_type_call_count',
     [
-      param(1, 1, id="success_path_single_entry"),
-      param(1, 1, id="success_path_multiple_entries"),
-      param(1, 0, id="error_case_logger_fails"),
-      param(1, 1, id="error_case_data_type_fails"),
+      param(1, 1, id='success_path_single_entry'),
+      param(1, 1, id='success_path_multiple_entries'),
+      param(1, 0, id='error_case_logger_fails'),
+      param(1, 1, id='error_case_data_type_fails'),
     ],
     ids=lambda param: param[2]
   )
   def test_load_ui(self, controlled_vocab_frame, logger_info_call_count, data_type_call_count, request):
     # Arrange
-    if request.node.callspec.id == "error_case_logger_fails":
-      controlled_vocab_frame.logger.info.side_effect = Exception("Logger failed")
-    elif request.node.callspec.id == "error_case_data_type_fails":
-      controlled_vocab_frame.data_type.populate_entry.side_effect = Exception("Data type failed")
+    if request.node.callspec.id == 'error_case_logger_fails':
+      controlled_vocab_frame.logger.info.side_effect = Exception('Logger failed')
+    elif request.node.callspec.id == 'error_case_data_type_fails':
+      controlled_vocab_frame.data_type.populate_entry.side_effect = Exception('Data type failed')
 
     # Act
-    if "error_case" in request.node.callspec.id:
+    if 'error_case' in request.node.callspec.id:
       with pytest.raises(Exception):
         controlled_vocab_frame.load_ui()
     else:
       controlled_vocab_frame.load_ui()
 
     # Assert
-    controlled_vocab_frame.logger.info.assert_called_once_with("Loading controlled vocabulary frame ui..")
+    controlled_vocab_frame.logger.info.assert_called_once_with('Loading controlled vocabulary frame ui..')
     assert controlled_vocab_frame.logger.info.call_count == logger_info_call_count
     assert controlled_vocab_frame.data_type.populate_entry.call_count == data_type_call_count
 
   @pytest.mark.parametrize(
-    "meta_field",
+    'meta_field',
     [
-      ("test_value"),  # success path
-      (""),  # edge case: empty string
+      ('test_value'),  # success path
+      (''),  # edge case: empty string
       (None),  # edge case: None value
     ],
-    ids=["success_path", "empty_string", "none_value"]
+    ids=['success_path', 'empty_string', 'none_value']
   )
   def test_add_button_click_handler(self, controlled_vocab_frame, meta_field):
     # Arrange
@@ -132,7 +132,7 @@ class TestControlledVocabFrame:
     controlled_vocab_frame.add_button_click_handler()
 
     # Assert
-    controlled_vocab_frame.logger.info.assert_called_once_with("Adding new vocabulary entry, value: %s",
+    controlled_vocab_frame.logger.info.assert_called_once_with('Adding new vocabulary entry, value: %s',
                                                                controlled_vocab_frame.meta_field)
     controlled_vocab_frame.data_type.add_new_entry.assert_called_once()
 

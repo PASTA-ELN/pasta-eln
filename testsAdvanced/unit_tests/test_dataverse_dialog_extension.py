@@ -13,22 +13,22 @@ from PySide6.QtWidgets import QApplication
 from pasta_eln.GUI.dataverse.dialog_extension import DialogExtension
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope='session')
 def qapp():
   return QApplication([])
 
 
 @pytest.mark.skip(
-  reason="Disabled until the issue with instantiating DialogExtension is resolved")
+  reason='Disabled until the issue with instantiating DialogExtension is resolved')
 class TestDataverseDialogExtension(object):
-  @pytest.mark.parametrize("test_id", [
-    ("happy_path"),
-    ("edge_case_no_event_data"),  # Simulating an edge case if possible
+  @pytest.mark.parametrize('test_id', [
+    ('happy_path'),
+    ('edge_case_no_event_data'),  # Simulating an edge case if possible
     # Error cases are not directly applicable here since the method and class are straightforward
   ])
   def test_closeEvent_emits_closed_signal(self, qapp, mocker, test_id):
     # Arrange
-    mocker.patch("PySide6.QtWidgets.QDialog")
+    mocker.patch('PySide6.QtWidgets.QDialog')
     dialog = DialogExtension()
     closed_emitted = False
 
@@ -38,9 +38,9 @@ class TestDataverseDialogExtension(object):
 
     dialog.closed.connect(on_closed)
 
-    if test_id == "happy_path":
+    if test_id == 'happy_path':
       close_event = QCloseEvent()
-    elif test_id == "edge_case_no_event_data":
+    elif test_id == 'edge_case_no_event_data':
       # This is a hypothetical edge case; in reality, QCloseEvent doesn't require additional data
       close_event = QCloseEvent()
 

@@ -32,15 +32,15 @@ async def prepare_result(response: ClientResponse) -> dict[str, Any]:
 
   """
   result = {
-    "status": response.status,
-    "headers": response.headers,
-    "reason": response.reason
+    'status': response.status,
+    'headers': response.headers,
+    'reason': response.reason
   }
   match response.headers.get('Content-Type'):
-    case x if "json" in x:  # type: ignore[operator]
-      result["result"] = await response.json()
+    case x if 'json' in x:  # type: ignore[operator]
+      result['result'] = await response.json()
     case _:
-      result["result"] = await response.text()
+      result['result'] = await response.text()
   return result
 
 
@@ -79,7 +79,7 @@ class AsyncHttpClient:
         "result": response.result
       }
     """
-    self.logger.info("Get url: %s", base_url)
+    self.logger.info('Get url: %s', base_url)
     self.session_request_errors.clear()
     async with ClientSession() as session:
       async with session.get(base_url,
@@ -119,7 +119,7 @@ class AsyncHttpClient:
         "result": response.result
       }
     """
-    self.logger.info("Post url: %s", base_url)
+    self.logger.info('Post url: %s', base_url)
     self.session_request_errors.clear()
     async with ClientSession() as session:
       async with session.post(base_url,
@@ -161,7 +161,7 @@ class AsyncHttpClient:
         "result": response.result
       }
     """
-    self.logger.info("Delete url: %s", base_url)
+    self.logger.info('Delete url: %s', base_url)
     self.session_request_errors.clear()
     async with ClientSession() as session:
       async with session.delete(base_url,

@@ -15,16 +15,16 @@ from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
 
 class TestDatabaseDataHierarchyModel:
   @pytest.mark.parametrize(
-    "doc_type, IRI, title, icon, shortcut, view",
+    'doc_type, IRI, title, icon, shortcut, view',
     [
-      ("document", "http://example.com", "Example Title", "icon.png", "ctrl+e", "view1"),
+      ('document', 'http://example.com', 'Example Title', 'icon.png', 'ctrl+e', 'view1'),
       (None, None, None, None, None, None),
-      ("", "", "", "", "", ""),
+      ('', '', '', '', '', ''),
     ],
     ids=[
-      "all_valid_strings",
-      "all_none",
-      "all_empty_strings",
+      'all_valid_strings',
+      'all_none',
+      'all_empty_strings',
     ]
   )
   def test_data_hierarchy_model_initialization(self, doc_type, IRI, title, icon, shortcut, view):
@@ -40,22 +40,22 @@ class TestDatabaseDataHierarchyModel:
     assert model.view == view
 
   @pytest.mark.parametrize(
-    "attribute, value",
+    'attribute, value',
     [
-      ("doc_type", 123),
-      ("IRI", 123),
-      ("title", 123),
-      ("icon", 123),
-      ("shortcut", 123),
-      ("view", 123),
+      ('doc_type', 123),
+      ('IRI', 123),
+      ('title', 123),
+      ('icon', 123),
+      ('shortcut', 123),
+      ('view', 123),
     ],
     ids=[
-      "invalid_doc_type",
-      "invalid_iri",
-      "invalid_title",
-      "invalid_icon",
-      "invalid_shortcut",
-      "invalid_view",
+      'invalid_doc_type',
+      'invalid_iri',
+      'invalid_title',
+      'invalid_icon',
+      'invalid_shortcut',
+      'invalid_view',
     ]
   )
   def test_data_hierarchy_model_initialization_invalid_types(self, attribute, value):
@@ -67,22 +67,22 @@ class TestDatabaseDataHierarchyModel:
       DataHierarchyModel(**kwargs)
 
   @pytest.mark.parametrize(
-    "attribute, initial_value, new_value",
+    'attribute, initial_value, new_value',
     [
-      ("doc_type", "initial", "new"),
-      ("IRI", "initial", "new"),
-      ("title", "initial", "new"),
-      ("icon", "initial", "new"),
-      ("shortcut", "initial", "new"),
-      ("view", "initial", "new"),
+      ('doc_type', 'initial', 'new'),
+      ('IRI', 'initial', 'new'),
+      ('title', 'initial', 'new'),
+      ('icon', 'initial', 'new'),
+      ('shortcut', 'initial', 'new'),
+      ('view', 'initial', 'new'),
     ],
     ids=[
-      "change_doc_type",
-      "change_iri",
-      "change_title",
-      "change_icon",
-      "change_shortcut",
-      "change_view",
+      'change_doc_type',
+      'change_iri',
+      'change_title',
+      'change_icon',
+      'change_shortcut',
+      'change_view',
     ]
   )
   def test_data_hierarchy_model_setters(self, attribute, initial_value, new_value):
@@ -96,22 +96,22 @@ class TestDatabaseDataHierarchyModel:
     assert getattr(model, attribute) == new_value
 
   @pytest.mark.parametrize(
-    "attribute, invalid_value",
+    'attribute, invalid_value',
     [
-      ("doc_type", 123),
-      ("IRI", 123),
-      ("title", 123),
-      ("icon", 123),
-      ("shortcut", 123),
-      ("view", 123),
+      ('doc_type', 123),
+      ('IRI', 123),
+      ('title', 123),
+      ('icon', 123),
+      ('shortcut', 123),
+      ('view', 123),
     ],
     ids=[
-      "invalid_set_doc_type",
-      "invalid_set_iri",
-      "invalid_set_title",
-      "invalid_set_icon",
-      "invalid_set_shortcut",
-      "invalid_set_view",
+      'invalid_set_doc_type',
+      'invalid_set_iri',
+      'invalid_set_title',
+      'invalid_set_icon',
+      'invalid_set_shortcut',
+      'invalid_set_view',
     ]
   )
   def test_data_hierarchy_model_setters_invalid_types(self, attribute, invalid_value):
@@ -123,27 +123,27 @@ class TestDatabaseDataHierarchyModel:
       setattr(model, attribute, invalid_value)
 
   @pytest.mark.parametrize(
-    "attribute",
+    'attribute',
     [
-      "doc_type",
-      "IRI",
-      "title",
-      "icon",
-      "shortcut",
-      "view",
+      'doc_type',
+      'IRI',
+      'title',
+      'icon',
+      'shortcut',
+      'view',
     ],
     ids=[
-      "delete_doc_type",
-      "delete_iri",
-      "delete_title",
-      "delete_icon",
-      "delete_shortcut",
-      "delete_view",
+      'delete_doc_type',
+      'delete_iri',
+      'delete_title',
+      'delete_icon',
+      'delete_shortcut',
+      'delete_view',
     ]
   )
   def test_data_hierarchy_model_deleters(self, attribute):
     # Arrange
-    model = DataHierarchyModel(**{attribute: "value"})
+    model = DataHierarchyModel(**{attribute: 'value'})
 
     # Act
     delattr(model, attribute)

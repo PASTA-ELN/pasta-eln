@@ -47,12 +47,12 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
 
     # Load the icon images for lookup portals
     current_path = realpath(join(getcwd(), dirname(__file__)))
-    resources_path = join(current_path, "../../Resources/Icons")
+    resources_path = join(current_path, '../../Resources/Icons')
     self.icons_pixmap = {
-      "wikipedia": QPixmap(join(resources_path, "wikipedia.png")).scaledToWidth(50),
-      "wikidata": QPixmap(join(resources_path, "wikidata.png")).scaledToWidth(50),
-      "ontology_lookup_service": QPixmap(join(resources_path, "ols.png")).scaledToWidth(50),
-      "tib_terminology_service": QPixmap(join(resources_path, "tib.png")).scaledToWidth(50),
+      'wikipedia': QPixmap(join(resources_path, 'wikipedia.png')).scaledToWidth(50),
+      'wikidata': QPixmap(join(resources_path, 'wikidata.png')).scaledToWidth(50),
+      'ontology_lookup_service': QPixmap(join(resources_path, 'ols.png')).scaledToWidth(50),
+      'tib_terminology_service': QPixmap(join(resources_path, 'tib.png')).scaledToWidth(50),
     }
 
     # Hide the error console and connect the slot
@@ -91,7 +91,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     Returns: Nothing
 
     """
-    self.logger.info("Adding entry to scroll area, checkbox_text: %s", checkbox_text)
+    self.logger.info('Adding entry to scroll area, checkbox_text: %s', checkbox_text)
     # Set up the layout for the entry with check box and label
     entry_layout = QHBoxLayout()
     check_box = QCheckBox(checkbox_text)
@@ -113,7 +113,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     Returns: Nothing
 
     """
-    self.logger.info("Clearing scroll area..")
+    self.logger.info('Clearing scroll area..')
     for widget_pos in reversed(range(self.scrollAreaContentsVerticalLayout.count())):
       self.scrollAreaContentsVerticalLayout.itemAt(widget_pos).widget().setParent(None)
 
@@ -127,7 +127,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
       check_box = self.scrollAreaContentsVerticalLayout.itemAt(widget_pos).widget().findChildren(QCheckBox)[0]
       if check_box.isChecked():
         self.selected_iris.append(check_box.toolTip())
-    self.logger.info("Set IRIs: %s", self.selected_iris)
+    self.logger.info('Set IRIs: %s', self.selected_iris)
 
   def terminology_search_button_clicked(self) -> None:
     """
@@ -139,12 +139,12 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     self.reset_ui()
     search_term = self.terminologyLineEdit.text()
     if not search_term or search_term.isspace():
-      self.logger.warning("Enter non null search term!")
-      QMessageBox.warning(self.instance, "Error", "Enter non null search term!",
+      self.logger.warning('Enter non null search term!')
+      QMessageBox.warning(self.instance, 'Error', 'Enter non null search term!',
                           QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.Ok)
       return
 
-    self.logger.info("Terminology search initiated for term: %s..", search_term)
+    self.logger.info('Terminology search initiated for term: %s..', search_term)
     self.searchProgressBar.setValue(5)
     event_loop = get_event_loop()
     if lookup_results := event_loop.run_until_complete(
@@ -166,7 +166,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     Returns:
 
     """
-    self.logger.info("Resetting UI..")
+    self.logger.info('Resetting UI..')
     self.searchProgressBar.setValue(0)
     self.clear_scroll_area()
     self.errorConsoleTextEdit.clear()
@@ -174,7 +174,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     self.selected_iris.clear()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   import sys
 
   app = QtWidgets.QApplication(sys.argv)

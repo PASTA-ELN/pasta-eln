@@ -64,7 +64,7 @@ class GenericTaskObject(QObject):
         self: The GenericTaskObject instance.
 
     """
-    self.logger.info("Cancelling task, id: %s", self.id)
+    self.logger.info('Cancelling task, id: %s', self.id)
     self.cancelled = True
 
   def start_task(self) -> None:
@@ -78,7 +78,7 @@ class GenericTaskObject(QObject):
         self: The GenericTaskObject instance.
 
     """
-    self.logger.info("Starting task, id: %s", self.id)
+    self.logger.info('Starting task, id: %s', self.id)
     self.cancelled = False
     self.started = True
 
@@ -93,7 +93,7 @@ class GenericTaskObject(QObject):
         self: The GenericTaskObject instance.
 
     """
-    self.logger.info("Cleaning up task, id: %s", self.id)
+    self.logger.info('Cleaning up task, id: %s', self.id)
     self.cleaned = True
 
   def finish_task(self) -> None:
@@ -104,5 +104,5 @@ class GenericTaskObject(QObject):
         self: The instance of the class.
     """
 
-    self.logger.info("Finishing up the task, id: %s", self.id)
+    self.logger.info('Finishing up the task, id: %s', self.id)
     self.finished = True

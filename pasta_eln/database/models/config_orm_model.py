@@ -23,7 +23,7 @@ class ConfigOrmModel(OrmModelBase):
   information, and metadata. It provides a method to retrieve the names of the table
   columns for database operations.
   """
-  __tablename__ = "config"
+  __tablename__ = 'config'
   id: Mapped[int] = mapped_column(primary_key=True)
   project_upload_items: Mapped[Optional[dict[str, Any]]]
   parallel_uploads_count: Mapped[Optional[int]]
@@ -41,4 +41,4 @@ class ConfigOrmModel(OrmModelBase):
     Returns:
         list[str]: A list of column names for the configuration table.
     """
-    return ["id", "project_upload_items", "parallel_uploads_count", "dataverse_login_info", "metadata_info"]
+    return ['id', 'project_upload_items', 'parallel_uploads_count', 'dataverse_login_info', 'metadata_info']

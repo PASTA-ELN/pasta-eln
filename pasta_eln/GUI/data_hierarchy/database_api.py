@@ -42,11 +42,11 @@ class DatabaseAPI:
     """
     self.config_model_id: int = 1
     self.logger: logging.Logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    self.pasta_db_name: str = "pastaELN"
+    self.pasta_db_name: str = 'pastaELN'
     db_info: dict[str, str] = get_db_info(self.logger)
     db_path: str | None = db_info.get('database_path')
     if db_path is None:
-      raise log_and_create_error(self.logger, Error, "Database path is None!")
+      raise log_and_create_error(self.logger, Error, 'Database path is None!')
     self.db_api: BaseDatabaseApi = BaseDatabaseApi(f"{db_path}/{self.pasta_db_name}.db")
 
   def create_data_hierarchy_model(self, data: Union[DataHierarchyModel]) -> DataHierarchyModel:
@@ -66,11 +66,11 @@ class DatabaseAPI:
         ValueError: If the provided data is None.
         TypeError: If the provided data is not an instance of DataHierarchyModel.
     """
-    self.logger.info("Creating data_hierarchy_model: %s", data)
+    self.logger.info('Creating data_hierarchy_model: %s', data)
     if data is None:
-      raise log_and_create_error(self.logger, ValueError, "Data cannot be None!")
+      raise log_and_create_error(self.logger, ValueError, 'Data cannot be None!')
     if not isinstance(data, DataHierarchyModel):
-      raise log_and_create_error(self.logger, TypeError, "Data must be DataHierarchyModel!")
+      raise log_and_create_error(self.logger, TypeError, 'Data must be DataHierarchyModel!')
     return self.db_api.insert_data_hierarchy_model(data)
 
   def update_data_hierarchy_models(self, data_models: list[DataHierarchyModel]) -> None:
@@ -83,7 +83,7 @@ class DatabaseAPI:
     Args:
         data_models (list[DataHierarchyModel]): A list of DataHierarchyModel instances to be updated.
     """
-    self.logger.info("Updating data hierarchy models...")
+    self.logger.info('Updating data hierarchy models...')
     for data_model in data_models:
       self.update_data_hierarchy_model(data_model)
 
@@ -101,11 +101,11 @@ class DatabaseAPI:
         ValueError: If the provided data is None.
         TypeError: If the provided data is not an instance of DataHierarchyModel.
     """
-    self.logger.info("Updating data_hierarchy_model: %s", data)
+    self.logger.info('Updating data_hierarchy_model: %s', data)
     if data is None:
-      raise log_and_create_error(self.logger, ValueError, "Data cannot be None!")
+      raise log_and_create_error(self.logger, ValueError, 'Data cannot be None!')
     if not isinstance(data, DataHierarchyModel):
-      raise log_and_create_error(self.logger, TypeError, "Data must be an DataHierarchyModel!")
+      raise log_and_create_error(self.logger, TypeError, 'Data must be an DataHierarchyModel!')
     self.db_api.update_data_hierarchy_model(data)
 
   def get_data_hierarchy_models(self) -> list[DataHierarchyModel]:
@@ -117,7 +117,7 @@ class DatabaseAPI:
     Returns:
         list[DataHierarchyModel]: A list of DataHierarchyModel instances retrieved from the database.
     """
-    self.logger.info("Retrieving data_hierarchy_models")
+    self.logger.info('Retrieving data_hierarchy_models')
     return self.db_api.get_data_hierarchy_models()
 
   def get_data_hierarchy_model(self, model_doc_type: str) -> DataHierarchyModel | None:
@@ -136,9 +136,9 @@ class DatabaseAPI:
     Raises:
         ValueError: If the model_doc_type is None.
     """
-    self.logger.info("Retrieving data_hierarchy_model with id: %s", model_doc_type)
+    self.logger.info('Retrieving data_hierarchy_model with id: %s', model_doc_type)
     if model_doc_type is None:
-      raise log_and_create_error(self.logger, ValueError, "model_id cannot be None")
+      raise log_and_create_error(self.logger, ValueError, 'model_id cannot be None')
     return self.db_api.get_data_hierarchy_model(model_doc_type)
 
   def initialize_database(self) -> None:
@@ -148,7 +148,7 @@ class DatabaseAPI:
     and bind the necessary database tables. It ensures that the database is set up
     correctly for further operations within the data-hierarchy module.
     """
-    self.logger.info("Initializing database for data-hierarchy module...")
+    self.logger.info('Initializing database for data-hierarchy module...')
     self.db_api.create_and_bind_db_tables()
 
   def get_data_hierarchy_document(self) -> dict[str, Any]:
@@ -164,7 +164,7 @@ class DatabaseAPI:
     Raises:
         Error: If there is an issue retrieving the data hierarchy models or converting them.
     """
-    self.logger.info("Retrieving data hierarchy document...")
+    self.logger.info('Retrieving data hierarchy document...')
     data_hierarchy_models = self.get_data_hierarchy_models()
     dh_document: dict[str, Any] = {}
     for model in data_hierarchy_models:
@@ -183,7 +183,7 @@ class DatabaseAPI:
     """
     models = DataHierarchyDocumentAdapter.to_data_hierarchy_model_list(data_hierarchy_document)
     for model in models:
-      if self.db_api.check_if_data_hierarchy_model_exists(model.doc_type or ""):
+      if self.db_api.check_if_data_hierarchy_model_exists(model.doc_type or ''):
         self.update_data_hierarchy_model(model)
       else:
         self.create_data_hierarchy_model(model)

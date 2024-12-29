@@ -22,7 +22,7 @@ class PropertiesOrmModel(OrmModelBase):
   including fields for ID, key, value, and unit. It provides a method to retrieve the
   names of the table columns for database operations.
   """
-  __tablename__ = "properties"
+  __tablename__ = 'properties'
 
   id: Mapped[str] = mapped_column(primary_key=True)
   key: Mapped[str] = mapped_column(primary_key=True)
@@ -40,4 +40,4 @@ class PropertiesOrmModel(OrmModelBase):
     Returns:
         list[str]: A list of column names for the properties table.
     """
-    return ["id", "key", "value", "unit"]
+    return ['id', 'key', 'value', 'unit']

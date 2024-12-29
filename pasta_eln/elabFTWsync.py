@@ -74,7 +74,7 @@ class Pasta2Elab:
     docTypesPasta = {i.capitalize() for i in self.backend.db.dataHierarchy('','') if not i.startswith('x')} | \
                     {'Default','Folder','Project','ProjectGroup'}
     for docType in docTypesPasta.difference({'Measurement'}|docTypesElab.keys()):  # do not create measurements, use 'experiments'
-      self.api.touchEntry('items_types', {"title": docType})
+      self.api.touchEntry('items_types', {'title': docType})
     #verify nothing extraneous
     docTypesElab  = {i['title']:i['id'] for i in self.api.readEntry('items_types')}
     if set(docTypesElab.keys()).difference(docTypesPasta|{'Default','ProjectGroup'}) and self.verbose:
@@ -84,7 +84,7 @@ class Pasta2Elab:
     dataHierarchy = []
     for docType in self.backend.db.dataHierarchy('',''):
       dataHierarchy += copy.deepcopy([dict(i) for i in self.backend.db.dataHierarchy(docType,'meta')])
-    self.api.updateEntry('items', self.elabProjGroupID, {"metadata":json.dumps(dataHierarchy)})
+    self.api.updateEntry('items', self.elabProjGroupID, {'metadata':json.dumps(dataHierarchy)})
     return
 
 
@@ -99,11 +99,11 @@ class Pasta2Elab:
       elabID    = self.api.touchEntry(urlSuffix, content)
       self.api.createLink(urlSuffix, elabID, 'items', self.elabProjGroupID)
       return elabID
-    self.backend.db.cursor.execute("SELECT id, type, externalId FROM main")
+    self.backend.db.cursor.execute('SELECT id, type, externalId FROM main')
     self.docID2elabID = {i[0]:((i[2],i[1].split('/')[0]=='measurement') if i[2] else (getNewEntry(elabTypes[i[1].split('/')[0]]),i[1].split('/')[0]=='measurement'))
                     for i in self.backend.db.cursor.fetchall()}
     # save to sqlite
-    self.backend.db.cursor.executemany("UPDATE main SET id=?, externalId=? WHERE id=?", [(k,v[0],k) for k, v in self.docID2elabID.items()])
+    self.backend.db.cursor.executemany('UPDATE main SET id=?, externalId=? WHERE id=?', [(k,v[0],k) for k, v in self.docID2elabID.items()])
     self.backend.db.connection.commit()
     return
 
@@ -133,9 +133,9 @@ class Pasta2Elab:
     docServer, uploads = self.elab2doc(self.api.readEntry(entityType, self.docID2elabID[node.id][0])[0])
     if self.verbose:
       print('>>>DOC_SERVER', docServer)
-    if [i for i in uploads if i['real_name']=="do_not_change.json"]:
+    if [i for i in uploads if i['real_name']=='do_not_change.json']:
       docOther = self.api.download(entityType, self.docID2elabID[node.id][0],
-                                   [i for i in uploads if i['real_name']=="do_not_change.json"][0])
+                                   [i for i in uploads if i['real_name']=='do_not_change.json'][0])
     else:
       docOther = {'name':'Untitled', 'tags':[], 'comment':'', 'dateSync':datetime.fromisoformat('2000-01-02').isoformat()+'.0000',
                   'dateModified':datetime.fromisoformat('2000-01-01').isoformat()+'.0000'}
@@ -243,7 +243,7 @@ class Pasta2Elab:
     if flagUpdateServer:
       uploadsToDelete |= {'thumbnail.svg', 'thumbnail.png', 'thumbnail.jpg'}
     for upload in existingUploads:
-      if upload["real_name"] in uploadsToDelete:
+      if upload['real_name'] in uploadsToDelete:
         self.api.uploadDelete(entityType, self.docID2elabID[node.id][0], upload['id'])
     self.api.upload(entityType, self.docID2elabID[node.id][0], jsonContent=json.dumps(docMerged))
     if flagUpdateServer:

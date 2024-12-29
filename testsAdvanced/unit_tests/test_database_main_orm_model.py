@@ -13,11 +13,11 @@ from pasta_eln.database.models.main_orm_model import MainOrmModel
 
 class TestDatabaseOrmMainModel:
   @pytest.mark.parametrize(
-    "expected_columns, test_id",
+    'expected_columns, test_id',
     [
-      (["id", "name", "user", "type", "date_created", "date_modified", "comment"], "default columns"),
+      (['id', 'name', 'user', 'type', 'date_created', 'date_modified', 'comment'], 'default columns'),
     ],
-    ids=["default columns"]
+    ids=['default columns']
   )
   def test_get_table_columns(self, expected_columns, test_id):
     # Act
@@ -27,13 +27,13 @@ class TestDatabaseOrmMainModel:
     assert result == expected_columns
 
   @pytest.mark.parametrize(
-    "id, name, user, type, date_created, date_modified, comment, expected",
+    'id, name, user, type, date_created, date_modified, comment, expected',
     [
-      ("1", "Project A", "User1", "Type1", "2023-01-01", "2023-01-02", "Initial comment", "valid data"),
-      ("2", None, None, None, None, None, None, "minimal data"),
-      ("3", "", "", "", "", "", "", "empty strings"),
+      ('1', 'Project A', 'User1', 'Type1', '2023-01-01', '2023-01-02', 'Initial comment', 'valid data'),
+      ('2', None, None, None, None, None, None, 'minimal data'),
+      ('3', '', '', '', '', '', '', 'empty strings'),
     ],
-    ids=["valid data", "minimal data", "empty strings"]
+    ids=['valid data', 'minimal data', 'empty strings']
   )
   def test_database_orm_main_model_initialization(self, id, name, user, type, date_created, date_modified, comment,
                                                   expected):

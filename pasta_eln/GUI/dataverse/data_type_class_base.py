@@ -33,7 +33,7 @@ class DataTypeClass:
       TypeError: If the provided context is not of type DataTypeClassContext.
     """
     if not isinstance(context, DataTypeClassContext):
-      raise TypeError("context must be of type DataTypeClassContext")
+      raise TypeError('context must be of type DataTypeClassContext')
     self.context: DataTypeClassContext = context
 
   def __new__(cls, *_: Any, **__: Any) -> Any:

@@ -25,7 +25,7 @@ class TestDataHierarchyIriColumnDelegate(object):
     delegate = IriColumnDelegate()
     mock_base_init.assert_called_once_with()
     mock_get_logger.assert_called_once_with('pasta_eln.GUI.data_hierarchy.iri_column_delegate.IriColumnDelegate')
-    assert delegate.logger is mock_logger, "logger should be set"
+    assert delegate.logger is mock_logger, 'logger should be set'
 
   def test_create_editor_should_return_line_edit(self, mocker, iri_delegate: iri_delegate):
     mock_parent = mocker.patch('PySide6.QtWidgets.QWidget')
@@ -38,11 +38,11 @@ class TestDataHierarchyIriColumnDelegate(object):
     mock_line_set_clear_button_enabled = mocker.patch.object(mock_line_edit, 'setClearButtonEnabled')
     mock_style_option = mocker.patch('PySide6.QtWidgets.QStyleOptionViewItem')
     mock_model_index = mocker.patch('PySide6.QtCore.QModelIndex')
-    mock_model_index.siblingAtColumn.return_value.data.return_value = "default"
+    mock_model_index.siblingAtColumn.return_value.data.return_value = 'default'
     line_edit = iri_delegate.createEditor(mock_parent, mock_style_option, mock_model_index)
-    assert line_edit is mock_line_edit, "line edit should be returned"
+    assert line_edit is mock_line_edit, 'line edit should be returned'
     mock_lookup_iri_action_construct.assert_called_once_with(LookupIriAction, cell_index=mock_model_index,
-                                                             lookup_term="default")
+                                                             lookup_term='default')
     mock_line_edit_construct.assert_called_once_with(QLineEdit, mock_parent)
     mock_line_edit_add_action.assert_called_once_with(mock_lookup_iri_action, QLineEdit.TrailingPosition)
     mock_line_set_clear_button_enabled.assert_called_once_with(True)

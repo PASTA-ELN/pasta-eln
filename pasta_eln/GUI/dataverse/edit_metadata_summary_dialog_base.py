@@ -11,17 +11,17 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 class Ui_EditMetadataSummaryDialog(object):
   def setupUi(self, EditMetadataSummaryDialog):
-    EditMetadataSummaryDialog.setObjectName("EditMetadataSummaryDialog")
+    EditMetadataSummaryDialog.setObjectName('EditMetadataSummaryDialog')
     EditMetadataSummaryDialog.resize(1047, 486)
     self.gridLayout = QtWidgets.QGridLayout(EditMetadataSummaryDialog)
-    self.gridLayout.setObjectName("gridLayout")
+    self.gridLayout.setObjectName('gridLayout')
     self.buttonBox = QtWidgets.QDialogButtonBox(parent=EditMetadataSummaryDialog)
     self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
     self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.No|QtWidgets.QDialogButtonBox.StandardButton.Yes)
-    self.buttonBox.setObjectName("buttonBox")
+    self.buttonBox.setObjectName('buttonBox')
     self.gridLayout.addWidget(self.buttonBox, 1, 0, 1, 1)
     self.summaryTextEdit = QtWidgets.QTextEdit(parent=EditMetadataSummaryDialog)
-    self.summaryTextEdit.setObjectName("summaryTextEdit")
+    self.summaryTextEdit.setObjectName('summaryTextEdit')
     self.gridLayout.addWidget(self.summaryTextEdit, 0, 0, 1, 1)
 
     self.retranslateUi(EditMetadataSummaryDialog)
@@ -31,10 +31,10 @@ class Ui_EditMetadataSummaryDialog(object):
 
   def retranslateUi(self, EditMetadataSummaryDialog):
     _translate = QtCore.QCoreApplication.translate
-    EditMetadataSummaryDialog.setWindowTitle(_translate("EditMetadataSummaryDialog", "Metadata Summary"))
+    EditMetadataSummaryDialog.setWindowTitle(_translate('EditMetadataSummaryDialog', 'Metadata Summary'))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
     EditMetadataSummaryDialog = QtWidgets.QDialog()

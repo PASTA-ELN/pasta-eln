@@ -21,8 +21,8 @@ from pasta_eln.GUI.dataverse.data_type_class_context import DataTypeClassContext
 @pytest.fixture
 def mock_widget():
   widget = MagicMock(spec=QLineEdit)
-  widget.objectName.return_value = "testLineEdit"
-  widget.text.return_value = "test_value"
+  widget.objectName.return_value = 'testLineEdit'
+  widget.text.return_value = 'test_value'
   return widget
 
 
@@ -47,7 +47,7 @@ def setup_context():
 
 @pytest.fixture
 def mock_compound_data_type_class(mocker, setup_context):
-  mocker.patch("pasta_eln.GUI.dataverse.compound_data_type_class.logging.getLogger")
+  mocker.patch('pasta_eln.GUI.dataverse.compound_data_type_class.logging.getLogger')
   return CompoundDataTypeClass(setup_context)
 
 
@@ -55,9 +55,9 @@ class TestCompoundDataTypeClass:
 
   def test_init_happy_path(self, mocker):
     # Arrange
-    mock_base_class_init = mocker.patch("pasta_eln.GUI.dataverse.compound_data_type_class.DataTypeClass.__init__")
+    mock_base_class_init = mocker.patch('pasta_eln.GUI.dataverse.compound_data_type_class.DataTypeClass.__init__')
     mock_context = mocker.MagicMock(spec=DataTypeClassContext)
-    mock_logger = mocker.patch("pasta_eln.GUI.dataverse.compound_data_type_class.logging.getLogger")
+    mock_logger = mocker.patch('pasta_eln.GUI.dataverse.compound_data_type_class.logging.getLogger')
 
     # Act
     instance = CompoundDataTypeClass(mock_context)
@@ -67,27 +67,27 @@ class TestCompoundDataTypeClass:
     mock_logger.assert_called_once_with('pasta_eln.GUI.dataverse.compound_data_type_class.CompoundDataTypeClass')
     assert instance.logger == mock_logger.return_value
 
-  @pytest.mark.parametrize("value_template, expected_widgets_added, expected_calls", [
+  @pytest.mark.parametrize('value_template, expected_widgets_added, expected_calls', [
     # Success path with various realistic test values
     ([
        {
-         "journalVolume": {
-           "typeName": "journalVolume",
-           "multiple": False,
-           "typeClass": "primitive",
-           "value": "JournalVolume1"
+         'journalVolume': {
+           'typeName': 'journalVolume',
+           'multiple': False,
+           'typeClass': 'primitive',
+           'value': 'JournalVolume1'
          },
-         "journalIssue": {
-           "typeName": "journalIssue",
-           "multiple": False,
-           "typeClass": "primitive",
-           "value": "JournalIssue1"
+         'journalIssue': {
+           'typeName': 'journalIssue',
+           'multiple': False,
+           'typeClass': 'primitive',
+           'value': 'JournalIssue1'
          },
-         "journalPubDate": {
-           "typeName": "journalPubDate",
-           "multiple": False,
-           "typeClass": "primitive",
-           "value": "1008-01-01"
+         'journalPubDate': {
+           'typeName': 'journalPubDate',
+           'multiple': False,
+           'typeClass': 'primitive',
+           'value': '1008-01-01'
          }
        }
      ], [QLineEdit, QLineEdit, QDateTimeEdit], 3),
@@ -99,7 +99,7 @@ class TestCompoundDataTypeClass:
     ([{'typeName': {'value': '2023-10-10'}}], [], 0),
     # Error case: valueTemplate with missing value
     ([{'typeName': 'dateTime'}], [], 0),
-  ], ids=["success_path", "empty_value_template", "non_dict_value", "missing_type_name", "missing_value"])
+  ], ids=['success_path', 'empty_value_template', 'non_dict_value', 'missing_type_name', 'missing_value'])
   def test_add_new_entry_parametrized(self, mocker, mock_compound_data_type_class, value_template,
                                       expected_widgets_added, expected_calls):
     # Arrange
@@ -133,49 +133,49 @@ class TestCompoundDataTypeClass:
         mock_qhbox_layout.return_value)
 
   @pytest.mark.parametrize(
-    "meta_field, expected_calls",
+    'meta_field, expected_calls',
     [
       # Success path: single value, not multiple
       param(
         {'valueTemplate': {'key': 'template'}, 'value': {'key': 'value'}, 'multiple': False},
         [call({'key': 'value'}, {'key': 'template'}, False)],
-        id="single_value_not_multiple"
+        id='single_value_not_multiple'
       ),
       # Success path: multiple values, empty list
       param(
         {'valueTemplate': [{'key': 'template'}], 'value': [], 'multiple': True},
         [call({'key': 'template'}, {'key': 'template'})],
-        id="multiple_values_empty_list"
+        id='multiple_values_empty_list'
       ),
       # Happy path: multiple values, non-empty list
       param(
         {'valueTemplate': [{'key': 'template'}], 'value': [{'key': 'value1'}, {'key': 'value2'}], 'multiple': True},
         [call({'key': 'value1'}, {'key': 'template'}), call({'key': 'value2'}, {'key': 'template'})],
-        id="multiple_values_non_empty_list"
+        id='multiple_values_non_empty_list'
       ),
       # Edge case: single value, no value provided
       param(
         {'valueTemplate': {'key': 'template'}, 'value': None, 'multiple': False},
         [call({'key': 'template'}, {'key': 'template'}, False)],
-        id="single_value_no_value_provided"
+        id='single_value_no_value_provided'
       ),
       # Edge case: multiple values, no value template
       param(
         {'valueTemplate': None, 'value': [{'key': 'value1'}], 'multiple': True},
         [],
-        id="multiple_values_no_value_template"
+        id='multiple_values_no_value_template'
       ),
       # Error case: valueTemplate is not a list when multiple is True
       param(
         {'valueTemplate': {'key': 'template'}, 'value': [], 'multiple': True},
         [],
-        id="value_template_not_list_multiple_true"
+        id='value_template_not_list_multiple_true'
       ),
       # Error case: value is not a list when multiple is True
       param(
         {'valueTemplate': [{'key': 'template'}], 'value': {'key': 'value'}, 'multiple': True},
         [],
-        id="value_not_list_multiple_true"
+        id='value_not_list_multiple_true'
       ),
     ],
     ids=lambda x: x[-1]
@@ -193,7 +193,7 @@ class TestCompoundDataTypeClass:
     assert mock_compound_data_type_class.populate_compound_entry.call_args_list == expected_calls
 
   @pytest.mark.parametrize(
-    "meta_field, layout_items, expected_value, log_error_called",
+    'meta_field, layout_items, expected_value, log_error_called',
     [
       # Success path: multiple is True, with valueTemplate
       (
@@ -232,11 +232,11 @@ class TestCompoundDataTypeClass:
       ),
     ],
     ids=[
-      "multiple_true_with_valueTemplate",
-      "multiple_false_with_valueTemplate",
-      "multiple_true_no_valueTemplate",
-      "multiple_false_no_valueTemplate",
-      "multiple_false_layout_not_found",
+      'multiple_true_with_valueTemplate',
+      'multiple_false_with_valueTemplate',
+      'multiple_true_no_valueTemplate',
+      'multiple_false_no_valueTemplate',
+      'multiple_false_layout_not_found',
     ]
   )
   def test_save_modifications(self, mock_compound_data_type_class, meta_field, layout_items, expected_value,
@@ -257,25 +257,25 @@ class TestCompoundDataTypeClass:
     # Assert
     assert mock_compound_data_type_class.context.meta_field['value'] == expected_value
     if log_error_called:
-      mock_compound_data_type_class.logger.error.assert_called_once_with("Compound horizontal layout not found")
+      mock_compound_data_type_class.logger.error.assert_called_once_with('Compound horizontal layout not found')
     else:
       mock_compound_data_type_class.logger.error.assert_not_called()
 
   @pytest.mark.parametrize(
-    "widget_text, expected_value, initial_meta_field, expected_meta_field",
+    'widget_text, expected_value, initial_meta_field, expected_meta_field',
     [
-      ("test_value", "test_value", {}, {'test': {'value': 'test_value'}}),
-      ("No Value", "", {}, {}),
-      ("", "", {}, {}),
-      ("test_value", "test_value", {'test': {'value': 'initial_value'}}, {'test': {'value': 'test_value'}}),
-      ("test_value", "test_value", [], [{'test': {'value': 'test_value'}}]),
+      ('test_value', 'test_value', {}, {'test': {'value': 'test_value'}}),
+      ('No Value', '', {}, {}),
+      ('', '', {}, {}),
+      ('test_value', 'test_value', {'test': {'value': 'initial_value'}}, {'test': {'value': 'test_value'}}),
+      ('test_value', 'test_value', [], [{'test': {'value': 'test_value'}}]),
     ],
     ids=[
-      "normal_value",
-      "no_value",
-      "empty_value",
-      "overwrite_existing_value",
-      "append_to_list"
+      'normal_value',
+      'no_value',
+      'empty_value',
+      'overwrite_existing_value',
+      'append_to_list'
     ]
   )
   def test_save_compound_horizontal_layout_values(self, mock_compound_data_type_class, mock_layout, widget_text,
@@ -294,14 +294,14 @@ class TestCompoundDataTypeClass:
     assert mock_compound_data_type_class.context.meta_field['value'] == expected_meta_field
 
   @pytest.mark.parametrize(
-    "layout_count, initial_meta_field, expected_meta_field",
+    'layout_count, initial_meta_field, expected_meta_field',
     [
       (0, {}, {}),
       (0, [], []),
     ],
     ids=[
-      "empty_layout_dict",
-      "empty_layout_list"
+      'empty_layout_dict',
+      'empty_layout_list'
     ]
   )
   def test_save_compound_horizontal_layout_values_empty_layout(self, mock_compound_data_type_class, layout_count,
@@ -321,14 +321,14 @@ class TestCompoundDataTypeClass:
     assert mock_compound_data_type_class.context.meta_field['value'] == expected_meta_field
 
   @pytest.mark.parametrize(
-    "initial_meta_field, expected_meta_field",
+    'initial_meta_field, expected_meta_field',
     [
       ({'value': 'string_value'}, {'test': {'value': 'test_value'}, 'value': 'string_value'}),
       (None, {'test': {'value': 'test_value'}}),
     ],
     ids=[
-      "initial_value_string",
-      "initial_value_none"
+      'initial_value_string',
+      'initial_value_none'
     ]
   )
   def test_save_compound_horizontal_layout_values_non_dict_list_initial_value(self, mock_compound_data_type_class,
@@ -336,7 +336,7 @@ class TestCompoundDataTypeClass:
                                                                               initial_meta_field, expected_meta_field):
     # Arrange
     mock_compound_data_type_class.context.meta_field['value'] = initial_meta_field
-    mock_layout.itemAt.return_value.widget.return_value.text.return_value = "test_value"
+    mock_layout.itemAt.return_value.widget.return_value.text.return_value = 'test_value'
     value_template = {'test': {'value': ''}}
     mock_compound_data_type_class.context.meta_field['valueTemplate'] = value_template
 
@@ -347,22 +347,22 @@ class TestCompoundDataTypeClass:
     assert mock_compound_data_type_class.context.meta_field['value'] == expected_meta_field
 
   @pytest.mark.parametrize(
-    "compound_entry, template_entry, enable_delete_button, expected_widget_count",
+    'compound_entry, template_entry, enable_delete_button, expected_widget_count',
     [
       # Success path test cases
       pytest.param(
-        {"date": {"value": "2023-10-01T12:00:00"}},
-        {"date": {"value": "2023-10-01T12:00:00"}},
+        {'date': {'value': '2023-10-01T12:00:00'}},
+        {'date': {'value': '2023-10-01T12:00:00'}},
         True,
         3,
-        id="success_path_with_date"
+        id='success_path_with_date'
       ),
       pytest.param(
-        {"text": {"value": "example"}},
-        {"text": {"value": "example"}},
+        {'text': {'value': 'example'}},
+        {'text': {'value': 'example'}},
         True,
         3,
-        id="success_path_with_text"
+        id='success_path_with_text'
       ),
       # Edge cases
       pytest.param(
@@ -370,29 +370,29 @@ class TestCompoundDataTypeClass:
         None,
         True,
         0,
-        id="empty_compound_entry"
+        id='empty_compound_entry'
       ),
       pytest.param(
-        {"date": {"value": "2023-10-01T12:00:00"}},
+        {'date': {'value': '2023-10-01T12:00:00'}},
         None,
         False,
         2,
-        id="no_template_entry"
+        id='no_template_entry'
       ),
       # Error cases
       pytest.param(
-        {"date": {"value": "invalid-date"}},
+        {'date': {'value': 'invalid-date'}},
         None,
         True,
         2,
-        id="invalid_date_value"
+        id='invalid_date_value'
       ),
       pytest.param(
-        {"unknown_type": {"value": "example"}},
+        {'unknown_type': {'value': 'example'}},
         None,
         True,
         2,
-        id="unknown_type"
+        id='unknown_type'
       ),
     ]
   )
@@ -415,7 +415,7 @@ class TestCompoundDataTypeClass:
 
     # Assert
     mock_qhbox_layout.assert_called_once()
-    mock_qhbox_layout.return_value.setObjectName.assert_called_once_with("compoundHorizontalLayout")
+    mock_qhbox_layout.return_value.setObjectName.assert_called_once_with('compoundHorizontalLayout')
     assert mock_compound_data_type_class.context.main_vertical_layout.addLayout.call_count == (
       1 if expected_widget_count > 0 else 0)
     if expected_widget_count > 0:

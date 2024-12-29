@@ -34,7 +34,7 @@ class LookupIriAction(QAction):
     """
     super().__init__(
       icon=icon('fa.angle-right', color='black', scale_factor=1),
-      text="Lookup IRI online",
+      text='Lookup IRI online',
       parent=parent_line_edit)
     self.parent_line_edit: QLineEdit | None = parent_line_edit
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
@@ -48,7 +48,7 @@ class LookupIriAction(QAction):
     Returns: Nothing
 
     """
-    self.logger.info("Lookup dialog shown..")
+    self.logger.info('Lookup dialog shown..')
     self.terminology_lookup_dialog.show()
 
   def terminology_lookup_accepted_callback(self) -> None:
@@ -56,8 +56,8 @@ class LookupIriAction(QAction):
     Callback for the terminology lookup accepted button
     Returns: Nothing
     """
-    self.logger.info("Accepted IRIs: %s", self.terminology_lookup_dialog.selected_iris)
-    iris = " ".join(self.terminology_lookup_dialog.selected_iris)
+    self.logger.info('Accepted IRIs: %s', self.terminology_lookup_dialog.selected_iris)
+    iris = ' '.join(self.terminology_lookup_dialog.selected_iris)
     if self.parent_line_edit:
       self.parent_line_edit.setText(iris)
     if self.cell_index and self.cell_index.isValid():

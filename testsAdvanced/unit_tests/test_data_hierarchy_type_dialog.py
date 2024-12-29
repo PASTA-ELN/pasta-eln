@@ -90,22 +90,22 @@ class TestDataHierarchyTypeDialog:
     type_dialog.typeLineEdit.setValidator.assert_called_once_with(mock_regular_expression_validator.return_value)
     type_dialog.iconComboBox.completer().setCompletionMode.assert_called_once_with(
       QtWidgets.QCompleter.CompletionMode.PopupCompletion)
-    type_dialog.set_iri_lookup_action.assert_called_once_with("")
+    type_dialog.set_iri_lookup_action.assert_called_once_with('')
 
   @pytest.mark.parametrize(
-    "type_info, validator_side_effect, expected_valid, log_error_called",
+    'type_info, validator_side_effect, expected_valid, log_error_called',
     [
       # Success path tests
-      param({"key": "value"}, None, True, False, id="valid_type_info"),
-      param({"another_key": "another_value"}, None, True, False, id="another_valid_type_info"),
+      param({'key': 'value'}, None, True, False, id='valid_type_info'),
+      param({'another_key': 'another_value'}, None, True, False, id='another_valid_type_info'),
 
       # Edge cases
-      param({}, None, True, False, id="empty_type_info"),
-      param({"key": None}, None, True, False, id="none_value_in_type_info"),
+      param({}, None, True, False, id='empty_type_info'),
+      param({'key': None}, None, True, False, id='none_value_in_type_info'),
 
       # Error cases
-      param({"key": "value"}, TypeError("Invalid type"), False, True, id="type_error"),
-      param({"key": "value"}, ValueError("Invalid value"), False, True, id="value_error"),
+      param({'key': 'value'}, TypeError('Invalid type'), False, True, id='type_error'),
+      param({'key': 'value'}, ValueError('Invalid value'), False, True, id='value_error'),
     ],
     ids=lambda x: x[-1]
   )
@@ -143,27 +143,27 @@ class TestDataHierarchyTypeDialog:
     assert type_dialog.buttonBox.button(QDialogButtonBox.StandardButton.Ok).clicked.isConnected()
 
   @pytest.mark.parametrize(
-    "lookup_term, existing_actions, expected_action_count",
+    'lookup_term, existing_actions, expected_action_count',
     [
-      ("http://example.com/iri1", [], 1),  # success path with no existing actions
-      ("http://example.com/iri2",
-       [MagicMock(spec=LookupIriAction, lookup_term=None, parent_line_edit="http://example.com/iri1")], 1),
+      ('http://example.com/iri1', [], 1),  # success path with no existing actions
+      ('http://example.com/iri2',
+       [MagicMock(spec=LookupIriAction, lookup_term=None, parent_line_edit='http://example.com/iri1')], 1),
       # success path with one existing action
-      ("", [], 1),  # edge case with empty lookup term
-      ("http://example.com/iri3", [MagicMock()], 2),  # edge case with non-LookupIriAction existing action
+      ('', [], 1),  # edge case with empty lookup term
+      ('http://example.com/iri3', [MagicMock()], 2),  # edge case with non-LookupIriAction existing action
     ],
     ids=[
-      "success_path_no_existing_actions",
-      "success_path_with_existing_action",
-      "edge_case_empty_lookup_term",
-      "edge_case_non_lookupiri_action_existing"
+      'success_path_no_existing_actions',
+      'success_path_with_existing_action',
+      'edge_case_empty_lookup_term',
+      'edge_case_non_lookupiri_action_existing'
     ]
   )
   def test_set_iri_lookup_action(self, mocker, type_dialog, lookup_term, existing_actions, expected_action_count):
     # Arrange
     mocker.resetall()
-    mock_lookup_action = mocker.patch("pasta_eln.GUI.data_hierarchy.type_dialog.LookupIriAction")
-    mock_isinstance = mocker.patch("pasta_eln.GUI.data_hierarchy.type_dialog.isinstance", return_value=True)
+    mock_lookup_action = mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.LookupIriAction')
+    mock_isinstance = mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.isinstance', return_value=True)
 
     type_dialog.iriLineEdit.actions.return_value = existing_actions
 
@@ -185,12 +185,12 @@ class TestDataHierarchyTypeDialog:
         act.deleteLater.assert_called_once()
 
   @pytest.mark.parametrize(
-    "lookup_term, existing_actions",
+    'lookup_term, existing_actions',
     [
-      ("http://example.com/iri4", None),  # error case with None as existing actions
+      ('http://example.com/iri4', None),  # error case with None as existing actions
     ],
     ids=[
-      "error_case_none_existing_actions"
+      'error_case_none_existing_actions'
     ]
   )
   def test_set_iri_lookup_action_errors(self, type_dialog, lookup_term, existing_actions):
@@ -224,7 +224,7 @@ class TestDataHierarchyTypeDialog:
 
   def test_title_modified(self, type_dialog):
     # Arrange
-    new_title = "New Title"
+    new_title = 'New Title'
 
     # Act
     with patch.object(type_dialog, 'set_iri_lookup_action') as mock_set_iri_lookup_action:
@@ -233,15 +233,15 @@ class TestDataHierarchyTypeDialog:
     # Assert
     mock_set_iri_lookup_action.assert_called_once_with(new_title)
 
-  @pytest.mark.parametrize("test_id, font_collection", [
-    ("success_path_1", "font_collection_1"),
-    ("success_path_2", "font_collection_2"),
-    ("empty_font_collection", ""),
-    ("special_characters", "!@#$%^&*()"),
-    ("long_string", "a" * 1000),
-    ("none_font_collection", None),
-  ], ids=["success_path_1", "success_path_2", "empty_font_collection", "special_characters", "long_string",
-          "none_font_collection"])
+  @pytest.mark.parametrize('test_id, font_collection', [
+    ('success_path_1', 'font_collection_1'),
+    ('success_path_2', 'font_collection_2'),
+    ('empty_font_collection', ''),
+    ('special_characters', '!@#$%^&*()'),
+    ('long_string', 'a' * 1000),
+    ('none_font_collection', None),
+  ], ids=['success_path_1', 'success_path_2', 'empty_font_collection', 'special_characters', 'long_string',
+          'none_font_collection'])
   def test_icon_font_collection_changed(self, type_dialog, test_id, font_collection):
     # Arrange
     type_dialog.populate_icons = MagicMock()
@@ -253,27 +253,27 @@ class TestDataHierarchyTypeDialog:
     type_dialog.populate_icons.assert_called_once_with(font_collection)
 
   @pytest.mark.parametrize(
-    "font_collection, expected_calls, log_warning",
+    'font_collection, expected_calls, log_warning',
     [
-      ("font1", [("icon1",), ('icon2', 'icon2'), ('icon3', 'icon3')], False),
-      ("font2", [("iconA",), ('iconB', 'iconB')], False),
-      ("", [], True),
+      ('font1', [('icon1',), ('icon2', 'icon2'), ('icon3', 'icon3')], False),
+      ('font2', [('iconA',), ('iconB', 'iconB')], False),
+      ('', [], True),
       (None, [], True),
-      ("nonexistent_font", [], True),
+      ('nonexistent_font', [], True),
     ],
     ids=[
-      "valid_font1",
-      "valid_font2",
-      "empty_string",
-      "none_value",
-      "nonexistent_font"
+      'valid_font1',
+      'valid_font2',
+      'empty_string',
+      'none_value',
+      'nonexistent_font'
     ]
   )
   def test_populate_icons(self, mocker, type_dialog, font_collection, expected_calls, log_warning):
     # Arrange
     mocker.resetall()
-    mock_qta = mocker.patch("pasta_eln.GUI.data_hierarchy.type_dialog.qta")
-    type_dialog.qta_icons.icon_names = {"font1": ["icon1", "icon2", "icon3"], "font2": ["iconA", "iconB"]}
+    mock_qta = mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.qta')
+    type_dialog.qta_icons.icon_names = {'font1': ['icon1', 'icon2', 'icon3'], 'font2': ['iconA', 'iconB']}
     expected_calls_modified = []
     for item in expected_calls:
       if len(item) == 2:
@@ -295,18 +295,18 @@ class TestDataHierarchyTypeDialog:
       assert call == expected_call
 
   @pytest.mark.parametrize(
-    "datatype, expected",
+    'datatype, expected',
     [
-      ("text", "text"),  # happy path with a common string
-      ("123", "123"),  # happy path with numeric string
-      ("", ""),  # edge case with empty string
-      ("a" * 1000, "a" * 1000),  # edge case with very long string
+      ('text', 'text'),  # happy path with a common string
+      ('123', '123'),  # happy path with numeric string
+      ('', ''),  # edge case with empty string
+      ('a' * 1000, 'a' * 1000),  # edge case with very long string
     ],
     ids=[
-      "common_string",
-      "numeric_string",
-      "empty_string",
-      "very_long_string"
+      'common_string',
+      'numeric_string',
+      'empty_string',
+      'very_long_string'
     ]
   )
   def test_set_data_type(self, type_dialog, datatype, expected):
@@ -322,20 +322,20 @@ class TestDataHierarchyTypeDialog:
       assert type_dialog.type_info.datatype == expected
 
   @pytest.mark.parametrize(
-    "title, expected_title",
+    'title, expected_title',
     [
-      ("Sample Title", "Sample Title"),  # happy path
-      ("", ""),  # edge case: empty string
-      ("A" * 1000, "A" * 1000),  # edge case: very long string
-      ("1234567890", "1234567890"),  # edge case: numeric string
-      ("!@#$%^&*()", "!@#$%^&*()"),  # edge case: special characters
+      ('Sample Title', 'Sample Title'),  # happy path
+      ('', ''),  # edge case: empty string
+      ('A' * 1000, 'A' * 1000),  # edge case: very long string
+      ('1234567890', '1234567890'),  # edge case: numeric string
+      ('!@#$%^&*()', '!@#$%^&*()'),  # edge case: special characters
     ],
     ids=[
-      "happy_path_sample_title",
-      "edge_case_empty_string",
-      "edge_case_very_long_string",
-      "edge_case_numeric_string",
-      "edge_case_special_characters",
+      'happy_path_sample_title',
+      'edge_case_empty_string',
+      'edge_case_very_long_string',
+      'edge_case_numeric_string',
+      'edge_case_special_characters',
     ]
   )
   def test_set_type_title(self, type_dialog, title, expected_title):
@@ -348,14 +348,14 @@ class TestDataHierarchyTypeDialog:
     assert type_dialog.type_info.title == expected_title
 
   @pytest.mark.parametrize(
-    "iri, expected_iri",
+    'iri, expected_iri',
     [
-      param("http://example.com/type1", "http://example.com/type1", id="success_path_1"),
-      param("http://example.com/type2", "http://example.com/type2", id="success_path_2"),
-      param("", "", id="edge_case_empty_string"),
-      param("http://example.com/very/long/iri/with/many/segments",
-            "http://example.com/very/long/iri/with/many/segments", id="edge_case_long_iri"),
-      param(None, None, id="error_case_none"),
+      param('http://example.com/type1', 'http://example.com/type1', id='success_path_1'),
+      param('http://example.com/type2', 'http://example.com/type2', id='success_path_2'),
+      param('', '', id='edge_case_empty_string'),
+      param('http://example.com/very/long/iri/with/many/segments',
+            'http://example.com/very/long/iri/with/many/segments', id='edge_case_long_iri'),
+      param(None, None, id='error_case_none'),
     ],
     ids=lambda x: x[-1]
   )
@@ -370,20 +370,20 @@ class TestDataHierarchyTypeDialog:
       assert type_dialog.type_info.iri == expected_iri
 
   @pytest.mark.parametrize(
-    "shortcut, expected",
+    'shortcut, expected',
     [
-      ("ctrl+c", "ctrl+c"),  # happy path with common shortcut
-      ("ctrl+v", "ctrl+v"),  # happy path with another common shortcut
-      ("", ""),  # edge case with empty string
-      ("a" * 1000, "a" * 1000),  # edge case with very long string
-      ("ctrl+shift+alt+del", "ctrl+shift+alt+del"),  # edge case with complex shortcut
+      ('ctrl+c', 'ctrl+c'),  # happy path with common shortcut
+      ('ctrl+v', 'ctrl+v'),  # happy path with another common shortcut
+      ('', ''),  # edge case with empty string
+      ('a' * 1000, 'a' * 1000),  # edge case with very long string
+      ('ctrl+shift+alt+del', 'ctrl+shift+alt+del'),  # edge case with complex shortcut
     ],
     ids=[
-      "common-shortcut-copy",
-      "common-shortcut-paste",
-      "empty-string",
-      "very-long-string",
-      "complex-shortcut"
+      'common-shortcut-copy',
+      'common-shortcut-paste',
+      'empty-string',
+      'very-long-string',
+      'complex-shortcut'
     ]
   )
   def test_set_type_shortcut(self, type_dialog, shortcut, expected):
@@ -396,18 +396,18 @@ class TestDataHierarchyTypeDialog:
     assert type_dialog.type_info.shortcut == expected
 
   @pytest.mark.parametrize(
-    "icon, expected_icon",
+    'icon, expected_icon',
     [
-      ("icon1.png", "icon1.png"),  # happy path with a typical icon name
-      ("", ""),  # edge case with an empty string
-      ("a" * 255, "a" * 255),  # edge case with a very long string
-      ("icon_with_special_chars_!@#.png", "icon_with_special_chars_!@#.png"),  # edge case with special characters
+      ('icon1.png', 'icon1.png'),  # happy path with a typical icon name
+      ('', ''),  # edge case with an empty string
+      ('a' * 255, 'a' * 255),  # edge case with a very long string
+      ('icon_with_special_chars_!@#.png', 'icon_with_special_chars_!@#.png'),  # edge case with special characters
     ],
     ids=[
-      "typical_icon_name",
-      "empty_string",
-      "very_long_string",
-      "special_characters"
+      'typical_icon_name',
+      'empty_string',
+      'very_long_string',
+      'special_characters'
     ]
   )
   def test_set_type_icon(self, type_dialog, icon, expected_icon):

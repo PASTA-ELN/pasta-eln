@@ -366,7 +366,7 @@ class Table(QWidget):
         self.models[i].setSourceModel(self.models[i-1])
       self.table.setModel(self.models[-1])
     else:
-      print("**ERROR table menu unknown:",command)
+      print('**ERROR table menu unknown:',command)
     return
 
 

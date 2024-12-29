@@ -46,37 +46,37 @@ class MockComboBox:
 # to isolate the class for testing
 @pytest.fixture
 def mock_dependencies(mocker):
-  with patch("pasta_eln.GUI.dataverse.edit_metadata_dialog.DatabaseAPI") as mock_db_api, \
-      patch("pasta_eln.GUI.dataverse.edit_metadata_dialog.QDialog") as mock_qdialog, \
+  with patch('pasta_eln.GUI.dataverse.edit_metadata_dialog.DatabaseAPI') as mock_db_api, \
+      patch('pasta_eln.GUI.dataverse.edit_metadata_dialog.QDialog') as mock_qdialog, \
       patch(
-        "pasta_eln.GUI.dataverse.edit_metadata_dialog.EditMetadataSummaryDialog") as mock_edit_metadata_summary_dialog, \
-      patch("pasta_eln.GUI.dataverse.edit_metadata_dialog.Ui_EditMetadataDialog.setupUi") as mock_setup_ui:
-    mocker.patch("pasta_eln.GUI.dataverse.edit_metadata_dialog.logging.getLogger")
-    mocker.patch.object(EditMetadataDialog, "metadataBlockComboBox", create=True)
-    mocker.patch.object(EditMetadataDialog, "typesComboBox", create=True)
-    mocker.patch.object(EditMetadataDialog, "minimalFullComboBox", create=True)
-    mocker.patch.object(EditMetadataDialog, "buttonBox", create=True)
-    mocker.patch.object(EditMetadataDialog, "licenseNameLineEdit", create=True)
-    mocker.patch.object(EditMetadataDialog, "licenseURLLineEdit", create=True)
-    mocker.patch.object(EditMetadataDialog, "primitive_compound_frame", create=True)
-    mocker.patch.object(EditMetadataDialog, "controlled_vocab_frame", create=True)
-    mocker.patch.object(EditMetadataDialog, "metadataScrollVerticalLayout", create=True)
+        'pasta_eln.GUI.dataverse.edit_metadata_dialog.EditMetadataSummaryDialog') as mock_edit_metadata_summary_dialog, \
+      patch('pasta_eln.GUI.dataverse.edit_metadata_dialog.Ui_EditMetadataDialog.setupUi') as mock_setup_ui:
+    mocker.patch('pasta_eln.GUI.dataverse.edit_metadata_dialog.logging.getLogger')
+    mocker.patch.object(EditMetadataDialog, 'metadataBlockComboBox', create=True)
+    mocker.patch.object(EditMetadataDialog, 'typesComboBox', create=True)
+    mocker.patch.object(EditMetadataDialog, 'minimalFullComboBox', create=True)
+    mocker.patch.object(EditMetadataDialog, 'buttonBox', create=True)
+    mocker.patch.object(EditMetadataDialog, 'licenseNameLineEdit', create=True)
+    mocker.patch.object(EditMetadataDialog, 'licenseURLLineEdit', create=True)
+    mocker.patch.object(EditMetadataDialog, 'primitive_compound_frame', create=True)
+    mocker.patch.object(EditMetadataDialog, 'controlled_vocab_frame', create=True)
+    mocker.patch.object(EditMetadataDialog, 'metadataScrollVerticalLayout', create=True)
     mock_db_api_instance = mock_db_api.return_value
     mock_db_api_instance.get_model.return_value = MagicMock(
       metadata={'datasetVersion': {'metadataBlocks': {}, 'license': {'name': '', 'uri': ''}}})
     yield {
-      "db_api": mock_db_api_instance,
-      "qdialog": mock_qdialog,
-      "setup_ui": mock_setup_ui,
-      "edit_metadata_summary_dialog": mock_edit_metadata_summary_dialog
+      'db_api': mock_db_api_instance,
+      'qdialog': mock_qdialog,
+      'setup_ui': mock_setup_ui,
+      'edit_metadata_summary_dialog': mock_edit_metadata_summary_dialog
     }
 
 
 @pytest.fixture
 def mock_edit_metadata_dialog(mock_dependencies):
   current_path = realpath(join(getcwd(), dirname(__file__)))
-  with open(join(current_path, "..//..//pasta_eln//dataverse", "dataset-create-new-all-default-fields.json"),
-            encoding="utf-8") as config_file:
+  with open(join(current_path, '..//..//pasta_eln//dataverse', 'dataset-create-new-all-default-fields.json'),
+            encoding='utf-8') as config_file:
     file_data = config_file.read()
     config = ConfigModel(_id=123456789, metadata=json.loads(file_data))
   mock_dependencies['db_api'].get_model.return_value = config
@@ -85,17 +85,17 @@ def mock_edit_metadata_dialog(mock_dependencies):
 
 class TestDataverseEditMetadataDialog:
   # Parametrized test for the __init__ method
-  @pytest.mark.parametrize("test_id, metadata_blocks, expected_metadata_types", [
-    ("SuccessCase_01",
+  @pytest.mark.parametrize('test_id, metadata_blocks, expected_metadata_types', [
+    ('SuccessCase_01',
      {'block1': {'displayName': 'Block 1', 'fields': [{'typeName': 'type1', 'typeClass': 'primitive'}]}},
      {'Block 1': [{'name': 'type1', 'displayName': 'Type1'}]}),
-    ("EdgeCase_01", {}, {})
+    ('EdgeCase_01', {}, {})
   ])
   def test_init(self, mocker, test_id, metadata_blocks, expected_metadata_types, mock_dependencies):
     # Arrange
-    mock_copy = mocker.patch("pasta_eln.GUI.dataverse.edit_metadata_dialog.copy")
+    mock_copy = mocker.patch('pasta_eln.GUI.dataverse.edit_metadata_dialog.copy')
     mock_dependencies['db_api'].get_model.return_value.metadata['datasetVersion']['metadataBlocks'] = metadata_blocks
-    mock_get_metadata_types = mocker.patch.object(EditMetadataDialog, "get_metadata_types",
+    mock_get_metadata_types = mocker.patch.object(EditMetadataDialog, 'get_metadata_types',
                                                   return_value=expected_metadata_types)
 
     # Act
@@ -116,16 +116,16 @@ class TestDataverseEditMetadataDialog:
     dialog.buttonBox.button.assert_called_once_with(QtWidgets.QDialogButtonBox.Save)
 
   # Parametrized test for the get_metadata_types method
-  @pytest.mark.parametrize("test_id, metadata, expected_result", [
-    ("SuccessCase_01", {'datasetVersion': {'metadataBlocks': {
+  @pytest.mark.parametrize('test_id, metadata, expected_result', [
+    ('SuccessCase_01', {'datasetVersion': {'metadataBlocks': {
       'block1': {'displayName': 'Block 1', 'fields': [{'typeName': 'type1', 'typeClass': 'primitive'}]}}}},
      {'Block 1': [{'name': 'type1', 'displayName': 'Type'}]}),
-    ("SuccessCase_02", {'datasetVersion': {'metadataBlocks': {
+    ('SuccessCase_02', {'datasetVersion': {'metadataBlocks': {
       'block1': {'displayName': 'Block 1',
                  'fields': [{'typeName': 'type.NameRestricted', 'typeClass': 'primitive'}]}}}},
      {'Block 1': [{'name': 'type.NameRestricted', 'displayName': 'Type Name Restricted'}]}),
-    ("EdgeCase_01", None, {}),
-    ("EdgeCase_02", {'datasetVersion': {'metadataBlocks': {}}}, {}),
+    ('EdgeCase_01', None, {}),
+    ('EdgeCase_02', {'datasetVersion': {'metadataBlocks': {}}}, {}),
   ])
   def test_get_metadata_types(self, test_id, mocker, metadata, expected_result, mock_dependencies,
                               mock_edit_metadata_dialog):
@@ -141,10 +141,10 @@ class TestDataverseEditMetadataDialog:
                                                             mocker.call('Loading metadata types mapping...')])
 
   # Parametrized test for the change_metadata_block method
-  @pytest.mark.parametrize("test_id, new_metadata_block, metadata_types, expected_items", [
-    ("SuccessCase_01", 'Block 1', {'Block 1': [{'name': 'type1', 'displayName': 'Type1'}]}, ['Type1']),
-    ("EdgeCase_01", 'Block 2', {'Block 1': [{'name': 'type1', 'displayName': 'Type1'}]}, []),
-    ("EdgeCase_02", None, {'Block 1': [{'name': 'type1', 'displayName': 'Type1'}]}, []),
+  @pytest.mark.parametrize('test_id, new_metadata_block, metadata_types, expected_items', [
+    ('SuccessCase_01', 'Block 1', {'Block 1': [{'name': 'type1', 'displayName': 'Type1'}]}, ['Type1']),
+    ('EdgeCase_01', 'Block 2', {'Block 1': [{'name': 'type1', 'displayName': 'Type1'}]}, []),
+    ('EdgeCase_02', None, {'Block 1': [{'name': 'type1', 'displayName': 'Type1'}]}, []),
   ])
   def test_change_metadata_block(self, test_id, new_metadata_block, metadata_types, expected_items,
                                  mock_edit_metadata_dialog):
@@ -163,15 +163,15 @@ class TestDataverseEditMetadataDialog:
       assert add_item_calls == expected_items
 
   # Parametrized test for the save_ui method
-  @pytest.mark.parametrize("metadata, expected_message, test_id", [
+  @pytest.mark.parametrize('metadata, expected_message, test_id', [
     # Test ID: #1 - Success path with both frames and metadata
-    ({"key": "value"}, "Formatted message", "Test message with both frames and metadata"),
+    ({'key': 'value'}, 'Formatted message', 'Test message with both frames and metadata'),
     # Test ID: #2 - Success path with no frames but with metadata
-    ({"key": "value"}, "Formatted message", "Test message with metadata but no frames"),
+    ({'key': 'value'}, 'Formatted message', 'Test message with metadata but no frames'),
     # Test ID: #3 - Edge case with empty metadata and both frames
-    ({}, "Empty metadata message", "Test message with empty metadata and both frames"),
+    ({}, 'Empty metadata message', 'Test message with empty metadata and both frames'),
     # Test ID: #4 - Error case with None as metadata (assuming get_formatted_metadata_message handles None gracefully)
-    (None, "None metadata message", "Test message with None as metadata"),
+    (None, 'None metadata message', 'Test message with None as metadata'),
   ])
   def test_save_ui(self, mocker, metadata, expected_message, test_id,
                    mock_dependencies,
@@ -182,7 +182,7 @@ class TestDataverseEditMetadataDialog:
     mock_edit_metadata_dialog.metadata_summary_dialog.summaryTextEdit = mocker.MagicMock()
     mock_edit_metadata_dialog.metadata_summary_dialog.summaryTextEdit.setText = mocker.MagicMock()
     mock_edit_metadata_dialog.metadata_frame = mocker.MagicMock(spec=MetadataFrame)
-    mock_get_formatted = mocker.patch("pasta_eln.GUI.dataverse.edit_metadata_dialog.get_formatted_metadata_message",
+    mock_get_formatted = mocker.patch('pasta_eln.GUI.dataverse.edit_metadata_dialog.get_formatted_metadata_message',
                                       return_value=expected_message)
 
     # Act
@@ -193,10 +193,10 @@ class TestDataverseEditMetadataDialog:
     mock_edit_metadata_dialog.metadata_summary_dialog.summaryTextEdit.setText.assert_called_once_with(expected_message)
     mock_edit_metadata_dialog.metadata_summary_dialog.show.assert_called_once()
     mock_edit_metadata_dialog.metadata_frame.save_modifications.assert_called_once()
-    mock_edit_metadata_dialog.logger.info.assert_called_with("Saving Config Model...")
+    mock_edit_metadata_dialog.logger.info.assert_called_with('Saving Config Model...')
 
   # Success path tests with various realistic test values
-  @pytest.mark.parametrize("new_metadata_type, type_class, test_id", [
+  @pytest.mark.parametrize('new_metadata_type, type_class, test_id', [
     ('title', 'primitive', 'success_primitive'),
     ('author', 'compound', 'success_compound'),
     ('author', 'compound', 'success_primitive_pre_exists'),
@@ -234,7 +234,7 @@ class TestDataverseEditMetadataDialog:
       [mocker.call(1), mocker.call().widget(), mocker.call().widget().setParent(None), mocker.call(0),
        mocker.call().widget(), mocker.call().widget().setParent(None)])
     mock_edit_metadata_dialog.logger.info.assert_has_calls(
-      [mocker.call("Loading %s metadata type of class: %s...", new_metadata_type, type_class)])
+      [mocker.call('Loading %s metadata type of class: %s...', new_metadata_type, type_class)])
     pre_metadata_frame_instance.setParent.assert_called_once_with(None)
     mock_edit_metadata_dialog.metadata_frame_factory.make_metadata_frame.assert_called_once_with(
       DataTypeClassName(type_class),
@@ -249,7 +249,7 @@ class TestDataverseEditMetadataDialog:
     pre_metadata_frame_instance.close.assert_called_once()
 
   # Edge cases
-  @pytest.mark.parametrize("new_metadata_type, test_id", [
+  @pytest.mark.parametrize('new_metadata_type, test_id', [
     ('', 'edge_empty_string'),
     (None, 'edge_none'),
   ])
@@ -266,7 +266,7 @@ class TestDataverseEditMetadataDialog:
     )
 
   # Error cases
-  @pytest.mark.parametrize("metadata, test_id", [
+  @pytest.mark.parametrize('metadata, test_id', [
     (None, 'error_no_metadata'),
     ({}, 'error_empty_metadata'),
     ({'datasetVersion': {}}, 'error_no_metadataBlocks'),
@@ -282,20 +282,20 @@ class TestDataverseEditMetadataDialog:
     if test_id == 'error_no_metadataBlocks':
       mock_edit_metadata_dialog.logger.error.assert_not_called()
     else:
-      mock_edit_metadata_dialog.logger.error.assert_called_with("Failed to load metadata model!")
+      mock_edit_metadata_dialog.logger.error.assert_called_with('Failed to load metadata model!')
 
-  @pytest.mark.parametrize("selection, expected_types, expected_visibility, test_id", [
+  @pytest.mark.parametrize('selection, expected_types, expected_visibility, test_id', [
     # Happy path tests
-    ("Minimal", [('Title', 'title'), ('Author', 'author')], False, "happy_minimal"),
-    ("Full", list({'title': 'Title', 'author': 'Author', 'date': 'Date'}.keys()), True, "happy_full"),
+    ('Minimal', [('Title', 'title'), ('Author', 'author')], False, 'happy_minimal'),
+    ('Full', list({'title': 'Title', 'author': 'Author', 'date': 'Date'}.keys()), True, 'happy_full'),
 
     # Edge cases
-    ("", [], False, "edge_empty_selection"),
-    ("Random", [], True, "edge_random_selection"),
+    ('', [], False, 'edge_empty_selection'),
+    ('Random', [], True, 'edge_random_selection'),
 
     # Error cases
-    (None, [], True, "error_none_selection"),
-    (123, [], True, "error_non_string_selection"),
+    (None, [], True, 'error_none_selection'),
+    (123, [], True, 'error_non_string_selection'),
   ])
   def test_toggle_minimal_full(self, mock_edit_metadata_dialog, selection, expected_types, expected_visibility,
                                test_id):
@@ -314,36 +314,36 @@ class TestDataverseEditMetadataDialog:
     mock_edit_metadata_dialog.toggle_minimal_full(selection)
 
     # Assert
-    mock_edit_metadata_dialog.logger.info.assert_called_with("Toggled to %s view...", selection)
-    if selection == "Minimal":
+    mock_edit_metadata_dialog.logger.info.assert_called_with('Toggled to %s view...', selection)
+    if selection == 'Minimal':
       assert mock_edit_metadata_dialog.typesComboBox.items == expected_types
       assert mock_edit_metadata_dialog.metadataBlockComboBox.visible == expected_visibility
-    elif selection == "Full":
+    elif selection == 'Full':
       assert mock_edit_metadata_dialog.metadataBlockComboBox.items == expected_types
       assert mock_edit_metadata_dialog.metadataBlockComboBox.visible == expected_visibility
     else:
       # For edge and error cases, we assume the default behavior is to show the full view
       assert mock_edit_metadata_dialog.metadataBlockComboBox.visible
 
-  @pytest.mark.parametrize("test_id, metadata_types, metadata_config, expected_license_name, expected_license_uri", [
+  @pytest.mark.parametrize('test_id, metadata_types, metadata_config, expected_license_name, expected_license_uri', [
     # Success path tests with various realistic test values
-    ("SuccessCase_01", {'Type1': None, 'Type2': None},
+    ('SuccessCase_01', {'Type1': None, 'Type2': None},
      {'datasetVersion': {'license': {'name': 'CC0', 'uri': 'http://creativecommons.org/publicdomain/zero/1.0/'}}, },
      'CC0', 'http://creativecommons.org/publicdomain/zero/1.0/'),
 
     # Edge cases could include empty metadata_types or metadata_config
-    ("EdgeCase_01", {}, {'datasetVersion': {'license': {'name': '', 'uri': ''}}}, '', ''),
+    ('EdgeCase_01', {}, {'datasetVersion': {'license': {'name': '', 'uri': ''}}}, '', ''),
     # Add more edge cases as needed
 
     # Error cases could include missing keys in metadata_config
-    ("ErrorCase_01", {'Type1': None}, {}, '', ''),
+    ('ErrorCase_01', {'Type1': None}, {}, '', ''),
     # Add more error cases as needed
   ])
   def test_load_ui(self, mocker, mock_edit_metadata_dialog, test_id, metadata_types, metadata_config,
                    expected_license_name,
                    expected_license_uri):
     # Arrange
-    mock_copy = mocker.patch("pasta_eln.GUI.dataverse.edit_metadata_dialog.copy")
+    mock_copy = mocker.patch('pasta_eln.GUI.dataverse.edit_metadata_dialog.copy')
     mock_edit_metadata_dialog.get_metadata_types = mocker.MagicMock(return_value=metadata_types)
     mock_edit_metadata_dialog.metadata_types = metadata_types
     mock_edit_metadata_dialog.config_model = MagicMock()
@@ -355,13 +355,13 @@ class TestDataverseEditMetadataDialog:
     mock_edit_metadata_dialog.load_ui()
 
     # Assert
-    mock_edit_metadata_dialog.minimalFullComboBox.addItems.assert_called_once_with(["Full", "Minimal"])
+    mock_edit_metadata_dialog.minimalFullComboBox.addItems.assert_called_once_with(['Full', 'Minimal'])
     mock_edit_metadata_dialog.licenseNameLineEdit.setText.assert_called_once_with(expected_license_name)
     mock_edit_metadata_dialog.licenseURLLineEdit.setText.assert_called_once_with(expected_license_uri)
 
-  @pytest.mark.parametrize("test_id, instance_method", [
+  @pytest.mark.parametrize('test_id, instance_method', [
     # Happy path tests with various realistic test values
-    ("succes_path", 'show'),
+    ('succes_path', 'show'),
   ])
   def test_show_method(self, mock_edit_metadata_dialog, test_id, instance_method):
     # Act
