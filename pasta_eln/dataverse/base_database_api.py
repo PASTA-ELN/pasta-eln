@@ -9,7 +9,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
 from collections.abc import Callable
-from typing import Type, Union
+from typing import Union
 
 from sqlalchemy import create_engine, or_, select
 from sqlalchemy.orm import Session

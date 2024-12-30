@@ -16,7 +16,7 @@ from json import dump
 from logging import Logger
 from os.path import exists, join
 from pathlib import Path
-from typing import Any, Callable, Type
+from typing import Any, Callable
 
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QImage, QPixmap

@@ -14,7 +14,7 @@ from json import load
 from os import getcwd
 from os.path import dirname, join, realpath
 from pathlib import Path
-from typing import Type, Union
+from typing import Union
 
 from pasta_eln.database.error import Error
 from pasta_eln.database.models.config_model import ConfigModel

@@ -1,8 +1,10 @@
 #!/usr/bin/python3
+""" Script to run when releasing a new version to pypi """
 from __future__ import annotations
 
 import configparser
 import json
+import datetime
 import os
 import shutil
 import subprocess
@@ -12,7 +14,7 @@ from urllib.request import urlopen
 try:
   import requests
   from requests.structures import CaseInsensitiveDict
-except:
+except Exception:
   pass
 
 
@@ -43,7 +45,7 @@ def createContributors():
   resp = requests.get('https://api.github.com/repos/PASTA-ELN/pasta-eln/contributors', headers=headers, timeout=10)
   if not resp.ok:
     print('**ERROR: get not successful',resp.reason)
-    return {}
+    return
   with open('CONTRIBUTORS.md', 'w', encoding='utf-8') as fOut:
     fOut.write('# Contributors \n## Code contributors\nThe following people have contributed code to this project:\n')
     fOut.write('<table border="2"><tr>\n')
@@ -69,12 +71,9 @@ def prevVersionsFromPypi(k=15):
   Args:
     k (int): number of information
   """
-  from urllib.request import urlopen
-  import datetime
-  import json
   url = 'https://pypi.org/pypi/pasta-eln/json'
-  response = urlopen(url)
-  data = json.loads(response.read())
+  with urlopen(url) as response:
+    data = json.loads(response.read())
   releases = list(data['releases'].keys())
   uploadTimes = [i[0]['upload_time'] for i in data['releases'].values()]
   releases = [x for _, x in sorted(zip(uploadTimes, releases))]
@@ -94,8 +93,8 @@ def newVersion(level=2):
   """
   # last 10 releases from pypi
   url = 'https://pypi.python.org/pypi/pasta-eln/json'
-  response = urlopen(url)
-  data_json = json.loads(response.read())
+  with urlopen(url) as response:
+    data_json = json.loads(response.read())
   labels, dates = [], []
   for release in data_json['releases']:
     labels.append(release)
@@ -113,34 +112,34 @@ def newVersion(level=2):
   version = '.'.join([str(i) for i in version])
   reply = input(f'Create version (2.5, 3.1.4b1): [{version}]: ')
   version = version if not reply or len(reply.split('.'))<2 else reply
-  print('======== Version '+version+' =======')
+  print(f'======== Version {version} =======')
   #update python files
   filesToUpdate = {'pasta_eln/__init__.py':'__version__ = ',
                    'docs/source/conf.py':'version = '}
-  for path in filesToUpdate:
+  for path,text in filesToUpdate.items():
     with open(path, encoding='utf-8') as fIn:
       fileOld = fIn.readlines()
     fileNew = []
     for line in fileOld:
       line = line[:-1]  #only remove last char, keeping front part
-      if line.startswith(filesToUpdate[path]):
-        line = filesToUpdate[path]+"'"+version+"'"
+      if line.startswith(text):
+        line = f"{text}'{version}'"
       fileNew.append(line)
     with open(path,'w', encoding='utf-8') as fOut:
       fOut.write('\n'.join(fileNew)+'\n')
   #execute git commands
-  os.system(f'git pull')
+  os.system('git pull')
   os.system(f'git tag -a v{version} -m "Version {version}; see CHANGELOG for details"')
   #create CHANGELOG / Contributor-list
   with open(Path.home()/'.ssh'/'github.token', encoding='utf-8') as fIn:
     token = fIn.read().strip()
-  os.system('github_changelog_generator -u PASTA-ELN -p pasta-eln -t '+token)
+  os.system(f'github_changelog_generator -u PASTA-ELN -p pasta-eln -t {token}')
   createContributors()
   addition = input('\n\nWhat do you want to add to the push message (do not use \' or \")? ')
   os.system(f'git commit -a -m "updated changelog; {addition}"')
   #push and publish
   print('\n\nWill bypass rule violation\n\n')
-  os.system(f'git push')
+  os.system('git push')
   os.system(f'git push origin v{version}')
   return
 
@@ -225,20 +224,29 @@ def copyAddOns():
   return
 
 
-def sourcery():
-  """ Verify code with sourcery """
-  print('------------------ Sourcery -----------------')
-  os.system('sourcery review pasta_eln/')
-  print('---------------- end sourcery ---------------')
+def runSourceVerification():
+  """ Verify code with a number of tools:
+  - pre-commit (which has a number included)
+  - mypy
+  - sourcery
+  """
+  tools = {'pre-commit': 'pre-commit run --all-files',
+           'pylint': 'pylint pasta_eln/',
+           'mypy': 'mypy --no-warn-unused-ignores  pasta_eln/',
+           'sourcery':'sourcery review pasta_eln/'}
+  for label, cmd in tools.items():
+    print(f'------------------ start {label} -----------------')
+    os.system(cmd)
+    print(f'---------------- end {label} ---------------')
   return
 
 
 if __name__=='__main__':
   runTests()
-  sourcery
+  runSourceVerification()
   copyAddOns()
   createRequirementsFile()
   #do update
-  level = 2 if len(sys.argv)==1 else int(sys.argv[1])
+  versionLevel = 2 if len(sys.argv)==1 else int(sys.argv[1])
   if input('Continue: only "y" continues. ') == 'y':
-    newVersion(level)
+    newVersion(versionLevel)

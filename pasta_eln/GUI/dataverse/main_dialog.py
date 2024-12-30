@@ -329,7 +329,7 @@ class MainDialog(Ui_MainDialogBase):
       id_label = frame.findChild(QtWidgets.QLabel, name='modelIdLabel')
       if upload_model_id := id_label.text() if isinstance(id_label, QtWidgets.QLabel) else '':
         model = self.db_api.get_model(upload_model_id, UploadModel)
-        log_console_text_edit.setText(model.log if isinstance(model, UploadModel) else '')
+        log_console_text_edit.setText(model.log if isinstance(model, UploadModel) and model.log is not None else '')
 
   def check_if_minimal_metadata_present(self) -> bool:
     """

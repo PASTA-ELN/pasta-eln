@@ -8,8 +8,6 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-from typing import Tuple
-
 from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.database.models.config_orm_model import ConfigOrmModel
 from pasta_eln.database.models.data_hierarchy_definition_model import DataHierarchyDefinitionModel
