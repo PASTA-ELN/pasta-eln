@@ -4,6 +4,7 @@ docs/build/
 __pycache__
 testsComplicated/
 htmlcov/
+pasta_eln.egg-info/
 
 pasta_eln/test.py
 pasta*.py
