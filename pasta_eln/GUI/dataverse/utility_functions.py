@@ -8,11 +8,9 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Callable
-
 from PySide6.QtCore import QDate, QSize
-from PySide6.QtWidgets import QBoxLayout, QComboBox, QDateTimeEdit, QFrame, QHBoxLayout, QLineEdit, QPushButton, \
-  QSizePolicy, QVBoxLayout
-
+from PySide6.QtWidgets import (QBoxLayout, QComboBox, QDateTimeEdit, QFrame, QHBoxLayout, QLineEdit, QPushButton,
+                               QSizePolicy, QVBoxLayout)
 from pasta_eln.dataverse.utils import adjust_type_name
 
 

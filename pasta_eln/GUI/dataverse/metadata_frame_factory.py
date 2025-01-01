@@ -8,7 +8,6 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Any
-
 from pasta_eln.GUI.dataverse.controlled_vocab_frame import ControlledVocabFrame
 from pasta_eln.GUI.dataverse.data_type_class_names import DataTypeClassName
 from pasta_eln.GUI.dataverse.metadata_frame_base import MetadataFrame

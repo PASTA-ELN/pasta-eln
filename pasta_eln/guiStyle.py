@@ -1,13 +1,13 @@
 """ all styling of buttons and other general widgets, some defined colors... """
 import logging
-from typing import Callable, Optional, Any, Union
-from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu, QSplitter, \
-                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QBoxLayout, QComboBox, \
-                              QScrollArea, QTextEdit # pylint: disable=no-name-in-module
-from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent   # pylint: disable=no-name-in-module
-from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
-from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
+from typing import Any, Callable, Optional, Union
 import qtawesome as qta
+from PySide6.QtCore import QByteArray, Qt  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap  # pylint: disable=no-name-in-module
+from PySide6.QtSvgWidgets import QSvgWidget  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QBoxLayout, QComboBox, QFormLayout, QGridLayout,  # pylint: disable=no-name-in-module
+                               QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox, QPushButton, QScrollArea, QSizePolicy,
+                               QSplitter, QTextEdit, QVBoxLayout, QWidget)
 from .handleDictionaries import dict2ul
 from .stringChanges import markdownEqualizer
 

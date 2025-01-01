@@ -16,10 +16,8 @@ from datetime import datetime
 from os.path import join
 from pathlib import Path
 from typing import Any, Callable
-
 from PySide6 import QtCore
 from PySide6.QtGui import QImage, QPixmap
-
 from pasta_eln.backend import Backend
 from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.database.models.upload_model import UploadModel

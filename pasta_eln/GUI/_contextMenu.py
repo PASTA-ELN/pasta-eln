@@ -1,10 +1,12 @@
 """ Common functions in a number of widgets """
-import platform, subprocess, os
+import os
+import platform
+import subprocess
 from enum import Enum
 from pathlib import Path
 from typing import Any
+from PySide6.QtCore import QPoint  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMenu, QWidget  # pylint: disable=no-name-in-module
-from PySide6.QtCore import     QPoint # pylint: disable=no-name-in-module
 from ..guiStyle import Action
 
 

@@ -1,12 +1,14 @@
 """ Table Header dialog: change which columns are shown and in which order """
 from enum import Enum
 from typing import Any
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QLineEdit, QDialogButtonBox  # pylint: disable=no-name-in-module
-from ..guiStyle import IconButton, widgetAndLayout, showMessage
-from ..miscTools import restart
-from ..guiCommunicate import Communicate
+from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QLineEdit, QListWidget,  # pylint: disable=no-name-in-module
+                               QVBoxLayout)
 from ..fixedStringsJson import tableHeaderHelp
+from ..guiCommunicate import Communicate
+from ..guiStyle import IconButton, showMessage, widgetAndLayout
+from ..miscTools import restart
 from ..sqlite import MAIN_ORDER
+
 
 class TableHeader(QDialog):
   """ Table Header dialog: change which columns are shown and in which order """

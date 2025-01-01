@@ -1,14 +1,21 @@
 """ Class for interaction with sqlite """
-import base64, copy, io, json, logging, os, re, sqlite3
-from typing import Any, Optional
+import base64
+import copy
+import io
+import json
+import logging
+import os
+import re
+import sqlite3
 from datetime import datetime
 from pathlib import Path
-from anytree import Node
+from typing import Any, Optional
 import pandas as pd
+from anytree import Node
 from PIL import Image
-from .fixedStringsJson import defaultDocTypes, defaultSchema, defaultDefinitions, SQLiteTranslation
-from .stringChanges import outputString, camelCase, tracebackString
+from .fixedStringsJson import SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema
 from .miscTools import hierarchy
+from .stringChanges import camelCase, outputString, tracebackString
 
 MAIN_ORDER     =['id'  ,'name','user','type','dateCreated','dateModified','gui',      'client','shasum','image','content','comment','externalId','dateSync']
 MAIN_TYPE      =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',   'TEXT',     'TEXT']

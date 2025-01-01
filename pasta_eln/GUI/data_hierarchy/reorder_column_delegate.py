@@ -10,12 +10,10 @@
 
 import logging
 from typing import Union
-
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize, Signal
 from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import QApplication, QPushButton, QStyle, QStyleOptionButton, QStyleOptionViewItem, \
-  QStyledItemDelegate, QWidget
-
+from PySide6.QtWidgets import (QApplication, QPushButton, QStyle, QStyledItemDelegate, QStyleOptionButton,
+                               QStyleOptionViewItem, QWidget)
 from .utility_functions import is_click_within_bounds
 
 

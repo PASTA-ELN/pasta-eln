@@ -9,15 +9,13 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
 from typing import Any
-
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QObject, Qt
 from PySide6.QtWidgets import QCheckBox, QDialog
-
-from pasta_eln.GUI.dataverse.upload_config_dialog_base import Ui_UploadConfigDialog
 from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.utils import get_data_hierarchy_types
+from pasta_eln.GUI.dataverse.upload_config_dialog_base import Ui_UploadConfigDialog
 
 
 class UploadConfigDialog(Ui_UploadConfigDialog, QObject):

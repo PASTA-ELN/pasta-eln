@@ -17,14 +17,12 @@ from logging import Logger
 from os.path import exists, join
 from pathlib import Path
 from typing import Any, Callable
-
+from cryptography.fernet import Fernet, InvalidToken
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QImage, QPixmap
-from cryptography.fernet import Fernet, InvalidToken
 from qtawesome import icon
 from sqlalchemy import Executable, and_, select
 from sqlalchemy.orm import aliased
-
 from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
 from pasta_eln.database.models.main_orm_model import MainOrmModel
 from pasta_eln.database.models.properties_orm_model import PropertiesOrmModel

@@ -12,18 +12,8 @@ import logging
 import textwrap
 import time
 from typing import Any
-
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QDialog, QFrame, QLabel, QMessageBox, QWidget
-
-from pasta_eln.GUI.dataverse.completed_uploads import CompletedUploads
-from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
-from pasta_eln.GUI.dataverse.dialog_extension import DialogExtension
-from pasta_eln.GUI.dataverse.edit_metadata_dialog import EditMetadataDialog
-from pasta_eln.GUI.dataverse.main_dialog_base import Ui_MainDialogBase
-from pasta_eln.GUI.dataverse.project_item_frame_base import Ui_ProjectItemFrame
-from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
-from pasta_eln.GUI.dataverse.upload_widget_base import Ui_UploadWidgetFrame
 from pasta_eln.backend import Backend
 from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.database.models.project_model import ProjectModel
@@ -33,8 +23,16 @@ from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.task_thread_extension import TaskThreadExtension
 from pasta_eln.dataverse.upload_queue_manager import UploadQueueManager
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
-from pasta_eln.dataverse.utils import check_if_dataverse_exists, check_if_minimal_metadata_exists, \
-  check_login_credentials, get_formatted_message, update_status
+from pasta_eln.dataverse.utils import (check_if_dataverse_exists, check_if_minimal_metadata_exists,
+                                       check_login_credentials, get_formatted_message, update_status)
+from pasta_eln.GUI.dataverse.completed_uploads import CompletedUploads
+from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
+from pasta_eln.GUI.dataverse.dialog_extension import DialogExtension
+from pasta_eln.GUI.dataverse.edit_metadata_dialog import EditMetadataDialog
+from pasta_eln.GUI.dataverse.main_dialog_base import Ui_MainDialogBase
+from pasta_eln.GUI.dataverse.project_item_frame_base import Ui_ProjectItemFrame
+from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
+from pasta_eln.GUI.dataverse.upload_widget_base import Ui_UploadWidgetFrame
 
 
 class MainDialog(Ui_MainDialogBase):

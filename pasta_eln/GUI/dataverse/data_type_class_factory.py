@@ -8,7 +8,6 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Any
-
 from pasta_eln.GUI.dataverse.compound_data_type_class import CompoundDataTypeClass
 from pasta_eln.GUI.dataverse.controlled_vocabulary_data_type_class import ControlledVocabularyDataTypeClass
 from pasta_eln.GUI.dataverse.data_type_class_base import DataTypeClass

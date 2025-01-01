@@ -1,19 +1,24 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-import logging, re, copy, json
+import copy
+import json
+import logging
+import re
 from enum import Enum
 from pathlib import Path
 from typing import Any, Union
-from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QScrollArea, QSplitter  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QLabel, QTextEdit, QTabWidget, QPlainTextEdit, QComboBox, QLineEdit # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QSizePolicy, QMessageBox                                            # pylint: disable=no-name-in-module
-from PySide6.QtGui import QRegularExpressionValidator                                             # pylint: disable=no-name-in-module
-from PySide6.QtCore import QSize, Qt, QTimer                                                      # pylint: disable=no-name-in-module
-from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout, widgetAndLayoutForm, ScrollMessageBox
-from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
-from ..fixedStringsJson import defaultDataHierarchyNode, minimalDocInForm, SQLiteTranslationDict
-from ..stringChanges import createDirName, markdownEqualizer
+from PySide6.QtCore import QSize, Qt, QTimer  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QRegularExpressionValidator  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit,  # pylint: disable=no-name-in-module
+                               QMessageBox, QPlainTextEdit, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit,
+                               QVBoxLayout, QWidget)
+from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
 from ..guiCommunicate import Communicate
+from ..guiStyle import (IconButton, Image, Label, ScrollMessageBox, TextButton, showMessage, widgetAndLayout,
+                        widgetAndLayoutForm)
 from ..sqlite import MAIN_ORDER
+from ..stringChanges import createDirName, markdownEqualizer
+from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
+
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""

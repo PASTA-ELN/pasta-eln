@@ -3,6 +3,7 @@ import platform
 from PySide6.QtWidgets import QMainWindow
 from qt_material import get_theme
 
+
 class Palette():
   """ Color palette allows easy color access """
   def __init__(self, mainWindow:QMainWindow|None, theme:str) -> None:

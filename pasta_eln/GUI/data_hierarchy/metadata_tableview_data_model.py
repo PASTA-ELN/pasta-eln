@@ -10,10 +10,8 @@
 
 import logging
 from typing import Any, Union
-
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Qt
 from PySide6.QtWidgets import QWidget
-
 from .constants import METADATA_TABLE_LIST_COLUMN_INDEX
 from .tableview_data_model import TableViewModel
 

@@ -10,11 +10,9 @@
 
 import copy
 from typing import Any
-
 from PySide6.QtCore import QEvent
 from PySide6.QtGui import QMouseEvent, Qt
 from PySide6.QtWidgets import QLabel, QMessageBox, QStyleOptionViewItem
-
 from pasta_eln.GUI.data_hierarchy.data_type_info import DataTypeInfo
 
 

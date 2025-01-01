@@ -9,9 +9,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
 from typing import Any, Union
-
 from aiohttp import BasicAuth, ClientResponse, ClientSession, ClientTimeout
-
 from .utils import handle_http_client_exception
 
 

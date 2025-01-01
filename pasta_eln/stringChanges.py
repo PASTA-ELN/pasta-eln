@@ -1,6 +1,9 @@
 """ Functions that modify strings into the appropriate format """
-import re, logging, traceback
+import logging
+import re
+import traceback
 from .miscTools import Bcolors
+
 
 def outputString(fmt:str='print', level:str='info', message:str='') -> str:
   """ Output a message into different formats:

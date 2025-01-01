@@ -11,10 +11,8 @@ from os.path import exists, join
 from pathlib import Path
 from typing import Any, Optional, Union
 from urllib import request
-
 from PySide6 import QtCore
 from PySide6.QtCore import QFileSystemWatcher
-
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
 from .handleDictionaries import diffDicts, fillDocBeforeCreate
 from .miscTools import generic_hash
@@ -478,7 +476,7 @@ class Backend(CLI_Mixin):
     if pyPath.is_file():
       # import module and use to get data
       os.environ['QT_API'] = 'pyside2'
-      import matplotlib.pyplot as plt  #IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
+      import matplotlib.pyplot as plt  # IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
       plt.clf()
       try:
         module  = importlib.import_module(pyFile[:-3])
@@ -541,11 +539,11 @@ class Backend(CLI_Mixin):
     """
     import base64
     from io import BytesIO
-    from PIL import Image
     import cairosvg
+    from PIL import Image
     os.environ['QT_API'] = 'pyside2'
-    import matplotlib.pyplot as plt
     import matplotlib.axes as mpaxes
+    import matplotlib.pyplot as plt
 
     htmlStr= 'Please visit <a href="https://pasta-eln.github.io/pasta-eln/extractors.html#'
     success = True

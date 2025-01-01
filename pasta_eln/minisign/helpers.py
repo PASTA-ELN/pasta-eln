@@ -2,15 +2,8 @@
 # mypy: ignore-errors
 import hashlib
 import io
-from typing import (
-    BinaryIO,
-    Union,
-)
-
-from .exceptions import (
-    Error,
-    ParseError,
-)
+from typing import BinaryIO, Union
+from .exceptions import Error, ParseError
 
 
 class Reader:

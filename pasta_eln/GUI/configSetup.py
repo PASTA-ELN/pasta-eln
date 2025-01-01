@@ -2,13 +2,15 @@
 import logging
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Any
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QProgressBar, QFileDialog  # pylint: disable=no-name-in-module
-from ..guiStyle import TextButton, widgetAndLayout
-from ..installationTools import configuration, exampleData, createShortcut
-from ..fixedStringsJson import setupText, exampleDataString
-from ..miscTools import restart
+from typing import Any, Callable
+from PySide6.QtWidgets import (QFileDialog, QMessageBox, QProgressBar, QTextEdit,  # pylint: disable=no-name-in-module
+                               QVBoxLayout, QWidget)
+from ..fixedStringsJson import exampleDataString, setupText
 from ..guiCommunicate import Communicate
+from ..guiStyle import TextButton, widgetAndLayout
+from ..installationTools import configuration, createShortcut, exampleData
+from ..miscTools import restart
+
 # from ..dataverse.database_api import DatabaseAPI
 
 class ConfigurationSetup(QWidget):

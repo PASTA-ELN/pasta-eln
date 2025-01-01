@@ -9,7 +9,6 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import random
 import time
-
 from PySide6 import QtCore
 from PySide6.QtCore import QThread
 

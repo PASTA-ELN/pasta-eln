@@ -10,14 +10,12 @@
 import copy
 import logging
 from typing import Any
-
 from PySide6.QtWidgets import QBoxLayout, QHBoxLayout
-
+from pasta_eln.dataverse.utils import clear_value, is_date_time_type
 from pasta_eln.GUI.dataverse.data_type_class_base import DataTypeClass
 from pasta_eln.GUI.dataverse.data_type_class_context import DataTypeClassContext
-from pasta_eln.GUI.dataverse.utility_functions import add_clear_button, add_delete_button, create_date_time_widget, \
-  create_line_edit
-from pasta_eln.dataverse.utils import clear_value, is_date_time_type
+from pasta_eln.GUI.dataverse.utility_functions import (add_clear_button, add_delete_button, create_date_time_widget,
+                                                       create_line_edit)
 
 
 class CompoundDataTypeClass(DataTypeClass):

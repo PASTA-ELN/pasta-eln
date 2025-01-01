@@ -10,7 +10,6 @@
 
 from abc import abstractmethod
 from typing import Any
-
 from pasta_eln.GUI.dataverse.data_type_class_context import DataTypeClassContext
 
 

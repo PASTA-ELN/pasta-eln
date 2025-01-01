@@ -10,9 +10,7 @@
 
 import logging
 from typing import Union
-
 from PySide6.QtWidgets import QWidget
-
 from .tableview_data_model import TableViewModel
 
 

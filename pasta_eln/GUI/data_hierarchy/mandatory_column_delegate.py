@@ -10,11 +10,10 @@
 
 import logging
 from typing import Union
-
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QRect, Qt
 from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import QApplication, QRadioButton, QStyle, QStyleOptionButton, QStyleOptionViewItem, \
-  QStyledItemDelegate, QWidget
+from PySide6.QtWidgets import (QApplication, QRadioButton, QStyle, QStyledItemDelegate, QStyleOptionButton,
+                               QStyleOptionViewItem, QWidget)
 
 
 class MandatoryColumnDelegate(QStyledItemDelegate):

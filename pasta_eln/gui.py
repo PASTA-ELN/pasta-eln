@@ -7,31 +7,30 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any, Union
-
 from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
-
 from pasta_eln import __version__
 from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .backend import Backend
-from .fixedStringsJson import shortcuts, CONF_FILE_NAME
-from .guiCommunicate import Communicate
-from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
-from .inputOutput import exportELN, importELN
-from .miscTools import restart, updateAddOnList
 from .elabFTWsync import Pasta2Elab
+from .fixedStringsJson import CONF_FILE_NAME, shortcuts
 # from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 # from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .GUI.body import Body
 from .GUI.config import Configuration
 # from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from .GUI.form import Form
-from .GUI.sidebar import Sidebar
 from .GUI.palette import Palette
+from .GUI.sidebar import Sidebar
+from .guiCommunicate import Communicate
+from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
+from .inputOutput import exportELN, importELN
+from .miscTools import restart, updateAddOnList
+
 os.environ['QT_API'] = 'pyside6'
 
 
@@ -254,7 +253,7 @@ def mainGUI(projectGroup:str='') -> tuple[Union[QCoreApplication, None], MainWin
   theme = main_window.backend.configuration['GUI']['theme']
   if theme != 'none':
     apply_stylesheet(application, theme=f'{theme}.xml')
-  import qtawesome as qta                       # qtawesome and matplot cannot coexist
+  import qtawesome as qta  # qtawesome and matplot cannot coexist
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
     print('qtawesome: could not load. Likely matplotlib is included and can not coexist.')

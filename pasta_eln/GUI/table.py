@@ -1,16 +1,19 @@
 """ widget that shows the table of the items """
 import itertools
-import re, logging
+import logging
+import re
 from enum import Enum
 from pathlib import Path
 from typing import Any
 import pandas as pd
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QFileDialog, QMessageBox, QHeaderView, QLineEdit, QComboBox, QMenu # pylint: disable=no-name-in-module
-from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem            # pylint: disable=no-name-in-module
-from .tableHeader import TableHeader
-from ..guiStyle import IconButton, Action, TextButton, Label, widgetAndLayout, widgetAndLayoutGrid, space
+from PySide6.QtCore import QModelIndex, QSortFilterProxyModel, Qt, Slot  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItem, QStandardItemModel  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QComboBox, QFileDialog, QHeaderView, QLineEdit,  # pylint: disable=no-name-in-module
+                               QMenu, QMessageBox, QTableView, QVBoxLayout, QWidget)
 from ..guiCommunicate import Communicate
+from ..guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
+from .tableHeader import TableHeader
+
 
 #Scan button to more button
 class Table(QWidget):

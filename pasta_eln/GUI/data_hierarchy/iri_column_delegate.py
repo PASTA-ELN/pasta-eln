@@ -10,11 +10,9 @@
 
 import logging
 from typing import Union
-
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex
 from PySide6.QtGui import Qt
-from PySide6.QtWidgets import QLineEdit, QStyleOptionViewItem, QStyledItemDelegate, QWidget
-
+from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate, QStyleOptionViewItem, QWidget
 from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
 
 

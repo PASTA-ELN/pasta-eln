@@ -1,18 +1,20 @@
 """ Table Header dialog: change which columns are shown and in which order """
-import json, shutil
+import json
+import shutil
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
-from datetime import datetime
-import qrcode, requests
+import qrcode
+import requests
 from PIL.ImageQt import ImageQt
-from PySide6.QtGui import QPixmap, QRegularExpressionValidator                 # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog, QLabel, \
-                              QLineEdit, QMessageBox, QVBoxLayout, QTextEdit   # pylint: disable=no-name-in-module
-from ..guiCommunicate import Communicate
+from PySide6.QtGui import QPixmap, QRegularExpressionValidator  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog,  # pylint: disable=no-name-in-module
+                               QLabel, QLineEdit, QMessageBox, QTextEdit, QVBoxLayout)
 from ..elabFTWapi import ElabFTWApi
-from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayoutGrid
 from ..fixedStringsJson import CONF_FILE_NAME
+from ..guiCommunicate import Communicate
+from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayoutGrid
 
 
 class ProjectGroup(QDialog):

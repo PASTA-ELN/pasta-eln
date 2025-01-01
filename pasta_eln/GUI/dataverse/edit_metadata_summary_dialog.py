@@ -9,10 +9,8 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
 from typing import Any, Callable
-
 from PySide6 import QtCore
 from PySide6.QtWidgets import QDialog
-
 from pasta_eln.GUI.dataverse.edit_metadata_summary_dialog_base import Ui_EditMetadataSummaryDialog
 
 

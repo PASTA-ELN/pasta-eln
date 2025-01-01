@@ -2,10 +2,13 @@
 - default jpeg image
 For tutorials, see extractor_csv.py and extractor_png.py
 """
-import base64, re, json
+import base64
+import json
+import re
 from io import BytesIO
 import numpy as np
 from PIL import Image
+
 
 def use(filePath, style={'main':''}, saveFileName=None):
   """

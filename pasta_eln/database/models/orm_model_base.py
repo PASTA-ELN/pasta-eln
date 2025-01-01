@@ -8,9 +8,8 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-from typing import Any
 from collections.abc import Generator
-
+from typing import Any
 from sqlalchemy import JSON
 from sqlalchemy.orm import DeclarativeBase
 

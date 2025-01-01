@@ -10,7 +10,6 @@
 
 import logging
 from typing import Any, Union
-
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt, Slot
 from PySide6.QtWidgets import QWidget
 

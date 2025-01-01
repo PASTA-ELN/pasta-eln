@@ -1,13 +1,14 @@
-import re, base64
+import base64
+import re
 from io import BytesIO
 from pathlib import Path
 from anytree import PreOrderIter
 from PIL import Image
-from PySide6.QtWidgets import QFileDialog
 from PySide6.QtGui import QTextDocument
-from pasta_eln.stringChanges import markdownEqualizer
+from PySide6.QtWidgets import QFileDialog
 import pasta_eln
 from pasta_eln.Resources import Icons as icons
+from pasta_eln.stringChanges import markdownEqualizer
 
 description  = 'Create html report'  #short description that is shown in the menu; has to be included in all project-addons
 

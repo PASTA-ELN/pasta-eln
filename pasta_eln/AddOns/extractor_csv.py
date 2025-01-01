@@ -10,8 +10,9 @@ THIS IS THE BASIC EXTRACTOR TUTORIAL, WHICH TEACHES
 - how to create images
 """
 from io import StringIO
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
+
 
 def use(filePath, style={'main':''}, saveFileName=None):
   """

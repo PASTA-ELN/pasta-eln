@@ -12,15 +12,14 @@ import copy
 import logging
 import webbrowser
 from typing import Any
-
 from PySide6 import QtWidgets
 from PySide6.QtCore import QCoreApplication, QObject, Signal, Slot
 from PySide6.QtWidgets import QApplication, QMessageBox
-
 from .attachments_tableview_data_model import AttachmentsTableViewModel
-from .constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
-  ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, DATA_HIERARCHY_HELP_PAGE_URL, METADATA_TABLE_DELETE_COLUMN_INDEX, \
-  METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
+from .constants import (ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, ATTACHMENT_TABLE_REORDER_COLUMN_INDEX,
+                        DATA_HIERARCHY_HELP_PAGE_URL, METADATA_TABLE_DELETE_COLUMN_INDEX,
+                        METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX,
+                        METADATA_TABLE_REQUIRED_COLUMN_INDEX)
 from .create_type_dialog import CreateTypeDialog, TypeDialog
 from .data_hierarchy_editor_dialog_base import Ui_DataHierarchyEditorDialogBase
 from .database_api import DatabaseAPI
@@ -29,15 +28,13 @@ from .document_null_exception import DocumentNullException
 from .edit_type_dialog import EditTypeDialog
 from .generic_exception import GenericException
 from .iri_column_delegate import IriColumnDelegate
-from .key_not_found_exception import \
-  KeyNotFoundException
+from .key_not_found_exception import KeyNotFoundException
 from .mandatory_column_delegate import MandatoryColumnDelegate
 from .metadata_tableview_data_model import MetadataTableViewModel
 from .reorder_column_delegate import ReorderColumnDelegate
-from .utility_functions import adapt_type, adjust_data_hierarchy_data_to_v4, can_delete_type, \
-  check_data_hierarchy_types, \
-  get_missing_metadata_message, get_types_for_display, show_message
-
+from .utility_functions import (adapt_type, adjust_data_hierarchy_data_to_v4, can_delete_type,
+                                check_data_hierarchy_types, get_missing_metadata_message, get_types_for_display,
+                                show_message)
 
 # from cloudant.document import Document
 

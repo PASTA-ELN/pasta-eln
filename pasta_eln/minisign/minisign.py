@@ -1,7 +1,6 @@
 # pylint: skip-file
 # mypy: ignore-errors
 from __future__ import annotations
-
 import base64
 import enum
 import hashlib
@@ -10,27 +9,13 @@ import secrets
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import (
-    BinaryIO,
-    Optional,
-    Union,
-)
-
+from typing import BinaryIO, Optional, Union
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives.kdf import scrypt
-
-from .exceptions import (
-    Error,
-    ParseError,
-    VerifyError,
-)
-from .helpers import (
-    Reader,
-    check_comment,
-    read_data,
-)
+from .exceptions import Error, ParseError, VerifyError
+from .helpers import Reader, check_comment, read_data
 
 ALG_LEN = 2
 KDF_PARAM_LEN = 8

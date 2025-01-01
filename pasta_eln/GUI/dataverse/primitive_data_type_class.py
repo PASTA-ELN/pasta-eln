@@ -10,14 +10,12 @@
 
 import logging
 from typing import Any
-
 from PySide6.QtWidgets import QBoxLayout, QHBoxLayout, QVBoxLayout
-
+from pasta_eln.dataverse.utils import is_date_time_type
 from pasta_eln.GUI.dataverse.data_type_class_base import DataTypeClass
 from pasta_eln.GUI.dataverse.data_type_class_context import DataTypeClassContext
-from pasta_eln.GUI.dataverse.utility_functions import add_clear_button, add_delete_button, create_date_time_widget, \
-  create_line_edit, get_primitive_line_edit_text_value
-from pasta_eln.dataverse.utils import is_date_time_type
+from pasta_eln.GUI.dataverse.utility_functions import (add_clear_button, add_delete_button, create_date_time_widget,
+                                                       create_line_edit, get_primitive_line_edit_text_value)
 
 
 class PrimitiveDataTypeClass(DataTypeClass):

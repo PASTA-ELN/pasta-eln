@@ -9,10 +9,8 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
 from typing import Any, Callable
-
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox
-
 from pasta_eln.GUI.data_hierarchy.generic_exception import GenericException
 from pasta_eln.GUI.data_hierarchy.type_dialog import TypeDialog
 from pasta_eln.GUI.data_hierarchy.utility_functions import generate_data_hierarchy_type, show_message

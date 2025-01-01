@@ -1,10 +1,11 @@
 """ widget that shows the table and the details of the items """
 from typing import Any
-from PySide6.QtCore import Slot                                # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QWidget, QSplitter, QVBoxLayout  # pylint: disable=no-name-in-module
-from .table import Table
-from .details import Details
+from PySide6.QtCore import Slot  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QSplitter, QVBoxLayout, QWidget  # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
+from .details import Details
+from .table import Table
+
 
 class DocTypes(QWidget):
   """ widget that shows the table and the details of the items """

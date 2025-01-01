@@ -9,10 +9,8 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
 from typing import Union
-
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
-
 from pasta_eln.database.error import Error
 from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 from pasta_eln.database.models.data_hierarchy_definition_orm_model import DataHierarchyDefinitionOrmModel

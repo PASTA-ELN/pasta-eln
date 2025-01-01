@@ -8,11 +8,9 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Any, Callable
-
 import qtawesome as qta
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox
-
 from pasta_eln.GUI.data_hierarchy.type_dialog import TypeDialog
 from pasta_eln.GUI.data_hierarchy.utility_functions import generate_data_hierarchy_type, show_message
 

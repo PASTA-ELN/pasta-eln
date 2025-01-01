@@ -1,18 +1,21 @@
 """ Widget that shows the content of project in a electronic labnotebook """
-import logging, importlib
+import importlib
+import logging
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Any
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit              # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction                                   # pylint: disable=no-name-in-module
-from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex                                  # pylint: disable=no-name-in-module
-from anytree import PreOrderIter, Node
-from .projectTreeView import TreeView
-from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout
+from typing import Any, Optional
+from anytree import Node, PreOrderIter
+from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayout,  # pylint: disable=no-name-in-module
+                               QWidget)
 from ..fixedStringsJson import DO_NOT_RENDER
-from ..stringChanges import createDirName
-from ..handleDictionaries import doc2markdown
 from ..guiCommunicate import Communicate
+from ..guiStyle import Action, Label, TextButton, showMessage, widgetAndLayout
+from ..handleDictionaries import doc2markdown
+from ..stringChanges import createDirName
+from .projectTreeView import TreeView
+
 
 class Project(QWidget):
   """ Widget that shows the content of project in a electronic labnotebook """

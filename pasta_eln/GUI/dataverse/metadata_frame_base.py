@@ -10,7 +10,6 @@
 
 from abc import abstractmethod
 from typing import Any
-
 from PySide6.QtWidgets import QFrame
 
 

@@ -9,12 +9,10 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
 from typing import Union
-
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QLineEdit, QWidget
 from qtawesome import icon
-
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog import TerminologyLookupDialog
 
 

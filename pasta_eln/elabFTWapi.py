@@ -1,8 +1,12 @@
 """ API for accessing an elabFTW server. That's API is inconvenient, complicated, ..."""
-import base64, json, copy, mimetypes
+import base64
+import copy
+import json
+import mimetypes
 from pathlib import Path
 from typing import Any, TypedDict
 import requests  # only requirement; could be replaced with urllib to eliminate requirements
+
 
 class ElabFTWApi:
   """ API for accessing an elabFTW server. That's API is inconvenient, complicated, ..."""

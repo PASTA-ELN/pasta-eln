@@ -10,7 +10,6 @@
 
 from collections.abc import Generator
 from typing import Any
-
 from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 
 

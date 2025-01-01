@@ -10,7 +10,6 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 from typing import Any
-
 from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 from pasta_eln.database.models.base_model import BaseModel
 

@@ -10,13 +10,11 @@
 
 import logging
 from typing import Any, Callable
-
 import qtawesome as qta
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QDialog, QLineEdit, QMessageBox
-
 from pasta_eln.GUI.data_hierarchy.data_type_info import DataTypeInfo
 from pasta_eln.GUI.data_hierarchy.data_type_info_validator import DataTypeInfoValidator
 from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction

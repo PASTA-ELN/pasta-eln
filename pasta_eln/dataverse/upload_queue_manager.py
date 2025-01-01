@@ -9,10 +9,8 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
 from time import sleep
-
 from PySide6 import QtCore
 from PySide6.QtCore import Qt
-
 from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.generic_task_object import GenericTaskObject

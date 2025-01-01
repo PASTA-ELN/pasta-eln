@@ -12,18 +12,16 @@ import logging
 import webbrowser
 from asyncio import get_event_loop
 from typing import Any
-
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QDialog, QMessageBox
-
-from pasta_eln.GUI.dataverse.config_dialog_base import Ui_ConfigDialogBase
 from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.utils import check_login_credentials, log_and_create_error
+from pasta_eln.GUI.dataverse.config_dialog_base import Ui_ConfigDialogBase
 
 
 class ConfigDialog(Ui_ConfigDialogBase):

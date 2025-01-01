@@ -15,20 +15,14 @@ from os import getcwd
 from os.path import dirname, join, realpath
 from pathlib import Path
 from typing import Union
-
 from pasta_eln.database.error import Error
 from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
 from pasta_eln.database.models.project_model import ProjectModel
 from pasta_eln.database.models.upload_model import UploadModel
 from pasta_eln.dataverse.base_database_api import BaseDatabaseApi
-from pasta_eln.dataverse.utils import (decrypt_data,
-                                       encrypt_data,
-                                       get_data_hierarchy_types,
-                                       get_db_info, get_encrypt_key,
-                                       log_and_create_error,
-                                       set_authors,
-                                       set_template_values)
+from pasta_eln.dataverse.utils import (decrypt_data, encrypt_data, get_data_hierarchy_types, get_db_info,
+                                       get_encrypt_key, log_and_create_error, set_authors, set_template_values)
 
 
 class DatabaseAPI:

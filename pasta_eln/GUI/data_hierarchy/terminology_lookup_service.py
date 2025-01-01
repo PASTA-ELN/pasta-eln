@@ -14,7 +14,6 @@ from json import load
 from os import getcwd
 from os.path import dirname, join, realpath
 from typing import Any
-
 from pasta_eln.webclient.http_client import AsyncHttpClient
 
 

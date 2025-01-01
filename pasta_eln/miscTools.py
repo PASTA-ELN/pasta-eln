@@ -1,12 +1,18 @@
 """ Misc functions that do not require instances """
-import os, logging, traceback, json, sys, importlib
-from collections.abc import Mapping
-from typing import Any, Union
-from io import BufferedReader
-from urllib import request
-from pathlib import Path
+import importlib
+import json
+import logging
+import os
 import platform
+import sys
+import traceback
+from collections.abc import Mapping
+from io import BufferedReader
+from pathlib import Path
+from typing import Any, Union
+from urllib import request
 from .fixedStringsJson import CONF_FILE_NAME
+
 
 class Bcolors:
   """

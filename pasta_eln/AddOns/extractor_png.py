@@ -22,6 +22,7 @@ from io import BytesIO
 import numpy as np
 from PIL import Image, ImageFilter
 
+
 def use(filePath, style={'main':''}, saveFileName=None):
   """
   Args:

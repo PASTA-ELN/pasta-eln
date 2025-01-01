@@ -1,14 +1,22 @@
 """ Custom tree view on data model """
-import subprocess, os, platform, logging, shutil, importlib
+import importlib
+import logging
+import os
+import platform
+import shutil
+import subprocess
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtWidgets import QWidget, QTreeView, QMenu, QMessageBox, QAbstractItemView # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QDropEvent, QEventPoint # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt  # pylint: disable=no-name-in-module
-from .projectLeafRenderer import ProjectLeafRenderer
-from ..guiStyle import Action, showMessage
+from PySide6.QtGui import (QDropEvent, QEventPoint, QStandardItem,  # pylint: disable=no-name-in-module
+                           QStandardItemModel)
+from PySide6.QtWidgets import (QAbstractItemView, QMenu, QMessageBox, QTreeView,  # pylint: disable=no-name-in-module
+                               QWidget)
 from ..guiCommunicate import Communicate
+from ..guiStyle import Action, showMessage
+from .projectLeafRenderer import ProjectLeafRenderer
+
 
 class TreeView(QTreeView):
   """ Custom tree view on data model """

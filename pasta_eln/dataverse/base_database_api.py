@@ -10,10 +10,8 @@
 import logging
 from collections.abc import Callable
 from typing import Union
-
 from sqlalchemy import create_engine, or_, select
 from sqlalchemy.orm import Session
-
 from pasta_eln.database.error import Error
 from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 from pasta_eln.database.models.base_model import BaseModel

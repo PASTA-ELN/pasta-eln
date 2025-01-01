@@ -1,9 +1,13 @@
 """Change the format of dictionaries"""
-import uuid, json, difflib, traceback
-from typing import Any
+import difflib
+import json
+import traceback
+import uuid
 from datetime import datetime
-from .fixedStringsJson import SQLiteTranslation, SORTED_KEYS
+from typing import Any
+from .fixedStringsJson import SORTED_KEYS, SQLiteTranslation
 from .stringChanges import markdownEqualizer
+
 
 def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   """ Fill the data before submission to database with common data

@@ -1,8 +1,9 @@
 """ Allow syncing to elabFTW server """
-import json, copy
-from typing import Any
+import copy
+import json
 from datetime import datetime
-from anytree import PreOrderIter, Node
+from typing import Any
+from anytree import Node, PreOrderIter
 from PySide6.QtGui import QTextDocument
 from .backend import Backend
 from .elabFTWapi import ElabFTWApi

@@ -13,10 +13,8 @@ from os.path import exists, join
 from pathlib import Path
 from threading import Lock
 from typing import Any
-
 from PySide6 import QtCore
 from PySide6.QtCore import QFileSystemWatcher
-
 from pasta_eln.dataverse.config_error import ConfigError
 
 

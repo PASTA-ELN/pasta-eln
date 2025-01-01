@@ -1,8 +1,9 @@
 """ Communication class that sends signals between widgets, incl. backend"""
 from typing import Any, Optional
-from PySide6.QtCore import QObject, Signal   # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QProgressBar # pylint: disable=no-name-in-module
+from PySide6.QtCore import QObject, Signal  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
 from .backend import Backend
+
 
 class Communicate(QObject):
   """ Communication class that sends signals between widgets, incl. backend"""

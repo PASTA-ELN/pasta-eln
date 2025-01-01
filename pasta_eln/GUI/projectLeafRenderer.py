@@ -1,14 +1,17 @@
 """ renders each leaf of project tree using QPaint """
-import base64, logging
+import base64
+import logging
 from typing import Any
-from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF, QModelIndex           # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStaticText, QPixmap, QTextDocument, QPainter, QColor, QPen # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem               # pylint: disable=no-name-in-module
-from PySide6.QtSvg import QSvgRenderer                                                # pylint: disable=no-name-in-module
+from PySide6.QtCore import QMargins, QModelIndex, QPoint, QRectF, QSize, Qt  # pylint: disable=no-name-in-module
+from PySide6.QtGui import (QColor, QPainter, QPen, QPixmap, QStaticText,  # pylint: disable=no-name-in-module
+                           QTextDocument)
+from PySide6.QtSvg import QSvgRenderer  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem  # pylint: disable=no-name-in-module
+from ..fixedStringsJson import DO_NOT_RENDER, defaultDataHierarchyNode
 from ..guiCommunicate import Communicate
-from ..stringChanges import markdownEqualizer
 from ..handleDictionaries import doc2markdown
-from ..fixedStringsJson import defaultDataHierarchyNode, DO_NOT_RENDER
+from ..stringChanges import markdownEqualizer
+
 
 class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """

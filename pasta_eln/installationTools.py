@@ -1,10 +1,15 @@
 '''  Methods that check, repair, the local PASTA-ELN installation: no Qt-here '''
-import os, platform, sys, json, shutil, logging
-from typing import Optional, Any, Callable
-from pathlib import Path
+import json
+import logging
+import os
+import platform
+import shutil
+import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Callable, Optional
 from .backend import Backend
-from .fixedStringsJson import defaultConfiguration, configurationGUI, CONF_FILE_NAME
+from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
 from .miscTools import DummyProgressBar
 from .stringChanges import outputString
 

@@ -1,16 +1,22 @@
 """Input and output functions towards the .eln file-format"""
-import json, shutil, logging, hashlib, uuid, copy, traceback
-from typing import Any
-from pathlib import Path
+import copy
+import hashlib
+import json
+import logging
+import shutil
+import traceback
+import uuid
 from datetime import datetime
-from zipfile import ZipFile, ZIP_DEFLATED
+from pathlib import Path
+from typing import Any
+from zipfile import ZIP_DEFLATED, ZipFile
 import requests
 from anytree import Node
 from PySide6.QtGui import QTextDocument
 from pasta_eln import __version__, minisign
 from .backend import Backend
-from .miscTools import flatten
 from .fixedStringsJson import CONF_FILE_NAME
+from .miscTools import flatten
 from .stringChanges import camelCase
 
 # .eln file: common between all ELNs

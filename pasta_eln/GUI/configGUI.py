@@ -1,12 +1,14 @@
 """ Main class of config tab on GUI elements """
 import json
-from typing import Callable
 from pathlib import Path
-from PySide6.QtWidgets import QDialog, QFormLayout, QVBoxLayout, QGroupBox, QDialogButtonBox  # pylint: disable=no-name-in-module
-from ..miscTools import restart
-from ..guiStyle import TextButton, addRowList
-from ..guiCommunicate import Communicate
+from typing import Callable
+from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QFormLayout, QGroupBox,  # pylint: disable=no-name-in-module
+                               QVBoxLayout)
 from ..fixedStringsJson import configurationGUI
+from ..guiCommunicate import Communicate
+from ..guiStyle import TextButton, addRowList
+from ..miscTools import restart
+
 
 class ConfigurationGUI(QDialog):
   """ Main class of config tab on GUI elements """

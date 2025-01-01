@@ -3,12 +3,12 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
+from PySide6.QtCore import Qt, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QScrollArea, QTextEdit  # pylint: disable=no-name-in-module
-from PySide6.QtCore import Qt, Slot                   # pylint: disable=no-name-in-module
-from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout, addDocDetails
-from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
-from ..fixedStringsJson import defaultDataHierarchyNode, SORTED_DB_KEYS
+from ..fixedStringsJson import SORTED_DB_KEYS, defaultDataHierarchyNode
 from ..guiCommunicate import Communicate
+from ..guiStyle import Image, Label, TextButton, addDocDetails, showMessage, widgetAndLayout
+from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
 
 
 class Details(QScrollArea):

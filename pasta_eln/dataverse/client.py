@@ -14,11 +14,9 @@ from os import getcwd
 from os.path import basename, dirname, join, realpath
 from typing import Any
 from xml.etree.ElementTree import ElementTree, fromstring
-
 from aiohttp import BasicAuth, FormData
-
-from pasta_eln.webclient.utils import handle_dataverse_exception_async
 from pasta_eln.webclient.http_client import AsyncHttpClient
+from pasta_eln.webclient.utils import handle_dataverse_exception_async
 
 
 class DataverseClient:

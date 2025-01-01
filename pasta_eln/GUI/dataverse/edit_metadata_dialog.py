@@ -11,18 +11,16 @@
 import copy
 import logging
 from typing import Any
-
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QDialog
-
+from pasta_eln.database.models.config_model import ConfigModel
+from pasta_eln.dataverse.database_api import DatabaseAPI
+from pasta_eln.dataverse.utils import adjust_type_name, get_formatted_metadata_message
 from pasta_eln.GUI.dataverse.data_type_class_names import DataTypeClassName
 from pasta_eln.GUI.dataverse.edit_metadata_dialog_base import Ui_EditMetadataDialog
 from pasta_eln.GUI.dataverse.edit_metadata_summary_dialog import EditMetadataSummaryDialog
 from pasta_eln.GUI.dataverse.metadata_frame_base import MetadataFrame
 from pasta_eln.GUI.dataverse.metadata_frame_factory import MetadataFrameFactory
-from pasta_eln.database.models.config_model import ConfigModel
-from pasta_eln.dataverse.database_api import DatabaseAPI
-from pasta_eln.dataverse.utils import adjust_type_name, get_formatted_metadata_message
 
 
 class EditMetadataDialog(Ui_EditMetadataDialog):

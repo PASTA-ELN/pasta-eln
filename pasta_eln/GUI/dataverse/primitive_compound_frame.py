@@ -10,9 +10,7 @@
 
 import logging
 from typing import Any
-
 from PySide6.QtWidgets import QFrame
-
 from pasta_eln.GUI.dataverse.data_type_class_base import DataTypeClass
 from pasta_eln.GUI.dataverse.data_type_class_context import DataTypeClassContext
 from pasta_eln.GUI.dataverse.data_type_class_factory import DataTypeClassFactory

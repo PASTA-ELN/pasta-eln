@@ -1,13 +1,16 @@
 #!/usr/bin/python3
 """Commandline utility to admin local installation and convert from Pasta-ELN version 2"""
-import json, os, traceback
-from typing import Any
+import json
+import os
+import traceback
 from pathlib import Path
+from typing import Any
 import requests
 from requests.structures import CaseInsensitiveDict
 from pasta_eln.backend import Backend
-from pasta_eln.stringChanges import outputString
 from pasta_eln.sqlite import SqlLiteDB
+from pasta_eln.stringChanges import outputString
+
 
 def couchDB2SQLite(userName:str='', password:str='', database:str='', path:str='') -> None:
   """

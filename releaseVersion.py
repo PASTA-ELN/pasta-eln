@@ -246,6 +246,7 @@ def runSourceVerification():
   - sourcery
   """
   tools = {'pre-commit': 'pre-commit run --all-files',
+           'isort': 'isort pasta_eln/',
            'pylint': 'pylint pasta_eln/',
            'mypy': 'mypy --no-warn-unused-ignores  pasta_eln/',
            'sourcery':'sourcery review pasta_eln/'}

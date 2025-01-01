@@ -8,7 +8,6 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Any
-
 from PySide6.QtWidgets import QFrame, QPushButton, QVBoxLayout
 
 
