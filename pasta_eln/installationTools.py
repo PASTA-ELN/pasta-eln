@@ -5,7 +5,7 @@ import os
 import platform
 import shutil
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable, Optional
 from .backend import Backend
@@ -249,7 +249,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   backend.db.addAttachment(idInstrument, 'Right side of instrument',
          {'date':datetime.now().isoformat(),'remark':'Worked well','docID':idSensor,'user':'nobody'})
   backend.db.addAttachment(idInstrument, 'Right side of instrument',
-         {'date':datetime.now().isoformat(),'remark':'Service','docID':'','user':'nobody'})
+         {'date':(datetime.now()+timedelta(hours=1)).isoformat(),'remark':'Service','docID':'','user':'nobody'})
   outputString(outputFormat,'info',backend.output('instrument'))
 
   ###  TEST MEASUREMENTS AND SCANNING/CURATION

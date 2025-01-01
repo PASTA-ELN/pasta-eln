@@ -65,7 +65,6 @@ numpy==2.2.1
     #   contourpy
     #   matplotlib
     #   pandas
-    #   pasta_eln (setup.py)
 packaging==24.2
     # via
     #   matplotlib
