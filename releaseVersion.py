@@ -1,16 +1,16 @@
 #!/usr/bin/python3
 """ Script to run when releasing a new version to pypi """
 from __future__ import annotations
-
 import configparser
-import json
 import datetime
+import json
 import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 from urllib.request import urlopen
+
 try:
   import requests
   from requests.structures import CaseInsensitiveDict
@@ -18,7 +18,7 @@ except Exception:
   pass
 
 
-def getVersion():
+def getVersion() -> str:
   """
   Get current version number from git-tag
 
@@ -26,8 +26,8 @@ def getVersion():
     string: v0.0.0
   """
   result = subprocess.run(['git','tag'], capture_output=True, check=False)
-  versionList= result.stdout.decode('utf-8').strip()
-  versionList= [i[1:].replace('b','.') for i in versionList.split('\n')]
+  versionStr = result.stdout.decode('utf-8').strip()
+  versionList= [i[1:].replace('b','.') for i in versionStr.split('\n')]
   if versionList == ['']:  #default
     return 'v0.0.1'
   versionList.sort(key=lambda s: list(map(int, s.split('.'))))
@@ -36,7 +36,7 @@ def getVersion():
     lastVersion = '.'.join(lastVersion.split('.')[:3]) + f'b{lastVersion.split(".")[-1]}'
   return f'v{lastVersion}'
 
-def createContributors():
+def createContributors() -> None:
   """
   curl -L -H "Accept: application/vnd.github+json"  -H "X-GitHub-Api-Version: 2022-11-28"   https://api.github.com/repos/PASTA-ELN/pasta-eln/contributors
   """
@@ -65,7 +65,7 @@ def createContributors():
   return
 
 
-def prevVersionsFromPypi(k=15):
+def prevVersionsFromPypi(k:int=15) -> None:
   """ Get and print the information of the last k versions on pypi
 
   Args:
@@ -84,7 +84,7 @@ def prevVersionsFromPypi(k=15):
   return
 
 
-def newVersion(level=2):
+def newVersion(level:int=2) -> None:
   """
   Create a new version
 
@@ -104,12 +104,12 @@ def newVersion(level=2):
   print('Create new version...')
   prevVersionsFromPypi()
   #get old version number
-  version = [int(i) for i in getVersion()[1:].replace('b','.').split('.')]
+  versionList = [int(i) for i in getVersion()[1:].replace('b','.').split('.')]
   #create new version number
-  version[level] += 1
+  versionList[level] += 1
   for i in range(level+1,3):
-    version[i] = 0
-  version = '.'.join([str(i) for i in version])
+    versionList[i] = 0
+  version = '.'.join([str(i) for i in versionList])
   reply = input(f'Create version (2.5, 3.1.4b1): [{version}]: ')
   version = version if not reply or len(reply.split('.'))<2 else reply
   print(f'======== Version {version} =======')
@@ -144,7 +144,7 @@ def newVersion(level=2):
   return
 
 
-def createRequirementsFile():
+def createRequirementsFile() -> None:
   """
   Create a requirements.txt file from the setup.cfg information
   - not done anymore automatically
@@ -182,7 +182,7 @@ def createRequirementsFile():
   return
 
 
-def runTests():
+def runTests() -> None:
   """
   run unit-tests: can only work if all add-ons and dependencies are fulfilled
 
@@ -225,7 +225,7 @@ def runTests():
   return
 
 
-def copyAddOns():
+def copyAddOns() -> None:
   """
   Copy add-ons from main location to distribution
   """
@@ -239,17 +239,24 @@ def copyAddOns():
   return
 
 
-def runSourceVerification():
+def runSourceVerification() -> None:
   """ Verify code with a number of tools:
-  - pre-commit (which has a number included)
+  Order: first those that change code automatically, then those that require manual inspection
+  - pre-commit (which has a number of submodules included)
+  - isort
+  - pylint
   - mypy
   - sourcery
   """
   tools = {'pre-commit': 'pre-commit run --all-files',
-           'isort': 'isort pasta_eln/',
-           'pylint': 'pylint pasta_eln/',
-           'mypy': 'mypy --no-warn-unused-ignores  pasta_eln/',
-           'sourcery':'sourcery review pasta_eln/'}
+           'isort'     : 'isort pasta_eln/',
+           'pylint'    : 'pylint pasta_eln/',
+           'mypy'      : 'mypy --no-warn-unused-ignores pasta_eln/',
+           'sourcery'  : 'sourcery review pasta_eln/',
+           'isort2'    : 'isort releaseVersion.py',
+           'pylint2'   : 'pylint releaseVersion.py',
+           'mypy2'     : 'mypy --no-warn-unused-ignores releaseVersion.py',
+           'sourcery2' : 'sourcery review releaseVersion.py'}
   for label, cmd in tools.items():
     print(f'------------------ start {label} -----------------')
     os.system(cmd)
@@ -258,11 +265,12 @@ def runSourceVerification():
 
 
 if __name__=='__main__':
+  #run tests
   runTests()
   runSourceVerification()
   copyAddOns()
   createRequirementsFile()
-  #do update
   versionLevel = 2 if len(sys.argv)==1 else int(sys.argv[1])
+  #do update
   if input('Continue: only "y" continues. ') == 'y':
     newVersion(versionLevel)
