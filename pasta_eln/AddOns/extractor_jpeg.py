@@ -2,13 +2,10 @@
 - default jpeg image
 For tutorials, see extractor_csv.py and extractor_png.py
 """
-import base64
-import json
-import re
+import base64, re, json
 from io import BytesIO
 import numpy as np
 from PIL import Image
-
 
 def use(filePath, style={'main':''}, saveFileName=None):
   """
@@ -49,7 +46,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
 
   # convert PIL image to base64
   figfile = BytesIO()
-  imageData.save(figfile, format='JPEG')
+  imageData.save(figfile, format="JPEG")
   imageData = base64.b64encode(figfile.getvalue()).decode()
   imageData = f"data:image/jpg;base64,{imageData}"
 
