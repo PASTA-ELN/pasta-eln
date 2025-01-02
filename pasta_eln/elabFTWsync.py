@@ -13,6 +13,16 @@ from .handleDictionaries import squashTupleIntoValue
 #   - hide an upload  api.upLoadUpdate('experiments', 66, 596, {'action':'update', 'state':'2'})
 #   - listing all uploads (incl. archived) is not possible in elab currently -> leave visible; change to invisible once in elab
 
+
+MERGE_LABELS = {
+      1:'1: client -> server',
+      2:'2: other client -> client',
+      3:'3: server -> client',
+      4:'4: no change',
+      5:'5: BOTH CHANGE / Merge'
+    }
+
+
 class Pasta2Elab:
   """ Allow syncing to elabFTW server"""
 
@@ -128,7 +138,7 @@ class Pasta2Elab:
     if 'dateSync' not in docClient or not docClient['dateSync']:
       docClient['dateSync'] = datetime.fromisoformat('2000-01-03').isoformat()+'.0000'
     if self.verbose:
-      print('\n>>>DOC_CLIENT sync&modified', docClient['dateSync'], docClient['dateModified'])
+      print(f'\n{node.id}\n>>>DOC_CLIENT sync&modified', docClient['dateSync'], docClient['dateModified'])
     # pull from server: content and other's client content
     entityType = 'experiments' if self.docID2elabID[node.id][1] else 'items'
     docServer, uploads = self.elab2doc(self.api.readEntry(entityType, self.docID2elabID[node.id][0])[0])
@@ -147,11 +157,17 @@ class Pasta2Elab:
     # merge 1: compare server content and doc and update later with changes
     flagServerChange = False
     for k,v in docServer.items():
-      if isinstance(v, (dict, str)):
+      if isinstance(v, str):
+        if v.strip() != docOther[k].strip():
+          flagServerChange = True
+          if self.verbose:
+            print(f'str change k:{k}; v:{v}; vOther:{docOther[k]}|type:{type(v)}')
+          docOther[k] = docServer[k]
+      elif isinstance(v, dict):
         if v != docOther[k]:
           flagServerChange = True
           if self.verbose:
-            print('str change', k,v, docOther[k])
+            print(f'dict change k:{k}; v:{v}; vOther:{docOther[k]}|type:{type(v)}')
           docOther[k] = docServer[k]
       elif isinstance(v, list):
         if set(v) != set(docOther[k]):
@@ -172,7 +188,7 @@ class Pasta2Elab:
        datetime.strptime(docOther['dateModified'], pattern)  < datetime.strptime(docOther['dateSync'], pattern):
       mergeCase = 1
       if self.verbose:
-        print(f'** MERGE CASE {mergeCase}')
+        print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
       flagUpdateServer = True
       flagUpdateClient = False
       docMerged = copy.deepcopy(docClient)
@@ -182,7 +198,7 @@ class Pasta2Elab:
          datetime.strptime(docOther['dateSync'], pattern)     < datetime.strptime(docOther['dateSync'], pattern):
       mergeCase = 2
       if self.verbose:
-        print(f'** MERGE CASE {mergeCase}')
+        print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
       flagUpdateServer = False
       flagUpdateClient = True
       docMerged = copy.deepcopy(docOther)
@@ -191,7 +207,7 @@ class Pasta2Elab:
          datetime.strptime(docOther['dateModified'], pattern) > datetime.strptime(docOther['dateSync'], pattern):
       mergeCase = 3
       if self.verbose:
-        print(f'** MERGE CASE {mergeCase}')
+        print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
       flagUpdateServer = True
       flagUpdateClient = True
       docMerged = copy.deepcopy(docOther)
@@ -200,7 +216,7 @@ class Pasta2Elab:
          datetime.strptime(docOther['dateModified'], pattern) < datetime.strptime(docOther['dateSync'], pattern):
       mergeCase = 4
       if self.verbose:
-        print(f'** MERGE CASE {mergeCase}')
+        print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
       flagUpdateServer = False
       flagUpdateClient = False
       docMerged = {}
@@ -209,12 +225,13 @@ class Pasta2Elab:
        datetime.strptime(docOther['dateModified'], pattern) > datetime.strptime(docOther['dateSync'], pattern):
       mergeCase = 5
       if self.verbose:
-        print(f'** MERGE CASE {mergeCase}')
+        print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
 
     # Case X: else
     # else:
     #   #TODO more complicated
     #   pass
+
     docMerged['dateSync'] = datetime.now().isoformat()
     if self.verbose:
       print('>>>MERGE TIME', docMerged['dateSync'])
@@ -224,6 +241,7 @@ class Pasta2Elab:
     if flagUpdateClient:
       docUpdate = copy.deepcopy(docMerged)
       docUpdate['branch'] = docUpdate['branch'][0] | {'op':''}
+      docUpdate['dateModified'] = docUpdate['dateSync']
       if 'metaVendor' in docUpdate:
         del docUpdate['metaVendor']
       squashTupleIntoValue(docUpdate)

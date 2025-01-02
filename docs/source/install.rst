@@ -6,23 +6,21 @@ Installation and Troubleshooting Instructions
 Windows Installation
 --------------------
 
-### Using Anaconda
+Using Default Python
+^^^^^^^^^^^^^^^^^^^^
 
-1. Visit the Anaconda website at https://www.anaconda.com/download and download the installer.
-2. Run the installer and accept the default installation settings.
-3. Create a new environment named "PASTA-ELN" and select the Python 3.11 option.
-4. Click the "New" button to open the terminal and execute the following commands:
-   * `pip install pasta-eln`
-   * `pip install pasta-eln -U --no-dependencies` (if you encounter issues with 'aiohttp')
-   * `python -m pasta_eln.gui`
-
-### Using Default Python
-
-If you prefer to install Python via the default installer:
+We recommend to use the default Python installer:
 
 1. Visit the Python website at https://www.python.org/downloads/windows/ and download the Windows installer for your architecture (likely 64-bit).
 2. Run the installer and select the option to "Add python.exe to PATH".
 3. Click "Install Now" to complete the installation.
+4. Open the Command Prompt (cmd) and execute the following commands:
+
+    .. code-block:: bash
+
+       pip install pasta-eln
+       python -m pasta_eln.gui
+
 
 **Recommendation:** We recommend installing additional packages such as `matplotlib`, `pandas`, and `spyder` to enhance your Python environment. To test your installation, open the Command Prompt and execute the following commands:
 
@@ -31,12 +29,22 @@ If you prefer to install Python via the default installer:
     pip install matplotlib pandas spyder
     python -c "import numpy as np;x = np.linspace(0,2*np.pi);y = np.sin(x);import matplotlib.pyplot as plt;plt.plot(x,y);plt.show()"
 
-### Installing PASTA-ELN via Command Prompt
 
-1. Open the Command Prompt and execute the following commands:
-   * `pip install pasta-eln`
-   * `pip install pasta-eln -U --no-dependencies` (if you encounter issues with 'aiohttp')
-   * `python -m pasta_eln.gui`
+Using Anaconda
+^^^^^^^^^^^^^^
+
+We recommend **against** using Anaconda as its license agreements prohibit its free use for anything else than education. Much work in universities and research institutions is carried out as funded third-party research that is not covered by the free Anaconda license. We give the Anaconda instructions here for those users that only use Python in an educational framework or that know about the excemptions from this short paragraph.
+
+1. Visit the Anaconda website at https://www.anaconda.com/download and download the installer.
+2. Run the installer and accept the default installation settings.
+3. Create a new environment named "PASTA-ELN" and select the Python 3.11 option.
+4. Click the "New" button to open the terminal and execute the following commands:
+
+    .. code-block:: bash
+
+      pip install pasta-eln
+      python -m pasta_eln.gui
+
 
 Linux Installation
 ------------------
