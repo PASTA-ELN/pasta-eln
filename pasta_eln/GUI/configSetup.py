@@ -46,10 +46,10 @@ class ConfigurationSetup(QWidget):
     self.progress1.hide()
     screen1L.addWidget(self.progress1)
 
-    _, footerL = widgetAndLayout('H', screen1L, 's')
-    self.button1 = TextButton('Start analyse and repair', self, [Command.ANALYSE], footerL)
-    self.button2 = TextButton('Finished',                 self, [Command.FINISHED], footerL)
-    self.button2.hide()
+    _, footerL = widgetAndLayout('H', screen1L, 's', top='m', left='xl', right='xl')
+    style = 'color: orange; font-weight: 550; font-size: 20px'
+    self.button1 = TextButton('Click to install / repair', self, [Command.ANALYSE], footerL, style=style)
+    self.button2 = TextButton('Click to finish',           self, [Command.FINISHED], footerL, style=style, hide=True)
 
 
   def callbackProgress(self, number:int) -> None:

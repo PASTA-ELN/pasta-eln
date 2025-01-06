@@ -49,10 +49,41 @@ We recommend **against** using Anaconda as its license agreements prohibit its f
 Linux Installation
 ------------------
 
-1. Navigate to a folder of your choice (e.g., your home directory) and create a new virtual environment with the name `.venvPastaELN`.
-2. Activate the virtual environment by running `source .venvPastaELN/bin/activate`.
-3. Install PASTA-ELN by executing `pip install pasta-eln`.
-4. Run the PASTA-ELN graphical interface by executing `python -m pasta_eln.gui`.
+1. Open the terminal and create a new folder to hold all your PASTA related information
+
+    .. code-block:: bash
+
+        mkdir ~/PASTA
+
+2. Create a new virtual environment with the name `venvPasta`.
+
+    .. code-block:: bash
+
+        python3 -m venv ~/PASTA/venvPasta
+
+3. Activate the virtual environment by running
+
+    .. code-block:: bash
+
+        source ~/PASTA/venvPastabin/activate
+
+4. Install PASTA-ELN by executing
+
+    .. code-block:: bash
+
+        pip install pasta-eln
+
+5. Run the PASTA-ELN graphical interface by executing
+
+    .. code-block:: bash
+
+        python3 -m pasta_eln.gui
+
+5. When prompted for data, we suggest to put your data inside a new **DATA** folder inside the Pasta folder you just created.
+
+
+
+
 
 Troubleshooting
 ---------------

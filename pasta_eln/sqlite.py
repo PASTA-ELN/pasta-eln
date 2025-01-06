@@ -477,7 +477,7 @@ class SqlLiteDB:
     mainOld = dict(cursor.fetchone())
     mainOld['type']= mainOld['type'].split('/')
     changesDB: dict[str,dict[str,str]] = {'main': {}}
-    for key in ('name','user','type','dateModified','client','image','content','comment'):
+    for key in ('name','user','type','dateModified','dateSync','client','image','content','comment'):
       if key in mainNew and mainOld[key]!=mainNew[key]:
         changesDB['main'][key] = '/'.join(mainNew[key]) if key=='type' else mainNew[key].translate(SQLiteTranslation)
         changesDict[key] = mainOld[key]

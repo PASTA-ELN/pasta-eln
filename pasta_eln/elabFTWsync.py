@@ -53,8 +53,8 @@ class Pasta2Elab:
       data = self.api.readEntry('items', self.elabProjGroupID)[0]
       _ = [self.api.deleteEntry('experiments', i['entityid']) for i in data['related_experiments_links']]
       _ = [self.api.deleteEntry('items',       i['entityid']) for i in data['related_items_links']]
-    self.docID2elabID:dict[str,tuple[int,bool]] = {}
-    self.qtDocument      = QTextDocument()   #used for converting html <-> md
+    self.docID2elabID:dict[str,tuple[int,bool]] = {}  # x-15343154th54325243, (4, bool if experiment)
+    self.qtDocument      = QTextDocument()            # used for converting html <-> md
     self.verbose         = True
     return
 
@@ -66,13 +66,13 @@ class Pasta2Elab:
       list: list of merge cases
     """
     if self.api.url:  #only when you are connected to web
-      self.syncDocTypes()
+      self.syncDocTypes()  #category agree
       self.createIdDict()
       # sync nodes in parallel
       reports = []
       for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
-        proj = self.backend.db.getHierarchy(projID)
-        reports += [self.updateEntry(i) for i in PreOrderIter(proj)]
+        projHierarchy = self.backend.db.getHierarchy(projID)
+        reports += [self.updateEntry(i) for i in PreOrderIter(projHierarchy)]
     return reports
 
 
@@ -154,7 +154,7 @@ class Pasta2Elab:
       print('>>>DOC_OTHER sync&modified', docOther.get('dateSync'), docOther.get('dateModified'))
     docMerged:dict[str,Any] = {}
     flagUpdateClient, flagUpdateServer = False, False
-    # merge 1: compare server content and doc and update later with changes
+    # merge 1: compare server content and docOther and update later with changes
     flagServerChange = False
     for k,v in docServer.items():
       if isinstance(v, str):
@@ -183,6 +183,7 @@ class Pasta2Elab:
       docOther['dateModified'] = datetime.now().isoformat()
     #  merge 2
     pattern = '%Y-%m-%dT%H:%M:%S.%f'
+    mergeCase = -1
     # Case 1 straight update from client to server: only client updated and server not changed
     if datetime.strptime(docClient['dateModified'], pattern) > datetime.strptime(docClient['dateSync'], pattern) and \
        datetime.strptime(docOther['dateModified'], pattern)  < datetime.strptime(docOther['dateSync'], pattern):
@@ -212,21 +213,23 @@ class Pasta2Elab:
       flagUpdateClient = True
       docMerged = copy.deepcopy(docOther)
     # Case 4 no change: nothing changed
-    if datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
-         datetime.strptime(docOther['dateModified'], pattern) < datetime.strptime(docOther['dateSync'], pattern):
+    if datetime.strptime(docClient['dateModified'], pattern) <= datetime.strptime(docClient['dateSync'], pattern) and \
+         datetime.strptime(docOther['dateModified'], pattern) <= datetime.strptime(docOther['dateSync'], pattern):
       mergeCase = 4
       if self.verbose:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
-      flagUpdateServer = False
-      flagUpdateClient = False
-      docMerged = {}
+      # flagUpdateServer = False
+      # flagUpdateClient = False
+      # docMerged = {}
+      return node.id, mergeCase
     # Case 5 both are updated: merge: both changed -> GUI
     if datetime.strptime(docClient['dateModified'], pattern) > datetime.strptime(docClient['dateSync'], pattern) and \
        datetime.strptime(docOther['dateModified'], pattern) > datetime.strptime(docOther['dateSync'], pattern):
       mergeCase = 5
       if self.verbose:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
-
+    if mergeCase<=0:
+      print('**ERROR should not occur')
     # Case X: else
     # else:
     #   #TODO more complicated
