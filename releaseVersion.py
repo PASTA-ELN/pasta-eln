@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 """ Script to run when releasing a new version to pypi """
 from __future__ import annotations
-import configparser
 import datetime
 import json
 import os
