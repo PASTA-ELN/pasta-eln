@@ -102,7 +102,7 @@ class Pasta2Elab:
   def createIdDict(self) -> None:
     """ create mapping of docIDs to elabIDs: if not exist, create elabIds """
     configRemote = self.backend.configuration['projectGroups'][self.backend.configurationProjectGroup]['remote']['config']
-    elabTypes = {i['title'].lower():i['id'] for i in self.api.readEntry('items_types')}|{'measurement':-1}
+    elabTypes = {i['title'].lower():i['id'] for i in self.api.readEntry('items_types')}  |  {'measurement':-1}
     elabTypes |= {'x0':elabTypes.pop('project'), 'x1':elabTypes.pop('folder'), '-':elabTypes.pop('default')}
     def getNewEntry(elabType:str) -> int:
       urlSuffix = 'items'                  if int(elabType)>0 else 'experiments'
@@ -113,6 +113,9 @@ class Pasta2Elab:
     self.backend.db.cursor.execute('SELECT id, type, externalId FROM main')
     self.docID2elabID = {i[0]:((i[2],i[1].split('/')[0]=='measurement') if i[2] else (getNewEntry(elabTypes[i[1].split('/')[0]]),i[1].split('/')[0]=='measurement'))
                     for i in self.backend.db.cursor.fetchall()}
+    if self.verbose:
+      print('List of docIDs and corresponding elabIDs (flag if experiment)')
+      print('\n'.join([f'{k} : {v}' for k,v in self.docID2elabID.items()]))
     # save to sqlite
     self.backend.db.cursor.executemany('UPDATE main SET id=?, externalId=? WHERE id=?', [(k,v[0],k) for k, v in self.docID2elabID.items()])
     self.backend.db.connection.commit()
@@ -276,6 +279,34 @@ class Pasta2Elab:
             (self.backend.basePath/docMerged['branch'][0]['path']).name not in {i['real_name'] for i in existingUploads}:
         self.api.upload(entityType, self.docID2elabID[node.id][0], fileName=self.backend.basePath/docMerged['branch'][0]['path'], comment='raw data')
     return node.id, mergeCase
+
+
+  def compareCounts(self) -> bool:
+    """
+    Compare information on server and client
+
+    Returns:
+    bool: true=equal; false=differences
+    """
+    agreement = True
+    self.backend.db.cursor.execute('SELECT type, externalId FROM main')
+    inPasta = self.backend.db.cursor.fetchall()
+    print('TODO only from project group')
+    inELAB_exp = [i['id'] for i in self.api.readEntry('experiments')]
+    inELAB_itm = [i['id'] for i in self.api.readEntry('items')]
+    if diff := {int(i[1]) for i in inPasta if i[0].startswith('measurement')}.difference(inELAB_exp):
+      agreement = False
+      print('Print there is a difference in experiments between CLIENT and SERVER. Ids on server:',diff)
+    if diff := set(inELAB_exp).difference({int(i[1]) for i in inPasta if i[0].startswith('measurement')}):
+      print('Print there is a difference in experiments between SERVER and CLIENT. Ids on server:',diff)
+      agreement = False
+    if diff := {int(i[1]) for i in inPasta if not i[0].startswith('measurement')}.difference(inELAB_itm):
+      print('Print there is a difference in ITEMS between CLIENT and SERVER. Ids on server:',diff)
+      agreement = False
+    if diff := set(inELAB_itm).difference({int(i[1]) for i in inPasta if not i[0].startswith('measurement')}):
+      print('Print there is a difference in ITEMS between SERVER and CLIENT. Ids on server:',diff)
+      agreement = False
+    return agreement
 
 
   def elab2doc(self,elab:dict[str,Any]) -> tuple[dict[str,Any], list[Any]]:

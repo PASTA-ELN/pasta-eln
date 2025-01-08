@@ -2,7 +2,8 @@
 .venvPasta/
 docs/build/
 __pycache__
-testsComplicated/
+testsComplicated/Data*/
+testsComplicated/OldTests/
 htmlcov/
 pasta_eln.egg-info/
 
