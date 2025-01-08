@@ -46,7 +46,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
 
   # convert PIL image to base64
   figfile = BytesIO()
-  imageData.save(figfile, format='JPEG')
+  imageData.save(figfile, format="JPEG")
   imageData = base64.b64encode(figfile.getvalue()).decode()
   imageData = f"data:image/jpg;base64,{imageData}"
 

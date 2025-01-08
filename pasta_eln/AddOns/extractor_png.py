@@ -65,7 +65,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
     newSize = (int(image.size[0]/scale), int(image.size[1]/scale))
     image = image.resize(newSize)
   figfile = BytesIO()
-  image.save(figfile, format='PNG')
+  image.save(figfile, format="PNG")
   imageB64 = base64.b64encode(figfile.getvalue()).decode()
   imageB64 = f"data:image/png;base64,{imageB64}"
 

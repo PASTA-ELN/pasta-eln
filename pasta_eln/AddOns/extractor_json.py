@@ -24,7 +24,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
   content = ''
   fileSize = os.stat(filePath).st_size / (1024*1024)  #in MB
   if fileSize<0.3:
-    with open(filePath, encoding='utf-8') as jsonFile:
+    with open(filePath,'r', encoding='utf-8') as jsonFile:
       jsonContent = jsonFile.read()
       content = json.loads(jsonContent)
       if not isinstance(content, dict):

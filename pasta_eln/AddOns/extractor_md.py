@@ -14,5 +14,5 @@ def use(filePath, style={'main':''}, saveFileName=None):
   Returns:
     dict: containing image, metaVendor, metaUser, recipe
   """
-  with open(filePath, encoding='utf-8') as fIn:
+  with open(filePath,'r', encoding='utf-8') as fIn:
     return {'content':fIn.read(), 'style': {'main':'procedure/markdown'}, 'metaVendor':{}, 'metaUser':{}}

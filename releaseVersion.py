@@ -268,7 +268,6 @@ if __name__=='__main__':
   #run tests
   runTests()
   runSourceVerification()
-  copyAddOns()
   createRequirementsFile()
   versionLevel = 2 if len(sys.argv)==1 else int(sys.argv[1])
   #do update
