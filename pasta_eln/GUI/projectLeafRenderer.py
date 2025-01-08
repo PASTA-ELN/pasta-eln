@@ -72,6 +72,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       return
     # details = body
     doc     = self.comm.backend.db.getDoc(docID)
+    if not doc:
+      return
     if doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
       dataHierarchyNode = defaultDataHierarchyNode
     else:

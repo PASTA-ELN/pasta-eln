@@ -8,9 +8,9 @@ from typing import Any
 import requests
 from requests.structures import CaseInsensitiveDict
 from pasta_eln.backend import Backend
+from pasta_eln.fixedStringsJson import CONF_FILE_NAME
 from pasta_eln.sqlite import SqlLiteDB
 from pasta_eln.stringChanges import outputString
-from pasta_eln.fixedStringsJson import CONF_FILE_NAME
 
 
 def couchDB2SQLite(userName:str='', password:str='', database:str='', path:str='') -> None:

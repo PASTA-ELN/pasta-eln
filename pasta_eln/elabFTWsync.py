@@ -291,8 +291,8 @@ class Pasta2Elab:
     inPasta = self.backend.db.cursor.fetchall()
 
     data = self.api.readEntry('items', self.elabProjGroupID)[0]
-    inELAB_exp = [i['entityid'] for i in data[f'related_experiments_links']]
-    inELAB_itm = [i['entityid'] for i in data[f'related_items_links']]
+    inELAB_exp = [i['entityid'] for i in data['related_experiments_links']]
+    inELAB_itm = [i['entityid'] for i in data['related_items_links']]
     if diff := {int(i[1]) for i in inPasta if i[0].startswith('measurement')}.difference(inELAB_exp):
       agreement = False
       print('**ERROR** There is a difference in experiments between CLIENT and SERVER. Ids on server:',diff)

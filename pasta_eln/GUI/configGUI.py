@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Callable
 from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QFormLayout, QGroupBox,  # pylint: disable=no-name-in-module
                                QVBoxLayout)
-from ..fixedStringsJson import configurationGUI, CONF_FILE_NAME
+from ..fixedStringsJson import CONF_FILE_NAME, configurationGUI
 from ..guiCommunicate import Communicate
 from ..guiStyle import TextButton, addRowList
 from ..miscTools import restart

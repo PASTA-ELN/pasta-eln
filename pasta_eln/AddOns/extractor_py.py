@@ -19,6 +19,6 @@ def use(filePath, style={'main':''}, saveFileName=None):
   metaUser   = {}
   style      = {'main':'procedure/python'}
   content    = ''
-  with open(filePath, 'r', encoding='utf-8') as fIn:
+  with open(filePath, encoding='utf-8') as fIn:
     content = '``` python\n'+fIn.read()+'```'
   return {'image':'', 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser, 'content':content}
