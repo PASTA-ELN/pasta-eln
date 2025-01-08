@@ -10,6 +10,7 @@ from requests.structures import CaseInsensitiveDict
 from pasta_eln.backend import Backend
 from pasta_eln.sqlite import SqlLiteDB
 from pasta_eln.stringChanges import outputString
+from pasta_eln.fixedStringsJson import CONF_FILE_NAME
 
 
 def couchDB2SQLite(userName:str='', password:str='', database:str='', path:str='') -> None:
@@ -130,7 +131,7 @@ def __returnBackend__(projectGroup:str='') -> Backend:
     projectGroup (str): name of project group
   """
   if not projectGroup:
-    with open(Path.home()/'.pastaELN.json', encoding='utf-8') as fIn:
+    with open(Path.home()/CONF_FILE_NAME, encoding='utf-8') as fIn:
       config = json.load(fIn)
       print('Possible project groups:','  '.join(config['projectGroups'].keys()))
     projectGroup = input('Enter project group: ').strip()
@@ -179,7 +180,7 @@ def printOrDelete(projectGroup:str='', docID:str='', output:bool=True) -> None:
     output (bool): print=True or delete=False
   """
   if not projectGroup:
-    with open(Path.home()/'.pastaELN.json', encoding='utf-8') as fIn:
+    with open(Path.home()/CONF_FILE_NAME, encoding='utf-8') as fIn:
       config = json.load(fIn)
       print('Possible project groups:','  '.join(config['projectGroups'].keys()))
     projectGroup = input('Enter project group: ').strip()
