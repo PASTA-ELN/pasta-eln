@@ -44,19 +44,30 @@ class TestStringMethods(unittest.TestCase):
     except RuntimeError:
       pass
     self.be = Backend('research')
+    projID = self.be.output('x0').split('|')[-1].strip()
+    self.be.changeHierarchy(projID)
+    output = self.be.outputHierarchy(False, True)
+    print(output)
 
     # CHANGE CONTENT ON SERVER
-    print('\n\n=============================\nChange content\n============================')
+    print('\n\n=============================\nSTART TEST\n============================')
+    choices = random.choices(range(100), k=10)
+    choices = [62,66,29,43,28,36,55,14,12,6]
+    print(f'Current choice: [{",".join([str(i) for i in choices])}]')
+
     # remove content in pasta: 1+1 entry
-    projID = self.be.output('x0').split('|')[-1].strip()
     hierarchy = self.be.db.getHierarchy(projID)
     leaves    = [i for i in PreOrderIter(hierarchy) if not i.children]
-    choiceExp = random.choice([i.id for i in leaves if i.docType[0]=='measurement'])
-    choiceItem= random.choice([i.id for i in leaves if i.docType[0]!='measurement'])
-    branchExp = random.choice(self.be.db.getDoc(choiceExp)['branch'])
-    branchItem= random.choice(self.be.db.getDoc(choiceItem)['branch'])
-    print('Delete experiment',choiceExp, branchExp)
-    print('Delete item', choiceItem,branchItem)
+    validChoices = [i.id for i in leaves if i.docType[0]=='measurement']
+    choiceExp = validChoices[choices.pop(0)%len(validChoices)]
+    validChoices = [i.id for i in leaves if i.docType[0]!='measurement']
+    choiceItem= validChoices[choices.pop(0)%len(validChoices)]
+    validChoices = self.be.db.getDoc(choiceExp)['branch']
+    branchExp = validChoices[choices.pop(0)%len(validChoices)]
+    validChoices = self.be.db.getDoc(choiceItem)['branch']
+    branchItem= validChoices[choices.pop(0)%len(validChoices)]
+    print('Delete experiment',choiceExp)
+    print('Delete item', choiceItem)
     if branchExp['path'] is not None and not branchExp['path'].startswith('http'):
       os.unlink(self.be.basePath/branchExp['path'])
     if branchItem['path'] is not None:
@@ -68,49 +79,56 @@ class TestStringMethods(unittest.TestCase):
     self.be.db.remove(choiceItem, '/'.join(branchItem['stack']))
 
     # add in pasta: 1+1 entry
-    choiceFolder= random.choice([i.id for i in leaves if i.docType[0]=='x1'])
+    hierarchy = self.be.db.getHierarchy(projID)
+    allNodes    = [i for i in PreOrderIter(hierarchy)]
+    validChoices = [i.id for i in allNodes if i.docType[0]=='x1']
+    choiceFolder= validChoices[choices.pop(0)%len(validChoices)]
     self.be.changeHierarchy(choiceFolder)
     self.be.addData('x1',    {'name': 'task to test elab','comment': 'Random comment 3'})
-    choiceFolder= random.choice([i.id for i in leaves if i.docType[0]=='x1'])
+    validChoices = [i.id for i in allNodes if i.docType[0]=='x1']
+    choiceFolder= validChoices[choices.pop(0)%len(validChoices)]
     self.be.changeHierarchy(choiceFolder)
     self.be.addData('measurement', {
       'name'   :'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Medieval_south-east_Wales_map_Lloyd.jpg/800px-Medieval_south-east_Wales_map_Lloyd.jpg',\
       'comment':'Random image', 'tags':['_3']})
 
     # change in pasta: 1 entry
-    choice= random.choice([i.id for i in PreOrderIter(hierarchy)])
+    validChoices = [i.id for i in PreOrderIter(hierarchy)]
+    choice= validChoices[choices.pop(0)%len(validChoices)]
     doc = self.be.db.getDoc(choice)
     self.be.editData(doc | {'comment':f'a very random comment to test elabFTW at {datetime.now().isoformat()}'})
-    print(f'\nChanged docID {choice}')
+    print(f'Changed docID {choice}')
 
     sync = Pasta2Elab(self.be, 'research')
+    sync.verbose = False
 
     # change on server: 1+1 entry
     data = sync.api.readEntry('items', sync.elabProjGroupID)[0]
     for entry in ['experiments','items']:
-      idx  = random.choice(data[f'related_{entry}_links'])['entityid']
+      validChoices = data[f'related_{entry}_links']
+      idx  = validChoices[choices.pop(0)%len(validChoices)]['entityid']
       sync.api.updateEntry(entry, idx, {'body':f'CHANGED BY test_03-elabFTW_good {entry}'})
       print(f'Changed on server {entry} {idx}')
 
     # change on server and on pasta
-    choice= random.choice([i.id for i in PreOrderIter(hierarchy)])
+    validChoices = [i.id for i in PreOrderIter(hierarchy)]
+    choice= validChoices[choices.pop(0)%len(validChoices)]
     docPasta = self.be.db.getDoc(choice)
     entry = 'experiments' if docPasta['type'][0]=='measurement' else 'items'
     sync.api.updateEntry(entry, docPasta['externalId'], {'body':f'CHANGED ELAB server (but also client) at {datetime.now().isoformat()}'})
     self.be.editData(docPasta | {'comment':f'CHANGE CLIENT (but also elab server) at {datetime.now().isoformat()}'})
-    print(f'\n Changed both for docID {choice}')
+    print(f'Changed both for docID {choice}')
 
-    # Sync
+    # Sync & verify
     reports = sync.sync()
+    print('\n')
     handleReports(reports)
-    sync.compareCounts()    # TODO count documents on both instances and compare
+    verify(self.be)
+    return
 
     # TODO experiments have no links from folders
     # TODO read-access incorrect
-
-    # verify
-    verify(self.be)
-    return
+    # TODO remove .id_pasta usage
 
 
   def tearDown(self):
@@ -120,11 +138,3 @@ class TestStringMethods(unittest.TestCase):
 
 if __name__ == '__main__':
   unittest.main()
-
-# for entityType in ['experiments','items']:
-#   response = requests.get(f'{sync.api.url}{entityType}?archived=on', **self.param)
-# allIDs = [i['id'] for i in json.loads(response.content.decode('utf-8'))]
-# for identifier in :
-#   response = requests.delete(f'{self.url}{entityType}/{identifier}', **self.param)
-#   if response.status_code != 204:
-#     print(f'**ERROR purge delete {entityType}: {identifier}')

@@ -15,6 +15,7 @@ from .handleDictionaries import squashTupleIntoValue
 
 
 MERGE_LABELS = {
+     -1:'-1: ERROR',
       1:'1: client -> server',
       2:'2: other client -> client',
       3:'3: server -> client',
@@ -73,6 +74,7 @@ class Pasta2Elab:
       for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
         projHierarchy = self.backend.db.getHierarchy(projID)
         reports += [self.updateEntry(i) for i in PreOrderIter(projHierarchy)]
+      self.removeWasteOnServer()
     return reports
 
 
@@ -184,19 +186,20 @@ class Pasta2Elab:
       if self.verbose:
         print('Server content changed from other')
       docOther['dateModified'] = datetime.now().isoformat()
-    #  merge 2
+
+    # merge 2: compare server client
     pattern = '%Y-%m-%dT%H:%M:%S.%f'
     mergeCase = -1
-    # Case 1 straight update from client to server: only client updated and server not changed
-    if datetime.strptime(docClient['dateModified'], pattern) > datetime.strptime(docClient['dateSync'], pattern) and \
-       datetime.strptime(docOther['dateModified'], pattern)  < datetime.strptime(docOther['dateSync'], pattern):
+    #  - Case 1 straight update from client to server: only client updated and server not changed
+    if datetime.strptime(docClient['dateModified'], pattern) >  datetime.strptime(docClient['dateSync'], pattern) and \
+       datetime.strptime(docOther['dateModified'], pattern)  <= datetime.strptime(docOther['dateSync'], pattern):
       mergeCase = 1
       if self.verbose:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
       flagUpdateServer = True
       flagUpdateClient = False
       docMerged = copy.deepcopy(docClient)
-    # Case 2 straight update from server to client: only others was updated / server itself was not updated, client not changed
+    #  - Case 2 straight update from server to client: only others was updated / server itself was not updated, client not changed
     if datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
          datetime.strptime(docOther['dateModified'], pattern) < datetime.strptime(docOther['dateSync'], pattern) and \
          datetime.strptime(docOther['dateSync'], pattern)     < datetime.strptime(docOther['dateSync'], pattern):
@@ -206,8 +209,8 @@ class Pasta2Elab:
       flagUpdateServer = False
       flagUpdateClient = True
       docMerged = copy.deepcopy(docOther)
-    # Case 3 straight update from server to client: only server updated, client not changed
-    if datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
+    #  - Case 3 straight update from server to client: only server updated, client not changed
+    if datetime.strptime(docClient['dateModified'], pattern) <= datetime.strptime(docClient['dateSync'], pattern) and \
          datetime.strptime(docOther['dateModified'], pattern) > datetime.strptime(docOther['dateSync'], pattern):
       mergeCase = 3
       if self.verbose:
@@ -215,7 +218,7 @@ class Pasta2Elab:
       flagUpdateServer = True
       flagUpdateClient = True
       docMerged = copy.deepcopy(docOther)
-    # Case 4 no change: nothing changed
+    #  - Case 4 no change: nothing changed
     if datetime.strptime(docClient['dateModified'], pattern) <= datetime.strptime(docClient['dateSync'], pattern) and \
          datetime.strptime(docOther['dateModified'], pattern) <= datetime.strptime(docOther['dateSync'], pattern):
       mergeCase = 4
@@ -225,7 +228,7 @@ class Pasta2Elab:
       # flagUpdateClient = False
       # docMerged = {}
       return node.id, mergeCase
-    # Case 5 both are updated: merge: both changed -> GUI
+    #  - Case 5 both are updated: merge: both changed -> GUI
     if datetime.strptime(docClient['dateModified'], pattern) > datetime.strptime(docClient['dateSync'], pattern) and \
        datetime.strptime(docOther['dateModified'], pattern) > datetime.strptime(docOther['dateSync'], pattern):
       mergeCase = 5
@@ -233,16 +236,11 @@ class Pasta2Elab:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
     if mergeCase<=0:
       print('**ERROR should not occur')
-    # Case X: else
-    # else:
-    #   #TODO more complicated
-    #   pass
+      return node.id, -1
 
     docMerged['dateSync'] = datetime.now().isoformat()
     if self.verbose:
       print('>>>MERGE TIME', docMerged['dateSync'])
-    # THE REST IS MOSTLY DONE
-
     # update client
     if flagUpdateClient:
       docUpdate = copy.deepcopy(docMerged)
@@ -281,9 +279,9 @@ class Pasta2Elab:
     return node.id, mergeCase
 
 
-  def compareCounts(self) -> bool:
+  def removeWasteOnServer(self) -> bool:
     """
-    Compare information on server and client
+    Compare information on server and client and delete those on server, that are not on client (because they were deleted there)
 
     Returns:
     bool: true=equal; false=differences
@@ -291,21 +289,25 @@ class Pasta2Elab:
     agreement = True
     self.backend.db.cursor.execute('SELECT type, externalId FROM main')
     inPasta = self.backend.db.cursor.fetchall()
-    print('TODO only from project group')
-    inELAB_exp = [i['id'] for i in self.api.readEntry('experiments')]
-    inELAB_itm = [i['id'] for i in self.api.readEntry('items')]
+
+    data = self.api.readEntry('items', self.elabProjGroupID)[0]
+    inELAB_exp = [i['entityid'] for i in data[f'related_experiments_links']]
+    inELAB_itm = [i['entityid'] for i in data[f'related_items_links']]
     if diff := {int(i[1]) for i in inPasta if i[0].startswith('measurement')}.difference(inELAB_exp):
       agreement = False
-      print('Print there is a difference in experiments between CLIENT and SERVER. Ids on server:',diff)
+      print('**ERROR** There is a difference in experiments between CLIENT and SERVER. Ids on server:',diff)
     if diff := set(inELAB_exp).difference({int(i[1]) for i in inPasta if i[0].startswith('measurement')}):
-      print('Print there is a difference in experiments between SERVER and CLIENT. Ids on server:',diff)
-      agreement = False
+      if self.verbose:
+        print(f'**INFO** There is a difference in experiments between SERVER and CLIENT. Ids on server: {diff}. Assume that they were deleted on purpose')
+        for idx in diff:
+          self.api.deleteEntry('experiments', idx)
     if diff := {int(i[1]) for i in inPasta if not i[0].startswith('measurement')}.difference(inELAB_itm):
-      print('Print there is a difference in ITEMS between CLIENT and SERVER. Ids on server:',diff)
+      print('**ERROR** There is a difference in ITEMS between CLIENT and SERVER. Ids on server:',diff)
       agreement = False
     if diff := set(inELAB_itm).difference({int(i[1]) for i in inPasta if not i[0].startswith('measurement')}):
-      print('Print there is a difference in ITEMS between SERVER and CLIENT. Ids on server:',diff)
-      agreement = False
+      print(f'**INFO** There is a difference in ITEMS between SERVER and CLIENT. Ids on server: {diff}. Assume that they were deleted on purpose')
+      for idx in diff:
+        self.api.deleteEntry('items', idx)
     return agreement
 
 
