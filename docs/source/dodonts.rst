@@ -10,16 +10,12 @@ Data Organization and Labelling
 
 To ensure the accessibility and comprehensibility of data, files and entries should be assigned clear and descriptive names, accompanied by comments, tags, and other relevant metadata. PASTA-ELN enables users to add tags, thereby enhancing the searchability of data. By implementing these practices, scientists can guarantee that their data is easily understandable not only by themselves but also by their colleagues in collaborative research projects.
 
-Here is a rewritten version of the text:
-
 Retention of Data
 -----------------
 
 It is essential to maintain data integrity by avoiding the deletion of research data. Deleting data can lead to the manipulation of results, falsification of conclusions, and ultimately, scientific misconduct. Furthermore, data deletion compromises the reproducibility of scientific studies, rendering them unreliable and unverifiable.
 
 PASTA-ELN offers a "Hide" function, which enables users to temporarily conceal data files and other items within a project, thereby maintaining a clear overview while preventing any loss of data. This approach adheres to the principles of a good Electronic Laboratory Notebook (ELN), ensuring the preservation of data and promoting transparent research practices.
-
-Here is a rewritten version of the text with a more professional tone:
 
 Raw Data as the Foundation of Truth
 -----------------------------------
