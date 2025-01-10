@@ -1,3 +1,9 @@
+"""example addon: create a report from within the project view
+
+THIS IS A VERY ADVANCED ADDON TUTORIAL
+This tutorial teaches
+- the basic structure of project-view-addons (header, function for each node, body, footer)
+"""
 import base64
 import re
 from io import BytesIO
@@ -22,8 +28,16 @@ HTML_HEADER = '<!DOCTYPE html>\n<html>\n<head>\n<style>'\
 HTML_FOOTER = '</body>\n</html>\n'
 
 def main(backend, hierStack, widget, parameter={}):
-    #TODO add comments
+    """ main function
+    Args:
+        backend (pasta backend): allow to extract data
+        hierStack (list): node in hierarchy to start the creation
+        widget (QWidget): allows to create new gui dialogs
+        parameter (dict): ability to pass parameters
 
+    Returns:
+        bool: success
+    """
     # Initialize variables
     if not parameter:
         res = QFileDialog.getSaveFileName(widget,'Use this file for output', str(Path.home()))
@@ -35,16 +49,22 @@ def main(backend, hierStack, widget, parameter={}):
         backend.changeHierarchy(i)
     qtDocument = QTextDocument()   #used for markdown -> html conversion
 
+    # function to handle each data entry
     def node2html(node):
         """
         Function that renders each node into html
+        - Node properties: depth, name, docType, id
 
-        Node properties: depth, name, docType, id
+        Args:
+            node (anyNode): anytree node to process
+
+        Returns:
+            str: conversion of node into html string
         """
         hidden = not all(node.gui)        # is this node hidden?
         if hidden:
             return ''
-        doc = backend.db.getDoc(node.id)  #get all information of this node
+        doc = backend.db.getDoc(node.id)  # GET ALL INFORMATION OF THIS NODE
         output = '<div class="node">\n'
         # headline of each node: either as html headline or normal text, incl. the objective
         if node.depth<4 and node.docType[0][0]=='x':
@@ -71,6 +91,7 @@ def main(backend, hierStack, widget, parameter={}):
     # main function that calls the render function
     proj = backend.db.getHierarchy(hierStack)
     out = ''.join(node2html(node) for node in PreOrderIter(proj))
+
     # add footer line with pasta-eln icon (read and converted to base64 to be inline included in html)
     iconImg = Image.open(f'{icons.__path__[0]}/favicon64.ico')
     figfile = BytesIO()
@@ -78,6 +99,7 @@ def main(backend, hierStack, widget, parameter={}):
     imageB64 = base64.b64encode(figfile.getvalue()).decode()
     imageB64 = f"data:image/png;base64,{imageB64}"
     out += f'<div class="footline">Created with Pasta-ELN {pasta_eln.__version__} and the default HTML export&nbsp;&nbsp;&nbsp;<image src="{imageB64}"/></div>'
+
     # save everything to the html file
     with open(res[0], 'w', encoding='utf-8') as f:
         f.write(f'{HTML_HEADER}{out}{HTML_FOOTER}')

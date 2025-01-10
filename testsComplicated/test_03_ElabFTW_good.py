@@ -126,11 +126,6 @@ class TestStringMethods(unittest.TestCase):
     verify(self.be)
     return
 
-    # TODO experiments have no links from folders
-    # TODO read-access incorrect
-    # TODO remove .id_pasta usage
-
-
   def tearDown(self):
     logging.info('End test')
     return

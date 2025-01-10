@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
     super().__init__()
     venv = ' without venv' if sys.prefix == sys.base_prefix and 'CONDA_PREFIX' not in os.environ else ' in venv'
     self.setWindowTitle(f"PASTA-ELN {__version__}{venv}")
-    self.resize(self.screen().size()) #self.setWindowState(Qt.WindowMaximized) #https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
+    self.resize(self.screen().size()) #self.setWindowState(Qt.WindowMaximized) #TODO https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
     self.backend = Backend(defaultProjectGroup=projectGroup)
@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
     menu = self.menuBar()
     projectMenu = menu.addMenu('&Project')
     Action('&Export project to .eln',        self, [Command.EXPORT],         projectMenu)
-    Action('&Import .eln',                   self, [Command.IMPORT],         projectMenu)
+    Action('&Import .eln into project',      self, [Command.IMPORT],         projectMenu)
     projectMenu.addSeparator()
     Action('&Export all projects to .eln',   self, [Command.EXPORT_ALL],     projectMenu)
     # Action('&Upload to Dataverse',           self, [Command.DATAVERSE_MAIN], projectMenu)
@@ -159,15 +159,16 @@ class MainWindow(QMainWindow):
         status = exportELN(self.comm.backend, allProjects, fileName, docTypes)
         showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.IMPORT:
-      if self.comm.projectID == '':
-        showMessage(self, 'Error', 'You have to open a project to export', 'Warning')
-        return
-      fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
-      if fileName != '':
-        status, statistics  = importELN(self.comm.backend, fileName, self.comm.projectID)
-        showMessage(self, 'Finished', f'{status}\n{statistics}', 'Information')
-        self.comm.changeSidebar.emit('redraw')
-        self.comm.changeTable.emit('x0', '')
+      showMessage(self, 'Error', 'Currently in testing and not activated yet', 'Warning')
+      # if self.comm.projectID == '':
+      #   showMessage(self, 'Error', 'You have to open a project to import', 'Warning')
+      #   return
+      # fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
+      # if fileName != '':
+      #   status, statistics  = importELN(self.comm.backend, fileName, self.comm.projectID)
+      #   showMessage(self, 'Finished', f'{status}\n{statistics}', 'Information')
+      #   self.comm.changeSidebar.emit('redraw')
+      #   self.comm.changeTable.emit('x0', '')
     elif command[0] is Command.EXIT:
       self.close()
     # view menu

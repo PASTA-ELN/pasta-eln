@@ -164,12 +164,12 @@ class ElabFTWApi:
     """
     if not areYouSure:
       return
-    for entityType in ['experiments','items']:
-      response = requests.get(f'{self.url}{entityType}?archived=on', **self.param)
+    for entryType in ['experiments','items']:
+      response = requests.get(f'{self.url}{entryType}?archived=on', **self.param)
       for identifier in [i['id'] for i in json.loads(response.content.decode('utf-8'))]:
-        response = requests.delete(f'{self.url}{entityType}/{identifier}', **self.param)
+        response = requests.delete(f'{self.url}{entryType}/{identifier}', **self.param)
         if response.status_code != 204:
-          print(f'**ERROR purge delete {entityType}: {identifier}')
+          print(f'**ERROR purge delete {entryType}: {identifier}')
     return
 
 

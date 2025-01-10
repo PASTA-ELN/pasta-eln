@@ -164,22 +164,24 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
   return markdown
 
 
-def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
+def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any], onlyEssentials:bool=True) -> str:
   """ Check if two dictionaries differ. Just compare the lowest level keys/values and output string
 
   Args:
     dict1 (dict): dictionary 1 - disk
     dict2 (dict): dictionary 2 - database
+    onlyEssentials (bool): compare only the essentials -- see below for includeKeys list
 
   Returns:
     str: output with \\n
   """
   ignoreKeys = ['client', '_rev', 'gui', '_attachments','externalId','dateSync']
+  includeKeys= ['id']
   shortVersion = '__version__' in dict1 and dict1['__version__'] == 'short'
   outString = ''
   dict2Copy = dict(dict2)
   for key,value in dict1.items():
-    if key in ignoreKeys:
+    if key in ignoreKeys or (onlyEssentials and key not in includeKeys):
       continue
     if key not in dict2Copy:
       if not shortVersion or key not in ('__version__','content','image','shasum'):

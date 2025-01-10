@@ -13,6 +13,10 @@ from .handleDictionaries import squashTupleIntoValue
 #   - hide an upload  api.upLoadUpdate('experiments', 66, 596, {'action':'update', 'state':'2'})
 #   - listing all uploads (incl. archived) is not possible in elab currently -> leave visible; change to invisible once in elab
 
+
+# TODO experiments have no links from folders
+# TODO read-access incorrect
+
 def cliCallback(api:ElabFTWApi , entry:str, idx:int) -> str:
   """ Default callback function for the syncMissingEntries function
 
@@ -163,12 +167,12 @@ class Pasta2Elab:
     if self.verbose:
       print(f'\n{node.id}\n>>>DOC_CLIENT sync&modified', docClient['dateSync'], docClient['dateModified'])
     # pull from server: content and other's client content
-    entityType = 'experiments' if self.docID2elabID[node.id][1] else 'items'
-    docServer, uploads = self.elab2doc(self.api.readEntry(entityType, self.docID2elabID[node.id][0])[0])
+    entryType = 'experiments' if self.docID2elabID[node.id][1] else 'items'
+    docServer, uploads = self.elab2doc(self.api.readEntry(entryType, self.docID2elabID[node.id][0])[0])
     if self.verbose:
       print('>>>DOC_SERVER', docServer)
     if [i for i in uploads if i['real_name']=='do_not_change.json']:
-      docOther = self.api.download(entityType, self.docID2elabID[node.id][0],
+      docOther = self.api.download(entryType, self.docID2elabID[node.id][0],
                                    [i for i in uploads if i['real_name']=='do_not_change.json'][0])
     else:
       docOther = {'name':'Untitled', 'tags':[], 'comment':'', 'dateSync':datetime.fromisoformat('2000-01-02').isoformat()+'.0000',
@@ -274,26 +278,26 @@ class Pasta2Elab:
     # send doc (merged version) to server everything
     if flagUpdateServer:
       content, image = self.doc2elab(copy.deepcopy(docMerged))
-      self.api.updateEntry(entityType, self.docID2elabID[node.id][0], content)
+      self.api.updateEntry(entryType, self.docID2elabID[node.id][0], content)
       # create links
-      _ = [self.api.createLink(entityType, self.docID2elabID[node.id][0], 'experiments' if self.docID2elabID[node.id][1] else 'items', self.docID2elabID[i.id][0])
+      _ = [self.api.createLink(entryType, self.docID2elabID[node.id][0], 'experiments' if self.docID2elabID[node.id][1] else 'items', self.docID2elabID[i.id][0])
                               for i in node.children]
     # uploads| clean first, then upload: PASTAs document, thumbnail, data-file
-    existingUploads = self.api.readEntry(entityType, self.docID2elabID[node.id][0])[0]['uploads']
+    existingUploads = self.api.readEntry(entryType, self.docID2elabID[node.id][0])[0]['uploads']
     uploadsToDelete = {'do_not_change.json', 'metadata.json'}
     if flagUpdateServer:
       uploadsToDelete |= {'thumbnail.svg', 'thumbnail.png', 'thumbnail.jpg'}
     for upload in existingUploads:
       if upload['real_name'] in uploadsToDelete:
-        self.api.uploadDelete(entityType, self.docID2elabID[node.id][0], upload['id'])
-    self.api.upload(entityType, self.docID2elabID[node.id][0], jsonContent=json.dumps(docMerged))
+        self.api.uploadDelete(entryType, self.docID2elabID[node.id][0], upload['id'])
+    self.api.upload(entryType, self.docID2elabID[node.id][0], jsonContent=json.dumps(docMerged))
     if flagUpdateServer:
       if image:
-        self.api.upload(entityType, self.docID2elabID[node.id][0], image)
+        self.api.upload(entryType, self.docID2elabID[node.id][0], image)
       if docMerged['branch'][0]['path'] is not None and docMerged['type'][0][0]!='x' \
             and not docMerged['branch'][0]['path'].startswith('http') and \
             (self.backend.basePath/docMerged['branch'][0]['path']).name not in {i['real_name'] for i in existingUploads}:
-        self.api.upload(entityType, self.docID2elabID[node.id][0], fileName=self.backend.basePath/docMerged['branch'][0]['path'], comment='raw data')
+        self.api.upload(entryType, self.docID2elabID[node.id][0], fileName=self.backend.basePath/docMerged['branch'][0]['path'], comment='raw data')
     return node.id, mergeCase
 
 
@@ -319,17 +323,25 @@ class Pasta2Elab:
     for entryType in ['experiments','items']:
       if diff := inPasta[entryType].difference(inELAB[entryType]):
         agreement = False
-        print(f'**ERROR** There is a difference in {entryType} between CLIENT and SERVER. Ids on server: {diff}')
+        print(f'**ERROR** There is a difference in {entryType} between CLIENT and SERVER. Ids on server: {diff}.')
       if diff := inELAB[entryType].difference(inPasta[entryType]):
         if self.verbose:
-          print(f'**INFO** There is a difference in {entryType} between SERVER and CLIENT. Ids on server: {diff}. Assume that they were deleted on purpose')
+          print(f'**INFO** There is a difference in {entryType} between SERVER and CLIENT. Ids on server: {diff}.')
           for idx in diff:
             mode = mode if mode.endswith('A') else callback(self.api, entryType, idx)
             if mode.startswith('s'):
               self.api.deleteEntry(entryType, idx)
             elif mode.startswith('g'):
-              a = 4/0
-              self.api.deleteEntry(entryType, idx)
+              _, uploads = self.elab2doc(self.api.readEntry(entryType, idx)[0])
+              if listDoNotChange := [i for i in uploads if i['real_name']=='do_not_change.json']:
+                docOther = self.api.download(entryType, idx, listDoNotChange[0])
+                docOther['dateSync'] = datetime.now().isoformat()
+                squashTupleIntoValue(docOther)
+                #TODO if data is there: copy it to the correct spot
+                try:
+                  self.backend.addData('/'.join(docOther['type']), docOther, docOther['branch'][0]['stack'])
+                except:
+                  print(f'**ERROR** Tried to add to client elab:{entryType} {idx}: {docOther}')
     return agreement
 
 
@@ -385,6 +397,6 @@ class Pasta2Elab:
     if doc:
       doc.pop('dateSync')
       metadata |= {'__':doc}
-    #TODO clarify how tags should be encoded
+    #TODO clarify how stars should be encoded
     elab = {'body':body, 'title':title, 'metadata':json.dumps(metadata), 'tags':tags, 'created_at':created_at, 'modified_at':modified_at}
     return elab, image
