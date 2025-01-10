@@ -14,8 +14,8 @@ from .handleDictionaries import squashTupleIntoValue
 #   - listing all uploads (incl. archived) is not possible in elab currently -> leave visible; change to invisible once in elab
 
 
-# TODO experiments have no links from folders
-# TODO read-access incorrect
+# TODO 3: experiments have no links from folders
+# TODO 2: read-access incorrect
 
 def cliCallback(api:ElabFTWApi , entry:str, idx:int) -> str:
   """ Default callback function for the syncMissingEntries function
@@ -337,8 +337,9 @@ class Pasta2Elab:
                 docOther = self.api.download(entryType, idx, listDoNotChange[0])
                 docOther['dateSync'] = datetime.now().isoformat()
                 squashTupleIntoValue(docOther)
-                #TODO if data is there: copy it to the correct spot
+                #TODO 1: if data is there: copy it to the correct spot
                 try:
+                  #TODO 0: why errors occur
                   self.backend.addData('/'.join(docOther['type']), docOther, docOther['branch'][0]['stack'])
                 except:
                   print(f'**ERROR** Tried to add to client elab:{entryType} {idx}: {docOther}')
@@ -397,6 +398,6 @@ class Pasta2Elab:
     if doc:
       doc.pop('dateSync')
       metadata |= {'__':doc}
-    #TODO clarify how stars should be encoded
+    #TODO 4: clarify how stars should be encoded
     elab = {'body':body, 'title':title, 'metadata':json.dumps(metadata), 'tags':tags, 'created_at':created_at, 'modified_at':modified_at}
     return elab, image

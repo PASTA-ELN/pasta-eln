@@ -349,7 +349,8 @@ class Form(QDialog):
         self.imageL.itemAt(0).widget().setParent(None)
         width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
-        Image(self.doc['image'], self.imageL, anyDimension=width)
+        if 'image' in self.doc:
+          Image(self.doc['image'], self.imageL, anyDimension=width)
         visibilityIcon = all(all(branch['show']) for branch in self.doc['branch'])
         self.visibilityText.setText('' if visibilityIcon else 'HIDDEN     \U0001F441')
     elif command[0] is Command.BUTTON_BAR:

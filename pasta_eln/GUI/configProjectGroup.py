@@ -131,9 +131,12 @@ class ProjectGroup(QDialog):
         showMessage(self, 'Error', 'Error: add-on directory not set.')
         return
       # success
-      choice = [i for i in self.serverPG if i[0]==self.serverProjectGroupLabel.currentText()][0]
-      if len(choice)==4:
-        config['remote']['config'] = {'title':choice[0],'id':choice[1],'canRead':choice[2],'canWrite':choice[3]}
+      choices = [i for i in self.serverPG if i[0]==self.serverProjectGroupLabel.currentText()]
+      if choices and len(choices[0])==4:
+        config['remote']['config'] = {'title':choices[0][0],
+                                      'id':choices[0][1],
+                                      'canRead':choices[0][2],
+                                      'canWrite':choices[0][3]}
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
       self.callbackFinished(True)
@@ -200,7 +203,7 @@ class ProjectGroup(QDialog):
         url += '/'
       if not url.endswith('api/v2/'):
         url += 'api/v2/'
-      if not url.startswith('https'):
+      if not url.startswith('http'):
         url = f'https://{url}'
       config['remote']['url'] = url
       self.serverLabel.setText(url)
@@ -289,7 +292,10 @@ class ProjectGroup(QDialog):
     self.directoryLabel.setText('Data directory: ' + config['local'].get('path',''))
     self.addOnLabel.setText('Add on directory: ' + config.get('addOnDir',''))
     self.serverLabel.setText(config['remote'].get('url', ''))
-    self.apiKeyLabel.setText('--- API key hidden ---')
+    if config['remote'].get('key', ''):
+      self.apiKeyLabel.setText('--- API key hidden ---')
+    else:
+      self.apiKeyLabel.setText('')
     return
 
 

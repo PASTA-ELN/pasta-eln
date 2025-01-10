@@ -222,10 +222,13 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any], onlyEssentials:bool=True
       else:
         outString += (f'values differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
     del dict2Copy[key]
-  for key in dict2Copy:
-    if key in ignoreKeys or (shortVersion and key in ('tags')):
-      continue
-    outString += f'key not in dictionary 1: {key}\n'
+  extraKeys = set(dict2Copy.keys()).difference(ignoreKeys)
+  if shortVersion:
+    extraKeys = extraKeys.difference(['tags'])
+  if onlyEssentials:
+    extraKeys = extraKeys.intersection(includeKeys)
+  if extraKeys:
+    outString += f'keys not in dictionary 1: {extraKeys}\n'
   return outString
 
 

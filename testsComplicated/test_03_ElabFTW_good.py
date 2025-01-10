@@ -52,7 +52,7 @@ class TestStringMethods(unittest.TestCase):
     # CHANGE CONTENT ON SERVER
     print('\n\n=============================\nSTART TEST\n============================')
     choices = random.choices(range(100), k=10)
-    choices = [62,66,29,43,28,36,55,14,12,6]
+    # choices = [62,66,29,43,28,36,55,14,12,6]
     print(f'Current choice: [{",".join([str(i) for i in choices])}]')
 
     # remove content in pasta: 1+1 entry
@@ -100,7 +100,7 @@ class TestStringMethods(unittest.TestCase):
     print(f'Changed docID {choice}')
 
     sync = Pasta2Elab(self.be, 'research')
-    sync.verbose = False
+    sync.verbose = True
 
     # change on server: 1+1 entry
     data = sync.api.readEntry('items', sync.elabProjGroupID)[0]
@@ -109,6 +109,9 @@ class TestStringMethods(unittest.TestCase):
       idx  = validChoices[choices.pop(0)%len(validChoices)]['entityid']
       sync.api.updateEntry(entry, idx, {'body':f'CHANGED BY test_03-elabFTW_good {entry}'})
       print(f'Changed on server {entry} {idx}')
+    projIDElab = [i['entityid'] for i in data['related_items_links'] if i['title']=='PASTAs Example Project'][0]
+    sync.api.updateEntry('items', projIDElab, {'body':f'PROJECT CHANGED ADDITIONALLY BY test_03-elabFTW_good'})
+    print(f'Changed on server items {projIDElab}')
 
     # change on server and on pasta
     validChoices = [i.id for i in PreOrderIter(hierarchy)]
