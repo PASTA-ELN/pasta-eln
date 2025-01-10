@@ -116,17 +116,18 @@ class TreeView(QTreeView):
         docID = hierStack[-1]
         doc = self.comm.backend.db.remove(docID)
         for branch in doc['branch']:
-          oldPath = Path(self.comm.backend.basePath)/branch['path']
-          if oldPath.exists():
-            newFileName = f'trash_{oldPath.name}'
-            if (oldPath.parent/newFileName).exists():  #ensure target does not exist
-              endText = ' was marked for deletion. Save it or its content now to some place on harddisk. It will be deleted now!!!'
-              showMessage(self, 'Warning', f'Warning! \nThe folder {oldPath.parent/newFileName}{endText}')
-              if (oldPath.parent/newFileName).is_file():
-                (oldPath.parent/newFileName).unlink()
-              elif (oldPath.parent/newFileName).is_dir():
-                shutil.rmtree(oldPath.parent/newFileName)
-            oldPath.rename( oldPath.parent/newFileName)
+          if branch['path'] is not None:
+            oldPath = Path(self.comm.backend.basePath)/branch['path']
+            if oldPath.exists():
+              newFileName = f'trash_{oldPath.name}'
+              if (oldPath.parent/newFileName).exists():  #ensure target does not exist
+                endText = ' was marked for deletion. Save it or its content now to some place on harddisk. It will be deleted now!!!'
+                showMessage(self, 'Warning', f'Warning! \nThe folder {oldPath.parent/newFileName}{endText}')
+                if (oldPath.parent/newFileName).is_file():
+                  (oldPath.parent/newFileName).unlink()
+                elif (oldPath.parent/newFileName).is_dir():
+                  shutil.rmtree(oldPath.parent/newFileName)
+              oldPath.rename( oldPath.parent/newFileName)
         # go through children
         children = self.comm.backend.db.getView('viewHierarchy/viewHierarchyAll', startKey='/'.join(doc['branch'][0]['stack']+[docID,'']))
         for line in children:

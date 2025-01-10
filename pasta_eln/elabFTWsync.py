@@ -2,7 +2,7 @@
 import copy
 import json
 from datetime import datetime
-from typing import Any
+from typing import Any, Callable
 from anytree import Node, PreOrderIter
 from PySide6.QtGui import QTextDocument
 from .backend import Backend
@@ -12,6 +12,20 @@ from .handleDictionaries import squashTupleIntoValue
 # - consider hiding metadata.json (requires hiding the upload (state=2) and ability to read (it is even hidden in the API-read))
 #   - hide an upload  api.upLoadUpdate('experiments', 66, 596, {'action':'update', 'state':'2'})
 #   - listing all uploads (incl. archived) is not possible in elab currently -> leave visible; change to invisible once in elab
+
+def cliCallback(api:ElabFTWApi , entry:str, idx:int) -> str:
+  """ Default callback function for the syncMissingEntries function
+
+  Args:
+    api (ElabFTWApi): api to ask about more information
+    entry (str): entry type to ask about
+    idx (int): entry number on elabFTW server
+
+  Returns:
+    str: mode of processing: g,gA,s,sA
+  """
+  print('**ERROR**: default callback function should not be called')
+  return ''
 
 
 MERGE_LABELS = {
@@ -60,8 +74,12 @@ class Pasta2Elab:
     return
 
 
-  def sync(self) -> list[tuple[str,int]]:
+  def sync(self, mode:str='', callback:Callable[[ElabFTWApi,str,int],str]=cliCallback) -> list[tuple[str,int]]:
     """ Main function
+
+    Args:
+      mode (str): sync mode g=get, gA=get-all, s=send, sA=send-all
+      callback (func): callback function if non-all mode is given
 
     Returns:
       list: list of merge cases
@@ -74,7 +92,7 @@ class Pasta2Elab:
       for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
         projHierarchy = self.backend.db.getHierarchy(projID)
         reports += [self.updateEntry(i) for i in PreOrderIter(projHierarchy)]
-      self.removeWasteOnServer()
+      self.syncMissingEntries(mode, callback)
     return reports
 
 
@@ -279,35 +297,39 @@ class Pasta2Elab:
     return node.id, mergeCase
 
 
-  def removeWasteOnServer(self) -> bool:
+  def syncMissingEntries(self, mode:str='', callback:Callable[[ElabFTWApi,str,int],str]=cliCallback) -> bool:
     """
     Compare information on server and client and delete those on server, that are not on client (because they were deleted there)
+
+    Args:
+      mode (str): sync mode g=get, gA=get-all, s=send, sA=send-all
+      callback (func): callback function if non-all mode is given
 
     Returns:
     bool: true=equal; false=differences
     """
     agreement = True
     self.backend.db.cursor.execute('SELECT type, externalId FROM main')
-    inPasta = self.backend.db.cursor.fetchall()
-
+    data = self.backend.db.cursor.fetchall()
+    inPasta = {'experiments': {int(i[1]) for i in data if i[0].startswith('measurement')},
+               'items':       {int(i[1]) for i in data if not i[0].startswith('measurement')} }
     data = self.api.readEntry('items', self.elabProjGroupID)[0]
-    inELAB_exp = [i['entityid'] for i in data['related_experiments_links']]
-    inELAB_itm = [i['entityid'] for i in data['related_items_links']]
-    if diff := {int(i[1]) for i in inPasta if i[0].startswith('measurement')}.difference(inELAB_exp):
-      agreement = False
-      print('**ERROR** There is a difference in experiments between CLIENT and SERVER. Ids on server:',diff)
-    if diff := set(inELAB_exp).difference({int(i[1]) for i in inPasta if i[0].startswith('measurement')}):
-      if self.verbose:
-        print(f'**INFO** There is a difference in experiments between SERVER and CLIENT. Ids on server: {diff}. Assume that they were deleted on purpose')
-        for idx in diff:
-          self.api.deleteEntry('experiments', idx)
-    if diff := {int(i[1]) for i in inPasta if not i[0].startswith('measurement')}.difference(inELAB_itm):
-      print('**ERROR** There is a difference in ITEMS between CLIENT and SERVER. Ids on server:',diff)
-      agreement = False
-    if diff := set(inELAB_itm).difference({int(i[1]) for i in inPasta if not i[0].startswith('measurement')}):
-      print(f'**INFO** There is a difference in ITEMS between SERVER and CLIENT. Ids on server: {diff}. Assume that they were deleted on purpose')
-      for idx in diff:
-        self.api.deleteEntry('items', idx)
+    inELAB  = {'experiments': {i['entityid'] for i in data['related_experiments_links']},
+               'items':       {i['entityid'] for i in data['related_items_links']} }
+    for entryType in ['experiments','items']:
+      if diff := inPasta[entryType].difference(inELAB[entryType]):
+        agreement = False
+        print(f'**ERROR** There is a difference in {entryType} between CLIENT and SERVER. Ids on server: {diff}')
+      if diff := inELAB[entryType].difference(inPasta[entryType]):
+        if self.verbose:
+          print(f'**INFO** There is a difference in {entryType} between SERVER and CLIENT. Ids on server: {diff}. Assume that they were deleted on purpose')
+          for idx in diff:
+            mode = mode if mode.endswith('A') else callback(self.api, entryType, idx)
+            if mode.startswith('s'):
+              self.api.deleteEntry(entryType, idx)
+            elif mode.startswith('g'):
+              a = 4/0
+              self.api.deleteEntry(entryType, idx)
     return agreement
 
 

@@ -1,4 +1,5 @@
 .vscode/
+.idea/
 .venvPasta/
 docs/build/
 __pycache__

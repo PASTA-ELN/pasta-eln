@@ -1,8 +1,11 @@
 #!/usr/bin/python3
-"""TEST set up elabFTW server and test repetion of sync """
-import logging, warnings, unittest
+"""TEST elabFTW server: do things that should be possible """
+import logging, warnings, unittest, random, os, shutil
+from datetime import datetime
 from pathlib import Path
+import requests
 from PySide6.QtWidgets import QApplication
+from anytree import PreOrderIter
 from pasta_eln.backend import Backend
 from pasta_eln.elabFTWsync import Pasta2Elab
 from .misc import verify, handleReports
@@ -15,6 +18,8 @@ class TestStringMethods(unittest.TestCase):
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.be = None
+    self.dirName = ''
+
 
 
   def test_main(self):
@@ -33,26 +38,28 @@ class TestStringMethods(unittest.TestCase):
       logging.getLogger(package).setLevel(logging.WARNING)
     logging.info('Start test')
 
+
     # setup and sync to server
     try:
       _ = QApplication()
     except RuntimeError:
       pass
+
     self.be = Backend('research')
-    sync = Pasta2Elab(self.be, 'research', True)
-    sync.verbose = False
-    reports = sync.sync('sA')
-    handleReports(reports, [14,0,1,0,0])
+    dirName = self.be.basePath
+    self.be.exit()
+    shutil.rmtree(dirName)
+    os.makedirs(dirName)
+    self.be = Backend('research')
+    sync = Pasta2Elab(self.be, 'research')
+    # sync.verbose = False
 
-    # sync again: nothing should change
-    print('\n\n=============================\nSecond sync: nothing should change\n============================')
-    reports = sync.sync('sA')
-    handleReports(reports, [0,0,0,15,0])
-
-    # verify
+    # Sync & verify
+    reports = sync.sync('gA')
+    print('\n')
+    handleReports(reports)
     verify(self.be)
     return
-
 
   def tearDown(self):
     logging.info('End test')

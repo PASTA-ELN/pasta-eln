@@ -120,7 +120,7 @@ class TestStringMethods(unittest.TestCase):
     print(f'Changed both for docID {choice}')
 
     # Sync & verify
-    reports = sync.sync()
+    reports = sync.sync('sA')
     print('\n')
     handleReports(reports)
     verify(self.be)
