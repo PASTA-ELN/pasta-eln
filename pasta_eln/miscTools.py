@@ -251,12 +251,14 @@ class DummyProgressBar():
 # adapted from flatten-dict https://github.com/ianlini/flatten-dict
 # - reduce dependencies and only have python 3 code
 # - add conversion of dict to list if applicable
-def flatten(d:Mapping[Any,Any]) -> dict[object, Any]:
+def flatten(d:dict[Any,Any], keepPastaStruct:bool=False) -> dict[object, Any]:
   """Flatten `Mapping` object.
 
   Args:
     d : dict-like object
         The dict that will be flattened.
+    keepPastaStruct : bool
+        keep pasta elements from flattening
 
   Returns:
     flat_dict : dict
@@ -288,8 +290,11 @@ def flatten(d:Mapping[Any,Any]) -> dict[object, Any]:
     return has_item
 
   # start recursive calling
+  backup = {'type':d.pop('type',''), 'branch':d.pop('branch',''), 'tags':d.pop('tags',''),
+            'gui':d.pop('gui',''), 'qrCodes':d.pop('qrCodes','')} \
+           if keepPastaStruct else {}
   _flatten(d, depth=1)
-  return flat_dict
+  return flat_dict | backup
 
 
 def hierarchy(d:dict[str,Any]) -> dict[str,Any]:

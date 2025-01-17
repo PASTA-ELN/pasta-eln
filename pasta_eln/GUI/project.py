@@ -144,7 +144,9 @@ class Project(QWidget):
     self.model.itemChanged.connect(self.modelChanged)
     rootItem = self.model.invisibleRootItem()
     #Populate model body of change project: start recursion
-    nodeHier = self.comm.backend.db.getHierarchy(self.projID, allItems=self.showAll)
+    nodeHier, error = self.comm.backend.db.getHierarchy(self.projID, allItems=self.showAll)
+    if error:
+      showMessage(self, 'Error', 'There is an error in the project hierarchy: a parent of a node is incorrect.', 'Critical')
     for node in PreOrderIter(nodeHier, maxlevel=2):
       if node.is_root:         #Project header
         self.projHeader()

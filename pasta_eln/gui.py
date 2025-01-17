@@ -63,7 +63,8 @@ class MainWindow(QMainWindow):
     menu = self.menuBar()
     projectMenu = menu.addMenu('&Project')
     Action('&Export project to .eln',        self, [Command.EXPORT],         projectMenu)
-    Action('&Import .eln into project',      self, [Command.IMPORT],         projectMenu)
+    if 'develop' in self.comm.backend.configuration:
+      Action('&Import .eln into project',      self, [Command.IMPORT],         projectMenu)
     projectMenu.addSeparator()
     Action('&Export all projects to .eln',   self, [Command.EXPORT_ALL],     projectMenu)
     # Action('&Upload to Dataverse',           self, [Command.DATAVERSE_MAIN], projectMenu)
@@ -88,7 +89,10 @@ class MainWindow(QMainWindow):
     if hasattr(self.backend, 'configuration'):                            # not case in fresh install
       for name in self.backend.configuration['projectGroups'].keys():
         Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
-    Action('&Synchronize',                   self, [Command.SYNC],            systemMenu, shortcut='F5')
+    if 'develop' in self.comm.backend.configuration:
+      syncMenu = systemMenu.addMenu('&Synchronize')
+      Action('Send',                         self, [Command.SYNC_SEND],       syncMenu)
+      Action('Get',                          self, [Command.SYNC_GET],       syncMenu)
     # Action('&Data hierarchy editor',         self, [Command.DATAHIERARCHY],   systemMenu, shortcut='F8')
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
@@ -159,16 +163,15 @@ class MainWindow(QMainWindow):
         status = exportELN(self.comm.backend, allProjects, fileName, docTypes)
         showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.IMPORT:
-      showMessage(self, 'Error', 'Currently in testing and not activated yet', 'Warning')
-      # if self.comm.projectID == '':
-      #   showMessage(self, 'Error', 'You have to open a project to import', 'Warning')
-      #   return
-      # fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
-      # if fileName != '':
-      #   status, statistics  = importELN(self.comm.backend, fileName, self.comm.projectID)
-      #   showMessage(self, 'Finished', f'{status}\n{statistics}', 'Information')
-      #   self.comm.changeSidebar.emit('redraw')
-      #   self.comm.changeTable.emit('x0', '')
+      if self.comm.projectID == '':
+        showMessage(self, 'Error', 'You have to open a project to import', 'Warning')
+        return
+      fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
+      if fileName != '':
+        status, statistics  = importELN(self.comm.backend, fileName, self.comm.projectID)
+        showMessage(self, 'Finished', f'{status}\n{statistics}', 'Information')
+        self.comm.changeSidebar.emit('redraw')
+        self.comm.changeTable.emit('x0', '')
     elif command[0] is Command.EXIT:
       self.close()
     # view menu
@@ -180,10 +183,18 @@ class MainWindow(QMainWindow):
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.backend.configuration, indent=2))
       restart()
-    elif command[0] is Command.SYNC:
+    elif command[0] is Command.SYNC_SEND:
       sync = Pasta2Elab(self.backend)
       if hasattr(sync, 'api'):  #if hostname and api-key given
-        sync.sync()
+        sync.sync('sA')
+      else:                     #if not given
+        showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
+        dialogC = Configuration(self.comm)
+        dialogC.exec()
+    elif command[0] is Command.SYNC_GET:
+      sync = Pasta2Elab(self.backend)
+      if hasattr(sync, 'api'):  #if hostname and api-key given
+        sync.sync('gA')
       else:                     #if not given
         showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
         dialogC = Configuration(self.comm)
@@ -270,7 +281,8 @@ class Command(Enum):
   EXIT      = 3
   VIEW      = 4
   CHANGE_PG = 6
-  SYNC      = 7
+  SYNC_SEND = 7
+  SYNC_GET  = 20
   DATAHIERARCHY = 8
   TEST1     = 9
   TEST2     = 10

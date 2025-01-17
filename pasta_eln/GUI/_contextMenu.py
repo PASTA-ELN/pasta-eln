@@ -22,8 +22,7 @@ def initContextMenu(widget:QWidget, pos:QPoint) -> None:
   # for extractors
   projectGroup = widget.comm.backend.configurationProjectGroup                                              # type: ignore[attr-defined]
   extractors = widget.comm.backend.configuration['projectGroups'][projectGroup]['addOns']['extractors']     # type: ignore[attr-defined]
-  extension = '' if widget.doc['branch'][0]['path'] is None else \
-              Path(widget.doc['branch'][0]['path']).suffix[1:]                                              # type: ignore[attr-defined]
+  extension = '' if widget.doc['branch'][0]['path'] is None else Path(widget.doc['branch'][0]['path']).suffix[1:] # type: ignore[attr-defined]
   if extension.lower() in extractors:
     extractors = extractors[extension.lower()]
     baseDocType= widget.doc['type'][0]                                                                      # type: ignore[attr-defined]

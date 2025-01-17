@@ -89,7 +89,7 @@ def main(backend, hierStack, widget, parameter={}):
         return f'{output}</td></tr></table></div>\n\n'
 
     # main function that calls the render function
-    proj = backend.db.getHierarchy(hierStack)
+    proj, _ = backend.db.getHierarchy(hierStack) #with _ you ignore the error that is also communicated, not important here
     out = ''.join(node2html(node) for node in PreOrderIter(proj))
 
     # add footer line with pasta-eln icon (read and converted to base64 to be inline included in html)

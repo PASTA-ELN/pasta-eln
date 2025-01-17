@@ -411,7 +411,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     for projectID in projectIDs:
       docProject = backend.db.getDoc(projectID)
       dirNameProject = docProject['branch'][0]['path']
-      listHier = backend.db.getHierarchy(projectID, allItems=False)
+      listHier, _ = backend.db.getHierarchy(projectID, allItems=False) #error not handled since should not occur during export
       processNode(listHier)
       masterParts.append(f'./{dirNameProject}/')
 

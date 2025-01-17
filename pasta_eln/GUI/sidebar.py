@@ -129,7 +129,7 @@ class Sidebar(QWidget):
         # treeW.setHeaderHidden(True)
         # treeW.setColumnCount(1)
         # treeW.itemClicked.connect(lambda item: self.execute([Command.SHOW_FOLDER, *item.text(1).split('/')]))
-        # hierarchy = db.getHierarchy(projID)
+        # hierarchy, _ = db.getHierarchy(projID)
         # rootItem = treeW.invisibleRootItem()
         # count = 0
         # for node in PreOrderIter(hierarchy, maxlevel=2):

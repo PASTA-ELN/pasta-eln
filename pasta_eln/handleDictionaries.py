@@ -58,10 +58,10 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     del data['links']
   #individual verification of documents
   if data['type'][0]=='sample':
-    if 'qrCode' not in data:
-      data['qrCode']=[]
-    if isinstance(data['qrCode'], str):
-      data['qrCode'] = data['qrCode'].split(' ')
+    if 'qrCodes' not in data:
+      data['qrCodes']=[]
+    if isinstance(data['qrCodes'], str):
+      data['qrCodes'] = data['qrCodes'].split(' ')
   # cleaning at end of all changes
   toDelete = []
   for key in data:
@@ -240,9 +240,9 @@ def squashTupleIntoValue(doc:dict[str,Any]) -> None:
   Args:
     doc (dict[str,Any]): document
   """
-  for meta in ['metaUser','metaVendor']:
-    if meta in doc:
-      for key,value in doc[meta].items():
-        if isinstance(value, (tuple,list)) and len(value)==4:
-          doc[meta][key] = value[0]
+  for key0,value0 in doc.items():
+    if isinstance(value0, dict):
+      for key1,value1 in doc[key0].items():
+        if isinstance(value1, (tuple,list)) and len(value1)==4:
+          doc[key0][key1] = value1[0]
   return

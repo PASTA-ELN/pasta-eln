@@ -272,10 +272,10 @@ class SqlLiteDB:
     # save into tags table
     self.cursor.executemany('INSERT INTO tags VALUES (?, ?);', zip([doc['id']]*len(doc['tags']), doc['tags']))
     del doc['tags']
-    if 'qrCode' in doc:
+    if 'qrCodes' in doc:
       cmd = 'INSERT INTO qrCodes VALUES (?, ?);'
-      self.cursor.executemany(cmd, zip([doc['id']]*len(doc['qrCode']), doc['qrCode']))
-      del doc['qrCode']
+      self.cursor.executemany(cmd, zip([doc['id']]*len(doc['qrCodes']), doc['qrCodes']))
+      del doc['qrCodes']
     if 'content' in doc and len(doc['content'])>200:
       doc['content'] = doc['content'][:200]
     doc['type'] = '/'.join(doc['type'])
@@ -432,7 +432,7 @@ class SqlLiteDB:
         elif op=='d':  #delete
           branchOld = [branch for branch in branchOld if branch['path']!=branchNew['path']]
         else:
-          raise ValueError(f'sqlite.1: unknown branch op: {mainNew["id"]} {mainNew["name"]}')
+          raise ValueError(f'sqlite.1: unknown branch op: {mainNew["id"]} {mainNew["name"]}: {branchNew} of doc {dataNew}')
 
     # read properties and identify changes
     self.cursor.execute(f"SELECT key, value FROM properties WHERE id == '{docID}'")
@@ -785,7 +785,7 @@ class SqlLiteDB:
     return results
 
 
-  def getHierarchy(self, start:str, allItems:bool=False) -> Node:
+  def getHierarchy(self, start:str, allItems:bool=False) -> tuple[Node,bool]:
     """
     get hierarchy tree for projects, ...
 
@@ -795,6 +795,7 @@ class SqlLiteDB:
 
     Returns:
       Node: hierarchy in an anytree
+      bool: error occurred
     """
     path = 'viewHierarchy/viewHierarchyAll' if allItems else 'viewHierarchy/viewHierarchy'
     view = self.getView(path,    startKey=start)
@@ -802,6 +803,7 @@ class SqlLiteDB:
     dataTree = None
     nonFolders = []
     id2Node = {}
+    error = False
     for item in view:
       docType = item['value'][1]
       if docType[0][0] != 'x':
@@ -814,7 +816,8 @@ class SqlLiteDB:
         id2Node[_id] = dataTree
       else:
         parent = item['key'].split('/')[-2]
-        subNode = Node(id=_id, parent=id2Node[parent], docType=docType, name=name, gui=gui, childNum=childNum)
+        parentNode, error = (id2Node[parent],error) if parent in id2Node else (dataTree,True)
+        subNode = Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum)
         id2Node[_id] = subNode
     # add non-folders into tree
     # print(len(nonFolders),'length: crop if too long')
@@ -822,13 +825,16 @@ class SqlLiteDB:
       _id     = item['id']
       childNum, docType, name, gui = item['value']
       parentId = item['key'].split('/')[-2]
-      Node(id=_id, parent=id2Node[parentId], docType=docType, name=name, gui=gui, childNum=childNum)
+      parentNode, error = (id2Node[parentId],error) if parentId in id2Node else (dataTree,True)
+      Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum)
     # sort children
     for parentNode in id2Node.values():
       children = parentNode.children
       childNums= [f'{i.childNum}{i.id}' for i in children]
       parentNode.children = [x for _, x in sorted(zip(childNums, children))]
-    return dataTree
+    if error:
+      print('**ERROR** there is an error in the hierarchy tree structure')
+    return dataTree, error
 
 
   def hideShow(self, docID:str) -> None:
