@@ -52,11 +52,11 @@ class TestStringMethods(unittest.TestCase):
     # CHANGE CONTENT ON SERVER
     print('\n\n=============================\nSTART TEST\n============================')
     choices = random.choices(range(100), k=10)
-    # choices = [62,66,29,43,28,36,55,14,12,6]
+    choices = [34,16,40,25,70,68,77,65,7,53]
     print(f'Current choice: [{",".join([str(i) for i in choices])}]')
 
     # remove content in pasta: 1+1 entry
-    hierarchy = self.be.db.getHierarchy(projID)
+    hierarchy, _ = self.be.db.getHierarchy(projID)
     leaves    = [i for i in PreOrderIter(hierarchy) if not i.children]
     validChoices = [i.id for i in leaves if i.docType[0]=='measurement']
     choiceExp = validChoices[choices.pop(0)%len(validChoices)]
@@ -79,7 +79,7 @@ class TestStringMethods(unittest.TestCase):
     self.be.db.remove(choiceItem, '/'.join(branchItem['stack']))
 
     # add in pasta: 1+1 entry
-    hierarchy = self.be.db.getHierarchy(projID)
+    hierarchy, _ = self.be.db.getHierarchy(projID)
     allNodes    = [i for i in PreOrderIter(hierarchy)]
     validChoices = [i.id for i in allNodes if i.docType[0]=='x1']
     choiceFolder= validChoices[choices.pop(0)%len(validChoices)]

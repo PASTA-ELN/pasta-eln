@@ -8,14 +8,11 @@ from PySide6.QtGui import QTextDocument
 from .backend import Backend
 from .elabFTWapi import ElabFTWApi
 from .handleDictionaries import squashTupleIntoValue
+from .miscTools import flatten
 
 # - consider hiding metadata.json (requires hiding the upload (state=2) and ability to read (it is even hidden in the API-read))
 #   - hide an upload  api.upLoadUpdate('experiments', 66, 596, {'action':'update', 'state':'2'})
 #   - listing all uploads (incl. archived) is not possible in elab currently -> leave visible; change to invisible once in elab
-
-
-# TODO 3: experiments have no links from folders
-# TODO 2: read-access incorrect
 
 def cliCallback(api:ElabFTWApi , entry:str, idx:int) -> str:
   """ Default callback function for the syncMissingEntries function
@@ -94,8 +91,8 @@ class Pasta2Elab:
       # sync nodes in parallel
       reports = []
       for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
-        projHierarchy = self.backend.db.getHierarchy(projID)
-        reports += [self.updateEntry(i) for i in PreOrderIter(projHierarchy)]
+        projHierarchy, _ = self.backend.db.getHierarchy(projID)
+        reports += [self.updateEntry(i, mode, callback) for i in PreOrderIter(projHierarchy)]
       self.syncMissingEntries(mode, callback)
     return reports
 
@@ -146,7 +143,7 @@ class Pasta2Elab:
     return
 
 
-  def updateEntry(self, node:Node) -> tuple[str,int]:
+  def updateEntry(self, node:Node, mode:str, callback:Callable[[ElabFTWApi,str,int],str]=cliCallback) -> tuple[str,int]:
     """ update an entry in elabFTW: all the logic goes here
         - myDesktop: sends content and the date when upload is made; if there is a change in modified time; the change is for real
         - server: gets document; if there is a difference between metadata.json and content: it was changed for real
@@ -155,6 +152,8 @@ class Pasta2Elab:
 
     Args:
       node (Node): node to process
+      mode (str): sync mode g=get, gA=get-all, s=send, sA=send-all
+      callback (func): callback function if non-all mode is given
 
     Returns:
       tuple: node.id; merge case
@@ -214,7 +213,8 @@ class Pasta2Elab:
     mergeCase = -1
     #  - Case 1 straight update from client to server: only client updated and server not changed
     if datetime.strptime(docClient['dateModified'], pattern) >  datetime.strptime(docClient['dateSync'], pattern) and \
-       datetime.strptime(docOther['dateModified'], pattern)  <= datetime.strptime(docOther['dateSync'], pattern):
+       datetime.strptime(docOther['dateModified'], pattern)  <= datetime.strptime(docOther['dateSync'], pattern) and  \
+       not mode.startswith('g'):
       mergeCase = 1
       if self.verbose:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
@@ -224,7 +224,8 @@ class Pasta2Elab:
     #  - Case 2 straight update from server to client: only others was updated / server itself was not updated, client not changed
     if datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
          datetime.strptime(docOther['dateModified'], pattern) < datetime.strptime(docOther['dateSync'], pattern) and \
-         datetime.strptime(docOther['dateSync'], pattern)     < datetime.strptime(docOther['dateSync'], pattern):
+         datetime.strptime(docOther['dateSync'], pattern)     < datetime.strptime(docOther['dateSync'], pattern) and \
+         not mode.startswith('s'):
       mergeCase = 2
       if self.verbose:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
@@ -233,7 +234,8 @@ class Pasta2Elab:
       docMerged = copy.deepcopy(docOther)
     #  - Case 3 straight update from server to client: only server updated, client not changed
     if datetime.strptime(docClient['dateModified'], pattern) <= datetime.strptime(docClient['dateSync'], pattern) and \
-         datetime.strptime(docOther['dateModified'], pattern) > datetime.strptime(docOther['dateSync'], pattern):
+         datetime.strptime(docOther['dateModified'], pattern) > datetime.strptime(docOther['dateSync'], pattern)  and \
+         not mode.startswith('s'):
       mergeCase = 3
       if self.verbose:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
@@ -256,8 +258,11 @@ class Pasta2Elab:
       mergeCase = 5
       if self.verbose:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
+      flagUpdateServer = True
+      flagUpdateClient = False
+      docMerged = copy.deepcopy(docClient)
     if mergeCase<=0:
-      print('**ERROR should not occur')
+      print(f'**No clear merge case: should not occur, {mode}')
       return node.id, -1
 
     docMerged['dateSync'] = datetime.now().isoformat()
@@ -314,12 +319,12 @@ class Pasta2Elab:
     """
     agreement = True
     self.backend.db.cursor.execute('SELECT type, externalId FROM main')
-    data = self.backend.db.cursor.fetchall()
-    inPasta = {'experiments': {int(i[1]) for i in data if i[0].startswith('measurement')},
-               'items':       {int(i[1]) for i in data if not i[0].startswith('measurement')} }
-    data = self.api.readEntry('items', self.elabProjGroupID)[0]
-    inELAB  = {'experiments': {i['entityid'] for i in data['related_experiments_links']},
-               'items':       {i['entityid'] for i in data['related_items_links']} }
+    dataPasta = self.backend.db.cursor.fetchall()
+    inPasta = {'experiments': {int(i[1]) for i in dataPasta if i[0].startswith('measurement')},
+               'items':       {int(i[1]) for i in dataPasta if not i[0].startswith('measurement')} }
+    dataELAB = self.api.readEntry('items', self.elabProjGroupID)[0]
+    inELAB  = {'experiments': {i['entityid'] for i in dataELAB['related_experiments_links']},
+               'items':       {i['entityid'] for i in dataELAB['related_items_links']} }
     for entryType in ['experiments','items']:
       if diff := inPasta[entryType].difference(inELAB[entryType]):
         agreement = False
@@ -337,12 +342,12 @@ class Pasta2Elab:
                 docOther = self.api.download(entryType, idx, listDoNotChange[0])
                 docOther['dateSync'] = datetime.now().isoformat()
                 squashTupleIntoValue(docOther)
-                #TODO 1: if data is there: copy it to the correct spot
+                docOther = flatten(docOther, keepPastaStruct=True)                       #type: ignore[assignment]
                 try:
-                  #TODO 0: why errors occur
                   self.backend.addData('/'.join(docOther['type']), docOther, docOther['branch'][0]['stack'])
                 except:
-                  print(f'**ERROR** Tried to add to client elab:{entryType} {idx}: {docOther}')
+                  docOther.pop('image','')
+                  print(f'**ERROR** Tried to add to client elab:{entryType} {idx}: {json.dumps(docOther,indent=2)}')
     return agreement
 
 
@@ -398,6 +403,5 @@ class Pasta2Elab:
     if doc:
       doc.pop('dateSync')
       metadata |= {'__':doc}
-    #TODO 4: clarify how stars should be encoded
     elab = {'body':body, 'title':title, 'metadata':json.dumps(metadata), 'tags':tags, 'created_at':created_at, 'modified_at':modified_at}
     return elab, image
