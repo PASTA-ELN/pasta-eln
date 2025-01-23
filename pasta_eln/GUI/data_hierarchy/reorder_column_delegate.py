@@ -8,8 +8,8 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-import logging
 from typing import Union
+import qtawesome as qta
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize, Signal
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (QApplication, QPushButton, QStyle, QStyledItemDelegate, QStyleOptionButton,
@@ -28,7 +28,6 @@ class ReorderColumnDelegate(QStyledItemDelegate):
       Constructor
     """
     super().__init__()
-    self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
   def paint(self,
             painter: QPainter,
@@ -48,7 +47,7 @@ class ReorderColumnDelegate(QStyledItemDelegate):
     opt = QStyleOptionButton()
     opt.state = QStyle.StateFlag.State_Active | QStyle.StateFlag.State_Enabled  # type: ignore[attr-defined]
     opt.rect = option.rect  # type: ignore[attr-defined]
-    opt.icon = QApplication.style().standardIcon(QStyle.StandardPixmap.SP_ArrowUp)  # type: ignore[attr-defined]
+    opt.icon = qta.icon('fa5s.arrow-up', scale_factor=1.0)
     opt.iconSize = QSize(15, 15)  # type: ignore[attr-defined]
     QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, opt, painter, button)
 
@@ -86,7 +85,6 @@ class ReorderColumnDelegate(QStyledItemDelegate):
     """
     if is_click_within_bounds(event, option):
       row = index.row()
-      self.logger.info('Re-order signal emitted for the position: {%s} in the table..', row)
       self.re_order_signal.emit(row)
       return True
     return False

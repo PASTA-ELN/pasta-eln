@@ -7,9 +7,8 @@
 #  Filename: delete_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-
-import logging
 from typing import Union
+import qtawesome as qta
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize, Signal
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (QApplication, QPushButton, QStyle, QStyledItemDelegate, QStyleOption, QStyleOptionButton,
@@ -29,7 +28,6 @@ class DeleteColumnDelegate(QStyledItemDelegate):
       Constructor
     """
     super().__init__()
-    self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
   def paint(self,
             painter: QPainter,
@@ -49,8 +47,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
     opt = QStyleOptionButton()
     opt.state = QStyle.StateFlag.State_Active | QStyle.StateFlag.State_Enabled  # type: ignore[attr-defined]
     opt.rect = option.rect  # type: ignore[attr-defined]
-    opt.icon = QApplication.style().standardIcon(  # type: ignore[attr-defined]
-      QStyle.StandardPixmap.SP_DialogDiscardButton)
+    opt.icon = qta.icon('fa5s.trash', scale_factor=1.0)
     opt.iconSize = QSize(15, 15)  # type: ignore[attr-defined]
     QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, opt, painter, button)
 
@@ -70,6 +67,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
     """
     return None  # type: ignore[return-value]
 
+
   def editorEvent(self,
                   event: QEvent,
                   model: QAbstractItemModel,
@@ -88,7 +86,6 @@ class DeleteColumnDelegate(QStyledItemDelegate):
     """
     if is_click_within_bounds(event, option):
       row = index.row()
-      self.logger.info('Delete signal emitted for the position: {%s}', row)
       self.delete_clicked_signal.emit(row)
       return True
     return False

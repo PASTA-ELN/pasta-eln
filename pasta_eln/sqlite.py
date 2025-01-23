@@ -129,7 +129,7 @@ class SqlLiteDB:
 
     Args:
       docType (str): document typ
-      column (str): column name as in meta, label, shortcut, ...
+      column (str): column name as in meta, title, shortcut, ...
       group (str): group of metadata rows; if group not given: return all
     Returns:
       list: information inquired
@@ -148,7 +148,7 @@ class SqlLiteDB:
         cursor.execute(f"SELECT * FROM docTypeSchema WHERE docType == '{docType}' and class == '{group}'")
       else:
         cursor.execute(f"SELECT * FROM docTypeSchema WHERE docType == '{docType}'")
-      return cursor.fetchall()
+      return [dict(i) for i in cursor.fetchall()]
     if column == 'metaColumns':
       self.cursor.execute(f"SELECT DISTINCT class FROM docTypeSchema WHERE docType == '{docType}'")
       return [i[0] for i in self.cursor.fetchall()]
@@ -187,8 +187,7 @@ class SqlLiteDB:
     cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
     res = cursor.fetchone()
     if res is None:
-      print(f'**ERROR sqlite: could not get docID: {docID}')
-      logging.error('could not get docID: %s',docID)
+      print(f'**ERROR sqlite: could not get docID: {tracebackString(True, docID)}')
       return {}
     doc = dict(res)
     self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")
