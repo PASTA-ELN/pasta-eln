@@ -28,6 +28,8 @@ class DeleteColumnDelegate(QStyledItemDelegate):
       Constructor
     """
     super().__init__()
+    self.numRows = -1
+
 
   def paint(self,
             painter: QPainter,
@@ -39,10 +41,9 @@ class DeleteColumnDelegate(QStyledItemDelegate):
       painter (QPainter): Painter instance for painting the button.
       option (QStyleOptionViewItem): Style option for the cell represented by index.
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
-
-    Returns: None
-
     """
+    if index.row() >= self.numRows:
+      return
     button = QPushButton()
     opt = QStyleOptionButton()
     opt.state = QStyle.StateFlag.State_Active | QStyle.StateFlag.State_Enabled  # type: ignore[attr-defined]
@@ -50,6 +51,8 @@ class DeleteColumnDelegate(QStyledItemDelegate):
     opt.icon = qta.icon('fa5s.trash', scale_factor=1.0)
     opt.iconSize = QSize(15, 15)  # type: ignore[attr-defined]
     QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, opt, painter, button)
+    return
+
 
   def createEditor(self,
                    parent: QWidget,
@@ -61,9 +64,6 @@ class DeleteColumnDelegate(QStyledItemDelegate):
       parent (QWidget): Parent table view.
       option (QStyleOptionViewItem): Style option for the cell represented by index.
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
-
-    Returns: None
-
     """
     return None  # type: ignore[return-value]
 
@@ -82,10 +82,8 @@ class DeleteColumnDelegate(QStyledItemDelegate):
       index (Union[QModelIndex, QPersistentModelIndex]): Table cell index.
 
     Returns (bool): True if deleted otherwise False
-
     """
     if is_click_within_bounds(event, option):
-      row = index.row()
-      self.delete_clicked_signal.emit(row)
+      self.delete_clicked_signal.emit(index.row())
       return True
     return False
