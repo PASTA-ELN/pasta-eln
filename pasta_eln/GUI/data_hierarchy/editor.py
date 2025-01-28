@@ -9,8 +9,17 @@ from .reorder_column_delegate   import ReorderColumnDelegate
 from .delete_column_delegate    import DeleteColumnDelegate
 from .name_column_delegate      import NameColumnDelegate
 from ...guiCommunicate import Communicate
-from ...guiStyle import (IconButton, Label, TextButton, showMessage, widgetAndLayout)
+from ...guiStyle import (IconButton, Label, TextButton, widgetAndLayout)
 from .docTypeEdit import DocTypeEditor
+
+#TODO in this order
+# - save content before redraw the tables
+# - tabs: double click to rename; button to delete (ask if user is sure)
+# - new tab: autoname
+# - add description
+# - warning: many verification not present yet
+# - save
+# - start verification: uniqueness in names (some do test on save)
 
 #                0       1            2      3           4      5         6
 COLUMN_NAMES = ['name','description','unit','mandatory','list','move up','delete']
