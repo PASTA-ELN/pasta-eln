@@ -424,12 +424,8 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
       valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
       labelStr = f'{key.capitalize()}: {valueString}<br>'
     if isinstance(value, dict):
-      try:
-        value = {k:v[0] for k,v in value.items()}
-      except:
-        print(f'**WARNING: could not translate {value}')
-      value = dict2ul(value)
-      labelStr = f'{CSS_STYLE}{key.capitalize()}: {value}'
+      value = {k:(v[0] if isinstance(v, (list,tuple)) else v) for k,v in value.items()}
+      labelStr = f'{CSS_STYLE}{key.capitalize()}: {dict2ul(value)}'
     if layout is not None:
       label = Label(labelStr, function=lambda x,y: clickLink(widget,x,y) if link else None, docID=docID)
       label.setOpenExternalLinks(True)
