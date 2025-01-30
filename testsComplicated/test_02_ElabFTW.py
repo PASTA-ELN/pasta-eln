@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""TEST set up elabFTW server and test repetion of sync """
+"""TEST set up elabFTW server and test repetition of sync """
 import logging, warnings, unittest
 from pathlib import Path
 from PySide6.QtWidgets import QApplication

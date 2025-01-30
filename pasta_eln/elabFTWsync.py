@@ -28,7 +28,7 @@ def cliCallback(api:ElabFTWApi , entry:str, idx:int) -> str:
   Returns:
     str: mode of processing: g,gA,s,sA
   """
-  print('**ERROR**: default callback function should not be called')
+  print(f'**ERROR**: default callback function should not be called. API:{api}, entry:{entry}, idx:{idx}')
   return ''
 
 
@@ -314,9 +314,9 @@ class Pasta2Elab:
     """
     agreement = True
     self.backend.db.cursor.execute('SELECT type, externalId FROM main')
-    data = self.backend.db.cursor.fetchall()
-    inPasta = {'experiments': {int(i[1]) for i in data if i[0].startswith('measurement')},
-               'items':       {int(i[1]) for i in data if not i[0].startswith('measurement')} }
+    dataLocal = self.backend.db.cursor.fetchall()
+    inPasta = {'experiments': {int(i[1]) for i in dataLocal if i[0].startswith('measurement')},
+               'items':       {int(i[1]) for i in dataLocal if not i[0].startswith('measurement')} }
     data = self.api.readEntry('items', self.elabProjGroupID)[0]
     inELAB  = {'experiments': {i['entityid'] for i in data['related_experiments_links']},
                'items':       {i['entityid'] for i in data['related_items_links']} }
@@ -341,7 +341,7 @@ class Pasta2Elab:
                 try:
                   #TODO 0: why errors occur
                   self.backend.addData('/'.join(docOther['type']), docOther, docOther['branch'][0]['stack'])
-                except:
+                except Exception:
                   print(f'**ERROR** Tried to add to client elab:{entryType} {idx}: {docOther}')
     return agreement
 

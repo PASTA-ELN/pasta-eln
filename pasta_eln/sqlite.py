@@ -703,7 +703,7 @@ class SqlLiteDB:
         df['image'] = str(len(df['image'])>1)
       # add: tags, qrCodes, parameters
       if 'tags' in viewColumns:
-        cmd = "SELECT main.id, tags.tag FROM main INNER JOIN tags USING(id) INNER JOIN branches USING(id) "\
+        cmd = 'SELECT main.id, tags.tag FROM main INNER JOIN tags USING(id) INNER JOIN branches USING(id) '\
               f"WHERE main.type LIKE '{docType}%'"
         if not allFlag:
           cmd += r" and NOT branches.show LIKE '%F%'"
@@ -713,18 +713,17 @@ class SqlLiteDB:
         dfTags = dfTags.groupby(['id'])['tag'].apply(lambda x: ', '.join(set(x))).reset_index().set_index('id')
         df = df.join(dfTags)
       if 'qrCodes' in viewColumns:
-        cmd = "SELECT main.id, qrCodes.qrCode FROM main INNER JOIN qrCodes USING(id) INNER JOIN branches "\
+        cmd = 'SELECT main.id, qrCodes.qrCode FROM main INNER JOIN qrCodes USING(id) INNER JOIN branches '\
               f"USING(id) WHERE main.type LIKE '{docType}%'"
         if not allFlag:
           cmd += r" and NOT branches.show LIKE '%F%'"
         if startKey:
           cmd += f" and branches.stack LIKE '{startKey}%'"
         dfQrCodes = pd.read_sql_query(cmd, self.connection, index_col='id').fillna('')
-        dfQrCodes = dfQrCodes.groupby(['id'])['qrCode'].apply(lambda x: ', '.join(x)).reset_index().set_index('id')
+        dfQrCodes = dfQrCodes.groupby(['id'])['qrCode'].apply(', '.join).reset_index().set_index('id')
         df = df.join(dfQrCodes)
-      metadataKeys  = [f'properties.key == "{i}"' for i in viewColumns if i not in MAIN_ORDER+['tags']]
-      if metadataKeys:
-        cmd = "SELECT main.id, properties.key, properties.value FROM main INNER JOIN properties USING(id) "\
+      if metadataKeys:= [f'properties.key == "{i}"' for i in viewColumns if i not in MAIN_ORDER+['tags']]:
+        cmd = 'SELECT main.id, properties.key, properties.value FROM main INNER JOIN properties USING(id) '\
               f"INNER JOIN branches USING(id) WHERE main.type LIKE '{docType}%' AND ({' OR '.join(metadataKeys)})"
         if not allFlag:
           cmd += r" and NOT branches.show LIKE '%F%'"

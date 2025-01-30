@@ -54,8 +54,8 @@ class EditTypeDialog(TypeDialog):
     self.typeDisplayedTitleLineEdit.setToolTip(self.typeDisplayedTitleLineEdit.toolTip().replace('Enter', 'Modify'))
     self.iriLineEdit.setToolTip(self.iriLineEdit.toolTip().replace('Enter', 'Modify'))
     self.shortcutLineEdit.setToolTip(self.shortcutLineEdit.toolTip().replace('Enter', 'Modify'))
-    self.iconComboBox.currentIndexChanged[int].connect(self.set_icon)
-    self.typeLineEdit.textChanged[str].connect(self.type_changed)
+    self.iconComboBox.currentIndexChanged[int].connect(self.set_icon)  # pylint: disable=unsubscriptable-object
+    self.typeLineEdit.textChanged[str].connect(self.type_changed)      # pylint: disable=unsubscriptable-object
 
   def show(self) -> None:
     """
