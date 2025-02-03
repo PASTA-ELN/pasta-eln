@@ -733,7 +733,7 @@ class SqlLiteDB:
         dfParams = dfParams.pivot(columns='key', values='value').reset_index().set_index('id')  # Pivot the DataFrame
         dfParams.columns.name = None                                                            # Flatten the columns
         df = df.join(dfParams)
-      # final sorting of colums
+      # final sorting of columns
       columnOrder = ['tag' if i=='tags' else 'qrCode' if i=='qrCodes'
                      else i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]
       df = df.reset_index().reindex(columnOrder, axis=1)
