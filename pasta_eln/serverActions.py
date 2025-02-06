@@ -4,7 +4,7 @@ import json
 import os
 import traceback
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Union
 import requests
 from requests.structures import CaseInsensitiveDict
 from pasta_eln.backend import Backend
@@ -130,15 +130,17 @@ def __returnBackend__(projectGroup:str='') -> Backend:
   Args:
     projectGroup (str): name of project group
   """
-  if not projectGroup:
+  while not projectGroup:
     with open(Path.home()/CONF_FILE_NAME, encoding='utf-8') as fIn:
       config = json.load(fIn)
       print('Possible project groups:','  '.join(config['projectGroups'].keys()))
     projectGroup = input('Enter project group: ').strip()
+    if projectGroup not in config['projectGroups'].keys():
+      projectGroup = ''
   return Backend(projectGroup)
 
 
-def verifyPasta(projectGroup:str='', repair:bool=False) -> None:
+def verifyPasta(projectGroup:str='', repair:Union[None,Callable]=None) -> None:
   """ Do the default verification of PastaELN. Adopted to CLI
     Args:
     projectGroup (str): name of project group
@@ -147,6 +149,16 @@ def verifyPasta(projectGroup:str='', repair:bool=False) -> None:
   be = __returnBackend__(projectGroup)
   print('\n\nOUTPUT:')
   outputString('print','info', be.checkDB(outputStyle='text', repair=repair))
+  return
+
+
+def createLostAndFound(projectGroup:str='') -> None:
+  """ Create a lost and found project that is the target of misc documents
+    Args:
+      projectGroup (str): name of project group
+  """
+  be = __returnBackend__(projectGroup)
+  be.addData('x0', {'name': 'LostAndFound', 'comment': 'Location of lost database items'})
   return
 
 
@@ -194,6 +206,20 @@ def printOrDelete(projectGroup:str='', docID:str='', output:bool=True) -> None:
   return
 
 
+def userQuestion(errorMessage:str) -> bool:
+  """ Ask user if repair should be done
+
+  Args:
+    errorMessage (str): error message
+
+  Return:
+    bool: repair should be done
+  """
+  print(errorMessage)
+  reply = input("Repair [yN]: ")
+  return reply=='y'
+
+
 def main() -> None:
   '''
   Main function
@@ -202,8 +228,8 @@ def main() -> None:
   print(  'Manage users and databases for PASTA-ELN on a local couchDB installation')
   print(  '-------------------------------------------------------------------------')
   while True:
-    print('\nCommands - general: [q]uit; [p]rint a document\n - update: [c]onvert couchDB to SQLite; [t]ranslate disk structure from V2->v3'
-          '\n - database integrity: [v]erify; [r]epair\n - repair sql: [rp1] repair properties: add missing .')
+    print('\nCommands - general: [q]uit; [p]rint a document; [d]elete a document\n - update: [c]onvert couchDB to SQLite; [t]ranslate disk structure from V2->v3'
+          '\n - database integrity: [v]erify; [r]epair; [laf]-create a lost and found project\n - repair sql: [rp1] repair properties: add missing .')
     command = input('> ')
     if command == 'c':
       couchDB2SQLite()
@@ -211,12 +237,16 @@ def main() -> None:
       translateV2_V3()
     elif command == 'v':
       verifyPasta()
+    elif command == 'laf':
+      createLostAndFound()
     elif command == 'r':
-      verifyPasta(repair=True)
+      verifyPasta('research', repair=userQuestion)
     elif command == 'rp1':
       repairPropertiesDot()
     elif command == 'p':
       printOrDelete()
+    elif command == 'd':
+      printOrDelete(projectGroup='', docID='', output=False)
     elif command == 'q':
       break
     else:

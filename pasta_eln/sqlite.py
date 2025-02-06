@@ -9,7 +9,7 @@ import re
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Union, Callable
 import pandas as pd
 from anytree import Node
 from PIL import Image
@@ -534,7 +534,7 @@ class SqlLiteDB:
     self.cursor.execute(cmd)
     reply = self.cursor.fetchone()
     if reply is None:
-      raise ValueError(f"FAILED AT: {cmd}'")
+      raise ValueError(f"FAILED AT: {cmd}")
     pathOld, stackOld, showOld = reply
     stack = stack or stackOld.split('/')[:-1]           # stack without current id
     show  = self.createShowFromStack(stack, showOld[-1])
@@ -832,7 +832,11 @@ class SqlLiteDB:
         id2Node[_id] = dataTree
       else:
         parent = item['key'].split('/')[-2]
-        parentNode, error = (id2Node[parent],error) if parent in id2Node else (dataTree,True)
+        if parent in id2Node:
+          parentNode, error = (id2Node[parent], error)
+        else:
+          parentNode, error = (dataTree, True)
+          print(f'**ERROR** there is an error in the hierarchy tree structure with parent {parent} missing')
         subNode = Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum)
         id2Node[_id] = subNode
     # add non-folders into tree
@@ -841,15 +845,17 @@ class SqlLiteDB:
       _id     = item['id']
       childNum, docType, name, gui = item['value']
       parentId = item['key'].split('/')[-2]
-      parentNode, error = (id2Node[parentId],error) if parentId in id2Node else (dataTree,True)
+      if parentId in id2Node:
+        parentNode, error = (id2Node[parentId],error)
+      else:
+        print(f'**ERROR** repair branch table as parentID {parentId} is missing')
+        parentNode, error = (dataTree,True)
       Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum)
     # sort children
     for parentNode in id2Node.values():
       children = parentNode.children
       childNums= [f'{i.childNum}{i.id}' for i in children]
       parentNode.children = [x for _, x in sorted(zip(childNums, children))]
-    if error:
-      print('**ERROR** there is an error in the hierarchy tree structure')
     return dataTree, error
 
 
@@ -900,7 +906,7 @@ class SqlLiteDB:
     return
 
 
-  def checkDB(self, outputStyle:str='text', minimal:bool=False, repair:bool=False) -> str:
+  def checkDB(self, outputStyle:str='text', minimal:bool=False, repair:Union[None,Callable]=None) -> str:
     """
     Check database for consistencies by iterating through all documents
     - only reporting, no repair
@@ -910,7 +916,7 @@ class SqlLiteDB:
     Args:
         outputStyle (str): output using a given style: see outputString
         minimal (bool): true=only show warnings and errors; else=also show information
-        repair (bool): auto-repair
+        repair (None|Callable): auto-repair after asking user
 
     Returns:
         str: output
@@ -927,6 +933,23 @@ class SqlLiteDB:
       outString += '</div>'
       outString+= outputString(outputStyle,'h2','List all database entries')
     # tests
+    self.cursor.execute('SELECT main.id, main.name FROM main WHERE id NOT IN (SELECT id FROM branches)')
+    if res:= self.cursor.fetchall():
+      errorStr = f'Documents with no branch: {", ".join(str(i) for i in res)}'
+      if repair is None:
+          outString+= errorStr
+      elif True or repair(errorStr):
+        df = self.getView('viewDocType/x0')
+        ids = df[df['name']=='LostAndFound']['id'].values
+        if len(ids)==0:
+          print('**ERROR: manually create "LostAndFound" project to allow repair')
+        else:
+          parentID = ids[0]
+          for docID in [i[0] for i in res if not i[0].startswith('x-')]:
+            self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
+                                [docID, 0, f'{parentID}/{docID}', 9999, '*', 'TT'])
+          self.connection.commit()
+
     cmd = 'SELECT id, main.type, branches.stack, branches.path, branches.child, branches.show '\
           'FROM branches INNER JOIN main USING(id)'
     self.cursor.execute(cmd)
@@ -943,8 +966,10 @@ class SqlLiteDB:
         outString+= outputString(outputStyle,'unsure',f"dch04b: no type in (removed data?) {docID}")
         continue
       if docType.startswith('x') and not docType.startswith(('x0','x1')):
-        outString+= outputString(outputStyle,'error',f"dch04c: bad data type*: {docID} {docType}")
-        if repair:
+        errorStr = outputString(outputStyle,'error',f"dch04c: bad data type*: {docID} {docType}")
+        if repair is None:
+          outString+= errorStr
+        elif repair(errorStr):
           self.cursor.execute(f"UPDATE main SET type='x1' WHERE id = '{docID}'")
       if not all(k.startswith('x-') for k in stack.split('/')[:-1]):
         outString+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {docID}")
@@ -1007,9 +1032,9 @@ class SqlLiteDB:
     self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'")
     if res:= [i[0] for i in self.cursor.fetchall() if i[1] is None]:
       outString+= outputString(outputStyle,'warning',f"dch09: qrCode not in samples {res}")
-    self.cursor.execute("SELECT id, shasum, image FROM main WHERE  type LIKE 'measurement%'")
+    self.cursor.execute("SELECT id, shasum, image, comment FROM main WHERE  type LIKE 'measurement%'")
     for row in self.cursor.fetchall():
-      docID, shasum, image = row
+      docID, shasum, image, comment = row
       if shasum is None:
         outString+= outputString(outputStyle,'warning',f"dch10: shasum not in measurement {docID}")
       if image.startswith('data:image'):  #for jpg and png
@@ -1025,9 +1050,65 @@ class SqlLiteDB:
         if SVG_RE.match(image) is None:
           outString+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
       elif image in ('', None):
-        outString+= outputString(outputStyle,'unsure',f"image not valid {docID} {image}")
+        outString+= outputString(outputStyle,'unsure',f"image not valid {docID} image:{image} comment:{comment.replace('\n','..')}")
       else:
         outString+= outputString(outputStyle,'error',f"dch14: image not valid {docID} {image}")
-    if repair:
+
+    #test hierarchy
+    for projID in self.getView('viewDocType/x0')['id'].values:
+      _, error = self.getHierarchy(projID, True)
+      if error:
+        outString+= outputString(outputStyle,'error',f"dch15: project hierarchy invalid in project {projID}")
+    if repair is not None:
       self.connection.commit()
     return outString
+
+
+  def repairNonExistingParent(self, idx, parentId):
+    """ Repair branches table: a parent is not existing in this table
+
+    Args:
+      idx (str): docID of child
+      parentID (str): docID of parent
+    """
+    # collect all data
+    # self.cursor.execute(f'SELECT * FROM main WHERE id=="{idx}"')
+    # if len(self.cursor.fetchall())!=1:   #there should be one entry in the main table
+    #   print(f'**ERROR** FAILURE TO FIX: idx is incorrect {idx}')
+    #   return False
+    # self.cursor.execute(f'SELECT * FROM main WHERE id=="{parentId}"')
+    # if len(self.cursor.fetchall())!=1:   #there should be one entry in the main table
+    #   print(f'**ERROR** FAILURE TO FIX: parentID is incorrect {parentId}')
+    #   return False
+    # self.cursor.execute(f'SELECT * FROM branches WHERE id=="{parentId}"')
+    # if len(self.cursor.fetchall())!=0:   #there should be an error
+    #   print(f'**ERROR** FAILURE TO FIX: branches exist {parentId}')
+    #   return False
+    # self.cursor.execute(f'SELECT * FROM branches WHERE id=="{idx}" AND stack LIKE "%{parentId}%"')
+    # res = self.cursor.fetchall()
+    # if len(res)!=1:   #there should be one entry in the main table
+    #   print(f'**ERROR** FAILURE TO FIX: there should only be one branch {parentId} {idx}')
+    #   return False
+    # data = list(res[0])
+    # print(data)
+    # data[0] = parentId
+    # data[1] = 0        # idx
+    # data[2] = '...'    # stack x-bfa63d26af604c73b1f31411067f7f5f/x-01424e69492b4403afe5220f18d4aa6a/x-557c534e91b042f3bb95fd4d62c11c01/i-fcf6c5471c874949aa06f2e2c6ac457f
+    #      4             # path DaL.Knoechel/004_ThermomechanicalTesting/000_ThermomechanicalTestSetup
+    # data[3] = 990      # child = close to end
+    # data[4] = since folder: it has to be created. Name from main
+    # print('repair',idx, parentId, data,'\n')
+    # return
+
+    #  Steps with example
+    #  get parent id: x-cb075c0e01f14dc69c43d9a22b3bb827
+    #                 x-5c62b48893f1495fac3536dff61b2ce3
+    #  find it in stack of branches -> copy-paste entire stack
+    #     filter for entire stack but always subtract one  -> see which folder is missing first :
+    #       x-bfa63d26af604c73b1f31411067f7f5f/x-01424e69492b4403afe5220f18d4aa6a/x-b71b5687c03d476e971160c043425285/x-658728f3e2094236a713a4f5a881d7b4
+    #                                                                             ^missing
+    #       x-27b866e79273405db41e95438af2dfae/x-cbe0fff676414710b5faefedab33d139/x-5c62b48893f1495fac3536dff61b2ce3/x-cdbd777c3e3c48d98c310845e284628b/m-e3950e9c2ccc452fba1b9f93df6fd67c
+    #                                                                             ^missing
+    # dch08: parent does not have corresponding path x-cdbd777c3e3c48d98c310845e284628b | parentID x-5c62b48893f1495fac3536dff61b2ce3
+    #  create corresponding path by creating directories manually: 001_FractureMechanicsTesting/000_GatheringCMODByOpticalMeasurmentSystem
+    #  create branches by copying largest offender
