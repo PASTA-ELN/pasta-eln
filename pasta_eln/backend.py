@@ -9,7 +9,7 @@ import traceback
 from datetime import datetime, timezone
 from os.path import exists, join
 from pathlib import Path
-from typing import Any, Optional, Union, Callable
+from typing import Any, Callable, Optional, Union
 from urllib import request
 from PySide6 import QtCore
 from PySide6.QtCore import QFileSystemWatcher

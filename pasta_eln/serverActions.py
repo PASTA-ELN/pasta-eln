@@ -229,7 +229,7 @@ def userQuestion(errorMessage:str) -> bool:
     bool: repair should be done
   """
   print(errorMessage)
-  reply = input("Repair [yN]: ")
+  reply = input('Repair [yN]: ')
   return reply=='y'
 
 

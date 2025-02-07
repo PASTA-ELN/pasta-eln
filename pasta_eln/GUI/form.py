@@ -518,19 +518,19 @@ class Form(QDialog):
       # ---- if docType changed: save; no further save to db required ----
       if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
         self.doc['type'] = [self.docTypeComboBox.currentData()]
-      self.doc = flatten(self.doc, True)
-      if '_ids' in self.doc:                              # group update
-        if 'name' in self.doc:
-          del self.doc['name']
-        self.doc = {k:v for k,v in self.doc.items() if v} # filter out empty items
-        for docID in self.doc.pop('_ids'):
-          doc = self.db.getDoc(docID)
-          doc.update( self.doc )
-          self.comm.backend.editData(doc)
-      elif 'id' in self.doc:                             # default update on item
-        self.comm.backend.editData(self.doc)
+      doc = flatten(self.doc, True)
+      if '_ids' in doc:                              # group update
+        if 'name' in doc:
+          del doc['name']
+        doc = {k:v for k,v in doc.items() if v} # filter out empty items
+        for docID in doc.pop('_ids'):
+          docI = self.db.getDoc(docID)
+          docI.update( doc )
+          self.comm.backend.editData(docI)
+      elif 'id' in doc:                             # default update on item
+        self.comm.backend.editData(doc)
       else:                                               # create new dataset
-        self.comm.backend.addData(self.doc['type'][0], copy.deepcopy(self.doc), newProjID)
+        self.comm.backend.addData(doc['type'][0], copy.deepcopy(doc), newProjID)
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
       if command[0] is Command.FORM_SAVE_NEXT:

@@ -9,13 +9,13 @@ import re
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Union, Callable
+from typing import Any, Callable, Optional, Union
 import pandas as pd
 from anytree import Node
 from PIL import Image
 from .fixedStringsJson import SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema
 from .miscTools import hierarchy
-from .stringChanges import camelCase, outputString, tracebackString, createDirName
+from .stringChanges import camelCase, createDirName, outputString, tracebackString
 
 MAIN_ORDER     =['id'  ,'name','user','type','dateCreated','dateModified','gui',      'client','shasum','image','content','comment','externalId','dateSync']
 MAIN_TYPE      =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',   'TEXT',     'TEXT']
@@ -963,7 +963,7 @@ class SqlLiteDB:
       try:
         docID, docType, stack, path, child, _, name = row[0], row[1], row[2], row[3], row[4], row[5], row[6]
       except ValueError:
-        outString+= outputString(outputStyle,'error',"dch03a: branch data has strange list")
+        outString+= outputString(outputStyle,'error','dch03a: branch data has strange list')
         continue
       if docType.count('/')>5:
         outString+= outputString(outputStyle,'error',f"dch04a: type has too many / {docID}")
