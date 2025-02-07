@@ -1,4 +1,4 @@
-# Contributors 
+# Contributors
 ## Code contributors
 The following people have contributed code to this project:
 <table border="2"><tr>
@@ -7,7 +7,7 @@ The following people have contributed code to this project:
 <td></td></tr>
 </table>
 
-## Support contributors 
+## Support contributors
  The following people contributed in the discussions:
 - Hanna Tsybenko
 - Ruth Schwaiger
