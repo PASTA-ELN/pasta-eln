@@ -15,6 +15,7 @@ from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, 
 from ..guiCommunicate import Communicate
 from ..guiStyle import (IconButton, Image, Label, ScrollMessageBox, TextButton, showMessage, widgetAndLayout,
                         widgetAndLayoutForm)
+from ..miscTools import flatten
 from ..sqlite import MAIN_ORDER
 from ..stringChanges import createDirName, markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
@@ -416,38 +417,6 @@ class Form(QDialog):
       self.checkThreadTimer.stop()
       self.reject()
     elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT):
-      # OLD CODE FROM FillDocBeforeCreate
-      # # separate comment into tags and fields
-      # # these tags are lost: '#d': too short; '#3tag': starts with number
-      # if 'comment' not in data:
-      #   data['comment'] =''
-      # if 'tags' not in data:
-      #   data['tags'] = []
-      # #always do regex expressions twice: if #lala at beginning or in middle of comment
-      # curated = re.findall(r'(?:^|\s)#_curated(?:\s|$)', data['comment']) # #_curated
-      # rating  = re.findall(r'(?:^|\s)#_\d(?:\s|$)',      data['comment']) # #_number
-      # if rating is None:
-      #   rating=[]
-      # if len(rating)>1:  #prevent multiple new ratings
-      #   rating=rating[:1]
-      # if len(rating)==1: #remove ratings that exist already
-      #   data['tags'] = [i for i in data['tags'] if not re.compile(r'^_\d$').match(i)]
-      # otherTags = re.findall(r'(?:^|\s)#[a-zA-Z]\w+(?=\s|$)', data['comment'])
-      # if otherTags is None:
-      #   otherTags=[]
-      # data['tags'] = rating + data['tags'] + otherTags + curated
-      # data['comment'] = re.sub(r'(?:^|\s)#\w+(?=\s|$)', '', data['comment']).strip()
-      # fields = re.findall(r':[\S]+:[\S]+:', data['comment'])
-      # if fields is not None:
-      #   for item in fields:
-      #     aList = item.split(':')
-      #     if aList[1] in data: #do not add if item already exists
-      #       continue
-      #     data[aList[1]] = aList[2]
-      # data['comment'] = re.sub(r':[\S]+:[\S]+:','',data['comment'])  #remove :field:data: information
-      # if isinstance(data['tags'], str):
-      #   data['tags'] = data['tags'].split(' ')
-      # data['tags'] = [i.strip()[1:] if i.strip()[0]=='#' else i.strip() for i in data['tags']]
       # create the data that has to be saved
       self.checkThreadTimer.stop()
       if (Path.home()/'.pastaELN.temp').is_file():
@@ -549,6 +518,7 @@ class Form(QDialog):
       # ---- if docType changed: save; no further save to db required ----
       if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
         self.doc['type'] = [self.docTypeComboBox.currentData()]
+      self.doc = flatten(self.doc, True)
       if '_ids' in self.doc:                              # group update
         if 'name' in self.doc:
           del self.doc['name']

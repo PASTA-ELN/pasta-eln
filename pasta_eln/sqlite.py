@@ -854,7 +854,7 @@ class SqlLiteDB:
     # sort children
     for parentNode in id2Node.values():
       children = parentNode.children
-      childNums= [f'{i.childNum}{i.id}' for i in children]
+      childNums= [f'{i.childNum}{i.id}{idx}' for idx,i in enumerate(children)]
       parentNode.children = [x for _, x in sorted(zip(childNums, children))]
     return dataTree, error
 
