@@ -294,7 +294,7 @@ def flatten(d:dict[Any,Any], keepPastaStruct:bool=False) -> dict[object, Any]:
             'gui':d.pop('gui',''), 'qrCodes':d.pop('qrCodes',''), '_ids':d.pop('_ids','')} \
            if keepPastaStruct else {}
   _flatten(d, depth=1)
-  return flat_dict | {k:v for k,v in backup if v}
+  return flat_dict | {k:v for k,v in backup.items() if v}
 
 
 def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
