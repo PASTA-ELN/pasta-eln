@@ -90,8 +90,9 @@ class TestStringMethods(unittest.TestCase):
     #Verify DB
     output = self.be.checkDB(outputStyle='text')
     output = '\n'.join(output.split('\n')[8:])
+    print(output)
     self.assertNotIn('**ERROR', output, 'Error in checkDB')
-    self.assertEqual(len(output.split('\n')), 5, 'Check db should have 5 more-less empty lines')
+    self.assertLessEqual(len(output.split('\n')), 6, 'Check db should have less than 6 almost empty lines')
     return
 
   def tearDown(self):

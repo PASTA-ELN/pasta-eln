@@ -512,6 +512,11 @@ class SqlLiteDB:
     if branch == -2: #delete this path
       self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}' and path == '{path}'")
       self.connection.commit()
+      # test if there is a branch remaining, if not delete document
+      self.cursor.execute(f'SELECT id FROM branches WHERE id == "{docID}"')
+      res = self.cursor.fetchall()
+      if len(res)==0:
+        self.remove(docID)
       return (path, None)
     if branch == -1: #append a new branch
       self.cursor.execute(f"SELECT idx FROM branches WHERE id == '{docID}'")
