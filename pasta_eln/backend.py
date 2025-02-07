@@ -755,7 +755,8 @@ class Backend(CLI_Mixin):
         for orphan in sorted(orphans):
           self.db.cursor.execute(f'SELECT main.name, main.type, branches.path, main.id, main.comment FROM main JOIN branches USING(id) WHERE branches.path == "{orphan}"')
           res = self.db.cursor.fetchall()
-          if repair(f'Path of database not on filesystem:\n  {"\n  ".join(str(i) for i in res)}'):
+          resString = "\n  ".join(str(i) for i in res)
+          if repair(f'Path of database not on filesystem:\n  {resString}'):
             if res[0][1].startswith('x'):
               (self.basePath/orphan).mkdir(parents=True)
               with open(self.basePath/orphan/'.id_pastaELN.json','w',encoding='utf-8') as fOut:

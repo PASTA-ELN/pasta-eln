@@ -1063,8 +1063,8 @@ class SqlLiteDB:
         if SVG_RE.match(image) is None:
           outString+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
       elif image in ('', None):
-        outString+= outputString(outputStyle,'unsure',
-          f"image not valid {docID} image:{image} comment:{comment.replace('\n','..')}")
+        comment = comment.replace('\n','..')
+        outString+=outputString(outputStyle,'unsure',f"image not valid {docID} image:{image} comment:{comment}")
       else:
         outString+= outputString(outputStyle,'error',f"dch14: image not valid {docID} {image}")
 

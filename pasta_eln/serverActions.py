@@ -242,7 +242,7 @@ def main() -> None:
   print(  '-------------------------------------------------------------------------')
   while True:
     print('\nCommands - general: [q]uit; [p]rint a document; [d]elete a document; [s]can all projects\n - update: [c]onvert couchDB to SQLite; [t]ranslate disk structure from V2->v3'
-          '\n - database integrity: [v]erify; [r]epair; [laf]-create a lost and found project\n - repair sql: [rp1] repair properties: add missing .')
+          '\n - database integrity: [v]erify; [r]epair; [cp]-create a lost and found project\n - repair sql: [rp1] repair properties: add missing .')
     command = input('> ')
     if command == 'c':
       couchDB2SQLite()
@@ -250,7 +250,7 @@ def main() -> None:
       translateV2_V3()
     elif command == 'v':
       verifyPasta()
-    elif command == 'laf':
+    elif command == 'cp':
       createLostAndFound()
     elif command == 'r':
       verifyPasta('research', repair=userQuestion)
