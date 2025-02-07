@@ -141,11 +141,11 @@ def __returnBackend__(projectGroup:str='') -> Backend:
   return Backend(projectGroup)
 
 
-def verifyPasta(projectGroup:str='', repair:Union[None,Callable]=None) -> None:
+def verifyPasta(projectGroup:str='', repair:Union[None,Callable[[str],bool]]=None) -> None:
   """ Do the default verification of PastaELN. Adopted to CLI
     Args:
     projectGroup (str): name of project group
-    repair (bool): repair
+    repair (function): repair
   """
   be = __returnBackend__(projectGroup)
   outputString('print','info', be.checkDB(outputStyle='text', repair=repair, minimal=True))

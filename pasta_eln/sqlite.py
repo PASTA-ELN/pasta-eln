@@ -801,14 +801,13 @@ class SqlLiteDB:
     return results
 
 
-  def getHierarchy(self, start:str, allItems:bool=False, repair:Union[None,Callable]=None,) -> tuple[Node,bool]:
+  def getHierarchy(self, start:str, allItems:bool=False) -> tuple[Node,bool]:
     """
     get hierarchy tree for projects, ...
 
     Args:
       start (str): start of the hierarchy (most parent)
       allItems (bool):  true=show all items, false=only non-hidden
-      repair (None|Callable): repair errors automatically; function that has user interaction
 
     Returns:
       Node: hierarchy in an anytree
@@ -834,7 +833,7 @@ class SqlLiteDB:
       else:
         parent = item['key'].split('/')[-2]
         if parent in id2Node:
-          parentNode, error = (id2Node[parent], error)
+          parentNode = id2Node[parent]
         else:
           parentNode, error = (dataTree, True)
           print(f'**ERROR** there is an error in the hierarchy tree structure with parent {parent} missing')
@@ -847,7 +846,7 @@ class SqlLiteDB:
       childNum, docType, name, gui = item['value']
       parentId = item['key'].split('/')[-2]
       if parentId in id2Node:
-        parentNode, error = (id2Node[parentId],error)
+        parentNode = id2Node[parentId]
       else:
         outputString('print','error',f'repair branch table as parentID {parentId} is missing')
         parentNode, error = (dataTree,True)
@@ -907,7 +906,8 @@ class SqlLiteDB:
     return
 
 
-  def checkDB(self, outputStyle:str='text', minimal:bool=False, repair:Union[None,Callable]=None) -> str:
+  def checkDB(self, outputStyle:str='text', minimal:bool=False,
+              repair:Union[None,Callable[[str],bool]]=None) -> str:
     """
     Check database for consistencies by iterating through all documents
     - only reporting, no repair
@@ -917,7 +917,7 @@ class SqlLiteDB:
     Args:
         outputStyle (str): output using a given style: see outputString
         minimal (bool): true=only show warnings and errors; else=also show information
-        repair (None|Callable): auto-repair after asking user
+        repair (function): auto-repair after asking user
 
     Returns:
         str: output
@@ -928,7 +928,8 @@ class SqlLiteDB:
     if not minimal:
       outString+= outputString(outputStyle,'h2','LEGEND')
       outString+= outputString(outputStyle,'perfect','Green: perfect and as intended')
-      outString+= outputString(outputStyle,'ok', 'Blue: ok, can happen: empty files for testing, strange path for measurements')
+      outString+= outputString(outputStyle,'ok',
+                               'Blue: ok, can happen: empty files for testing, strange path for measurements')
       outString+= outputString(outputStyle,'h2','List all database entries')
     if outputStyle=='html':
       outString += '</div>'
@@ -936,9 +937,9 @@ class SqlLiteDB:
     # tests
     self.cursor.execute('SELECT main.id, main.name FROM main WHERE id NOT IN (SELECT id FROM branches)')
     if res:= self.cursor.fetchall():
-      errorStr = outputString(outputStyle,'error', f'Documents with no branch: {", ".join(str(i) for i in res)}')
+      errorStr = outputString(outputStyle,'error', f'Items with no branch: {", ".join(str(i) for i in res)}')
       if repair is None:
-          outString+= errorStr
+        outString+= errorStr
       elif repair(errorStr):
         df = self.getView('viewDocType/x0')
         ids = df[df['name']=='Lost and Found']['id'].values
@@ -949,9 +950,9 @@ class SqlLiteDB:
           parentPath = Path('LostAndFound')  #by definition
           for docID, name in res:
             self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
-                                [docID, 0, f'{parentID}/{docID}', 9999,
-                                 (parentPath/createDirName(name, 'x0', 0)).as_posix() if docID.startswith('x-') else '*',
-                                 'TT'])
+                  [docID, 0, f'{parentID}/{docID}', 9999,
+                  (parentPath/createDirName(name, 'x0', 0)).as_posix() if docID.startswith('x-') else '*',
+                  'TT'])
           self.connection.commit()
 
     cmd = 'SELECT id, main.type, branches.stack, branches.path, branches.child, branches.show, main.name '\
@@ -962,7 +963,7 @@ class SqlLiteDB:
       try:
         docID, docType, stack, path, child, _, name = row[0], row[1], row[2], row[3], row[4], row[5], row[6]
       except ValueError:
-        outString+= outputString(outputStyle,'error',f"dch03a: branch data has strange list {docID}")
+        outString+= outputString(outputStyle,'error',"dch03a: branch data has strange list")
         continue
       if docType.count('/')>5:
         outString+= outputString(outputStyle,'error',f"dch04a: type has too many / {docID}")
@@ -981,7 +982,8 @@ class SqlLiteDB:
         if docType.startswith(('measurement','x')):
           outString+= outputString(outputStyle,'warning',f"branch stack length = 0: no parent {docID}")
         elif not minimal:
-          outString+= outputString(outputStyle,'ok',f"branch stack length = 0: no parent for procedure/sample {docID}")
+          outString+= outputString(outputStyle,'ok',
+                                   f"branch stack length = 0: no parent for procedure/sample {docID}")
       try:
         dirNamePrefix = path.split(os.sep)[-1].split('_')[0]
         if dirNamePrefix.isdigit() and child!=int(dirNamePrefix) and docType.startswith('x'): #compare child-number to start of directory name
@@ -1001,9 +1003,12 @@ class SqlLiteDB:
           #check if length of path and stack coincide; ignore path=None=*
           if docType.startswith('procedure'):
             if not minimal:
-              outString+= outputString(outputStyle,'perfect',f"procedure: branch stack and path lengths not equal: {docID}: {name}")
+              outString+= outputString(outputStyle,'perfect',
+                                       f"procedure: branch stack and path lengths not equal: {docID}: {name}")
           else:
-            outString+= outputString(outputStyle,'unsure',f"branch stack and path lengths not equal: {docID}: {name} {len(stack.split('/'))} {len(path.split(os.sep))}")
+            outString+= outputString(outputStyle,'unsure',
+              f"branch stack and path lengths not equal: {docID}: {name} {len(stack.split('/'))}"
+              f" {len(path.split(os.sep))}")
         if path!='*' and not path.startswith('http'):
           for parentID in stack.split('/')[:-1]:            #check if all parents in doc have a corresponding path
             parentDoc = self.getDoc(parentID)
@@ -1015,9 +1020,11 @@ class SqlLiteDB:
             if not onePathFound:
               if docType.startswith('procedure'):
                 if not minimal:
-                  outString+= outputString(outputStyle,'perfect',f"dch08: parent of procedure does not have corresponding path {docID} | parentID {parentID}")
+                  outString+= outputString(outputStyle,'perfect',
+                    f"dch08: procedure parent does not have corresponding path {docID} | parentID {parentID}")
               else:
-                outString+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path {docID} | parentID {parentID}")
+                outString+= outputString(outputStyle,'unsure',
+                    f"dch08: parent does not have corresponding path {docID} | parentID {parentID}")
 
     self.cursor.execute('SELECT id, idx FROM branches WHERE idx<0')
     res = self.cursor.fetchall()
@@ -1034,7 +1041,8 @@ class SqlLiteDB:
       outString+= outputString(outputStyle,'ok',f"value of this key is missing: {docID} idx: {key}")
 
     #doc-type specific tests
-    self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'")
+    cmd = "SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'"
+    self.cursor.execute(cmd)
     if res:= [i[0] for i in self.cursor.fetchall() if i[1] is None]:
       outString+= outputString(outputStyle,'warning',f"dch09: qrCode not in samples {res}")
     self.cursor.execute("SELECT id, shasum, image, comment FROM main WHERE  type LIKE 'measurement%'")
@@ -1055,13 +1063,14 @@ class SqlLiteDB:
         if SVG_RE.match(image) is None:
           outString+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
       elif image in ('', None):
-        outString+= outputString(outputStyle,'unsure',f"image not valid {docID} image:{image} comment:{comment.replace('\n','..')}")
+        outString+= outputString(outputStyle,'unsure',
+          f"image not valid {docID} image:{image} comment:{comment.replace('\n','..')}")
       else:
         outString+= outputString(outputStyle,'error',f"dch14: image not valid {docID} {image}")
 
     #test hierarchy
     for projID in self.getView('viewDocType/x0')['id'].values:
-      _, error = self.getHierarchy(projID, True, repair)
+      _, error = self.getHierarchy(projID, True)
       if error:
         outString+= outputString(outputStyle,'error',f"dch15: project hierarchy invalid in project {projID}")
     if repair is not None:

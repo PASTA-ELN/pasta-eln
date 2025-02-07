@@ -671,13 +671,14 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Wrapper for database functions
   ######################################################
-  def checkDB(self, outputStyle:str='text', repair:Union[None,Callable]=None, minimal:bool=False) -> str:
+  def checkDB(self, outputStyle:str='text', repair:Union[None,Callable[[str],bool]]=None,
+              minimal:bool=False) -> str:
     """
     Wrapper of check database for consistencies by iterating through all documents
 
     Args:
         outputStyle (str): output using a given style: see outputString
-        repair (None|Callable): repair errors automatically; function that has user interaction
+        repair (function): repair errors automatically; function that has user interaction
         minimal (bool): true=only show warnings and errors; else=also show information
 
     Returns:
@@ -758,7 +759,7 @@ class Backend(CLI_Mixin):
             if res[0][1].startswith('x'):
               (self.basePath/orphan).mkdir(parents=True)
               with open(self.basePath/orphan/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
-                  json.dump({'id':res[0][3]}, fOut)
+                json.dump({'id':res[0][3]}, fOut)
             else:
               self.db.cursor.execute(f"UPDATE branches SET path='*' WHERE id == '{res[0][3]}' and path == '{orphan}'")
               self.db.connection.commit()
