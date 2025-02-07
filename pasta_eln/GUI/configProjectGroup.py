@@ -189,7 +189,6 @@ class ProjectGroup(QDialog):
       button = QMessageBox.question(self, 'Question', 'Do you want to copy the add-ons from the old directory (recommended)?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
-        print(config['addOnDir'] ,answer)
         shutil.copytree(config['addOnDir'], answer, dirs_exist_ok=True)
       config['addOnDir'] = answer
       self.addOnLabel.setText('Add on directory: ' + config['addOnDir'])
