@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -552,7 +553,7 @@ class SqlLiteDB:
       if not (self.basePath/pathOld).exists() and (self.basePath/path).exists():
         logging.debug('sqlite:updateBranch: dont move since already good')
       else:
-        (self.basePath/pathOld).rename(self.basePath/path)
+        shutil.move(self.basePath/pathOld, self.basePath/path)
     if docID[0]=='x' and path is not None:
       with open(self.basePath/path/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
         fOut.write(json.dumps(self.getDoc(docID)))
