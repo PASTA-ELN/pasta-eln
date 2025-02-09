@@ -376,6 +376,10 @@ class Backend(CLI_Mixin):
           with open(self.basePath/path/'.id_pastaELN.json', encoding='utf-8') as fIn:
             doc = json.loads(fIn.read())
             doc = self.db.getDoc(doc['id'])
+          if len(doc)==0:
+            (self.basePath/path/'.id_pastaELN.json').unlink()
+            rerunScanTree = True
+            continue
           if (self.basePath/doc['branch'][0]['path']).parent.as_posix()  == root and \
                doc['branch'][0]['stack']==hierStack:
             # special case: user wants to have a different directory name in same folder: then the child-number should not change
