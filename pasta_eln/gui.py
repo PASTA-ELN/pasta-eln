@@ -21,7 +21,6 @@ from .fixedStringsJson import CONF_FILE_NAME, shortcuts
 # from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .GUI.body import Body
 from .GUI.config import Configuration
-from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from .GUI.form import Form
 from .GUI.palette import Palette
 from .GUI.sidebar import Sidebar
@@ -200,8 +199,9 @@ class MainWindow(QMainWindow):
         dialogC = Configuration(self.comm)
         dialogC.exec()
     elif command[0] is Command.DATAHIERARCHY:
-      dataHierarchyForm = DataHierarchyEditorDialog()
-      dataHierarchyForm.instance.exec()
+      pass
+      # dataHierarchyForm = DataHierarchyEditorDialog()
+      # dataHierarchyForm.instance.exec()
     elif command[0] is Command.DATAVERSE_CONFIG:
       self.dataverseConfig = ConfigDialog()
       self.dataverseConfig.show()
