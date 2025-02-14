@@ -1,7 +1,7 @@
 """ dialog to edit docType schema """
-import sqlite3
 from enum import Enum
 from typing import Any
+import pandas as pd
 from PySide6.QtWidgets import (QComboBox, QDialog, QTableWidget, QTableWidgetItem,  # pylint: disable=no-name-in-module
                                QTabWidget, QVBoxLayout, QDialogButtonBox, QMessageBox, QInputDialog, QTabBar)
 from .mandatory_column_delegate import MandatoryColumnDelegate
@@ -30,8 +30,12 @@ class SchemeEditor(QDialog):
     self.comm = comm
     self.db   = self.comm.backend.db
     self.docType = ''
-    self.schema:list[dict[str,str]] = [{}]  # entire schema of this docType
-    self.groups = ['']  # group names
+    cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
+          'docTypeSchema.unit, docTypeSchema.mandatory, docTypeSchema.list, definitions.long '\
+          'FROM docTypeSchema LEFT JOIN definitions ON docTypeSchema.name = definitions.key '
+    self.df = pd.read_sql_query(cmd, self.db.connection).fillna('')
+    self.df.rename(columns={'long':'description'}, inplace=True)
+    self.df['idx'] = self.df['idx'].astype('int')
     self.closeButtons:list[IconButton] = []  #close buttons of tabs
 
     # GUI elements
@@ -82,7 +86,9 @@ class SchemeEditor(QDialog):
     """
     if btn.text().endswith('Cancel'):
       self.reject()
-    elif btn.text().endswith('Save') and self.saveDocTypeSchema():
+    elif btn.text().endswith('Save'):
+      # TODO start verification: uniqueness in names (some do test before save)
+      # SAVE
       self.accept()
     return
 
@@ -113,9 +119,8 @@ class SchemeEditor(QDialog):
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
         self.table2schema()
-        group = self.groups[command[1]]
-        self.schema = [i for i in self.schema if i['class']!=group]
-        self.groups.remove(group)
+        group = self.tabW.tabBar().tabText(command[1])
+        self.df = self.df[self.df['class']!=group]
         self.redrawTabW()
     return
 
@@ -123,8 +128,9 @@ class SchemeEditor(QDialog):
   def redrawTabW(self) -> None:
     """ Redraw tab-widget: all tables """
     self.tabW.clear()
-    for group in self.groups:
-      data  = [i for i in self.schema if i['class']==group]
+    df = self.df[self.df['docType']==self.docType]
+    for group in df['class'].unique():
+      data  = df[df['class']==group]
       self.nameColumnDelegate.numRows    = len(data)
       self.reorderColumnDelegate.numRows = len(data)
       self.deleteColumnDelegate.numRows  = len(data)
@@ -134,19 +140,17 @@ class SchemeEditor(QDialog):
       table.setHorizontalHeaderLabels(COLUMN_NAMES)
       for idx, width in enumerate(COLUMN_WIDTH):
         table.setColumnWidth(idx, width)
-      for row in data:
+      for _,row in data.iterrows():
         idx = int(row['idx'])
-        table.setItem(idx, 0, QTableWidgetItem(row['name']))
-        table.setItem(idx, 1, QTableWidgetItem(row['long']))
-        table.setItem(idx, 2, QTableWidgetItem(row['unit']))
-        table.setItem(idx, 3, QTableWidgetItem(row['mandatory']))
-        table.setItem(idx, 4, QTableWidgetItem(row['list']))
+        for col in range(5):
+          table.setItem(idx, col, QTableWidgetItem(row[COLUMN_NAMES[col]]))
       #Delegates to give function to row
       table.setItemDelegateForColumn(0, self.nameColumnDelegate)
       table.setItemDelegateForColumn(3, self.requiredColumnDelegate)
       table.setItemDelegateForColumn(5, self.reorderColumnDelegate)
       table.setItemDelegateForColumn(6, self.deleteColumnDelegate)
       self.tabW.addTab(table, group or 'default')
+    # define close buttons on some of the tabs
     self.closeButtons.clear()
     for idx in range(1, self.tabW.count()):
       self.closeButtons.append(IconButton('fa5s.times', self, [Command.DEL_GROUP,idx], None, 'Delete group'))
@@ -161,29 +165,10 @@ class SchemeEditor(QDialog):
     Args:
       docType (str): name of document type
     """
-    if self.docType and docType!=self.docType and not self.saveDocTypeSchema():
-      self.selectDocType.setCurrentText(self.docType)
-      return
-    # get schema by custom command as general does not exist that includes the definition
-    self.db.connection.row_factory = sqlite3.Row
-    cursor = self.db.connection.cursor()
-    cursor.execute('SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '
-                  'docTypeSchema.unit, docTypeSchema.mandatory, docTypeSchema.list, definitions.long '
-                  'FROM docTypeSchema LEFT JOIN definitions ON docTypeSchema.name = definitions.key '
-                  f'WHERE docType == "{docType}"')
-    self.schema = [dict(i) for i in cursor.fetchall()]
-    self.groups = self.db.dataHierarchy(docType, 'metaColumns')
     self.docType = docType
     self.redrawTabW()
     return
 
-
-  def saveDocTypeSchema(self) -> bool:
-    """ Save table information to database """
-    # TODO start verification: uniqueness in names (some do test on save)
-    # SAVE
-    print("TODO: implement save")
-    return True
 
 
   def table2schema(self) -> None:
@@ -195,12 +180,9 @@ class SchemeEditor(QDialog):
       group = '' if group=='default' else group
       widget:QTableWidget = self.tabW.widget(tabID) # type: ignore[assignment]
       for row in range(widget.rowCount()-1):  # -1: ignore last row as it is meant for adding
-        thisRow = {'docType':self.docType, 'class':group, 'idx':str(row)}
         for col in range(5):
           item = widget.item(row,col)
-          thisRow[COLUMN_NAMES[col]] = '' if item is None else item.text()
-        thisRow['long'] = thisRow.pop('description')
-        self.schema = [thisRow if i['class']==group and i['idx']==str(row) else i for i in self.schema]
+          self.df.at[row, COLUMN_NAMES[col]] = '' if item is None else item.text()
     return
 
 
@@ -213,9 +195,13 @@ class SchemeEditor(QDialog):
     """
     if row>0:
       self.table2schema()
-      group = self.groups[self.tabW.currentIndex()]
-      self.schema = [ i|{'idx':str(row-1)} if i['class']==group and i['idx']==str(row)   else
-                     (i|{'idx':str(row)}   if i['class']==group and i['idx']==str(row-1) else i) for i in self.schema]
+      group = self.tabW.tabBar().tabText(self.tabW.currentIndex())
+      group = '' if group=='default' else group
+      column= (self.df['docType']==self.docType) & (self.df['class']==group)
+      self.df.loc[column & (self.df['idx']==row),   'idx']=-1
+      self.df.loc[column & (self.df['idx']==row-1), 'idx']=row
+      self.df.loc[column & (self.df['idx']==-1),    'idx']=row-1
+      self.df = self.df.sort_values('idx').reset_index(drop=True)
       self.redrawTabW()
     return
 
@@ -229,9 +215,11 @@ class SchemeEditor(QDialog):
     """
     if row>0:
       self.table2schema()
-      group = self.groups[self.tabW.currentIndex()]
-      self.schema = [ i|{'idx':str(int(i['idx'])-1)} if i['class']==group and int(i['idx'])>row else i for i in self.schema
-                                                 if not(i['class']==group and i['idx']==str(row))]
+      group = self.tabW.tabBar().tabText(self.tabW.currentIndex())
+      group = '' if group=='default' else group
+      column= (self.df['docType']==self.docType) & (self.df['class']==group)
+      self.df = self.df.drop(self.df[column & (self.df['idx']==row)].index)
+      self.df.loc[column & (self.df['idx']>row), 'idx'] -= 1
       self.redrawTabW()
     return
 
@@ -241,12 +229,14 @@ class SchemeEditor(QDialog):
     Add a data row
     """
     self.table2schema()
-    group  = self.groups[self.tabW.currentIndex()]
+    group = self.tabW.tabBar().tabText(self.tabW.currentIndex())
+    group = '' if group=='default' else group
     widget:QTableWidget  = self.tabW.currentWidget()   # type: ignore[assignment]
     newIdx = widget.rowCount()-1
     name   = widget.currentItem().text()
-    self.schema += [{'docType':self.docType, 'class':group, 'idx':str(newIdx), 'name':name,
-                     'unit': '', 'mandatory': '', 'list': '', 'long':''}]
+    newRow = {'docType':self.docType, 'class':group, 'idx':newIdx, 'name':name,
+              'unit': '', 'mandatory': '', 'list': '', 'description':''}
+    self.df = pd.concat([self.df, pd.DataFrame([newRow])], ignore_index=True)
     self.redrawTabW()
     return
 
@@ -262,8 +252,8 @@ class SchemeEditor(QDialog):
       textNew, ok = QInputDialog.getText(self, "Rename group", "Enter new group name:", text=textOld)
       if ok and textNew.strip():
         self.tabW.setTabText(idx, textNew.strip())
-        self.schema = [ i|{'class':textNew.strip() if i['class']==textOld else i['class']} for i in self.schema]
-        self.groups[self.groups.index(textOld)] = textNew
+        column= (self.df['docType']==self.docType) & (self.df['class']==textOld)
+        self.df.loc[column, 'class'] = textNew
     return
 
 
@@ -276,7 +266,9 @@ class SchemeEditor(QDialog):
     if idx == self.tabW.count()-1:
       textNew, ok = QInputDialog.getText(self, "Create group", "Enter new group name:", text='')
       if ok and textNew.strip():
-        self.groups.append(textNew.strip())
+        newRow = {'docType':self.docType, 'class':textNew.strip(), 'idx':0, 'name':'item',
+              'unit': '', 'mandatory': '', 'list': '', 'description':''}
+        self.df = pd.concat([self.df, pd.DataFrame([newRow])], ignore_index=True)
         self.redrawTabW()
     return
 
