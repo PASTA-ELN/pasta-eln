@@ -98,6 +98,7 @@ disable=raw-checker-failed,
         dangerous-default-value,
         missing-raises-doc,
         no-else-return,
+        unused-argument,
         broad-except
 
 #Reasons:

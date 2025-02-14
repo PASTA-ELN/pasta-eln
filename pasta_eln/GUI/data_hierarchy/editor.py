@@ -102,10 +102,10 @@ class SchemeEditor(QDialog):
       dfDef.rename(columns={'description':'long'}, inplace=True)
       nonUnique = dict(dfDef.groupby(['key']).apply(lambda x: len(np.unique(x))))
       if nonUniqueStr:= ', '.join(k for k,v in nonUnique.items() if v>2):
-        btn = QMessageBox.question(self, 'Non unique definitions',
+        button = QMessageBox.question(self, 'Non unique definitions',
                                    f'The definitions are non-unique for {nonUniqueStr}. Do you want to flatten?',
                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-        if btn == QMessageBox.StandardButton.No:
+        if button == QMessageBox.StandardButton.No:
           return
       dfDef = dfDef.groupby(['key']).first()
       listDef = list(dfDef.itertuples(name=None))

@@ -46,9 +46,9 @@ class ReorderColumnDelegate(QStyledItemDelegate):
     button = QPushButton()
     opt = QStyleOptionButton()
     opt.state = QStyle.StateFlag.State_Active | QStyle.StateFlag.State_Enabled  # type: ignore[attr-defined]
-    opt.rect = option.rect  # type: ignore[attr-defined]
-    opt.icon = qta.icon('fa5s.arrow-up', scale_factor=1.0)
-    opt.iconSize = QSize(15, 15)  # type: ignore[attr-defined]
+    opt.rect = option.rect                                                      # type: ignore[attr-defined]
+    opt.icon = qta.icon('fa5s.arrow-up', scale_factor=1.0)                      # type: ignore[attr-defined]
+    opt.iconSize = QSize(15, 15)                                                # type: ignore[attr-defined]
     QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, opt, painter, button)
     return
 

@@ -20,6 +20,7 @@ class NameColumnDelegate(QStyledItemDelegate):
                    index:  QModelIndex | QPersistentModelIndex) -> QWidget:
     """
     Creates the line edit with lookup icon for the iri column cell represented by index
+
     Args:
       parent (QWidget): Parent table view.
       option (QStyleOptionViewItem): Style option for the cell represented by index.
@@ -31,7 +32,14 @@ class NameColumnDelegate(QStyledItemDelegate):
     return lineEdit
 
 
-  def destroyEditor(self, editor, index):
+  def destroyEditor(self, editor:QWidget, index:QModelIndex | QPersistentModelIndex) -> None:
+    """ destroy the line editor
+
+    Args:
+      editor (QWidget): Parent table view
+      index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
+    """
     if index.row()==self.numRows:
-        self.add_row_signal.emit()
-    return super().destroyEditor(editor, index)
+      self.add_row_signal.emit()
+    super().destroyEditor(editor, index)
+    return

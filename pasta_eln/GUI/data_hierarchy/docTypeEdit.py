@@ -1,11 +1,10 @@
 """ Edit properties of a docType """
-from typing import Any
 import string
 import qtawesome as qta
 from PySide6.QtGui import QRegularExpressionValidator  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QLineEdit, QDialog, QLabel, QVBoxLayout, QDialogButtonBox, QComboBox) # pylint: disable=no-name-in-module
 from ...guiCommunicate import Communicate
-from ...guiStyle import (TextButton, showMessage, widgetAndLayoutForm, widgetAndLayout, Label)
+from ...guiStyle import (TextButton, widgetAndLayoutForm, widgetAndLayout)
 from ...fixedStringsJson import allIcons
 
 
@@ -64,8 +63,8 @@ class DocTypeEditor(QDialog):
       self.row4.setDisabled(True)
     else:
       data = [i[1] for i in self.comm.backend.db.dataHierarchy('','shortcut') if not i[0].startswith('x')]
-      data = set(string.ascii_lowercase).difference(data)
-      self.row4.setValidator(QRegularExpressionValidator(f'^[{"".join(data)}]$'))
+      dataSet = set(string.ascii_lowercase).difference(data)
+      self.row4.setValidator(QRegularExpressionValidator(f'^[{"".join(dataSet)}]$'))
     mainForm.addRow(QLabel('Shortcut '), self.row4)
 
     #final button box
@@ -75,7 +74,7 @@ class DocTypeEditor(QDialog):
     mainL.addWidget(buttonBox)
 
 
-  def closeDialog(self, btn:TextButton):
+  def closeDialog(self, btn:TextButton) -> None:
     """
     cancel or save entered data
 
@@ -92,7 +91,7 @@ class DocTypeEditor(QDialog):
         self.comm.backend.db.cursor.execute(f"UPDATE docTypes SET title='{label}', shortcut='{shortcut}', icon='{icon}' WHERE docType = '{self.docType}'")
       else:
         docType = self.row1.text()
-        self.comm.backend.db.cursor.execute(f"INSERT INTO docTypes VALUES (?, ?, ?, ?, ?, ?)",
+        self.comm.backend.db.cursor.execute('INSERT INTO docTypes VALUES (?, ?, ?, ?, ?, ?)',
                                             [docType, '', label, icon, shortcut, ''])
       self.comm.backend.db.connection.commit()
       self.accept()
