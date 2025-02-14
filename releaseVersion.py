@@ -112,7 +112,8 @@ def newVersion(level:int=2) -> None:
   reply = input(f'Create version (2.5, 3.1.4b1): [{version}]: ')
   version = version if not reply or len(reply.split('.'))<2 else reply
   print(f'======== Version {version} =======')
-  #update python files
+  #git commands and update python files
+  os.system('git pull')
   filesToUpdate = {'pasta_eln/__init__.py':'__version__ = ',
                    'docs/source/conf.py':'version = '}
   for path,text in filesToUpdate.items():
@@ -126,14 +127,12 @@ def newVersion(level:int=2) -> None:
       fileNew.append(line)
     with open(path,'w', encoding='utf-8') as fOut:
       fOut.write('\n'.join(fileNew)+'\n')
-  #execute git commands
-  os.system('git pull')
+  os.system('git commit -a -m "update version numbers"')
   os.system(f'git tag -a v{version} -m "Version {version}; see CHANGELOG for details"')
   #create CHANGELOG / Contributor-list
   with open(Path.home()/'.ssh'/'github.token', encoding='utf-8') as fIn:
     token = fIn.read().strip()
   os.system(f'github_changelog_generator -u PASTA-ELN -p pasta-eln -t {token}')
-  createContributors()
   addition = input('\n\nWhat do you want to add to the push message (do not use \' or \")? ')
   os.system(f'git commit -a -m "updated changelog; {addition}"')
   #push and publish
@@ -264,8 +263,9 @@ def runSourceVerification() -> None:
 
 
 if __name__=='__main__':
-  #run tests
+  #run tests and create default files
   runTests()
+  createContributors()
   runSourceVerification()
   createRequirementsFile()
   versionLevel = 2 if len(sys.argv)==1 else int(sys.argv[1])

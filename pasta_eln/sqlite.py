@@ -6,16 +6,17 @@ import json
 import logging
 import os
 import re
+import shutil
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional, Union
 import pandas as pd
 from anytree import Node
 from PIL import Image
 from .fixedStringsJson import SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema
 from .miscTools import hierarchy
-from .stringChanges import camelCase, outputString, tracebackString
+from .stringChanges import camelCase, createDirName, outputString, tracebackString
 
 MAIN_ORDER     =['id'  ,'name','user','type','dateCreated','dateModified','gui',      'client','shasum','image','content','comment','externalId','dateSync']
 MAIN_TYPE      =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',   'TEXT',     'TEXT']
@@ -511,6 +512,11 @@ class SqlLiteDB:
     if branch == -2: #delete this path
       self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}' and path == '{path}'")
       self.connection.commit()
+      # test if there is a branch remaining, if not delete document
+      self.cursor.execute(f'SELECT id FROM branches WHERE id == "{docID}"')
+      res = self.cursor.fetchall()
+      if len(res)==0:
+        self.remove(docID)
       return (path, None)
     if branch == -1: #append a new branch
       self.cursor.execute(f"SELECT idx FROM branches WHERE id == '{docID}'")
@@ -533,7 +539,7 @@ class SqlLiteDB:
     self.cursor.execute(cmd)
     reply = self.cursor.fetchone()
     if reply is None:
-      raise ValueError(f"FAILED AT: {cmd}'")
+      raise ValueError(f"FAILED AT: {cmd}")
     pathOld, stackOld, showOld = reply
     stack = stack or stackOld.split('/')[:-1]           # stack without current id
     show  = self.createShowFromStack(stack, showOld[-1])
@@ -546,7 +552,7 @@ class SqlLiteDB:
       if not (self.basePath/pathOld).exists() and (self.basePath/path).exists():
         logging.debug('sqlite:updateBranch: dont move since already good')
       else:
-        (self.basePath/pathOld).rename(self.basePath/path)
+        shutil.move(self.basePath/pathOld, self.basePath/path)
     if docID[0]=='x' and path is not None:
       with open(self.basePath/path/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
         fOut.write(json.dumps(self.getDoc(docID)))
@@ -690,36 +696,52 @@ class SqlLiteDB:
       viewColumns = self.dataHierarchy(docType, 'view')
       viewColumns = viewColumns+['id'] if viewColumns else ['name','tags','comment','id']
       textSelect = ', '.join([f'main.{i}' for i in viewColumns if i in MAIN_ORDER or i[1:] in MAIN_ORDER])
-      if 'tags' in viewColumns:
-        textSelect += ', tags.tag'
-      if 'qrCodes' in viewColumns:
-        textSelect += ', qrCodes.qrCode'
-      metadataKeys  = [f'properties.key == "{i}"' for i in viewColumns if i not in MAIN_ORDER+['tags']]
-      if metadataKeys:
-        textSelect += ', properties.key, properties.value'
-      cmd = f"SELECT {textSelect} FROM main LEFT JOIN tags USING(id) LEFT JOIN qrCodes USING(id) "\
-              f"INNER JOIN branches USING(id) LEFT JOIN properties USING(id) WHERE main.type LIKE '{docType}%'"
+      cmd = f"SELECT {textSelect} FROM main INNER JOIN branches USING(id) WHERE main.type LIKE '{docType}%'"
       if not allFlag:
         cmd += r" and NOT branches.show LIKE '%F%'"
       if startKey:
         cmd += f" and branches.stack LIKE '{startKey}%'"
-      df      = pd.read_sql_query(cmd, self.connection).fillna('')
-      allCols = list(df.columns)
+      df      = pd.read_sql_query(cmd, self.connection, index_col='id', ).fillna('')
+      #clean main df
+      df      = df[~df.index.duplicated(keep='first')]
       if 'image' in viewColumns:
         df['image'] = str(len(df['image'])>1)
+      # add: tags, qrCodes, parameters
       if 'tags' in viewColumns:
-        allCols.remove('tag')
-        df   = df.groupby(allCols)['tag'].apply(lambda x: ', '.join(set(x.astype(str)))).reset_index()
+        cmd = 'SELECT main.id, tags.tag FROM main INNER JOIN tags USING(id) INNER JOIN branches USING(id) '\
+              f"WHERE main.type LIKE '{docType}%'"
+        if not allFlag:
+          cmd += r" and NOT branches.show LIKE '%F%'"
+        if startKey:
+          cmd += f" and branches.stack LIKE '{startKey}%'"
+        dfTags = pd.read_sql_query(cmd, self.connection, index_col='id').fillna('')
+        dfTags = dfTags.groupby(['id'])['tag'].apply(lambda x: ', '.join(set(x))).reset_index().set_index('id')
+        df = df.join(dfTags)
       if 'qrCodes' in viewColumns:
-        allCols.remove('qrCode')
-        df   = df.groupby(allCols)['qrCode'].apply(lambda x: ', '.join(x.astype(str))).reset_index()
-      if metadataKeys:
-        columnNames = [i for i in df.columns if i not in ('key','value')]
-        df = df.pivot(index=columnNames, columns='key', values='value').reset_index()  # Pivot the DataFrame
-        df.columns.name = None                                                         # Flatten the columns
+        cmd = 'SELECT main.id, qrCodes.qrCode FROM main INNER JOIN qrCodes USING(id) INNER JOIN branches '\
+              f"USING(id) WHERE main.type LIKE '{docType}%'"
+        if not allFlag:
+          cmd += r" and NOT branches.show LIKE '%F%'"
+        if startKey:
+          cmd += f" and branches.stack LIKE '{startKey}%'"
+        dfQrCodes = pd.read_sql_query(cmd, self.connection, index_col='id').fillna('')
+        dfQrCodes = dfQrCodes.groupby(['id'])['qrCode'].apply(', '.join).reset_index().set_index('id')
+        df = df.join(dfQrCodes)
+      if metadataKeys:= [f'properties.key == "{i}"' for i in viewColumns if i not in MAIN_ORDER+['tags']]:
+        cmd = 'SELECT main.id, properties.key, properties.value FROM main INNER JOIN properties USING(id) '\
+              f"INNER JOIN branches USING(id) WHERE main.type LIKE '{docType}%' AND ({' OR '.join(metadataKeys)})"
+        if not allFlag:
+          cmd += r" and NOT branches.show LIKE '%F%'"
+        if startKey:
+          cmd += f" and branches.stack LIKE '{startKey}%'"
+        dfParams = pd.read_sql_query(cmd, self.connection, index_col='id').fillna('')
+        dfParams = dfParams.pivot(columns='key', values='value').reset_index().set_index('id')  # Pivot the DataFrame
+        dfParams.columns.name = None                                                            # Flatten the columns
+        df = df.join(dfParams)
+      # final sorting of columns
       columnOrder = ['tag' if i=='tags' else 'qrCode' if i=='qrCodes'
                      else i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]
-      df = df.reindex(columnOrder, axis=1)
+      df = df.reset_index().reindex(columnOrder, axis=1)
       df = df.rename(columns={i:i[1:] for i in columnOrder if i.startswith('.') })
       df = df.astype('str').fillna('')
       return df
@@ -815,7 +837,11 @@ class SqlLiteDB:
         id2Node[_id] = dataTree
       else:
         parent = item['key'].split('/')[-2]
-        parentNode, error = (id2Node[parent],error) if parent in id2Node else (dataTree,True)
+        if parent in id2Node:
+          parentNode = id2Node[parent]
+        else:
+          parentNode, error = (dataTree, True)
+          print(f'**ERROR** there is an error in the hierarchy tree structure with parent {parent} missing')
         subNode = Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum)
         id2Node[_id] = subNode
     # add non-folders into tree
@@ -824,15 +850,17 @@ class SqlLiteDB:
       _id     = item['id']
       childNum, docType, name, gui = item['value']
       parentId = item['key'].split('/')[-2]
-      parentNode, error = (id2Node[parentId],error) if parentId in id2Node else (dataTree,True)
+      if parentId in id2Node:
+        parentNode = id2Node[parentId]
+      else:
+        outputString('print','error',f'repair branch table as parentID {parentId} is missing')
+        parentNode, error = (dataTree,True)
       Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum)
     # sort children
     for parentNode in id2Node.values():
       children = parentNode.children
-      childNums= [f'{i.childNum}{i.id}' for i in children]
+      childNums= [f'{i.childNum}{i.id}{idx}' for idx,i in enumerate(children)]
       parentNode.children = [x for _, x in sorted(zip(childNums, children))]
-    if error:
-      print('**ERROR** there is an error in the hierarchy tree structure')
     return dataTree, error
 
 
@@ -883,7 +911,8 @@ class SqlLiteDB:
     return
 
 
-  def checkDB(self, outputStyle:str='text', minimal:bool=False, repair:bool=False) -> str:
+  def checkDB(self, outputStyle:str='text', minimal:bool=False,
+              repair:Union[None,Callable[[str],bool]]=None) -> str:
     """
     Check database for consistencies by iterating through all documents
     - only reporting, no repair
@@ -893,7 +922,7 @@ class SqlLiteDB:
     Args:
         outputStyle (str): output using a given style: see outputString
         minimal (bool): true=only show warnings and errors; else=also show information
-        repair (bool): auto-repair
+        repair (function): auto-repair after asking user
 
     Returns:
         str: output
@@ -904,21 +933,42 @@ class SqlLiteDB:
     if not minimal:
       outString+= outputString(outputStyle,'h2','LEGEND')
       outString+= outputString(outputStyle,'perfect','Green: perfect and as intended')
-      outString+= outputString(outputStyle,'ok', 'Blue: ok, can happen: empty files for testing, strange path for measurements')
+      outString+= outputString(outputStyle,'ok',
+                               'Blue: ok, can happen: empty files for testing, strange path for measurements')
       outString+= outputString(outputStyle,'h2','List all database entries')
     if outputStyle=='html':
       outString += '</div>'
       outString+= outputString(outputStyle,'h2','List all database entries')
     # tests
-    cmd = 'SELECT id, main.type, branches.stack, branches.path, branches.child, branches.show '\
+    self.cursor.execute('SELECT main.id, main.name FROM main WHERE id NOT IN (SELECT id FROM branches)')
+    if res:= self.cursor.fetchall():
+      errorStr = outputString(outputStyle,'error', f'Items with no branch: {", ".join(str(i) for i in res)}')
+      if repair is None:
+        outString+= errorStr
+      elif repair(errorStr):
+        df = self.getView('viewDocType/x0')
+        ids = df[df['name']=='Lost and Found']['id'].values
+        if len(ids)==0:
+          print('**ERROR: manually create "LostAndFound" project to allow repair')
+        else:
+          parentID = ids[0]
+          parentPath = Path('LostAndFound')  #by definition
+          for docID, name in res:
+            self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
+                  [docID, 0, f'{parentID}/{docID}', 9999,
+                  (parentPath/createDirName(name, 'x0', 0)).as_posix() if docID.startswith('x-') else '*',
+                  'TT'])
+          self.connection.commit()
+
+    cmd = 'SELECT id, main.type, branches.stack, branches.path, branches.child, branches.show, main.name '\
           'FROM branches INNER JOIN main USING(id)'
     self.cursor.execute(cmd)
     res = self.cursor.fetchall()
     for row in res:
       try:
-        docID, docType, stack, path, child, _ = row[0], row[1], row[2], row[3], row[4], row[5]
+        docID, docType, stack, path, child, _, name = row[0], row[1], row[2], row[3], row[4], row[5], row[6]
       except ValueError:
-        outString+= outputString(outputStyle,'error',f"dch03a: branch data has strange list {docID}")
+        outString+= outputString(outputStyle,'error','dch03a: branch data has strange list')
         continue
       if docType.count('/')>5:
         outString+= outputString(outputStyle,'error',f"dch04a: type has too many / {docID}")
@@ -926,8 +976,10 @@ class SqlLiteDB:
         outString+= outputString(outputStyle,'unsure',f"dch04b: no type in (removed data?) {docID}")
         continue
       if docType.startswith('x') and not docType.startswith(('x0','x1')):
-        outString+= outputString(outputStyle,'error',f"dch04c: bad data type*: {docID} {docType}")
-        if repair:
+        errorStr = outputString(outputStyle,'error',f"dch04c: bad data type*: {docID} {docType}")
+        if repair is None:
+          outString+= errorStr
+        elif repair(errorStr):
           self.cursor.execute(f"UPDATE main SET type='x1' WHERE id = '{docID}'")
       if not all(k.startswith('x-') for k in stack.split('/')[:-1]):
         outString+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {docID}")
@@ -935,7 +987,8 @@ class SqlLiteDB:
         if docType.startswith(('measurement','x')):
           outString+= outputString(outputStyle,'warning',f"branch stack length = 0: no parent {docID}")
         elif not minimal:
-          outString+= outputString(outputStyle,'ok',f"branch stack length = 0: no parent for procedure/sample {docID}")
+          outString+= outputString(outputStyle,'ok',
+                                   f"branch stack length = 0: no parent for procedure/sample {docID}")
       try:
         dirNamePrefix = path.split(os.sep)[-1].split('_')[0]
         if dirNamePrefix.isdigit() and child!=int(dirNamePrefix) and docType.startswith('x'): #compare child-number to start of directory name
@@ -955,9 +1008,12 @@ class SqlLiteDB:
           #check if length of path and stack coincide; ignore path=None=*
           if docType.startswith('procedure'):
             if not minimal:
-              outString+= outputString(outputStyle,'perfect',f"procedure: branch stack and path lengths not equal: {docID}")
+              outString+= outputString(outputStyle,'perfect',
+                                       f"procedure: branch stack and path lengths not equal: {docID}: {name}")
           else:
-            outString+= outputString(outputStyle,'unsure',f"branch stack and path lengths not equal: {docID}")
+            outString+= outputString(outputStyle,'unsure',
+              f"branch stack and path lengths not equal: {docID}: {name} {len(stack.split('/'))}"
+              f" {len(path.split(os.sep))}")
         if path!='*' and not path.startswith('http'):
           for parentID in stack.split('/')[:-1]:            #check if all parents in doc have a corresponding path
             parentDoc = self.getDoc(parentID)
@@ -967,10 +1023,13 @@ class SqlLiteDB:
             parentDocBranches = parentDoc['branch']
             onePathFound = any(path.startswith(parentBranch['path']) for parentBranch in parentDocBranches)
             if not onePathFound:
-              if docType.startswith('procedure') and not minimal:
-                outString+= outputString(outputStyle,'perfect',f"dch08: parent of procedure does not have corresponding path {docID} | parentID {parentID}")
+              if docType.startswith('procedure'):
+                if not minimal:
+                  outString+= outputString(outputStyle,'perfect',
+                    f"dch08: procedure parent does not have corresponding path {docID} | parentID {parentID}")
               else:
-                outString+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path {docID} | parentID {parentID}")
+                outString+= outputString(outputStyle,'unsure',
+                    f"dch08: parent does not have corresponding path {docID} | parentID {parentID}")
 
     self.cursor.execute('SELECT id, idx FROM branches WHERE idx<0')
     res = self.cursor.fetchall()
@@ -987,12 +1046,13 @@ class SqlLiteDB:
       outString+= outputString(outputStyle,'ok',f"value of this key is missing: {docID} idx: {key}")
 
     #doc-type specific tests
-    self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'")
+    cmd = "SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'"
+    self.cursor.execute(cmd)
     if res:= [i[0] for i in self.cursor.fetchall() if i[1] is None]:
       outString+= outputString(outputStyle,'warning',f"dch09: qrCode not in samples {res}")
-    self.cursor.execute("SELECT id, shasum, image FROM main WHERE  type LIKE 'measurement%'")
+    self.cursor.execute("SELECT id, shasum, image, comment FROM main WHERE  type LIKE 'measurement%'")
     for row in self.cursor.fetchall():
-      docID, shasum, image = row
+      docID, shasum, image, comment = row
       if shasum is None:
         outString+= outputString(outputStyle,'warning',f"dch10: shasum not in measurement {docID}")
       if image.startswith('data:image'):  #for jpg and png
@@ -1008,9 +1068,16 @@ class SqlLiteDB:
         if SVG_RE.match(image) is None:
           outString+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
       elif image in ('', None):
-        outString+= outputString(outputStyle,'unsure',f"image not valid {docID} {image}")
+        comment = comment.replace('\n','..')
+        outString+=outputString(outputStyle,'unsure',f"image not valid {docID} image:{image} comment:{comment}")
       else:
         outString+= outputString(outputStyle,'error',f"dch14: image not valid {docID} {image}")
-    if repair:
+
+    #test hierarchy
+    for projID in self.getView('viewDocType/x0')['id'].values:
+      _, error = self.getHierarchy(projID, True)
+      if error:
+        outString+= outputString(outputStyle,'error',f"dch15: project hierarchy invalid in project {projID}")
+    if repair is not None:
       self.connection.commit()
     return outString

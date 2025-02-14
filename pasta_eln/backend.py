@@ -9,7 +9,7 @@ import traceback
 from datetime import datetime, timezone
 from os.path import exists, join
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Callable, Optional, Union
 from urllib import request
 from PySide6 import QtCore
 from PySide6.QtCore import QFileSystemWatcher
@@ -375,6 +375,11 @@ class Backend(CLI_Mixin):
         if (self.basePath/path/'.id_pastaELN.json').is_file(): # update branch: path and stack
           with open(self.basePath/path/'.id_pastaELN.json', encoding='utf-8') as fIn:
             doc = json.loads(fIn.read())
+            doc = self.db.getDoc(doc['id'])
+          if len(doc)==0:
+            (self.basePath/path/'.id_pastaELN.json').unlink()
+            rerunScanTree = True
+            continue
           if (self.basePath/doc['branch'][0]['path']).parent.as_posix()  == root and \
                doc['branch'][0]['stack']==hierStack:
             # special case: user wants to have a different directory name in same folder: then the child-number should not change
@@ -670,13 +675,14 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Wrapper for database functions
   ######################################################
-  def checkDB(self, outputStyle:str='text', repair:bool=False, minimal:bool=False) -> str:
+  def checkDB(self, outputStyle:str='text', repair:Union[None,Callable[[str],bool]]=None,
+              minimal:bool=False) -> str:
     """
     Wrapper of check database for consistencies by iterating through all documents
 
     Args:
         outputStyle (str): output using a given style: see outputString
-        repair (bool): repair id files in file tree by copying from DB
+        repair (function): repair errors automatically; function that has user interaction
         minimal (bool): true=only show warnings and errors; else=also show information
 
     Returns:
@@ -719,32 +725,49 @@ class Backend(CLI_Mixin):
             count += 1
           else:
             pathsInDB_folder.remove(path)
+            listDocs = self.db.getView('viewHierarchy/viewPathsAll', preciseKey=path)
+            if len(listDocs)!=1:
+              output += outputString(outputStyle, 'error', f'Path of folder is non-unique (1): {path} in '\
+                                      f'{" ".join([i["id"] for i in listDocs])}')
+            docDB   = self.db.getDoc(listDocs[0]['id'])
             if (self.basePath/root/dirName/'.id_pastaELN.json').is_file():
               with open(self.basePath/root/dirName/'.id_pastaELN.json',encoding='utf-8') as fIn:
                 docDisk = json.loads(fIn.read())
-                listDocs = self.db.getView('viewHierarchy/viewPathsAll', preciseKey=path)
-                if len(listDocs)!=1:
-                  output += outputString(outputStyle, 'error', f'Path of folder is non-unique (1): {path} in '\
-                                         f'{" ".join([i["id"] for i in listDocs])}')
-                docDB   = self.db.getDoc(listDocs[0]['id'])
                 difference = diffDicts(docDisk,docDB)
                 if len(difference)>1:
-                  output += outputString(outputStyle,'error',f'disk(1) and db(2) content do not match*: {docDB["id"]}\n{difference}')
-                  if repair:
+                  errorStr = outputString(outputStyle,'error',f'disk(1) and db(2) content do not match*: {docDB["id"]}\n{difference}')
+                  if repair is None:
+                    output += errorStr
+                  elif repair(errorStr):
                     with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
                       json.dump(docDB, fOut)
                   # #use only for resetting the content in the .id_pastaELN.json
             else:
-              output += outputString(outputStyle, 'error', f'Folder has no .id_pastaELN.json:{path}')
               count += 1
-              # if True:  #use only for resetting the content in the .id_pastaELN.json
-              #   with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
-              #     docDB   = self.db.getDoc( docDisk['id'] )
-              #     json.dump(docDB, fOut)
+              errorStr = outputString(outputStyle, 'error', f'Folder has no .id_pastaELN.json:{path}')
+              if repair is None:
+                output += errorStr
+              elif repair(errorStr):
+                with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
+                  json.dump({'id':docDB['id']}, fOut)
     orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ':/' not in i and i!='*']  #paths can be files or directories
     orphans+= [i for i in pathsInDB_folder if not (self.basePath/i).exists() ]
     if orphans:
-      output += outputString(outputStyle,'error','bch01: These files of database not on filesystem(3):\n  - '+'\n  - '.join(orphans))
+      if repair is None:
+        output += outputString(outputStyle,'error','bch01: These paths of database not on filesystem(3):\n  - '+'\n  - '.join(orphans))
+      else:
+        for orphan in sorted(orphans):
+          self.db.cursor.execute(f'SELECT main.name, main.type, branches.path, main.id, main.comment FROM main JOIN branches USING(id) WHERE branches.path == "{orphan}"')
+          res = self.db.cursor.fetchall()
+          resString = '\n  '.join(str(i) for i in res)
+          if repair(f'Path of database not on filesystem:\n  {resString}'):
+            if res[0][1].startswith('x'):
+              (self.basePath/orphan).mkdir(parents=True)
+              with open(self.basePath/orphan/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
+                json.dump({'id':res[0][3]}, fOut)
+            else:
+              self.db.cursor.execute(f"UPDATE branches SET path='*' WHERE id == '{res[0][3]}' and path == '{orphan}'")
+              self.db.connection.commit()
     if not minimal:
       output += outputString(outputStyle,'h2','File summary')
     if outputStyle == 'text':

@@ -85,10 +85,10 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     # Connect slots
     self.metadataBlockComboBox.currentTextChanged.connect(self.change_metadata_block)
     self.typesComboBox.currentTextChanged.connect(self.change_metadata_type)
-    self.minimalFullComboBox.currentTextChanged[str].connect(self.toggle_minimal_full)
+    self.minimalFullComboBox.currentTextChanged[str].connect(self.toggle_minimal_full)  # pylint: disable=unsubscriptable-object
     self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Save).clicked.connect(self.save_ui)
-    self.licenseNameLineEdit.textChanged[str].connect(self.update_license_name)
-    self.licenseURLLineEdit.textChanged[str].connect(self.update_license_uri)
+    self.licenseNameLineEdit.textChanged[str].connect(self.update_license_name)         # pylint: disable=unsubscriptable-object
+    self.licenseURLLineEdit.textChanged[str].connect(self.update_license_uri)           # pylint: disable=unsubscriptable-object
     self.buttonBox.accepted.disconnect()
 
   def get_metadata_types(self) -> dict[str, list[dict[str, str]]]:

@@ -102,9 +102,9 @@ class ConfigDialog(Ui_ConfigDialogBase):
     self.dataverseLineEdit.setText(self.config_model.dataverse_login_info.get('dataverse_id', ''))
 
     # Setup slots
-    self.dataverseServerLineEdit.textChanged[str].connect(self.update_dataverse_server)
-    self.apiTokenLineEdit.textChanged[str].connect(self.update_api_token)
-    self.dataverseLineEdit.textChanged[str].connect(self.update_dataverse_id)
+    self.dataverseServerLineEdit.textChanged[str].connect(self.update_dataverse_server)  # pylint: disable=unsubscriptable-object
+    self.apiTokenLineEdit.textChanged[str].connect(self.update_api_token)                # pylint: disable=unsubscriptable-object
+    self.dataverseLineEdit.textChanged[str].connect(self.update_dataverse_id)            # pylint: disable=unsubscriptable-object
     self.dataverseListComboBox.currentTextChanged.connect(self.update_dataverse_line_edit)
     self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Save).clicked.connect(self.save_config)
     self.dataverseVerifyLoadPushButton.clicked.connect(self.verify_and_load_dataverse_list)
