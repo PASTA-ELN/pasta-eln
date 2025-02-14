@@ -1,6 +1,7 @@
 """ dialog to edit docType schema """
 from enum import Enum
 from typing import Any
+import numpy as np
 import pandas as pd
 from PySide6.QtWidgets import (QComboBox, QDialog, QTableWidget, QTableWidgetItem,  # pylint: disable=no-name-in-module
                                QTabWidget, QVBoxLayout, QDialogButtonBox, QMessageBox, QInputDialog, QTabBar)
@@ -15,6 +16,7 @@ from .docTypeEdit import DocTypeEditor
 #                0       1            2      3           4      5         6
 COLUMN_NAMES = ['name','description','unit','mandatory','list','move up','delete']
 COLUMN_WIDTH = [100,   250,          100,   50,         245,   60,       50]
+pd.options.mode.copy_on_write = True
 
 class SchemeEditor(QDialog):
   """ dialog to edit docType schema """
@@ -32,7 +34,7 @@ class SchemeEditor(QDialog):
     self.docType = ''
     cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
           'docTypeSchema.unit, docTypeSchema.mandatory, docTypeSchema.list, definitions.long '\
-          'FROM docTypeSchema LEFT JOIN definitions ON docTypeSchema.name = definitions.key '
+          'FROM docTypeSchema LEFT JOIN definitions ON definitions.key = (docTypeSchema.class || "." || docTypeSchema.name)'
     self.df = pd.read_sql_query(cmd, self.db.connection).fillna('')
     self.df.rename(columns={'long':'description'}, inplace=True)
     self.df['idx'] = self.df['idx'].astype('int')
@@ -87,8 +89,32 @@ class SchemeEditor(QDialog):
     if btn.text().endswith('Cancel'):
       self.reject()
     elif btn.text().endswith('Save'):
+      self.table2schema()
       # TODO start verification: uniqueness in names (some do test before save)
-      # SAVE
+      # - in each table, name has to be unique
+      # - .qrCodes, .chemistry?
+
+      # SAVE DATA
+      dfSchema = self.df.drop('description', axis=1)
+      dfDef = self.df[['class','name','description']]
+      dfDef['key'] = dfDef['class']+'.'+dfDef['name']
+      dfDef = dfDef.drop(['name','class'], axis=1)[['key','description']]
+      dfDef.rename(columns={'description':'long'}, inplace=True)
+      nonUnique = dict(dfDef.groupby(['key']).apply(lambda x: len(np.unique(x))))
+      if nonUniqueStr:= ', '.join(k for k,v in nonUnique.items() if v>2):
+        btn = QMessageBox.question(self, 'Non unique definitions',
+                                   f'The definitions are non-unique for {nonUniqueStr}. Do you want to flatten?',
+                                   QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+        if btn == QMessageBox.StandardButton.No:
+          return
+      dfDef = dfDef.groupby(['key']).first()
+      listDef = list(dfDef.itertuples(name=None))
+      # save to sqlite
+      dfSchema.to_sql('docTypeSchema', self.db.connection, if_exists='replace', index=False, dtype='str')
+      cmd = 'INSERT INTO definitions (key, long, PURL) VALUES (?, ?, "") ON CONFLICT(key) DO '\
+            'UPDATE SET long = excluded.long;'
+      self.db.cursor.executemany(cmd, listDef)
+      self.db.connection.commit()
       self.accept()
     return
 
