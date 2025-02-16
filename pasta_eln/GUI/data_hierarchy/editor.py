@@ -32,12 +32,7 @@ class SchemeEditor(QDialog):
     self.comm = comm
     self.db   = self.comm.backend.db
     self.docType = ''
-    cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
-          'docTypeSchema.unit, docTypeSchema.mandatory, docTypeSchema.list, definitions.long '\
-          'FROM docTypeSchema LEFT JOIN definitions ON definitions.key = (docTypeSchema.class || "." || docTypeSchema.name)'
-    self.df = pd.read_sql_query(cmd, self.db.connection).fillna('')
-    self.df.rename(columns={'long':'description'}, inplace=True)
-    self.df['idx'] = self.df['idx'].astype('int')
+
     self.closeButtons:list[IconButton] = []  #close buttons of tabs
 
     # GUI elements
@@ -48,8 +43,6 @@ class SchemeEditor(QDialog):
     Label('Warning: verification not fully implemented yet', 'h2', mainL)
     _, docTypeL = widgetAndLayout('H', mainL, 's')
     self.selectDocType = QComboBox()
-    docTypes = self.db.dataHierarchy('','')
-    self.selectDocType.addItems(docTypes)
     self.selectDocType.currentTextChanged.connect(self.changeDocType)
     docTypeL.addWidget(self.selectDocType)
     docTypeL.addStretch(1)
@@ -62,13 +55,10 @@ class SchemeEditor(QDialog):
     self.tabW.tabBarDoubleClicked.connect(self.renameTab)
     self.tabW.tabBarClicked.connect(self.createNewTab)
     mainL.addWidget(self.tabW, stretch=10)
-    self.nameColumnDelegate     = NameColumnDelegate()
-    self.nameColumnDelegate.add_row_signal.connect(self.addRow)
-    self.requiredColumnDelegate = MandatoryColumnDelegate()
-    self.reorderColumnDelegate  = ReorderColumnDelegate()
-    self.reorderColumnDelegate.re_order_signal.connect(self.reorderRows)
-    self.deleteColumnDelegate   = DeleteColumnDelegate()
-    self.deleteColumnDelegate.delete_clicked_signal.connect(self.deleteRow)
+    self.nameColumnDelegates     = []
+    self.requiredColumnDelegates = []
+    self.reorderColumnDelegates  = []
+    self.deleteColumnDelegates   = []
     self.newWidget = QTableWidget()
 
     #final button box
@@ -76,7 +66,22 @@ class SchemeEditor(QDialog):
     buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
+
+    #initialize
+    self.readDB()
     self.selectDocType.setCurrentText('x0')
+
+
+  def readDB(self):
+    cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
+          'docTypeSchema.unit, docTypeSchema.mandatory, docTypeSchema.list, definitions.long '\
+          'FROM docTypeSchema LEFT JOIN definitions ON definitions.key = (docTypeSchema.class || "." || docTypeSchema.name)'
+    self.df = pd.read_sql_query(cmd, self.db.connection).fillna('')
+    self.df.rename(columns={'long':'description'}, inplace=True)
+    self.df['idx'] = self.df['idx'].astype('int')
+    self.selectDocType.clear()
+    self.selectDocType.addItems(self.db.dataHierarchy('',''))
+    return
 
 
   def closeDialog(self, btn:TextButton) -> None:
@@ -90,8 +95,8 @@ class SchemeEditor(QDialog):
       self.reject()
     elif btn.text().endswith('Save'):
       self.table2schema()
-      # TODO start verification: uniqueness in names (some do test before save)
-      # - in each table, name has to be unique
+      # verification: uniqueness in names,.. etc.
+      # - mandatory column
       # - .qrCodes, .chemistry?
 
       # SAVE DATA
@@ -127,8 +132,9 @@ class SchemeEditor(QDialog):
       command (list): list of commands
     """
     if command[0] is Command.NEW:
-      dialog = DocTypeEditor(self.comm, '')
+      dialog = DocTypeEditor(self.comm, '', self.changeDocType)
       dialog.exec()
+      self.readDB()
     elif command[0] is Command.EDIT:
       dialog = DocTypeEditor(self.comm, self.selectDocType.currentText())
       dialog.exec()
@@ -154,12 +160,10 @@ class SchemeEditor(QDialog):
   def redrawTabW(self) -> None:
     """ Redraw tab-widget: all tables """
     self.tabW.clear()
+    self.reorderColumnDelegates.clear()
     df = self.df[self.df['docType']==self.docType]
     for group in df['class'].unique():
       data  = df[df['class']==group]
-      self.nameColumnDelegate.numRows    = len(data)
-      self.reorderColumnDelegate.numRows = len(data)
-      self.deleteColumnDelegate.numRows  = len(data)
       table = QTableWidget(len(data)+1, 7)
       table.verticalHeader().hide()
       table.setAlternatingRowColors(True)
@@ -171,10 +175,17 @@ class SchemeEditor(QDialog):
         for col in range(5):
           table.setItem(idx, col, QTableWidgetItem(row[COLUMN_NAMES[col]]))
       #Delegates to give function to row
-      table.setItemDelegateForColumn(0, self.nameColumnDelegate)
-      table.setItemDelegateForColumn(3, self.requiredColumnDelegate)
-      table.setItemDelegateForColumn(5, self.reorderColumnDelegate)
-      table.setItemDelegateForColumn(6, self.deleteColumnDelegate)
+      self.nameColumnDelegates.append(NameColumnDelegate(self.df[self.df['docType']==self.docType], group))
+      self.nameColumnDelegates[-1].add_row_signal.connect(self.addRow)
+      table.setItemDelegateForColumn(0, self.nameColumnDelegates[-1])
+      self.requiredColumnDelegates.append(MandatoryColumnDelegate(self.df[self.df['docType']==self.docType], group))
+      table.setItemDelegateForColumn(3, self.requiredColumnDelegates[-1])
+      self.reorderColumnDelegates.append(ReorderColumnDelegate(self.df[self.df['docType']==self.docType], group))
+      self.reorderColumnDelegates[-1].re_order_signal.connect(self.reorderRows)
+      table.setItemDelegateForColumn(5, self.reorderColumnDelegates[-1])
+      self.deleteColumnDelegates.append(DeleteColumnDelegate(self.df[self.df['docType']==self.docType], group))
+      self.deleteColumnDelegates[-1].delete_clicked_signal.connect(self.deleteRow)
+      table.setItemDelegateForColumn(6, self.deleteColumnDelegates[-1])
       self.tabW.addTab(table, group or 'default')
     # define close buttons on some of the tabs
     self.closeButtons.clear()
@@ -259,6 +270,8 @@ class SchemeEditor(QDialog):
     group = '' if group=='default' else group
     widget:QTableWidget  = self.tabW.currentWidget()   # type: ignore[assignment]
     newIdx = widget.rowCount()-1
+    if widget.currentItem() is None:  #user pressed escape
+      return
     name   = widget.currentItem().text()
     newRow = {'docType':self.docType, 'class':group, 'idx':newIdx, 'name':name,
               'unit': '', 'mandatory': '', 'list': '', 'description':''}

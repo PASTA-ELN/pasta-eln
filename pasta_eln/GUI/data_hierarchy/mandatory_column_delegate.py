@@ -21,12 +21,13 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
   Delegate for creating the radio buttons for the mandatory column in data hierarchy editor tables
   """
 
-  def __init__(self) -> None:
+  def __init__(self, df, group) -> None:
     """
       Constructor
     """
     super().__init__()
-    self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+    self.df = df
+    self.group = group
 
   def paint(self,
             painter: QPainter,

@@ -23,12 +23,13 @@ class DeleteColumnDelegate(QStyledItemDelegate):
   delete_clicked_signal = Signal(
     int)  # Signal to inform the delete button click with the position in the table as the parameter
 
-  def __init__(self) -> None:
+  def __init__(self, df, group) -> None:
     """
       Constructor
     """
     super().__init__()
-    self.numRows = -1
+    self.df = df
+    self.group = group
 
 
   def paint(self,
@@ -42,7 +43,10 @@ class DeleteColumnDelegate(QStyledItemDelegate):
       option (QStyleOptionViewItem): Style option for the cell represented by index.
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
     """
-    if index.row() >= self.numRows:
+    dfSub = self.df[self.df['class']==self.group]
+    if index.row()>=len(dfSub):
+      return
+    if self.group=='' and dfSub[dfSub['idx']==index.row()]['name'].isin(['name','tags','comment']).values[0]:
       return
     button = QPushButton()
     opt = QStyleOptionButton()
@@ -83,6 +87,11 @@ class DeleteColumnDelegate(QStyledItemDelegate):
 
     Returns (bool): True if deleted otherwise False
     """
+    dfSub = self.df[self.df['class']==self.group]
+    if index.row()>=len(dfSub):
+      return False
+    if self.group=='' and dfSub[dfSub['idx']==index.row()]['name'].isin(['name','tags','comment']).values[0]:
+      return False
     if is_click_within_bounds(event, option):
       self.delete_clicked_signal.emit(index.row())
       return True

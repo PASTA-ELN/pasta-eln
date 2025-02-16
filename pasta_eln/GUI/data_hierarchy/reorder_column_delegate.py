@@ -22,12 +22,13 @@ class ReorderColumnDelegate(QStyledItemDelegate):
   """
   re_order_signal = Signal(int)
 
-  def __init__(self) -> None:
+  def __init__(self, df, group) -> None:
     """
       Constructor
     """
     super().__init__()
-    self.numRows = -1
+    self.df = df
+    self.group = group
 
 
   def paint(self,
@@ -41,7 +42,7 @@ class ReorderColumnDelegate(QStyledItemDelegate):
       option (QStyleOptionViewItem): Style option for the cell represented by index.
       index (Union[QModelIndex, QPersistentModelIndex]): Table cell index
     """
-    if index.row() >= self.numRows:
+    if index.row()>=len(self.df[self.df['class']==self.group]):
       return
     button = QPushButton()
     opt = QStyleOptionButton()

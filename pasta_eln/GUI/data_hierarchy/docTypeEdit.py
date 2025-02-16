@@ -10,7 +10,7 @@ from ...fixedStringsJson import allIcons
 
 class DocTypeEditor(QDialog):
   """ Edit properties of a docType """
-  def __init__(self, comm:Communicate, docType:str):
+  def __init__(self, comm:Communicate, docType:str, callback=None):
     """
     Initialization
 
@@ -22,6 +22,7 @@ class DocTypeEditor(QDialog):
     self.comm = comm
     self.db   = self.comm.backend.db
     self.docType = docType
+    self.callback = callback
     mainL = QVBoxLayout(self)
     _, mainForm = widgetAndLayoutForm(mainL)
     self.setWindowTitle('Edit docType properties')
@@ -88,11 +89,20 @@ class DocTypeEditor(QDialog):
       icon     = '' if self.docType.startswith('x') else self.comboIcon.currentText()
       shortcut = '' if self.docType.startswith('x') else self.row4.text()
       if self.docType:
-        self.comm.backend.db.cursor.execute(f"UPDATE docTypes SET title='{label}', shortcut='{shortcut}', icon='{icon}' WHERE docType = '{self.docType}'")
+        self.comm.backend.db.cursor.execute(f"UPDATE docTypes SET title='{label}', shortcut='{shortcut}', "\
+                                            f"icon='{icon}' WHERE docType = '{self.docType}'")
       else:
         docType = self.row1.text()
         self.comm.backend.db.cursor.execute('INSERT INTO docTypes VALUES (?, ?, ?, ?, ?, ?)',
                                             [docType, '', label, icon, shortcut, ''])
+        self.comm.backend.db.cursor.execute('INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
+                                            [docType, '', '0', 'name', '', '', ''])
+        self.comm.backend.db.cursor.execute('INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
+                                            [docType, '', '1', 'tags', '', '', ''])
+        self.comm.backend.db.cursor.execute('INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
+                                            [docType, '', '2', 'comment', '', '', ''])
+        if self.callback is not None:
+          self.callback(docType)
       self.comm.backend.db.connection.commit()
       self.accept()
     return

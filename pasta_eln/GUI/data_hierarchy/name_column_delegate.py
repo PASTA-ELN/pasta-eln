@@ -9,9 +9,10 @@ class NameColumnDelegate(QStyledItemDelegate):
   """
   add_row_signal = Signal()
 
-  def __init__(self) -> None:
+  def __init__(self, df, group) -> None:
     super().__init__()
-    self.numRows = -1
+    self.df = df
+    self.group = group
 
 
   def createEditor(self,
@@ -28,6 +29,12 @@ class NameColumnDelegate(QStyledItemDelegate):
 
     Returns: QLineEdit widget
     """
+    dfSub = self.df[self.df['class']==self.group]
+    if index.row()>len(dfSub):
+      return QWidget(parent)
+    trues = dfSub[dfSub['idx']==index.row()]['name'].isin(['name','tags','comment']).values
+    if len(trues)>0 and self.group=='' and trues[0]:
+      return QWidget(parent)
     lineEdit = QLineEdit(parent)
     return lineEdit
 
@@ -39,7 +46,8 @@ class NameColumnDelegate(QStyledItemDelegate):
       editor (QWidget): Parent table view
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
     """
-    if index.row()==self.numRows:
+    dfSub = self.df[self.df['class']==self.group]
+    if index.row()==len(dfSub):
       self.add_row_signal.emit()
     super().destroyEditor(editor, index)
     return
