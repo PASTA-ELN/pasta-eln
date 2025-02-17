@@ -12,7 +12,6 @@ from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-i
 from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 from pasta_eln import __version__
-from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .backend import Backend
@@ -22,7 +21,6 @@ from .fixedStringsJson import CONF_FILE_NAME, shortcuts
 # from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .GUI.body import Body
 from .GUI.config import Configuration
-# from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from .GUI.form import Form
 from .GUI.palette import Palette
 from .GUI.sidebar import Sidebar
@@ -93,7 +91,8 @@ class MainWindow(QMainWindow):
       syncMenu = systemMenu.addMenu('&Synchronize')
       Action('Send',                         self, [Command.SYNC_SEND],       syncMenu)
       Action('Get',                          self, [Command.SYNC_GET],       syncMenu)
-    # Action('&Data hierarchy editor',         self, [Command.DATAHIERARCHY],   systemMenu, shortcut='F8')
+    if 'develop' in self.comm.backend.configuration:
+      Action('&Editor to change data type schema', self, [Command.DATAHIERARCHY],   systemMenu, shortcut='F8')
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
@@ -200,8 +199,9 @@ class MainWindow(QMainWindow):
         dialogC = Configuration(self.comm)
         dialogC.exec()
     elif command[0] is Command.DATAHIERARCHY:
-      dataHierarchyForm = DataHierarchyEditorDialog()
-      dataHierarchyForm.instance.exec()
+      pass
+      # dataHierarchyForm = DataHierarchyEditorDialog()
+      # dataHierarchyForm.instance.exec()
     elif command[0] is Command.DATAVERSE_CONFIG:
       self.dataverseConfig = ConfigDialog()
       self.dataverseConfig.show()
