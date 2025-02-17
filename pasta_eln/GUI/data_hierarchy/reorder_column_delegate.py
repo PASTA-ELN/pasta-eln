@@ -9,6 +9,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Union
 import qtawesome as qta
+from pandas import DataFrame
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize, Signal
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (QApplication, QPushButton, QStyle, QStyledItemDelegate, QStyleOptionButton,
@@ -22,9 +23,13 @@ class ReorderColumnDelegate(QStyledItemDelegate):
   """
   re_order_signal = Signal(int)
 
-  def __init__(self, df, group) -> None:
+  def __init__(self, df:DataFrame, group:str) -> None:
     """
       Constructor
+
+    Args:
+      df (DataFrame): pandas dataframe containing the entire schema
+      group (str): string of this group/class
     """
     super().__init__()
     self.df = df

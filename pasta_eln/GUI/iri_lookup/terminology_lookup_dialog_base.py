@@ -1,3 +1,4 @@
+# type: ignore
 # Form implementation generated from reading ui file 'terminology_lookup_dialog_base.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.2

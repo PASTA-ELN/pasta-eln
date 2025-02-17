@@ -32,7 +32,7 @@ class SchemeEditor(QDialog):
     self.comm = comm
     self.db   = self.comm.backend.db
     self.docType = ''
-
+    self.df = pd.DataFrame()
     self.closeButtons:list[IconButton] = []  #close buttons of tabs
 
     # GUI elements
@@ -55,10 +55,10 @@ class SchemeEditor(QDialog):
     self.tabW.tabBarDoubleClicked.connect(self.renameTab)
     self.tabW.tabBarClicked.connect(self.createNewTab)
     mainL.addWidget(self.tabW, stretch=10)
-    self.nameColumnDelegates     = []
-    self.requiredColumnDelegates = []
-    self.reorderColumnDelegates  = []
-    self.deleteColumnDelegates   = []
+    self.nameColumnDelegates     :list[NameColumnDelegate]      = []
+    self.mandatoryColumnDelegates:list[MandatoryColumnDelegate] = []
+    self.reorderColumnDelegates  :list[ReorderColumnDelegate]   = []
+    self.deleteColumnDelegates   :list[DeleteColumnDelegate]    = []
     self.newWidget = QTableWidget()
 
     #final button box
@@ -72,7 +72,8 @@ class SchemeEditor(QDialog):
     self.selectDocType.setCurrentText('x0')
 
 
-  def readDB(self):
+  def readDB(self) -> None:
+    """ Read information from database and fill main combobox """
     cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
           'docTypeSchema.unit, docTypeSchema.mandatory, docTypeSchema.list, definitions.long '\
           'FROM docTypeSchema LEFT JOIN definitions ON definitions.key = (docTypeSchema.class || "." || docTypeSchema.name)'
@@ -178,8 +179,8 @@ class SchemeEditor(QDialog):
       self.nameColumnDelegates.append(NameColumnDelegate(self.df[self.df['docType']==self.docType], group))
       self.nameColumnDelegates[-1].add_row_signal.connect(self.addRow)
       table.setItemDelegateForColumn(0, self.nameColumnDelegates[-1])
-      self.requiredColumnDelegates.append(MandatoryColumnDelegate(self.df[self.df['docType']==self.docType], group))
-      table.setItemDelegateForColumn(3, self.requiredColumnDelegates[-1])
+      self.mandatoryColumnDelegates.append(MandatoryColumnDelegate(self.df[self.df['docType']==self.docType], group))
+      table.setItemDelegateForColumn(3, self.mandatoryColumnDelegates[-1])
       self.reorderColumnDelegates.append(ReorderColumnDelegate(self.df[self.df['docType']==self.docType], group))
       self.reorderColumnDelegates[-1].re_order_signal.connect(self.reorderRows)
       table.setItemDelegateForColumn(5, self.reorderColumnDelegates[-1])

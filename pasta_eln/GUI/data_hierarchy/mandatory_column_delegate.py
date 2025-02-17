@@ -8,8 +8,8 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-import logging
 from typing import Union
+from pandas import DataFrame
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QRect, Qt
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (QApplication, QRadioButton, QStyle, QStyledItemDelegate, QStyleOptionButton,
@@ -21,9 +21,13 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
   Delegate for creating the radio buttons for the mandatory column in data hierarchy editor tables
   """
 
-  def __init__(self, df, group) -> None:
+  def __init__(self, df:DataFrame, group:str) -> None:
     """
       Constructor
+
+    Args:
+      df (DataFrame): pandas dataframe containing the entire schema
+      group (str): string of this group/class
     """
     super().__init__()
     self.df = df
@@ -56,6 +60,7 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
     opt.state = QStyle.StateFlag.State_On if is_mandatory else QStyle.StateFlag.State_Off  # type: ignore[attr-defined]
     style.drawControl(QStyle.ControlElement.CE_RadioButton, opt, painter, radio_button)
 
+
   def editorEvent(self,
                   event: QEvent,
                   model: QAbstractItemModel,
@@ -75,6 +80,7 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
     if event.type() == QEvent.Type.MouseButtonRelease:
       model.setData(index, not bool(index.data(Qt.ItemDataRole.UserRole)), Qt.ItemDataRole.UserRole)
     return super().editorEvent(event, model, option, index)
+
 
   def createEditor(self,
                    parent: QWidget,

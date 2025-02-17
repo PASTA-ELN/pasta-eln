@@ -1,4 +1,5 @@
 """ NameColumnDelegate module used for the table views """
+from pandas import DataFrame
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Signal
 from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate, QStyleOptionViewItem, QWidget
 
@@ -9,7 +10,12 @@ class NameColumnDelegate(QStyledItemDelegate):
   """
   add_row_signal = Signal()
 
-  def __init__(self, df, group) -> None:
+  def __init__(self, df:DataFrame, group:str) -> None:
+    """
+    Args:
+      df (DataFrame): pandas dataframe containing the entire schema
+      group (str): string of this group/class
+    """
     super().__init__()
     self.df = df
     self.group = group

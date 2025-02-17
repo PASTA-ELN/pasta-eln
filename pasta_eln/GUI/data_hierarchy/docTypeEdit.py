@@ -1,5 +1,6 @@
 """ Edit properties of a docType """
 import string
+from typing import Callable, Optional
 import qtawesome as qta
 from PySide6.QtGui import QRegularExpressionValidator  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QLineEdit, QDialog, QLabel, QVBoxLayout, QDialogButtonBox, QComboBox) # pylint: disable=no-name-in-module
@@ -10,13 +11,14 @@ from ...fixedStringsJson import allIcons
 
 class DocTypeEditor(QDialog):
   """ Edit properties of a docType """
-  def __init__(self, comm:Communicate, docType:str, callback=None):
+  def __init__(self, comm:Communicate, docType:str, callback:Optional[Callable[[str],None]]=None):
     """
     Initialization
 
     Args:
       comm (Communicate): communication channel
       doc (dict):  document to change / create
+      callback (function): callback to allow sending the new doc-type
     """
     super().__init__()
     self.comm = comm
