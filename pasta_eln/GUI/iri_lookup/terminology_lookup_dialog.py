@@ -18,7 +18,7 @@ from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QMessageBox, QWidget
 from pasta_eln.GUI.iri_lookup.terminology_lookup_service import TerminologyLookupService
-from .terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase  # type: ignore[attr-defined]
+from pasta_eln.GUI.iri_lookup.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase  # type: ignore[attr-defined]
 
 
 class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
