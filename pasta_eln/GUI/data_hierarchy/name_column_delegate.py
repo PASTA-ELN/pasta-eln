@@ -41,8 +41,7 @@ class NameColumnDelegate(QStyledItemDelegate):
     trues = dfSub[dfSub['idx']==index.row()]['name'].isin(['name','tags','comment']).values
     if len(trues)>0 and self.group=='' and trues[0]:
       return QWidget(parent)
-    lineEdit = QLineEdit(parent)
-    return lineEdit
+    return QLineEdit(parent)
 
 
   def destroyEditor(self, editor:QWidget, index:QModelIndex | QPersistentModelIndex) -> None:

@@ -56,8 +56,12 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
                      option_rect.top(),
                      option_rect.width(),
                      option_rect.height())
-    is_mandatory = bool(index.data(Qt.ItemDataRole.UserRole))
-    opt.state = QStyle.StateFlag.State_On if is_mandatory else QStyle.StateFlag.State_Off  # type: ignore[attr-defined]
+    dfSub = self.df[self.df['class']==self.group]
+    if index.row()>len(dfSub):
+      return
+    trues = dfSub[dfSub['idx']==index.row()]['mandatory'].values
+    isMandatory = len(trues)==1 and trues[0]=='T'
+    opt.state = QStyle.StateFlag.State_On if isMandatory else QStyle.StateFlag.State_Off  # type: ignore[attr-defined]
     style.drawControl(QStyle.ControlElement.CE_RadioButton, opt, painter, radio_button)
 
 
@@ -75,10 +79,12 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
       index (Union[QModelIndex, QPersistentModelIndex]): Table cell index.
 
     Returns (bool): True/False
-
     """
     if event.type() == QEvent.Type.MouseButtonRelease:
-      model.setData(index, not bool(index.data(Qt.ItemDataRole.UserRole)), Qt.ItemDataRole.UserRole)
+      column= (self.df['class']==self.group) & (self.df['idx']==index.row())
+      trues = self.df[column]['mandatory'].values
+      isMandatory = len(trues)==1 and trues[0]=='T'
+      self.df.loc[column,   'mandatory']= '' if isMandatory else 'T'
     return super().editorEvent(event, model, option, index)
 
 
@@ -94,6 +100,5 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
 
     Returns: None
-
     """
     return None  # type: ignore[return-value]

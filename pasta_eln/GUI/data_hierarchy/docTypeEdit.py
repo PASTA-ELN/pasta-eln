@@ -3,10 +3,11 @@ import string
 from typing import Callable, Optional
 import qtawesome as qta
 from PySide6.QtGui import QRegularExpressionValidator  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QLineEdit, QDialog, QLabel, QVBoxLayout, QDialogButtonBox, QComboBox) # pylint: disable=no-name-in-module
-from ...guiCommunicate import Communicate
-from ...guiStyle import (TextButton, widgetAndLayoutForm, widgetAndLayout)
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QLabel,  # pylint: disable=no-name-in-module
+                               QLineEdit, QVBoxLayout)
 from ...fixedStringsJson import allIcons
+from ...guiCommunicate import Communicate
+from ...guiStyle import TextButton, widgetAndLayout, widgetAndLayoutForm
 
 
 class DocTypeEditor(QDialog):

@@ -3,19 +3,19 @@ from enum import Enum
 from typing import Any
 import numpy as np
 import pandas as pd
-from PySide6.QtWidgets import (QComboBox, QDialog, QTableWidget, QTableWidgetItem,  # pylint: disable=no-name-in-module
-                               QTabWidget, QVBoxLayout, QDialogButtonBox, QMessageBox, QInputDialog, QTabBar)
-from .mandatory_column_delegate import MandatoryColumnDelegate
-from .reorder_column_delegate   import ReorderColumnDelegate
-from .delete_column_delegate    import DeleteColumnDelegate
-from .name_column_delegate      import NameColumnDelegate
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QInputDialog,  # pylint: disable=no-name-in-module
+                               QMessageBox, QTabBar, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout)
 from ...guiCommunicate import Communicate
-from ...guiStyle import (IconButton, Label, TextButton, widgetAndLayout)
+from ...guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout
+from .delete_column_delegate import DeleteColumnDelegate
 from .docTypeEdit import DocTypeEditor
+from .mandatory_column_delegate import MandatoryColumnDelegate
+from .name_column_delegate import NameColumnDelegate
+from .reorder_column_delegate import ReorderColumnDelegate
 
 #                0       1            2      3           4      5         6
 COLUMN_NAMES = ['name','description','unit','mandatory','list','move up','delete']
-COLUMN_WIDTH = [100,   250,          100,   50,         245,   60,       50]
+COLUMN_WIDTH = [100,   250,          100,   80,         245,   60,       50]
 pd.options.mode.copy_on_write = True
 
 class SchemeEditor(QDialog):
@@ -36,11 +36,11 @@ class SchemeEditor(QDialog):
     self.closeButtons:list[IconButton] = []  #close buttons of tabs
 
     # GUI elements
-    self.setMinimumWidth(905)
+    self.setMinimumWidth(965)
     self.setMinimumHeight(500)
     mainL = QVBoxLayout(self)
     Label('Schema-editor for document types', 'h1', mainL)
-    Label('Warning: verification not fully implemented yet', 'h2', mainL)
+    Label('Warning: basic verification exists only. Use with care.', 'h2', mainL)
     _, docTypeL = widgetAndLayout('H', mainL, 's')
     self.selectDocType = QComboBox()
     self.selectDocType.currentTextChanged.connect(self.changeDocType)
@@ -96,10 +96,12 @@ class SchemeEditor(QDialog):
       self.reject()
     elif btn.text().endswith('Save'):
       self.table2schema()
-      # verification: uniqueness in names,.. etc.
-      # - mandatory column
-      # - .qrCodes, .chemistry?
-
+      # verification: uniqueness in names. etc.
+      unique =self.df.groupby('docType')['name'].nunique()==self.df.groupby('docType').size()
+      if not unique.all():
+        showMessage(self, 'Error', 'Within each table, the text in the first column has to be unique. E.g. no '
+                    'two "tags" are allowed.', 'Critical')
+        return
       # SAVE DATA
       dfSchema = self.df.drop('description', axis=1)
       dfDef = self.df[['class','name','description']]
@@ -169,7 +171,7 @@ class SchemeEditor(QDialog):
       table.verticalHeader().hide()
       table.setAlternatingRowColors(True)
       table.setHorizontalHeaderLabels(COLUMN_NAMES)
-      for idx, width in enumerate(COLUMN_WIDTH):
+      for idx, width in enumerate(COLUMN_WIDTH[:-1]):
         table.setColumnWidth(idx, width)
       for _,row in data.iterrows():
         idx = int(row['idx'])
@@ -193,6 +195,8 @@ class SchemeEditor(QDialog):
     for idx in range(1, self.tabW.count()):
       self.closeButtons.append(IconButton('fa5s.times', self, [Command.DEL_GROUP,idx], None, 'Delete group'))
       self.tabW.tabBar().setTabButton(idx, QTabBar.ButtonPosition.RightSide, self.closeButtons[-1])
+      header = table.horizontalHeader()
+      header.setStretchLastSection(True)
     self.tabW.addTab(self.newWidget, '+')
     return
 
@@ -289,7 +293,7 @@ class SchemeEditor(QDialog):
     """
     if 0 < idx <self.tabW.count()-1:
       textOld = self.tabW.tabText(idx)
-      textNew, ok = QInputDialog.getText(self, "Rename group", "Enter new group name:", text=textOld)
+      textNew, ok = QInputDialog.getText(self, 'Rename group', 'Enter new group name:', text=textOld)
       if ok and textNew.strip():
         self.tabW.setTabText(idx, textNew.strip())
         column= (self.df['docType']==self.docType) & (self.df['class']==textOld)
@@ -304,7 +308,7 @@ class SchemeEditor(QDialog):
       idx (int): index of the tab
     """
     if idx == self.tabW.count()-1:
-      textNew, ok = QInputDialog.getText(self, "Create group", "Enter new group name:", text='')
+      textNew, ok = QInputDialog.getText(self, 'Create group', 'Enter new group name:', text='')
       if ok and textNew.strip():
         newRow = {'docType':self.docType, 'class':textNew.strip(), 'idx':0, 'name':'item',
               'unit': '', 'mandatory': '', 'list': '', 'description':''}
