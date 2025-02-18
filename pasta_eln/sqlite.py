@@ -173,12 +173,13 @@ class SqlLiteDB:
     return
 
 
-  def getDoc(self, docID:str) -> dict[str,Any]:
+  def getDoc(self, docID:str, noError:bool=False) -> dict[str,Any]:
     """
     Wrapper for get from database function
 
     Args:
         docID (dict): document id
+        noError (bool): False=report errors as they occur; True=do not report on errors
 
     Returns:
         dict: json representation of document
@@ -188,7 +189,8 @@ class SqlLiteDB:
     cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
     res = cursor.fetchone()
     if res is None:
-      print(f'**ERROR sqlite: could not get docID: {tracebackString(True, docID)}')
+      if not noError:
+        print(f'**ERROR sqlite: could not get docID: {docID} | {tracebackString(True, docID)}')
       return {}
     doc = dict(res)
     self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")

@@ -93,7 +93,7 @@ class Details(QScrollArea):
       self.docID = docID
     if self.docID=='':
       return
-    self.doc   = self.comm.backend.db.getDoc(self.docID)
+    self.doc   = self.comm.backend.db.getDoc(self.docID, noError=True)
     if 'name' not in self.doc:  #keep empty details and wait for user to click
       self.comm.changeTable.emit('','')
       return
