@@ -518,6 +518,7 @@ class SqlLiteDB:
       if len(res)==0:
         self.remove(docID)
       return (path, None)
+
     if branch == -1: #append a new branch
       self.cursor.execute(f"SELECT idx FROM branches WHERE id == '{docID}'")
       idxOld = [i[0] for i in self.cursor.fetchall()]
@@ -527,6 +528,7 @@ class SqlLiteDB:
                   [docID, idxNew, '/'.join(stack+[docID]), str(child), path, show])
       self.connection.commit()
       return (None, None if path=='*' else path)
+
     # modify existing branch
     if 'pathOld' in kwargs:
       pathOld = kwargs['pathOld']
@@ -542,6 +544,12 @@ class SqlLiteDB:
       raise ValueError(f"FAILED AT: {cmd}")
     pathOld, stackOld, showOld = reply
     stack = stack or stackOld.split('/')[:-1]           # stack without current id
+    if path=='':
+      self.cursor.execute(f"SELECT type, name FROM main WHERE id == '{docID}'")
+      docType, name = self.cursor.fetchall()[0]
+      if docType.startswith('x'):
+        name = createDirName(name,docType,child)
+      path = ((Path(pathOld).parent)/name).as_posix()
     show  = self.createShowFromStack(stack, showOld[-1])
     cmd = f"UPDATE branches SET stack='{'/'.join(stack+[docID])}', child={child}, path='{path}', show='{show}' "\
           f"WHERE path = '{pathOld}' and stack = '{stackOld}'"
@@ -687,6 +695,8 @@ class SqlLiteDB:
     Returns:
         df: data-frame with human-readable column names
     """
+    if (startKey is not None and ' ' in startKey) or (preciseKey is not None and ' ' in preciseKey):
+      raise ValueError(f'key cannot have a space inside |{startKey}|{preciseKey}|')  #TODO: remove this safeguard in 2026
     allFlag = False
     if thePath.endswith('All'):
       thePath = thePath.removesuffix('All')
@@ -746,16 +756,16 @@ class SqlLiteDB:
       df = df.astype('str').fillna('')
       return df
     elif thePath=='viewHierarchy/viewHierarchy':
-      cmd = 'SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui '\
+      cmd = 'SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui, branches.idx '\
             f"FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '{startKey}%'"
       if not allFlag:
         cmd += r" and NOT branches.show LIKE '%F%'"
       cmd += ' ORDER BY branches.stack'
       self.cursor.execute(cmd)
       results = self.cursor.fetchall()
-      # value: [child, doc['-type'], doc['.name'], doc['-gui']]
+      # value: [child, doc['type'], doc['name'], doc['gui'], branches.idx]
       results = [{'id':i[0], 'key':i[1],
-                  'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]]]} for i in results]
+                  'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]], i[6]]} for i in results]
     elif thePath=='viewHierarchy/viewPaths':
       cmd = 'SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum, branches.idx '\
             'FROM branches INNER JOIN main USING(id)'
@@ -831,7 +841,7 @@ class SqlLiteDB:
         nonFolders.append(item)
         continue
       _id     = item['id']
-      childNum, docType, name, gui = item['value']
+      childNum, docType, name, gui, _ = item['value']
       if dataTree is None:
         dataTree = Node(id=_id, docType=docType, name=name, gui=gui, childNum=childNum)
         id2Node[_id] = dataTree
@@ -848,7 +858,7 @@ class SqlLiteDB:
     # print(len(nonFolders),'length: crop if too long')
     for item in nonFolders:
       _id     = item['id']
-      childNum, docType, name, gui = item['value']
+      childNum, docType, name, gui, _ = item['value']
       parentId = item['key'].split('/')[-2]
       if parentId in id2Node:
         parentNode = id2Node[parentId]
