@@ -39,10 +39,10 @@ class TestStringMethods(unittest.TestCase):
     main(self.be, projID, None, {'fileNames':[fileName]})
 
     # test file
-    try:
-      os.system(f'google-chrome {fileName}')
-    except Exception:
-      pass
+    # try:
+    #   os.system(f'google-chrome {fileName}')
+    # except Exception:
+    #   pass
     return
 
 

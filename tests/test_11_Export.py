@@ -61,10 +61,10 @@ Data on disk:
     └── Example_SOP.md
 """)
 
-    try:
-      os.system(f'code {tempDir}/PASTA/ro-crate-metadata.json')
-    except Exception:
-      pass
+    # try:
+    #   os.system(f'code {tempDir}/PASTA/ro-crate-metadata.json')
+    # except Exception:
+    #   pass
     return
 
 
