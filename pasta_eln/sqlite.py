@@ -556,7 +556,7 @@ class SqlLiteDB:
     self.cursor.execute(cmd)
     self.connection.commit()
     # move content: folder and data and write .json to disk
-    if pathOld!='*' and path!='*' and ':/' not in pathOld:
+    if pathOld!='*' and ':/' not in pathOld and path!='*' and path is not None:
       if not (self.basePath/pathOld).exists() and (self.basePath/path).exists():
         logging.debug('sqlite:updateBranch: dont move since already good')
       else:
