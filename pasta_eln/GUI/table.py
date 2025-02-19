@@ -340,7 +340,7 @@ class Table(QWidget):
           self.comm.backend.useExtractors(path, doc.get('shasum',''), doc)
           if doc['type'][0] == oldDocType[0]:
             del doc['branch']  #don't update
-            self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
+            self.comm.backend.db.updateDoc(doc, docID)
           else:
             self.comm.backend.db.remove( docID )
             del doc['id']
