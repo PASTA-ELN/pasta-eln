@@ -46,7 +46,7 @@ def createContributors() -> None:
     print('**ERROR: get not successful',resp.reason)
     return
   with open('CONTRIBUTORS.md', 'w', encoding='utf-8') as fOut:
-    fOut.write('# Contributors \n## Code contributors\nThe following people have contributed code to this project:\n')
+    fOut.write('# Contributors\n## Code contributors\nThe following people have contributed code to this project:\n')
     fOut.write('<table border="2"><tr>\n')
     for idx, user in enumerate(json.loads(resp.text)):
       userName = user['login']
@@ -56,11 +56,11 @@ def createContributors() -> None:
       if idx%3==2:
         fOut.write('</tr>\n')
     fOut.write('<td></td></tr>\n</table>')
-    fOut.write('\n\n## Support contributors \n The following people contributed in the discussions:\n')
+    fOut.write('\n\n## Support contributors\n The following people contributed in the discussions:\n')
     fOut.write('- Hanna Tsybenko\n')
     fOut.write('- Ruth Schwaiger\n')
     fOut.write('\n\n## Software projects\nMost of the file-layout and the integration of webservices follows the example of datalad and datalad-gooey')
-    fOut.write('https://github.com/datalad. We thank those developers for their work and contribution to free software.')
+    fOut.write('https://github.com/datalad. We thank those developers for their work and contribution to free software.\n')
   return
 
 
@@ -247,7 +247,7 @@ def runSourceVerification() -> None:
   - sourcery
   """
   tools = {'pre-commit': 'pre-commit run --all-files',
-           'isort'     : 'isort pasta_eln/',
+           'isort'     : 'isort --ca -l 120 pasta_eln/',
            'pylint'    : 'pylint pasta_eln/',
            'mypy'      : 'mypy --no-warn-unused-ignores pasta_eln/',
            'sourcery'  : 'sourcery review pasta_eln/',
