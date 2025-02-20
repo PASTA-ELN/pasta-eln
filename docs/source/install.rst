@@ -33,7 +33,7 @@ We recommend to use the default Python installer:
 Using Anaconda
 ^^^^^^^^^^^^^^
 
-We recommend **against** using Anaconda as its license agreements prohibit its free use for anything else than education. Much work in universities and research institutions is carried out as funded third-party research that is not covered by the free Anaconda license. We give the Anaconda instructions here for those users that only use Python in an educational framework or that know about the excemptions from this short paragraph.
+We recommend **against** using Anaconda as its license agreements prohibit its free use for anything else than education. Much work in universities and research institutions is carried out as funded third-party research that is not covered by the free Anaconda license. We give the Anaconda instructions here for those users that only use Python in an educational framework or that know about the exceptions from this short paragraph.
 
 1. Visit the Anaconda website at https://www.anaconda.com/download and download the installer.
 2. Run the installer and accept the default installation settings.

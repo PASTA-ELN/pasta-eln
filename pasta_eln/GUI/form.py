@@ -15,6 +15,7 @@ from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, 
 from ..guiCommunicate import Communicate
 from ..guiStyle import (IconButton, Image, Label, ScrollMessageBox, TextButton, showMessage, widgetAndLayout,
                         widgetAndLayoutForm)
+from ..miscTools import flatten
 from ..sqlite import MAIN_ORDER
 from ..stringChanges import createDirName, markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
@@ -276,8 +277,11 @@ class Form(QDialog):
     buttonLineL.addStretch(1)
     self.btnAddKWPairs = IconButton('ri.menu-add-fill', self, [Command.FORM_ADD_KV],   buttonLineL,
                                     'Add key-value pair', style='border-width:1')
-    IconButton('fa5s.poll-h',      self, [Command.FORM_SHOW_DOC], buttonLineL, 'Show all information',
-               style='border-width:1')
+    if not self.flagNewDoc: #existing dataset
+      IconButton('fa5s.poll-h',      self, [Command.FORM_SHOW_DOC], buttonLineL, 'Show all information',
+                 style='border-width:1')
+      IconButton('fa5s.plus-circle', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Duplicate data set',
+                 style='border-width:1')
     saveBtn = TextButton('Save',             self, [Command.FORM_SAVE],     buttonLineL, 'Save changes')
     saveBtn.setShortcut('Ctrl+Return')
     TextButton('Cancel',           self, [Command.FORM_CANCEL],   buttonLineL, 'Discard changes')
@@ -416,47 +420,14 @@ class Form(QDialog):
       self.checkThreadTimer.stop()
       self.reject()
     elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT):
-      # OLD CODE FROM FillDocBeforeCreate
-      # # separate comment into tags and fields
-      # # these tags are lost: '#d': too short; '#3tag': starts with number
-      # if 'comment' not in data:
-      #   data['comment'] =''
-      # if 'tags' not in data:
-      #   data['tags'] = []
-      # #always do regex expressions twice: if #lala at beginning or in middle of comment
-      # curated = re.findall(r'(?:^|\s)#_curated(?:\s|$)', data['comment']) # #_curated
-      # rating  = re.findall(r'(?:^|\s)#_\d(?:\s|$)',      data['comment']) # #_number
-      # if rating is None:
-      #   rating=[]
-      # if len(rating)>1:  #prevent multiple new ratings
-      #   rating=rating[:1]
-      # if len(rating)==1: #remove ratings that exist already
-      #   data['tags'] = [i for i in data['tags'] if not re.compile(r'^_\d$').match(i)]
-      # otherTags = re.findall(r'(?:^|\s)#[a-zA-Z]\w+(?=\s|$)', data['comment'])
-      # if otherTags is None:
-      #   otherTags=[]
-      # data['tags'] = rating + data['tags'] + otherTags + curated
-      # data['comment'] = re.sub(r'(?:^|\s)#\w+(?=\s|$)', '', data['comment']).strip()
-      # fields = re.findall(r':[\S]+:[\S]+:', data['comment'])
-      # if fields is not None:
-      #   for item in fields:
-      #     aList = item.split(':')
-      #     if aList[1] in data: #do not add if item already exists
-      #       continue
-      #     data[aList[1]] = aList[2]
-      # data['comment'] = re.sub(r':[\S]+:[\S]+:','',data['comment'])  #remove :field:data: information
-      # if isinstance(data['tags'], str):
-      #   data['tags'] = data['tags'].split(' ')
-      # data['tags'] = [i.strip()[1:] if i.strip()[0]=='#' else i.strip() for i in data['tags']]
-      # create the data that has to be saved
       self.checkThreadTimer.stop()
-      if (Path.home()/'.pastaELN.temp').is_file():
-        with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:
-          content = json.loads(fTemp.read())
-          if self.doc.get('id', '') in content:
-            del content[self.doc.get('id', '')]
-        with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
-          fTemp.write(json.dumps(content))
+      if (Path.home()/'.pastaELN.temp').is_file(): #if there is a temporary file
+        with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp: #open it
+          content = json.loads(fTemp.read()) #and read its contents
+          if self.doc.get('id', '') in content: #if there is an ID in content -> unique identifier?
+            del content[self.doc.get('id', '')]# delete the ID
+        with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp: #then open the temporary file again
+          fTemp.write(json.dumps(content)) #and write all content into the file
 
       # loop through all the subitems
       if self.gradeChoices.currentText():
@@ -521,7 +492,7 @@ class Form(QDialog):
       keyValueDict = {k:v for k,v in keyValueDict.items() if k}
       self.doc = keyValueDict | self.doc
       # ---- if project changed: only branch save; remaining data still needs saving
-      newProjID = []
+      newProjID = self.doc['branch'][0]['stack'] if 'branch' in self.doc else []
       if hasattr(self, 'projectComboBox') and self.projectComboBox.currentData() != '':
         parentPath = self.db.getDoc(self.projectComboBox.currentData())['branch'][0]['path']
         if '_ids' in self.doc:  # group update
@@ -549,6 +520,8 @@ class Form(QDialog):
       # ---- if docType changed: save; no further save to db required ----
       if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
         self.doc['type'] = [self.docTypeComboBox.currentData()]
+      self.doc = flatten(self.doc, True)                  # type: ignore[assignment]
+      docBackup = copy.deepcopy(self.doc)                # for duplicate, save&next
       if '_ids' in self.doc:                              # group update
         if 'name' in self.doc:
           del self.doc['name']
@@ -561,10 +534,11 @@ class Form(QDialog):
         self.comm.backend.editData(self.doc)
       else:                                               # create new dataset
         self.comm.backend.addData(self.doc['type'][0], copy.deepcopy(self.doc), newProjID)
+      self.doc = docBackup
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
       if command[0] is Command.FORM_SAVE_NEXT:
-        for delKey in [i for i in self.doc.keys() if i not in ['name','type','tags']]:
+        for delKey in [i for i in self.doc.keys() if i in ['id'] or i.startswith('meta')]: #delete these keys
           del self.doc[delKey]
         self.comm.changeTable.emit('', '')
       else:
@@ -638,7 +612,7 @@ class Form(QDialog):
     for i in reversed(range(self.tagsBarSubL.count())):
       self.tagsBarSubL.itemAt(i).widget().setParent(None)
     for tag in (self.doc['tags'] if 'tags' in self.doc else []):
-      if not re.match(r'^_\dS', tag):
+      if not re.match(r'^_\d$', tag):
         Label(tag, 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
     self.tagsBarSubL.addWidget(QWidget(), stretch=2)
     #update choices in combobox
@@ -676,4 +650,4 @@ class Command(Enum):
   FORM_CANCEL      = 8
   FORM_ADD_KV      = 9
   FORM_SHOW_DOC    = 10
-  FORM_SAVE_NEXT   = 11
+  FORM_SAVE_NEXT   = 11  # same as duplicate

@@ -25,7 +25,7 @@ def cliCallback(api:ElabFTWApi , entry:str, idx:int) -> str:
   Returns:
     str: mode of processing: g,gA,s,sA
   """
-  print('**ERROR**: default callback function should not be called')
+  print(f'**ERROR**: default callback function should not be called. API:{api}, entry:{entry}, idx:{idx}')
   return ''
 
 
@@ -319,12 +319,12 @@ class Pasta2Elab:
     """
     agreement = True
     self.backend.db.cursor.execute('SELECT type, externalId FROM main')
-    dataPasta = self.backend.db.cursor.fetchall()
-    inPasta = {'experiments': {int(i[1]) for i in dataPasta if i[0].startswith('measurement')},
-               'items':       {int(i[1]) for i in dataPasta if not i[0].startswith('measurement')} }
-    dataELAB = self.api.readEntry('items', self.elabProjGroupID)[0]
-    inELAB  = {'experiments': {i['entityid'] for i in dataELAB['related_experiments_links']},
-               'items':       {i['entityid'] for i in dataELAB['related_items_links']} }
+    dataLocal = self.backend.db.cursor.fetchall()
+    inPasta = {'experiments': {int(i[1]) for i in dataLocal if i[0].startswith('measurement')},
+               'items':       {int(i[1]) for i in dataLocal if not i[0].startswith('measurement')} }
+    data = self.api.readEntry('items', self.elabProjGroupID)[0]
+    inELAB  = {'experiments': {i['entityid'] for i in data['related_experiments_links']},
+               'items':       {i['entityid'] for i in data['related_items_links']} }
     for entryType in ['experiments','items']:
       if diff := inPasta[entryType].difference(inELAB[entryType]):
         agreement = False

@@ -291,10 +291,10 @@ def flatten(d:dict[Any,Any], keepPastaStruct:bool=False) -> dict[object, Any]:
 
   # start recursive calling
   backup = {'type':d.pop('type',''), 'branch':d.pop('branch',''), 'tags':d.pop('tags',''),
-            'gui':d.pop('gui',''), 'qrCodes':d.pop('qrCodes','')} \
+            'gui':d.pop('gui',''), 'qrCodes':d.pop('qrCodes',''), '_ids':d.pop('_ids','')} \
            if keepPastaStruct else {}
   _flatten(d, depth=1)
-  return flat_dict | backup
+  return flat_dict | {k:v for k,v in backup.items() if v}
 
 
 def hierarchy(d:dict[str,Any]) -> dict[str,Any]:

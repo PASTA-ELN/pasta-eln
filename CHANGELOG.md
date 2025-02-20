@@ -1,5 +1,34 @@
 # Changelog
 
+## [v3.0.9](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.9) (2025-02-10)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.8...v3.0.9)
+
+## [v3.0.8](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.8) (2025-02-07)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.7...v3.0.8)
+
+## [v3.0.7](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.7) (2025-02-07)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.5...v3.0.7)
+
+## [v3.0.5](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.5) (2025-01-30)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.4...v3.0.5)
+
+**Fixed bugs:**
+
+- Data hierarchy editor allows to remove default metadata group [\#235](https://github.com/PASTA-ELN/pasta-eln/issues/235)
+
+**Closed issues:**
+
+- Selecting the columns shown in the sample list [\#385](https://github.com/PASTA-ELN/pasta-eln/issues/385)
+- Offering more sample geometries [\#384](https://github.com/PASTA-ELN/pasta-eln/issues/384)
+
+## [v3.0.4](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.4) (2025-01-08)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.3b2...v3.0.4)
+
 ## [v3.0.3b2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.3b2) (2025-01-01)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.3b1...v3.0.3b2)

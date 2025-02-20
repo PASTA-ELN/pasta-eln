@@ -46,7 +46,7 @@ def createContributors() -> None:
     print('**ERROR: get not successful',resp.reason)
     return
   with open('CONTRIBUTORS.md', 'w', encoding='utf-8') as fOut:
-    fOut.write('# Contributors \n## Code contributors\nThe following people have contributed code to this project:\n')
+    fOut.write('# Contributors\n## Code contributors\nThe following people have contributed code to this project:\n')
     fOut.write('<table border="2"><tr>\n')
     for idx, user in enumerate(json.loads(resp.text)):
       userName = user['login']
@@ -56,11 +56,11 @@ def createContributors() -> None:
       if idx%3==2:
         fOut.write('</tr>\n')
     fOut.write('<td></td></tr>\n</table>')
-    fOut.write('\n\n## Support contributors \n The following people contributed in the discussions:\n')
+    fOut.write('\n\n## Support contributors\n The following people contributed in the discussions:\n')
     fOut.write('- Hanna Tsybenko\n')
     fOut.write('- Ruth Schwaiger\n')
     fOut.write('\n\n## Software projects\nMost of the file-layout and the integration of webservices follows the example of datalad and datalad-gooey')
-    fOut.write('https://github.com/datalad. We thank those developers for their work and contribution to free software.')
+    fOut.write('https://github.com/datalad. We thank those developers for their work and contribution to free software.\n')
   return
 
 
@@ -112,7 +112,8 @@ def newVersion(level:int=2) -> None:
   reply = input(f'Create version (2.5, 3.1.4b1): [{version}]: ')
   version = version if not reply or len(reply.split('.'))<2 else reply
   print(f'======== Version {version} =======')
-  #update python files
+  #git commands and update python files
+  os.system('git pull')
   filesToUpdate = {'pasta_eln/__init__.py':'__version__ = ',
                    'docs/source/conf.py':'version = '}
   for path,text in filesToUpdate.items():
@@ -126,14 +127,12 @@ def newVersion(level:int=2) -> None:
       fileNew.append(line)
     with open(path,'w', encoding='utf-8') as fOut:
       fOut.write('\n'.join(fileNew)+'\n')
-  #execute git commands
-  os.system('git pull')
+  os.system('git commit -a -m "update version numbers"')
   os.system(f'git tag -a v{version} -m "Version {version}; see CHANGELOG for details"')
   #create CHANGELOG / Contributor-list
   with open(Path.home()/'.ssh'/'github.token', encoding='utf-8') as fIn:
     token = fIn.read().strip()
   os.system(f'github_changelog_generator -u PASTA-ELN -p pasta-eln -t {token}')
-  createContributors()
   addition = input('\n\nWhat do you want to add to the push message (do not use \' or \")? ')
   os.system(f'git commit -a -m "updated changelog; {addition}"')
   #push and publish
@@ -248,7 +247,7 @@ def runSourceVerification() -> None:
   - sourcery
   """
   tools = {'pre-commit': 'pre-commit run --all-files',
-           'isort'     : 'isort pasta_eln/',
+           'isort'     : 'isort --ca -l 120 pasta_eln/',
            'pylint'    : 'pylint pasta_eln/',
            'mypy'      : 'mypy --no-warn-unused-ignores pasta_eln/',
            'sourcery'  : 'sourcery review pasta_eln/',
@@ -264,8 +263,9 @@ def runSourceVerification() -> None:
 
 
 if __name__=='__main__':
-  #run tests
+  #run tests and create default files
   runTests()
+  createContributors()
   runSourceVerification()
   createRequirementsFile()
   versionLevel = 2 if len(sys.argv)==1 else int(sys.argv[1])

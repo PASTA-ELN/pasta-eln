@@ -17,11 +17,6 @@ Error Resolutions
 
 1. Perform a scan of the folder to locate any new data.
 
-### 3. "ERROR: bch01: These files of database not on filesystem"
-
-1. Open the 'branches' table and search for the affected path in the branch.
-2. If both IDs are affected and the docID is also present in other errors, delete the document.
-
 Deleting Documents
 ------------------
 

@@ -319,8 +319,8 @@ class Project(QWidget):
       return
     branchOld = branchOldList[0]
     childOld = branchOld['child']
-    siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))
-    siblingsOld = [i for i in siblingsOld if len(i['key'].split(' '))==len(stackOld)+1 and \
+    siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackOld))
+    siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(stackOld)+1 and \
                                                   i['value'][0]>branchOld['child'] and i['value'][0]<9999]
     #gather new information
     stackNew = []  #create reversed
@@ -340,22 +340,24 @@ class Project(QWidget):
       pathNew = f'{parentDir}/{dirNameNew}'
     else:
       pathNew = branchOld['path']
-    siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackNew))
-    siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
+    siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackNew))
+    siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(stackNew)+1 and \
                                                    i['value'][0]>=childNew and i['value'][0]<9999]
     logging.debug('Change project: docID %s | old stack %s child %i | new stack %s child %i path %s'\
                   , docID, str(stackOld), childOld, str(stackNew), childNew, pathNew)
     if stackOld==stackNew and childOld==childNew:  #nothing changed, just redraw
       return
-    # change item in question
-    db.updateBranch(docID=docID, branch=-99, stack=stackNew, path=pathNew, child=childNew, stackOld=stackOld+[docID])
-    item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID])})
-    # change siblings
-    for line in siblingsOld:
-      db.updateBranch(  docID=line['id'], branch=line['value'][4], child=line['value'][0]-1)
+    # CHANGE
+    # change new siblings
     for line in siblingsNew:
       if line['id']!=docID:
         db.updateBranch(docID=line['id'], branch=line['value'][4], child=line['value'][0]+1)
+    # change item in question
+    db.updateBranch(docID=docID, branch=-99, stack=stackNew, path=pathNew, child=childNew, stackOld=stackOld+[docID])
+    item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID])})
+    # change old siblings
+    for line in siblingsOld:
+      db.updateBranch(  docID=line['id'], branch=line['value'][4], child=line['value'][0]-1)
     return
 
 

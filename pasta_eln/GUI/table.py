@@ -85,7 +85,6 @@ class Table(QWidget):
     header.setSectionsMovable(True)
     header.setSortIndicatorShown(True)
     header.setMaximumSectionSize(self.comm.backend.configuration['GUI']['maxTableColumnWidth'])
-    header.resizeSections(QHeaderView.ResizeMode.ResizeToContents)
     header.setStretchLastSection(True)
     mainL.addWidget(self.table)
     self.setLayout(mainL)
@@ -176,13 +175,14 @@ class Table(QWidget):
         item = QStandardItem('oo') # \u260D')
         # item.setFont(QFont("Helvetica [Cronyx]", 16))
       else:
-        if self.filterHeader[j]=='tags':
-          tags = value[j].split(' ')
+        if self.filterHeader[j]=='tag':
+          tags = [i.strip() for i in value.split(',')]
           if '_curated' in tags:
             tags[tags.index('_curated')] = '_curated_'
-          for iStar in range(1,6):
-            if f'_{str(iStar)}' in tags:
-              tags[tags.index(f'_{str(iStar)}')] = '*'*iStar
+          elementStar = list(filter(re.compile(r'^_\d$').match, tags))
+          if elementStar:
+            tags.remove(elementStar[0])
+            tags = ['\u2605'*int(elementStar[0][1])]+tags
           text = ' '.join(tags)
         else:
           text = value
@@ -201,6 +201,8 @@ class Table(QWidget):
     self.models.append(model)                                                                                # type: ignore[arg-type]
     self.table.setModel(self.models[-1])
     self.table.show()
+    self.table.horizontalHeader().resizeSections(QHeaderView.ResizeMode.ResizeToContents)
+    self.table.horizontalHeader().setStretchLastSection(True)
     return
 
 
@@ -340,7 +342,7 @@ class Table(QWidget):
           self.comm.backend.useExtractors(path, doc.get('shasum',''), doc)
           if doc['type'][0] == oldDocType[0]:
             del doc['branch']  #don't update
-            self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
+            self.comm.backend.db.updateDoc(doc, docID)
           else:
             self.comm.backend.db.remove( docID )
             del doc['id']
