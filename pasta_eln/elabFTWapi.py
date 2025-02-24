@@ -130,12 +130,6 @@ class ElabFTWApi:
     response = requests.patch(f'{self.url}{entryType}/{identifier}', data=json.dumps(content), **self.param)
     if response.status_code not in {200, 400}:
       return False
-    # redo title, and accessrights for good measure
-    if 'canread' in content:
-      response = requests.patch(f'{self.url}{entryType}/{identifier}', data=json.dumps({
-        'canread':content['canread'], 'canwrite':content['canwrite'], 'canbook':content['canbook']}), **self.param)
-      if response.status_code not in {200, 400}:
-        return False
     # separate tags handling
     response = requests.get(f'{self.url}{entryType}/{identifier}/tags', **self.param)
     for tag in tags:

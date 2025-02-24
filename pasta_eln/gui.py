@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import webbrowser
+from collections import Counter
 from enum import Enum
 from pathlib import Path
 from typing import Any, Union
@@ -15,7 +16,7 @@ from pasta_eln import __version__
 from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .backend import Backend
-from .elabFTWsync import Pasta2Elab
+from .elabFTWsync import Pasta2Elab, MERGE_LABELS
 from .fixedStringsJson import CONF_FILE_NAME, shortcuts
 # from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 # from pasta_eln.GUI.dataverse.main_dialog import MainDialog
@@ -176,7 +177,10 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.SYNC_SEND:
       sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
       if hasattr(sync, 'api'):  #if hostname and api-key given
-        sync.sync('sA')
+        report = sync.sync('sA')
+        reportSum = Counter([i[1] for i in report])
+        reportText = '\n  - '.join(['']+[f'{v:>4}:{MERGE_LABELS[k][2:]}' for k,v in reportSum.items()])
+        showMessage(self, 'Information', f'Send all data to server: success\n{reportText}', 'Information')
       else:                     #if not given
         showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
         dialogC = Configuration(self.comm)

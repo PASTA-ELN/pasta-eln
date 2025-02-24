@@ -1,6 +1,7 @@
 """ Allow syncing to elabFTW server """
 import copy
 import json
+import re
 from datetime import datetime
 from typing import Any, Callable
 from anytree import Node, PreOrderIter
@@ -96,7 +97,6 @@ class Pasta2Elab:
         projHierarchy, _ = self.backend.db.getHierarchy(projID)
         reports += [self.updateEntry(i, mode, callback) for i in PreOrderIter(projHierarchy)]
       self.syncMissingEntries(mode, callback)
-      print('Sync done!')
     return reports
 
 
@@ -291,8 +291,9 @@ class Pasta2Elab:
       content, image = self.doc2elab(copy.deepcopy(docMerged))
       self.api.updateEntry(entryType, self.docID2elabID[node.id][0], content|self.readWriteAccess)
       # create links
-      _ = [self.api.createLink(entryType, self.docID2elabID[node.id][0], 'experiments' if self.docID2elabID[node.id][1] else 'items', self.docID2elabID[i.id][0])
-                              for i in node.children]
+      _ = [self.api.createLink(entryType, self.docID2elabID[node.id][0],
+                               'experiments' if self.docID2elabID[i.id][1] else 'items', self.docID2elabID[i.id][0])
+                               for i in node.children]
     # uploads| clean first, then upload: PASTAs document, thumbnail, data-file
     existingUploads = self.api.readEntry(entryType, self.docID2elabID[node.id][0])[0]['uploads']
     uploadsToDelete = {'do_not_change.json', 'metadata.json'}
@@ -400,14 +401,18 @@ class Pasta2Elab:
     bodyMD    = doc.pop('comment')
     self.qtDocument.setMarkdown(bodyMD)
     body      = self.qtDocument.toHtml()
-    created_at= doc.pop('dateCreated')
-    modified_at=doc.pop('dateModified')
+    doc.pop('dateCreated')  #created_at= doc.pop('dateCreated')
+    doc.pop('dateModified') #modified_at=doc.pop('dateModified')
     tags       =doc.pop('tags')
+    ratings    = [i[1] for i in tags if i.startswith('_')]
+    tags       = [i for i in tags if not re.match(r'^_\d$', i)]
     doc        = {k:v for k,v in doc.items() if k not in {'id','user','client','externalId','type','gui','branch','shasum','qrCodes'}}
     metadata = {'metaVendor': doc.pop('metaVendor') if 'metaVendor' in doc else {}}
     metadata['metaUser']    = doc.pop('metaUser')   if 'metaUser' in doc else {}
     if doc:
       doc.pop('dateSync')
       metadata |= {'__':doc}
-    elab = {'body':body, 'title':title, 'metadata':json.dumps(metadata), 'tags':tags, 'created_at':created_at, 'modified_at':modified_at}
+    elab = {'body':body, 'title':title, 'metadata':json.dumps(metadata), 'tags':tags,
+            #'created_at':created_at, 'modified_at':modified_at,
+            'rating':'0' if len(ratings)==0 else ratings[0]}
     return elab, image
