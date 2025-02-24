@@ -63,8 +63,6 @@ class MainWindow(QMainWindow):
     Action('&Export project to .eln',        self, [Command.EXPORT],         projectMenu)
     if 'develop' in self.comm.backend.configuration:
       Action('&Import .eln into project',      self, [Command.IMPORT],         projectMenu)
-    projectMenu.addSeparator()
-    Action('&Export all projects to .eln',   self, [Command.EXPORT_ALL],     projectMenu)
     # Action('&Upload to Dataverse',           self, [Command.DATAVERSE_MAIN], projectMenu)
     Action('&Exit',                          self, [Command.EXIT],           projectMenu)
 
@@ -89,10 +87,10 @@ class MainWindow(QMainWindow):
         Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
     if 'develop' in self.comm.backend.configuration:
       syncMenu = systemMenu.addMenu('&Synchronize')
-      Action('Send',                         self, [Command.SYNC_SEND],       syncMenu)
-      Action('Get',                          self, [Command.SYNC_GET],       syncMenu)
-    if 'develop' in self.comm.backend.configuration:
-      Action('&Editor to change data type schema', self, [Command.DATAHIERARCHY],   systemMenu, shortcut='F8')
+      Action('Send',                         self, [Command.SYNC_SEND],       syncMenu, shortcut='F5')
+      # Action('Get',                          self, [Command.SYNC_GET],       syncMenu)
+      # Action('Smart synce',                  self, [Command.SYNC_SMART],       syncMenu)
+      Action('&Editor to change data type schema', self, [Command.SCHEMA],   systemMenu, shortcut='F8')
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
@@ -154,13 +152,6 @@ class MainWindow(QMainWindow):
         docTypes = [i for i in self.comm.backend.db.dataHierarchy('','') if i[0]!='x']
         status = exportELN(self.comm.backend, [self.comm.projectID], fileName, docTypes)
         showMessage(self, 'Finished', status, 'Information')
-    elif command[0] is Command.EXPORT_ALL:
-      fileName = QFileDialog.getSaveFileName(self, 'Save everything to .eln file', str(Path.home()), '*.eln')[0]
-      if fileName != '' and hasattr(self.backend, 'db'):
-        docTypes = [i for i in self.comm.backend.db.dataHierarchy('','') if i[0]!='x']
-        allProjects = [i['id'] for i in self.comm.backend.db.getView('viewDocType/x0')]
-        status = exportELN(self.comm.backend, allProjects, fileName, docTypes)
-        showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.IMPORT:
       if self.comm.projectID == '':
         showMessage(self, 'Error', 'You have to open a project to import', 'Warning')
@@ -183,7 +174,7 @@ class MainWindow(QMainWindow):
         fConf.write(json.dumps(self.backend.configuration, indent=2))
       restart()
     elif command[0] is Command.SYNC_SEND:
-      sync = Pasta2Elab(self.backend)
+      sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
       if hasattr(sync, 'api'):  #if hostname and api-key given
         sync.sync('sA')
       else:                     #if not given
@@ -192,22 +183,20 @@ class MainWindow(QMainWindow):
         dialogC.exec()
     elif command[0] is Command.SYNC_GET:
       sync = Pasta2Elab(self.backend)
-      if hasattr(sync, 'api'):  #if hostname and api-key given
-        sync.sync('gA')
-      else:                     #if not given
-        showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
-        dialogC = Configuration(self.comm)
-        dialogC.exec()
-    elif command[0] is Command.DATAHIERARCHY:
+      sync.sync('gA')
+    elif command[0] is Command.SYNC_SMART:
+      sync = Pasta2Elab(self.backend)
+      sync.sync('')
+    elif command[0] is Command.SCHEMA:
       pass
       # dataHierarchyForm = DataHierarchyEditorDialog()
       # dataHierarchyForm.instance.exec()
-    elif command[0] is Command.DATAVERSE_CONFIG:
-      self.dataverseConfig = ConfigDialog()
-      self.dataverseConfig.show()
-    elif command[0] is Command.DATAVERSE_MAIN:
-      self.dataverseMainDialog = MainDialog(self.comm.backend)
-      self.dataverseMainDialog.show()
+    # elif command[0] is Command.DATAVERSE_CONFIG:
+    #   self.dataverseConfig = ConfigDialog()
+    #   self.dataverseConfig.show()
+    # elif command[0] is Command.DATAVERSE_MAIN:
+    #   self.dataverseMainDialog = MainDialog(self.comm.backend)
+    #   self.dataverseMainDialog.show()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       report = self.comm.backend.testExtractor(fileName, outputStyle='html')
@@ -282,19 +271,17 @@ class Command(Enum):
   VIEW      = 4
   CHANGE_PG = 6
   SYNC_SEND = 7
-  SYNC_GET  = 20
-  DATAHIERARCHY = 8
-  TEST1     = 9
-  TEST2     = 10
-  UPDATE    = 11
-  CONFIG    = 12
-  WEBSITE   = 13
-  VERIFY_DB = 14
-  SHORTCUTS = 15
-  RESTART   = 16
-  EXPORT_ALL= 17
-  DATAVERSE_CONFIG = 18
-  DATAVERSE_MAIN = 19
+  SYNC_GET  = 8
+  SYNC_SMART= 9
+  SCHEMA    = 10
+  TEST1     = 11
+  TEST2     = 12
+  UPDATE    = 13
+  CONFIG    = 14
+  WEBSITE   = 15
+  VERIFY_DB = 16
+  SHORTCUTS = 17
+  RESTART   = 18
 
 
 def startMain(projectGroup:str='') -> None:

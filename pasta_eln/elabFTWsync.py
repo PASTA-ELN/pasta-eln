@@ -59,11 +59,13 @@ class Pasta2Elab:
     self.backend = backend
     self.projectGroup = projectGroup or self.backend.configuration['defaultProjectGroup']
     if not self.backend.configuration['projectGroups'][self.projectGroup]['remote']['url'] or \
-       not self.backend.configuration['projectGroups'][self.projectGroup]['remote']['key']:
+       not self.backend.configuration['projectGroups'][self.projectGroup]['remote']['key'] or \
+       'config' not in self.backend.configuration['projectGroups'][self.projectGroup]['remote'] or \
+       'id' not in self.backend.configuration['projectGroups'][self.projectGroup]['remote']['config']:
       return
     self.api = ElabFTWApi(self.backend.configuration['projectGroups'][self.projectGroup]['remote']['url'],
                           self.backend.configuration['projectGroups'][self.projectGroup]['remote']['key'])
-    configRemote = self.backend.configuration['projectGroups'][self.backend.configurationProjectGroup]['remote']
+    configRemote = self.backend.configuration['projectGroups'][self.projectGroup]['remote']
     self.elabProjGroupID = configRemote['config']['id']
     if purge:
       data = self.api.readEntry('items', self.elabProjGroupID)[0]
@@ -71,7 +73,7 @@ class Pasta2Elab:
       _ = [self.api.deleteEntry('items',       i['entityid']) for i in data['related_items_links']]
     self.docID2elabID:dict[str,tuple[int,bool]] = {}  # x-15343154th54325243, (4, bool if experiment)
     self.qtDocument      = QTextDocument()            # used for converting html <-> md
-    self.verbose         = True
+    self.verbose         = False
     return
 
 
@@ -94,6 +96,7 @@ class Pasta2Elab:
         projHierarchy, _ = self.backend.db.getHierarchy(projID)
         reports += [self.updateEntry(i, mode, callback) for i in PreOrderIter(projHierarchy)]
       self.syncMissingEntries(mode, callback)
+      print('Sync done!')
     return reports
 
 
@@ -123,11 +126,14 @@ class Pasta2Elab:
   def createIdDict(self) -> None:
     """ create mapping of docIDs to elabIDs: if not exist, create elabIds """
     configRemote = self.backend.configuration['projectGroups'][self.backend.configurationProjectGroup]['remote']['config']
+    # set default read/write access rules
+    self.readWriteAccess =  {'canwrite':configRemote['canWrite'], 'canread':configRemote['canRead'],
+                             'canbook':configRemote['canRead']}
     elabTypes = {i['title'].lower():i['id'] for i in self.api.readEntry('items_types')}  |  {'measurement':-1}
     elabTypes |= {'x0':elabTypes.pop('project'), 'x1':elabTypes.pop('folder'), '-':elabTypes.pop('default')}
     def getNewEntry(elabType:str) -> int:
       urlSuffix = 'items'                  if int(elabType)>0 else 'experiments'
-      content   = {'category_id':elabType, 'canwrite':configRemote['canWrite'], 'canread':configRemote['canRead']}
+      content   = {'category_id':elabType} | self.readWriteAccess
       elabID    = self.api.touchEntry(urlSuffix, content)
       self.api.createLink(urlSuffix, elabID, 'items', self.elabProjGroupID)
       return elabID
@@ -159,7 +165,6 @@ class Pasta2Elab:
       tuple: node.id; merge case
     """
     # get this content: check if it changed
-    mergeCase = -1
     docClient   = self.backend.db.getDoc(node.id)
     if 'dateSync' not in docClient or not docClient['dateSync']:
       docClient['dateSync'] = datetime.fromisoformat('2000-01-03').isoformat()+'.0000'
@@ -212,9 +217,9 @@ class Pasta2Elab:
     pattern = '%Y-%m-%dT%H:%M:%S.%f'
     mergeCase = -1
     #  - Case 1 straight update from client to server: only client updated and server not changed
-    if datetime.strptime(docClient['dateModified'], pattern) >  datetime.strptime(docClient['dateSync'], pattern) and \
+    if (datetime.strptime(docClient['dateModified'], pattern) >  datetime.strptime(docClient['dateSync'], pattern) and \
        datetime.strptime(docOther['dateModified'], pattern)  <= datetime.strptime(docOther['dateSync'], pattern) and  \
-       not mode.startswith('g'):
+       not mode.startswith('g')) or mode=='sA':
       mergeCase = 1
       if self.verbose:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
@@ -222,10 +227,10 @@ class Pasta2Elab:
       flagUpdateClient = False
       docMerged = copy.deepcopy(docClient)
     #  - Case 2 straight update from server to client: only others was updated / server itself was not updated, client not changed
-    if datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
+    if (datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
          datetime.strptime(docOther['dateModified'], pattern) < datetime.strptime(docOther['dateSync'], pattern) and \
          datetime.strptime(docOther['dateSync'], pattern)     < datetime.strptime(docOther['dateSync'], pattern) and \
-         not mode.startswith('s'):
+         not mode.startswith('s')) or mode=='gA':
       mergeCase = 2
       if self.verbose:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
@@ -244,7 +249,8 @@ class Pasta2Elab:
       docMerged = copy.deepcopy(docOther)
     #  - Case 4 no change: nothing changed
     if datetime.strptime(docClient['dateModified'], pattern) <= datetime.strptime(docClient['dateSync'], pattern) and \
-         datetime.strptime(docOther['dateModified'], pattern) <= datetime.strptime(docOther['dateSync'], pattern):
+         datetime.strptime(docOther['dateModified'], pattern) <= datetime.strptime(docOther['dateSync'], pattern) and \
+          not mode.endswith('A'):
       mergeCase = 4
       if self.verbose:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
@@ -262,7 +268,7 @@ class Pasta2Elab:
       flagUpdateClient = False
       docMerged = copy.deepcopy(docClient)
     if mergeCase<=0:
-      print(f'**No clear merge case: should not occur, {mode}')
+      print(f'**ERROR** No merge case set! {mode}')
       return node.id, -1
 
     docMerged['dateSync'] = datetime.now().isoformat()
@@ -283,7 +289,7 @@ class Pasta2Elab:
     # send doc (merged version) to server everything
     if flagUpdateServer:
       content, image = self.doc2elab(copy.deepcopy(docMerged))
-      self.api.updateEntry(entryType, self.docID2elabID[node.id][0], content)
+      self.api.updateEntry(entryType, self.docID2elabID[node.id][0], content|self.readWriteAccess)
       # create links
       _ = [self.api.createLink(entryType, self.docID2elabID[node.id][0], 'experiments' if self.docID2elabID[node.id][1] else 'items', self.docID2elabID[i.id][0])
                               for i in node.children]

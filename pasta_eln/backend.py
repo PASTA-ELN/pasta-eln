@@ -93,8 +93,7 @@ class Backend(CLI_Mixin):
     if self.configuration['version']!=3:
       print('**Info: configuration file does not exist or version is < 3')
       return
-    if not defaultProjectGroup:
-      defaultProjectGroup = self.configuration['defaultProjectGroup']
+    defaultProjectGroup = defaultProjectGroup or self.configuration['defaultProjectGroup']
     if defaultProjectGroup not in self.configuration['projectGroups']:
       raise ValueError('BadConfigurationFileError')
     self.configurationProjectGroup = defaultProjectGroup

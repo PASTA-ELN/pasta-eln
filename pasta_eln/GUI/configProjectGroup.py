@@ -234,6 +234,8 @@ class ProjectGroup(QDialog):
           self.row4Button2.setStyleSheet('background: #00FF00')
           self.elabApi   = ElabFTWApi(url, config['remote']['key'])
           response = self.elabApi.readEntry('items?q=category%3AProjectGroup&archived=on')
+          if len(response)==0:
+            showMessage(self, 'Error', 'Please ask your database admin to add your project-group(s).')
           self.serverPG = {(i['title'],i['id'],i['canread'],i['canwrite']) for i in response}
           self.serverProjectGroupLabel.addItems([i[0] for i in self.serverPG])
         else:
@@ -244,7 +246,10 @@ class ProjectGroup(QDialog):
         self.row4Button2.setStyleSheet('background: #FF0000')
 
     elif command[0] is Command.TEST_SERVERPG and self.elabApi is not None:
-      idx = [i[1] for i in self.serverPG if i[0]==self.serverProjectGroupLabel.currentText()][0]
+      idxList = [i[1] for i in self.serverPG if i[0]==self.serverProjectGroupLabel.currentText()]
+      if len(idxList)==0:
+        return
+      idx = idxList[0]
       currentBody = self.elabApi.readEntry('items',idx)[0]['body']
       currentBody+= f'<br>Tested access by {self.configuration["userID"]} on {datetime.now().isoformat()} <br>'
       if self.elabApi.updateEntry('items',idx, {'body':currentBody}):
