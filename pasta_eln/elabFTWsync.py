@@ -74,6 +74,7 @@ class Pasta2Elab:
       _ = [self.api.deleteEntry('items',       i['entityid']) for i in data['related_items_links']]
     self.docID2elabID:dict[str,tuple[int,bool]] = {}  # x-15343154th54325243, (4, bool if experiment)
     self.qtDocument      = QTextDocument()            # used for converting html <-> md
+    self.readWriteAccess:dict[str,str] = {}
     self.verbose         = False
     return
 
@@ -352,7 +353,7 @@ class Pasta2Elab:
                 docOther = flatten(docOther, keepPastaStruct=True)                       #type: ignore[assignment]
                 try:
                   self.backend.addData('/'.join(docOther['type']), docOther, docOther['branch'][0]['stack'])
-                except:
+                except Exception:
                   docOther.pop('image','')
                   print(f'**ERROR** Tried to add to client elab:{entryType} {idx}: {json.dumps(docOther,indent=2)}')
     return agreement
@@ -414,5 +415,5 @@ class Pasta2Elab:
       metadata |= {'__':doc}
     elab = {'body':body, 'title':title, 'metadata':json.dumps(metadata), 'tags':tags,
             #'created_at':created_at, 'modified_at':modified_at,
-            'rating':'0' if len(ratings)==0 else ratings[0]}
+            'rating': ratings[0] if ratings else '0'}
     return elab, image

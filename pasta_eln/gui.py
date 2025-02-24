@@ -16,7 +16,7 @@ from pasta_eln import __version__
 from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .backend import Backend
-from .elabFTWsync import Pasta2Elab, MERGE_LABELS
+from .elabFTWsync import MERGE_LABELS, Pasta2Elab
 from .fixedStringsJson import CONF_FILE_NAME, shortcuts
 # from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 # from pasta_eln.GUI.dataverse.main_dialog import MainDialog
@@ -203,8 +203,8 @@ class MainWindow(QMainWindow):
     #   self.dataverseMainDialog.show()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
-      report = self.comm.backend.testExtractor(fileName, outputStyle='html')
-      showMessage(self, 'Report of extractor test', report)
+      reportText = self.comm.backend.testExtractor(fileName, outputStyle='html')
+      showMessage(self, 'Report of extractor test', reportText)
     elif command[0] is Command.TEST2:
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
@@ -220,8 +220,8 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.WEBSITE:
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
     elif command[0] is Command.VERIFY_DB:
-      report = self.comm.backend.checkDB(outputStyle='html', minimal=True)
-      showMessage(self, 'Report of database verification', report, style='QLabel {min-width: 800px}')
+      reportText = self.comm.backend.checkDB(outputStyle='html', minimal=True)
+      showMessage(self, 'Report of database verification', reportText, style='QLabel {min-width: 800px}')
     elif command[0] is Command.SHORTCUTS:
       showMessage(self, 'Keyboard shortcuts', shortcuts)
     elif command[0] is Command.RESTART:
