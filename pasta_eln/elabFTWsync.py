@@ -290,7 +290,11 @@ class Pasta2Elab:
     # send doc (merged version) to server everything
     if flagUpdateServer:
       content, image = self.doc2elab(copy.deepcopy(docMerged))
-      self.api.updateEntry(entryType, self.docID2elabID[node.id][0], content|self.readWriteAccess)
+      success = self.api.updateEntry(entryType, self.docID2elabID[node.id][0], content|self.readWriteAccess)
+      if not success:
+        print(f'**ERROR: could not sync data {entryType}, {self.docID2elabID[node.id][0]}, '
+              f'{content|self.readWriteAccess}')
+        return node.id, -1
       # create links
       _ = [self.api.createLink(entryType, self.docID2elabID[node.id][0],
                                'experiments' if self.docID2elabID[i.id][1] else 'items', self.docID2elabID[i.id][0])
@@ -402,8 +406,8 @@ class Pasta2Elab:
     bodyMD    = doc.pop('comment')
     self.qtDocument.setMarkdown(bodyMD)
     body      = self.qtDocument.toHtml()
-    doc.pop('dateCreated')  #created_at= doc.pop('dateCreated')
-    doc.pop('dateModified') #modified_at=doc.pop('dateModified')
+    # created_at= doc.pop('dateCreated')
+    # modified_at=doc.pop('dateModified')
     tags       =doc.pop('tags')
     ratings    = [i[1] for i in tags if i.startswith('_')]
     tags       = [i for i in tags if not re.match(r'^_\d$', i)]
@@ -414,6 +418,6 @@ class Pasta2Elab:
       doc.pop('dateSync')
       metadata |= {'__':doc}
     elab = {'body':body, 'title':title, 'metadata':json.dumps(metadata), 'tags':tags,
-            #'created_at':created_at, 'modified_at':modified_at,
+            # 'created_at':created_at, 'modified_at':modified_at,
             'rating': ratings[0] if ratings else '0'}
     return elab, image

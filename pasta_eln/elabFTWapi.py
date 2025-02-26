@@ -128,7 +128,7 @@ class ElabFTWApi:
     """
     tags = content.pop('tags',[])
     response = requests.patch(f'{self.url}{entryType}/{identifier}', data=json.dumps(content), **self.param)
-    if response.status_code not in {200, 400}:
+    if response.status_code != 200:
       return False
     # separate tags handling
     response = requests.get(f'{self.url}{entryType}/{identifier}/tags', **self.param)
