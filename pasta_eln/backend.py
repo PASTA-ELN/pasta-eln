@@ -364,9 +364,9 @@ class Backend(CLI_Mixin):
       parentDoc = self.db.getDoc(parentID)
       hierStack = parentDoc['branch'][0]['stack']+[parentID]
       # handle directories
+      dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i not in ('__pycache__')
+                 and not (Path(root)/i/'pyvenv.cfg').is_file()]
       for dirName in dirs[::-1]: #sorted forward in Linux
-        if dirName.startswith(('.','trash_')) or dirName in ('.git', '__pycache__'):            # ignore directories
-          continue
         path = (Path(root)/dirName).relative_to(self.basePath).as_posix()
         if path in pathsInDB_x: #path already in database
           pathsInDB_x.remove(path)
@@ -715,9 +715,9 @@ class Backend(CLI_Mixin):
             count += 1
           else:
             pathsInDB_data.remove(path)
+        dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i not in ('__pycache__')
+                  and not (Path(root)/i/'pyvenv.cfg').is_file()]
         for dirName in dirs:
-          if dirName.startswith('.') or dirName.startswith('trash_'):
-            continue
           path = (Path(root).relative_to(self.basePath) /dirName).as_posix()
           if path not in pathsInDB_folder:
             output += outputString(outputStyle, 'error', f'Directory on harddisk but not DB:{path}')

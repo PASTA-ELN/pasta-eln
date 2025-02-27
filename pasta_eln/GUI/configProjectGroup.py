@@ -6,6 +6,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 import qrcode
+import qtawesome as qta
 import requests
 from PIL.ImageQt import ImageQt
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator  # pylint: disable=no-name-in-module
@@ -69,7 +70,7 @@ class ProjectGroup(QDialog):
     self.serverLabel = QLineEdit('server')
     self.serverLabel.setPlaceholderText('Enter server address')
     self.formL.addWidget(self.serverLabel, 3, 1)
-    self.row3Button = IconButton('fa5s.check-square',   self, [Command.TEST_SERVER], tooltip='Check server')
+    self.row3Button = TextButton('Verify',   self, [Command.TEST_SERVER], tooltip='Check server')
     self.formL.addWidget(self.row3Button, 3, 3)
 
     self.formL.addWidget(QLabel('API-key:'), 4, 0)
@@ -80,13 +81,13 @@ class ProjectGroup(QDialog):
     self.formL.addWidget(self.apiKeyLabel, 4, 1)
     row4Button1 = IconButton('fa5s.question-circle', self,      [Command.TEST_API_HELP], tooltip='Help on obtaining API key')
     self.formL.addWidget(row4Button1, 4, 2)
-    self.row4Button2 = IconButton('fa5s.check-square',   self, [Command.TEST_APIKEY], tooltip='Check API-key')
+    self.row4Button2 = TextButton('Verify',   self, [Command.TEST_APIKEY], tooltip='Check API-key')
     self.formL.addWidget(self.row4Button2, 4, 3)
 
     self.formL.addWidget(QLabel('Storage block:'), 5, 0)
     self.serverProjectGroupLabel = QComboBox()
     self.formL.addWidget(self.serverProjectGroupLabel, 5, 1)
-    self.row5Button2 = IconButton('fa5s.check-square',   self, [Command.TEST_SERVERPG], tooltip='Check access to storage block')
+    self.row5Button2 = TextButton('Verify',   self, [Command.TEST_SERVERPG], tooltip='Check access to storage block')
     self.formL.addWidget(self.row5Button2, 5, 3)
 
     # RIGHT SIDE: button and image
@@ -208,10 +209,9 @@ class ProjectGroup(QDialog):
       self.serverLabel.setText(url)
       try:
         requests.get(f'{url}info', headers=headers, verify=True, timeout=15)
-        self.row3Button.setStyleSheet('background: #00FF00')
+        self.changeButtonOnTest(True, self.row3Button)
       except Exception:
-        showMessage(self, 'Error', 'Wrong server address')
-        self.row3Button.setStyleSheet('background: #FF0000')
+        self.changeButtonOnTest(False, self.row3Button, 'Wrong server address')
 
     elif command[0] is Command.TEST_API_HELP:
       link = f'OR go to {config["remote"]["url"][:-7]}ucp.php?tab=4\n\n' if config['remote'].get('url','') else ''
@@ -231,19 +231,18 @@ class ProjectGroup(QDialog):
           if elabVersion<5:
             showMessage(self, 'Error', 'Old elabFTW server installation')
           # success
-          self.row4Button2.setStyleSheet('background: #00FF00')
+          self.changeButtonOnTest(True, self.row4Button2)
           self.elabApi   = ElabFTWApi(url, config['remote']['key'])
           response = self.elabApi.readEntry('items?q=category%3AProjectGroup&archived=on')
           if not response:
             showMessage(self, 'Error', 'Please ask your database admin to add your project-group(s).')
           self.serverPG = {(i['title'],i['id'],i['canread'],i['canwrite']) for i in response}
+          self.serverProjectGroupLabel.clear()
           self.serverProjectGroupLabel.addItems([i[0] for i in self.serverPG])
         else:
-          showMessage(self, 'Error', 'Wrong API key')
-          self.row4Button2.setStyleSheet('background: #FF0000')
+          self.changeButtonOnTest(False, self.row4Button2, 'Wrong API key')
       except Exception:
-        showMessage(self, 'Error', 'Wrong API key')
-        self.row4Button2.setStyleSheet('background: #FF0000')
+        self.changeButtonOnTest(False, self.row4Button2, 'Wrong API key')
 
     elif command[0] is Command.TEST_SERVERPG and self.elabApi is not None:
       idxList = [i[1] for i in self.serverPG if i[0]==self.serverProjectGroupLabel.currentText()]
@@ -254,10 +253,9 @@ class ProjectGroup(QDialog):
       currentBody+= f'<br>Tested access by {self.configuration["userID"]} on {datetime.now().isoformat()} <br>'
       if self.elabApi.updateEntry('items',idx, {'body':currentBody}):
         self.projectGroupTested = True
-        self.row5Button2.setStyleSheet('background: #00FF00')
+        self.changeButtonOnTest(True, self.row5Button2)
       else:
-        self.row5Button2.setStyleSheet('background: #FF0000')
-        showMessage(self, 'Error', 'You do not have access to this project group')
+        self.changeButtonOnTest(False, self.row5Button2, 'You do not have access to this project group')
 
     elif command[0] is Command.CREATE_QRCODE:
       text   = json.dumps(config['remote'])
@@ -300,6 +298,27 @@ class ProjectGroup(QDialog):
       self.apiKeyLabel.setText('--- API key hidden ---')
     else:
       self.apiKeyLabel.setText('')
+    return
+
+
+  def changeButtonOnTest(self, success:bool, button:TextButton, message:str) -> None:
+    """ Helper function to change buttons upon success/failure
+
+    Args:
+      success (bool): change to successful state
+      button (TextBotton): button to change
+      message (str): optional message on failure
+    """
+    if success:
+      button.setStyleSheet('background: #00FF00')
+      button.setText('')
+      button.setIcon(qta.icon('fa5s.check-square', scale_factor=1))
+    else:
+      if message:
+        showMessage(self, 'Error', message)
+      button.setStyleSheet('background: #FF0000')
+      button.setText('')
+      button.setIcon(qta.icon('fa5.times-circle', scale_factor=1))
     return
 
 

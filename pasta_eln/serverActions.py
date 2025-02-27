@@ -253,7 +253,7 @@ def main() -> None:
     elif command == 'cp':
       createLostAndFound()
     elif command == 'r':
-      verifyPasta('research', repair=userQuestion)
+      verifyPasta('', repair=userQuestion)
     elif command == 'rp1':
       repairPropertiesDot()
     elif command == 'p':
