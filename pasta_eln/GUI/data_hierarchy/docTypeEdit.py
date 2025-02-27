@@ -38,7 +38,7 @@ class DocTypeEditor(QDialog):
     else:
       data = self.comm.backend.db.dataHierarchy('','')
       regex = ''.join(f'(?!{i})' for i in data)
-      self.row1.setValidator(QRegularExpressionValidator(regex+r'(^[a-wyz]\w{3,}$)'))
+      self.row1.setValidator(QRegularExpressionValidator(r'(^[a-wyz][\w/]{3,}$)'))
     mainForm.addRow(QLabel('DocType '), self.row1)
 
     self.row2 = QLineEdit(initialData[2])
