@@ -25,6 +25,7 @@ from .GUI.config import Configuration
 from .GUI.form import Form
 from .GUI.palette import Palette
 from .GUI.sidebar import Sidebar
+from .GUI.data_hierarchy.editor import SchemeEditor
 from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN, importELN
@@ -191,10 +192,9 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.SYNC_SMART:
       sync = Pasta2Elab(self.backend)
       sync.sync('')
-    elif command[0] is Command.SCHEMA:
-      pass
-      # dataHierarchyForm = DataHierarchyEditorDialog()
-      # dataHierarchyForm.instance.exec()
+    elif command[0] is Command.SCHEMA and 'develop' in self.comm.backend.configuration:
+      dialog = SchemeEditor(self.comm)
+      dialog.show()
     # elif command[0] is Command.DATAVERSE_CONFIG:
     #   self.dataverseConfig = ConfigDialog()
     #   self.dataverseConfig.show()
