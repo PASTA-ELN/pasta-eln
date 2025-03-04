@@ -1,0 +1,14 @@
+# head of workflow: always the same
+from urllib.parse import urlparse
+from common_workflow_description import Storage, Sample, step
+try:
+    from pyiron_workflow import Workflow
+except ImportError:
+    from common_workflow_description import Workflow
+from analysis_steps import plot_curves, calc_YoungsModulus
+
+# footer, always the same
+print('Output:\n  ','\n   '.join([f"{k}: {v}" for k, v in list(wf.outputs.to_value_dict().items())]))
+wf.draw().render(filename="io_demo", format="png", cleanup=True) #plot to file
+
+# Automatically Created by Workflow Creator
