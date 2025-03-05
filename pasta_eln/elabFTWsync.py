@@ -1,7 +1,7 @@
 """ Allow syncing to elabFTW server """
 import copy
 import json
-import re
+import re, traceback
 from datetime import datetime
 from typing import Any, Callable
 from anytree import Node, PreOrderIter
@@ -58,15 +58,16 @@ class Pasta2Elab:
       bool: success
     '''
     self.backend = backend
-    self.projectGroup = projectGroup or self.backend.configuration['defaultProjectGroup']
-    if not self.backend.configuration['projectGroups'][self.projectGroup]['remote']['url'] or \
-       not self.backend.configuration['projectGroups'][self.projectGroup]['remote']['key'] or \
-       'config' not in self.backend.configuration['projectGroups'][self.projectGroup]['remote'] or \
-       'id' not in self.backend.configuration['projectGroups'][self.projectGroup]['remote']['config']:
+    configuration = self.backend.configuration
+    self.projectGroup = projectGroup or configuration['defaultProjectGroup']
+    if not configuration['projectGroups'][self.projectGroup]['remote']['url'] or \
+       not configuration['projectGroups'][self.projectGroup]['remote']['key'] or \
+       'config' not in configuration['projectGroups'][self.projectGroup]['remote'] or \
+       'id' not in configuration['projectGroups'][self.projectGroup]['remote']['config']:
       return
-    self.api = ElabFTWApi(self.backend.configuration['projectGroups'][self.projectGroup]['remote']['url'],
-                          self.backend.configuration['projectGroups'][self.projectGroup]['remote']['key'])
-    configRemote = self.backend.configuration['projectGroups'][self.projectGroup]['remote']
+    self.api = ElabFTWApi(configuration['projectGroups'][self.projectGroup]['remote']['url'],
+                          configuration['projectGroups'][self.projectGroup]['remote']['key'])
+    configRemote = configuration['projectGroups'][self.projectGroup]['remote']
     self.elabProjGroupID = configRemote['config']['id']
     if purge:
       data = self.api.readEntry('items', self.elabProjGroupID)[0]
@@ -126,7 +127,7 @@ class Pasta2Elab:
 
   def createIdDict(self) -> None:
     """ create mapping of docIDs to elabIDs: if not exist, create elabIds """
-    configRemote = self.backend.configuration['projectGroups'][self.backend.configurationProjectGroup]['remote']['config']
+    configRemote = self.backend.configuration['projectGroups'][self.projectGroup]['remote']['config']
     # set default read/write access rules
     self.readWriteAccess =  {'canwrite':configRemote['canWrite'], 'canread':configRemote['canRead'],
                              'canbook':configRemote['canRead']}
@@ -344,22 +345,42 @@ class Pasta2Elab:
       if diff := inELAB[entryType].difference(inPasta[entryType]):
         if self.verbose:
           print(f'**INFO** There is a difference in {entryType} between SERVER and CLIENT. Ids on server: {diff}.')
-          for idx in diff:
-            mode = mode if mode.endswith('A') else callback(self.api, entryType, idx)
-            if mode.startswith('s'):
-              self.api.deleteEntry(entryType, idx)
-            elif mode.startswith('g'):
-              _, uploads = self.elab2doc(self.api.readEntry(entryType, idx)[0])
-              if listDoNotChange := [i for i in uploads if i['real_name']=='do_not_change.json']:
-                docOther = self.api.download(entryType, idx, listDoNotChange[0])
-                docOther['dateSync'] = datetime.now().isoformat()
-                squashTupleIntoValue(docOther)
-                docOther = flatten(docOther, keepPastaStruct=True)                       #type: ignore[assignment]
-                try:
-                  self.backend.addData('/'.join(docOther['type']), docOther, docOther['branch'][0]['stack'])
-                except Exception:
-                  docOther.pop('image','')
-                  print(f'**ERROR** Tried to add to client elab:{entryType} {idx}: {json.dumps(docOther,indent=2)}')
+        for idx in diff:
+          mode = mode if mode.endswith('A') else callback(self.api, entryType, idx)
+          if mode.startswith('s'):
+            self.api.deleteEntry(entryType, idx)
+          elif mode.startswith('g'):
+            _, uploads = self.elab2doc(self.api.readEntry(entryType, idx)[0])
+            if listDoNotChange := [i for i in uploads if i['real_name']=='do_not_change.json']:
+              docOther = self.api.download(entryType, idx, listDoNotChange[0])
+              docOther['dateSync'] = datetime.now().isoformat()
+              squashTupleIntoValue(docOther)
+              docOther = flatten(docOther, keepPastaStruct=True)                       #type: ignore[assignment]
+              try:
+                branch = copy.deepcopy(docOther['branch'][0])
+                # create folder
+                if branch['path'] is not None:
+                  if docOther['type'][0][0]=='x':
+                    (self.backend.basePath/branch['path']).mkdir(parents=True, exist_ok=True)
+                    with open(self.backend.basePath/branch['path']/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
+                      json.dump({'id':docOther['id']}, fOut)
+                  else:
+                    (self.backend.basePath/branch['path']).parent.mkdir(parents=True, exist_ok=True)
+                docOther['branch'] = branch | {'op':'c'} #TODO: one remains only
+                if 'tags' not in docOther:
+                  docOther['tags'] = []
+                self.backend.db.saveDoc(docOther)
+              except Exception:
+                docOther.pop('image','')
+                docOther.pop('metaVendor','')
+                print(f'**ERROR** Tried to add to client elab:{entryType} {idx}: {json.dumps(docOther,indent=2)}')
+                print(traceback.format_exc())
+            # save datafile if exists
+            if listFile := [i for i in uploads if i['real_name']!='do_not_change.json' and \
+                            not i['real_name'].startswith('thumbnail.')]:
+              data = self.api.download(listFile[0]['type'], idx, listFile[0])
+              with open(self.backend.basePath/branch['path'], 'wb') as fOut:
+                fOut.write(data)
     return agreement
 
 

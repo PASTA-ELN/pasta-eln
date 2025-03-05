@@ -301,7 +301,7 @@ class ProjectGroup(QDialog):
     return
 
 
-  def changeButtonOnTest(self, success:bool, button:TextButton, message:str) -> None:
+  def changeButtonOnTest(self, success:bool, button:TextButton, message:str='') -> None:
     """ Helper function to change buttons upon success/failure
 
     Args:
