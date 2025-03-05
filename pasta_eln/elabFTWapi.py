@@ -35,8 +35,8 @@ class ElabFTWApi:
     # test server
     self.url = ''  #initialize
     self.param = Param()
-    headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
-    param:Param = {'headers':headers, 'verify':verifySSL, 'timeout':10}
+    self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
+    param:Param = {'headers':self.headers, 'verify':verifySSL, 'timeout':10}
     try:
       response = requests.get(f'{url}info', **param)
       if response.status_code == 200:

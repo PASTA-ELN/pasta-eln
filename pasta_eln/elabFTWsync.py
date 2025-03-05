@@ -1,7 +1,8 @@
 """ Allow syncing to elabFTW server """
 import copy
 import json
-import re, traceback
+import re, traceback, time, logging
+from collections import Counter
 from datetime import datetime
 from typing import Any, Callable
 from anytree import Node, PreOrderIter
@@ -80,7 +81,7 @@ class Pasta2Elab:
     return
 
 
-  def sync(self, mode:str='', callback:Callable[[ElabFTWApi,str,int],str]=cliCallback) -> list[tuple[str,int]]:
+  def sync(self, mode:str='', callback:Callable[[ElabFTWApi,str,int],str]=cliCallback, progressCallback=None) -> list[tuple[str,int]]:
     """ Main function
 
     Args:
@@ -90,15 +91,37 @@ class Pasta2Elab:
     Returns:
       list: list of merge cases
     """
+    if progressCallback is not None:
+      progressCallback('text', '### Start syncing with elabFTW server\n#### Align configuration\nStart...')
     if self.api.url:  #only when you are connected to web
+      startTime = time.time()
       self.syncDocTypes()  #category agree
+      if progressCallback is not None:
+        progressCallback('append', 'Done\n#### Create list of ids\nStart...')
+      print("Step 1:",round((time.time()-startTime),1),"sec")  #to see if warrants progressbar
+      startTime = time.time()
       self.createIdDict()
+      if progressCallback is not None:
+        progressCallback('append', 'Done\n#### Sync each document\nStart...')
+      print("Step 2:",round((time.time()-startTime),1),"sec")
+      startTime = time.time()
       # sync nodes in parallel
       reports = []
       for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
         projHierarchy, _ = self.backend.db.getHierarchy(projID)
         reports += [self.updateEntry(i, mode, callback) for i in PreOrderIter(projHierarchy)]
+      print("Step 3:",round((time.time()-startTime),1),"sec")
+      startTime = time.time()
+      if progressCallback is not None:
+        progressCallback('append', 'Done\n#### Sync missing entries\nStart...')
       self.syncMissingEntries(mode, callback)
+      print("Step 4:",round((time.time()-startTime),1),"sec")
+      startTime = time.time()
+    if progressCallback is not None:
+      reportSum = Counter([i[1] for i in reports])
+      reportText = '\n  - '.join(['']+[f'{v:>4}:{MERGE_LABELS[k][2:]}' for k,v in reportSum.items()])
+      progressCallback('count', 100)
+      progressCallback('append', f'Done\n#### Summary\nSend all data to server: success\n{reportText}')
     return reports
 
 
@@ -174,15 +197,13 @@ class Pasta2Elab:
       print(f'\n{node.id}\n>>>DOC_CLIENT sync&modified', docClient['dateSync'], docClient['dateModified'])
     # pull from server: content and other's client content
     entryType = 'experiments' if self.docID2elabID[node.id][1] else 'items'
-    docServer, uploads = self.elab2doc(self.api.readEntry(entryType, self.docID2elabID[node.id][0])[0])
+    docServer, uploads = self.elab2doc(self.api.readEntry(entryType, elabID)[0])
     if self.verbose:
       print('>>>DOC_SERVER', docServer)
-    if [i for i in uploads if i['real_name']=='do_not_change.json']:
-      docOther = self.api.download(entryType, self.docID2elabID[node.id][0],
-                                   [i for i in uploads if i['real_name']=='do_not_change.json'][0])
+    if listDoNotChange :=[i for i in uploads if i['real_name']=='do_not_change.json']:
+      docOther = self.api.download(entryType, elabID, listDoNotChange[0])
     else:
-      docOther = {'name':'Untitled', 'tags':[], 'comment':'', 'dateSync':datetime.fromisoformat('2000-01-02').isoformat()+'.0000',
-                  'dateModified':datetime.fromisoformat('2000-01-01').isoformat()+'.0000'}
+      return(node.id, -1)
     if self.verbose:
       print('>>>DOC_OTHER sync&modified', docOther.get('dateSync'), docOther.get('dateModified'))
     docMerged:dict[str,Any] = {}
@@ -289,33 +310,33 @@ class Pasta2Elab:
       self.backend.db.cursor.execute(f"UPDATE main SET dateSync='{docMerged['dateSync']}' WHERE id = '{node.id}'")
       self.backend.db.connection.commit()
     # send doc (merged version) to server everything
+    elabID = self.docID2elabID[node.id][0]
     if flagUpdateServer:
       content, image = self.doc2elab(copy.deepcopy(docMerged))
-      success = self.api.updateEntry(entryType, self.docID2elabID[node.id][0], content|self.readWriteAccess)
+      success = self.api.updateEntry(entryType, elabID, content|self.readWriteAccess)
       if not success:
-        print(f'**ERROR: could not sync data {entryType}, {self.docID2elabID[node.id][0]}, '
-              f'{content|self.readWriteAccess}')
+        logging.error(f'Could not sync data {entryType}, {elabID} {content|self.readWriteAccess}')
         return node.id, -1
       # create links
-      _ = [self.api.createLink(entryType, self.docID2elabID[node.id][0],
+      _ = [self.api.createLink(entryType, elabID,
                                'experiments' if self.docID2elabID[i.id][1] else 'items', self.docID2elabID[i.id][0])
                                for i in node.children]
     # uploads| clean first, then upload: PASTAs document, thumbnail, data-file
-    existingUploads = self.api.readEntry(entryType, self.docID2elabID[node.id][0])[0]['uploads']
+    existingUploads = self.api.readEntry(entryType, elabID)[0]['uploads']
     uploadsToDelete = {'do_not_change.json', 'metadata.json'}
     if flagUpdateServer:
       uploadsToDelete |= {'thumbnail.svg', 'thumbnail.png', 'thumbnail.jpg'}
     for upload in existingUploads:
       if upload['real_name'] in uploadsToDelete:
-        self.api.uploadDelete(entryType, self.docID2elabID[node.id][0], upload['id'])
-    self.api.upload(entryType, self.docID2elabID[node.id][0], jsonContent=json.dumps(docMerged))
+        self.api.uploadDelete(entryType, elabID, upload['id'])
+    self.api.upload(entryType, elabID, jsonContent=json.dumps(docMerged))
     if flagUpdateServer:
       if image:
-        self.api.upload(entryType, self.docID2elabID[node.id][0], image)
+        self.api.upload(entryType, elabID, image)
       if docMerged['branch'][0]['path'] is not None and docMerged['type'][0][0]!='x' \
             and not docMerged['branch'][0]['path'].startswith('http') and \
             (self.backend.basePath/docMerged['branch'][0]['path']).name not in {i['real_name'] for i in existingUploads}:
-        self.api.upload(entryType, self.docID2elabID[node.id][0], fileName=self.backend.basePath/docMerged['branch'][0]['path'], comment='raw data')
+        self.api.upload(entryType, elabID, fileName=self.backend.basePath/docMerged['branch'][0]['path'], comment='raw data')
     return node.id, mergeCase
 
 

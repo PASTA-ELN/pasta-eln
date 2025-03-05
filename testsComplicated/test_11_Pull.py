@@ -25,17 +25,11 @@ def test_simple(qtbot):
 
   # start app and load project
   backend = Backend('georgTesting')
-  dirName = backend.basePath
-  backend.exit()
-  try:
-    shutil.rmtree(dirName)
-    os.makedirs(dirName)
-    if platform.system()=='Windows':
-      print('Try-Except unnecessary')
-  except Exception:
-    pass
-  backend = Backend('georgTesting')
-  Pasta2Elab(backend, 'georgTesting', purge=False)
+  sync = Pasta2Elab(backend, 'georgTesting', purge=False)
+  if not sync.api.url:
+    return
+  reports = sync.sync('gA')
+  print('Reports',reports)
 
   # verify
   verify(backend)

@@ -4,7 +4,6 @@ import logging
 import os
 import sys
 import webbrowser
-from collections import Counter
 from enum import Enum
 from pathlib import Path
 from typing import Any, Union
@@ -25,6 +24,7 @@ from .GUI.config import Configuration
 from .GUI.form import Form
 from .GUI.palette import Palette
 from .GUI.sidebar import Sidebar
+from .GUI.waitDialog import WaitDialog
 from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN, importELN
@@ -89,7 +89,7 @@ class MainWindow(QMainWindow):
     if 'develop' in self.comm.backend.configuration:
       syncMenu = systemMenu.addMenu('&Synchronize')
       Action('Send',                         self, [Command.SYNC_SEND],       syncMenu, shortcut='F5')
-      # Action('Get',                          self, [Command.SYNC_GET],       syncMenu)
+      Action('Get',                          self, [Command.SYNC_GET],        syncMenu, shortcut='F4')
       # Action('Smart synce',                  self, [Command.SYNC_SMART],       syncMenu)
       Action('&Editor to change data type schema', self, [Command.SCHEMA],   systemMenu, shortcut='F8')
     systemMenu.addSeparator()
@@ -176,11 +176,9 @@ class MainWindow(QMainWindow):
       restart()
     elif command[0] is Command.SYNC_SEND:
       sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
-      if hasattr(sync, 'api'):  #if hostname and api-key given
-        report = sync.sync('sA')
-        reportSum = Counter([i[1] for i in report])
-        reportText = '\n  - '.join(['']+[f'{v:>4}:{MERGE_LABELS[k][2:]}' for k,v in reportSum.items()])
-        showMessage(self, 'Information', f'Send all data to server: success\n{reportText}', 'Information')
+      if hasattr(sync, 'api') and sync.api.url:  #if hostname and api-key given
+        dialogW = WaitDialog(lambda progress: sync.sync('sA', progressCallback=progress))
+        dialogW.exec()
       else:                     #if not given
         showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
         dialogC = Configuration(self.comm)
