@@ -1,12 +1,12 @@
 """ Dialog that shows a message and the progress-bar """
-from typing import Callable
+from typing import Callable, Any
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QTextEdit, QProgressBar, QDialogButtonBox)
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QShowEvent
 
 class WaitDialog(QDialog):
   """ Dialog that shows a message and the progress-bar """
-  def __init__(self, callback:Callable[..., None]):
+  def __init__(self, callback:Callable[[Any], list[tuple[str, int]]]):
     """
     Initialization
 

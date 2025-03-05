@@ -15,7 +15,7 @@ from pasta_eln import __version__
 from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .backend import Backend
-from .elabFTWsync import MERGE_LABELS, Pasta2Elab
+from .elabFTWsync import Pasta2Elab
 from .fixedStringsJson import CONF_FILE_NAME, shortcuts
 # from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 # from pasta_eln.GUI.dataverse.main_dialog import MainDialog

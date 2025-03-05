@@ -5,7 +5,7 @@ import logging, warnings
 from pathlib import Path
 from pasta_eln.backend import Backend
 from pasta_eln.elabFTWsync import Pasta2Elab
-from .misc import verify
+from .misc import verify, handleReport
 
 def test_simple(qtbot):
   """
@@ -21,16 +21,20 @@ def test_simple(qtbot):
                       datefmt='%m-%d %H:%M:%S')   #This logging is always info, since for installation only
   for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
-  logging.info('Start 10 test: deterministic process')
 
   # start app and load project
-  backend = Backend('georgTesting')
-  sync = Pasta2Elab(backend, 'georgTesting', purge=False)
+  backend = Backend('research')
+  sync = Pasta2Elab(backend, 'research', purge=False)
   if not sync.api.url:
     return
-  reports = sync.sync('gA')
-  print('Reports',reports)
+  report = sync.sync('gA')
+  print()
+  handleReport(report, [0,0,14,0,0])
 
   # verify
   verify(backend)
+  output = backend.output('x0')
+  projID = output.split('|')[-1].strip()
+  backend.changeHierarchy(projID)
+  print(backend.outputHierarchy(False))
   return

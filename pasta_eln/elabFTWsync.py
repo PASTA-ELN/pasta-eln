@@ -1,7 +1,7 @@
 """ Allow syncing to elabFTW server """
 import copy
 import json
-import re, traceback, time, logging
+import re, traceback, logging
 from collections import Counter
 from datetime import datetime
 from typing import Any, Callable
@@ -81,48 +81,38 @@ class Pasta2Elab:
     return
 
 
-  def sync(self, mode:str='', callback:Callable[[ElabFTWApi,str,int],str]=cliCallback, progressCallback=None) -> list[tuple[str,int]]:
+  def sync(self, mode:str='', callback:Callable[[ElabFTWApi,str,int],str]=cliCallback,
+           progressCallback:Callable[...,None]|None=None) -> list[tuple[str,int]]:
     """ Main function
 
     Args:
       mode (str): sync mode g=get, gA=get-all, s=send, sA=send-all
       callback (func): callback function if non-all mode is given
+      progressCallback (func): callback function to implement progress-bar
 
     Returns:
       list: list of merge cases
     """
-    if progressCallback is not None:
-      progressCallback('text', '### Start syncing with elabFTW server\n#### Align configuration\nStart...')
     if self.api.url:  #only when you are connected to web
-      startTime = time.time()
-      self.syncDocTypes()  #category agree
+      report = []
       if progressCallback is not None:
-        progressCallback('append', 'Done\n#### Create list of ids\nStart...')
-      print("Step 1:",round((time.time()-startTime),1),"sec")  #to see if warrants progressbar
-      startTime = time.time()
-      self.createIdDict()
+        progressCallback('text', '### Start syncing with elabFTW server\n#### Set up sync\nStart...')
+      self.syncDocTypes()  # sync categories ~1sec
+      self.createIdDict()  # TODO: get progressCallback as argument
       if progressCallback is not None:
         progressCallback('append', 'Done\n#### Sync each document\nStart...')
-      print("Step 2:",round((time.time()-startTime),1),"sec")
-      startTime = time.time()
-      # sync nodes in parallel
-      reports = []
       for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
         projHierarchy, _ = self.backend.db.getHierarchy(projID)
-        reports += [self.updateEntry(i, mode, callback) for i in PreOrderIter(projHierarchy)]
-      print("Step 3:",round((time.time()-startTime),1),"sec")
-      startTime = time.time()
+        report += [self.updateEntry(i, mode, callback) for i in PreOrderIter(projHierarchy)] # TODO: get progressCallback as argument
       if progressCallback is not None:
         progressCallback('append', 'Done\n#### Sync missing entries\nStart...')
-      self.syncMissingEntries(mode, callback)
-      print("Step 4:",round((time.time()-startTime),1),"sec")
-      startTime = time.time()
+      report += self.syncMissingEntries(mode, callback) # TODO: get progressCallback as argument
     if progressCallback is not None:
-      reportSum = Counter([i[1] for i in reports])
+      reportSum = Counter([i[1] for i in report])
       reportText = '\n  - '.join(['']+[f'{v:>4}:{MERGE_LABELS[k][2:]}' for k,v in reportSum.items()])
       progressCallback('count', 100)
       progressCallback('append', f'Done\n#### Summary\nSend all data to server: success\n{reportText}')
-    return reports
+    return report
 
 
   def syncDocTypes(self) -> None:
@@ -152,8 +142,7 @@ class Pasta2Elab:
     """ create mapping of docIDs to elabIDs: if not exist, create elabIds """
     configRemote = self.backend.configuration['projectGroups'][self.projectGroup]['remote']['config']
     # set default read/write access rules
-    self.readWriteAccess =  {'canwrite':configRemote['canWrite'], 'canread':configRemote['canRead'],
-                             'canbook':configRemote['canRead']}
+    self.readWriteAccess =  {'canwrite':configRemote['canWrite'], 'canread':configRemote['canRead']}
     elabTypes = {i['title'].lower():i['id'] for i in self.api.readEntry('items_types')}  |  {'measurement':-1}
     elabTypes |= {'x0':elabTypes.pop('project'), 'x1':elabTypes.pop('folder'), '-':elabTypes.pop('default')}
     def getNewEntry(elabType:str) -> int:
@@ -191,6 +180,7 @@ class Pasta2Elab:
     """
     # get this content: check if it changed
     docClient   = self.backend.db.getDoc(node.id)
+    elabID = self.docID2elabID[node.id][0]
     if 'dateSync' not in docClient or not docClient['dateSync']:
       docClient['dateSync'] = datetime.fromisoformat('2000-01-03').isoformat()+'.0000'
     if self.verbose:
@@ -203,7 +193,9 @@ class Pasta2Elab:
     if listDoNotChange :=[i for i in uploads if i['real_name']=='do_not_change.json']:
       docOther = self.api.download(entryType, elabID, listDoNotChange[0])
     else:
-      return(node.id, -1)
+      docOther = {'name':'Untitled', 'tags':[], 'comment':'', 'dateSync':datetime.fromisoformat('2000-01-02').isoformat()+'.0000',
+                  'dateModified':datetime.fromisoformat('2000-01-01').isoformat()+'.0000'}
+      # return(node.id, -1)
     if self.verbose:
       print('>>>DOC_OTHER sync&modified', docOther.get('dateSync'), docOther.get('dateModified'))
     docMerged:dict[str,Any] = {}
@@ -309,13 +301,14 @@ class Pasta2Elab:
     else:
       self.backend.db.cursor.execute(f"UPDATE main SET dateSync='{docMerged['dateSync']}' WHERE id = '{node.id}'")
       self.backend.db.connection.commit()
-    # send doc (merged version) to server everything
-    elabID = self.docID2elabID[node.id][0]
+    # send doc (merged version) to server
     if flagUpdateServer:
       content, image = self.doc2elab(copy.deepcopy(docMerged))
+      if entryType=='experiments':
+        pass
       success = self.api.updateEntry(entryType, elabID, content|self.readWriteAccess)
       if not success:
-        logging.error(f'Could not sync data {entryType}, {elabID} {content|self.readWriteAccess}')
+        logging.error('Could not sync data %s, %s  %s',entryType, elabID, json.dumps(content|self.readWriteAccess, indent=2))
         return node.id, -1
       # create links
       _ = [self.api.createLink(entryType, elabID,
@@ -340,7 +333,8 @@ class Pasta2Elab:
     return node.id, mergeCase
 
 
-  def syncMissingEntries(self, mode:str='', callback:Callable[[ElabFTWApi,str,int],str]=cliCallback) -> bool:
+  def syncMissingEntries(self, mode:str='', callback:Callable[[ElabFTWApi,str,int],str]=cliCallback) \
+    -> list[tuple[str,int]]:
     """
     Compare information on server and client and delete those on server, that are not on client (because they were deleted there)
 
@@ -349,9 +343,9 @@ class Pasta2Elab:
       callback (func): callback function if non-all mode is given
 
     Returns:
-    bool: true=equal; false=differences
+      list: changes
     """
-    agreement = True
+    report = []
     self.backend.db.cursor.execute('SELECT type, externalId FROM main')
     dataLocal = self.backend.db.cursor.fetchall()
     inPasta = {'experiments': {int(i[1]) for i in dataLocal if i[0].startswith('measurement')},
@@ -361,7 +355,7 @@ class Pasta2Elab:
                'items':       {i['entityid'] for i in data['related_items_links']} }
     for entryType in ['experiments','items']:
       if diff := inPasta[entryType].difference(inELAB[entryType]):
-        agreement = False
+        #TODO report??
         print(f'**ERROR** There is a difference in {entryType} between CLIENT and SERVER. Ids on server: {diff}.')
       if diff := inELAB[entryType].difference(inPasta[entryType]):
         if self.verbose:
@@ -401,8 +395,9 @@ class Pasta2Elab:
                             not i['real_name'].startswith('thumbnail.')]:
               data = self.api.download(listFile[0]['type'], idx, listFile[0])
               with open(self.backend.basePath/branch['path'], 'wb') as fOut:
-                fOut.write(data)
-    return agreement
+                fOut.write(data['data'])
+          report.append((docOther['id'],3))
+    return report
 
 
   def elab2doc(self,elab:dict[str,Any]) -> tuple[dict[str,Any], list[Any]]:

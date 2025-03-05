@@ -8,7 +8,7 @@ def verify(backend): # Verify DB
   return
 
 
-def handleReports(reports, targets=[]):
+def handleReport(reports, targets=[]):
   print('\n'.join([f'{i[0]} {MERGE_LABELS[i[1]]}' for i in reports]))
   if targets:
     cases = [i[1] for i in reports]

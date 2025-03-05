@@ -5,7 +5,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from pasta_eln.backend import Backend
 from pasta_eln.elabFTWsync import Pasta2Elab
-from .misc import verify, handleReports
+from .misc import verify, handleReport
 
 
 class TestStringMethods(unittest.TestCase):
@@ -31,7 +31,6 @@ class TestStringMethods(unittest.TestCase):
                         datefmt='%m-%d %H:%M:%S')   #This logging is always info, since for installation only
     for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
       logging.getLogger(package).setLevel(logging.WARNING)
-    logging.info('Start test')
 
     # setup and sync to server
     try:
@@ -41,13 +40,13 @@ class TestStringMethods(unittest.TestCase):
     self.be = Backend('research')
     sync = Pasta2Elab(self.be, 'research', True)
     sync.verbose = False
-    reports = sync.sync('sA')
-    handleReports(reports, [14,0,1,0,0])
+    report = sync.sync('sA')
+    handleReport(report, [15,0,0,0,0])
 
     # sync again: nothing should change
-    print('\n\n=============================\nSecond sync: nothing should change\n============================')
-    reports = sync.sync('sA')
-    handleReports(reports, [0,0,0,15,0])
+    print('\n\n=============================\nSecond sync: everything the same since HARD SEND\n============================')
+    report = sync.sync('sA')
+    handleReport(report, [15,0,0,0,0])
 
     # verify
     verify(self.be)

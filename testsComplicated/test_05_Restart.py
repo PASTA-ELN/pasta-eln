@@ -21,10 +21,9 @@ def test_simple(qtbot):
                       datefmt='%m-%d %H:%M:%S')   #This logging is always info, since for installation only
   for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
-  logging.info('Start 10 test: deterministic process')
 
   # start app and load project
-  backend = Backend('georgTesting')
+  backend = Backend('research')
   dirName = backend.basePath
   backend.exit()
   try:
@@ -34,8 +33,8 @@ def test_simple(qtbot):
       print('Try-Except unnecessary')
   except Exception:
     pass
-  backend = Backend('georgTesting')
-  Pasta2Elab(backend, 'georgTesting', purge=False)
+  backend = Backend('research')
+  Pasta2Elab(backend, 'research', purge=False)
 
   # verify
   verify(backend)

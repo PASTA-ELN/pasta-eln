@@ -33,19 +33,17 @@ class ElabFTWApi:
       verify: bool
       timeout: int
     # test server
-    self.url = ''  #initialize
-    self.param = Param()
+    self.url = ''  #initialize: indicator if initialization successful
     self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
-    param:Param = {'headers':self.headers, 'verify':verifySSL, 'timeout':10}
+    self.param:Param = {'headers':self.headers, 'verify':verifySSL, 'timeout':10}
     try:
-      response = requests.get(f'{url}info', **param)
+      response = requests.get(f'{url}info', **self.param)
       if response.status_code == 200:
         elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
         if elabVersion<5:
           print('**ERROR old elab-ftw version')
         else:
           self.url   = url
-          self.param = param
       else:
         print('|',response.status_code,'|')
         print('**ERROR not an elab-ftw server')
@@ -300,7 +298,7 @@ class ElabFTWApi:
     if response.status_code == 200:
       if elabData['real_name']== 'do_not_change.json':
         return json.loads(response.content.decode('utf-8'))
-      return response.content
+      return {'data':response.content}
     print(elabData,response.status_code, url)
     return {}
 
