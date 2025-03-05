@@ -1,7 +1,9 @@
 """ Allow syncing to elabFTW server """
 import copy
 import json
-import re, traceback, logging
+import logging
+import re
+import traceback
 from collections import Counter
 from datetime import datetime
 from typing import Any, Callable
@@ -304,8 +306,6 @@ class Pasta2Elab:
     # send doc (merged version) to server
     if flagUpdateServer:
       content, image = self.doc2elab(copy.deepcopy(docMerged))
-      if entryType=='experiments':
-        pass
       success = self.api.updateEntry(entryType, elabID, content|self.readWriteAccess)
       if not success:
         logging.error('Could not sync data %s, %s  %s',entryType, elabID, json.dumps(content|self.readWriteAccess, indent=2))
