@@ -14,9 +14,9 @@ class WaitDialog(QDialog):
     Args:
       callback (func): function that wants to receive the update function
     """
+    super().__init__()
     self.callback = callback
     self.count  = 0
-    super().__init__()
     self.callback = callback
     self.mainL = QVBoxLayout()
     self.setMinimumWidth(400)
@@ -71,7 +71,7 @@ class WaitDialog(QDialog):
       self.count = data
     else:
       print(f"**ERROR unknown data {dType} {data}")
-    print(f"Waiting ... {dType}  {data}")
+    print(f"Waiting ... {dType}  {data if isinstance(data, int) else data.replace('\n','')}")
     self.progressBar.setValue(self.count)
     if self.count == 100:
       self.buttonBox.show()

@@ -14,7 +14,7 @@ from typing import Any, Callable, Optional, Union
 import pandas as pd
 from anytree import Node
 from PIL import Image
-from .fixedStringsJson import SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema, SMALL_SVG
+from .fixedStringsJson import SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema
 from .miscTools import hierarchy
 from .stringChanges import camelCase, createDirName, outputString, tracebackString
 
@@ -1094,11 +1094,7 @@ class SqlLiteDB:
           outString+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
       elif image in ('', None):
         comment = comment.replace('\n','..')
-        errorStr=outputString(outputStyle,'unsure',f"image does not exist {docID} image:{image} comment:{comment}")
-        if repair is None:
-          outString+= errorStr
-        elif repair(errorStr):
-          self.cursor.execute(f"UPDATE main SET image='{SMALL_SVG}' WHERE id = '{docID}'")
+        outputString+=outputString(outputStyle,'unsure',f"image does not exist {docID} image:{image} comment:{comment}")
       else:
         outString+= outputString(outputStyle,'error',f"dch14: image not valid {docID} {image}")
 

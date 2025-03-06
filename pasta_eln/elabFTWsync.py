@@ -95,6 +95,14 @@ class Pasta2Elab:
     Returns:
       list: list of merge cases
     """
+    def updateEntryLocal(i:Node, mode:str, callback:Callable[[ElabFTWApi,str,int],str]=cliCallback, count:int)\
+                         -> tuple[str,int]:
+      """Intermediate function used in list comprehension"""
+      res = self.updateEntry(i, mode, callback)
+      if progressCallback is not None:
+        progressCallback('count', int(i/count*100))
+      return res
+
     if hasattr(self,'api') and self.api.url:  #only when you are connected to web
       report = []
       if progressCallback is not None:
@@ -105,7 +113,8 @@ class Pasta2Elab:
         progressCallback('append', 'Done\n#### Sync each document\nStart...')
       for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
         projHierarchy, _ = self.backend.db.getHierarchy(projID)
-        report += [self.updateEntry(i, mode, callback) for i in PreOrderIter(projHierarchy)] # TODO: get progressCallback as argument
+        count = len(PreOrderIter(projHierarchy))
+        report += [updateEntryLocal(i, mode, callback, count) for i in PreOrderIter(projHierarchy)]
       if progressCallback is not None:
         progressCallback('append', 'Done\n#### Sync missing entries\nStart...')
       report += self.syncMissingEntries(mode, callback) # TODO: get progressCallback as argument
@@ -398,7 +407,7 @@ class Pasta2Elab:
               data = self.api.download(listFile[0]['type'], idx, listFile[0])
               with open(self.backend.basePath/branch['path'], 'wb') as fOut:
                 fOut.write(data['data'])
-          report.append((docOther['id'],2))
+            report.append((docOther['id'],2))
     return report
 
 

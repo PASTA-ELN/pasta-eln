@@ -253,7 +253,7 @@ Commands - update Version 2 -> Version 3:
 Commands - database integrity:
   - [v]erify
   - [r]epair
-  - [rA]epair: answer always 'yes'
+  - [rA]epair: answer always 'yes': WARNING can change too much
   - [cp]-create a lost and found project: helpful for some repair operations
 Commands - depricated:
   - [rp1] repair properties: add missing '.'
