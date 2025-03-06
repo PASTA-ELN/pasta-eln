@@ -120,7 +120,7 @@ class Pasta2Elab:
       report += self.syncMissingEntries(mode, callback) # TODO: get progressCallback as argument
     else:
       print('**ERROR Not connected to elab server!')
-      return [()]
+      return []
     if progressCallback is not None:
       reportSum = Counter([i[1] for i in report])
       reportText = '\n  - '.join(['']+[f'{v:>4}:{MERGE_LABELS[k][2:]}' for k,v in reportSum.items()])
@@ -230,7 +230,7 @@ class Pasta2Elab:
             print(f'dict change k:{k}; v:{v}; vOther:{docOther[k]}|type:{type(v)}')
           docOther[k] = docServer[k]
       elif isinstance(v, list):
-        if set(v) != set([i for i in docOther[k] if not re.match(r'^_\d$', i)]):
+        if set(v) != {i for i in docOther[k] if not re.match(r'^_\d$', i)}:
           flagServerChange = True
           if self.verbose:
             print('list change', k,v, docOther[k])

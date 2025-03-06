@@ -1,19 +1,22 @@
 #!/usr/bin/python3
 """Commandline utility to admin local installation and convert from Pasta-ELN version 2"""
 import json
-import os, re, platform, shutil
+import os
+import platform
+import re
+import shutil
 import traceback
 from pathlib import Path
 from typing import Any, Callable, Union
-from PySide6.QtWidgets import QApplication
 import requests
+from PySide6.QtWidgets import QApplication
 from requests.structures import CaseInsensitiveDict
 from pasta_eln.backend import Backend
+from pasta_eln.elabFTWsync import Pasta2Elab
 from pasta_eln.fixedStringsJson import CONF_FILE_NAME
 from pasta_eln.miscTools import DummyProgressBar
 from pasta_eln.sqlite import SqlLiteDB
 from pasta_eln.stringChanges import outputString
-from pasta_eln.elabFTWsync import Pasta2Elab
 
 
 def couchDB2SQLite(userName:str='', password:str='', database:str='', path:str='') -> None:
@@ -233,10 +236,10 @@ def sync(projectGroup:str='', command:str='') -> None:
     command (str): 'ss' or 'sg' to send/get data
   """
   backend = __returnBackend__(projectGroup)
-  sync = Pasta2Elab(backend, backend.configurationProjectGroup)
+  syncObj = Pasta2Elab(backend, backend.configurationProjectGroup)
   if command:
     _ = QApplication()
-    sync.sync('sA' if command=='ss' else 'gA')
+    syncObj.sync('sA' if command=='ss' else 'gA')
   return
 
 
@@ -276,7 +279,7 @@ def userQuestion(errorMessage:str, allYes:bool=False) -> bool:
   return True if allYes else input('Repair [yN]: ')=='y'
 
 
-def help() -> None:
+def printHelp() -> None:
   """ Print all commands
   """
   print("""Command line program to troubleshoot and possibly repair Pasta-ELN database
@@ -339,7 +342,7 @@ def main() -> None:
     elif command == 'q':
       break
     elif command == 'h':
-      help()
+      printHelp()
     else:
       print('Unknown command or incomplete entries.')
 

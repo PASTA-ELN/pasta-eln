@@ -17,9 +17,9 @@ from .elabFTWsync import Pasta2Elab
 from .fixedStringsJson import CONF_FILE_NAME, shortcuts
 from .GUI.body import Body
 from .GUI.config import Configuration
+from .GUI.data_hierarchy.editor import SchemeEditor
 from .GUI.dataverse.config_dialog import ConfigDialog
 from .GUI.dataverse.main_dialog import MainDialog
-from .GUI.data_hierarchy.editor import SchemeEditor
 from .GUI.form import Form
 from .GUI.palette import Palette
 from .GUI.sidebar import Sidebar
