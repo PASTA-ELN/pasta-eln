@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 """Commandline utility to admin local installation and convert from Pasta-ELN version 2"""
 import json
-import os, re
+import os, re, platform, shutil
 import traceback
 from pathlib import Path
 from typing import Any, Callable, Union
+from PySide6.QtWidgets import QApplication
 import requests
 from requests.structures import CaseInsensitiveDict
 from pasta_eln.backend import Backend
@@ -12,6 +13,7 @@ from pasta_eln.fixedStringsJson import CONF_FILE_NAME
 from pasta_eln.miscTools import DummyProgressBar
 from pasta_eln.sqlite import SqlLiteDB
 from pasta_eln.stringChanges import outputString
+from pasta_eln.elabFTWsync import Pasta2Elab
 
 
 def couchDB2SQLite(userName:str='', password:str='', database:str='', path:str='') -> None:
@@ -201,6 +203,43 @@ def repairPropertiesDot(projectGroup:str='') -> None:
   return
 
 
+def purgeLocal(projectGroup:str='') -> None:
+  """ Purge entire local storage, remove everything
+
+    Args:
+    projectGroup (str): name of project group
+  """
+  backend = __returnBackend__(projectGroup)
+  dirName = backend.basePath
+  if dirName.as_posix() != '/home/steffen/FZJ/pasta_misc/testing': #TODO temporary safeguard
+    print('DO NOT DELETE THIS')
+    return
+  backend.exit()
+  try:
+    shutil.rmtree(dirName)
+    os.makedirs(dirName)
+    if platform.system()=='Windows':
+      print('Try-Except unnecessary')
+  except Exception:
+    pass
+  return
+
+
+def sync(projectGroup:str='', command:str='') -> None:
+  """ synchronize with elab server
+
+    Args:
+    projectGroup (str): name of project group
+    command (str): 'ss' or 'sg' to send/get data
+  """
+  backend = __returnBackend__(projectGroup)
+  sync = Pasta2Elab(backend, backend.configurationProjectGroup)
+  if command:
+    _ = QApplication()
+    sync.sync('sA' if command=='ss' else 'gA')
+  return
+
+
 def printOrDelete(projectGroup:str='', docID:str='', output:bool=True) -> None:
   """ Print or delete a document
   Args:
@@ -255,6 +294,9 @@ Commands - database integrity:
   - [r]epair
   - [rA]epair: answer always 'yes': WARNING can change too much
   - [cp]-create a lost and found project: helpful for some repair operations
+  - [pL]urge local database: REMOVE EVERYTHING
+  - [ss]ync SEND ALL
+  - [sg]ync GET ALL
 Commands - depricated:
   - [rp1] repair properties: add missing '.'
 """)
@@ -288,8 +330,12 @@ def main() -> None:
       printOrDelete()
     elif command == 's':
       scanAllProjects()
+    elif command in ['ss','sg']:
+      sync('', command)
     elif command == 'd':
       printOrDelete(projectGroup='', docID='', output=False)
+    elif command == 'pL':
+      purgeLocal()
     elif command == 'q':
       break
     elif command == 'h':
