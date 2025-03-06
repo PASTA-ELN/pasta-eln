@@ -119,6 +119,8 @@ SORTED_DB_KEYS  = ['id', 'type', 'dateCreated','dateModified','dateSync', 'user'
 DO_NOT_RENDER   = ['image','content','metaVendor','shasum','type','branch','gui','dateCreated',
                  'dateModified','id','user','name','externalId','client','elnIdentifier','oldIdentifier']
 
+SMALL_SVG = '<?xml version="1.0"?><!DOCTYPE svg><svg stroke="red"> <polygon points="1 6 1 22 23 18 23 2 1 6" /></svg>'
+
 setupText = """
 ### Welcome to the PASTA-ELN setup
 Three components are needed for proper functioning of PASTA-ELN:

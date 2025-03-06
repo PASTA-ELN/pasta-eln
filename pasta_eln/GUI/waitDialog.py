@@ -25,6 +25,7 @@ class WaitDialog(QDialog):
     self.setLayout(self.mainL)
 
     self.text = QTextEdit()
+    self.text.setFixedHeight(450)
     self.text.setMarkdown('Default text')
     self.mainL.addWidget(self.text)
     self.progressBar = QProgressBar(self)
@@ -70,6 +71,7 @@ class WaitDialog(QDialog):
       self.count = data
     else:
       print(f"**ERROR unknown data {dType} {data}")
+    print(f"Waiting ... {dType}  {data}")
     self.progressBar.setValue(self.count)
     if self.count == 100:
       self.buttonBox.show()

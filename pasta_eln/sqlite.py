@@ -14,7 +14,7 @@ from typing import Any, Callable, Optional, Union
 import pandas as pd
 from anytree import Node
 from PIL import Image
-from .fixedStringsJson import SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema
+from .fixedStringsJson import SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema, SMALL_SVG
 from .miscTools import hierarchy
 from .stringChanges import camelCase, createDirName, outputString, tracebackString
 
@@ -951,6 +951,17 @@ class SqlLiteDB:
     if outputStyle=='html':
       outString += '</div>'
       outString+= outputString(outputStyle,'h2','List all database entries')
+    lostAndFoundProjId   = ''
+    lostAndFoundProjPath = Path()
+    if repair is not None:
+      dfProjects = self.getView('viewDocType/x0')
+      idProjects = dfProjects[dfProjects['name']=='Lost and Found']['id'].values
+      if len(idProjects)==0:
+        print('**ERROR: manually create "LostAndFound" project to allow full repair')
+        return '**ERROR: manually create "LostAndFound" project to allow full repair\n'
+      else:
+        lostAndFoundProjId   = idProjects[0]
+        lostAndFoundProjPath = Path('LostAndFound')  #by definition
     # tests
     self.cursor.execute('SELECT main.id, main.name FROM main WHERE id NOT IN (SELECT id FROM branches)')
     if res:= self.cursor.fetchall():
@@ -958,19 +969,12 @@ class SqlLiteDB:
       if repair is None:
         outString+= errorStr
       elif repair(errorStr):
-        df = self.getView('viewDocType/x0')
-        ids = df[df['name']=='Lost and Found']['id'].values
-        if len(ids)==0:
-          print('**ERROR: manually create "LostAndFound" project to allow repair')
-        else:
-          parentID = ids[0]
-          parentPath = Path('LostAndFound')  #by definition
-          for docID, name in res:
-            self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
-                  [docID, 0, f'{parentID}/{docID}', 9999,
-                  (parentPath/createDirName(name, 'x0', 0)).as_posix() if docID.startswith('x-') else '*',
-                  'TT'])
-          self.connection.commit()
+        for docID, name in res:
+          self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
+            [docID, 0, f'{lostAndFoundProjId}/{docID}', 9999,
+            (lostAndFoundProjPath/createDirName(name, 'x0', 0)).as_posix() if docID.startswith('x-') else '*',
+            'TT'])
+        self.connection.commit()
 
     cmd = 'SELECT id, main.type, branches.stack, branches.path, branches.child, branches.show, main.name '\
           'FROM branches INNER JOIN main USING(id)'
@@ -1030,7 +1034,16 @@ class SqlLiteDB:
           for parentID in stack.split('/')[:-1]:            #check if all parents in doc have a corresponding path
             parentDoc = self.getDoc(parentID)
             if not parentDoc:
-              outString+= outputString(outputStyle,'error',f"branch stack parent is bad: {docID}")
+              errorStr= outputString(outputStyle,'error',f"branch stack parent is bad: {docID}")
+              if repair is None:
+                outString+= errorStr
+              elif repair(errorStr):
+                pathNew = (lostAndFoundProjPath/createDirName(name, 'x0', 0)).as_posix() if docID.startswith('x-')\
+                          else '*'
+                stackNew = f'{lostAndFoundProjId}/{docID}'
+                self.cursor.execute(f"UPDATE branches SET path='{pathNew}', stack='{stackNew}' "\
+                                    f"WHERE id='{docID}' AND stack='{stack}'")
+                self.connection.commit()
               continue
             parentDocBranches = parentDoc['branch']
             onePathFound = any(path.startswith(parentBranch['path']) for parentBranch in parentDocBranches)
@@ -1081,7 +1094,11 @@ class SqlLiteDB:
           outString+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
       elif image in ('', None):
         comment = comment.replace('\n','..')
-        outString+=outputString(outputStyle,'unsure',f"image not valid {docID} image:{image} comment:{comment}")
+        errorStr=outputString(outputStyle,'unsure',f"image does not exist {docID} image:{image} comment:{comment}")
+        if repair is None:
+          outString+= errorStr
+        elif repair(errorStr):
+          self.cursor.execute(f"UPDATE main SET image='{SMALL_SVG}' WHERE id = '{docID}'")
       else:
         outString+= outputString(outputStyle,'error',f"dch14: image not valid {docID} {image}")
 

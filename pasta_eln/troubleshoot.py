@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """Commandline utility to admin local installation and convert from Pasta-ELN version 2"""
 import json
-import os
+import os, re
 import traceback
 from pathlib import Path
 from typing import Any, Callable, Union
@@ -134,8 +134,12 @@ def __returnBackend__(projectGroup:str='') -> Backend:
   while not projectGroup:
     with open(Path.home()/CONF_FILE_NAME, encoding='utf-8') as fIn:
       config = json.load(fIn)
-      print('Possible project groups:','  '.join(config['projectGroups'].keys()))
-    projectGroup = input('Enter project group: ').strip()
+      print('Possible project groups:','  '.join(f'{idx+1}-{i}' for idx,i in enumerate(config['projectGroups'].keys())))
+    projectGroup = input('  Enter project group [number or name or entire text]: ').strip()
+    if re.match(r'^\d+-\w+$', projectGroup):
+      projectGroup = projectGroup.split('-')[1]
+    if re.match(r'^\d+$', projectGroup):
+      projectGroup = list(config['projectGroups'].keys())[int(projectGroup)-1]
     if projectGroup not in config['projectGroups'].keys():
       projectGroup = ''
   return Backend(projectGroup)
@@ -219,18 +223,42 @@ def printOrDelete(projectGroup:str='', docID:str='', output:bool=True) -> None:
   return
 
 
-def userQuestion(errorMessage:str) -> bool:
+def userQuestion(errorMessage:str, allYes:bool=False) -> bool:
   """ Ask user if repair should be done
 
   Args:
     errorMessage (str): error message
+    allYes (bool): answer all questions with yes
 
   Return:
     bool: repair should be done
   """
   print(errorMessage)
-  reply = input('Repair [yN]: ')
-  return reply=='y'
+  return True if allYes else input('Repair [yN]: ')=='y'
+
+
+def help() -> None:
+  """ Print all commands
+  """
+  print("""Command line program to troubleshoot and possibly repair Pasta-ELN database
+Commands - general:
+  - [h]elp: long help
+  - [q]uit
+  - [p]rint a document
+  - [d]elete a document
+  - [s]can all projects
+Commands - update Version 2 -> Version 3:
+  - [c]onvert couchDB to SQLite
+  - [t]ranslate disk structure from V2->v3
+Commands - database integrity:
+  - [v]erify
+  - [r]epair
+  - [rA]epair: answer always 'yes'
+  - [cp]-create a lost and found project: helpful for some repair operations
+Commands - depricated:
+  - [rp1] repair properties: add missing '.'
+""")
+  return
 
 
 def main() -> None:
@@ -241,9 +269,7 @@ def main() -> None:
   print(  '------------     Manual functions for PASTA-ELN installation    ---------')
   print(  '-------------------------------------------------------------------------')
   while True:
-    print('\nCommands - general: [q]uit; [p]rint a document; [d]elete a document; [s]can all projects\n - update: [c]onvert couchDB to SQLite; [t]ranslate disk structure from V2->v3'
-          '\n - database integrity: [v]erify; [r]epair; [cp]-create a lost and found project\n - repair sql: [rp1] repair properties: add missing .')
-    command = input('> ')
+    command = input('\nImportant commands [h]elp; [q]uit; [v]erify; [r]epair: ')
     if command == 'c':
       couchDB2SQLite()
     elif command == 't':
@@ -253,7 +279,9 @@ def main() -> None:
     elif command == 'cp':
       createLostAndFound()
     elif command == 'r':
-      verifyPasta('', repair=userQuestion)
+      verifyPasta('', userQuestion)
+    elif command == 'rA':
+      verifyPasta('', lambda t: userQuestion(t, True))
     elif command == 'rp1':
       repairPropertiesDot()
     elif command == 'p':
@@ -264,6 +292,8 @@ def main() -> None:
       printOrDelete(projectGroup='', docID='', output=False)
     elif command == 'q':
       break
+    elif command == 'h':
+      help()
     else:
       print('Unknown command or incomplete entries.')
 
