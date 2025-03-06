@@ -95,7 +95,7 @@ class Pasta2Elab:
     Returns:
       list: list of merge cases
     """
-    if self.api.url:  #only when you are connected to web
+    if hasattr(self,'api') and self.api.url:  #only when you are connected to web
       report = []
       if progressCallback is not None:
         progressCallback('text', '### Start syncing with elabFTW server\n#### Set up sync\nStart...')
@@ -109,6 +109,9 @@ class Pasta2Elab:
       if progressCallback is not None:
         progressCallback('append', 'Done\n#### Sync missing entries\nStart...')
       report += self.syncMissingEntries(mode, callback) # TODO: get progressCallback as argument
+    else:
+      print('**ERROR Not connected to elab server!')
+      return [()]
     if progressCallback is not None:
       reportSum = Counter([i[1] for i in report])
       reportText = '\n  - '.join(['']+[f'{v:>4}:{MERGE_LABELS[k][2:]}' for k,v in reportSum.items()])

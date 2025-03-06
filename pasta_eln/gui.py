@@ -184,8 +184,9 @@ class MainWindow(QMainWindow):
         dialogC = Configuration(self.comm)
         dialogC.exec()
     elif command[0] is Command.SYNC_GET:
-      sync = Pasta2Elab(self.backend)
-      sync.sync('gA')
+      sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
+      dialogW = WaitDialog(lambda progress: sync.sync('gA', progressCallback=progress))
+      dialogW.exec()
     elif command[0] is Command.SYNC_SMART:
       sync = Pasta2Elab(self.backend)
       sync.sync('')

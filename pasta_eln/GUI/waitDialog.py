@@ -21,6 +21,7 @@ class WaitDialog(QDialog):
     self.mainL = QVBoxLayout()
     self.setMinimumWidth(400)
     self.setMinimumHeight(500)
+    self.setWindowTitle('Wait for processes to finish')
     self.setLayout(self.mainL)
 
     self.text = QTextEdit()
