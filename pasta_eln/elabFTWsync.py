@@ -206,7 +206,7 @@ class Pasta2Elab:
     flagServerChange = False
     for k,v in docServer.items():
       if isinstance(v, str):
-        if v.strip() != docOther[k].strip():
+        if v.replace('\n','').replace(' ','') != docOther[k].replace('\n','').replace(' ',''):  #ignore white-space changes from server, html-markdown format differences
           flagServerChange = True
           if self.verbose:
             print(f'str change k:{k}; v:{v}; vOther:{docOther[k]}|type:{type(v)}')
@@ -218,7 +218,7 @@ class Pasta2Elab:
             print(f'dict change k:{k}; v:{v}; vOther:{docOther[k]}|type:{type(v)}')
           docOther[k] = docServer[k]
       elif isinstance(v, list):
-        if set(v) != set(docOther[k]):
+        if set(v) != set([i for i in docOther[k] if not re.match(r'^_\d$', i)]):
           flagServerChange = True
           if self.verbose:
             print('list change', k,v, docOther[k])
@@ -235,8 +235,8 @@ class Pasta2Elab:
     mergeCase = -1
     #  - Case 1 straight update from client to server: only client updated and server not changed
     if (datetime.strptime(docClient['dateModified'], pattern) >  datetime.strptime(docClient['dateSync'], pattern) and \
-       datetime.strptime(docOther['dateModified'], pattern)  <= datetime.strptime(docOther['dateSync'], pattern) and  \
-       not mode.startswith('g')) or mode=='sA':
+        datetime.strptime(docOther['dateModified'], pattern)  <= datetime.strptime(docOther['dateSync'], pattern) and  \
+        not mode.startswith('g'))     or     mode=='sA':
       mergeCase = 1
       if self.verbose:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
@@ -244,10 +244,9 @@ class Pasta2Elab:
       flagUpdateClient = False
       docMerged = copy.deepcopy(docClient)
     #  - Case 2 straight update from server to client: only others was updated / server itself was not updated, client not changed
-    if (datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
-         datetime.strptime(docOther['dateModified'], pattern) < datetime.strptime(docOther['dateSync'], pattern) and \
-         datetime.strptime(docOther['dateSync'], pattern)     < datetime.strptime(docOther['dateSync'], pattern) and \
-         not mode.startswith('s')) or mode=='gA':
+    if (datetime.strptime(docClient['dateModified'], pattern) <= datetime.strptime(docClient['dateSync'], pattern) and \
+        datetime.strptime(docOther['dateModified'], pattern)  >  datetime.strptime(docOther['dateSync'], pattern) and \
+        not mode.startswith('s'))     or     mode=='gA':
       mergeCase = 2
       if self.verbose:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
@@ -256,8 +255,8 @@ class Pasta2Elab:
       docMerged = copy.deepcopy(docOther)
     #  - Case 3 straight update from server to client: only server updated, client not changed
     if datetime.strptime(docClient['dateModified'], pattern) <= datetime.strptime(docClient['dateSync'], pattern) and \
-         datetime.strptime(docOther['dateModified'], pattern) > datetime.strptime(docOther['dateSync'], pattern)  and \
-         not mode.startswith('s'):
+       datetime.strptime(docOther['dateModified'], pattern)  >  datetime.strptime(docOther['dateSync'], pattern) and \
+       flagServerChange and not mode.startswith('s'):
       mergeCase = 3
       if self.verbose:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
@@ -266,7 +265,7 @@ class Pasta2Elab:
       docMerged = copy.deepcopy(docOther)
     #  - Case 4 no change: nothing changed
     if datetime.strptime(docClient['dateModified'], pattern) <= datetime.strptime(docClient['dateSync'], pattern) and \
-         datetime.strptime(docOther['dateModified'], pattern) <= datetime.strptime(docOther['dateSync'], pattern) and \
+       datetime.strptime(docOther['dateModified'], pattern)  <= datetime.strptime(docOther['dateSync'], pattern) and \
           not mode.endswith('A'):
       mergeCase = 4
       if self.verbose:
@@ -277,7 +276,7 @@ class Pasta2Elab:
       return node.id, mergeCase
     #  - Case 5 both are updated: merge: both changed -> GUI
     if datetime.strptime(docClient['dateModified'], pattern) > datetime.strptime(docClient['dateSync'], pattern) and \
-       datetime.strptime(docOther['dateModified'], pattern) > datetime.strptime(docOther['dateSync'], pattern):
+       datetime.strptime(docOther['dateModified'], pattern)  > datetime.strptime(docOther['dateSync'], pattern):
       mergeCase = 5
       if self.verbose:
         print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
@@ -396,7 +395,7 @@ class Pasta2Elab:
               data = self.api.download(listFile[0]['type'], idx, listFile[0])
               with open(self.backend.basePath/branch['path'], 'wb') as fOut:
                 fOut.write(data['data'])
-          report.append((docOther['id'],3))
+          report.append((docOther['id'],2))
     return report
 
 
