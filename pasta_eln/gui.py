@@ -12,15 +12,14 @@ from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-i
 from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 from pasta_eln import __version__
-from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
-from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .backend import Backend
 from .elabFTWsync import Pasta2Elab
 from .fixedStringsJson import CONF_FILE_NAME, shortcuts
-# from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
-# from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .GUI.body import Body
 from .GUI.config import Configuration
+from .GUI.dataverse.config_dialog import ConfigDialog
+from .GUI.dataverse.main_dialog import MainDialog
+from .GUI.data_hierarchy.editor import SchemeEditor
 from .GUI.form import Form
 from .GUI.palette import Palette
 from .GUI.sidebar import Sidebar
@@ -191,9 +190,8 @@ class MainWindow(QMainWindow):
       sync = Pasta2Elab(self.backend)
       sync.sync('')
     elif command[0] is Command.SCHEMA:
-      pass
-      # dataHierarchyForm = DataHierarchyEditorDialog()
-      # dataHierarchyForm.instance.exec()
+      dialogS = SchemeEditor(self.comm)
+      dialogS.exec()
     # elif command[0] is Command.DATAVERSE_CONFIG:
     #   self.dataverseConfig = ConfigDialog()
     #   self.dataverseConfig.show()

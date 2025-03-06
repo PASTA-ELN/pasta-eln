@@ -386,7 +386,7 @@ class Backend(CLI_Mixin):
             newPath = path
           else:
             #determine childNumber
-            thisStack = ' '.join(hierStack)
+            thisStack = '/'.join(hierStack)
             view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack)
             childNum = 0
             for item in view:
@@ -720,7 +720,7 @@ class Backend(CLI_Mixin):
         for dirName in dirs:
           path = (Path(root).relative_to(self.basePath) /dirName).as_posix()
           if path not in pathsInDB_folder:
-            output += outputString(outputStyle, 'error', f'Directory on harddisk but not DB:{path}')
+            output += outputString(outputStyle, 'error', f'Folder on disk but not DB  :{path}')
             count += 1
           else:
             pathsInDB_folder.remove(path)
