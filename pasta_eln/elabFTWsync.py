@@ -95,8 +95,8 @@ class Pasta2Elab:
     Returns:
       list: list of merge cases
     """
-    def updateEntryLocal(i:Node, mode:str, callback:Callable[[ElabFTWApi,str,int],str]=cliCallback, count:int)\
-                         -> tuple[str,int]:
+    def updateEntryLocal(i:Node, mode:str, callback:Callable[[ElabFTWApi,str,int],str]=cliCallback,
+                         count:int=-1) -> tuple[str,int]:
       """Intermediate function used in list comprehension"""
       res = self.updateEntry(i, mode, callback)
       if progressCallback is not None:
@@ -113,7 +113,7 @@ class Pasta2Elab:
         progressCallback('append', 'Done\n#### Sync each document\nStart...')
       for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
         projHierarchy, _ = self.backend.db.getHierarchy(projID)
-        count = len(PreOrderIter(projHierarchy))
+        count = len(list(PreOrderIter(projHierarchy)))
         report += [updateEntryLocal(i, mode, callback, count) for i in PreOrderIter(projHierarchy)]
       if progressCallback is not None:
         progressCallback('append', 'Done\n#### Sync missing entries\nStart...')

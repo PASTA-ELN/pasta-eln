@@ -1094,7 +1094,7 @@ class SqlLiteDB:
           outString+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
       elif image in ('', None):
         comment = comment.replace('\n','..')
-        outputString+=outputString(outputStyle,'unsure',f"image does not exist {docID} image:{image} comment:{comment}")
+        outString+=outputString(outputStyle,'unsure',f"image does not exist {docID} image:{image} comment:{comment}")
       else:
         outString+= outputString(outputStyle,'error',f"dch14: image not valid {docID} {image}")
 
