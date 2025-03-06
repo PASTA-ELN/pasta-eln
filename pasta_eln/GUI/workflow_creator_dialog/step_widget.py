@@ -3,9 +3,9 @@ from PySide6.QtGui import QMouseEvent, Qt, QDrag, QPixmap, QPalette, QColor
 from PySide6.QtWidgets import QWidget, QLabel, QSizePolicy, QPushButton, QStyle, QFrame, QVBoxLayout, QHBoxLayout
 
 from .central_text_widget import CentralTextWidget
-from .common_workflow_description import Storage
 from .param_widget import ParamWidget
 from .workflow_functions import get_procedure_default_paramaters, get_procedure_text
+from ...guiCommunicate import Communicate
 
 
 class StepWidget(QWidget):
@@ -13,10 +13,11 @@ class StepWidget(QWidget):
     A single Step containing Procedure Name, Parameters and buttons.
     """
 
-    def __init__(self, storage: Storage, count: int, procedure_name: str, textfield: CentralTextWidget,
+    def __init__(self, comm: Communicate, count: int, procedure_name: str, textfield: CentralTextWidget,
                  parameters: dict[str, str] = None):
         super().__init__()
-        self.storage = storage
+        self.comm = comm
+        self.storage = self.comm.storage
         self.procedure_name = procedure_name
         self.textfield = textfield
         self.params_visible = False
@@ -80,7 +81,7 @@ class StepWidget(QWidget):
 
         # add Parameter-Widgets to the layout and hide them
         if not self.param_widgets:
-            default_parameters = get_procedure_default_paramaters(self.procedure_name, self.storage)
+            default_parameters = get_procedure_default_paramaters(self.procedure_name, self.comm)
             if parameters is None:
                 parameters = default_parameters
             for key in default_parameters:
@@ -125,7 +126,7 @@ class StepWidget(QWidget):
         """
         Click View Button to display text in TextWidget.
         """
-        self.textfield.textedit.setMarkdown(get_procedure_text(self.procedure_name, self.storage))
+        self.textfield.textedit.setMarkdown(get_procedure_text(self.procedure_name, self.comm))
 
     def onParameterButtonClicked(self) -> None:
         """

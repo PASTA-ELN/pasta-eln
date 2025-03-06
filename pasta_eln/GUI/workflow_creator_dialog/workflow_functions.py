@@ -1,65 +1,47 @@
 from pathlib import Path
 from typing import Tuple
 
-from .common_workflow_description import Storage
+from ...guiCommunicate import Communicate
 
 
-def generate_workflow(output_file: str, workflow_name: str, library_url: str, sample_name: str, procedures: list[str],
-                      parameters: list[dict[str, str]]) -> None:
+def generate_workflow(comm: Communicate, workflow_name: str, library_url: str, sample_name: str, procedures: list[str],
+                      parameters: list[dict[str, str]], docType: str) -> None:
     """
     Write the given parameters of a workflow in a file with the format of the common workflow description.
     """
     # Read Template
-    with open("workflow_template.txt", 'r') as reader:
+    with open("pasta_eln/GUI/workflow_creator_dialog/workflow_template.txt", 'r') as reader:
         template = reader.readlines()
+
     # Generate Common Workflow Description
-    with open(output_file, 'w') as writer:
-        # Header always the same
-        for line in template[0:8]:
-            writer.write(line)
-        writer.write("")
-
-        # Stuff inbetween
-        writer.write(f"wf = Workflow('{workflow_name}', automate_execution=False)\n")
-        writer.write(f"proceduresLibrary = urlparse('{library_url}')\n")
-        writer.write(f"storage=Storage(proceduresLibrary)\n")
-        writer.write("\n")
-        writer.write(f"sample = Sample('{sample_name}')\n")
-        writer.write("\n")
-        for i, step in enumerate(procedures):
-            writer.write(f"wf.step{i} = step(storage, sample, '{step}', {parameters[i]}, run_after_init = True)\n")
-        writer.write("\n")
-        string = ''
-        for i in range(len(procedures)):
-            if i < len(procedures) - 1:
-                string += f'wf.step{i} >> '
-            else:
-                string += f'wf.step{i}'
-        writer.write(string + "\n")
-        writer.write("wf.starting_nodes = [wf.step0] \n")
-
-        # Footer always the same
-        writer.write("")
-        for line in template[9:]:
-            writer.write(line)
+    step_string1 = "".join(
+        [f"wf.step{i} = step(storage, sample, '{step}', {parameters[i]}, run_after_init = True)\n" for i, step in
+         enumerate(procedures)])
+    step_string2 = ''
+    for i in range(len(procedures)):
+        if i < len(procedures) - 1:
+            step_string2 += f'wf.step{i} >> '
+        else:
+            step_string2 += f'wf.step{i}'
+    cwd_string = ''.join(template[0:14]).format(**locals()) + step_string1 + "\n" + step_string2 + "\n" + "".join(template[14:])
+    comm.backend.addData(docType, {'name':sample_name, 'content':cwd_string}, [comm.projectID])
 
 
-def get_db_procedures(storage: Storage) -> dict[str, str | Path]:
-    print("get_db_procedures", storage.procedures)
-    return storage.procedures
+def get_db_procedures(comm: Communicate) -> dict[str, str | Path]:
+    return comm.storage.procedures
 
 
-def get_procedure_default_paramaters(procedure: str, storage: Storage) -> dict[str, str]:
+def get_procedure_default_paramaters(procedure: str, comm: Communicate) -> dict[str, str]:
     parameters = {}
     try:
-        parameters = storage.list_parameters(procedure)
+        parameters = comm.storage.list_parameters(procedure)
     finally:
         return parameters
 
 
-def get_procedure_text(procedure: str, storage: Storage) -> str:
+def get_procedure_text(procedure: str, comm: Communicate) -> str:
     try:
-        text = storage.get_text(procedure)
+        text = comm.storage.get_text(procedure)
     except UnboundLocalError:
         text = procedure
     return text

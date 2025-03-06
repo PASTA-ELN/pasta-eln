@@ -2,9 +2,9 @@ from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QToolButton, QSizePolicy, QMenu
 
-from .common_workflow_description import Storage
 from .step_list import StepList
 from .workflow_functions import get_db_procedures
+from ...guiCommunicate import Communicate
 
 
 class NewStepButton(QToolButton):
@@ -13,10 +13,11 @@ class NewStepButton(QToolButton):
     """
 
     # Depending on Amount of Procedures, the Dropdown Menu could be Exchanged for a dialog
-    def __init__(self, parent: StepList, storage: Storage):
+    def __init__(self, parent: StepList, comm: Communicate):
         super().__init__(parent)
-        self.storage = storage
-        self.procedures = get_db_procedures(self.storage)
+        self.comm = comm
+        self.storage = self.comm.storage
+        self.procedures = get_db_procedures(self.comm)
 
         # Configure Appearence of Button
         self.setText("Add new Step")

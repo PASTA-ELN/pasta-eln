@@ -7,6 +7,13 @@ except ImportError:
     from common_workflow_description import Workflow
 from analysis_steps import plot_curves, calc_YoungsModulus
 
+wf = Workflow('{workflow_name}', automate_execution=False)
+proceduresLibrary = urlparse('{library_url}')
+storage=Storage(proceduresLibrary)
+sample = Sample('{sample_name}')
+
+wf.starting_nodes = [wf.step0]
+
 # footer, always the same
 print('Output:\n  ','\n   '.join([f"{k}: {v}" for k, v in list(wf.outputs.to_value_dict().items())]))
 wf.draw().render(filename="io_demo", format="png", cleanup=True) #plot to file

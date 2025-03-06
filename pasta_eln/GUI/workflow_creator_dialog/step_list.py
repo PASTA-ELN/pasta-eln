@@ -3,8 +3,8 @@ from PySide6.QtGui import QDragEnterEvent, QDropEvent
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 
 from pasta_eln.GUI.workflow_creator_dialog.central_text_widget import CentralTextWidget
-from .common_workflow_description import Storage
 from .step_widget import StepWidget
+from ...guiCommunicate import Communicate
 
 
 class StepList(QWidget):
@@ -12,9 +12,10 @@ class StepList(QWidget):
     Displays a list of StepWidgets which can be rearranged.
     """
 
-    def __init__(self, storage: Storage, textfield: CentralTextWidget):
+    def __init__(self, comm: Communicate, textfield: CentralTextWidget):
         super().__init__()
-        self.storage = storage
+        self.comm = comm
+        self.storage = self.comm.storage
         self.textfield = textfield
 
         self.setAcceptDrops(True)
@@ -57,7 +58,7 @@ class StepList(QWidget):
         :param parameters: matching parameters to be added to the step.
         """
         self.layout.addWidget(
-            StepWidget(self.storage, self.layout.count() + 1, procedure_name, self.textfield, parameters))
+            StepWidget(self.comm, self.layout.count() + 1, procedure_name, self.textfield, parameters))
 
     def rename_steps(self) -> None:
         """

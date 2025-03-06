@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QDialog, QVBoxLayout
 
 from .central_widget import CentralWidget
 from .common_workflow_description import Storage
-from ...backend import Backend
+from ...guiCommunicate import Communicate
 
 
 class WorkflowCreatorDialog(QDialog):
@@ -10,18 +10,18 @@ class WorkflowCreatorDialog(QDialog):
     The Top level Widget of the Workflow Creator Dialog containing only the CentralWidget.
     """
 
-    def __init__(self):
+    def __init__(self, comm: Communicate):
         super().__init__()
 
         self.setWindowTitle("Workflow Creator")  # + Sample name ?
 
         # Configure Backend / Storage
-        self.backend = Backend()
-        self.storage = Storage({})  # Empty Storage gets filled by add_pasta_database below
-        self.storage.add_pasta_database(self.backend)
+        self.comm = comm
+        self.comm.storage = Storage({})  # Empty Storage gets filled by add_pasta_database below
+        self.comm.storage.add_pasta_database(self.comm.backend)
 
         # Central widget
-        central_widget = CentralWidget(self.storage)
+        central_widget = CentralWidget(self.comm)
 
         # layout
         layout = QVBoxLayout()

@@ -188,7 +188,7 @@ class Sidebar(QWidget):
     elif command[0] is Command.SHOW_FOLDER:
       self.comm.changeProject.emit(command[1], command[2])
     elif command[0] is Command.WORKFLOW_DIALOG:
-      workflow_dialog = WorkflowCreatorDialog()
+      workflow_dialog = WorkflowCreatorDialog(self.comm)
       workflow_dialog.exec()
     else:
       print('**ERROR sidebar menu unknown:',command)

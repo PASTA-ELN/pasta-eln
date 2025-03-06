@@ -170,8 +170,15 @@ class Storage:
             name = row.name
             id = row.id
             doc = backend.db.getDoc(id)
-            path = doc['branch'][0]['path']
-            self.procedures[name] = path
+            docPath = doc['branch'][0]['path']
+            if docPath:
+                path = backend.basePath/docPath
+            else:
+                path = Path()
+            if path.is_file():
+                self.procedures[name] = path
+            else:
+                self.procedures[name] = doc['content']
 
     def list_parameters(self, name: str) -> dict[str, str]:
         """list all the parameters in this procedure

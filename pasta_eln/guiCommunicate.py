@@ -2,6 +2,8 @@
 from typing import Any, Optional
 from PySide6.QtCore import QObject, Signal  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
+from .GUI.workflow_creator_dialog.common_workflow_description import Storage
+
 from .backend import Backend
 
 
@@ -12,6 +14,7 @@ class Communicate(QObject):
     self.backend               = backend
     self.palette               = palette
     self.projectID             = ''
+    self.storage: Optional[Storage] = None
     self.progressBar:Optional[QProgressBar] = None
 
   # Signals: specify emitter and receiver
