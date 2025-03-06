@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Tuple
-from urllib.parse import urlparse
 
 from .common_workflow_description import Storage
 
@@ -45,18 +44,12 @@ def generate_workflow(output_file: str, workflow_name: str, library_url: str, sa
             writer.write(line)
 
 
-def get_db_procedures() -> dict[str, str | Path]:
-    proceduresLibrary = urlparse(
-        'https://raw.githubusercontent.com/SteffenBrinckmann/common-workflow-description_Procedures/main')
-    storage = Storage(proceduresLibrary)
-
+def get_db_procedures(storage: Storage) -> dict[str, str | Path]:
+    print("get_db_procedures", storage.procedures)
     return storage.procedures
 
 
-def get_procedure_default_paramaters(procedure: str) -> dict[str, str]:
-    proceduresLibrary = urlparse(
-        'https://raw.githubusercontent.com/SteffenBrinckmann/common-workflow-description_Procedures/main')
-    storage = Storage(proceduresLibrary)
+def get_procedure_default_paramaters(procedure: str, storage: Storage) -> dict[str, str]:
     parameters = {}
     try:
         parameters = storage.list_parameters(procedure)
@@ -64,11 +57,7 @@ def get_procedure_default_paramaters(procedure: str) -> dict[str, str]:
         return parameters
 
 
-def get_procedure_text(procedure: str) -> str:
-    proceduresLibrary = urlparse(
-        'https://raw.githubusercontent.com/SteffenBrinckmann/common-workflow-description_Procedures/main')
-    storage = Storage(proceduresLibrary)
-
+def get_procedure_text(procedure: str, storage: Storage) -> str:
     try:
         text = storage.get_text(procedure)
     except UnboundLocalError:

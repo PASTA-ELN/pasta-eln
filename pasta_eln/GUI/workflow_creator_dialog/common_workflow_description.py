@@ -6,22 +6,29 @@ Part of the NFDI-Matwerk and the Task area Workflow and software development
 
 Authors: Steffen Brinckmann, Liam Huber, Sarath Menon
 """
-import hashlib, json, logging, re, functools
+import functools
+import hashlib
+import json
+import logging
+import re
+import tkinter as tk
 from inspect import signature
-from typing import Union, Any, Optional
 from pathlib import Path
+from tkinter import filedialog
+from tkinter import font as tkFont
+from typing import Union, Any, Optional
+from urllib.error import HTTPError
 from urllib.parse import ParseResult, urlunparse, urlparse
 from urllib.request import urlopen
-from urllib.error import HTTPError
-import tkinter as tk
-from tkinter import font as tkFont
-from tkinter import filedialog
+
 try:
     from pyiron_workflow import Workflow
+
     print('Started pyiron workflow engine')
 except ImportError:
     class RShiftableOutput:
         """ Output of the wrapper / decorator function """
+
         def __init__(self, value):
             self.value = value
 
@@ -31,6 +38,7 @@ except ImportError:
 
     class WorkflowOutputs(dict):
         """ Output of the entire workflow """
+
         def to_value_dict(self):
             """ return workflow output as dictionary """
             return self
@@ -38,10 +46,13 @@ except ImportError:
 
     class Wrap():
         """ Wrapper class that defines the decorator """
+
         def as_function_node(self, _):
             """ decorator function """
+
             def decorator_inner(func):
                 """ inner decorator, that is returned """
+
                 @functools.wraps(func)
                 def wrapper(self, *args, **kwargs):
                     wrapped_params = signature(func).parameters
@@ -49,7 +60,9 @@ except ImportError:
                     # wrapper that can access the local variables of the wrapped function
                     out = func(self, *args, **kwargs)
                     return RShiftableOutput(out)
+
                 return wrapper
+
             return decorator_inner
 
 
@@ -73,20 +86,24 @@ except ImportError:
 
     class Picture():
         """ Dummy picture class that does nothing """
+
         def render(self, *args, **kwargs):
             """ render the workflow as a picture """
+
         print('Started minimalistic workflow engine')
+
+
 #### END of minimalistic workflow ####
 
 
-class Storage():
+class Storage:
     """Storage for procedures"""
 
     def __init__(self, procedures) -> None:
         """Storage of procedures
 
         Args:
-          procedures (): location or list of procedures to choose from
+          procedures (): location or Dict of procedures to choose from
         """
         self.procedures: dict[str, Union[str, Path]] = {}
         if isinstance(procedures, dict):
@@ -105,7 +122,6 @@ class Storage():
         )
         logging.info("Start workflow")
 
-
     def add_procedures(self, procedures: dict[str, Union[str, Path]]) -> None:
         """Add procedures to local copy
 
@@ -118,7 +134,6 @@ class Storage():
                     self.procedures[key] = Path(value)
                     continue
             self.procedures[key] = value
-
 
     def add_procedure_directory(self, path: Path) -> None:
         """Add directory with procedures to local copy
@@ -135,7 +150,6 @@ class Storage():
                 continue
             self.procedures[key] = value
 
-
     def add_remote_procedure_directory(self, path: ParseResult) -> None:
         """Add remote directory with procedures
 
@@ -150,6 +164,14 @@ class Storage():
             self.procedures[key] = urlparse(path + rel_path)
         # print(json.dumps(self.procedures))
 
+    def add_pasta_database(self, backend):
+        df = backend.db.getView('viewDocType/procedure')
+        for row in df.itertuples(index=False):
+            name = row.name
+            id = row.id
+            doc = backend.db.getDoc(id)
+            path = doc['branch'][0]['path']
+            self.procedures[name] = path
 
     def list_parameters(self, name: str) -> dict[str, str]:
         """list all the parameters in this procedure
@@ -163,7 +185,6 @@ class Storage():
         text = self.get_text(name)
         params = re.findall(r"\|\w+\|.*\|", text)
         return {i.split("|")[1]: i.split("|")[2] for i in params}
-
 
     def get_text(self, name: str) -> str:
         """get text of this procedure
@@ -194,6 +215,7 @@ class Storage():
 
 class Sample:
     """ Sample with a name """
+
     def __init__(self, name: str) -> None:
         """Sample with a name: most basic sample
 
@@ -214,10 +236,11 @@ class RichText(tk.Text):
     """ Class to display the markdown text in the window
     based on https://stackoverflow.com/questions/63099026/fomatted-text-in-tkinter
     """
+
     def __init__(self, *args, **kwargs):
         """Init rich text field in TK"""
         super().__init__(*args, **kwargs)
-        self.text_width = kwargs.get('width',40)
+        self.text_width = kwargs.get('width', 40)
         # fonts
         default = tkFont.nametofont(self.cget("font"))
         default_size = default.cget("size")
@@ -235,7 +258,6 @@ class RichText(tk.Text):
         lmargin2 = em + default.measure("\u2022 ")
         self.tag_configure("bullet", lmargin1=em, lmargin2=lmargin2)
 
-
     def insert_item(self, text: str, index: str = "end") -> None:
         """insert an item to the bullet point list
 
@@ -244,7 +266,6 @@ class RichText(tk.Text):
           index (str): location where to add
         """
         self.insert(index, f"\u2022 {text}\n", "bullet")
-
 
     def insert_text(self, text: str, style: str = "", index: str = "end") -> None:
         """insert rich text into window
@@ -255,7 +276,6 @@ class RichText(tk.Text):
           index (str): location where to add
         """
         self.insert(index, text, style)
-
 
     def parse_markdown(self, text: str) -> None:
         """Poor mans markdown parser by SB
@@ -275,7 +295,7 @@ class RichText(tk.Text):
             style = ""
             if line.startswith("# "):
                 style = "h1"
-                line = line[2:int(self.text_width/1.3)]
+                line = line[2:int(self.text_width / 1.3)]
             elif line.startswith("**") and line.endswith("**"):
                 style = "bold"
                 line = line[2:-2]
@@ -283,7 +303,7 @@ class RichText(tk.Text):
                 style = "italic"
                 line = line[1:-1]
             if line.startswith("- "):
-                self.insert_item(f"{line[2:self.text_width-1]}")
+                self.insert_item(f"{line[2:self.text_width - 1]}")
             else:
                 self.insert_text(f"{line[:self.text_width]}\n", style)
 
@@ -349,7 +369,7 @@ def main_window(text, parameter_all, param):
 
 
 @Workflow.wrap.as_function_node("y")
-def step(storage:Storage, sample: Sample, name: str, param: Optional[dict[str, Any]] = None):
+def step(storage: Storage, sample: Sample, name: str, param: Optional[dict[str, Any]] = None):
     """Render in TkInter
 
     Args:
@@ -379,5 +399,3 @@ def step(storage:Storage, sample: Sample, name: str, param: Optional[dict[str, A
     file_name, metadata = main_window(text, parameter_all, param)
     logging.info("End step ")
     return [sample, file_name, metadata]
-
-
