@@ -396,18 +396,21 @@ class Pasta2Elab:
                 if 'tags' not in docOther:
                   docOther['tags'] = []
                 self.backend.db.saveDoc(docOther)
+                # save datafile if exists
+                if listFile := [i for i in uploads if i['real_name']!='do_not_change.json' and \
+                                not i['real_name'].startswith('thumbnail.')]:
+                  data = self.api.download(listFile[0]['type'], idx, listFile[0])
+                  with open(self.backend.basePath/branch['path'], 'wb') as fOut:
+                    fOut.write(data['data'])
+                report.append((docOther['id'], 2))
               except Exception:
                 docOther.pop('image','')
-                docOther.pop('metaVendor','')
+                for k in list(docOther.keys()):
+                  if k.startswith('metaVendor.'):
+                    docOther.pop(k,'')
                 print(f'**ERROR** Tried to add to client elab:{entryType} {idx}: {json.dumps(docOther,indent=2)}')
                 print(traceback.format_exc())
-            # save datafile if exists
-            if listFile := [i for i in uploads if i['real_name']!='do_not_change.json' and \
-                            not i['real_name'].startswith('thumbnail.')]:
-              data = self.api.download(listFile[0]['type'], idx, listFile[0])
-              with open(self.backend.basePath/branch['path'], 'wb') as fOut:
-                fOut.write(data['data'])
-            report.append((docOther['id'],2))
+                report.append((docOther['id'], -1))
     return report
 
 

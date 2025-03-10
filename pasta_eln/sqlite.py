@@ -546,7 +546,9 @@ class SqlLiteDB:
       raise ValueError(f"FAILED AT: {cmd}")
     pathOld, stackOld, showOld = reply
     stack = stack or stackOld.split('/')[:-1]           # stack without current id
-    if path=='':
+    if pathOld=='*':
+      path = '*'
+    elif path=='':
       self.cursor.execute(f"SELECT type, name FROM main WHERE id == '{docID}'")
       docType, name = self.cursor.fetchall()[0]
       if docType.startswith('x'):
@@ -589,17 +591,6 @@ class SqlLiteDB:
       stackINew = stackNew+stackIOld[len(stackOld):]                           if stackNew else stackIOld
       showINew  = self.createShowFromStack(stackIOld.split('/'), showIOld[-1]) if stackNew else showIOld
       updatedInfo.append((pathINew, stackINew, showINew, docID, idx))
-      # update .json on disk
-      if stackINew.split('/')[-1][0]=='x' and (self.basePath/pathINew).is_dir():
-        with open(self.basePath/pathINew/'.id_pastaELN.json', encoding='utf-8') as fIn:
-          doc = json.load(fIn)
-        doc['branch'] = [{'stack':stackINew.split('/')[:-1],
-                          'show':[i=='T' for i in showINew],
-                          'path':pathINew,
-                          'child':i['child']}
-                         for i in doc['branch'] if i['stack']==stackIOld.split('/')[:-1]]
-        with open(self.basePath/pathINew/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
-          fOut.write(json.dumps(doc))
     cmd = 'UPDATE branches SET path=?, stack=?, show=? WHERE id == ? and idx == ?'
     self.cursor.executemany(cmd, updatedInfo)
     self.connection.commit()
@@ -939,18 +930,18 @@ class SqlLiteDB:
     Returns:
         str: output
     """
-    outString = ''
+    reply = ''
     if outputStyle=='html':
-      outString += '<div align="right">'
+      reply += '<div align="right">'
     if not minimal:
-      outString+= outputString(outputStyle,'h2','LEGEND')
-      outString+= outputString(outputStyle,'perfect','Green: perfect and as intended')
-      outString+= outputString(outputStyle,'ok',
+      reply+= outputString(outputStyle,'h2','LEGEND')
+      reply+= outputString(outputStyle,'perfect','Green: perfect and as intended')
+      reply+= outputString(outputStyle,'ok',
                                'Blue: ok, can happen: empty files for testing, strange path for measurements')
-      outString+= outputString(outputStyle,'h2','List all database entries')
+      reply+= outputString(outputStyle,'h2','List all database entries')
     if outputStyle=='html':
-      outString += '</div>'
-      outString+= outputString(outputStyle,'h2','List all database entries')
+      reply += '</div>'
+      reply+= outputString(outputStyle,'h2','List all database entries')
     lostAndFoundProjId   = ''
     lostAndFoundProjPath = Path()
     if repair is not None:
@@ -967,7 +958,7 @@ class SqlLiteDB:
     if res:= self.cursor.fetchall():
       errorStr = outputString(outputStyle,'error', f'Items with no branch: {", ".join(str(i) for i in res)}')
       if repair is None:
-        outString+= errorStr
+        reply+= errorStr
       elif repair(errorStr):
         for docID, name in res:
           self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
@@ -980,54 +971,55 @@ class SqlLiteDB:
           'FROM branches INNER JOIN main USING(id)'
     self.cursor.execute(cmd)
     res = self.cursor.fetchall()
+    reply += f'Number of documents: {len(res)}'
     for row in res:
       try:
         docID, docType, stack, path, child, _, name = row[0], row[1], row[2], row[3], row[4], row[5], row[6]
       except ValueError:
-        outString+= outputString(outputStyle,'error','dch03a: branch data has strange list')
+        reply+= outputString(outputStyle,'error','dch03a: branch data has strange list')
         continue
       if docType.count('/')>5:
-        outString+= outputString(outputStyle,'error',f"dch04a: type has too many / {docID}")
+        reply+= outputString(outputStyle,'error',f"dch04a: type has too many / {docID}")
       if len(docType.split('/'))==0:
-        outString+= outputString(outputStyle,'unsure',f"dch04b: no type in (removed data?) {docID}")
+        reply+= outputString(outputStyle,'unsure',f"dch04b: no type in (removed data?) {docID}")
         continue
       if docType.startswith('x') and not docType.startswith(('x0','x1')):
         errorStr = outputString(outputStyle,'error',f"dch04c: bad data type*: {docID} {docType}")
         if repair is None:
-          outString+= errorStr
+          reply+= errorStr
         elif repair(errorStr):
           self.cursor.execute(f"UPDATE main SET type='x1' WHERE id = '{docID}'")
       if not all(k.startswith('x-') for k in stack.split('/')[:-1]):
-        outString+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {docID}")
+        reply+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {docID}")
       if any(len(i)==0 for i in stack) and not docType.startswith('x0'): #if no inheritance
         if docType.startswith(('measurement','x')):
-          outString+= outputString(outputStyle,'warning',f"branch stack length = 0: no parent {docID}")
+          reply+= outputString(outputStyle,'warning',f"branch stack length = 0: no parent {docID}")
         elif not minimal:
-          outString+= outputString(outputStyle,'ok',
+          reply+= outputString(outputStyle,'ok',
                                    f"branch stack length = 0: no parent for procedure/sample {docID}")
       try:
         dirNamePrefix = path.split(os.sep)[-1].split('_')[0]
         if dirNamePrefix.isdigit() and child!=int(dirNamePrefix) and docType.startswith('x'): #compare child-number to start of directory name
-          outString+= outputString(outputStyle,'error',f"dch05: child-number and dirName dont match {docID}")
+          reply+= outputString(outputStyle,'error',f"dch05: child-number and dirName dont match {docID}")
       except Exception:
         pass  #handled next lines
       if path is None:
         if docType.startswith('x'):
-          outString+= outputString(outputStyle,'error',f"dch06: branch path is None {docID}")
+          reply+= outputString(outputStyle,'error',f"dch06: branch path is None {docID}")
         elif docType.startswith('measurement'):
           if not minimal:
-            outString+= outputString(outputStyle,'ok', f'measurement branch path is None=no data {docID}')
+            reply+= outputString(outputStyle,'ok', f'measurement branch path is None=no data {docID}')
         elif not minimal:
-          outString+= outputString(outputStyle,'perfect',f"procedure/sample with empty path {docID}")
+          reply+= outputString(outputStyle,'perfect',f"procedure/sample with empty path {docID}")
       else:                                                    #if sensible path
         if len(stack.split('/')) != len(path.split(os.sep)) and path!='*' and not path.startswith('http'):
           #check if length of path and stack coincide; ignore path=None=*
           if docType.startswith('procedure'):
             if not minimal:
-              outString+= outputString(outputStyle,'perfect',
+              reply+= outputString(outputStyle,'perfect',
                                        f"procedure: branch stack and path lengths not equal: {docID}: {name}")
           else:
-            outString+= outputString(outputStyle,'unsure',
+            reply+= outputString(outputStyle,'unsure',
               f"branch stack and path lengths not equal: {docID}: {name} {len(stack.split('/'))}"
               f" {len(path.split(os.sep))}")
         if path!='*' and not path.startswith('http'):
@@ -1036,7 +1028,7 @@ class SqlLiteDB:
             if not parentDoc:
               errorStr= outputString(outputStyle,'error',f"branch stack parent is bad: {docID}")
               if repair is None:
-                outString+= errorStr
+                reply+= errorStr
               elif repair(errorStr):
                 pathNew = (lostAndFoundProjPath/createDirName(name, 'x0', 0)).as_posix() if docID.startswith('x-')\
                           else '*'
@@ -1050,59 +1042,56 @@ class SqlLiteDB:
             if not onePathFound:
               if docType.startswith('procedure'):
                 if not minimal:
-                  outString+= outputString(outputStyle,'perfect',
+                  reply+= outputString(outputStyle,'perfect',
                     f"dch08: procedure parent does not have corresponding path {docID} | parentID {parentID}")
               else:
-                outString+= outputString(outputStyle,'unsure',
+                reply+= outputString(outputStyle,'unsure',
                     f"dch08: parent does not have corresponding path {docID} | parentID {parentID}")
 
     self.cursor.execute('SELECT id, idx FROM branches WHERE idx<0')
-    res = self.cursor.fetchall()
-    for docID, idx in res:
-      outString+= outputString(outputStyle,'error',f"branch idx is bad: {docID} idx: {idx}")
+    for docID, idx in self.cursor.fetchall():
+      reply+= outputString(outputStyle,'error',f"branch idx is bad: {docID} idx: {idx}")
 
     self.cursor.execute("SELECT id, key FROM properties where key NOT LIKE '%.%'")
-    res = self.cursor.fetchall()
-    for docID, key in res:
-      outString+= outputString(outputStyle,'error',f"key is bad, miss .: {docID} idx: {key}")
+    for docID, key in self.cursor.fetchall():
+      reply+= outputString(outputStyle,'error',f"key is bad, miss .: {docID} idx: {key}")
     self.cursor.execute("SELECT id, key FROM properties where value LIKE ''")
-    res = self.cursor.fetchall()
-    for docID, key in res:
-      outString+= outputString(outputStyle,'ok',f"value of this key is missing: {docID} idx: {key}")
+    for docID, key in self.cursor.fetchall():
+      reply+= outputString(outputStyle,'ok',f"value of this key is missing: {docID} idx: {key}")
 
     #doc-type specific tests
     cmd = "SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'"
     self.cursor.execute(cmd)
     if res:= [i[0] for i in self.cursor.fetchall() if i[1] is None]:
-      outString+= outputString(outputStyle,'warning',f"dch09: qrCode not in samples {res}")
+      reply+= outputString(outputStyle,'warning',f"dch09: qrCode not in samples {res}")
     self.cursor.execute("SELECT id, shasum, image, comment FROM main WHERE  type LIKE 'measurement%'")
     for row in self.cursor.fetchall():
       docID, shasum, image, comment = row
       if shasum is None:
-        outString+= outputString(outputStyle,'warning',f"dch10: shasum not in measurement {docID}")
+        reply+= outputString(outputStyle,'warning',f"dch10: shasum not in measurement {docID}")
       if image.startswith('data:image'):  #for jpg and png
         try:
           imgData = base64.b64decode(image[22:])
           Image.open(io.BytesIO(imgData))  #can convert, that is all that needs to be tested
         except Exception:
-          outString+= outputString(outputStyle,'error',f"dch12: jpg-image not valid {docID}")
+          reply+= outputString(outputStyle,'error',f"dch12: jpg-image not valid {docID}")
       elif image.startswith('<?xml'):
         #from https://stackoverflow.com/questions/63419010/check-if-an-image-file-is-a-valid-svg-file-in-python
         SVG_R = r'(?:<\?xml\b[^>]*>[^<]*)?(?:<!--.*?-->[^<]*)*(?:<svg|<!DOCTYPE svg)\b'
         SVG_RE = re.compile(SVG_R, re.DOTALL)
         if SVG_RE.match(image) is None:
-          outString+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
+          reply+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
       elif image in ('', None):
         comment = comment.replace('\n','..')
-        outString+=outputString(outputStyle,'unsure',f"image does not exist {docID} image:{image} comment:{comment}")
+        reply+=outputString(outputStyle,'unsure',f"image does not exist {docID} image:{image} comment:{comment}")
       else:
-        outString+= outputString(outputStyle,'error',f"dch14: image not valid {docID} {image}")
+        reply+= outputString(outputStyle,'error',f"dch14: image not valid {docID} {image}")
 
     #test hierarchy
     for projID in self.getView('viewDocType/x0')['id'].values:
       _, error = self.getHierarchy(projID, True)
       if error:
-        outString+= outputString(outputStyle,'error',f"dch15: project hierarchy invalid in project {projID}")
+        reply+= outputString(outputStyle,'error',f"dch15: project hierarchy invalid in project {projID}")
     if repair is not None:
       self.connection.commit()
-    return outString
+    return reply

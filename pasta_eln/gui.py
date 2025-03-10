@@ -174,6 +174,9 @@ class MainWindow(QMainWindow):
         fConf.write(json.dumps(self.backend.configuration, indent=2))
       restart()
     elif command[0] is Command.SYNC_SEND:
+      if "ERROR" in self.backend.checkDB(minimal=True):
+        showMessage(self, 'ERROR', 'There are errors in your database: fix before upload')
+        return
       sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
       if hasattr(sync, 'api') and sync.api.url:  #if hostname and api-key given
         dialogW = WaitDialog(lambda progress: sync.sync('sA', progressCallback=progress))

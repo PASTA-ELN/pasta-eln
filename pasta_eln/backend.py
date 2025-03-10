@@ -321,7 +321,7 @@ class Backend(CLI_Mixin):
     return
 
 
-  def scanProject(self, progressBar:Any , projID:str, projPath:str='') -> None:
+  def scanProject(self, progressBar:Callable[...,None]|None, projID:str, projPath:str='') -> None:
     """ Scan directory tree recursively from project/...
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
@@ -331,14 +331,13 @@ class Backend(CLI_Mixin):
       doc['path'] is adopted once changes are observed
 
     Args:
-      progressBar (QProgressBar): gui - qt progress bar
+      progressBar (func): progress bar
       projID (str): project's docID
       projPath (str): project's path from basePath; if not given, will be determined
 
     Raises:
       ValueError: could not add new measurement to database
     """
-    progressBar.show()
     self.hierStack = [projID]
     if not projPath:
       projPath = self.db.getDoc(projID)['branch'][0]['path']
@@ -410,7 +409,8 @@ class Backend(CLI_Mixin):
       # handle files
       for fileName in files:
         filesCount += 1
-        progressBar.setValue(int(100*filesCount/filesCountSum))
+        if progressBar is not None:
+          progressBar(int(100*filesCount/filesCountSum))
         if fileName.startswith(('.', 'trash_')) or '_PastaExport' in fileName:  #ignore files
           continue
         path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
@@ -448,7 +448,6 @@ class Backend(CLI_Mixin):
     self.cwd = Path(self.basePath)
     if rerunScanTree:
       self.scanProject(progressBar, projID, projPath)
-    progressBar.hide()
     return
 
 

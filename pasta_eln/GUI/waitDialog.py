@@ -17,7 +17,6 @@ class WaitDialog(QDialog):
     super().__init__()
     self.callback = callback
     self.count  = 0
-    self.callback = callback
     self.mainL = QVBoxLayout()
     self.setMinimumWidth(400)
     self.setMinimumHeight(500)
