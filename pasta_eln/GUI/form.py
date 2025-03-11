@@ -17,7 +17,7 @@ from ..guiStyle import (IconButton, Image, Label, ScrollMessageBox, TextButton, 
                         widgetAndLayoutForm)
 from ..miscTools import flatten
 from ..sqlite import MAIN_ORDER
-from ..stringChanges import createDirName, markdownEqualizer
+from ..textTools.stringChanges import createDirName, markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
 
 

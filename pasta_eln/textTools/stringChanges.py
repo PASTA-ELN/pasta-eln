@@ -2,7 +2,7 @@
 import logging
 import re
 import traceback
-from .miscTools import Bcolors
+from ..miscTools import Bcolors
 
 
 def outputString(fmt:str='print', level:str='info', message:str='') -> str:

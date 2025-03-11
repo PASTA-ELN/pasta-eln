@@ -5,7 +5,7 @@ import warnings
 import unittest
 from pathlib import Path
 from pasta_eln.backend import Backend
-from pasta_eln.stringChanges import outputString
+from pasta_eln.textTools.stringChanges import outputString
 from pasta_eln.miscTools import DummyProgressBar
 from pasta_eln.installationTools import exampleData
 

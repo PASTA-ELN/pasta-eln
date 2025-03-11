@@ -10,11 +10,11 @@ from io import BytesIO
 from pathlib import Path
 from anytree import PreOrderIter
 from PIL import Image
-from PySide6.QtGui import QTextDocument
+from PySide6.QtGui import QTextDocument  # This is used for html-markdown conversion: works fine here
 from PySide6.QtWidgets import QFileDialog
 import pasta_eln
 from pasta_eln.Resources import Icons as icons
-from pasta_eln.stringChanges import markdownEqualizer
+from pasta_eln.textTools.stringChanges import markdownEqualizer
 
 description  = 'Create html report'  #short description that is shown in the menu; has to be included in all project-addons
 

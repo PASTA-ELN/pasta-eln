@@ -9,8 +9,8 @@ from PySide6.QtSvg import QSvgRenderer  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem  # pylint: disable=no-name-in-module
 from ..fixedStringsJson import DO_NOT_RENDER, defaultDataHierarchyNode
 from ..guiCommunicate import Communicate
-from ..handleDictionaries import doc2markdown
-from ..stringChanges import markdownEqualizer
+from ..textTools.handleDictionaries import doc2markdown
+from ..textTools.stringChanges import markdownEqualizer
 
 
 class ProjectLeafRenderer(QStyledItemDelegate):

@@ -21,6 +21,9 @@ ignore: # A list of paths or files which Sourcery will ignore.
 - node_modules
 - vendor
 - pasta_eln/AddOns/
+- pasta_eln/textTools/markdown2html.py
+- pasta_eln/textTools/html2markdown.py
+- pasta_eln/textTools/html2mdUtils.py
 
 rule_settings:
   enable:

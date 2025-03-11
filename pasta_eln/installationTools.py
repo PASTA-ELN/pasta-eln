@@ -10,8 +10,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 from .backend import Backend
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
-from .miscTools import DummyProgressBar
-from .stringChanges import outputString
+from .textTools.stringChanges import outputString
 
 
 def getOS() -> str:
@@ -134,7 +133,6 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     outputFormat (str): output of the example data creation, see miscTools.outputString()
   '''
   logging.info('Start example data creation')
-  progressBar = DummyProgressBar()
   if callbackPercent is not None:
     callbackPercent(0)
   if force:
@@ -226,6 +224,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
 
   ### TEST SAMPLES
   outputString(outputFormat,'h2','TEST SAMPLES')
+  #TODO: qrCodes correct??
   backend.addData('sample',    {'name': 'Example sample', '.chemistry': 'A2B2C3', 'qrCodes': '13214124 99698708', 'comment':'this sample has multiple groups of metadata',
                                 'geometry.height':4, 'geometry.width':2, 'weight.initial':6})
   if callbackPercent is not None:
@@ -260,7 +259,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if callbackPercent is not None:
     callbackPercent(19)
   logging.info('Finished copy files')
-  backend.scanProject(progressBar, projID1)
+  backend.scanProject(None, projID1)
   logging.info('Finished scan tree')
   if callbackPercent is not None:
     callbackPercent(20)
@@ -286,7 +285,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING 2')
   shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.png', data2DirName)
   logging.info('Finished copy files 2')
-  backend.scanProject(progressBar, projID1)
+  backend.scanProject(None, projID1)
   logging.info('Finished scan tree 2')
   df = backend.db.getView('viewDocType/measurement')
   docID = df[df['name']=='simple.png']['id'].values[0]

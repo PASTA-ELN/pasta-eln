@@ -3,12 +3,8 @@
 import logging, warnings
 from pathlib import Path
 from pasta_eln.backend import Backend
-from pasta_eln.installationTools import exampleData
-from pasta_eln.GUI.form import Form
-from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.GUI.palette import Palette
 from pasta_eln.elabFTWsync import Pasta2Elab
-from .misc import verify
+from .misc import verify, handleReport
 
 def test_simple(qtbot):
   """
@@ -26,12 +22,18 @@ def test_simple(qtbot):
     logging.getLogger(package).setLevel(logging.WARNING)
 
   # start app and load project
-  exampleData(True, None, 'research', '')
   backend = Backend('research')
-  palette = Palette(None, 'dark_blue')
-  comm = Communicate(backend, palette)
-  window = Form(comm, {'_projectID': '', 'type': ['x0']})
-  qtbot.addWidget(window)
-  _ = Pasta2Elab(backend, 'research', purge=True)
+  sync = Pasta2Elab(backend, 'research', purge=False)
+  if not sync.api.url:
+    return
+  print('\nRe-pull: same as before')
+  report = sync.sync('gA')
+  handleReport(report, [0,14,0,0,0])
+
+  print('Re-push: same as tests 02')
+  report = sync.sync('sA')
+  handleReport(report, [14,0,0,0,0])
+
+  # verify
   verify(backend)
   return

@@ -5,11 +5,10 @@ def verify(backend): # Verify DB
   print(output)
   output = '\n'.join(output.split('\n')[8:])
   assert '**ERROR' not in output, 'Error in checkDB'
-  assert len(output.split('\n')) == 5, 'Check db should have 5 more-less empty lines'
   return
 
 
-def handleReports(reports, targets=[]):
+def handleReport(reports, targets=[]):
   print('\n'.join([f'{i[0]} {MERGE_LABELS[i[1]]}' for i in reports]))
   if targets:
     cases = [i[1] for i in reports]

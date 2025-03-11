@@ -2,13 +2,9 @@
 """TEST the form """
 import logging, warnings
 from pathlib import Path
-from pasta_eln.backend import Backend
 from pasta_eln.installationTools import exampleData
-from pasta_eln.GUI.form import Form
-from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.GUI.palette import Palette
-from pasta_eln.elabFTWsync import Pasta2Elab
-from .misc import verify
+from pasta_eln.tools import Tools
+from .misc import verify, handleReport
 
 def test_simple(qtbot):
   """
@@ -25,13 +21,16 @@ def test_simple(qtbot):
   for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
 
-  # start app and load project
+  #set up
+  print()
+  tools = Tools()
+  tools.run(['research','h','cp','v','q'])
+
+  #remove everything and create example data
+  tools.run(['research','pL','pR','q'])
   exampleData(True, None, 'research', '')
-  backend = Backend('research')
-  palette = Palette(None, 'dark_blue')
-  comm = Communicate(backend, palette)
-  window = Form(comm, {'_projectID': '', 'type': ['x0']})
-  qtbot.addWidget(window)
-  _ = Pasta2Elab(backend, 'research', purge=True)
-  verify(backend)
+
+  tools.run(['research','v','ss','v','q']) #sync to server
+  tools.run(['research','pL','sg','v','q']) #sync from server
+
   return

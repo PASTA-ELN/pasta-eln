@@ -4,7 +4,6 @@ import logging
 import os
 import sys
 import webbrowser
-from collections import Counter
 from enum import Enum
 from pathlib import Path
 from typing import Any, Union
@@ -13,18 +12,18 @@ from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-i
 from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 from pasta_eln import __version__
-from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
-from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .backend import Backend
-from .elabFTWsync import MERGE_LABELS, Pasta2Elab
+from .elabFTWsync import Pasta2Elab
 from .fixedStringsJson import CONF_FILE_NAME, shortcuts
-# from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
-# from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .GUI.body import Body
 from .GUI.config import Configuration
+from .GUI.data_hierarchy.editor import SchemeEditor
+from .GUI.dataverse.config_dialog import ConfigDialog
+from .GUI.dataverse.main_dialog import MainDialog
 from .GUI.form import Form
 from .GUI.palette import Palette
 from .GUI.sidebar import Sidebar
+from .GUI.waitDialog import WaitDialog, Worker
 from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN, importELN
@@ -89,7 +88,7 @@ class MainWindow(QMainWindow):
     if 'develop' in self.comm.backend.configuration:
       syncMenu = systemMenu.addMenu('&Synchronize')
       Action('Send',                         self, [Command.SYNC_SEND],       syncMenu, shortcut='F5')
-      # Action('Get',                          self, [Command.SYNC_GET],       syncMenu)
+      Action('Get',                          self, [Command.SYNC_GET],        syncMenu, shortcut='F4')
       # Action('Smart synce',                  self, [Command.SYNC_SMART],       syncMenu)
       Action('&Editor to change data type schema', self, [Command.SCHEMA],   systemMenu, shortcut='F8')
     systemMenu.addSeparator()
@@ -174,27 +173,33 @@ class MainWindow(QMainWindow):
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.backend.configuration, indent=2))
       restart()
-    elif command[0] is Command.SYNC_SEND:
-      sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
-      if hasattr(sync, 'api'):  #if hostname and api-key given
-        report = sync.sync('sA')
-        reportSum = Counter([i[1] for i in report])
-        reportText = '\n  - '.join(['']+[f'{v:>4}:{MERGE_LABELS[k][2:]}' for k,v in reportSum.items()])
-        showMessage(self, 'Information', f'Send all data to server: success\n{reportText}', 'Information')
-      else:                     #if not given
-        showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
-        dialogC = Configuration(self.comm)
-        dialogC.exec()
+    # elif command[0] is Command.SYNC_SEND:
+    #   if 'ERROR' in self.backend.checkDB(minimal=True):
+    #     showMessage(self, 'ERROR', 'There are errors in your database: fix before upload')
+    #     return
+    #   sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
+    #   if hasattr(sync, 'api') and sync.api.url:  #if hostname and api-key given
+    #     dialogW = WaitDialog(lambda progress: sync.sync('sA', progressCallback=progress))
+    #     dialogW.exec()
+    #   else:                     #if not given
+    #     showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
+    #     dialogC = Configuration(self.comm)
+    #     dialogC.exec()
     elif command[0] is Command.SYNC_GET:
-      sync = Pasta2Elab(self.backend)
-      sync.sync('gA')
+      sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
+      self.progressWindow = WaitDialog()
+      self.progressWindow.show()
+      self.worker = Worker(lambda func1: sync.sync('gA', progressCallback=func1))
+      self.worker.progress.connect(self.progressWindow.updateProgressBar)
+      self.worker.start()
+      self.comm.changeSidebar.emit('redraw')
+      self.comm.changeTable.emit('x0', '')
     elif command[0] is Command.SYNC_SMART:
       sync = Pasta2Elab(self.backend)
       sync.sync('')
     elif command[0] is Command.SCHEMA:
-      pass
-      # dataHierarchyForm = DataHierarchyEditorDialog()
-      # dataHierarchyForm.instance.exec()
+      dialogS = SchemeEditor(self.comm)
+      dialogS.exec()
     # elif command[0] is Command.DATAVERSE_CONFIG:
     #   self.dataverseConfig = ConfigDialog()
     #   self.dataverseConfig.show()

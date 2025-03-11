@@ -4,8 +4,7 @@ from typing import Any
 from anytree import Node
 from PySide6.QtCore import Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QResizeEvent  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QFrame, QProgressBar, QTreeWidgetItem, QVBoxLayout,  # pylint: disable=no-name-in-module
-                               QWidget)
+from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QVBoxLayout, QWidget  # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, TextButton, showMessage, space, widgetAndLayout, widgetAndLayoutGrid
 from .config import Configuration
@@ -36,10 +35,6 @@ class Sidebar(QWidget):
     # scrollSection = QScrollArea()
     # scrollSection.setWidget(projectListW)
     # mainL.addWidget(scrollSection)
-    self.progress = QProgressBar(self)
-    self.progress.hide()
-    self.comm.progressBar = self.progress
-    mainL.addWidget(self.progress)
     self.setLayout(mainL)
 
     self.widgetsAction:dict[str,QWidget] = {}
@@ -179,7 +174,7 @@ class Sidebar(QWidget):
       self.comm.changeProject.emit(projID, item)
     elif command[0] is Command.SCAN_PROJECT:
       for _ in range(2):  #scan twice: convert, extract
-        self.comm.backend.scanProject(self.progress, self.openProjectId, '')
+        self.comm.backend.scanProject(None, self.openProjectId, '')
       self.comm.changeProject.emit(self.openProjectId,'')
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_FOLDER:

@@ -27,31 +27,32 @@ class ElabFTWApi:
       print('Log-in to elabFTW server.')
       print(f'Go to website: {url}ucp.php?tab=4, enter a name and as permission: read/write. Create the API key')
       apiKey = input('Copy-paste the api-key: ').strip()
-    self.url     = url
-    self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
     class Param(TypedDict):
       """ class for parameters """
       headers: dict[str, str]
       verify: bool
       timeout: int
-    self.param : Param = {'headers':self.headers, 'verify':verifySSL, 'timeout':60}
     # test server
+    self.url = ''  #initialize: indicator if initialization successful
+    self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
+    self.param:Param = {'headers':self.headers, 'verify':verifySSL, 'timeout':10}
     try:
-      response = requests.get(f'{self.url}info', **self.param)
+      response = requests.get(f'{url}info', **self.param)
       if response.status_code == 200:
         elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
         if elabVersion<5:
           print('**ERROR old elab-ftw version')
+        else:
+          self.url   = url
       else:
+        print('|',response.status_code,'|')
         print('**ERROR not an elab-ftw server')
     except requests.ConnectionError:
       try:
         response = requests.get('https://www.google.com', headers={'Content-type': 'application/json'}, timeout=60)
-        print('**ERROR not an elab-ftw server')
+        print('**ERROR not an elab-ftw server or cannot connect to that server.')
       except requests.ConnectionError:
         print('**ERROR: cannot connect to google. You are not online')
-        self.url = ''
-        self.headers = {}
     return
 
 
@@ -297,7 +298,7 @@ class ElabFTWApi:
     if response.status_code == 200:
       if elabData['real_name']== 'do_not_change.json':
         return json.loads(response.content.decode('utf-8'))
-      print('**ERROR I do not know what to do')
+      return {'data':response.content}
     print(elabData,response.status_code, url)
     return {}
 

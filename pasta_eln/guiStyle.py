@@ -8,8 +8,8 @@ from PySide6.QtSvgWidgets import QSvgWidget  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QBoxLayout, QComboBox, QFormLayout, QGridLayout,  # pylint: disable=no-name-in-module
                                QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox, QPushButton, QScrollArea, QSizePolicy,
                                QSplitter, QTextEdit, QVBoxLayout, QWidget)
-from .handleDictionaries import dict2ul
-from .stringChanges import markdownEqualizer
+from .textTools.handleDictionaries import dict2ul
+from .textTools.stringChanges import markdownEqualizer
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200} #spaces: padding and margin
 
