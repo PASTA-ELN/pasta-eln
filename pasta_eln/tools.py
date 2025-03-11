@@ -10,7 +10,6 @@ import traceback
 from pathlib import Path
 from typing import Any, Callable, Union
 import requests
-from PySide6.QtWidgets import QApplication
 from requests.structures import CaseInsensitiveDict
 from pasta_eln.backend import Backend
 from pasta_eln.elabFTWsync import Pasta2Elab
@@ -398,7 +397,6 @@ class Tools:
       self.__setBackend__(projectGroup)
     syncObj = Pasta2Elab(self.backend, self.projectGroup)
     if command:
-      _ = QApplication()
       syncObj.sync('sA' if command=='ss' else 'gA', progressCallback=self.__updateProgressBar__)
     return
 

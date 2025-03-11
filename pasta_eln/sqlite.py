@@ -971,7 +971,7 @@ class SqlLiteDB:
           'FROM branches INNER JOIN main USING(id)'
     self.cursor.execute(cmd)
     res = self.cursor.fetchall()
-    reply += f'Number of documents: {len(res)}'
+    reply += f'Number of documents: {len(res)}\n'
     for row in res:
       try:
         docID, docType, stack, path, child, _, name = row[0], row[1], row[2], row[3], row[4], row[5], row[6]

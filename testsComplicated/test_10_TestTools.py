@@ -2,8 +2,8 @@
 """TEST the form """
 import logging, warnings
 from pathlib import Path
-from pasta_eln.backend import Backend
-from pasta_eln.elabFTWsync import Pasta2Elab
+from pasta_eln.installationTools import exampleData
+from pasta_eln.tools import Tools
 from .misc import verify, handleReport
 
 def test_simple(qtbot):
@@ -21,19 +21,16 @@ def test_simple(qtbot):
   for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
 
-  # start app and load project
-  backend = Backend('research')
-  sync = Pasta2Elab(backend, 'research', purge=False)
-  if not sync.api.url:
-    return
-  print('\nRe-pull: same as before')
-  report = sync.sync('gA')
-  handleReport(report, [0,14,0,0,0])
+  #set up
+  print()
+  tools = Tools()
+  tools.run(['research','h','cp','v','q'])
 
-  print('Re-push: same as tests 02')
-  report = sync.sync('sA')
-  handleReport(report, [14,0,0,0,0])
+  #remove everything and create example data
+  tools.run(['research','pL','pR','q'])
+  exampleData(True, None, 'research', '')
 
-  # verify
-  verify(backend)
+  tools.run(['research','v','ss','v','q']) #sync to server
+  tools.run(['research','pL','sg','v','q']) #sync from server
+
   return
