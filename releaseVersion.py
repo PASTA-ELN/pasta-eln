@@ -275,3 +275,5 @@ if __name__=='__main__':
     #do update
     if input('Continue: only "y" continues. ') == 'y':
       newVersion(versionLevel)
+    else:
+      print('You have to be on main branch to continue.')
