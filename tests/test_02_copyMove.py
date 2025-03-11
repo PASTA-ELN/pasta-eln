@@ -22,8 +22,6 @@ class TestStringMethods(unittest.TestCase):
     """
     main function
     """
-    outputFormat = ''  #change to 'print' for human usage, '' for less output
-    dummyProgressBar = DummyProgressBar()
     # initialization: create database, destroy on filesystem and database and then create new one
     warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
     warnings.filterwarnings('ignore', message='invalid escape sequence')
@@ -39,7 +37,6 @@ class TestStringMethods(unittest.TestCase):
     projID = self.be.output('x0').split('|')[-1].strip()
     self.be.changeHierarchy(projID)
 
-    progressBar = DummyProgressBar()
     choices = random.choices(range(100), k=155)
     # choices =  [34,83,40,8,70,1,14,14,60,42,13,99,94,47,14,7,45,85,96,80,91,35,33,85,85,38,63,1,89,62,24,47,82,1,13,4,97,46,6,82,97,76,5,14,69,7,50,14,33,8,15,69,99,75,69,68,9,70,56,75,44,60,97,93,72,50,46,89,60,63,65,82,50,54,33,6,77,52,72,90,82,1,58,11,81,76,9,3,83,40,26,45,88,56,10,74,66,16,5,31,27,62,65,65,56,7,80,43,56,15,93,36,49,74,15,73,5,80,35,46,17,31,79,51,20,81,5,50,49,31,59,9,28,9,33,65,81,85,10,78,64,79,58,14,99,35,86,98,95,0]
     print(f'Current choice: [{",".join([str(i) for i in choices])}]')
@@ -77,12 +74,12 @@ class TestStringMethods(unittest.TestCase):
           pass  #skip step if invalid step because file already exists in that folder
       if choices.pop(0)%2==1:
         print('Start scanning')
-        self.be.scanProject(progressBar, projID)
+        self.be.scanProject(None, projID)
       if choices.pop(0)%2==1:
         print('Start scanning')
-        self.be.scanProject(progressBar, projID)
+        self.be.scanProject(None, projID)
     print('Final scanning and verification')
-    self.be.scanProject(progressBar, projID)
+    self.be.scanProject(None, projID)
     self.verify()
     return
 
