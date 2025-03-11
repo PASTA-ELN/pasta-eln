@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 from .backend import Backend
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
-from .stringChanges import outputString
+from .textTools.stringChanges import outputString
 
 
 def getOS() -> str:

@@ -5,7 +5,7 @@ import traceback
 import uuid
 from datetime import datetime
 from typing import Any
-from .fixedStringsJson import SORTED_KEYS, SQLiteTranslation
+from ..fixedStringsJson import SORTED_KEYS, SQLiteTranslation
 from .stringChanges import markdownEqualizer
 
 

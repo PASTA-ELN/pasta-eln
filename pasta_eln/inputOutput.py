@@ -12,12 +12,12 @@ from typing import Any
 from zipfile import ZIP_DEFLATED, ZipFile
 import requests
 from anytree import Node
-from PySide6.QtGui import QTextDocument
+from PySide6.QtGui import QTextDocument  #TODO switch to html-markdown since also run as pytest
 from pasta_eln import __version__, minisign
 from .backend import Backend
 from .fixedStringsJson import CONF_FILE_NAME
 from .miscTools import flatten
-from .stringChanges import camelCase
+from .textTools.stringChanges import camelCase
 
 # .eln file: common between all ELNs
 # - can be exported / imported generally; not a 1:1 backup (just zip it)

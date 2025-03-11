@@ -15,7 +15,7 @@ from requests.structures import CaseInsensitiveDict
 from pasta_eln.backend import Backend
 from pasta_eln.elabFTWsync import Pasta2Elab
 from pasta_eln.fixedStringsJson import CONF_FILE_NAME
-from pasta_eln.stringChanges import outputString
+from pasta_eln.textTools.stringChanges import outputString
 
 
 class Tools:
@@ -74,6 +74,9 @@ class Tools:
     helpString += '  [pL]urge local database: REMOVE EVERYTHING\n'
     if command == 'pL':
       self.purgeLocal()
+    helpString += '  [pR]urge remote database: REMOVE EVERYTHING\n'
+    if command == 'pR':
+      self.purgeRemote()
 
     helpString += 'Commands - depricated:\n'
     helpString += '  [rp1] repair properties: add missing "."\n'
@@ -277,7 +280,7 @@ class Tools:
     Returns:
       dict: output document
     """
-    from .handleDictionaries import fillDocBeforeCreate
+    from .textTools.handleDictionaries import fillDocBeforeCreate
     defaultValues = {'gui':[True,True], 'user':''}
     try:
       doc['id'] = doc.pop('_id')
@@ -369,6 +372,19 @@ class Tools:
       pass
     self.__setBackend__(self.projectGroup)
     return
+
+
+  def purgeRemote(self, projectGroup:str='') -> None:
+    """ Purge entire remote storage, remove everything
+
+      Args:
+      projectGroup (str): name of project group
+    """
+    if not self.projectGroup:
+      self.__setBackend__(projectGroup)
+    Pasta2Elab(self.backend, self.projectGroup, True)
+    return
+
 
 
   def sync(self, projectGroup:str='', command:str='') -> None:

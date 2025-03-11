@@ -14,11 +14,11 @@ from urllib import request
 from PySide6 import QtCore
 from PySide6.QtCore import QFileSystemWatcher
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
-from .handleDictionaries import diffDicts, fillDocBeforeCreate
+from .textTools.handleDictionaries import diffDicts, fillDocBeforeCreate
 from .miscTools import generic_hash
 from .mixin_cli import CLI_Mixin
 from .sqlite import SqlLiteDB
-from .stringChanges import camelCase, createDirName, outputString
+from .textTools.stringChanges import camelCase, createDirName, outputString
 
 
 class Backend(CLI_Mixin):

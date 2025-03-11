@@ -36,10 +36,6 @@ class Sidebar(QWidget):
     # scrollSection = QScrollArea()
     # scrollSection.setWidget(projectListW)
     # mainL.addWidget(scrollSection)
-    self.progress = QProgressBar(self)
-    self.progress.hide()
-    self.comm.progressBar = self.progress
-    mainL.addWidget(self.progress)
     self.setLayout(mainL)
 
     self.widgetsAction:dict[str,QWidget] = {}
@@ -179,7 +175,7 @@ class Sidebar(QWidget):
       self.comm.changeProject.emit(projID, item)
     elif command[0] is Command.SCAN_PROJECT:
       for _ in range(2):  #scan twice: convert, extract
-        self.comm.backend.scanProject(self.progress, self.openProjectId, '')
+        self.comm.backend.scanProject(None, self.openProjectId, '')
       self.comm.changeProject.emit(self.openProjectId,'')
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_FOLDER:

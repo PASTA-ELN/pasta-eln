@@ -1,21 +1,15 @@
 """ Dialog that shows a message and the progress-bar """
-from typing import Any, Callable
-from PySide6.QtCore import QTimer
-from PySide6.QtGui import QShowEvent
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QProgressBar, QTextEdit, QVBoxLayout
+import re
+from typing import Callable
+from PySide6.QtCore import QThread, Signal
+from PySide6.QtWidgets import QWidget, QTextBrowser, QDialogButtonBox, QProgressBar, QVBoxLayout
 
 
-class WaitDialog(QDialog):
+class WaitDialog(QWidget):
   """ Dialog that shows a message and the progress-bar """
-  def __init__(self, callback:Callable[[Any], list[tuple[str, int]]]):
-    """
-    Initialization
-
-    Args:
-      callback (func): function that wants to receive the update function
-    """
+  def __init__(self) -> None:
+    """ Initialization """
     super().__init__()
-    self.callback = callback
     self.count  = 0
     self.mainL = QVBoxLayout()
     self.setMinimumWidth(400)
@@ -23,7 +17,7 @@ class WaitDialog(QDialog):
     self.setWindowTitle('Wait for processes to finish')
     self.setLayout(self.mainL)
 
-    self.text = QTextEdit()
+    self.text = QTextBrowser()
     self.text.setFixedHeight(450)
     self.text.setMarkdown('Default text')
     self.mainL.addWidget(self.text)
@@ -35,49 +29,48 @@ class WaitDialog(QDialog):
 
     #final button box
     self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
-    self.buttonBox.clicked.connect(self.closeDialog)
+    self.buttonBox.clicked.connect(self.close)
     self.buttonBox.hide()
     self.mainL.addWidget(self.buttonBox)
 
 
-  def showEvent(self, event:QShowEvent) -> None:
-    """Called when the dialog is shown
-
-    Args:
-      event (QEvent): event called
-    """
-    super().showEvent(event)
-    QTimer.singleShot(100, lambda: self.callback(self.updateProgressBar))  # Small delay to ensure it's fully rendered
-    return
-
-
-  def updateProgressBar(self, dType:str, data:str|int) -> None:
+  def updateProgressBar(self, dType:str, data:str) -> None:
     """ update dialog
     - "text" and "append" will update the text
     - "count" and "incr" will update the progress-bar which runs until 100
 
     Args:
       dType (str): what to update and how "text", "append", "count", "incr"
-      data (str): str- or int-value to update with
+      data (str): value to update with
     """
-    if dType=='text' and isinstance(data, str):
+    if dType=='text':
       self.text.setMarkdown(data)
-    elif dType=='append' and isinstance(data, str):
+    elif dType=='append':
       self.text.setMarkdown(self.text.toMarkdown().strip()+data)
-    elif dType=='incr' and isinstance(data, int):
-      self.count += data
-    elif dType=='count' and isinstance(data, int):
-      self.count = data
+    elif dType=='incr' and re.match(r'^\d+$',data):
+      self.count += int(data)
+    elif dType=='count' and re.match(r'^\d+$',data):
+      self.count = int(data)
     else:
       print(f"**ERROR unknown data {dType} {data}")
-    print(f"Waiting ... {dType}  {data if isinstance(data, int) else data.replace('\n','')}")
     self.progressBar.setValue(self.count)
-    if self.count == 100:
+    if self.count > 99:
       self.buttonBox.show()
     return
 
 
-  def closeDialog(self) -> None:
-    """ Close dialog can only be accept """
-    self.accept()
-    return
+
+class Worker(QThread):
+    """A generic worker thread that runs a given function."""
+    progress = Signal(str, str)  # Signal to update the progress bar
+
+    def __init__(self, task_function:Callable[[Callable[[str,str], None]], None]):
+        super().__init__()
+        self.task_function = task_function  # Function to execute
+
+    def run(self) -> None:
+        """Runs the assigned function, providing a callback for progress updates."""
+        try:
+          self.task_function(self.progress.emit)  # Pass progress emitter as callback
+        finally:
+          return

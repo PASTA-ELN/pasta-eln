@@ -8,11 +8,12 @@ from collections import Counter
 from datetime import datetime
 from typing import Any, Callable
 from anytree import Node, PreOrderIter
-from PySide6.QtGui import QTextDocument
 from .backend import Backend
 from .elabFTWapi import ElabFTWApi
-from .handleDictionaries import squashTupleIntoValue
+from .textTools.handleDictionaries import squashTupleIntoValue
 from .miscTools import flatten
+from .textTools.html2markdown import html2markdown
+from .textTools.markdown2html import markdown2html
 
 # - consider hiding metadata.json (requires hiding the upload (state=2) and ability to read (it is even hidden in the API-read))
 #   - hide an upload  api.upLoadUpdate('experiments', 66, 596, {'action':'update', 'state':'2'})
@@ -77,7 +78,6 @@ class Pasta2Elab:
       _ = [self.api.deleteEntry('experiments', i['entityid']) for i in data['related_experiments_links']]
       _ = [self.api.deleteEntry('items',       i['entityid']) for i in data['related_items_links']]
     self.docID2elabID:dict[str,tuple[int,bool]] = {}  # x-15343154th54325243, (4, bool if experiment)
-    self.qtDocument      = QTextDocument()            # used for converting html <-> md
     self.readWriteAccess:dict[str,str] = {}
     self.verbose         = False
     return
@@ -96,11 +96,11 @@ class Pasta2Elab:
       list: list of merge cases
     """
     def updateEntryLocal(i:Node, mode:str, callback:Callable[[ElabFTWApi,str,int],str]=cliCallback,
-                         count:int=-1) -> tuple[str,int]:
+                         idx:int=-1, count:int=-1) -> tuple[str,int]:
       """Intermediate function used in list comprehension"""
       res = self.updateEntry(i, mode, callback)
       if progressCallback is not None:
-        progressCallback('count', int(i/count*100))
+        progressCallback('count', str(int(idx/count*100)))
       return res
 
     if hasattr(self,'api') and self.api.url:  #only when you are connected to web
@@ -114,17 +114,17 @@ class Pasta2Elab:
       for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
         projHierarchy, _ = self.backend.db.getHierarchy(projID)
         count = len(list(PreOrderIter(projHierarchy)))
-        report += [updateEntryLocal(i, mode, callback, count) for i in PreOrderIter(projHierarchy)]
+        report += [updateEntryLocal(i, mode, callback, idx, count) for idx, i in enumerate(PreOrderIter(projHierarchy))]
       if progressCallback is not None:
         progressCallback('append', 'Done\n#### Sync missing entries\nStart...')
-      report += self.syncMissingEntries(mode, callback) # TODO: get progressCallback as argument
+      report += self.syncMissingEntries(mode, callback, progressCallback)
     else:
       print('**ERROR Not connected to elab server!')
       return []
     if progressCallback is not None:
       reportSum = Counter([i[1] for i in report])
       reportText = '\n  - '.join(['']+[f'{v:>4}:{MERGE_LABELS[k][2:]}' for k,v in reportSum.items()])
-      progressCallback('count', 100)
+      progressCallback('count', '100')
       progressCallback('append', f'Done\n#### Summary\nSend all data to server: success\n{reportText}')
     return report
 
@@ -214,14 +214,15 @@ class Pasta2Elab:
       print('>>>DOC_OTHER sync&modified', docOther.get('dateSync'), docOther.get('dateModified'))
     docMerged:dict[str,Any] = {}
     flagUpdateClient, flagUpdateServer = False, False
+
     # merge 1: compare server content and docOther and update later with changes
     flagServerChange = False
     for k,v in docServer.items():
       if isinstance(v, str):
-        if v.replace('\n','').replace(' ','') != docOther[k].replace('\n','').replace(' ',''):  #ignore white-space changes from server, html-markdown format differences
+        if v != html2markdown(markdown2html(docOther[k])):
           flagServerChange = True
           if self.verbose:
-            print(f'str change k:{k}; v:{v}; vOther:{docOther[k]}|type:{type(v)}')
+            print(f'str change k:{k}; v:\n|{v}|\nvOther:\n|{docOther[k]}|\n|{html2markdown(markdown2html(docOther[k]))}|\ntype:{type(v)}')
           docOther[k] = docServer[k]
       elif isinstance(v, dict):
         if v != docOther[k]:
@@ -344,14 +345,15 @@ class Pasta2Elab:
     return node.id, mergeCase
 
 
-  def syncMissingEntries(self, mode:str='', callback:Callable[[ElabFTWApi,str,int],str]=cliCallback) \
-    -> list[tuple[str,int]]:
+  def syncMissingEntries(self, mode:str='', callback:Callable[[ElabFTWApi,str,int],str]=cliCallback,
+                         progressCallback:Callable[...,None]|None=None) -> list[tuple[str,int]]:
     """
     Compare information on server and client and delete those on server, that are not on client (because they were deleted there)
 
     Args:
       mode (str): sync mode g=get, gA=get-all, s=send, sA=send-all
       callback (func): callback function if non-all mode is given
+      progressCallback (func): callback function to allow to monitor the progress
 
     Returns:
       list: changes
@@ -364,14 +366,15 @@ class Pasta2Elab:
     data = self.api.readEntry('items', self.elabProjGroupID)[0]
     inELAB  = {'experiments': {i['entityid'] for i in data['related_experiments_links']},
                'items':       {i['entityid'] for i in data['related_items_links']} }
-    for entryType in ['experiments','items']:
+    for count0, entryType in enumerate(['experiments','items']):
       if diff := inPasta[entryType].difference(inELAB[entryType]):
-        #TODO report??
         print(f'**ERROR** There is a difference in {entryType} between CLIENT and SERVER. Ids on server: {diff}.')
       if diff := inELAB[entryType].difference(inPasta[entryType]):
         if self.verbose:
           print(f'**INFO** There is a difference in {entryType} between SERVER and CLIENT. Ids on server: {diff}.')
-        for idx in diff:
+        for count1, idx in enumerate(diff):
+          if progressCallback is not None:
+            progressCallback('count', str(round(count0*50+count1*50/len(diff))))
           mode = mode if mode.endswith('A') else callback(self.api, entryType, idx)
           if mode.startswith('s'):
             self.api.deleteEntry(entryType, idx)
@@ -424,10 +427,7 @@ class Pasta2Elab:
       dict: PASTA doc
     """
     # print(json.dumps(elab, indent=2))
-    self.qtDocument.setHtml(elab.get('body',''))
-    comment = self.qtDocument.toMarkdown()
-    if comment.endswith('\n\n'):
-      comment = comment[:-2]  #also handle contents
+    comment = html2markdown(elab.get('body','')).strip()
     # User is not allowed to change dates: ignore these dates from the server
     tags = [] if elab.get('tags','') is None else elab.get('tags','').split('|')
     doc = {'name': elab.get('title',''), 'tags':tags, 'comment':comment}
@@ -455,8 +455,7 @@ class Pasta2Elab:
     if 'content' in doc:
       bodyMD += doc.pop('content')+'\n\n__DO NOT CHANGE THIS DELIMITER between content (top) and comment (bottom)__\n\n'
     bodyMD    = doc.pop('comment')
-    self.qtDocument.setMarkdown(bodyMD)
-    body      = self.qtDocument.toHtml()
+    body      = markdown2html(bodyMD)
     # created_at= doc.pop('dateCreated')
     # modified_at=doc.pop('dateModified')
     tags       =doc.pop('tags')

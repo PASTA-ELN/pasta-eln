@@ -12,8 +12,8 @@ from PySide6.QtWidgets import (QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayou
 from ..fixedStringsJson import DO_NOT_RENDER
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, Label, TextButton, showMessage, widgetAndLayout
-from ..handleDictionaries import doc2markdown
-from ..stringChanges import createDirName
+from ..textTools.handleDictionaries import doc2markdown
+from ..textTools.stringChanges import createDirName
 from .projectTreeView import TreeView
 
 
@@ -242,7 +242,7 @@ class Project(QWidget):
         self.comm.changeTable.emit('x0','')
     elif command[0] is Command.SCAN:
       for _ in range(2):  #scan twice: convert, extract
-        self.comm.backend.scanProject(self.comm.progressBar, self.projID, self.docProj['branch'][0]['path'])
+        self.comm.backend.scanProject(None, self.projID, self.docProj['branch'][0]['path'])
       self.comm.changeProject.emit(self.projID,'')
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_PROJ_DETAILS:

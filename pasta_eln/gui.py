@@ -6,7 +6,7 @@ import sys
 import webbrowser
 from enum import Enum
 from pathlib import Path
-from typing import Any, Union
+from typing import Any, Union, Callable
 from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
@@ -23,7 +23,7 @@ from .GUI.dataverse.main_dialog import MainDialog
 from .GUI.form import Form
 from .GUI.palette import Palette
 from .GUI.sidebar import Sidebar
-from .GUI.waitDialog import WaitDialog
+from .GUI.waitDialog import WaitDialog, Worker
 from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN, importELN
@@ -179,16 +179,22 @@ class MainWindow(QMainWindow):
         return
       sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
       if hasattr(sync, 'api') and sync.api.url:  #if hostname and api-key given
-        dialogW = WaitDialog(lambda progress: sync.sync('sA', progressCallback=progress))
-        dialogW.exec()
+        pass
+        # dialogW = WaitDialog(lambda progress: sync.sync('sA', progressCallback=progress))
+        # dialogW.exec()
       else:                     #if not given
         showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
         dialogC = Configuration(self.comm)
         dialogC.exec()
     elif command[0] is Command.SYNC_GET:
       sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
-      dialogW = WaitDialog(lambda progress: sync.sync('gA', progressCallback=progress))
-      dialogW.exec()
+      self.progressWindow = WaitDialog()
+      self.progressWindow.show()
+      self.worker = Worker(lambda func1: sync.sync('gA', progressCallback=func1))
+      self.worker.progress.connect(self.progressWindow.updateProgressBar)
+      self.worker.start()
+      self.comm.changeSidebar.emit('redraw')
+      self.comm.changeTable.emit('x0', '')
     elif command[0] is Command.SYNC_SMART:
       sync = Pasta2Elab(self.backend)
       sync.sync('')
