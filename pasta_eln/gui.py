@@ -6,7 +6,7 @@ import sys
 import webbrowser
 from enum import Enum
 from pathlib import Path
-from typing import Any, Union, Callable
+from typing import Any, Union
 from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
@@ -173,19 +173,18 @@ class MainWindow(QMainWindow):
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.backend.configuration, indent=2))
       restart()
-    elif command[0] is Command.SYNC_SEND:
-      if "ERROR" in self.backend.checkDB(minimal=True):
-        showMessage(self, 'ERROR', 'There are errors in your database: fix before upload')
-        return
-      sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
-      if hasattr(sync, 'api') and sync.api.url:  #if hostname and api-key given
-        pass
-        # dialogW = WaitDialog(lambda progress: sync.sync('sA', progressCallback=progress))
-        # dialogW.exec()
-      else:                     #if not given
-        showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
-        dialogC = Configuration(self.comm)
-        dialogC.exec()
+    # elif command[0] is Command.SYNC_SEND:
+    #   if 'ERROR' in self.backend.checkDB(minimal=True):
+    #     showMessage(self, 'ERROR', 'There are errors in your database: fix before upload')
+    #     return
+    #   sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
+    #   if hasattr(sync, 'api') and sync.api.url:  #if hostname and api-key given
+    #     dialogW = WaitDialog(lambda progress: sync.sync('sA', progressCallback=progress))
+    #     dialogW.exec()
+    #   else:                     #if not given
+    #     showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
+    #     dialogC = Configuration(self.comm)
+    #     dialogC.exec()
     elif command[0] is Command.SYNC_GET:
       sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
       self.progressWindow = WaitDialog()

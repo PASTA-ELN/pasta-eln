@@ -1,8 +1,8 @@
 """ Dialog that shows a message and the progress-bar """
 import re
-from typing import Callable
+from typing import Any, Callable
 from PySide6.QtCore import QThread, Signal
-from PySide6.QtWidgets import QWidget, QTextBrowser, QDialogButtonBox, QProgressBar, QVBoxLayout
+from PySide6.QtWidgets import QDialogButtonBox, QProgressBar, QTextBrowser, QVBoxLayout, QWidget
 
 
 class WaitDialog(QWidget):
@@ -61,16 +61,17 @@ class WaitDialog(QWidget):
 
 
 class Worker(QThread):
-    """A generic worker thread that runs a given function."""
-    progress = Signal(str, str)  # Signal to update the progress bar
+  """A generic worker thread that runs a given function."""
+  progress = Signal(str, str)  # Signal to update the progress bar
 
-    def __init__(self, task_function:Callable[[Callable[[str,str], None]], None]):
-        super().__init__()
-        self.task_function = task_function  # Function to execute
+  def __init__(self, task_function:Callable[[Callable[[str,str], None]], Any]):
+    super().__init__()
+    self.task_function = task_function  # Function to execute
 
-    def run(self) -> None:
-        """Runs the assigned function, providing a callback for progress updates."""
-        try:
-          self.task_function(self.progress.emit)  # Pass progress emitter as callback
-        finally:
-          return
+  def run(self) -> None:
+    """Runs the assigned function, providing a callback for progress updates."""
+    try:
+      self.task_function(self.progress.emit)  # Pass progress emitter as callback
+    except Exception:
+      pass
+    return

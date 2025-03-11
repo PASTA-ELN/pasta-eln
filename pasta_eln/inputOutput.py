@@ -12,7 +12,7 @@ from typing import Any
 from zipfile import ZIP_DEFLATED, ZipFile
 import requests
 from anytree import Node
-from PySide6.QtGui import QTextDocument  #TODO switch to html-markdown since also run as pytest
+from PySide6.QtGui import QTextDocument  # TODO switch to html-markdown since also run as pytest
 from pasta_eln import __version__, minisign
 from .backend import Backend
 from .fixedStringsJson import CONF_FILE_NAME

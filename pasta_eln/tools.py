@@ -5,7 +5,7 @@ import os
 import platform
 import re
 import shutil
-import sys, time
+import sys
 import traceback
 from pathlib import Path
 from typing import Any, Callable, Union
@@ -69,7 +69,7 @@ class Tools:
     helpString += 'Commands - clone from / to server:\n'
     helpString += '  [ss]ync SEND ALL\n'
     helpString += '  [sg]ync GET ALL\n'
-    if command in ['ss','sg']:
+    if command in {'ss','sg'}:
       self.sync('', command)
     helpString += '  [pL]urge local database: REMOVE EVERYTHING\n'
     if command == 'pL':
@@ -108,7 +108,7 @@ class Tools:
 
 
   def __progressBar__(self, iteration:int, total:int=100, prefix:str='', suffix:str='', decimals:int=1,
-                      length:int=100, fill:str='█', printEnd:str="") -> None:
+                      length:int=100, fill:str='█', printEnd:str='') -> None:
     """
     Call in a loop to create terminal progress bar
     - https://stackoverflow.com/questions/3173320/text-progress-bar-in-terminal-with-block-characters
@@ -123,13 +123,13 @@ class Tools:
         fill      (int): bar fill character
         printEnd  (int): end character (e.g. "\r", "\r\n")
     """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    percent = ('{0:.' + str(decimals) + 'f}').format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+    barString = fill * filledLength + '-' * (length - filledLength)
+    print(f'\r{prefix} |{barString}| {percent}% {suffix}', end = printEnd)
     # Print New Line on Complete
     if iteration == total:
-        print()
+      print()
     return
 
 
@@ -141,7 +141,7 @@ class Tools:
       dType (str): what to update and how "text", "append", "count", "incr"
       data (str): str- or int-value to update with
     """
-    if dType in ['text','append'] and isinstance(data, str):
+    if dType in {'text','append'} and isinstance(data, str):
       print(data)
     if dType=='count' and isinstance(data, int):
       self.__progressBar__(data)
@@ -170,7 +170,7 @@ class Tools:
     if todos:
       self.__setBackend__(todos.pop(0))
     while True:
-      command = input('\nImportant commands [h]elp; [q]uit; [v]erify; [r]epair: ') if not todos else todos.pop(0)
+      command = todos.pop(0) if todos else input('\nImportant commands [h]elp; [q]uit; [v]erify; [r]epair: ')
       if command == 'q':
         break
       print(self.__choice__(command))
@@ -439,7 +439,7 @@ def main() -> None:
   if len(sys.argv)==2:
     todos = sys.argv[1].split()
     if not re.match(r'^\d+$', todos[0]):
-      print("** ERROR Malformed todo list (start with a number), exit")
+      print('** ERROR Malformed todo list (start with a number), exit')
       return
   tools.run(todos)
   return

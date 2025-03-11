@@ -4,8 +4,7 @@ from typing import Any
 from anytree import Node
 from PySide6.QtCore import Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QResizeEvent  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QFrame, QProgressBar, QTreeWidgetItem, QVBoxLayout,  # pylint: disable=no-name-in-module
-                               QWidget)
+from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QVBoxLayout, QWidget  # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, TextButton, showMessage, space, widgetAndLayout, widgetAndLayoutGrid
 from .config import Configuration

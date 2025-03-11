@@ -32,6 +32,12 @@ ignore-patterns=data_hierarchy_editor_dialog_base.py,
                 lookup_iri_action.py,
                 iri_column_delegate.py,
                 delete_column_delegate.py,
+                # needed
+                html2markdown.py,
+                html2mdConfig.py,
+                html2mdElements.py,
+                html2mdUtils.py,
+                markdown2html.py,
                 extractor_[a-z]+.py,
                 project_html_report.py
 
