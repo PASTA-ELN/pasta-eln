@@ -270,8 +270,8 @@ if __name__=='__main__':
   createRequirementsFile()
   versionLevel = 2 if len(sys.argv)==1 else int(sys.argv[1])
   #test if on main branch
-  result = subprocess.run(['git','status'], capture_output=True, check=False)
-  if result.stdout.decode('utf-8').strip().startswith('On branch main\n'):
+  resultMain = subprocess.run(['git','status'], capture_output=True, check=False)
+  if resultMain.stdout.decode('utf-8').strip().startswith('On branch main\n'):
     #do update
     if input('Continue: only "y" continues. ') == 'y':
       newVersion(versionLevel)

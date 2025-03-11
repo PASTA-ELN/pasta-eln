@@ -77,7 +77,7 @@ class Tools:
     if command == 'pR':
       self.purgeRemote()
 
-    helpString += 'Commands - depricated:\n'
+    helpString += 'Commands - deprecated:\n'
     helpString += '  [rp1] repair properties: add missing "."\n'
     if command == 'rp1':
       self.repairPropertiesDot()

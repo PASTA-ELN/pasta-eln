@@ -95,7 +95,7 @@ class HTML2Text(html.parser.HTMLParser):
         self.maybe_automatic_link: Optional[str] = None
         self.empty_link = False
         self.absolute_url_matcher = re.compile(r'^[a-zA-Z+]+://')
-        self.acount = 0
+        self.account = 0
         self.list: list[ListElement] = []
         self.blockquote = 0
         self.pre = False
@@ -527,8 +527,8 @@ class HTML2Text(html.parser.HTMLParser):
                             if i is not None:
                                 a_props = self.a[i]
                             else:
-                                self.acount += 1
-                                a_props = AnchorElement(a, self.acount, self.outcount)
+                                self.account += 1
+                                a_props = AnchorElement(a, self.account, self.outcount)
                                 self.a.append(a_props)
                             self.o('][' + str(a_props.count) + ']')
 
@@ -585,8 +585,8 @@ class HTML2Text(html.parser.HTMLParser):
                         if i is not None:
                             a_props = self.a[i]
                         else:
-                            self.acount += 1
-                            a_props = AnchorElement(attrs, self.acount, self.outcount)
+                            self.account += 1
+                            a_props = AnchorElement(attrs, self.account, self.outcount)
                             self.a.append(a_props)
                         self.o('[' + str(a_props.count) + ']')
 

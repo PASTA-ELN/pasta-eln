@@ -820,7 +820,7 @@ class Markdown:
         return emacs_vars
 
     def _detab_line(self, line: str) -> str:
-        r"""Recusively convert tabs to spaces in a single line.
+        r"""Recursively convert tabs to spaces in a single line.
 
         Called from _detab()."""
         if '\t' not in line:
@@ -1484,7 +1484,7 @@ class Markdown:
         safe = r'-\w'
         # omitted ['"<>] for XSS reasons
         less_safe = r'#/\.!#$%&\(\)\+,/:;=\?@\[\]^`\{\}\|~'
-        # dot seperated hostname, optional port number, not followed by protocol seperator
+        # dot separated hostname, optional port number, not followed by protocol separator
         domain = fr'(?:[{safe}]+(?:\.[{safe}]+)*)(?:(?<!tel):\d+/?)?(?![^:/]*:/*)'
         fragment = r'[%s]*' % (safe + less_safe)
 
@@ -1952,7 +1952,7 @@ class Markdown:
         #         <p>Just type <code>foo `bar` baz</code> at the prompt.</p>
         #
         #       There's no arbitrary limit to the number of backticks you
-        #       can use as delimters. If you need three consecutive backticks
+        #       can use as delimiters. If you need three consecutive backticks
         #       in your code, use four for delimiters, etc.
         #
         #   *   You can use spaces to get literal backticks at the edges:
@@ -2415,7 +2415,7 @@ class Extra(ABC):
                 # eg: Stage.PREPROCESS
                 Extra._exec_order.setdefault(item, ([], []))
                 if cls in Extra._exec_order[item][0 if before else 1]:
-                    # extra is already runnig after this stage. Don't duplicate that effort
+                    # extra is already running after this stage. Don't duplicate that effort
                     continue
                 if before:
                     Extra._exec_order[item][0].insert(0, cls)
@@ -3258,7 +3258,7 @@ class Mermaid(FencedCodeBlocks):
 #             self.liberal_em_re = re.compile(
 #                 r'''
 #                     (                # \1 - must be a single em char in the middle of a word
-#                         (?<![*_\s])  # cannot be preceeded by em character or whitespace (must be in middle of word)
+#                         (?<![*_\s])  # cannot be preceded by em character or whitespace (must be in middle of word)
 #                         [*_]         # em character
 #                         (?![*_])     # cannot be followed by another em char
 #                     )
