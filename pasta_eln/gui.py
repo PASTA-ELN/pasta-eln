@@ -186,7 +186,7 @@ class MainWindow(QMainWindow):
         dialogC.exec()
     elif command[0] is Command.SYNC_GET:
       sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
-      self.progressWindow(lambda func1: sync.sync('gA', progressCallback=func1))
+      self.comm.progressWindow(lambda func1: sync.sync('gA', progressCallback=func1))
       self.comm.changeSidebar.emit('redraw')
       self.comm.changeTable.emit('x0', '')
     elif command[0] is Command.SYNC_SMART:

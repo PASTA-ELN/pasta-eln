@@ -19,10 +19,10 @@ class Communicate(QObject):
     Args:
       taskFunction (func): function to execute
     """
-    self.progressWindow = WaitDialog()
-    self.progressWindow.show()
+    self.waitDialog = WaitDialog()
+    self.waitDialog.show()
     self.worker = Worker(taskFunction)
-    self.worker.progress.connect(self.progressWindow.updateProgressBar)
+    self.worker.progress.connect(self.waitDialog.updateProgressBar)
     self.worker.start()
     return
 
