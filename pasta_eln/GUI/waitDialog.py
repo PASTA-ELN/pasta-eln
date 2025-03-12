@@ -64,14 +64,14 @@ class Worker(QThread):
   """A generic worker thread that runs a given function."""
   progress = Signal(str, str)  # Signal to update the progress bar
 
-  def __init__(self, task_function:Callable[[Callable[[str,str], None]], Any]):
+  def __init__(self, taskFunction:Callable[[Callable[[str,str],None]],Any]):
     super().__init__()
-    self.task_function = task_function  # Function to execute
+    self.taskFunction = taskFunction  # Function to execute
 
   def run(self) -> None:
     """Runs the assigned function, providing a callback for progress updates."""
     try:
-      self.task_function(self.progress.emit)  # Pass progress emitter as callback
+      self.taskFunction(self.progress.emit)  # Pass progress emitter as callback
     except Exception:
       pass
     return

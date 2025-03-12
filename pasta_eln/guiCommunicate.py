@@ -1,8 +1,9 @@
 """ Communication class that sends signals between widgets, incl. backend"""
-from typing import Any, Optional
+from typing import Any, Optional, Callable
 from PySide6.QtCore import QObject, Signal  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
 from .backend import Backend
+from .GUI.waitDialog import WaitDialog, Worker
 
 
 class Communicate(QObject):
@@ -12,7 +13,20 @@ class Communicate(QObject):
     self.backend               = backend
     self.palette               = palette
     self.projectID             = ''
-    self.progressBar:Optional[QProgressBar] = None
+
+  def progressWindow(self, taskFunction:Callable[[Callable[[str,str],None]],Any]) -> None:
+    """ Show a progress window and execute function
+    Args:
+      taskFunction (func): function to execute
+    """
+    self.progressWindow = WaitDialog()
+    self.progressWindow.show()
+    self.worker = Worker(taskFunction)
+    self.worker.progress.connect(self.progressWindow.updateProgressBar)
+    self.worker.start()
+    return
+
+
 
   # Signals: specify emitter and receiver
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES

@@ -23,7 +23,6 @@ from .GUI.dataverse.main_dialog import MainDialog
 from .GUI.form import Form
 from .GUI.palette import Palette
 from .GUI.sidebar import Sidebar
-from .GUI.waitDialog import WaitDialog, Worker
 from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN, importELN
@@ -95,8 +94,9 @@ class MainWindow(QMainWindow):
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
     Action('Update &Add-on list',            self, [Command.UPDATE],          systemMenu)
-    systemMenu.addSeparator()
-    Action('&Verify database',               self, [Command.VERIFY_DB],       systemMenu, shortcut='Ctrl+?')
+    if 'develop' in self.comm.backend.configuration:
+      systemMenu.addSeparator()
+      Action('&Verify database',               self, [Command.VERIFY_DB],       systemMenu, shortcut='Ctrl+?')
 
     helpMenu = menu.addMenu('&Help')
     Action('&Website',                       self, [Command.WEBSITE],         helpMenu)
@@ -173,25 +173,20 @@ class MainWindow(QMainWindow):
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.backend.configuration, indent=2))
       restart()
-    # elif command[0] is Command.SYNC_SEND:
-    #   if 'ERROR' in self.backend.checkDB(minimal=True):
-    #     showMessage(self, 'ERROR', 'There are errors in your database: fix before upload')
-    #     return
-    #   sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
-    #   if hasattr(sync, 'api') and sync.api.url:  #if hostname and api-key given
-    #     dialogW = WaitDialog(lambda progress: sync.sync('sA', progressCallback=progress))
-    #     dialogW.exec()
-    #   else:                     #if not given
-    #     showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
-    #     dialogC = Configuration(self.comm)
-    #     dialogC.exec()
+    elif command[0] is Command.SYNC_SEND:
+      if 'ERROR' in self.backend.checkDB(minimal=True):
+        showMessage(self, 'ERROR', 'There are errors in your database: fix before upload')
+        return
+      sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
+      if hasattr(sync, 'api') and sync.api.url:  #if hostname and api-key given
+        self.comm.progressWindow(lambda func1: sync.sync('sA', progressCallback=func1))
+      else:                     #if not given
+        showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
+        dialogC = Configuration(self.comm)
+        dialogC.exec()
     elif command[0] is Command.SYNC_GET:
       sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
-      self.progressWindow = WaitDialog()
-      self.progressWindow.show()
-      self.worker = Worker(lambda func1: sync.sync('gA', progressCallback=func1))
-      self.worker.progress.connect(self.progressWindow.updateProgressBar)
-      self.worker.start()
+      self.progressWindow(lambda func1: sync.sync('gA', progressCallback=func1))
       self.comm.changeSidebar.emit('redraw')
       self.comm.changeTable.emit('x0', '')
     elif command[0] is Command.SYNC_SMART:
