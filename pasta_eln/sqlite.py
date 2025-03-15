@@ -818,7 +818,7 @@ class SqlLiteDB:
       allItems (bool):  true=show all items, false=only non-hidden
 
     Returns:
-      Node: hierarchy in an anytree
+      Node: hierarchy in an anytree; children sorted by childNum (primary) and docID (secondary)
       bool: error occurred
     """
     path = 'viewHierarchy/viewHierarchyAll' if allItems else 'viewHierarchy/viewHierarchy'
