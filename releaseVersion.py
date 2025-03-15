@@ -273,7 +273,18 @@ if __name__=='__main__':
   resultMain = subprocess.run(['git','status'], capture_output=True, check=False)
   if resultMain.stdout.decode('utf-8').strip().startswith('On branch main\n'):
     #do update
+    print("""You should have done before:
+- 'git checkout main'
+- 'git merge sb_staging'
+- Close milestone on github
+""")
     if input('Continue: only "y" continues. ') == 'y':
       newVersion(versionLevel)
+      print("""You should do here after:
+- 'git checkout sb_staging'
+- Open new milestone on github and fill in few issues
+""")
     else:
       print('You have to be on main branch to continue.')
+
+
