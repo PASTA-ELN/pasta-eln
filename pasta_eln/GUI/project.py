@@ -343,7 +343,7 @@ class Project(QWidget):
       pathNew = branchOld['path']
     siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackNew)) #sorted by docID
     siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(stackNew)+1]
-    childNums   = [f'{i['value'][0]}{i['id']}{idx}' for idx,i in enumerate(siblingsNew)]
+    childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
     siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]                    #sorted by childNum (primary) and docID (secondary)
     logging.debug('Change project: docID %s | old stack %s child %i | new stack %s child %i path %s'\
                   , docID, str(stackOld), childOld, str(stackNew), childNew, pathNew)
@@ -362,7 +362,7 @@ class Project(QWidget):
     # change old siblings
     siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackOld))  #sorted by docID
     siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(stackOld)+1]
-    childNums   = [f'{i['value'][0]}{i['id']}{idx}' for idx,i in enumerate(siblingsOld)]
+    childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
     siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]                    #sorted by childNum (primary) and docID (secondary)
     for idx, line in enumerate(siblingsOld):
       shift = -1 if idx>=childOld else 0  #shift those before the extraction point by 0 and those after by -1
