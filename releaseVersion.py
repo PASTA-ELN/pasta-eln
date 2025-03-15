@@ -273,7 +273,7 @@ if __name__=='__main__':
   resultMain = subprocess.run(['git','status'], capture_output=True, check=False)
   if resultMain.stdout.decode('utf-8').strip().startswith('On branch main\n'):
     #do update
-    print("""You should have done before:
+    print("""You should have done before as ~12 issues are closed in current milestone:
 - 'git checkout main'
 - 'git merge sb_staging'
 - Close milestone on github
