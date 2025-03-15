@@ -155,7 +155,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         doc['tags'] = [i.strip() for i in doc['tags'].split(',')]
       else:
         doc['tags'] = []
-      if elnName!='PASTA ELN' and 'id' in doc:
+      if 'id' in doc:
         doc['.oldIdentifier'] = doc.pop('id')
       doc['.elnIdentifier'] = elnID
       if (children and ('type' not in doc or doc['type']!='x1')):

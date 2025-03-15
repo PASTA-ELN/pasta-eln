@@ -20,7 +20,7 @@ from pasta_eln.textTools.stringChanges import outputString
 class Tools:
   """Commandline utility to admin local installation and convert from Pasta-ELN version 2"""
   def __init__(self) -> None:
-    self.backend:Backend = Backend()
+    self.backend:Backend|None = None
     self.projectGroup = ''
 
 
@@ -206,6 +206,8 @@ class Tools:
     """
     if not self.projectGroup:
       self.__setBackend__(projectGroup)
+    if self.backend is None:
+      return
     projectGroups = self.backend.db.getView('viewDocType/x0')['id'].values
     for projID in projectGroups:
       self.backend.scanProject(lambda i: self.__updateProgressBar__('count',i), projID)
@@ -244,6 +246,8 @@ class Tools:
     if not database:
       database = input('Enter database: ').strip()
     # big loop over all documents
+    if self.backend is None:
+      return
     db = self.backend.db
     resp = requests.get(f'http://{location}:5984/{database}/_all_docs', headers=headers, auth=authUser, timeout=10)
     for item in resp.json()['rows']:
@@ -333,6 +337,8 @@ class Tools:
     """
     if not self.projectGroup:
       self.__setBackend__(projectGroup)
+    if self.backend is None:
+      return
     outputString('print','info', self.backend.checkDB(outputStyle='text', repair=repair, minimal=False))
     return
 
@@ -345,6 +351,8 @@ class Tools:
     """
     if not self.projectGroup:
       self.__setBackend__(projectGroup)
+    if self.backend is None:
+      return
     self.backend.addData('x0', {'name': 'Lost and Found', 'comment': 'Location of lost database items'})
     return
 
@@ -357,6 +365,8 @@ class Tools:
     """
     if not self.projectGroup:
       self.__setBackend__(projectGroup)
+    if self.backend is None:
+      return
     dirName = self.backend.basePath
     if dirName.as_posix() != '/home/steffen/FZJ/pasta_misc/testing': #TODO temporary safeguard
       print('DO NOT DELETE THIS')
@@ -381,6 +391,8 @@ class Tools:
     """
     if not self.projectGroup:
       self.__setBackend__(projectGroup)
+    if self.backend is None:
+      return
     Pasta2Elab(self.backend, self.projectGroup, True)
     return
 
@@ -395,6 +407,8 @@ class Tools:
     """
     if not self.projectGroup:
       self.__setBackend__(projectGroup)
+    if self.backend is None:
+      return
     syncObj = Pasta2Elab(self.backend, self.projectGroup)
     if command:
       syncObj.sync('sA' if command=='ss' else 'gA', progressCallback=self.__updateProgressBar__)
@@ -408,6 +422,8 @@ class Tools:
     """
     if not self.projectGroup:
       self.__setBackend__(projectGroup)
+    if self.backend is None:
+      return
     key= input('Which key to repair, e.g. "chemistry" will become .chemistry? ')
     self.backend.db.cursor.execute(f"SELECT id FROM properties where key == '{key}'")
     res = self.backend.db.cursor.fetchall()

@@ -214,7 +214,7 @@ class Sidebar(QWidget):
     Args:
       event (QResizeEvent): event
     """
-    self.change()
+    self.change('redraw')
     return super().resizeEvent(event)
 
 
