@@ -1,5 +1,29 @@
 # Changelog
 
+## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.13...HEAD)
+
+**Fixed bugs:**
+
+- Importing eln file multiple times [\#229](https://github.com/PASTA-ELN/pasta-eln/issues/229)
+- Editing comments in imported eln projects [\#228](https://github.com/PASTA-ELN/pasta-eln/issues/228)
+
+**Closed issues:**
+
+- Creation of project groups not working [\#404](https://github.com/PASTA-ELN/pasta-eln/issues/404)
+- Adding metadata to the list instead of showing only the one from the current item [\#390](https://github.com/PASTA-ELN/pasta-eln/issues/390)
+- Automated re-reordering of items in the project view [\#389](https://github.com/PASTA-ELN/pasta-eln/issues/389)
+- Showing the sample dimensions in the details column in the sample list [\#386](https://github.com/PASTA-ELN/pasta-eln/issues/386)
+- Wrong version number in window title [\#380](https://github.com/PASTA-ELN/pasta-eln/issues/380)
+- Sidebar buttons vanish on resizing window [\#378](https://github.com/PASTA-ELN/pasta-eln/issues/378)
+- Double clicking on empty cells in metadata table throws console errors [\#305](https://github.com/PASTA-ELN/pasta-eln/issues/305)
+- Import and edit the eLabFTW project [\#141](https://github.com/PASTA-ELN/pasta-eln/issues/141)
+
+## [v3.0.13](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.13) (2025-03-11)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.12...v3.0.13)
+
 ## [v3.0.12](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.12) (2025-03-11)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.11...v3.0.12)
