@@ -30,7 +30,7 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
       group (str): string of this group/class
     """
     super().__init__()
-    self.df = df
+    self.df = df  #for reading only, not for change
     self.group = group
 
   def paint(self,
@@ -84,7 +84,8 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
       column= (self.df['class']==self.group) & (self.df['idx']==index.row())
       trues = self.df[column]['mandatory'].values
       isMandatory = len(trues)==1 and trues[0]=='T'
-      self.df.loc[column,   'mandatory']= '' if isMandatory else 'T'
+      self.df.loc[column,   'mandatory']= '' if isMandatory else 'T'  #invert mandatory after click; saved here for local use
+      model.setData(index, '' if isMandatory else 'T')                #save for use in main editor form
     return super().editorEvent(event, model, option, index)
 
 

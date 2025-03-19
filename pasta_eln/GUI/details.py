@@ -172,6 +172,8 @@ class Details(QScrollArea):
         path = self.comm.backend.basePath/path
       report = self.comm.backend.testExtractor(path, outputStyle='html', style={'main':'/'.join(self.doc['type'])})
       showMessage(self, 'Report of extractor test', report, style='QLabel {min-width: 800px}')
+    else:
+      showMessage(self, 'Warning', 'No item was selected via table-view, i.e. no details are shown.')
     return
 
 
