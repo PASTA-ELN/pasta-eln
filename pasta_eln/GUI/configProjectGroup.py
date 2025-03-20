@@ -119,6 +119,9 @@ class ProjectGroup(QDialog):
       self.reject()
       self.callbackFinished(False)
     elif 'Save' in btn.text() and not self.selectGroup.isHidden():
+      if not self.comboboxActive:
+        showMessage(self, 'Error', 'Fill out data and add-on location, first.')
+        return
       # all information (excl. storage block) is already in self.configuration saved
       key      = self.selectGroup.currentText()
       config   = self.configuration['projectGroups'][key]
@@ -138,6 +141,10 @@ class ProjectGroup(QDialog):
                                       'id':choices[0][1],
                                       'canRead':choices[0][2],
                                       'canWrite':choices[0][3]}
+      defaultProjectGroup = self.configuration['defaultProjectGroup']
+      if defaultProjectGroup not in self.configuration['projectGroups']:
+        self.configuration['defaultProjectGroup'] = self.configuration['projectGroups'].keys()[0]
+
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
       self.callbackFinished(True)
@@ -190,7 +197,10 @@ class ProjectGroup(QDialog):
       button = QMessageBox.question(self, 'Question', 'Do you want to copy the add-ons from the old directory (recommended)?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
-        shutil.copytree(config['addOnDir'], answer, dirs_exist_ok=True)
+        # if last source '', take one sensible one from config
+        source = config['addOnDir'] or \
+                 [i['addOnDir'] for i in self.configuration['projectGroups'].values() if i['addOnDir']][0]
+        shutil.copytree(source, answer, dirs_exist_ok=True)
       config['addOnDir'] = answer
       self.addOnLabel.setText('Add on directory: ' + config['addOnDir'])
 
@@ -277,7 +287,8 @@ class ProjectGroup(QDialog):
       del self.configuration['projectGroups'][key]
       self.selectGroup.removeItem(self.selectGroup.currentIndex())
       self.selectGroup.setCurrentIndex(0)
-
+      self.execute([Command.TEST_APIKEY])
+      self.execute([Command.TEST_SERVERPG])
     else:
       print('Got some button, without definition', command)
     return
