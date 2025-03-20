@@ -21,19 +21,9 @@ class ReorderColumnDelegate(QStyledItemDelegate):
   """
   Delegate for creating the icons for the re-order column in the data hierarchy editor tables
   """
-  re_order_signal = Signal(int)
-
-  def __init__(self, df:DataFrame, group:str) -> None:
-    """
-      Constructor
-
-    Args:
-      df (DataFrame): pandas dataframe containing the entire schema
-      group (str): string of this group/class
-    """
+  def __init__(self) -> None:
+    """ Constructor """
     super().__init__()
-    self.df = df
-    self.group = group
 
 
   def paint(self,
@@ -47,7 +37,8 @@ class ReorderColumnDelegate(QStyledItemDelegate):
       option (QStyleOptionViewItem): Style option for the cell represented by index.
       index (Union[QModelIndex, QPersistentModelIndex]): Table cell index
     """
-    if index.row()>=len(self.df[self.df['class']==self.group]):
+    indexName = index.model().index(index.row(), 0)
+    if not indexName.data():
       return
     button = QPushButton()
     opt = QStyleOptionButton()
@@ -88,7 +79,14 @@ class ReorderColumnDelegate(QStyledItemDelegate):
 
     Returns (bool): True/False
     """
-    if is_click_within_bounds(event, option):
-      self.re_order_signal.emit(index.row())
+    indexName = index.model().index(index.row(), 0)
+    if indexName.data() and is_click_within_bounds(event, option):
+      for idx in range(7):
+        indexTop    = model.index(index.row()-1, idx)
+        indexBottom = model.index(index.row(),   idx)
+        helper = model.data(indexTop)
+        model.setData(indexTop, model.data(indexBottom))
+        model.setData(indexBottom, helper)
+      model.layoutChanged.emit()
       return True
     return False
