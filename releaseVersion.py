@@ -286,5 +286,3 @@ if __name__=='__main__':
 """)
     else:
       print('You have to be on main branch to continue.')
-
-

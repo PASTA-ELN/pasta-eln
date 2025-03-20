@@ -2,6 +2,7 @@
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex
 from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate, QStyleOptionViewItem, QWidget
 
+
 class NameColumnDelegate(QStyledItemDelegate):
   """
   Delegate for creating the line edit with lookup icon for the iri column in data hierarchy editor tables

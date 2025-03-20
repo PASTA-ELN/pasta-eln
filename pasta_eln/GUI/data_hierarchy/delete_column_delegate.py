@@ -79,7 +79,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
     Returns (bool): True if deleted otherwise False
     """
     indexName = index.model().index(index.row(), 0)
-    if indexName.data() and not indexName.data() in ['name','tags','comment'] and \
+    if indexName.data() and indexName.data() not in ['name','tags','comment'] and \
         is_click_within_bounds(event, option) and isinstance(index, QModelIndex):
       index.model().removeRow(index.row())
       return True
