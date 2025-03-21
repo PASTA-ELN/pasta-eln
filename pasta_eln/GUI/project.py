@@ -365,10 +365,9 @@ class Project(QWidget):
     childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
     siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]                    #sorted by childNum (primary) and docID (secondary)
     for idx, line in enumerate(siblingsOld):
-      shift = -1 if idx>=childOld else 0  #shift those before the extraction point by 0 and those after by -1
-      if line['id']==docID or line['value'][0]==idx+shift: #ignore id in question and those that are correct already
+      if line['id']==docID or line['value'][0]==idx: #ignore id in question and those that are correct already
         continue
-      db.updateBranch(  docID=line['id'], branch=line['value'][4], child=idx+shift)
+      db.updateBranch(  docID=line['id'], branch=line['value'][4], child=idx)
     return
 
 
