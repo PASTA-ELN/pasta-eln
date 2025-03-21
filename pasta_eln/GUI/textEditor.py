@@ -1,7 +1,8 @@
 """ Plain text ediotr that has the special feature of Alt-Up/Down to move text """
-from PySide6.QtWidgets import QPlainTextEdit
-from PySide6.QtGui import QTextCursor, QKeyEvent
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QKeyEvent, QTextCursor
+from PySide6.QtWidgets import QPlainTextEdit
+
 
 class TextEditor(QPlainTextEdit):
   """ Plain text ediotr that has the special feature of Alt-Up/Down to move text """
