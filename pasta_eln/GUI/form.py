@@ -19,6 +19,7 @@ from ..miscTools import flatten
 from ..sqlite import MAIN_ORDER
 from ..textTools.stringChanges import createDirName, markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
+from .textEditor import TextEditor
 
 
 class Form(QDialog):
@@ -162,9 +163,8 @@ class Form(QDialog):
           textStr = self.doc.get(key, '')
           for k,v in SQLiteTranslationDict.items():
             textStr = textStr.replace(v,k)
-          setattr(self, f'textEdit_{key}', QPlainTextEdit(textStr))
+          setattr(self, f'textEdit_{key}', TextEditor(textStr))
           getattr(self, f'textEdit_{key}').setAccessibleName(key)
-          getattr(self, f'textEdit_{key}').setTabStopDistance(20)
           getattr(self, f'textEdit_{key}').textChanged.connect(self.textChanged)
           setattr(self, f'textShow_{key}', QTextEdit())
           getattr(self, f'textShow_{key}').setMarkdown(markdownEqualizer(self.doc.get(key, '')))
