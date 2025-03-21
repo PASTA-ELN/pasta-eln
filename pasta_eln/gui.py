@@ -89,7 +89,7 @@ class MainWindow(QMainWindow):
       Action('Send',                         self, [Command.SYNC_SEND],       syncMenu, shortcut='F5')
       Action('Get',                          self, [Command.SYNC_GET],        syncMenu, shortcut='F4')
       # Action('Smart synce',                  self, [Command.SYNC_SMART],       syncMenu)
-      Action('&Editor to change data type schema', self, [Command.SCHEMA],   systemMenu, shortcut='F8')
+    Action('&Editor to change data type schema', self, [Command.SCHEMA],   systemMenu, shortcut='F8')
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
