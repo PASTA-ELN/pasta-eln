@@ -2,7 +2,21 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.13...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.14...HEAD)
+
+**Closed issues:**
+
+- Breaking pasta completely using the schema editor [\#408](https://github.com/PASTA-ELN/pasta-eln/issues/408)
+- Use Alt-Up  Alt-Down to move up and down in form editor [\#407](https://github.com/PASTA-ELN/pasta-eln/issues/407)
+- elnidentifier key-value pair [\#403](https://github.com/PASTA-ELN/pasta-eln/issues/403)
+- Schema editor - mandatoriness [\#400](https://github.com/PASTA-ELN/pasta-eln/issues/400)
+- Test selected item extraction [\#397](https://github.com/PASTA-ELN/pasta-eln/issues/397)
+- "Test extraction from a file" [\#395](https://github.com/PASTA-ELN/pasta-eln/issues/395)
+- Form: autosave is not working anymore [\#364](https://github.com/PASTA-ELN/pasta-eln/issues/364)
+
+## [v3.0.14](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.14) (2025-03-15)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.13...v3.0.14)
 
 **Fixed bugs:**
 
@@ -13,7 +27,6 @@
 
 - Creation of project groups not working [\#404](https://github.com/PASTA-ELN/pasta-eln/issues/404)
 - Adding metadata to the list instead of showing only the one from the current item [\#390](https://github.com/PASTA-ELN/pasta-eln/issues/390)
-- Automated re-reordering of items in the project view [\#389](https://github.com/PASTA-ELN/pasta-eln/issues/389)
 - Showing the sample dimensions in the details column in the sample list [\#386](https://github.com/PASTA-ELN/pasta-eln/issues/386)
 - Wrong version number in window title [\#380](https://github.com/PASTA-ELN/pasta-eln/issues/380)
 - Sidebar buttons vanish on resizing window [\#378](https://github.com/PASTA-ELN/pasta-eln/issues/378)
