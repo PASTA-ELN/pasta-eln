@@ -300,13 +300,17 @@ class Form(QDialog):
           if ret==QMessageBox.StandardButton.Yes:
             subContent = content[self.doc.get('id', '')]
             for key in subContent.keys():
+              try:
+                elementName = f'key_{[idx for idx, (k,_) in enumerate(self.allUserElements) if key==k][0]}'
+              except:
+                continue
               if key in ('comment', 'content'):
                 getattr(self, f'textEdit_{key}').setPlainText(subContent[key])
               elif key in ('tags'):
                 self.doc[key] = subContent[key]
                 self.updateTagsBar()
-              elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
-                getattr(self, f'key_{key}').setText(subContent[key])
+              elif isinstance(getattr(self, elementName), QLineEdit):
+                getattr(self, elementName).setText(subContent[key])
               # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
           del content[self.doc.get('id', '')]
       with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
@@ -321,21 +325,33 @@ class Form(QDialog):
     """ Autosave comment to file """
     if self.comm.backend.configuration['GUI']['autosave'] == 'No':
       return
-    # subContent = {'name':getattr(self, 'key_-name').text().strip(), 'tags':self.doc['tags']}
-    # for key in self.allKeys:
-    #   if key in ['comment','content']:
-    #     subContent[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
-    #   elif key in self.skipKeys or not hasattr(self, f'key_{key}'):
-    #     continue
-    #   elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
-    #     subContent[key] = getattr(self, f'key_{key}').text().strip()
+    subContent = {'name':getattr(self, f"key_{self.allUserElements.index(('name','LineEdit'))}").text().strip(),
+                  'tags':self.doc['tags']}
+    for idx, (key, guiType) in enumerate(self.allUserElements):
+      if key in ['tags', 'name']:
+        continue
+      elementName = f"key_{idx}"
+      if key in ['comment','content']:
+        subContent[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
+      elif key in self.skipKeys:
+        continue
+      elif guiType=='ComboBox':
+        valueNew = getattr(self, elementName).currentText()
+        dataNew  = getattr(self, elementName).currentData()  #if docID is stored in currentData
+        if ((dataNew is not None and re.search(r'^[a-z\-]-[a-z0-9]{32}$',dataNew) is not None)
+            or dataNew==''):
+          subContent[key] = dataNew
+        elif valueNew!='- no link -' or dataNew is None:
+          subContent[key] = valueNew
+      else:                          #normal text field
+        subContent[key] = getattr(self, elementName).text().strip()
     # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
     if (Path.home()/'.pastaELN.temp').is_file():
       with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
     else:
       content = {}
-    content[self.doc.get('id', '')] = '' #subContent
+    content[self.doc.get('id', '')] = subContent
     with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
       fTemp.write(json.dumps(content))
     return
