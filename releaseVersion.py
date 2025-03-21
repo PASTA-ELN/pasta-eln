@@ -282,6 +282,7 @@ if __name__=='__main__':
       newVersion(versionLevel)
       print("""You should do here after:
 - 'git checkout sb_staging'
+- 'git merge main'
 - Open new milestone on github and fill in few issues
 """)
     else:

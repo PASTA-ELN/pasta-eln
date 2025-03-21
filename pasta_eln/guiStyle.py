@@ -7,7 +7,7 @@ from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap  #
 from PySide6.QtSvgWidgets import QSvgWidget  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QBoxLayout, QComboBox, QFormLayout, QGridLayout,  # pylint: disable=no-name-in-module
                                QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox, QPushButton, QScrollArea, QSizePolicy,
-                               QSplitter, QTextEdit, QVBoxLayout, QWidget)
+                               QSplitter, QTextEdit, QVBoxLayout, QWidget, QFrame)
 from .textTools.handleDictionaries import dict2ul
 from .textTools.stringChanges import markdownEqualizer
 
@@ -203,7 +203,7 @@ class Label(QLabel):
 
 
 
-def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') -> None:
+def showMessage(parent:QWidget, title:str, text:str, icon:str='Information', style:str='') -> None:
   """
   Show simple message box for little information
 
@@ -223,6 +223,8 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') 
     dialog.setIcon(getattr(QMessageBox, icon))
   if style!='':
     dialog.setStyleSheet(style)
+  color = 'red' if icon=='Critical' else 'yellow' if icon=='Warning' else 'green'
+  dialog.setStyleSheet(f'QMessageBox {{border: 2px solid {color}; border-radius: 10px;}}')
   dialog.exec()
   return
 
