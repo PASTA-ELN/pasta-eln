@@ -1,4 +1,5 @@
 """ Edit properties of a docType """
+import random
 import string
 from typing import Callable, Optional
 import qtawesome as qta
@@ -89,6 +90,8 @@ class DocTypeEditor(QDialog):
       self.reject()
     else:
       label    = self.row2.text()
+      if not label or label in [v1 for v0,v1 in self.db.dataHierarchy('','title')]:
+        label = 'Random_'+''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
       icon     = '' if self.docType.startswith('x') else self.comboIcon.currentText()
       shortcut = '' if self.docType.startswith('x') else self.row4.text()
       if self.docType:
@@ -105,7 +108,7 @@ class DocTypeEditor(QDialog):
         self.comm.backend.db.cursor.execute('INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
                                             [docType, '', '2', 'comment', '', '', ''])
         if self.callback is not None:
-          self.callback(docType)
+          self.callback(label)
       self.comm.backend.db.connection.commit()
       self.accept()
     return

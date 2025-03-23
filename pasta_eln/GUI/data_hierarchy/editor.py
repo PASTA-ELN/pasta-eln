@@ -32,6 +32,7 @@ class SchemeEditor(QDialog):
     self.comm = comm
     self.db   = self.comm.backend.db
     self.docType = ''
+    self.docLabel= ''
     self.closeButtons:list[IconButton] = []  #close buttons of tabs
 
     # GUI elements
@@ -65,19 +66,22 @@ class SchemeEditor(QDialog):
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
     #initialize
-    self.selectDocType.addItems(self.db.dataHierarchy('',''))
-    self.selectDocType.setCurrentText('x0')
+    _ = [self.selectDocType.addItem(text, data) for (data, text) in self.db.dataHierarchy('','title')]
+    self.selectDocType.setCurrentIndex(0)
     return
 
 
-  def changeDocType(self, docType:str) -> None:
+  def changeDocType(self, label:str) -> None:
     """ Change the document type
 
     Args:
-      docType (str): name of document type
+      label (str): label of document type
     """
     # get data frame
-    self.docType = docType
+    if not label:
+      return
+    self.docLabel= label
+    self.docType = [data for (data, text) in self.db.dataHierarchy('','title') if text==label][0]
     cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
           'docTypeSchema.unit, docTypeSchema.mandatory, docTypeSchema.list, definitions.long '\
           'FROM docTypeSchema LEFT JOIN definitions ON definitions.key = (docTypeSchema.class || "." || docTypeSchema.name) '\
@@ -125,8 +129,8 @@ class SchemeEditor(QDialog):
     """ Finish a docType, either by selecting another docType or by pressing save  """
     df = self.table2schema()
     # verification: uniqueness in names. etc.
-    unique =df.groupby('docType')['name'].nunique()==df.groupby('docType').size()
-    if not unique.all():
+    unique =df['name'].nunique()==df.shape[0]
+    if not unique:
       showMessage(self, 'Error', 'Within each table, the text in the first column has to be unique. E.g. no '
                   'two "tags" are allowed.', 'Critical')
       return
@@ -146,11 +150,12 @@ class SchemeEditor(QDialog):
     dfDef = dfDef.groupby(['key']).first()
     listDef = list(dfDef.itertuples(name=None))
     # save to sqlite
-    dfSchema.to_sql('docTypeSchema', self.db.connection, if_exists='replace', index=False, dtype='str')
     cmd = 'INSERT INTO definitions (key, long, PURL) VALUES (?, ?, "") ON CONFLICT(key) DO '\
           'UPDATE SET long = excluded.long;'
     self.db.cursor.executemany(cmd, listDef)
+    self.db.cursor.execute(f"DELETE FROM docTypeSchema WHERE docType == '{self.docType}'")
     self.db.connection.commit()
+    dfSchema.to_sql('docTypeSchema', self.db.connection, if_exists='append', index=False, dtype='str')
     return
 
 
@@ -179,20 +184,29 @@ class SchemeEditor(QDialog):
     if command[0] is Command.NEW:
       dialog = DocTypeEditor(self.comm, '', self.changeDocType)
       dialog.exec()
+      docLabel = str(self.docLabel)
       self.selectDocType.clear()
-      self.selectDocType.addItems(self.db.dataHierarchy('',''))
+      _ = [self.selectDocType.addItem(text, data) for (data, text) in self.db.dataHierarchy('','title')]
+      self.selectDocType.setCurrentText(docLabel)
     elif command[0] is Command.EDIT:
-      dialog = DocTypeEditor(self.comm, self.selectDocType.currentText())
+      dialog = DocTypeEditor(self.comm, self.selectDocType.currentData())
       dialog.exec()
+      docIdx = self.selectDocType.currentIndex()
+      self.selectDocType.clear()
+      _ = [self.selectDocType.addItem(text, data) for (data, text) in self.db.dataHierarchy('','title')]
+      self.selectDocType.setCurrentIndex(docIdx)
     elif command[0] is Command.DEL:
       button = QMessageBox.question(self, 'Question', 'Do you really want to remove the doc-type?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.No:
         return
-      self.db.cursor.execute(f"DELETE FROM docTypes WHERE docType == '{self.selectDocType.currentText()}'")
-      self.db.cursor.execute(f"DELETE FROM docTypeSchema WHERE docType == '{self.selectDocType.currentText()}'")
+      self.db.cursor.execute(f"DELETE FROM docTypes WHERE docType == '{self.selectDocType.currentData()}'")
+      self.db.cursor.execute(f"DELETE FROM docTypeSchema WHERE docType == '{self.selectDocType.currentData()}'")
       self.db.connection.commit()
+      self.selectDocType.clear()
+      _ = [self.selectDocType.addItem(text, data) for (data, text) in self.db.dataHierarchy('','title')]
     elif command[0] is Command.DEL_GROUP:
+      docLabel = str(self.docLabel)
       button = QMessageBox.question(self, 'Question', 'Do you really want to remove this group?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
@@ -200,7 +214,7 @@ class SchemeEditor(QDialog):
         self.db.cursor.execute(f"DELETE FROM docTypeSchema WHERE docType == '{self.docType}' "\
                                             f"AND class == '{group}'")
         self.db.connection.commit()
-        self.changeDocType(self.docType)
+        self.changeDocType(docLabel)
     return
 
 
@@ -249,7 +263,7 @@ class SchemeEditor(QDialog):
         self.db.cursor.execute(f"INSERT INTO docTypeSchema VALUES ({', '.join(['?']*7)})",
                         [self.docType, textNew.strip(), '0', 'item', '', '', ''])
         self.db.connection.commit()
-        self.changeDocType(self.docType)
+        self.changeDocType(self.docLabel)
     return
 
 

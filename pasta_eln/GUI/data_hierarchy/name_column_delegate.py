@@ -1,5 +1,6 @@
 """ NameColumnDelegate module used for the table views """
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex
+from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate, QStyleOptionViewItem, QWidget
 
 
@@ -23,7 +24,9 @@ class NameColumnDelegate(QStyledItemDelegate):
     """
     if index.data() in ['name','tags','comment']:
       return QWidget(parent)
-    return QLineEdit(parent)
+    res = QLineEdit(parent)
+    res.setValidator(QRegularExpressionValidator(r'[a-z][a-z0-9]+'))
+    return res
 
 
   def destroyEditor(self, editor:QWidget, index:QModelIndex | QPersistentModelIndex) -> None:
