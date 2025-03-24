@@ -152,11 +152,12 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
     projectGroup = configuration['defaultProjectGroup']
   directory = Path(configuration['projectGroups'][projectGroup]['addOnDir'])
   sys.path.append(str(directory))  #allow add-ons
-  # Extractors
+  # Add-Ons
   verboseDebug = False
   extractorsAll = {}
   projectAll    = {}
   for fileName in os.listdir(directory):
+    # Extractor
     if fileName.endswith('.py') and fileName.startswith('extractor_'):
       #start with file
       with open(directory/fileName, encoding='utf-8') as fIn:
@@ -203,10 +204,14 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
         ending = fileName.split('_')[1].split('.')[0]
         extractorsAll[ending]=extractorsThis
                     #header not used for now
+    # Project
     if fileName.endswith('.py') and fileName.startswith('project_'):
       name        = fileName[:-3]
-      module      = importlib.import_module(fileName[:-3])
-      description = module.description
+      try:
+        module      = importlib.import_module(fileName[:-3])
+        description = module.description
+      except Exception:
+        description = f'** SYNTAX ERROR in add-on **\n{traceback.format_exc()}'
       projectAll[name] = description
   #update configuration file
   confProjectGroup = configuration['projectGroups'][projectGroup]['addOns']

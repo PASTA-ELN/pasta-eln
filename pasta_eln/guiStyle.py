@@ -7,7 +7,7 @@ from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap  #
 from PySide6.QtSvgWidgets import QSvgWidget  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QBoxLayout, QComboBox, QFormLayout, QGridLayout,  # pylint: disable=no-name-in-module
                                QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox, QPushButton, QScrollArea, QSizePolicy,
-                               QSplitter, QTextEdit, QVBoxLayout, QWidget, QFrame)
+                               QSplitter, QTextEdit, QVBoxLayout, QWidget)
 from .textTools.handleDictionaries import dict2ul
 from .textTools.stringChanges import markdownEqualizer
 

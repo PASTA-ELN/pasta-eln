@@ -16,6 +16,7 @@ from ..elabFTWapi import ElabFTWApi
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayoutGrid
+from ..miscTools import restart
 
 
 class ProjectGroup(QDialog):
@@ -147,7 +148,7 @@ class ProjectGroup(QDialog):
 
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
-      self.callbackFinished(True)
+      restart() # in future perhaps: self.callbackFinished(True)
     return
 
 
