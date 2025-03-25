@@ -81,7 +81,7 @@ def configuration(command:str, pathData:str) -> str:
   logging.info('Configuration starting ...')
   output = ''
   if Path(pathData).is_dir():
-    pathPasta = Path(pathData).absolute()
+    pathPasta = Path(pathData).resolve()
   else:
     pathPasta = Path.home()/pathData
     pathPasta.mkdir(exist_ok=True)
