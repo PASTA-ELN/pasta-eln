@@ -2,7 +2,25 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.14...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.15...HEAD)
+
+**Closed issues:**
+
+- Restart of pasta after creating a new project group [\#412](https://github.com/PASTA-ELN/pasta-eln/issues/412)
+- Renaming x0 and x1 into project/folder in the schema editor [\#411](https://github.com/PASTA-ELN/pasta-eln/issues/411)
+- items in schema editor vanish [\#410](https://github.com/PASTA-ELN/pasta-eln/issues/410)
+- Larger \(and/or more obvious\) notifcation windows [\#406](https://github.com/PASTA-ELN/pasta-eln/issues/406)
+- Add-On updater not working [\#405](https://github.com/PASTA-ELN/pasta-eln/issues/405)
+- Export as html [\#402](https://github.com/PASTA-ELN/pasta-eln/issues/402)
+- Schema editor - List [\#401](https://github.com/PASTA-ELN/pasta-eln/issues/401)
+- Error in item editor [\#399](https://github.com/PASTA-ELN/pasta-eln/issues/399)
+- List of tags shows \_all\_ items in that project [\#394](https://github.com/PASTA-ELN/pasta-eln/issues/394)
+- Adding instruments to the links in a measurement [\#393](https://github.com/PASTA-ELN/pasta-eln/issues/393)
+- Selection of extractors for a multiply used file format [\#388](https://github.com/PASTA-ELN/pasta-eln/issues/388)
+
+## [v3.0.15](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.15) (2025-03-21)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.14...v3.0.15)
 
 **Closed issues:**
 
