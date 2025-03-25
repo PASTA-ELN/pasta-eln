@@ -304,6 +304,7 @@ class Project(QWidget):
     Args:
       item (QStandardItem): item changed, new location
     """
+    verbose = False # TODO: remove after issue 389 is solved
     #gather old information
     db       = self.comm.backend.db
     ## print hierarchy of this project for debugging
@@ -351,12 +352,26 @@ class Project(QWidget):
       return
     # --- CHANGE ----
     # change new siblings
+    if verbose:
+      print('\n=============================================\nStep 1: before new siblings')
+      print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
     for idx, line in enumerate(siblingsNew):
       shift = 1 if idx>=childNew else 0  #shift those before the insertion point by 0 and those after by 1
       if line['id']==docID or line['value'][0]==idx+shift: #ignore id in question and those that are correct already
         continue
+      if verbose:
+        print(f'  {line["id"]}: move: {idx} {shift}')
       db.updateBranch(docID=line['id'], branch=line['value'][4], child=idx+shift)
+    if verbose:
+      siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackNew)) #sorted by docID
+      siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(stackNew)+1]
+      childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
+      siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]                    #sorted by childNum (primary) and docID (secondary)
+      print('Step 2: after new siblings')
+      print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
     # change item in question
+    if verbose:
+      print(f'  manual move {childOld} -> {childNew}: {docID}')
     db.updateBranch(docID=docID, branch=-99, stack=stackNew, path=pathNew, child=childNew, stackOld=stackOld+[docID])
     item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID])})
     # change old siblings
@@ -364,10 +379,22 @@ class Project(QWidget):
     siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(stackOld)+1]
     childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
     siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]                    #sorted by childNum (primary) and docID (secondary)
+    if verbose:
+      print('Step 3: before old siblings')
+      print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
     for idx, line in enumerate(siblingsOld):
-      if line['id']==docID or line['value'][0]==idx: #ignore id in question and those that are correct already
+      if line['value'][0]==idx: #ignore id in question and those that are correct already
         continue
+      if verbose:
+        print(f'  {line["id"]}: move: {idx} {shift}')
       db.updateBranch(  docID=line['id'], branch=line['value'][4], child=idx)
+    if verbose:
+      siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackOld))  #sorted by docID
+      siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(stackOld)+1]
+      childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
+      siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]                    #sorted by childNum (primary) and docID (secondary)
+      print('Step 4: end of function')
+      print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
     return
 
 
