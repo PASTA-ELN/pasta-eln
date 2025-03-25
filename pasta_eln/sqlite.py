@@ -78,10 +78,16 @@ class SqlLiteDB:
       self.cursor.executemany(command, defaultDocTypes)
       # docTypeSchema table (see below)
       # - define the key of the metadata table, units, icons, ...
+      if 'docTypeSchema' in tables:
+        print('Info: remove old docTypeSchema')
+        self.cursor.execute('DROP TABLE docTypeSchema')
       self.createSQLTable('docTypeSchema', DOC_TYPE_SCHEMA,  'docType, class, idx')
       command = f"INSERT INTO docTypeSchema ({', '.join(DOC_TYPE_SCHEMA)}) VALUES ({', '.join(['?']*len(DOC_TYPE_SCHEMA))});"
       self.cursor.executemany(command, defaultSchema)
       # definitions of all the keys (those from the docTypeSchema and those of the properties table)
+      if 'definitions' in tables:
+        print('Info: remove old definitions')
+        self.cursor.execute('DROP TABLE definitions')
       self.createSQLTable('definitions',     ['key','long','PURL'],                       'key')
       command =  'INSERT INTO definitions VALUES (?, ?, ?);'
       self.cursor.executemany(command, defaultDefinitions)

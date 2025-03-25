@@ -61,6 +61,9 @@ class Tools:
     helpString += '  [rA]epair: answer always "yes": WARNING can change too much\n'
     if command == 'rA':
       self.verifyPasta('', lambda t: self.__userQuestion__(t, True))
+    helpString += '  [rS]repair schema: reset the doc-type schema to its original state\n'
+    if command == 'rS':
+      self.repairSchema()
     helpString += '  [cp]-create a lost and found project: helpful for some repair operations\n'
     if command == 'cp':
       self.createLostAndFound()
@@ -342,6 +345,19 @@ class Tools:
     outputString('print','info', self.backend.checkDB(outputStyle='text', repair=repair, minimal=False))
     return
 
+
+  def repairSchema(self, projectGroup:str='') -> None:
+    """ Do the default verification of PastaELN. Adopted to CLI
+      Args:
+      projectGroup (str): name of project group
+      repair (function): repair
+    """
+    if not self.projectGroup:
+      self.__setBackend__(projectGroup)
+    if self.backend is None:
+      return
+    self.backend.db.dataHierarchyInit(True)
+    return
 
 
   def createLostAndFound(self, projectGroup:str='') -> None:
