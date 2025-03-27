@@ -80,7 +80,7 @@ class ConfigurationSetup(QWidget):
             self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to INVALID folder' )
             self.text.setMarkdown(self.mainText)
           else:
-            if [x for x in Path(dirName).iterdir()]:
+            if list(Path(dirName).iterdir()):
               button = QMessageBox.question(self, 'PASTA-ELN configuration', 'Folder is not empty. Do you want to remove all content?',
                                       QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
               if button == QMessageBox.StandardButton.Yes:

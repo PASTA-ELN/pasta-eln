@@ -16,7 +16,6 @@ from ..elabFTWapi import ElabFTWApi
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayoutGrid
-from ..miscTools import restart
 
 
 class ProjectGroup(QDialog):
@@ -148,7 +147,7 @@ class ProjectGroup(QDialog):
 
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
-      restart() # in future perhaps: self.callbackFinished(True)
+      self.callbackFinished(True)
     return
 
 
@@ -285,11 +284,14 @@ class ProjectGroup(QDialog):
       self.comboboxActive = False
 
     elif command[0] is Command.DEL:
-      del self.configuration['projectGroups'][key]
-      self.selectGroup.removeItem(self.selectGroup.currentIndex())
-      self.selectGroup.setCurrentIndex(0)
-      self.execute([Command.TEST_APIKEY])
-      self.execute([Command.TEST_SERVERPG])
+      button = QMessageBox.question(self, 'Question', 'Do you really want to delete this project group from the configuration (Data will remain)?',
+                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+      if button == QMessageBox.StandardButton.Yes:
+        del self.configuration['projectGroups'][key]
+        self.selectGroup.removeItem(self.selectGroup.currentIndex())
+        self.selectGroup.setCurrentIndex(0)
+        self.execute([Command.TEST_APIKEY])
+        self.execute([Command.TEST_SERVERPG])
     else:
       print('Got some button, without definition', command)
     return

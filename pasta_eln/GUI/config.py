@@ -56,5 +56,5 @@ class Configuration(QDialog):
     """
     self.close()
     if restart:
-      self.comm.backend.initialize()  #restart backend
+      self.comm.restart.emit()        #send signal
     return

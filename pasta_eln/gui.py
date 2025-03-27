@@ -53,6 +53,7 @@ class MainWindow(QMainWindow):
     palette      = Palette(self, theme)
     self.comm = Communicate(self.backend, palette)
     self.comm.formDoc.connect(self.formDoc)
+    self.comm.restart.connect(self.initialize)
     self.dataverseMainDialog: MainDialog | None = None
     self.dataverseConfig: ConfigDialog | None = None
 
@@ -65,25 +66,10 @@ class MainWindow(QMainWindow):
     # Action('&Upload to Dataverse',           self, [Command.DATAVERSE_MAIN], projectMenu)
     Action('&Exit',                          self, [Command.EXIT],           projectMenu)
 
-    viewMenu = menu.addMenu('&Lists')
-    if hasattr(self.backend, 'db'):
-      for docType, docLabel in self.comm.backend.db.dataHierarchy('', 'title'):
-        if docType[0] == 'x' and docType[1] != '0':
-          continue
-        shortcut = self.comm.backend.db.dataHierarchy(docType,'shortcut')[0]
-        shortcut = None if shortcut=='' else f"Ctrl+{shortcut}"
-        Action(docLabel,                     self, [Command.VIEW, docType],  viewMenu, shortcut=shortcut)
-        if docType == 'x0':
-          viewMenu.addSeparator()
-      viewMenu.addSeparator()
-      Action('&Tags',                        self, [Command.VIEW, '_tags_'], viewMenu, shortcut='Ctrl+T')
-      Action('&Unidentified',                self, [Command.VIEW, '-'],      viewMenu, shortcut='Ctrl+U')
+    self.viewMenu = menu.addMenu('&Lists')
 
     systemMenu = menu.addMenu('Project &group')
-    changeProjectGroups = systemMenu.addMenu('&Change project group')
-    if hasattr(self.backend, 'configuration'):                            # not case in fresh install
-      for name in self.backend.configuration['projectGroups'].keys():
-        Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
+    self.changeProjectGroups = systemMenu.addMenu('&Change project group')
     if 'develop' in self.comm.backend.configuration:
       syncMenu = systemMenu.addMenu('&Synchronize')
       Action('Send',                         self, [Command.SYNC_SEND],       syncMenu, shortcut='F5')
@@ -120,7 +106,32 @@ class MainWindow(QMainWindow):
     # mainLayout.addWidget(sidebarScroll)
     mainLayout.addWidget(self.sidebar)
     mainLayout.addWidget(body)
+    self.initialize()
+
+
+  @Slot()
+  def initialize(self) -> None:
+    """ Initialize: things that might change """
+    self.comm.backend.initialize(self.backend.configurationProjectGroup)  #restart backend
+    # Things that are inside the List menu
+    self.viewMenu.clear()
+    if hasattr(self.backend, 'db'):
+      for docType, docLabel in self.comm.backend.db.dataHierarchy('', 'title'):
+        if docType[0] == 'x' and docType[1] != '0':
+          continue
+        shortcut = self.comm.backend.db.dataHierarchy(docType,'shortcut')[0]
+        shortcut = None if shortcut=='' else f"Ctrl+{shortcut}"
+        Action(docLabel,            self, [Command.VIEW, docType],  self.viewMenu, shortcut=shortcut)
+      self.viewMenu.addSeparator()
+      Action('&Tags',               self, [Command.VIEW, '_tags_'], self.viewMenu, shortcut='Ctrl+T')
+      Action('&Unidentified',       self, [Command.VIEW, '-'],      self.viewMenu, shortcut='Ctrl+U')
+    # Things that are related to project group
+    self.changeProjectGroups.clear()
+    if hasattr(self.backend, 'configuration'):                            # not case in fresh install
+      for name in self.backend.configuration['projectGroups'].keys():
+        Action(name,                         self, [Command.CHANGE_PG, name], self.changeProjectGroups)
     self.comm.changeTable.emit('x0', '')
+    return
 
 
   @Slot(dict)                                         # type: ignore[arg-type]
