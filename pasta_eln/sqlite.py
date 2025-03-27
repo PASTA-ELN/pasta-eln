@@ -85,11 +85,8 @@ class SqlLiteDB:
       command = f"INSERT INTO docTypeSchema ({', '.join(DOC_TYPE_SCHEMA)}) VALUES ({', '.join(['?']*len(DOC_TYPE_SCHEMA))});"
       self.cursor.executemany(command, defaultSchema)
       # definitions of all the keys (those from the docTypeSchema and those of the properties table)
-      if 'definitions' in tables:
-        print('Info: remove old definitions')
-        self.cursor.execute('DROP TABLE definitions')
       self.createSQLTable('definitions',     ['key','long','PURL'],                       'key')
-      command =  'INSERT INTO definitions VALUES (?, ?, ?);'
+      command =  'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);'
       self.cursor.executemany(command, defaultDefinitions)
       self.connection.commit()
     return
