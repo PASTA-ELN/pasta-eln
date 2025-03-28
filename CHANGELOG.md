@@ -9,7 +9,7 @@
 - Restart of pasta after creating a new project group [\#412](https://github.com/PASTA-ELN/pasta-eln/issues/412)
 - Renaming x0 and x1 into project/folder in the schema editor [\#411](https://github.com/PASTA-ELN/pasta-eln/issues/411)
 - items in schema editor vanish [\#410](https://github.com/PASTA-ELN/pasta-eln/issues/410)
-- Larger \(and/or more obvious\) notifcation windows [\#406](https://github.com/PASTA-ELN/pasta-eln/issues/406)
+- Larger \(and/or more obvious\) notification windows [\#406](https://github.com/PASTA-ELN/pasta-eln/issues/406)
 - Add-On updater not working [\#405](https://github.com/PASTA-ELN/pasta-eln/issues/405)
 - Export as html [\#402](https://github.com/PASTA-ELN/pasta-eln/issues/402)
 - Schema editor - List [\#401](https://github.com/PASTA-ELN/pasta-eln/issues/401)

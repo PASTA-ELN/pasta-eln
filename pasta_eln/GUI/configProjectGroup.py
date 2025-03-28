@@ -143,7 +143,7 @@ class ProjectGroup(QDialog):
                                       'canWrite':choices[0][3]}
       defaultProjectGroup = self.configuration['defaultProjectGroup']
       if defaultProjectGroup not in self.configuration['projectGroups']:
-        self.configuration['defaultProjectGroup'] = self.configuration['projectGroups'].keys()[0]
+        self.configuration['defaultProjectGroup'] = list(self.configuration['projectGroups'].keys())[0]
 
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
