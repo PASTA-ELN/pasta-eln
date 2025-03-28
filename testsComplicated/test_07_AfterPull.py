@@ -26,6 +26,7 @@ def test_simple(qtbot):
   sync = Pasta2Elab(backend, 'research', purge=False)
   if not sync.api.url:
     return
+  # All cases
   print('\nRe-pull: same as before')
   report = sync.sync('gA')
   handleReport(report, [0,14,0,0,0])
@@ -33,6 +34,18 @@ def test_simple(qtbot):
   print('Re-push: same as tests 02')
   report = sync.sync('sA')
   handleReport(report, [14,0,0,0,0])
+
+  print('Re-push')
+  report = sync.sync('sA')
+  handleReport(report, [14,0,0,0,0])
+
+  print('\nRe-pull')
+  report = sync.sync('gA')
+  handleReport(report, [0,14,0,0,0])
+
+  print('\nRe-pull')
+  report = sync.sync('gA')
+  handleReport(report, [0,14,0,0,0])
 
   # verify
   verify(backend)
