@@ -186,18 +186,17 @@ class Tools:
       docID (str): which ID to delete
       output (bool): print=True or delete=False
     """
-    if not projectGroup:
-      with open(Path.home()/CONF_FILE_NAME, encoding='utf-8') as fIn:
-        config = json.load(fIn)
-        print('Possible project groups:','  '.join(config['projectGroups'].keys()))
-      projectGroup = input('Enter project group: ').strip()
-    be = Backend(projectGroup)
+    if not self.projectGroup:
+      self.__setBackend__(projectGroup)
+    if self.backend is None:
+      return
+    self.backend = Backend(projectGroup)
     if not docID:
       docID = input('Enter docID: ').strip()
     if output:
-      print(json.dumps(be.db.getDoc(docID), indent=2))
+      print(json.dumps(self.backend.db.getDoc(docID), indent=2))
     else:
-      be.db.remove(docID)
+      self.backend.db.remove(docID)
     return
 
 

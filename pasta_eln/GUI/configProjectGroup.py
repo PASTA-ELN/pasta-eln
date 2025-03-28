@@ -15,7 +15,8 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog
 from ..elabFTWapi import ElabFTWApi
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
-from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayoutGrid
+from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayoutGrid, ScrollMessageBox
+from ..miscTools import updateAddOnList
 
 
 class ProjectGroup(QDialog):
@@ -202,6 +203,14 @@ class ProjectGroup(QDialog):
                  [i['addOnDir'] for i in self.configuration['projectGroups'].values() if i['addOnDir']][0]
         shutil.copytree(source, answer, dirs_exist_ok=True)
       config['addOnDir'] = answer
+      config['addOns'] = {}
+      button = QMessageBox.question(self, 'Question', 'Do you want to update the AddOn list (recommended)?',
+                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+      if button == QMessageBox.StandardButton.Yes:
+        reportDict = updateAddOnList(self.backend.configurationProjectGroup)
+        messageWindow = ScrollMessageBox('Extractor list updated', reportDict,
+                                       style='QScrollArea{min-width:600 px; min-height:400px}')
+        messageWindow.exec()
       self.addOnLabel.setText('Add on directory: ' + config['addOnDir'])
 
     elif command[0] is Command.TEST_SERVER:

@@ -3,8 +3,7 @@
 """
 import base64
 from io import BytesIO
-import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image
 
 
 def use(filePath, style={'main':''}, saveFileName=None):
@@ -38,10 +37,11 @@ def use(filePath, style={'main':''}, saveFileName=None):
     newSize = (int(image.size[0]/scale), int(image.size[1]/scale))
     image = image.resize(newSize)
 
+  image = image.convert('RGB')
   figfile = BytesIO()
-  imageData.save(figfile, format='JPEG')
-  imageData = base64.b64encode(figfile.getvalue()).decode()
-  imageData = f"data:image/jpg;base64,{imageData}"
+  image.save(figfile, format='JPEG')
+  image = base64.b64encode(figfile.getvalue()).decode()
+  image = f"data:image/jpg;base64,{image}"
 
   # return everything
-  return {'image':imageData, 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser}
+  return {'image':image, 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser}
