@@ -684,7 +684,7 @@ class SqlLiteDB:
     Wrapper for getting view function
 
     Args:
-        thePath (string): path to view
+        thePath (string): path to view; e.g. 'viewDocType/x0'
         startKey (string): / separated; if given, use to filter output, everything that starts with this key
         preciseKey (string): if given, use to filter output. Match precisely
 

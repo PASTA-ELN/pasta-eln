@@ -342,6 +342,11 @@ class Tools:
     if self.backend is None:
       return
     outputString('print','info', self.backend.checkDB(outputStyle='text', repair=repair, minimal=False))
+    # print hierarchy of project with name
+    # projName = '...'
+    # df = self.backend.db.getView('viewDocType/x0')
+    # self.backend.changeHierarchy(df[df['name']==projName]['id'].values[0])
+    # print(self.backend.outputHierarchy(False,True))
     return
 
 

@@ -600,6 +600,8 @@ class Backend(CLI_Mixin):
     if success:
       try:
         _ = json.dumps(content['metaVendor'])
+        if not isinstance(content['metaVendor'], dict):
+          raise TypeError(' Meta vendor: wrong type')
         report += outputString(outputStyle,'info','Number of vendor entries: '+str(len(content['metaVendor'])))
       except Exception:
         # possible cause of failure: make sure that no int64 but normal int
@@ -615,6 +617,8 @@ class Backend(CLI_Mixin):
     if success:
       try:
         _ = json.dumps(content['metaUser'])
+        if not isinstance(content['metaUser'], dict):
+          raise TypeError(' Meta user: wrong type')
         report += 'Number of user entries: '+str(len(content['metaUser']))+'<br>'
       except Exception:
         report += outputString(outputStyle,'error', 'Some json format does not fit in metaUser')

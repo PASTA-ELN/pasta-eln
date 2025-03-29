@@ -24,7 +24,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
   for key in toDelete:
     del metaVendor[key]
   style['main'] = 'measurement/image'
-  metaUser   = []
+  metaUser   = {}
 
   # save to file: this is the high quality image
   if saveFileName is not None:
