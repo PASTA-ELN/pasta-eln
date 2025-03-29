@@ -2,7 +2,18 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.15...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.16...HEAD)
+
+**Closed issues:**
+
+- Data scheme editor -\> same name in different tabs yield error [\#417](https://github.com/PASTA-ELN/pasta-eln/issues/417)
+- Deletion of project group + subsequent saving error [\#414](https://github.com/PASTA-ELN/pasta-eln/issues/414)
+- Warning message for folder creation during installation [\#413](https://github.com/PASTA-ELN/pasta-eln/issues/413)
+- Project group editor \(during programming lesson\) [\#409](https://github.com/PASTA-ELN/pasta-eln/issues/409)
+
+## [v3.0.16](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.16) (2025-03-25)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.15...v3.0.16)
 
 **Closed issues:**
 
