@@ -207,7 +207,7 @@ class ProjectGroup(QDialog):
       button = QMessageBox.question(self, 'Question', 'Do you want to update the AddOn list (recommended)?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
-        reportDict = updateAddOnList(self.backend.configurationProjectGroup)
+        reportDict = updateAddOnList(self.comm.backend.configurationProjectGroup)
         messageWindow = ScrollMessageBox('Extractor list updated', reportDict,
                                        style='QScrollArea{min-width:600 px; min-height:400px}')
         messageWindow.exec()

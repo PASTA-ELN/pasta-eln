@@ -1,14 +1,12 @@
 """ Graphical user interface includes all widgets """
-import json, base64
+import json
 import logging
 import os
-from io import BytesIO
 import sys
 import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any, Union
-from PIL import Image
 from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
@@ -29,7 +27,6 @@ from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN, importELN
 from .miscTools import restart, updateAddOnList
-from pasta_eln.Resources import Icons as icons
 
 os.environ['QT_API'] = 'pyside6'
 
