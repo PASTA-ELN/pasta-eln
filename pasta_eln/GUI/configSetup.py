@@ -79,17 +79,16 @@ class ConfigurationSetup(QWidget):
           if dirName is None:
             self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to INVALID folder' )
             self.text.setMarkdown(self.mainText)
-          else:
-            if list(Path(dirName).iterdir()):
-              button = QMessageBox.question(self, 'PASTA-ELN configuration', 'Folder is not empty. Do you want to remove all content?',
-                                      QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-              if button == QMessageBox.StandardButton.Yes:
-                configuration('repair', dirName)
-              else:
-                self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
-                self.text.setMarkdown(self.mainText)
-            else:
+          elif list(Path(dirName).iterdir()):
+            button = QMessageBox.question(self, 'PASTA-ELN configuration', 'Folder is not empty. Do you want to remove all content?',
+                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+            if button == QMessageBox.StandardButton.Yes:
               configuration('repair', dirName)
+            else:
+              self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
+              self.text.setMarkdown(self.mainText)
+          else:
+            configuration('repair', dirName)
         else:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
           self.text.setMarkdown(self.mainText)

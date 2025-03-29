@@ -14,7 +14,7 @@ from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-ma
 from pasta_eln import __version__
 from .backend import Backend
 from .elabFTWsync import Pasta2Elab
-from .fixedStringsJson import CONF_FILE_NAME, shortcuts, AboutMessage
+from .fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
 from .GUI.body import Body
 from .GUI.config import Configuration
 from .GUI.data_hierarchy.editor import SchemeEditor
