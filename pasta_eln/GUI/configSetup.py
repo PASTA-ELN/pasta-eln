@@ -112,6 +112,7 @@ class ConfigurationSetup(QWidget):
       else:
         self.mainText = self.mainText.replace('- Example data', '- Example data was NOT added, per user choice')
       self.text.setMarkdown(self.mainText)
+      self.comm.backend.addData('x0', {'name': 'Blank Project'})
       #at end
       self.button1.hide()
       self.button2.show()

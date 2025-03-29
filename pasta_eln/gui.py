@@ -1,12 +1,14 @@
 """ Graphical user interface includes all widgets """
-import json
+import json, base64
 import logging
 import os
+from io import BytesIO
 import sys
 import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any, Union
+from PIL import Image
 from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
@@ -14,7 +16,7 @@ from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-ma
 from pasta_eln import __version__
 from .backend import Backend
 from .elabFTWsync import Pasta2Elab
-from .fixedStringsJson import CONF_FILE_NAME, shortcuts
+from .fixedStringsJson import CONF_FILE_NAME, shortcuts, AboutMessage
 from .GUI.body import Body
 from .GUI.config import Configuration
 from .GUI.data_hierarchy.editor import SchemeEditor
@@ -27,6 +29,7 @@ from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN, importELN
 from .miscTools import restart, updateAddOnList
+from pasta_eln.Resources import Icons as icons
 
 os.environ['QT_API'] = 'pyside6'
 
@@ -43,8 +46,7 @@ class MainWindow(QMainWindow):
     """
     # global setting
     super().__init__()
-    venv = ' without venv' if sys.prefix == sys.base_prefix and 'CONDA_PREFIX' not in os.environ else ' in venv'
-    self.setWindowTitle(f"PASTA-ELN {__version__}{venv}")
+    self.setWindowTitle(f"PASTA-ELN {__version__}")
     self.resize(self.screen().size()) #self.setWindowState(Qt.WindowMaximized) #TODO https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
@@ -82,11 +84,12 @@ class MainWindow(QMainWindow):
     Action('Update &Add-on list',            self, [Command.UPDATE],          systemMenu)
     if 'develop' in self.comm.backend.configuration:
       systemMenu.addSeparator()
-      Action('&Verify database',               self, [Command.VERIFY_DB],       systemMenu, shortcut='Ctrl+?')
+      Action('&Verify database',             self, [Command.VERIFY_DB],       systemMenu, shortcut='Ctrl+?')
 
     helpMenu = menu.addMenu('&Help')
     Action('&Website',                       self, [Command.WEBSITE],         helpMenu)
     Action('Shortcuts',                      self, [Command.SHORTCUTS],       helpMenu)
+    Action('About',                          self, [Command.ABOUT],           helpMenu)
     systemMenu.addSeparator()
     Action('&Configuration',                 self, [Command.CONFIG],          helpMenu, shortcut='Ctrl+0')
     # Action('&Dataverse Configuration',       self, [Command.DATAVERSE_CONFIG],helpMenu, shortcut='F10')
@@ -235,6 +238,8 @@ class MainWindow(QMainWindow):
       showMessage(self, 'Report of database verification', reportText, style='QLabel {min-width: 800px}')
     elif command[0] is Command.SHORTCUTS:
       showMessage(self, 'Keyboard shortcuts', shortcuts)
+    elif command[0] is Command.ABOUT:
+      showMessage(self, 'About', f'{AboutMessage}Environment: {sys.prefix}\n', '')
     elif command[0] is Command.RESTART:
       restart()
     else:
@@ -297,6 +302,7 @@ class Command(Enum):
   VERIFY_DB = 16
   SHORTCUTS = 17
   RESTART   = 18
+  ABOUT     = 19
 
 
 def startMain(projectGroup:str='') -> None:
