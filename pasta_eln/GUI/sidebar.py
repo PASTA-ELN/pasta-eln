@@ -106,7 +106,7 @@ class Sidebar(QWidget):
           listW.hide()
         docTypes = db.dataHierarchy('', '')
         for idx, doctype in enumerate(docTypes):
-          if doctype[0]!='x':
+          if doctype[0]!='x' and '/' not in doctype:
             icon = self.comm.backend.db.dataHierarchy(doctype,'icon')[0]
             icon = 'fa5s.asterisk' if icon=='' else icon
             btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projID], None,db.dataHierarchy(doctype,'title')[0])

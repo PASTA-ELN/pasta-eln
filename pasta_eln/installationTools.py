@@ -232,11 +232,11 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   outputString(outputFormat,'info',backend.output('workflow'))
   if callbackPercent is not None:
     callbackPercent(20)
-
   logging.info('Finished workflow creation')
 
   ### TEST SAMPLES
   outputString(outputFormat,'h2','TEST SAMPLES')
+  backend.changeHierarchy(projID1)
   #TODO: qrCodes correct??
   backend.addData('sample',    {'name': 'Example sample', '.chemistry': 'A2B2C3', 'qrCodes': '13214124 99698708', 'comment':'this sample has multiple groups of metadata',
                                 'geometry.height':4, 'geometry.width':2, 'weight.initial':6})

@@ -46,6 +46,12 @@ class Table(QWidget):
     self.headerW.hide()
     self.headline = Label('','h1', headerL)
     self.showState= Label('', 'h3', headerL)
+    self.subDocTypeL= Label('      subType:', 'h3', headerL)
+    self.subDocTypeL.hide()
+    self.subDocType=QComboBox(self)
+    self.subDocType.currentTextChanged.connect(lambda dt: self.change(dt, self.projID))
+    self.subDocType.hide()
+    headerL.addWidget(self.subDocType)
     headerL.addStretch(1)
     self.addBtn = TextButton('Add',  self, [Command.ADD_ITEM],   headerL)
 
@@ -109,6 +115,21 @@ class Table(QWidget):
       item_1 = self.filterL.itemAt(i)
       if item_1 is not None:
         item_1.widget().setParent(None)
+    allDocTypes:list[str] = []
+    if (docType!=self.docType or projID!=self.projID) and '/' not in docType:
+      # get list of all subDocTypes
+      allDocTypes = self.comm.backend.db.dataHierarchy('', '')
+      allDocTypes = [i for i in allDocTypes if i.startswith(docType)]
+      if len(allDocTypes)==1:
+        self.subDocTypeL.hide()
+        self.subDocType.hide()
+      elif len(allDocTypes)>1 and docType:
+        self.subDocTypeL.show()
+        self.subDocType.show()
+        alreadyInside = {self.subDocType.itemText(i) for i in range(self.subDocType.count())}
+        if alreadyInside != set(allDocTypes):
+          self.subDocType.clear()
+          self.subDocType.addItems(allDocTypes)
     if docType!='':
       self.docType = docType
       self.projID  = projID
