@@ -1,5 +1,5 @@
 """extract data from vendor
-- Markdown .md for procedures
+- Log  .log for procedures
 For tutorials, see extractor_csv.py and extractor_png.py
 """
 
@@ -15,4 +15,4 @@ def use(filePath, style={'main':''}, saveFileName=None):
     dict: containing image, metaVendor, metaUser, recipe
   """
   with open(filePath, encoding='utf-8') as fIn:
-    return {'content':fIn.read(), 'style': {'main':'workflow/procedure/markdown'}, 'metaVendor':{}, 'metaUser':{}}
+    return {'content':fIn.read(), 'style': {'main':'workflow/worklog'}, 'metaVendor':{}, 'metaUser':{}}

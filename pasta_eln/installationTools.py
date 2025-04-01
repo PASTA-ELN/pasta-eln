@@ -205,22 +205,35 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   logging.info('Finished project planning')
 
   ### TEST PROCEDURES
-  outputString(outputFormat,'h2','TEST PROCEDURES')
+  outputString(outputFormat,'h2','TEST WORKFLOWS')
   sopDir = backend.basePath/'StandardOperatingProcedures'
   os.makedirs(sopDir, exist_ok=True)
   with open(sopDir/'Example_SOP.md','w', encoding='utf-8') as fOut:
     fOut.write('# Put sample in instrument\n# Do something\nDo not forget to\n- not do anything wrong\n- **USE BOLD LETTERS**\n')
   if callbackPercent is not None:
     callbackPercent(13)
-  backend.addData('procedure', {'name': 'StandardOperatingProcedures/Example_SOP.md', 'tags':['v1']})
+  backend.addData('workflow/procedure', {'name': 'StandardOperatingProcedures/Example_SOP.md', 'tags':['v1']})
   if callbackPercent is not None:
     callbackPercent(14)
-  outputString(outputFormat,'info',backend.output('procedure'))
-  df = backend.db.getView('viewDocType/procedure')
+  outputString(outputFormat,'info',backend.output('workflow'))
+  df = backend.db.getView('viewDocType/workflow/procedure')
   procedureID = df[df['name']=='Example_SOP.md']['id'].values[0]
   if callbackPercent is not None:
     callbackPercent(15)
-  logging.info('Finished procedures creating')
+  dataDirName2 = backend.basePath/backend.cwd
+  shutil.copy(Path(__file__).parent/'Resources'/'ExampleWorkflows'/'procedure.md', dataDirName2)
+  shutil.copy(Path(__file__).parent/'Resources'/'ExampleWorkflows'/'worklog.log',  dataDirName2)
+  shutil.copy(Path(__file__).parent/'Resources'/'ExampleWorkflows'/'workplan.py',  dataDirName2)
+  if callbackPercent is not None:
+    callbackPercent(19)
+  logging.info('Finished copy files')
+  backend.scanProject(None, projID1)
+  logging.info('Finished scan tree')
+  outputString(outputFormat,'info',backend.output('workflow'))
+  if callbackPercent is not None:
+    callbackPercent(20)
+
+  logging.info('Finished workflow creation')
 
   ### TEST SAMPLES
   outputString(outputFormat,'h2','TEST SAMPLES')
@@ -270,6 +283,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   backend.changeHierarchy(semStepID)
   if callbackPercent is not None:
     callbackPercent(21)
+
   backend.addData('measurement', {
     'name'   :'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
     'comment':'- Remote image from wikipedia. Used for testing and reference\n- This item links to a procedure that was used for its creation.'

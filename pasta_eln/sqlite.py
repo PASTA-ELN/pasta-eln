@@ -697,7 +697,7 @@ class SqlLiteDB:
     if thePath.endswith('All'):
       thePath = thePath.removesuffix('All')
       allFlag = True
-    viewType, docType = thePath.split('/')
+    viewType, docType = thePath.split('/', 1)
     if viewType=='viewDocType':
       viewColumns = self.dataHierarchy(docType, 'view')
       viewColumns = viewColumns+['id'] if viewColumns else ['name','tags','comment','id']

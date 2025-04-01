@@ -5,9 +5,12 @@ defaultDocTypes: list[list[str]] = [
   #docType,       PURL, title,          icon,                   shortcut, view
   ['x0',          '',  'Projects',     '',                     'space', 'name,tags,.status,.objective,comment'],
   ['x1',          '',  'Folders',      '',                      '',     ''],
-  ['measurement', '',  'Measurements', 'fa5s.thermometer-half', 'm',    'name,tags,comment,type,image,.sample,.procedure'],
+  ['measurement', '',  'Measurements', 'fa5s.thermometer-half', 'm',    'name,tags,comment,type,image,.sample,.workflow/procedure'],
   ['sample',      '',  'Samples',      'fa5s.vial',             's',    'name,tags,.chemistry,comment,qrCodes'],
-  ['procedure',   '',  'Procedures',   'fa5s.list-ol',          'p',    'name,tags,comment,content'],
+  ['workflow',   '',   'Workflows',    'fa5s.list-ol',          'w',    'name,tags,comment'],
+  ['workflow/procedure',   '',   'Procedure',    'fa5s.list-ol',          'w',    'name,tags,comment,content'],
+  ['workflow/workplan' ,   '',   'Work plan',    'fa5s.list-ol',          'w',    'name,tags,comment,content'],
+  ['workflow/worklog'  ,   '',   'Work log',     'fa5s.list-ol',          'w',    'name,tags,comment,content'],
   ['instrument',  '',  'Instruments',  'ri.scales-2-line',      'i',    'name,tags,comment,.vendor']
 ]
 
@@ -25,7 +28,7 @@ defaultSchema: list[list[Union[str,int]]] = [
   ['measurement',         '', 1,   'tags',      '',   '',        ''],
   ['measurement',         '', 2,   'comment',   '',   '',        ''],
   ['measurement',         '', 3,   'sample',    '',   '',        'sample'],
-  ['measurement',         '', 4,   'procedure', '',   '',        'procedure'],
+  ['measurement',         '', 4,   'procedure', '',   '',        'workflow/procedure'],
   ['sample',              '', 0,   'name',      '',   'T',       ''],
   ['sample',              '', 1,   'tags',      '',   '',        ''],
   ['sample',              '', 2,   'chemistry', '',   '',        ''],
@@ -34,10 +37,10 @@ defaultSchema: list[list[Union[str,int]]] = [
   ['sample',      'geometry', 0,   'height',    'mm', '',        ''],
   ['sample',      'geometry', 1,   'width',     'mm', '',        ''],
   ['sample',      'geometry', 2,   'length',    'mm', '',        ''],
-  ['procedure',           '', 0,   'name',      '',   'T',       ''],
-  ['procedure',           '', 1,   'tags',      '',   '',        ''],
-  ['procedure',           '', 2,   'comment',   '',   '',        ''],
-  ['procedure',           '', 3,   'content',   '',   '',        ''],
+  ['workflow',           '', 0,   'name',      '',   'T',       ''],
+  ['workflow',           '', 1,   'tags',      '',   '',        ''],
+  ['workflow',           '', 2,   'comment',   '',   '',        ''],
+  ['workflow',           '', 3,   'content',   '',   '',        ''],
   ['instrument',          '', 0,   'name',      '',   'T',       ''],
   ['instrument',          '', 1,   'tags',      '',   '',        ''],
   ['instrument',          '', 2,   'comment',   '',   '',        ''],
@@ -155,7 +158,7 @@ shortcuts = """
 
 **Ctrl+S**: List samples
 
-**Ctrl+P**: List procedures
+**Ctrl+W**: List workflows
 
 **Ctrl+I**: List instruments
 
