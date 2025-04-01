@@ -3,14 +3,14 @@
 {{}}
 02-21 11:44:58|INFO:Save step file-name:  metadata:
 {}
-02-21 11:44:58|INFO:End step 
+02-21 11:44:58|INFO:End step
 02-21 11:44:58|INFO:Start step sample:{AM_NA_05}  procedure-name:{light microscopy}  sha256:{d9392406da5b3a43ca425f91c7d1f4c5723d748be401239d0e373ccf134086cb}  parameters:
 {{}}
 02-21 11:45:01|INFO:Save step file-name:  metadata:
 {
   "magnification": "5"
 }
-02-21 11:45:01|INFO:End step 
+02-21 11:45:01|INFO:End step
 02-21 11:45:01|INFO:Start step sample:{AM_NA_05}  procedure-name:{tensile test}  sha256:{a0c63a560f707505c2e4ae1644cbd04d70911be032cffdb44c18499e906ad2f2}  parameters:
 {{}}
 02-21 11:45:08|INFO:Save step file-name:/home/steffen/FZJ/Funding/NFDI4Mat/common_workflow_description/LongitundinalTensileOverall.xlsx  metadata:
@@ -18,14 +18,14 @@
   "width": "1",
   "thickness": "1"
 }
-02-21 11:45:08|INFO:End step 
+02-21 11:45:08|INFO:End step
 02-21 11:45:08|INFO:Start step sample:{AM_NA_05}  procedure-name:{light microscopy}  sha256:{d9392406da5b3a43ca425f91c7d1f4c5723d748be401239d0e373ccf134086cb}  parameters:
 {{}}
 02-21 11:45:13|INFO:Save step file-name:  metadata:
 {
   "magnification": "5"
 }
-02-21 11:45:13|INFO:End step 
+02-21 11:45:13|INFO:End step
 02-21 11:45:13|INFO:Start step sample:{AM_NA_05}  procedure-name:{sem}  sha256:{0f4d34da9d66db801253bbed1c6f30678f1f0b64e5a6b356d4c8adc3c096269b}  parameters:
 {{
   "voltage": "30"
@@ -35,7 +35,7 @@
   "voltage": "20",
   "aperture": "3"
 }
-02-21 11:45:23|INFO:End step 
+02-21 11:45:23|INFO:End step
 02-21 11:45:23|INFO:Start step sample:{AM_NA_05}  procedure-name:{sem}  sha256:{0f4d34da9d66db801253bbed1c6f30678f1f0b64e5a6b356d4c8adc3c096269b}  parameters:
 {{
   "voltage": "30"
@@ -45,7 +45,7 @@
   "voltage": "20",
   "aperture": "3"
 }
-02-21 11:45:24|INFO:End step 
+02-21 11:45:24|INFO:End step
 02-21 11:45:24|INFO:Assigning a channel with the label y to the io key step1__y
 02-21 11:45:24|INFO:Assigning a channel with the label y to the io key step2__y
 02-21 11:45:24|INFO:Assigning a channel with the label y to the io key step4__y
@@ -152,14 +152,14 @@
 {{}}
 02-21 12:13:22|INFO:Save step file-name:  metadata:
 {}
-02-21 12:13:22|INFO:End step 
+02-21 12:13:22|INFO:End step
 02-21 12:13:22|INFO:Start step sample:{AM_NA_05}  procedure-name:{light microscopy}  sha256:{d9392406da5b3a43ca425f91c7d1f4c5723d748be401239d0e373ccf134086cb}  parameters:
 {{}}
 02-21 12:13:24|INFO:Save step file-name:  metadata:
 {
   "magnification": "5"
 }
-02-21 12:13:24|INFO:End step 
+02-21 12:13:24|INFO:End step
 02-21 12:13:24|INFO:Start step sample:{AM_NA_05}  procedure-name:{tensile test}  sha256:{a0c63a560f707505c2e4ae1644cbd04d70911be032cffdb44c18499e906ad2f2}  parameters:
 {{}}
 02-21 12:13:31|INFO:Save step file-name:/home/steffen/FZJ/Funding/NFDI4Mat/common_workflow_description/LongitundinalTensileOverall.xlsx  metadata:
@@ -167,14 +167,14 @@
   "width": "1",
   "thickness": "1"
 }
-02-21 12:13:31|INFO:End step 
+02-21 12:13:31|INFO:End step
 02-21 12:13:31|INFO:Start step sample:{AM_NA_05}  procedure-name:{light microscopy}  sha256:{d9392406da5b3a43ca425f91c7d1f4c5723d748be401239d0e373ccf134086cb}  parameters:
 {{}}
 02-21 12:13:32|INFO:Save step file-name:  metadata:
 {
   "magnification": "5"
 }
-02-21 12:13:32|INFO:End step 
+02-21 12:13:32|INFO:End step
 02-21 12:13:32|INFO:Start step sample:{AM_NA_05}  procedure-name:{sem}  sha256:{0f4d34da9d66db801253bbed1c6f30678f1f0b64e5a6b356d4c8adc3c096269b}  parameters:
 {{
   "voltage": "30"
@@ -184,7 +184,7 @@
   "voltage": "20",
   "aperture": "3"
 }
-02-21 12:13:34|INFO:End step 
+02-21 12:13:34|INFO:End step
 02-21 12:13:34|INFO:Start step sample:{AM_NA_05}  procedure-name:{sem}  sha256:{0f4d34da9d66db801253bbed1c6f30678f1f0b64e5a6b356d4c8adc3c096269b}  parameters:
 {{
   "voltage": "30"
@@ -194,20 +194,20 @@
   "voltage": "20",
   "aperture": "3"
 }
-02-21 12:13:35|INFO:End step 
+02-21 12:13:35|INFO:End step
 02-21 16:06:38|INFO:Start workflow
 02-21 16:06:38|INFO:Start step sample:{AM_NA_05}  procedure-name:{metallography}  sha256:{aa3df28fb706568036a85375e62ad76149801b141eb07d629422d511fe901735}  parameters:
 {{}}
 02-21 16:06:40|INFO:Save step file-name:  metadata:
 {}
-02-21 16:06:40|INFO:End step 
+02-21 16:06:40|INFO:End step
 02-21 16:06:40|INFO:Start step sample:{AM_NA_05}  procedure-name:{light microscopy}  sha256:{d9392406da5b3a43ca425f91c7d1f4c5723d748be401239d0e373ccf134086cb}  parameters:
 {{}}
 02-21 16:06:42|INFO:Save step file-name:  metadata:
 {
   "magnification": "5"
 }
-02-21 16:06:42|INFO:End step 
+02-21 16:06:42|INFO:End step
 02-21 16:06:42|INFO:Start step sample:{AM_NA_05}  procedure-name:{tensile test}  sha256:{a0c63a560f707505c2e4ae1644cbd04d70911be032cffdb44c18499e906ad2f2}  parameters:
 {{}}
 02-21 16:06:49|INFO:Save step file-name:/home/steffen/FZJ/Funding/NFDI4Mat/common_workflow_description/LongitundinalTensileOverall.xlsx  metadata:
@@ -215,14 +215,14 @@
   "width": "1",
   "thickness": "1"
 }
-02-21 16:06:49|INFO:End step 
+02-21 16:06:49|INFO:End step
 02-21 16:06:49|INFO:Start step sample:{AM_NA_05}  procedure-name:{light microscopy}  sha256:{d9392406da5b3a43ca425f91c7d1f4c5723d748be401239d0e373ccf134086cb}  parameters:
 {{}}
 02-21 16:06:50|INFO:Save step file-name:  metadata:
 {
   "magnification": "5"
 }
-02-21 16:06:50|INFO:End step 
+02-21 16:06:50|INFO:End step
 02-21 16:06:51|INFO:Start step sample:{AM_NA_05}  procedure-name:{sem}  sha256:{0f4d34da9d66db801253bbed1c6f30678f1f0b64e5a6b356d4c8adc3c096269b}  parameters:
 {{
   "voltage": "30"
@@ -232,7 +232,7 @@
   "voltage": "20",
   "aperture": "3"
 }
-02-21 16:06:52|INFO:End step 
+02-21 16:06:52|INFO:End step
 02-21 16:06:52|INFO:Start step sample:{AM_NA_05}  procedure-name:{sem}  sha256:{0f4d34da9d66db801253bbed1c6f30678f1f0b64e5a6b356d4c8adc3c096269b}  parameters:
 {{
   "voltage": "30"
@@ -242,4 +242,4 @@
   "voltage": "20",
   "aperture": "3"
 }
-02-21 16:06:52|INFO:End step 
+02-21 16:06:52|INFO:End step
