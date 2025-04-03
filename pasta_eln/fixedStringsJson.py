@@ -3,16 +3,17 @@ from typing import Any, Union
 
 defaultDocTypes: list[list[str]] = [
   #docType,       PURL, title,          icon,                   shortcut, view
-  ['x0',          '',  'Projects',     '',                     'space', 'name,tags,.status,.objective,comment'],
-  ['x1',          '',  'Folders',      '',                      '',     ''],
-  ['measurement', '',  'Measurements', 'fa5s.thermometer-half', 'm',    'name,tags,comment,type,image,.sample,.workflow/procedure'],
-  ['sample',      '',  'Samples',      'fa5s.vial',             's',    'name,tags,.chemistry,comment,qrCodes'],
-  ['workflow',   '',   'Workflows',    'fa5s.list-ol',          'w',    'name,tags,comment'],
-  ['workflow/procedure',   '',   'Procedure',    'fa5s.list-ol',          'w',    'name,tags,comment,content'],
-  ['workflow/workplan' ,   '',   'Work plan',    'fa5s.list-ol',          'w',    'name,tags,comment,content'],
-  ['workflow/worklog'  ,   '',   'Work log',     'fa5s.list-ol',          'w',    'name,tags,comment,content'],
-  ['instrument',  '',  'Instruments',  'ri.scales-2-line',      'i',    'name,tags,comment,.vendor']
+  ['x0',                 'http://purl.obolibrary.org/obo/NCIT_C47885',  'Projects',     '',                     'space', 'name,tags,.status,.objective,comment'],
+  ['x1',                 'http://purl.obolibrary.org/obo/NCIT_C101129', 'Folders',      '',                      '',     ''],
+  ['measurement',        'http://purl.obolibrary.org/obo/NCIT_C42790',  'Measurements', 'fa5s.thermometer-half', 'm',    'name,tags,comment,type,image,.sample,.workflow/procedure'],
+  ['sample',             'http://purl.obolibrary.org/obo/NCIT_C19157',  'Samples',      'fa5s.vial',             's',    'name,tags,.chemistry,comment,qrCodes'],
+  ['workflow',           'http://purl.obolibrary.org/obo/NCIT_C42753',  'Workflows',    'fa5s.list-ol',          'w',    'name,tags,comment'],
+  ['workflow/procedure', 'https://schema.org/procedure',                'Procedure',    'fa5s.list-ol',          'w',    'name,tags,comment,content'],
+  ['workflow/workplan' , 'http://purl.obolibrary.org/obo/PROCO_0000093','Work plan',    'fa5s.list-ol',          'w',    'name,tags,comment,content'],
+  ['workflow/worklog'  , '',                                            'Work log',     'fa5s.list-ol',          'w',    'name,tags,comment,content'],
+  ['instrument',         'http://purl.obolibrary.org/obo/NCIT_C16742',  'Instruments',  'ri.scales-2-line',      'i',    'name,tags,comment,.vendor']
 ]
+
 
 defaultSchema: list[list[Union[str,int]]] = [
   #docType,            group,index,key,        unit, mandatory, list

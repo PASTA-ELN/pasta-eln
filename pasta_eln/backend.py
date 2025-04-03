@@ -33,6 +33,7 @@ class Backend(CLI_Mixin):
     Args:
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
     """
+    print('Update from version 3.17->3.18: please update your procedures via the tools')
     #initialize basic values
     self.configFileName = Path.home() / CONF_FILE_NAME
     self.configuration: dict[str, Any] = {}
@@ -90,8 +91,8 @@ class Backend(CLI_Mixin):
       for k,v in items.items():
         if k not in self.configuration['GUI']:
           self.configuration['GUI'][k] = v[1]
-    if self.configuration['version']!=3:
-      print('**Info: configuration file does not exist or version is < 3')
+    if self.configuration['version'] != 3:
+      print('**Info: configuration file does not exist or version is != 3')
       return
     defaultProjectGroup = defaultProjectGroup or self.configuration['defaultProjectGroup']
     if defaultProjectGroup not in self.configuration['projectGroups']:

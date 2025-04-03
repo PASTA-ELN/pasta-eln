@@ -39,28 +39,31 @@ def createContributors() -> None:
   """
   curl -L -H "Accept: application/vnd.github+json"  -H "X-GitHub-Api-Version: 2022-11-28"   https://api.github.com/repos/PASTA-ELN/pasta-eln/contributors
   """
-  headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
-  headers['Content-Type'] = 'application/json'
-  resp = requests.get('https://api.github.com/repos/PASTA-ELN/pasta-eln/contributors', headers=headers, timeout=10)
-  if not resp.ok:
-    print('**ERROR: get not successful',resp.reason)
-    return
-  with open('CONTRIBUTORS.md', 'w', encoding='utf-8') as fOut:
-    fOut.write('# Contributors\n## Code contributors\nThe following people have contributed code to this project:\n')
-    fOut.write('<table border="2"><tr>\n')
-    for idx, user in enumerate(json.loads(resp.text)):
-      userName = user['login']
-      link     = user['html_url']
-      avatar   = user['avatar_url']
-      fOut.write(f'<td style="text-align: center"><a href="{link}"><img src="{avatar}" /><br>{userName}</a></td>')
-      if idx%3==2:
-        fOut.write('</tr>\n')
-    fOut.write('<td></td></tr>\n</table>')
-    fOut.write('\n\n## Support contributors\n The following people contributed in the discussions:\n')
-    fOut.write('- Hanna Tsybenko\n')
-    fOut.write('- Ruth Schwaiger\n')
-    fOut.write('\n\n## Software projects\nMost of the file-layout and the integration of webservices follows the example of datalad and datalad-gooey')
-    fOut.write('https://github.com/datalad. We thank those developers for their work and contribution to free software.\n')
+  try:
+    headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
+    headers['Content-Type'] = 'application/json'
+    resp = requests.get('https://api.github.com/repos/PASTA-ELN/pasta-eln/contributors', headers=headers, timeout=10)
+    if not resp.ok:
+      print('**ERROR: get not successful',resp.reason)
+      return
+    with open('CONTRIBUTORS.md', 'w', encoding='utf-8') as fOut:
+      fOut.write('# Contributors\n## Code contributors\nThe following people have contributed code to this project:\n')
+      fOut.write('<table border="2"><tr>\n')
+      for idx, user in enumerate(json.loads(resp.text)):
+        userName = user['login']
+        link     = user['html_url']
+        avatar   = user['avatar_url']
+        fOut.write(f'<td style="text-align: center"><a href="{link}"><img src="{avatar}" /><br>{userName}</a></td>')
+        if idx%3==2:
+          fOut.write('</tr>\n')
+      fOut.write('<td></td></tr>\n</table>')
+      fOut.write('\n\n## Support contributors\n The following people contributed in the discussions:\n')
+      fOut.write('- Hanna Tsybenko\n')
+      fOut.write('- Ruth Schwaiger\n')
+      fOut.write('\n\n## Software projects\nMost of the file-layout and the integration of webservices follows the example of datalad and datalad-gooey')
+      fOut.write('https://github.com/datalad. We thank those developers for their work and contribution to free software.\n')
+  except:
+    print('**Warning: could not create list of contributors; perhaps no internet connection. Keep old.')
   return
 
 
