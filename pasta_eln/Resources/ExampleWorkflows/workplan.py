@@ -1,11 +1,13 @@
+""" Example workflow for the Sandia Fracture Challenge 3 """
+# pylint: skip-file
 # head of workflow: always the same
 from urllib.parse import urlparse
 from common_workflow_description.common_workflow_description import Sample, Storage, step
 
 try:
-    from pyiron_workflow import Workflow
+  from pyiron_workflow import Workflow
 except ImportError:
-    from common_workflow_description.common_workflow_description import Workflow
+  from common_workflow_description.common_workflow_description import Workflow
 
 from analysis_steps import calc_YoungsModulus, plot_curves
 

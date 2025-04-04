@@ -75,7 +75,7 @@ class TerminologyLookupService:
         results.append(result)
     # Log any errors
     if errors:
-      logging.error("Session request errors: %s", errors)
+      logging.error('Session request errors: %s', errors)
     return results
 
 

@@ -61,10 +61,10 @@ class Editor(QDialog):
     TextButton('Cancel', self, [Command.Cancel],   buttonLineL, 'Discard changes')
     ### Data
     db = self.comm.backend.db
-    df0 = pd.read_sql_query("SELECT docType, PURL, title FROM docTypes", db.connection).fillna('')
+    df0 = pd.read_sql_query('SELECT docType, PURL, title FROM docTypes', db.connection).fillna('')
     df0['defType'] = 'class'
     df0 = df0.rename({'docType':'key', 'title':'long'}, axis=1)
-    df1 = pd.read_sql_query("SELECT * FROM definitions", db.connection).fillna('')
+    df1 = pd.read_sql_query('SELECT * FROM definitions', db.connection).fillna('')
     df1['defType'] = 'attribute'
     self.data = pd.concat([df0,df1])[['key','long','PURL','defType']]
     self.showDataframe()

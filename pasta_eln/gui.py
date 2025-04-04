@@ -20,9 +20,9 @@ from .GUI.config import Configuration
 from .GUI.data_hierarchy.editor import SchemeEditor
 from .GUI.dataverse.config_dialog import ConfigDialog
 from .GUI.dataverse.main_dialog import MainDialog
+from .GUI.definitions.editor import Editor as DefinitionsEditor
 from .GUI.form import Form
 from .GUI.palette import Palette
-from .GUI.definitions.editor import Editor as DefinitionsEditor
 from .GUI.sidebar import Sidebar
 from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout

@@ -1,6 +1,6 @@
 # Tensile testing with Doli
 
-- Setup controll box at instrument
+- Setup control box at instrument
   - General information
   - buttons F1..F3 correspond to three symbols above
   - PC-mode: use for control by PC
