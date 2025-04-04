@@ -17,7 +17,8 @@
       ],
       "id_key": "id"
     },
-    "skip_description": "Topics referred to by the same term"
+    "skip_description": "Topics referred to by the same term",
+    "icon_name": "wikipedia.png"
   },
   {
     "name": "wikidata",
@@ -41,7 +42,8 @@
         "value"
       ],
       "id_key": "concepturi"
-    }
+    },
+    "icon_name": "wikidata.png"
   },
   {
     "name": "ontology_lookup_service",
@@ -59,7 +61,8 @@
         "description"
       ],
       "id_key": "iri"
-    }
+    },
+    "icon_name": "ols.png"
   },
   {
     "name": "tib_terminology_service",
@@ -111,6 +114,7 @@
       ],
       "id_key": "iri",
       "ontology_name_key": "ontology_name"
-    }
+    },
+    "icon_name": "tib.png"
   }
 ]

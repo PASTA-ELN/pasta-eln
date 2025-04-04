@@ -70,14 +70,9 @@ class LookupDelegate(QStyledItemDelegate):
 
     Returns (bool): True/False
     """
-    indexName = index.model().index(index.row(), 0)
-    if indexName.data() and is_click_within_bounds(event, option):
-      for idx in range(7):
-        indexTop    = model.index(index.row()-1, idx)
-        indexBottom = model.index(index.row(),   idx)
-        helper = model.data(indexTop)
-        model.setData(indexTop, model.data(indexBottom))
-        model.setData(indexBottom, helper)
-      model.layoutChanged.emit()
+    keyText = index.model().index(index.row(), 0).data()
+    labelText = index.model().index(index.row(), 1).data()
+    if is_click_within_bounds(event, option) and (keyText or labelText):
+      print(keyText, labelText)
       return True
     return False
