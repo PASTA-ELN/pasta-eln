@@ -68,9 +68,7 @@ class Editor(QDialog):
     df1['defType'] = 'attribute'
     self.data = pd.concat([df0,df1])[['key','long','PURL','defType']]
     self.showDataframe()
-    self.execute([Command.Import])
 
-    self.execute([Command.Export])
 
   def execute(self, command:list[Any]) -> None:
     """

@@ -22,6 +22,7 @@ from .GUI.dataverse.config_dialog import ConfigDialog
 from .GUI.dataverse.main_dialog import MainDialog
 from .GUI.form import Form
 from .GUI.palette import Palette
+from .GUI.definitions.editor import Editor as DefinitionsEditor
 from .GUI.sidebar import Sidebar
 from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
@@ -74,7 +75,9 @@ class MainWindow(QMainWindow):
       Action('Send',                         self, [Command.SYNC_SEND],       syncMenu, shortcut='F5')
       Action('Get',                          self, [Command.SYNC_GET],        syncMenu, shortcut='F4')
       # Action('Smart synce',                  self, [Command.SYNC_SMART],       syncMenu)
-    Action('&Editor to change data type schema', self, [Command.SCHEMA],   systemMenu, shortcut='F8')
+    Action('&Editor to change data type schema', self, [Command.SCHEMA],      systemMenu, shortcut='F8')
+    if 'develop' in self.comm.backend.configuration:
+      Action('&Definitions editor',          self, [Command.DEFINITIONS],     systemMenu)
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
@@ -206,6 +209,9 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.SCHEMA:
       dialogS = SchemeEditor(self.comm)
       dialogS.exec()
+    elif command[0] is Command.DEFINITIONS:
+      dialogD = DefinitionsEditor(self.comm)
+      dialogD.show()
     # elif command[0] is Command.DATAVERSE_CONFIG:
     #   self.dataverseConfig = ConfigDialog()
     #   self.dataverseConfig.show()
@@ -300,6 +306,7 @@ class Command(Enum):
   SHORTCUTS = 17
   RESTART   = 18
   ABOUT     = 19
+  DEFINITIONS= 20
 
 
 def startMain(projectGroup:str='') -> None:

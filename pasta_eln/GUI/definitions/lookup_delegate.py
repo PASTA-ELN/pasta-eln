@@ -14,6 +14,7 @@ from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (QApplication, QPushButton, QStyle, QStyledItemDelegate, QStyleOptionButton,
                                QStyleOptionViewItem, QWidget)
 from ..data_hierarchy.utility_functions import is_click_within_bounds
+from .terminology_lookup_dialog import TerminologyLookupDialog
 
 
 class LookupDelegate(QStyledItemDelegate):
@@ -70,9 +71,21 @@ class LookupDelegate(QStyledItemDelegate):
 
     Returns (bool): True/False
     """
+    # callback function to set the PURL
+    def setPURL(iris: list[str]) -> None:
+      """ Callback function to set the PURL
+      Args:
+        iris (list[str]): List of IRIs
+      """
+      indexPurl = index.model().index(index.row(), 2)
+      index.model().setData(indexPurl, ', '.join(iris))
+      return
+
     keyText = index.model().index(index.row(), 0).data()
     labelText = index.model().index(index.row(), 1).data()
     if is_click_within_bounds(event, option) and (keyText or labelText):
-      print(keyText, labelText)
+      ui = TerminologyLookupDialog(labelText or keyText, setPURL)
+      ui.instance.show()
       return True
     return False
+

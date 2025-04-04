@@ -76,6 +76,6 @@ class LinkOnlineDelegate(QStyledItemDelegate):
     """
     indexName = index.model().index(index.row(), 2)
     if is_click_within_bounds(event, option):
-      webbrowser.open(indexName.data())
+      webbrowser.open(indexName.data().split(', ')[0])
       return True
     return False

@@ -42,7 +42,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     self.errorConsole.hide()
     self.errorConsoleBtn.clicked.connect(lambda: self.errorConsole.setVisible(not self.errorConsole.isVisible()))
     self.buttonBox.accepted.connect(self.set_selected_iris)
-    self.buttonBox.accepted.connect(self.accepted_callback)
+    self.buttonBox.accepted.connect(lambda: self.accepted_callback(self.selected_iris))
     self.terminologySearchPushButton.clicked.connect(self.terminology_search_button_clicked)
     self.terminologyLineEdit.setText(default_lookup_term)
     self.terminology_search_button_clicked()
