@@ -88,4 +88,3 @@ class LookupDelegate(QStyledItemDelegate):
       ui.instance.show()
       return True
     return False
-

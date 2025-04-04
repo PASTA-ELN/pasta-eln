@@ -22,14 +22,14 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
 
   def __init__(self,
                default_lookup_term: str | None = None,
-               accepted_callback: Callable[[], None] = None) -> None:  # type: ignore[assignment]
+               accepted_callback: Callable[[list[str]], None] = None) -> None:  # type: ignore[assignment]
     """
     Initializes the dialog
     Args:
       default_lookup_term (str): Default search term to be used by the terminology lookup service.
       accepted_callback (Callable[[], None]): Accepted button parent callback.
     """
-    self.accepted_callback: Callable[[], None] = accepted_callback
+    self.accepted_callback: Callable[[list[str]], None] = accepted_callback
     # Set up the UI elements
     self.instance = QtWidgets.QDialog()
     super().setupUi(self.instance)
