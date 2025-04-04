@@ -126,9 +126,7 @@ class Editor(QDialog):
     model = self.table.model()
     data = []
     for row in range(model.rowCount()):
-      rowRes = []
-      for column in range(3):
-        rowRes.append(model.index(row, column).data())
+      rowRes = [model.index(row, column).data() for column in range(3)]
       data.append(rowRes)
     df = pd.DataFrame(data)
     df = df.rename({0:'key',1:'description',2:'PURL'}, axis=1)

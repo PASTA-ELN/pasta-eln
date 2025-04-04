@@ -62,7 +62,7 @@ def createContributors() -> None:
       fOut.write('- Ruth Schwaiger\n')
       fOut.write('\n\n## Software projects\nMost of the file-layout and the integration of webservices follows the example of datalad and datalad-gooey')
       fOut.write('https://github.com/datalad. We thank those developers for their work and contribution to free software.\n')
-  except:
+  except Exception:
     print('**Warning: could not create list of contributors; perhaps no internet connection. Keep old.')
   return
 
