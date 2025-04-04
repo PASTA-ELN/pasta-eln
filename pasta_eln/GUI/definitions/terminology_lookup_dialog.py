@@ -9,8 +9,6 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import textwrap
 from asyncio import get_event_loop
-from os import getcwd
-from os.path import dirname, join, realpath
 from typing import Callable
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QPixmap
@@ -122,9 +120,6 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
                                      textwrap.fill(result['information'], width=100, max_lines=2),
                                      result['iri'])
           self.searchProgressBar.setValue((100 - self.searchProgressBar.value()) / 2)
-    if self.terminology_lookup_service.http_client.session_request_errors:
-      self.errorConsole.setText('\n'.join(self.terminology_lookup_service.http_client.session_request_errors))
-      self.errorConsole.setVisible(True)
     self.searchProgressBar.setValue(100)
     return
 

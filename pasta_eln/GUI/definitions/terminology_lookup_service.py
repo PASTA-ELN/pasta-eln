@@ -7,14 +7,16 @@
 #  Filename: terminology_lookup_service.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+import asyncio
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from functools import reduce
 from json import load
 from os import getcwd
 from os.path import dirname, join, realpath
 from typing import Any
+import requests
 from PySide6.QtGui import QPixmap
-from pasta_eln.webclient.http_client import AsyncHttpClient
 
 
 class TerminologyLookupService:
@@ -26,7 +28,6 @@ class TerminologyLookupService:
 
   def __init__(self) -> None:
     self.session_timeout = 10  # Timeout in seconds for the requests send to the lookup services
-    self.http_client = AsyncHttpClient(self.session_timeout)
     current_path = realpath(join(getcwd(), dirname(__file__)))
     self.lookupConfig = join(current_path, 'terminology_lookup_config.json')
 
@@ -38,23 +39,43 @@ class TerminologyLookupService:
       search_term (str): Search term used for the lookup
 
     Returns: List of IRI information for the search term crawled online using the services in the terminology_lookup_config.json
-    In case of error, an empty list is returned and session_request_errors is updated with failures
+    In case of error, an empty list is returned and errors is updated with failures
     """
     if not search_term.strip():
       return []
-    self.http_client.session_request_errors.clear()  # Clear the list of request errors before the lookup
-    results = list[dict[str, Any]]()
+    errors = []
+    results = []
+    # Load the lookup configuration
     with open(self.lookupConfig, encoding='utf-8') as config_file:
-      for lookup_service in load(config_file):
-        lookup_service['request_params'][lookup_service['search_term_key']] = search_term
-        web_result = await self.http_client.get(lookup_service['url'], lookup_service['request_params'])
-        if web_result and (web_result.get('status') == 200 or web_result.get('reason') == 'OK'):
-          if result := self.parse_web_result(search_term, web_result.get('result'), lookup_service):
-            results.append(result)
+      lookup_services = load(config_file)
+
+    # Define a function to perform the HTTP request
+    def fetch_service(service: dict[str, Any]) -> dict[str, str] | None:
+      try:
+        service['request_params'][service['search_term_key']] = search_term
+        response = requests.get(service['url'], params=service['request_params'],
+          timeout=self.session_timeout)
+        if response.status_code == 200:
+          web_result = response.json()
+          return self.parse_web_result(search_term, web_result, service)
         else:
-          logging.error('Error while querying the lookup service: %s, Reason: %s, Status: %s, Error: %s',
-                            lookup_service.get('name'), web_result.get('reason'), web_result.get('status'),
-                            self.http_client.session_request_errors)
+          errors.append(f"Error querying {service['name']}: {response.status_code} {response.reason}")
+      except requests.RequestException as e:
+        errors.append(f"Error querying {service['name']}: {str(e)}")
+      return None
+
+    # Use ThreadPoolExecutor to run requests in parallel
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor() as executor:
+      tasks = [loop.run_in_executor(executor, fetch_service, service) for service in lookup_services]
+      fetched_results = await asyncio.gather(*tasks)
+    # Collect valid results
+    for result in fetched_results:
+      if result:
+        results.append(result)
+    # Log any errors
+    if errors:
+      logging.error("Session request errors: %s", errors)
     return results
 
 
