@@ -7,12 +7,9 @@ import sys
 import tempfile
 import traceback
 from datetime import datetime, timezone
-from os.path import exists, join
 from pathlib import Path
 from typing import Any, Callable, Optional, Union
 from urllib import request
-from PySide6 import QtCore
-from PySide6.QtCore import QFileSystemWatcher
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
 from .miscTools import generic_hash
 from .mixin_cli import CLI_Mixin

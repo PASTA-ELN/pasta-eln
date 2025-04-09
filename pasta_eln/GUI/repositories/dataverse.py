@@ -304,7 +304,7 @@ class DataverseClient(RepositoryClient):
       return f"Error uploading file: {df_file_path} to dataset: {ds_pid} Info: {resp.json()}"
 
 
-  def uploadRepository(self, metadata:dict[str,Any], file_path:str) -> bool:
+  def uploadRepository(self, metadata:dict[str,Any], file_path:str) -> tuple[bool, str]:
     """
     Uploads a file and metadata to become a dataset.
 
@@ -313,7 +313,7 @@ class DataverseClient(RepositoryClient):
       file_path (str): The absolute path to the file to be uploaded.
 
     Returns:
-      bool: success of function
+      tuple: success of function, message
     """
     res= self.createDataset(metadata)
     if isinstance(res, str):

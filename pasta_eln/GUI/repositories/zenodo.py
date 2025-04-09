@@ -117,7 +117,7 @@ class ZenodoClient(RepositoryClient):
     resp = requests.post(server_url, json=metadata, headers=self.headers1)
     if resp.status_code != 201:
       print("**ERROR** creating deposition/dataset:", resp.json(), resp.status_code, resp.text)
-      return False
+      return False, 'Error creating the dataset'
     deposition = resp.json()
     persistentID = deposition["id"]
     # print(f"Deposition created: {persistentID}")
@@ -131,7 +131,7 @@ class ZenodoClient(RepositoryClient):
     resp = requests.post(file_upload_url, files=files, headers=self.headers2)
     if resp.status_code != 201:
       print("**ERROR** uploading file:", resp.json())
-      return False
+      return False, 'Error uploading the file'
     # print("File uploaded successfully:")
 
     # Step 3: Publish the deposition
