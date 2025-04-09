@@ -64,17 +64,19 @@ class ZenodoClient(RepositoryClient):
     self.headers2 = {"Authorization": f"Bearer {api_token}"}
 
   def checkServer(self) -> tuple[bool, str]:
-    """
+    """ VOID TEST SINCE ZENODO DOES NOT HAVE A SERVER TEST
+
     Checks if the data-verse server is reachable
 
     Returns (tuple(bool, Any)):
       A tuple of (success, a message) is returned
     """
-    resp = requests.get(f"{self.server_url}/api/info/version", headers=self.headers1)
-    success = (resp.status_code == 200 and resp.json().get('data').get('version') is not None)
-    return (success, 'Dataverse is reachable') \
-      if success \
-      else (success, f"Cannot reach server: {self.server_url}, Status: {resp.status_code}, json: {resp.json()}")
+    return True, 'VOID TEST'
+    # resp = requests.get(f"{self.server_url}/api/info/version", headers=self.headers1)
+    # success = (resp.status_code == 200 and resp.json().get('data').get('version') is not None)
+    # return (success, 'Dataverse is reachable') \
+    #   if success \
+    #   else (success, f"Cannot reach server: {self.server_url}, Status: {resp.status_code}, json: {resp.json()}")
 
 
   def checkAPIKey(self) -> bool:
@@ -92,12 +94,13 @@ class ZenodoClient(RepositoryClient):
     Returns:
         bool: True if the API token is valid, False otherwise.
     """
-    resp = requests.get(f"{self.server_url}/api/users/token", headers=self.headers1)
+    server_url = f"{self.server_url}/api/deposit/depositions"
+    resp = requests.get(f"{self.server_url}", headers=self.headers1)
     return (bool(resp) and resp.status_code is not None
             and resp.status_code not in [401, 403, 500])
 
 
-  def uploadRepository(self, metadata:dict[str,Any], file_path:str) -> bool:
+  def uploadRepository(self, metadata:dict[str,Any], file_path:str) -> tuple[bool, str]:
     """
     Uploads a file and metadata to become a dataset.
 
@@ -106,34 +109,34 @@ class ZenodoClient(RepositoryClient):
       file_path (str): The absolute path to the file to be uploaded.
 
     Returns:
-      bool: success of function
+      tuple: success of function, message
     """
+    server_url = f"{self.server_url}/api/deposit/depositions"
     # Define the API URLs and headers based on the repository kind
     # Step 1: Create the deposition with metadata
-    resp = requests.post(self.server_url, json=metadata, headers=self.headers1)
+    resp = requests.post(server_url, json=metadata, headers=self.headers1)
     if resp.status_code != 201:
       print("**ERROR** creating deposition/dataset:", resp.json(), resp.status_code, resp.text)
       return False
     deposition = resp.json()
     persistentID = deposition["id"]
-    print(f"Deposition created: {persistentID}")
+    # print(f"Deposition created: {persistentID}")
 
     # Define the API URLs and headers based on the repository kind
     files = {"file": open(file_path, "rb")}
-    file_upload_url = f"{self.server_url}/{persistentID}/files"
-    publish_url = f"{self.server_url}/{persistentID}/actions/publish"
+    file_upload_url = f"{server_url}/{persistentID}/files"
+    publish_url = f"{server_url}/{persistentID}/actions/publish"
 
     # Step 2: Upload a file
     resp = requests.post(file_upload_url, files=files, headers=self.headers2)
     if resp.status_code != 201:
       print("**ERROR** uploading file:", resp.json())
       return False
-    print("File uploaded successfully:")
+    # print("File uploaded successfully:")
 
     # Step 3: Publish the deposition
     resp = requests.post(publish_url, headers=self.headers1)
     if resp.status_code != 202:
       print("**ERROR** publishing:", resp.json())
-      return False
-    print("Published:", resp.json()['doi'], resp.json()['doi_url'])
-    return True
+      return False, 'Error publishing the dataset'
+    return True, f'Published: {resp.json()["doi"]}, {resp.json()["doi_url"]}'

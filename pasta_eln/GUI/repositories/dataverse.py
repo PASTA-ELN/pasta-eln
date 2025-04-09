@@ -315,8 +315,14 @@ class DataverseClient(RepositoryClient):
     Returns:
       bool: success of function
     """
-
-    return False
+    res= self.createDataset(metadata)
+    if isinstance(res, str):
+      return False, 'Error publishing the dataset'
+    doi = f"{res['protocol']}:{res['authority']}/{res['identifier']}"
+    reply = self.uploadFile(doi, file_path, '.eln file', ['file'])
+    if isinstance(reply, str):
+      return False, 'Error publishing the file'
+    return True, f'Published: {doi}, {res['persistentUrl']}'
 
 
   def getDatasetInfo(self, ds_persistent_id: str, version: str = ':latest-published') -> dict[Any, Any] | Any:

@@ -41,7 +41,7 @@ class RepositoryClient:
     return False
 
 
-  def uploadRepository(self, metadata:dict[str,Any], file_path:str) -> bool:
+  def uploadRepository(self, metadata:dict[str,Any], file_path:str) -> tuple[bool, str]:
     """
     Uploads a file and metadata to become a dataset.
 
@@ -50,8 +50,6 @@ class RepositoryClient:
       file_path (str): The absolute path to the file to be uploaded.
 
     Returns:
-      bool: success of function
+      tuple: success of function, message
     """
-    print(metadata)
-    print(file_path)
-    return False
+    return False, f"Mock output of metadata {metadata} and file_path {file_path}"

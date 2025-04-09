@@ -40,41 +40,7 @@ class Backend(CLI_Mixin):
     self.hierStack:list[str] = []
     self.cwd:Optional[Path]  = Path('.')
     self.initialize(defaultProjectGroup)
-    self.fsWatcher = QFileSystemWatcher()
-    self.fsWatcher.addPath(join(Path.home(), CONF_FILE_NAME))
-    if exists(self.configFileName):
-      self.fsWatcher.fileChanged.connect(self.configFileChanged)
 
-  def readPastaConfig(self) -> None:
-    """
-    Read the configuration file and update the internal configuration.
-
-    This method logs the action of reading the configuration file and attempts to load its contents into the internal configuration dictionary.
-    If the configuration file does not exist, it raises a ConfigError to indicate an issue with the installation.
-
-    Raises:
-        ConfigError: If the configuration file does not exist.
-    """
-    if not exists(self.configFileName):
-      raise TypeError('Config file not found, Corrupt installation!')
-    with open(self.configFileName, encoding='utf-8') as confFile:
-      self.configuration = json.load(confFile)
-
-  @QtCore.Slot()                                          # type: ignore[arg-type]
-  def configFileChanged(self, configFilePath: str) -> None:
-    """
-    Handle changes to the configuration file.
-
-    This method is triggered when the configuration file changes. It reads the updated configuration and refreshes the file system watcher to ensure it continues to monitor the correct file path.
-
-    Args:
-        configFilePath (str): The path to the configuration file that has changed.
-    """
-
-    self.readPastaConfig()
-    if exists(configFilePath):
-      self.fsWatcher.removePath(configFilePath)
-      self.fsWatcher.addPath(configFilePath)
 
   def initialize(self, defaultProjectGroup:str='') -> None:
     """
