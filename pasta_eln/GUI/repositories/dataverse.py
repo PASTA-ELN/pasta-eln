@@ -2,28 +2,10 @@
 - Author: Jithu Murugan, Steffen Brinckmann
 """
 # Dataverse: remember to always publish everything before using it!!
-
-# Mandatory Metadata Fields in Dataverse
-# Dataverse Term	Required?	Details
-# title	          Yes	      Title of the dataset
-# author	        Yes	At least one author; each must have authorName
-# datasetContact	Yes	At least one contact; must include datasetContactEmail
-# dsDescription	  Yes	At least one description (dsDescriptionValue)
-# subject	        Yes	At least one subject from a controlled vocabulary
-
-# Optional but Recommended Fields
-# Dataverse Term	Recommended?	Notes
-# keyword	Yes	Improves discoverability
-# publicationDate	No (auto-filled)	Defaults to date of publication
-# language	Yes	Language of the dataset contents
-# license	Yes	Usually selected via UI or API terms of use
-# relatedPublications	Optional	Good for linking articles
-
 import requests, logging
 from datetime import datetime
-from json import dumps, load
-from os import getcwd
-from os.path import basename, dirname, join, realpath
+from json import dumps
+from os.path import basename
 from typing import Any
 from xml.etree.ElementTree import ElementTree, fromstring
 from requests.auth import HTTPBasicAuth

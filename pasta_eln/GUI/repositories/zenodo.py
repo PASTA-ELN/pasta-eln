@@ -1,54 +1,6 @@
 import requests
 from typing import Any
 from .repository import RepositoryClient
-# TODO
-# -test dataverse
-# - structure API and Sandboxes
-# - stucture Metadata: including communities
-# - build GUI
-
-# Zenodo
-# - Go to Zenodo.
-# - Log in or create an account.
-# - Navigate to Applications under your user settings.
-# - Generate a new Personal Access Token with deposit:write and deposit:actions permissions.
-# - Use the sandbox API (https://sandbox.zenodo.org/api/deposit/depositions) for testing.
-# Metadata
-# - title (string)
-# - upload_type (string, e.g. "dataset", "publication", etc.)
-# - description (string)
-# - creators (list of dicts: name, affiliation, orcid)
-# - keywords (list of strings)
-# - publication_date (YYYY-MM-DD)
-# - access_right (e.g. "open", "embargoed", "restricted", "closed")
-# - license (e.g. "CC-BY-4.0")
-# - related_identifiers (list of dicts: identifier, relation, resource_type)
-# More notes
-# - "keywords": ["machine learning", "neuroscience", "data science"]
-# - "communities": [{"identifier": "neuroscience"}]
-
-# Comparison table dataverse - zenodo
-# title	title
-# author	creators
-# datasetContact	Not required (optionally in creators or omitted)
-# dsDescription	description
-# subject	keywords, communities (approx.)
-# keyword	keywords
-# publicationDate	publication_date
-# license (from termsOfUse)	license
-# language	language
-# series	No direct match
-# relatedPublications	related_identifiers
-# productionDate	No direct match
-# depositor (internal use)	Not explicitly captured
-# distributor	No direct match
-# software (if included)	upload_type = software, or related_identifiers
-# notesText	description (as additional info)
-# fileDescription	File-level metadata (manually added in Zenodo)
-# geographicCoverage	No direct match (can go in description or keywords)
-# temporalCoverage	No direct match
-# dataSources	description (or none)
-# methods	description (or none)
 
 class ZenodoClient(RepositoryClient):
   def __init__(self, server_url: str, api_token: str) -> None:

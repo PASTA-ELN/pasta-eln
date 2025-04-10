@@ -5,7 +5,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 import qtawesome as qta
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit,  QVBoxLayout) # pylint: disable=no-name-in-module
+import webbrowser
+from PySide6.QtWidgets import (QComboBox, QDialog, QLabel, QLineEdit,  QVBoxLayout) # pylint: disable=no-name-in-module
 from ...guiCommunicate import Communicate
 from ...guiStyle import Label, TextButton, widgetAndLayout, widgetAndLayoutGrid, showMessage
 from .zenodo import ZenodoClient
@@ -31,7 +32,7 @@ class ConfigurationRepositories(QDialog):
 
     # GUI elements
     mainL = QVBoxLayout(self)
-    Label('Project group editor', 'h1', mainL)
+    Label('Configure the repositories', 'h1', mainL)
     _, center = widgetAndLayout('H', mainL, spacing='l', bottom='l', top='m')
 
     leftSideW, leftSide = widgetAndLayoutGrid(center, spacing='m', right='l')
@@ -66,37 +67,13 @@ class ConfigurationRepositories(QDialog):
     self.dvDataverse = QComboBox()
     rightSide.addWidget(self.dvDataverse, 3, 1)
 
-    #TODO add HELP button
     #final button box
-    buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
-    buttonBox.clicked.connect(self.closeDialog)
-    mainL.addWidget(buttonBox)
-
-
-  def closeDialog(self, btn:TextButton) -> None:
-    """
-    cancel or save entered data
-
-    Args:
-      btn (QButton): save or cancel button
-    """
-    if btn.text().endswith('Cancel'):
-      self.reject()
-      self.callbackFinished(False)
-    elif 'Save' in btn.text():
-      if 'repositories' not in self.configuration:
-        self.configuration['repositories'] = {}
-      if self.checkedZenodo:
-        self.configuration['repositories']['zenodo'] = {'url':self.urlZenodo.text(),
-                                                        'key':self.apiZenodo.text()}
-      if self.checkedDataverse:
-        self.configuration['repositories']['dataverse'] = {'url':self.urlDatavese.text(),
-                                                          'key':self.apiDataverse.text(),
-                                                          'dataverse':self.dvDataverse.currentData()}
-      with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.configuration,indent=2))
-      self.accept()
-    return
+    _, buttonLineL = widgetAndLayout('H', mainL, 'm')
+    TextButton('Help',           self, [Command.HELP],   buttonLineL, 'Help for this dialog')
+    buttonLineL.addStretch(1)
+    saveBtn = TextButton('Save', self, [Command.SAVE],   buttonLineL, 'Save changes')
+    saveBtn.setShortcut('Ctrl+Return')
+    TextButton('Cancel',         self, [Command.CANCEL], buttonLineL, 'Discard changes')
 
 
   def execute(self, command:list[Any]) -> None:
@@ -154,6 +131,24 @@ class ConfigurationRepositories(QDialog):
       else:
         self.changeButtonOnTest(False, self.dataverseButton2)
         showMessage(self, 'Error', 'API key invalid')
+    elif command[0] is Command.CANCEL:
+      self.reject()
+      self.callbackFinished(False)
+    elif command[0] is Command.SAVE:
+      if 'repositories' not in self.configuration:
+        self.configuration['repositories'] = {}
+      if self.checkedZenodo:
+        self.configuration['repositories']['zenodo'] = {'url':self.urlZenodo.text(),
+                                                        'key':self.apiZenodo.text()}
+      if self.checkedDataverse:
+        self.configuration['repositories']['dataverse'] = {'url':self.urlDatavese.text(),
+                                                          'key':self.apiDataverse.text(),
+                                                          'dataverse':self.dvDataverse.currentData()}
+      with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
+        fConf.write(json.dumps(self.configuration,indent=2))
+      self.accept()
+    elif command[0] is Command.HELP:
+      webbrowser.open('https://pasta-eln.github.io/pasta-eln/repositories.html')
     else:
       print('Got some button, without definition', command)
     return
@@ -182,6 +177,9 @@ class ConfigurationRepositories(QDialog):
 
 class Command(Enum):
   """ Commands used in this file """
-  CHECK_ZENODO = 1
-  CHECK_DV1    = 2
+  CHECK_ZENODO= 1
+  CHECK_DV1   = 2
   CHECK_DV2   = 3
+  HELP        = 4
+  SAVE        = 5
+  CANCEL      = 6
