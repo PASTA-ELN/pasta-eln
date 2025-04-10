@@ -70,7 +70,7 @@ class DataverseClient(RepositoryClient):
     Returns (tuple(bool, Any)):
       A tuple of (success, a message) is returned
     """
-    resp = requests.get(f"{self.server_url}/api/info/version", headers=self.headers)
+    resp = requests.get(f"{self.server_url}/api/info/version", headers={'Accept': 'application/json'})
     success = (resp.status_code == 200 and resp.json().get('data').get('version') is not None)
     return (success, 'Dataverse is reachable') \
       if success \

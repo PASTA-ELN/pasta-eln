@@ -200,8 +200,8 @@ class SqlLiteDB:
     doc['tags'] = [i[0] for i in self.cursor.fetchall()]
     self.cursor.execute(f"SELECT qrCode FROM qrCodes WHERE id == '{docID}'")
     doc['qrCodes'] = [i[0] for i in self.cursor.fetchall()]
-    for key in ['image', 'content','shasum','client','qrCodes']:
-      if len(doc[key])==0:
+    for key in ['image', 'content', 'shasum', 'client', 'qrCodes']:
+      if len(doc[key])==0 or doc[key]==['']:
         del doc[key]
     doc['type']= doc['type'].split('/')
     doc['gui'] = [i=='T' for i in doc['gui']]

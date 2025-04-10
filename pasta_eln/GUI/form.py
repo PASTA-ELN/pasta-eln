@@ -80,18 +80,18 @@ class Form(QDialog):
       self.doc['type'] = ['x1']
     if self.doc['type'][0] in self.db.dataHierarchy('', ''):
       rawData = self.db.dataHierarchy(self.doc['type'][0], 'meta')
-      dataHierarchyNode = copy.deepcopy([dict(i) for i in rawData])
+      self.dataHierarchyNode = copy.deepcopy([dict(i) for i in rawData])
     else:
-      dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
-    keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in dataHierarchyNode]
+      self.dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
+    keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in self.dataHierarchyNode]
     keysDocOrg = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k])] if isinstance(self.doc[k], dict) else [f'.{k}']
                for k in self.doc if k not in MAIN_ORDER+['branch','qrCodes','tags']]
     for keyInDocNotHierarchy in {i for row in keysDocOrg for i in row}.difference(keysDataHierarchy):
       group = keyInDocNotHierarchy.split('.')[0]
       key = keyInDocNotHierarchy.split('.')[1]
-      idx = len([1 for i in dataHierarchyNode if i['class']==group])
-      dataHierarchyNode.append({'docType': self.doc['type'][0], 'class':group, 'idx':idx, 'name':key, 'list':''})
-    groups = {i['class'] for i in dataHierarchyNode}.difference({'metaVendor','metaUser'})
+      idx = len([1 for i in self.dataHierarchyNode if i['class']==group])
+      self.dataHierarchyNode.append({'docType': self.doc['type'][0], 'class':group, 'idx':idx, 'name':key, 'list':''})
+    groups = {i['class'] for i in self.dataHierarchyNode}.difference({'metaVendor','metaUser'})
     # create tabs or not: depending on the number of groups
     self.tabW = QTabWidget() #has count=0 if not connected
     if len(groups)>1:
@@ -109,7 +109,7 @@ class Form(QDialog):
         formW, formL = widgetAndLayoutForm(None, 's', top='m')
         self.tabW.addTab(formW, 'Home' if group=='' else group)
       self.formsL.append(formL)
-      for name in [i['name'] for i in dataHierarchyNode if i['class']==group]:
+      for name in [i['name'] for i in self.dataHierarchyNode if i['class']==group]:
         key = f"{group}.{name}"
         defaultValue = self.doc['qrCodes'] if key=='.qrCodes' and 'qrCodes' in self.doc else \
                        self.doc.get(group, {}).get(name, ('','','','')) #tags, name, comment are handled separately
@@ -189,7 +189,7 @@ class Form(QDialog):
                          key, str(defaultValue), self.doc['id'])
         elif (isinstance(defaultValue, tuple) and len(defaultValue)==4 and isinstance(defaultValue[0], str)) or \
               isinstance(defaultValue, str):    #string or tuple
-          dataHierarchyItem = [i for i in dataHierarchyNode if i['class']==group and f"{i['class']}.{i['name']}"==key]
+          dataHierarchyItem = [i for i in self.dataHierarchyNode if i['class']==group and f"{i['class']}.{i['name']}"==key]
           if len(dataHierarchyItem)!=1:
             raise ValueError('more than one dataHierarchyItem')
           label = dataHierarchyItem[0]['name'].capitalize()
@@ -452,11 +452,17 @@ class Form(QDialog):
       for idx, (key, guiType) in enumerate(self.allUserElements):
         elementName = f"key_{idx}"
         valueOld = self.doc.get(key, '')
+        if '.' in key:
+          group, subItem = key.split('.')
+        else:
+          group, subItem = '', key
+        if [i['mandatory'] for i in self.dataHierarchyNode if i['class']==group and i['name']==subItem] == ['T'] and \
+          getattr(self, elementName).text().strip()=='':
+          print(group,key,subItem)
+          showMessage(self, 'Error', f'The created item must have a valid {subItem}')
+          return
         if key=='name':
           self.doc['name'] = getattr(self, elementName).text().strip()
-          if self.doc['name'] == '':
-            showMessage(self, 'Error', 'A created item has to have a valid name')
-            return
           if self.doc['type'][0]=='x0':  #prevent project-directory names that are identical
             others = self.comm.backend.db.getView('viewDocType/x0All')
             if 'id' in self.doc:
