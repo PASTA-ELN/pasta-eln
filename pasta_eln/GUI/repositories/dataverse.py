@@ -17,14 +17,14 @@ class DataverseClient(RepositoryClient):
   Client for communicating with Dataverse Server via REST API
   """
 
-  def __init__(self, server_url: str, api_token: str, identifier:str='') -> None:
+  def __init__(self, server_url: str, api_token: str, identifier:str) -> None:
     """
     Initializes the client.
 
     Args:
         server_url (str): The URL of the server.
         api_token (str): The API token for authentication.
-        identifier (str): sub-dataverse, category
+        identifier (str): sub-dataverse, category; use '' for void
     """
     super().__init__(server_url, api_token)
     self.identifier = identifier
@@ -299,7 +299,7 @@ class DataverseClient(RepositoryClient):
     """
     res= self.createDataset(metadata)
     if isinstance(res, str):
-      return False, 'Error publishing the dataset'
+      return False, f'Error publishing the dataset: {res}'
     doi = f"{res['protocol']}:{res['authority']}/{res['identifier']}"
     reply = self.uploadFile(doi, file_path, '.eln file', ['file'])
     if isinstance(reply, str):
@@ -478,3 +478,29 @@ class DataverseClient(RepositoryClient):
     if resp.status_code == 200:
       return resp.json().get('data').get('message')
     return f"Error deleting dataverse, Id: {self.identifier}, Info: {resp.json()}"
+
+
+  def prepareMetadata(self, metadata:dict[str,Any]) -> dict[str,Any]:
+    """
+    Prepares the metadata for uploading.
+
+    Args:
+        metadata (dict): The metadata to be prepared.
+
+    Returns:
+        dict: The prepared metadata.
+    """
+    author = metadata['author']
+    fields = [{"typeName": "title", "value": metadata['title'], "typeClass": "primitive"},
+              {"typeName": "author", "value": [{"authorName": {"value": f"{author['last']}, {author['first']}"},
+                "authorIdentifier": {"value": author['orcid']},
+                "authorAffiliation": {"value": author['organizations'][0]['organization']}}], "typeClass": "compound"},
+              {"typeName": "datasetContact", "value": [{"datasetContactEmail": {"value": author['email']},
+                "datasetContactName": {"value": f"{author['last']}, {author['first']}"}}], "typeClass": "compound"},
+              {"typeName": "keywords", "value": metadata['keywords'], "typeClass": "primitive"},
+              {"typeName": "publicationDate", "value": datetime.now().strftime("%Y-%m-%d"), "typeClass": "primitive"},
+              {"typeName": "dsDescription", "value": [{"dsDescriptionValue": {"value": metadata['description']}}],
+                "typeClass": "compound"},
+              {"typeName": "subject", "value": [metadata['category']], "typeClass": "controlledVocabulary"}
+            ] + metadata['additional']
+    return {"metadata": {"datasetVersion": {"metadataBlocks": {"citation": {"fields": fields}}}}}

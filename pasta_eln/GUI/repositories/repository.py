@@ -53,3 +53,16 @@ class RepositoryClient:
       tuple: success of function, message
     """
     return False, f"Mock output of metadata {metadata} and file_path {file_path}"
+
+
+  def prepareMetadata(self, metadata:dict[str,Any]) -> dict[str,Any]:
+    """
+    Prepares the metadata for uploading.
+
+    Args:
+        metadata (dict): The metadata to be prepared.
+
+    Returns:
+        dict: The prepared metadata.
+    """
+    return {}

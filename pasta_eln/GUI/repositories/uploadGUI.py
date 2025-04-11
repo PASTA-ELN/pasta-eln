@@ -1,16 +1,17 @@
 """ Upload for Zenodo and Dataverse """
-import json
-import re
+import json, tempfile
 from enum import Enum
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 import qtawesome as qta
-import webbrowser
-from PySide6.QtWidgets import (QComboBox, QDialog, QLabel, QLineEdit,  QVBoxLayout, QCheckBox) # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QDialog, QLabel, QLineEdit,  QVBoxLayout, QCheckBox) # pylint: disable=no-name-in-module
 from ...guiCommunicate import Communicate
 from ...guiStyle import Label, TextButton, widgetAndLayout, widgetAndLayoutGrid, showMessage
 from .zenodo import ZenodoClient
 from .dataverse import DataverseClient
+from ...inputOutput import exportELN
 from ...fixedStringsJson import CONF_FILE_NAME
 
 class UploadGUI(QDialog):
@@ -26,30 +27,41 @@ class UploadGUI(QDialog):
     super().__init__()
     self.comm    = comm
     self.callbackFinished = callbackFinished
-    self.configuration = self.comm.backend.configuration.get('repositories',{})
 
     # GUI elements
     mainL = QVBoxLayout(self)
     Label('Upload to a repository', 'h1', mainL)
     _, center = widgetAndLayout('H', mainL, spacing='l', bottom='l', top='m')
 
-
+    if not self.comm.projectID:
+      return
+    docProject = self.comm.backend.db.getDoc(self.comm.projectID)
+    repositories = self.comm.backend.configuration['repositories']
     leftSideW, leftSide = widgetAndLayoutGrid(center, spacing='m', right='l')
     leftSideW.setStyleSheet("border-right: 2px solid black;")
-    Label('Metadata','h2', rightSide)
-    # leftSide.addWidget(QLabel('URL'), 1, 0)
-    # self.urlZenodo = QLineEdit('https://zenodo.org')
-    # self.urlZenodo.setMinimumWidth(350)
-    # leftSide.addWidget(self.urlZenodo, 1, 1)
-    # leftSide.addWidget(QLabel('API key'), 2, 0)
-    # self.apiZenodo = QLineEdit()
-    # leftSide.addWidget(self.apiZenodo, 2, 1)
-    # self.zenodoButton = TextButton('Check',   self, [Command.CHECK_ZENODO], tooltip='Check Zenodo login details')
-    # leftSide.addWidget(self.zenodoButton, 3, 1)
+    leftSide.setAlignment(Qt.AlignTop)
+    leftSide.addWidget(Label('Metadata','h2'), 0, 0)
+    leftSide.addWidget(QLabel('Title'), 1, 0)
+    self.leTitle = QLineEdit(docProject['name'])
+    self.leTitle.setMinimumWidth(400)
+    leftSide.addWidget(self.leTitle, 1, 1)
+    leftSide.addWidget(QLabel('Description'), 2, 0)
+    self.leDescription = QLineEdit(docProject['comment'])
+    leftSide.addWidget(self.leDescription, 2, 1)
+    leftSide.addWidget(QLabel('Keywords'), 3, 0)
+    self.leKeywords = QLineEdit(', '.join(docProject['tags']))
+    leftSide.addWidget(self.leKeywords, 3, 1)
+    leftSide.addWidget(QLabel('Category/Community'), 4, 0)
+    self.leCategory = QLineEdit(repositories.get('category',''))
+    leftSide.addWidget(self.leCategory, 4, 1)
+    leftSide.addWidget(QLabel('Additional'), 5, 0)
+    self.leAdditional = QLineEdit(json.dumps(repositories.get('additional',{})))
+    leftSide.addWidget(self.leAdditional, 5, 1)
 
     self.allDocTypes = self.comm.backend.db.dataHierarchy('', 'title')
     projectString = ', '.join(i[1] for i in self.allDocTypes if i[0].startswith('x'))
     _, rightSide = widgetAndLayout('V', center, spacing='m', right='l')
+    rightSide.setAlignment(Qt.AlignTop)
     Label('Include data types','h2', rightSide)
     self.allCheckboxes = [QCheckBox(projectString, self)]
     self.allCheckboxes[0].setChecked(True)
@@ -65,8 +77,10 @@ class UploadGUI(QDialog):
     #final button box
     _, buttonLineL = widgetAndLayout('H', mainL, 'm')
     buttonLineL.addStretch(1)
-    TextButton('Upload to Zenodo',    self, [Command.UPLOAD, True],  buttonLineL)
-    TextButton('Upload to Dataverse', self, [Command.UPLOAD, False], buttonLineL)
+    if 'zenodo' in repositories and 'url' in repositories['zenodo']:
+      TextButton('Upload to Zenodo',    self, [Command.UPLOAD, True],  buttonLineL)
+    if 'dataverse' in repositories and 'url' in repositories['dataverse']:
+      TextButton('Upload to Dataverse', self, [Command.UPLOAD, False], buttonLineL)
     TextButton('Cancel',              self, [Command.CANCEL], buttonLineL, 'Discard changes')
 
 
@@ -81,17 +95,44 @@ class UploadGUI(QDialog):
       self.reject()
       self.callbackFinished(False)
     elif command[0] is Command.UPLOAD:
-      if 'repositories' not in self.configuration:
-        self.configuration['repositories'] = {}
-      if self.checkedZenodo:
-        self.configuration['repositories']['zenodo'] = {'url':self.urlZenodo.text(),
-                                                        'key':self.apiZenodo.text()}
-      if self.checkedDataverse:
-        self.configuration['repositories']['dataverse'] = {'url':self.urlDatavese.text(),
-                                                          'key':self.apiDataverse.text(),
-                                                          'dataverse':self.dvDataverse.currentData()}
+      # collect docTypes and create .eln
+      docTypes = [i.text() for i in self.allCheckboxes if i.isChecked() and ', ' not in i.text()]
+      tempELN = str(Path(tempfile.gettempdir())/'export.eln')
+      res = exportELN(self.comm.backend, [self.comm.projectID], tempELN, docTypes)
+      print('Export eln',res)
+
+      # collect metadata and save parts of it
+      metadata = {'title': self.leTitle.text(),
+                  'description': self.leDescription.text(),
+                  'keywords': [i.strip() for i in self.leKeywords.text().split(',')],
+                  'category': self.leCategory.text(),
+                  'additional': json.loads(self.leAdditional.text()),
+                  'author': self.comm.backend.configuration['authors'][0]}
+      repositories = self.comm.backend.configuration['repositories']
+      repositories['category'] = self.leCategory.text()
+      repositories['additional'] = json.loads(self.leAdditional.text())
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.configuration,indent=2))
+        fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
+      # convert to repository specific and upload to repository
+      if command[1]: #Zenodo
+        clientZ = ZenodoClient(repositories['zenodo']['url'], repositories['zenodo']['key'])
+        metadataZ = clientZ.prepareMetadata(metadata)
+        res = clientZ.uploadRepository(metadataZ, tempELN)
+      else:          #Dataverse
+        clientD = DataverseClient(repositories['dataverse']['url'], repositories['dataverse']['key'],
+                                  repositories['dataverse']['dataverse'])
+        metadataD = clientD.prepareMetadata(metadata)
+        res = clientD.uploadRepository(metadataD, tempELN)
+      showMessage(self, 'Success' if res[0] else 'Error', res[1])
+      # update project with upload details
+      if res[0]:
+        docProject = self.comm.backend.db.getDoc(self.comm.projectID)
+        docProject['.repository_upload'] = f'{datetime.now().strftime("%Y-%m-%d")} {res[1]}'
+        docProject['branch'] = docProject['branch'][0] | {'op':'u'}
+        self.comm.backend.db.updateDoc(docProject, self.comm.projectID)
+        self.callbackFinished(True)
+      else:
+        showMessage(self, 'Error', res[1])
       self.accept()
     else:
       print('Got some button, without definition', command)

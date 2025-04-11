@@ -22,8 +22,8 @@ There are two instances of Zenodo
 Zenodo typically requires this metadata:
 
 - *title* (string): defaults to the project title
-- *description* (string): defaults to the project objective
 - *creators* (list of dicts: name, affiliation, orcid): defaults to the list of authors
+- *description* (string): defaults to the project objective
 - *keywords* (list of strings): defaults to the tags of this project
 - *additional keys* (dict): additional information
 - publication_date (YYYY-MM-DD): is today
@@ -57,8 +57,8 @@ Dataverse requires this metadata:
 - *author* (string): defaults to the list of authors
 - *datasetContact* (string): defaults to the one in the list of authors
 - *dsDescription* (string): defaults to the project objective
-- *subject* (choice): At least one subject from a controlled vocabulary
 - *keyword* (list): defaults to the tags of this project
+- *subject* (choice): At least one subject from a controlled vocabulary
 - relatedPublications: is empty
 
 

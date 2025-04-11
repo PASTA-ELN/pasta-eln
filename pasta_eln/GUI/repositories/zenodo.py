@@ -1,5 +1,6 @@
 import requests
 from typing import Any
+from datetime import datetime
 from .repository import RepositoryClient
 
 class ZenodoClient(RepositoryClient):
@@ -92,3 +93,35 @@ class ZenodoClient(RepositoryClient):
       print("**ERROR** publishing:", resp.json())
       return False, 'Error publishing the dataset'
     return True, f'Published: {resp.json()["doi"]}, {resp.json()["doi_url"]}'
+
+
+  def prepareMetadata(self, metadata:dict[str,Any]) -> dict[str,Any]:
+    """
+    Prepares the metadata for uploading.
+
+    Args:
+        metadata (dict): The metadata to be prepared.
+
+    Returns:
+        dict: The prepared metadata.
+    """
+    author = metadata['author']
+    metadataZenodo = {
+        "title": metadata["title"],
+        "upload_type": "dataset",
+        "description": metadata["description"],
+        "creators": [
+            {"name": f"{author['last']}, {author['first']}",
+             "affiliation": author['organizations'][0]['organization'],
+             "orcid": author['orcid'],
+             "email": author['email']},
+        ],
+        "keywords": metadata["keywords"],
+        "communities": [
+            {"identifier": metadata['category']},
+        ],
+        "publication_date": datetime.now().strftime("%Y-%m-%d"),
+        "access_right": "open",
+        "license": "CC-BY-4.0"
+      }
+    return {"metadata": metadata['additional']|metadataZenodo}
