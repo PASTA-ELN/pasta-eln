@@ -18,8 +18,6 @@ from .fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
 from .GUI.body import Body
 from .GUI.config import Configuration
 from .GUI.data_hierarchy.editor import SchemeEditor
-from .GUI.dataverse.config_dialog import ConfigDialog
-from .GUI.dataverse.main_dialog import MainDialog
 from .GUI.definitions.editor import Editor as DefinitionsEditor
 from .GUI.form import Form
 from .GUI.palette import Palette
@@ -28,6 +26,7 @@ from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN, importELN
 from .miscTools import restart, updateAddOnList
+from .GUI.repositories.uploadGUI import UploadGUI
 
 os.environ['QT_API'] = 'pyside6'
 
@@ -54,25 +53,23 @@ class MainWindow(QMainWindow):
     self.comm = Communicate(self.backend, palette)
     self.comm.formDoc.connect(self.formDoc)
     self.comm.restart.connect(self.initialize)
-    self.dataverseMainDialog: MainDialog | None = None
-    self.dataverseConfig: ConfigDialog | None = None
 
     # Menubar
     menu = self.menuBar()
     projectMenu = menu.addMenu('&Project')
     Action('&Export project to .eln',        self, [Command.EXPORT],         projectMenu)
     if 'develop' in self.comm.backend.configuration:
-      Action('&Import .eln into project',      self, [Command.IMPORT],         projectMenu)
-    # Action('&Upload to Dataverse',           self, [Command.DATAVERSE_MAIN], projectMenu)
+      Action('&Import .eln into project',    self, [Command.IMPORT],         projectMenu)
+      Action('&Upload to repository',        self, [Command.REPOSITORY], projectMenu)
     Action('&Exit',                          self, [Command.EXIT],           projectMenu)
 
     self.viewMenu = menu.addMenu('&Lists')
 
     systemMenu = menu.addMenu('Project &group')
     self.changeProjectGroups = systemMenu.addMenu('&Change project group')
+    syncMenu = systemMenu.addMenu('&Synchronize')
+    Action('Send',                         self, [Command.SYNC_SEND],       syncMenu, shortcut='F5')
     if 'develop' in self.comm.backend.configuration:
-      syncMenu = systemMenu.addMenu('&Synchronize')
-      Action('Send',                         self, [Command.SYNC_SEND],       syncMenu, shortcut='F5')
       Action('Get',                          self, [Command.SYNC_GET],        syncMenu, shortcut='F4')
       # Action('Smart synce',                  self, [Command.SYNC_SMART],       syncMenu)
     Action('&Editor to change data type schema', self, [Command.SCHEMA],      systemMenu, shortcut='F8')
@@ -176,6 +173,12 @@ class MainWindow(QMainWindow):
         showMessage(self, 'Finished', f'{status}\n{statistics}', 'Information')
         self.comm.changeSidebar.emit('redraw')
         self.comm.changeTable.emit('x0', '')
+    elif command[0] is Command.REPOSITORY:
+      if self.comm.projectID == '':
+        showMessage(self, 'Error', 'You have to open a project to upload', 'Warning')
+        return
+      dialogR = UploadGUI(self.comm, None)
+      dialogR.exec()
     elif command[0] is Command.EXIT:
       self.close()
     # view menu
@@ -307,6 +310,7 @@ class Command(Enum):
   RESTART   = 18
   ABOUT     = 19
   DEFINITIONS= 20
+  REPOSITORY = 21
 
 
 def startMain(projectGroup:str='') -> None:
