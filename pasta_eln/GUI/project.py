@@ -1,15 +1,14 @@
 """ Widget that shows the content of project in a electronic labnotebook """
-import importlib
 import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayout,  # pylint: disable=no-name-in-module
-                               QWidget)
+from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel   # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayout,  QWidget) # pylint: disable=no-name-in-module
 from ..fixedStringsJson import DO_NOT_RENDER
+from ..miscTools import callAddOn
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, Label, TextButton, showMessage, widgetAndLayout
 from ..textTools.handleDictionaries import doc2markdown
@@ -290,8 +289,7 @@ class Project(QWidget):
     elif command[0] is Command.SHOW_TABLE:
       self.comm.changeTable.emit(command[1], self.projID)
     elif command[0] is Command.ADD_ON:
-      module      = importlib.import_module(command[1])
-      module.main(self.comm.backend, self.projID, self)
+      callAddOn(command[1], self.comm.backend, self.projID, self)
     else:
       print('**ERROR project menu unknown:',command)
     return

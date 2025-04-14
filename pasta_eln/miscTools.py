@@ -154,8 +154,8 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   sys.path.append(str(directory))  #allow add-ons
   # Add-Ons
   verboseDebug = False
-  extractorsAll = {}
-  projectAll    = {}
+  extractorsAll= {}
+  otherAddOns  = {'project':{}, 'table':{} ,'definition':{} ,'form':{}, '_ERRORS_':{}}
   for fileName in os.listdir(directory):
     # Extractor
     if fileName.endswith('.py') and fileName.startswith('extractor_'):
@@ -204,23 +204,42 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
         ending = fileName.split('_')[1].split('.')[0]
         extractorsAll[ending]=extractorsThis
                     #header not used for now
-    # Project
-    if fileName.endswith('.py') and fileName.startswith('project_'):
+    # Project, et al.
+    if fileName.endswith('.py') and '_' in fileName and fileName.split('_')[0] in ['project','table','definition','form']:
       name        = fileName[:-3]
       try:
-        module      = importlib.import_module(fileName[:-3])
+        module      = importlib.import_module(name)
         description = module.description
+        _ = module.reqParameter  # check if reqParameter exists
+        otherAddOns[name] = description
       except Exception:
         description = f'** SYNTAX ERROR in add-on **\n{traceback.format_exc()}'
-      projectAll[name] = description
+        otherAddOns['_ERRORS_'][name] = description
   #update configuration file
-  confProjectGroup = configuration['projectGroups'][projectGroup]['addOns']
-  confProjectGroup['extractors'] = extractorsAll
-  confProjectGroup['project']    = projectAll
-  confProjectGroup['table']      = {}
+  configuration['projectGroups'][projectGroup]['addOns']['extractors'] = extractorsAll
+  configuration['projectGroups'][projectGroup]['addOns'] |= otherAddOns
   with open(Path.home()/CONF_FILE_NAME,'w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
-  return {'addon directory':directory} | extractorsAll | projectAll
+  return {'addon directory':directory} | extractorsAll | otherAddOns
+
+
+def callAddOn(name, backend, projID, widget) -> None:
+  """ Call add-ons
+  Args:
+    name (str): name of the add-on
+    backend (str): backend to be used
+    projID (str): project ID
+    widget: widget to be used
+  """
+  module      = importlib.import_module(name)
+  parameter   = backend.configuration['addOnParameter']
+  try:
+    subParameter = parameter[name]
+  except KeyError:
+    print('**ERROR: No parameter for this add-on')
+    subParameter = {}
+  module.main(backend, projID, widget, subParameter)
+  return
 
 
 def restart() -> None:

@@ -16,7 +16,9 @@ import pasta_eln
 from pasta_eln.Resources import Icons as icons
 from pasta_eln.textTools.stringChanges import markdownEqualizer
 
-description  = 'Create html report'  #short description that is shown in the menu; has to be included in all project-addons
+# The following two variables are mandatory
+description  = 'Create html report'  #short description that is shown in the menu
+reqParameter = {'key':'Human readable description of parameter'} #possibility for required parameters: like API-key, etc. {'API': 'text'}
 
 HTML_HEADER = '<!DOCTYPE html>\n<html>\n<head>\n<style>'\
     '* {font-family: sans-serif;}'\
@@ -28,7 +30,7 @@ HTML_HEADER = '<!DOCTYPE html>\n<html>\n<head>\n<style>'\
 HTML_FOOTER = '</body>\n</html>\n'
 
 def main(backend, hierStack, widget, parameter={}):
-    """ main function
+    """ main function: has to exist and is called by the menu
     Args:
         backend (pasta backend): allow to extract data
         hierStack (list): node in hierarchy to start the creation
@@ -39,7 +41,7 @@ def main(backend, hierStack, widget, parameter={}):
         bool: success
     """
     # Initialize variables
-    if not parameter:
+    if 'fileNames' not in parameter:
         res = QFileDialog.getSaveFileName(widget,'Use this file for output', str(Path.home()))
         if res is None:
             return False

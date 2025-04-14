@@ -1,5 +1,4 @@
 """ Custom tree view on data model """
-import importlib
 import logging
 import os
 import platform
@@ -15,6 +14,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QMenu, QMessageBox, QTreeView,
                                QWidget)
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, showMessage
+from ..miscTools import callAddOn
 from .projectLeafRenderer import ProjectLeafRenderer
 
 
@@ -167,8 +167,7 @@ class TreeView(QTreeView):
         else:                                   # linux variants
           subprocess.call(('xdg-open', path))
     elif command[0] is Command.ADD_ON:
-      module      = importlib.import_module(command[1])
-      module.main(self.comm.backend, item.data()['hierStack'], self)
+      callAddOn(command[1], self.comm.backend, item.data()['hierStack'], self)
     else:
       print('**ERROR**: unknown context menu', command)
     return
