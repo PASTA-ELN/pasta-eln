@@ -116,6 +116,17 @@ class MainWindow(QMainWindow):
     """ Initialize: things that might change """
     self.comm.backend.initialize(self.backend.configurationProjectGroup)  #restart backend
     # Test for old datastructures
+    # start v3.0.17 -> 3.1
+    cursor = self.comm.backend.db.cursor
+    cursor.execute("SELECT * FROM docTypes WHERE docType LIKE '%procedure%'")
+    lengthOld = len(cursor.fetchall())
+    cursor.execute("SELECT * FROM docTypes WHERE docType LIKE '%workflow%'")
+    lengthNew = len(cursor.fetchall())
+    if lengthOld == 1 and lengthNew == 4:
+      print('Info: your data structure is up to date.')
+    elif lengthOld == 0 and lengthNew == 4:
+      pass
+    print(lengthOld, lengthNew)
 
 
     # Things that are inside the List menu
