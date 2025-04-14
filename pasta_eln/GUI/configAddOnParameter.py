@@ -1,15 +1,11 @@
 """ Main class of config tab on parameteres (e.g. API keys) for add-ons """
 import json, importlib
-import re
-from enum import Enum
 from pathlib import Path
-from typing import Any, Callable
-import requests
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QLabel,  # pylint: disable=no-name-in-module
-                               QLineEdit, QFormLayout)
+from typing import Callable
+from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QLabel, QLineEdit, QFormLayout)  # pylint: disable=no-name-in-module
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
-from ..guiStyle import IconButton, TextButton, widgetAndLayout, widgetAndLayoutForm, Label
+from ..guiStyle import TextButton
 
 
 class ConfigurationAddOnParameter(QDialog):
@@ -63,7 +59,7 @@ class ConfigurationAddOnParameter(QDialog):
       self.reject()
     else:
       apiKeys = self.comm.backend.configuration.get('addOnParameter',{})
-      for addOnType, name, param, lineEdit in self.allLineEdits:
+      for _, name, param, lineEdit in self.allLineEdits:
         if name not in apiKeys:
           apiKeys[name] = {}
         apiKeys[name][param] = lineEdit.text()

@@ -177,7 +177,7 @@ class MainWindow(QMainWindow):
       if self.comm.projectID == '':
         showMessage(self, 'Error', 'You have to open a project to upload', 'Warning')
         return
-      dialogR = UploadGUI(self.comm, None)
+      dialogR = UploadGUI(self.comm)
       dialogR.exec()
     elif command[0] is Command.EXIT:
       self.close()

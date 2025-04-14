@@ -11,6 +11,7 @@ from io import BufferedReader
 from pathlib import Path
 from typing import Any, Union
 from urllib import request
+from PySide6.QtWidgets import QWidget # pylint: disable=no-name-in-module
 from .fixedStringsJson import CONF_FILE_NAME
 
 
@@ -155,7 +156,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   # Add-Ons
   verboseDebug = False
   extractorsAll= {}
-  otherAddOns  = {'project':{}, 'table':{} ,'definition':{} ,'form':{}, '_ERRORS_':{}}
+  otherAddOns:dict[str,dict[str,str]]  = {'project':{}, 'table':{} ,'definition':{} ,'form':{}, '_ERRORS_':{}}
   for fileName in os.listdir(directory):
     # Extractor
     if fileName.endswith('.py') and fileName.startswith('extractor_'):
@@ -223,7 +224,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   return {'addon directory':directory} | extractorsAll | otherAddOns
 
 
-def callAddOn(name, backend, projID, widget) -> None:
+def callAddOn(name:str, backend:Any, projID:str, widget:QWidget) -> None:
   """ Call add-ons
   Args:
     name (str): name of the add-on

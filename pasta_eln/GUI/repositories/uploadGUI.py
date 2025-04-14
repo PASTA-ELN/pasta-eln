@@ -16,7 +16,7 @@ from ...fixedStringsJson import CONF_FILE_NAME
 
 class UploadGUI(QDialog):
   """ Upload for Zenodo and Dataverse """
-  def __init__(self, comm:Communicate, callbackFinished:Callable[[bool],None]):
+  def __init__(self, comm:Communicate):
     """
     Initialization
 
@@ -26,7 +26,6 @@ class UploadGUI(QDialog):
     """
     super().__init__()
     self.comm    = comm
-    self.callbackFinished = callbackFinished
 
     # GUI elements
     mainL = QVBoxLayout(self)
@@ -39,7 +38,7 @@ class UploadGUI(QDialog):
     repositories = self.comm.backend.configuration['repositories']
     leftSideW, leftSide = widgetAndLayoutGrid(center, spacing='m', right='l')
     leftSideW.setStyleSheet("border-right: 2px solid black;")
-    leftSide.setAlignment(Qt.AlignTop)
+    leftSide.setAlignment(Qt.AlignTop)                                            # type: ignore[attr-defined]
     leftSide.addWidget(Label('Metadata','h2'), 0, 0)
     leftSide.addWidget(QLabel('Title'), 1, 0)
     self.leTitle = QLineEdit(docProject['name'])
@@ -61,7 +60,7 @@ class UploadGUI(QDialog):
     self.allDocTypes = self.comm.backend.db.dataHierarchy('', 'title')
     projectString = ', '.join(i[1] for i in self.allDocTypes if i[0].startswith('x'))
     _, rightSide = widgetAndLayout('V', center, spacing='m', right='l')
-    rightSide.setAlignment(Qt.AlignTop)
+    rightSide.setAlignment(Qt.AlignTop)                                           # type: ignore[attr-defined]
     Label('Include data types','h2', rightSide)
     self.allCheckboxes = [QCheckBox(projectString, self)]
     self.allCheckboxes[0].setChecked(True)
@@ -93,13 +92,12 @@ class UploadGUI(QDialog):
     """
     if command[0] is Command.CANCEL:
       self.reject()
-      self.callbackFinished(False)
     elif command[0] is Command.UPLOAD:
       # collect docTypes and create .eln
       docTypes = [i.text() for i in self.allCheckboxes if i.isChecked() and ', ' not in i.text()]
       tempELN = str(Path(tempfile.gettempdir())/'export.eln')
-      res = exportELN(self.comm.backend, [self.comm.projectID], tempELN, docTypes)
-      print('Export eln',res)
+      res0 = exportELN(self.comm.backend, [self.comm.projectID], tempELN, docTypes)
+      print('Export eln',res0)
 
       # collect metadata and save parts of it
       metadata = {'title': self.leTitle.text(),
@@ -130,7 +128,6 @@ class UploadGUI(QDialog):
         docProject['.repository_upload'] = f'{datetime.now().strftime("%Y-%m-%d")} {res[1]}'
         docProject['branch'] = docProject['branch'][0] | {'op':'u'}
         self.comm.backend.db.updateDoc(docProject, self.comm.projectID)
-        self.callbackFinished(True)
       else:
         showMessage(self, 'Error', res[1])
       self.accept()

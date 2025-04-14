@@ -105,7 +105,7 @@ class ConfigurationRepositories(QDialog):
       if re.match(r'(http:|https:)+\/\/[\w\.]+', url) is None:
         showMessage(self, 'Error', 'URL is not valid')
         return
-      clientD = DataverseClient(url, '')
+      clientD = DataverseClient(url, '', '')
       success, message = clientD.checkServer()
       if success:
         self.changeButtonOnTest(True, self.dataverseButton1)
@@ -121,7 +121,7 @@ class ConfigurationRepositories(QDialog):
       if re.match(r'\w{8}-\w{4}-\w{4}-\w{4}-\w{12}', api) is None:
         showMessage(self, 'Error', 'API key is not valid')
         return
-      clientD = DataverseClient(url, api)
+      clientD = DataverseClient(url, api, '')
       if success := clientD.checkAPIKey():
         self.changeButtonOnTest(True, self.dataverseButton2)
         self.checkedDataverse = True
