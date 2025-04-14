@@ -124,15 +124,15 @@ class MainWindow(QMainWindow):
     lengthNew = len(cursor.fetchall())
     if lengthOld == 1 and lengthNew == 4:
       print('Info: your data structure is up to date.')
-    elif lengthOld == 1 and lengthNew == 0:
+    if lengthOld == 1 and lengthNew == 0:
       button = QMessageBox.question(self, 'Question', 'You seem to have an old data-structure. '\
                                     'Do you want to update your data structure?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
         self.comm.backend.db.dataHierarchyInit(True)
         print('Done: your data structure is updated.')
-        cursor.execute(f"UPDATE definitions SET key='workflow/procedure' WHERE key = 'procedure'")
-        cursor.execute(f"UPDATE main SET type='workflow/procedure/markdown' WHERE key = 'procedure/markdown'")
+        cursor.execute(f"DELETE FROM definitions WHERE key = 'procedure'")
+        cursor.execute(f"UPDATE main SET type='workflow/procedure/markdown' WHERE type = 'procedure/markdown'")
         cursor.execute(f"UPDATE properties SET key='workflow/procedure' WHERE key = 'procedure'")
         self.comm.backend.db.connection.commit()
     # Things that are inside the List menu
