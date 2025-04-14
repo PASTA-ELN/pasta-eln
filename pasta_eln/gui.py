@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Union
 from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 from pasta_eln import __version__
 from .backend import Backend
@@ -124,11 +124,15 @@ class MainWindow(QMainWindow):
     lengthNew = len(cursor.fetchall())
     if lengthOld == 1 and lengthNew == 4:
       print('Info: your data structure is up to date.')
-    elif lengthOld == 0 and lengthNew == 4:
-      pass
-    print(lengthOld, lengthNew)
-
-
+    elif lengthOld == 1 and lengthNew == 0:
+      button = QMessageBox.question(self, 'Question', 'Do you want to update your data structure?',
+                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+      if button == QMessageBox.StandardButton.Yes:
+        self.comm.backend.db.dataHierarchyInit(True)
+        cursor.execute(f"UPDATE definitions SET key='workflow/procedure' WHERE key = 'procedure'")
+        cursor.execute(f"UPDATE main SET type='workflow/procedure/markdown' WHERE key = 'procedure/markdown'")
+        cursor.execute(f"UPDATE properties SET key='workflow/procedure' WHERE key = 'procedure'")
+        self.comm.backend.db.connection.commit()
     # Things that are inside the List menu
     self.viewMenu.clear()
     if hasattr(self.backend, 'db'):

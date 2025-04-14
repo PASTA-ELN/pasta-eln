@@ -29,7 +29,7 @@ defaultSchema: list[list[Union[str,int]]] = [
   ['measurement',         '', 1,   'tags',      '',   '',        ''],
   ['measurement',         '', 2,   'comment',   '',   '',        ''],
   ['measurement',         '', 3,   'sample',    '',   '',        'sample'],
-  ['measurement',         '', 4,   'procedure', '',   '',        'workflow/procedure'],
+  ['measurement',         '', 4,   'workflow/procedure','','','workflow/procedure'],
   ['sample',              '', 0,   'name',      '',   'T',       ''],
   ['sample',              '', 1,   'tags',      '',   '',        ''],
   ['sample',              '', 2,   'chemistry', '',   '',        ''],
@@ -38,10 +38,10 @@ defaultSchema: list[list[Union[str,int]]] = [
   ['sample',      'geometry', 0,   'height',    'mm', '',        ''],
   ['sample',      'geometry', 1,   'width',     'mm', '',        ''],
   ['sample',      'geometry', 2,   'length',    'mm', '',        ''],
-  ['workflow',           '', 0,   'name',      '',   'T',       ''],
-  ['workflow',           '', 1,   'tags',      '',   '',        ''],
-  ['workflow',           '', 2,   'comment',   '',   '',        ''],
-  ['workflow',           '', 3,   'content',   '',   '',        ''],
+  ['workflow',            '', 0,   'name',      '',   'T',       ''],
+  ['workflow',            '', 1,   'tags',      '',   '',        ''],
+  ['workflow',            '', 2,   'comment',   '',   '',        ''],
+  ['workflow',            '', 3,   'content',   '',   '',        ''],
   ['instrument',          '', 0,   'name',      '',   'T',       ''],
   ['instrument',          '', 1,   'tags',      '',   '',        ''],
   ['instrument',          '', 2,   'comment',   '',   '',        ''],
@@ -53,20 +53,20 @@ defaultSchema: list[list[Union[str,int]]] = [
 ]
 
 defaultDefinitions = [
-  ['name',            'What is the name this item?',                                    ''],
-  ['tags',            'What are the tags?',                                             ''],
-  ['status',          'What is the project status',                                     ''],
-  ['objective',       'What is the objective?',                                         ''],
-  ['comment',         'What are the comments?',                                         ''],
-  ['content',         'What is procedure (Markdown possible; autofill if file given)?', ''],
-  ['vendor',          'Who is the vendor?',                                             ''],
-  ['sample',          'Which sample was used?',                                         ''],
-  ['procedure',       'Which procedure was used?',                                      ''],
-  ['chemistry',       'What is its chemical composition?',                              ''],
-  ['qrCodes',         '',                                                               ''],
-  ['geometry.width',  'Sample width',                                                   ''],
-  ['geometry.length', 'Sample length',                                                  ''],
-  ['geometry.height', 'Sample height',                         'https://schema.org/height']
+  ['name',              'What is the name this item?',                                    ''],
+  ['tags',              'What are the tags?',                                             ''],
+  ['status',            'What is the project status',                                     ''],
+  ['objective',         'What is the objective?',                                         ''],
+  ['comment',           'What are the comments?',                                         ''],
+  ['content',           'What is procedure (Markdown possible; autofill if file given)?', ''],
+  ['vendor',            'Who is the vendor?',                                             ''],
+  ['sample',            'Which sample was used?',                                         ''],
+  ['workflow/procedure','Which procedure was used?',                                      ''],
+  ['chemistry',         'What is its chemical composition?',                              ''],
+  ['qrCodes',           '',                                                               ''],
+  ['geometry.width',    'Sample width',                                                   ''],
+  ['geometry.length',   'Sample length',                                                  ''],
+  ['geometry.height',   'Sample height',                         'https://schema.org/height']
 ]
 
 defaultDataHierarchyNode: list[dict[str, str]] = [
