@@ -130,11 +130,11 @@ class MainWindow(QMainWindow):
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
         self.comm.backend.db.dataHierarchyInit(True)
-        print('Done: your data structure is updated.')
         cursor.execute(f"DELETE FROM definitions WHERE key = 'procedure'")
         cursor.execute(f"UPDATE main SET type='workflow/procedure/markdown' WHERE type = 'procedure/markdown'")
         cursor.execute(f"UPDATE properties SET key='.workflow/procedure' WHERE key = '.procedure'")
         self.comm.backend.db.connection.commit()
+        print('Done: your data structure is updated.')
     # Things that are inside the List menu
     self.viewMenu.clear()
     if hasattr(self.backend, 'db'):

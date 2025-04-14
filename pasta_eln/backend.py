@@ -30,7 +30,6 @@ class Backend(CLI_Mixin):
     Args:
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
     """
-    print('Update from version 3.17->3.18: please update your procedures via the tools')
     #initialize basic values
     self.configFileName = Path.home() / CONF_FILE_NAME
     self.configuration: dict[str, Any] = {}
