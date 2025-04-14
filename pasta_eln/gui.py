@@ -93,6 +93,8 @@ class MainWindow(QMainWindow):
 
     # shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda: self.execute([Command.RESTART]))
+    if 'develop' not in self.comm.backend.configuration:
+      QShortcut('Ctrl+?', self, lambda: self.execute([Command.VERIFY_DB]))
 
     # GUI elements
     mainWidget, mainLayout = widgetAndLayout('H')
@@ -113,6 +115,9 @@ class MainWindow(QMainWindow):
   def initialize(self) -> None:
     """ Initialize: things that might change """
     self.comm.backend.initialize(self.backend.configurationProjectGroup)  #restart backend
+    # Test for old datastructures
+
+
     # Things that are inside the List menu
     self.viewMenu.clear()
     if hasattr(self.backend, 'db'):
