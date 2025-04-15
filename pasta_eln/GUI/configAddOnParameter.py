@@ -1,8 +1,9 @@
-""" Main class of config tab on parameteres (e.g. API keys) for add-ons """
-import json, importlib
+""" Main class of config tab on parameters (e.g. API keys) for add-ons """
+import importlib
+import json
 from pathlib import Path
 from typing import Callable
-from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QLabel, QLineEdit, QFormLayout)  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QFormLayout, QLabel,  QLineEdit) # pylint: disable=no-name-in-module
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
 from ..guiStyle import TextButton

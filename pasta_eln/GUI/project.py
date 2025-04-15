@@ -5,12 +5,13 @@ from pathlib import Path
 from typing import Any, Optional
 from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel   # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayout,  QWidget) # pylint: disable=no-name-in-module
+from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayout,  # pylint: disable=no-name-in-module
+                               QWidget)
 from ..fixedStringsJson import DO_NOT_RENDER
-from ..miscTools import callAddOn
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, Label, TextButton, showMessage, widgetAndLayout
+from ..miscTools import callAddOn
 from ..textTools.handleDictionaries import doc2markdown
 from ..textTools.stringChanges import createDirName
 from .projectTreeView import TreeView

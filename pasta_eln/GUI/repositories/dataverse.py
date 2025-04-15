@@ -1,16 +1,18 @@
 """ Client for communicating with Dataverse Server via REST API
 - Author: Jithu Murugan, Steffen Brinckmann
 """
-# Dataverse: remember to always publish everything before using it!!
-import requests, logging
+import logging
 from datetime import datetime
 from json import dumps
 from os.path import basename
 from typing import Any
 from xml.etree.ElementTree import ElementTree, fromstring
+# Dataverse: remember to always publish everything before using it!!
+import requests
 from requests.auth import HTTPBasicAuth
-from .repository import RepositoryClient
 from .dataverseDefaultDict import DATAVERSE_METADATA
+from .repository import RepositoryClient
+
 
 class DataverseClient(RepositoryClient):
   """
@@ -304,7 +306,7 @@ class DataverseClient(RepositoryClient):
     reply = self.uploadFile(doi, file_path, '.eln file', ['file'])
     if isinstance(reply, str):
       return False, 'Error publishing the file'
-    return True, f'Published: {doi}, {res['persistentUrl']}'
+    return True, f'Published: {doi}, {res["persistentUrl"]}'
 
 
   def getDatasetInfo(self, ds_persistent_id: str, version: str = ':latest-published') -> dict[Any, Any] | Any:
@@ -491,16 +493,16 @@ class DataverseClient(RepositoryClient):
         dict: The prepared metadata.
     """
     author = metadata['author']
-    fields = [{"typeName": "title", "value": metadata['title'], "typeClass": "primitive"},
-              {"typeName": "author", "value": [{"authorName": {"value": f"{author['last']}, {author['first']}"},
-                "authorIdentifier": {"value": author['orcid']},
-                "authorAffiliation": {"value": author['organizations'][0]['organization']}}], "typeClass": "compound"},
-              {"typeName": "datasetContact", "value": [{"datasetContactEmail": {"value": author['email']},
-                "datasetContactName": {"value": f"{author['last']}, {author['first']}"}}], "typeClass": "compound"},
-              {"typeName": "keywords", "value": metadata['keywords'], "typeClass": "primitive"},
-              {"typeName": "publicationDate", "value": datetime.now().strftime("%Y-%m-%d"), "typeClass": "primitive"},
-              {"typeName": "dsDescription", "value": [{"dsDescriptionValue": {"value": metadata['description']}}],
-                "typeClass": "compound"},
-              {"typeName": "subject", "value": [metadata['category']], "typeClass": "controlledVocabulary"}
+    fields = [{'typeName': 'title', 'value': metadata['title'], 'typeClass': 'primitive'},
+              {'typeName': 'author', 'value': [{'authorName': {'value': f"{author['last']}, {author['first']}"},
+                'authorIdentifier': {'value': author['orcid']},
+                'authorAffiliation': {'value': author['organizations'][0]['organization']}}], 'typeClass': 'compound'},
+              {'typeName': 'datasetContact', 'value': [{'datasetContactEmail': {'value': author['email']},
+                'datasetContactName': {'value': f"{author['last']}, {author['first']}"}}], 'typeClass': 'compound'},
+              {'typeName': 'keywords', 'value': metadata['keywords'], 'typeClass': 'primitive'},
+              {'typeName': 'publicationDate', 'value': datetime.now().strftime('%Y-%m-%d'), 'typeClass': 'primitive'},
+              {'typeName': 'dsDescription', 'value': [{'dsDescriptionValue': {'value': metadata['description']}}],
+                'typeClass': 'compound'},
+              {'typeName': 'subject', 'value': [metadata['category']], 'typeClass': 'controlledVocabulary'}
             ] + metadata['additional']
-    return {"metadata": {"datasetVersion": {"metadataBlocks": {"citation": {"fields": fields}}}}}
+    return {'metadata': {'datasetVersion': {'metadataBlocks': {'citation': {'fields': fields}}}}}

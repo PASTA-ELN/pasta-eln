@@ -28,7 +28,7 @@ def test_simple(qtbot):
   if not (Path.home()/'.pastaELN_testing.json').exists():
     print('**ERROR**: No testing configuration file found.')
     return
-  configuration = json.load(open(Path.home()/'.pastaELN_testing.json', 'r'))
+  configuration = json.load(open(Path.home()/'.pastaELN_testing.json'))
   conf = configuration['repositories']
 
   # test default: should all fail
@@ -39,17 +39,17 @@ def test_simple(qtbot):
 
   # test zenodo
   metadataZenodo = {
-    "metadata": {
-        "title": "My Sample Dataset",
-        "upload_type": "dataset",
-        "description": "This is a test dataset uploaded via the Zenodo API.",
-        "creators": [
-            {"name": "Doe, John", "affiliation": "Example University"}
+    'metadata': {
+        'title': 'My Sample Dataset',
+        'upload_type': 'dataset',
+        'description': 'This is a test dataset uploaded via the Zenodo API.',
+        'creators': [
+            {'name': 'Doe, John', 'affiliation': 'Example University'}
         ],
-        "keywords": ["test", "zenodo", "api", "python"],
-        "publication_date": "2025-04-04",
-        "access_right": "open",
-        "license": "CC-BY-4.0"
+        'keywords': ['test', 'zenodo', 'api', 'python'],
+        'publication_date': '2025-04-04',
+        'access_right': 'open',
+        'license': 'CC-BY-4.0'
     }
   }
   client = ZenodoClient(conf['zenodo']['url'], conf['zenodo']['key'])
@@ -61,58 +61,58 @@ def test_simple(qtbot):
 
   # test dataverse
   metadataDataverse = {
-    "datasetVersion": {
-      "metadataBlocks": {
-        "citation": {
-          "fields": [
+    'datasetVersion': {
+      'metadataBlocks': {
+        'citation': {
+          'fields': [
             {
-              "typeName": "title",
-              "value": "Default Dataset Title",
-              "typeClass": "primitive"
+              'typeName': 'title',
+              'value': 'Default Dataset Title',
+              'typeClass': 'primitive'
             },
             {
-              "typeName": "author",
-              "value": [
+              'typeName': 'author',
+              'value': [
                 {
-                  "authorName": {
-                    "value": "Default Author"
+                  'authorName': {
+                    'value': 'Default Author'
                   },
-                  "authorAffiliation": {
-                    "value": "Default Institution"
+                  'authorAffiliation': {
+                    'value': 'Default Institution'
                   }
                 }
               ],
-              "typeClass": "compound"
+              'typeClass': 'compound'
             },
             {
-              "typeName": "datasetContact",
-              "value": [
+              'typeName': 'datasetContact',
+              'value': [
                 {
-                  "datasetContactEmail": {
-                    "value": "contact@example.com"
+                  'datasetContactEmail': {
+                    'value': 'contact@example.com'
                   },
-                  "datasetContactName": {
-                    "value": "Default Contact"
+                  'datasetContactName': {
+                    'value': 'Default Contact'
                   }
                 }
               ],
-              "typeClass": "compound"
+              'typeClass': 'compound'
             },
             {
-              "typeName": "dsDescription",
-              "value": [
+              'typeName': 'dsDescription',
+              'value': [
                 {
-                  "dsDescriptionValue": {
-                    "value": "This is a default description for the dataset."
+                  'dsDescriptionValue': {
+                    'value': 'This is a default description for the dataset.'
                   }
                 }
               ],
-              "typeClass": "compound"
+              'typeClass': 'compound'
             },
             {
-              "typeName": "subject",
-              "value": ["Computer and Information Science"],
-              "typeClass": "controlledVocabulary"
+              'typeName': 'subject',
+              'value': ['Computer and Information Science'],
+              'typeClass': 'controlledVocabulary'
             }
           ]
         }

@@ -1,5 +1,6 @@
 from typing import Any
 
+
 class RepositoryClient:
   def __init__(self, server_url: str, api_token: str) -> None:
     """

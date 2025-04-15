@@ -1,7 +1,8 @@
-import requests
-from typing import Any
 from datetime import datetime
+from typing import Any
+import requests
 from .repository import RepositoryClient
+
 
 class ZenodoClient(RepositoryClient):
   def __init__(self, server_url: str, api_token: str) -> None:
@@ -13,8 +14,8 @@ class ZenodoClient(RepositoryClient):
         api_token (str): The API token for authentication.
     """
     super().__init__(server_url, api_token)
-    self.headers1 = {"Content-Type": "application/json", "Authorization": f"Bearer {api_token}"}
-    self.headers2 = {"Authorization": f"Bearer {api_token}"}
+    self.headers1 = {'Content-Type': 'application/json', 'Authorization': f"Bearer {api_token}"}
+    self.headers2 = {'Authorization': f"Bearer {api_token}"}
 
   def checkServer(self) -> tuple[bool, str]:
     """ VOID TEST SINCE ZENODO DOES NOT HAVE A SERVER TEST
@@ -69,28 +70,28 @@ class ZenodoClient(RepositoryClient):
     # Step 1: Create the deposition with metadata
     resp = requests.post(server_url, json=metadata, headers=self.headers1)
     if resp.status_code != 201:
-      print("**ERROR** creating deposition/dataset:", resp.json(), resp.status_code, resp.text)
+      print('**ERROR** creating deposition/dataset:', resp.json(), resp.status_code, resp.text)
       return False, 'Error creating the dataset'
     deposition = resp.json()
-    persistentID = deposition["id"]
+    persistentID = deposition['id']
     # print(f"Deposition created: {persistentID}")
 
     # Define the API URLs and headers based on the repository kind
-    files = {"file": open(file_path, "rb")}
+    files = {'file': open(file_path, 'rb')}
     file_upload_url = f"{server_url}/{persistentID}/files"
     publish_url = f"{server_url}/{persistentID}/actions/publish"
 
     # Step 2: Upload a file
     resp = requests.post(file_upload_url, files=files, headers=self.headers2)
     if resp.status_code != 201:
-      print("**ERROR** uploading file:", resp.json())
+      print('**ERROR** uploading file:', resp.json())
       return False, 'Error uploading the file'
     # print("File uploaded successfully:")
 
     # Step 3: Publish the deposition
     resp = requests.post(publish_url, headers=self.headers1)
     if resp.status_code != 202:
-      print("**ERROR** publishing:", resp.json())
+      print('**ERROR** publishing:', resp.json())
       return False, 'Error publishing the dataset'
     return True, f'Published: {resp.json()["doi"]}, {resp.json()["doi_url"]}'
 
@@ -107,21 +108,21 @@ class ZenodoClient(RepositoryClient):
     """
     author = metadata['author']
     metadataZenodo = {
-        "title": metadata["title"],
-        "upload_type": "dataset",
-        "description": metadata["description"],
-        "creators": [
-            {"name": f"{author['last']}, {author['first']}",
-             "affiliation": author['organizations'][0]['organization'],
-             "orcid": author['orcid'],
-             "email": author['email']},
+        'title': metadata['title'],
+        'upload_type': 'dataset',
+        'description': metadata['description'],
+        'creators': [
+            {'name': f"{author['last']}, {author['first']}",
+             'affiliation': author['organizations'][0]['organization'],
+             'orcid': author['orcid'],
+             'email': author['email']},
         ],
-        "keywords": metadata["keywords"],
-        "communities": [
-            {"identifier": metadata['category']},
+        'keywords': metadata['keywords'],
+        'communities': [
+            {'identifier': metadata['category']},
         ],
-        "publication_date": datetime.now().strftime("%Y-%m-%d"),
-        "access_right": "open",
-        "license": "CC-BY-4.0"
+        'publication_date': datetime.now().strftime('%Y-%m-%d'),
+        'access_right': 'open',
+        'license': 'CC-BY-4.0'
       }
-    return {"metadata": metadata['additional']|metadataZenodo}
+    return {'metadata': metadata['additional']|metadataZenodo}

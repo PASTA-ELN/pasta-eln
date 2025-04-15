@@ -91,4 +91,3 @@ Comparison Zenodo and Dataverse terms
    temporalCoverage,	No direct match
    dataSources,	description (or none)
    methods,	description (or none)
-

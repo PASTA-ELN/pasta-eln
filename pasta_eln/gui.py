@@ -21,12 +21,12 @@ from .GUI.data_hierarchy.editor import SchemeEditor
 from .GUI.definitions.editor import Editor as DefinitionsEditor
 from .GUI.form import Form
 from .GUI.palette import Palette
+from .GUI.repositories.uploadGUI import UploadGUI
 from .GUI.sidebar import Sidebar
 from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN, importELN
 from .miscTools import restart, updateAddOnList
-from .GUI.repositories.uploadGUI import UploadGUI
 
 os.environ['QT_API'] = 'pyside6'
 
@@ -130,9 +130,9 @@ class MainWindow(QMainWindow):
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
         self.comm.backend.db.dataHierarchyInit(True)
-        cursor.execute(f"DELETE FROM definitions WHERE key = 'procedure'")
-        cursor.execute(f"UPDATE main SET type='workflow/procedure/markdown' WHERE type = 'procedure/markdown'")
-        cursor.execute(f"UPDATE properties SET key='.workflow/procedure' WHERE key = '.procedure'")
+        cursor.execute("DELETE FROM definitions WHERE key = 'procedure'")
+        cursor.execute("UPDATE main SET type='workflow/procedure/markdown' WHERE type = 'procedure/markdown'")
+        cursor.execute("UPDATE properties SET key='.workflow/procedure' WHERE key = '.procedure'")
         self.comm.backend.db.connection.commit()
         print('Done: your data structure is updated.')
     # Things that are inside the List menu

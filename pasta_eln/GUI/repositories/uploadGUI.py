@@ -1,18 +1,20 @@
 """ Upload for Zenodo and Dataverse """
-import json, tempfile
-from enum import Enum
+import json
+import tempfile
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 import qtawesome as qta
 from PySide6.QtCore import Qt  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QDialog, QLabel, QLineEdit,  QVBoxLayout, QCheckBox) # pylint: disable=no-name-in-module
-from ...guiCommunicate import Communicate
-from ...guiStyle import Label, TextButton, widgetAndLayout, widgetAndLayoutGrid, showMessage
-from .zenodo import ZenodoClient
-from .dataverse import DataverseClient
-from ...inputOutput import exportELN
+from PySide6.QtWidgets import QCheckBox, QDialog, QLabel, QLineEdit, QVBoxLayout  # pylint: disable=no-name-in-module
 from ...fixedStringsJson import CONF_FILE_NAME
+from ...guiCommunicate import Communicate
+from ...guiStyle import Label, TextButton, showMessage, widgetAndLayout, widgetAndLayoutGrid
+from ...inputOutput import exportELN
+from .dataverse import DataverseClient
+from .zenodo import ZenodoClient
+
 
 class UploadGUI(QDialog):
   """ Upload for Zenodo and Dataverse """
@@ -37,7 +39,7 @@ class UploadGUI(QDialog):
     docProject = self.comm.backend.db.getDoc(self.comm.projectID)
     repositories = self.comm.backend.configuration['repositories']
     leftSideW, leftSide = widgetAndLayoutGrid(center, spacing='m', right='l')
-    leftSideW.setStyleSheet("border-right: 2px solid black;")
+    leftSideW.setStyleSheet('border-right: 2px solid black;')
     leftSide.setAlignment(Qt.AlignTop)                                            # type: ignore[attr-defined]
     leftSide.addWidget(Label('Metadata','h2'), 0, 0)
     leftSide.addWidget(QLabel('Title'), 1, 0)

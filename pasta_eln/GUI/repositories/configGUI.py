@@ -1,17 +1,18 @@
 """ Config for Zenodo and Dataverse """
 import json
 import re
+import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 import qtawesome as qta
-import webbrowser
-from PySide6.QtWidgets import (QComboBox, QDialog, QLabel, QLineEdit,  QVBoxLayout) # pylint: disable=no-name-in-module
-from ...guiCommunicate import Communicate
-from ...guiStyle import Label, TextButton, widgetAndLayout, widgetAndLayoutGrid, showMessage
-from .zenodo import ZenodoClient
-from .dataverse import DataverseClient
+from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit, QVBoxLayout  # pylint: disable=no-name-in-module
 from ...fixedStringsJson import CONF_FILE_NAME
+from ...guiCommunicate import Communicate
+from ...guiStyle import Label, TextButton, showMessage, widgetAndLayout, widgetAndLayoutGrid
+from .dataverse import DataverseClient
+from .zenodo import ZenodoClient
+
 
 class ConfigurationRepositories(QDialog):
   """ Config for Zenodo and Dataverse """
@@ -36,7 +37,7 @@ class ConfigurationRepositories(QDialog):
     _, center = widgetAndLayout('H', mainL, spacing='l', bottom='l', top='m')
 
     leftSideW, leftSide = widgetAndLayoutGrid(center, spacing='m', right='l')
-    leftSideW.setStyleSheet("border-right: 2px solid black;")
+    leftSideW.setStyleSheet('border-right: 2px solid black;')
     leftSide.addWidget(QLabel('Zenodo'), 0, 0)
     leftSide.addWidget(QLabel('URL'), 1, 0)
     self.urlZenodo = QLineEdit('https://zenodo.org')

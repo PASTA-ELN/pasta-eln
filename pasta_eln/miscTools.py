@@ -11,7 +11,7 @@ from io import BufferedReader
 from pathlib import Path
 from typing import Any, Union
 from urllib import request
-from PySide6.QtWidgets import QWidget # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget  # pylint: disable=no-name-in-module
 from .fixedStringsJson import CONF_FILE_NAME
 
 
