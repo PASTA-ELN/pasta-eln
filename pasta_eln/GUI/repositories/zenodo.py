@@ -1,3 +1,4 @@
+""" Interactions with Zenodo repository """
 from datetime import datetime
 from typing import Any
 import requests
@@ -5,6 +6,7 @@ from .repository import RepositoryClient
 
 
 class ZenodoClient(RepositoryClient):
+  """ Interactions with Zenodo repository """
   def __init__(self, server_url: str, api_token: str) -> None:
     """
     Initializes the client.
@@ -48,8 +50,7 @@ class ZenodoClient(RepositoryClient):
     Returns:
         bool: True if the API token is valid, False otherwise.
     """
-    server_url = f"{self.server_url}/api/deposit/depositions"
-    resp = requests.get(f"{self.server_url}", headers=self.headers1)
+    resp = requests.get(f"{self.server_url}", headers=self.headers1, timeout=10)
     return (bool(resp) and resp.status_code is not None
             and resp.status_code not in [401, 403, 500])
 
@@ -68,7 +69,7 @@ class ZenodoClient(RepositoryClient):
     server_url = f"{self.server_url}/api/deposit/depositions"
     # Define the API URLs and headers based on the repository kind
     # Step 1: Create the deposition with metadata
-    resp = requests.post(server_url, json=metadata, headers=self.headers1)
+    resp = requests.post(server_url, json=metadata, headers=self.headers1, timeout=10)
     if resp.status_code != 201:
       print('**ERROR** creating deposition/dataset:', resp.json(), resp.status_code, resp.text)
       return False, 'Error creating the dataset'
@@ -77,19 +78,20 @@ class ZenodoClient(RepositoryClient):
     # print(f"Deposition created: {persistentID}")
 
     # Define the API URLs and headers based on the repository kind
-    files = {'file': open(file_path, 'rb')}
+    with open(file_path, 'rb') as f:
+      files = {'file': f}
     file_upload_url = f"{server_url}/{persistentID}/files"
     publish_url = f"{server_url}/{persistentID}/actions/publish"
 
     # Step 2: Upload a file
-    resp = requests.post(file_upload_url, files=files, headers=self.headers2)
+    resp = requests.post(file_upload_url, files=files, headers=self.headers2, timeout=10)
     if resp.status_code != 201:
       print('**ERROR** uploading file:', resp.json())
       return False, 'Error uploading the file'
     # print("File uploaded successfully:")
 
     # Step 3: Publish the deposition
-    resp = requests.post(publish_url, headers=self.headers1)
+    resp = requests.post(publish_url, headers=self.headers1, timeout=10)
     if resp.status_code != 202:
       print('**ERROR** publishing:', resp.json())
       return False, 'Error publishing the dataset'

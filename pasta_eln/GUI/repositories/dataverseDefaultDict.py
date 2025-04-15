@@ -1,9 +1,9 @@
+""" Dataverse default metadata dictionary. """
 DATAVERSE_METADATA = {
   'datasetVersion': {
     'license': {
       'name': 'CC0 1.0',
-      'uri': 'http://creativecommons.org/publicdomain/zero/1.0'
-    },
+      'uri': 'http://creativecommons.org/publicdomain/zero/1.0'},
     'metadataBlocks': {
       'citation': {
         'displayName': 'Citation Metadata',
@@ -12,26 +12,22 @@ DATAVERSE_METADATA = {
             'typeName': 'title',
             'multiple': False,
             'typeClass': 'primitive',
-            'value': 'Replication Data for: Title'
-          },
+            'value': 'Replication Data for: Title'},
           {
             'typeName': 'subtitle',
             'multiple': False,
             'typeClass': 'primitive',
-            'value': 'Subtitle'
-          },
+            'value': 'Subtitle'},
           {
             'typeName': 'alternativeTitle',
             'multiple': False,
             'typeClass': 'primitive',
-            'value': 'Alternative Title'
-          },
+            'value': 'Alternative Title'},
           {
             'typeName': 'alternativeURL',
             'multiple': False,
             'typeClass': 'primitive',
-            'value': 'http://AlternativeURL.org'
-          },
+            'value': 'http://AlternativeURL.org'},
           {
             'typeName': 'otherId',
             'multiple': True,
@@ -96,8 +92,7 @@ DATAVERSE_METADATA = {
                   'multiple': False,
                   'typeClass': 'primitive',
                   'value': 'AuthorIdentifier1'
-                }
-              },
+                }},
               {
                 'authorName': {
                   'typeName': 'authorName',
@@ -122,10 +117,7 @@ DATAVERSE_METADATA = {
                   'multiple': False,
                   'typeClass': 'primitive',
                   'value': 'AuthorIdentifier2'
-                }
-              }
-            ]
-          },
+                }}]},
           {
             'typeName': 'datasetContact',
             'multiple': True,
@@ -136,43 +128,34 @@ DATAVERSE_METADATA = {
                   'typeName': 'datasetContactName',
                   'multiple': False,
                   'typeClass': 'primitive',
-                  'value': 'LastContact1, FirstContact1'
-                },
+                  'value': 'LastContact1, FirstContact1'},
                 'datasetContactAffiliation': {
                   'typeName': 'datasetContactAffiliation',
                   'multiple': False,
                   'typeClass': 'primitive',
-                  'value': 'ContactAffiliation1'
-                },
+                  'value': 'ContactAffiliation1'},
                 'datasetContactEmail': {
                   'typeName': 'datasetContactEmail',
                   'multiple': False,
                   'typeClass': 'primitive',
-                  'value': 'ContactEmail1@mailinator.com'
-                }
-              },
+                  'value': 'ContactEmail1@mailinator.com'}},
               {
                 'datasetContactName': {
                   'typeName': 'datasetContactName',
                   'multiple': False,
                   'typeClass': 'primitive',
-                  'value': 'LastContact2, FirstContact2'
-                },
+                  'value': 'LastContact2, FirstContact2'},
                 'datasetContactAffiliation': {
                   'typeName': 'datasetContactAffiliation',
                   'multiple': False,
                   'typeClass': 'primitive',
-                  'value': 'ContactAffiliation2'
-                },
+                  'value': 'ContactAffiliation2'},
                 'datasetContactEmail': {
                   'typeName': 'datasetContactEmail',
                   'multiple': False,
                   'typeClass': 'primitive',
-                  'value': 'ContactEmail2@mailinator.com'
-                }
-              }
-            ]
-          },
+                  'value': 'ContactEmail2@mailinator.com'}
+              }]},
           {
             'typeName': 'dsDescription',
             'multiple': True,
@@ -183,31 +166,23 @@ DATAVERSE_METADATA = {
                   'typeName': 'dsDescriptionValue',
                   'multiple': False,
                   'typeClass': 'primitive',
-                  'value': 'DescriptionText1'
-                },
+                  'value': 'DescriptionText1'},
                 'dsDescriptionDate': {
                   'typeName': 'dsDescriptionDate',
                   'multiple': False,
                   'typeClass': 'primitive',
-                  'value': '1000-01-01'
-                }
-              },
+                  'value': '1000-01-01'}},
               {
                 'dsDescriptionValue': {
                   'typeName': 'dsDescriptionValue',
                   'multiple': False,
                   'typeClass': 'primitive',
-                  'value': 'DescriptionText2'
-                },
+                  'value': 'DescriptionText2'},
                 'dsDescriptionDate': {
                   'typeName': 'dsDescriptionDate',
                   'multiple': False,
                   'typeClass': 'primitive',
-                  'value': '1000-02-02'
-                }
-              }
-            ]
-          },
+                  'value': '1000-02-02'}}]},
           {
             'typeName': 'subject',
             'multiple': True,

@@ -1,7 +1,9 @@
+"""Parent class to repository classes"""
 from typing import Any
 
 
 class RepositoryClient:
+  """Parent class to repository classes"""
   def __init__(self, server_url: str, api_token: str) -> None:
     """
     Initializes the client.
