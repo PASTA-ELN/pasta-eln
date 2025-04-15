@@ -2,7 +2,29 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.16...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.17...HEAD)
+
+**Implemented enhancements:**
+
+- Dataverse upload window [\#316](https://github.com/PASTA-ELN/pasta-eln/issues/316)
+
+**Fixed bugs:**
+
+- Data-verse: Repeatedly changing "metadata block" in metadata editor throws segmentation fault [\#330](https://github.com/PASTA-ELN/pasta-eln/issues/330)
+- ELN file generation for Dataverse upload [\#321](https://github.com/PASTA-ELN/pasta-eln/issues/321)
+- Dataverse: Saving the Metadata form reverts changes in Configure [\#320](https://github.com/PASTA-ELN/pasta-eln/issues/320)
+
+**Closed issues:**
+
+- Tags not searchable when using \*\*\*-ratings [\#434](https://github.com/PASTA-ELN/pasta-eln/issues/434)
+- Case sensitivity for folder names [\#427](https://github.com/PASTA-ELN/pasta-eln/issues/427)
+- Mandatoriness in the data schema editor [\#418](https://github.com/PASTA-ELN/pasta-eln/issues/418)
+- svg's do not appear in pasta as in VScode [\#391](https://github.com/PASTA-ELN/pasta-eln/issues/391)
+- The qr code line shows \[''\] after sample dimensions are added [\#387](https://github.com/PASTA-ELN/pasta-eln/issues/387)
+
+## [v3.0.17](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.17) (2025-03-29)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.16...v3.0.17)
 
 **Closed issues:**
 
