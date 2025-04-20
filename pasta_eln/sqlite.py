@@ -952,8 +952,7 @@ class SqlLiteDB:
       dfProjects = self.getView('viewDocType/x0')
       idProjects = dfProjects[dfProjects['name']=='Lost and Found']['id'].values
       if len(idProjects)==0:
-        print('**ERROR: manually create "LostAndFound" project to allow full repair')
-        return '**ERROR: manually create "LostAndFound" project to allow full repair\n'
+        print('**Warning: manually create "LostAndFound" project to allow full repair')
       else:
         lostAndFoundProjId   = idProjects[0]
         lostAndFoundProjPath = Path('LostAndFound')  #by definition
@@ -975,7 +974,7 @@ class SqlLiteDB:
           'FROM branches INNER JOIN main USING(id)'
     self.cursor.execute(cmd)
     res = self.cursor.fetchall()
-    reply += f'Number of documents: {len(res)}\n'
+    reply += outputString(outputStyle,'info', f'Number of documents: {len(res)}')
     for row in res:
       try:
         docID, docType, stack, path, child, _, name = row[0], row[1], row[2], row[3], row[4], row[5], row[6]
@@ -1061,8 +1060,12 @@ class SqlLiteDB:
       reply+= outputString(outputStyle,'error',f"key is bad, miss .: {docID} idx: {key}")
     self.cursor.execute("SELECT id, key FROM properties where value LIKE ''")
     for docID, key in self.cursor.fetchall():
-      reply+= outputString(outputStyle,'ok',f"value of this key is missing: {docID} idx: {key}")
-
+      errorStr= outputString(outputStyle,'ok',f"value of this key is missing*: {docID} idx: {key}")
+      if repair is None:
+        reply+= errorStr
+      elif repair(errorStr):
+        self.cursor.execute(f"DELETE FROM properties WHERE id='{docID}' AND key='{key}'")
+        self.connection.commit()
     #doc-type specific tests
     cmd = "SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'"
     self.cursor.execute(cmd)

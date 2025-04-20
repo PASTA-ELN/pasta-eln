@@ -172,8 +172,15 @@ class Backend(CLI_Mixin):
         #  edit: cwd of the project/step/task: remove last directory from cwd (since cwd contains a / at end: remove two)
         #  new: below the current project/step/task
         parentDirectory = self.cwd.parent if edit else self.cwd
-        path = parentDirectory/createDirName(doc['name'],doc['type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
         operation = 'u'
+        # prevent that projects have the same name: #TODO make this a separate function and merge others
+        dirNameBase = createDirName(doc['name'],doc['type'][0],childNum)
+        dirName = dirNameBase
+        idx = 0
+        while (parentDirectory/dirName).exists():
+          idx += 1
+          dirName = f'{dirNameBase}_{idx:02d}'
+        path = parentDirectory/dirName #update,or create (if new doc, update ignored anyhow)
       else:
         #measurement, sample, procedure
         shasum = ''
@@ -563,7 +570,7 @@ class Backend(CLI_Mixin):
     if success:
       try:
         _ = json.dumps(content['metaVendor'])
-        if not isinstance(content['metaVendor'], dict):
+        if not isinstance(content['metaVendor'], [dict,list]):
           raise TypeError(' Meta vendor: wrong type')
         report += outputString(outputStyle,'info','Number of vendor entries: '+str(len(content['metaVendor'])))
       except Exception:

@@ -224,6 +224,7 @@ class Table(QWidget):
     self.table.show()
     self.table.horizontalHeader().resizeSections(QHeaderView.ResizeMode.ResizeToContents)
     self.table.horizontalHeader().setStretchLastSection(True)
+    self.table.sortByColumn(0, Qt.SortOrder.AscendingOrder)
     return
 
 

@@ -30,6 +30,7 @@ class ConfigurationRepositories(QDialog):
     self.configuration = self.comm.backend.configuration
     self.checkedZenodo = False
     self.checkedDataverse = True
+    self.setStyleSheet(f"QLineEdit {{ {self.comm.palette.get('secondaryText', 'color')} }}")
 
     # GUI elements
     mainL = QVBoxLayout(self)
@@ -66,6 +67,7 @@ class ConfigurationRepositories(QDialog):
     self.dataverseButton2.setMinimumWidth(100)
     rightSide.addWidget(QLabel('Sub dataverse'), 3, 0)
     self.dvDataverse = QComboBox()
+    self.dvDataverse.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     rightSide.addWidget(self.dvDataverse, 3, 1)
 
     #final button box

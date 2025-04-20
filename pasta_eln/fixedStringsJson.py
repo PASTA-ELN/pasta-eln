@@ -123,8 +123,8 @@ SORTED_DB_KEYS  = ['id', 'type', 'dateCreated','dateModified','dateSync', 'user'
 DO_NOT_RENDER   = ['image','content','metaVendor','shasum','type','branch','gui','dateCreated',
                  'dateModified','id','user','name','externalId','client','elnIdentifier','oldIdentifier']
 
-AboutMessage  = '### PASTA-ELN | The favorite ELN for experimental scientists\nPASTA-ELN provides a streamlined '\
-                'and efficient solution for experimental scientists to manage and organize raw data alongside '\
+AboutMessage  = '### PASTA-ELN | The favorite ELN for experimental scientists\n\nPASTA-ELN provides a streamlined '\
+                'and efficient solution for experimental scientists\n\n to manage and organize raw data alongside '\
                 'associated metadata.\n\n'
 
 setupText = """

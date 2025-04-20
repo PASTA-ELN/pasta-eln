@@ -1,5 +1,5 @@
 """ all styling of buttons and other general widgets, some defined colors... """
-import logging
+import logging, re
 from typing import Any, Callable, Optional, Union
 import qtawesome as qta
 from PySide6.QtCore import QByteArray, Qt  # pylint: disable=no-name-in-module
@@ -7,7 +7,7 @@ from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap  #
 from PySide6.QtSvgWidgets import QSvgWidget  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QBoxLayout, QComboBox, QFormLayout, QGridLayout,  # pylint: disable=no-name-in-module
                                QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox, QPushButton, QScrollArea, QSizePolicy,
-                               QSplitter, QTextEdit, QVBoxLayout, QWidget)
+                               QSplitter, QTextEdit, QVBoxLayout, QWidget, QDialog, QDialogButtonBox)
 from .textTools.handleDictionaries import dict2ul
 from .textTools.stringChanges import markdownEqualizer
 
@@ -167,7 +167,7 @@ class Image():
 class Label(QLabel):
   """ Label widget: headline, ... """
   def __init__(self, text:str='', size:str='', layout:Optional[QLayout]=None,
-               function:Optional[Callable[[str, str],None]]=None, docID:str='', tooltip:str=''):
+               function:Optional[Callable[[str, str],None]]=None, docID:str='', tooltip:str='', style:str=''):
     """
     Args:
       text (str): text on label
@@ -176,15 +176,18 @@ class Label(QLabel):
       function (function): function to call on mouse click
       docID (str): docID on other string to connect to this label
       tooltip (str): tooltip shown when mouse hovers the button
+      style (str): css style
     """
     super().__init__()
     self.setText(text)
     if size == 'h1':
-      self.setStyleSheet('font-size: 14pt')
+      style += 'font-size: 14pt'
     elif size == 'h2':
-      self.setStyleSheet('font-size: 12pt')
+      style += 'font-size: 12pt'
     elif size == 'h3':
-      self.setStyleSheet('font-size: 10pt')
+      style += 'font-size: 10pt'
+    if style:
+      self.setStyleSheet(style)
     if layout is not None:
       layout.addWidget(self)
     self.mouseFunction = function
@@ -214,17 +217,30 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='Information', sty
     icon (str): icon: 'Information','Warning','Critical'
     style (str): css style
   """
-  dialog = QMessageBox(parent)
-  dialog.setWindowTitle(title)
-  dialog.setText(text)
-  if not (text.startswith('<') and text.endswith('>')):
-    dialog.setTextFormat(Qt.TextFormat.MarkdownText)
-  if icon in {'Information', 'Warning', 'Critical'}:
-    dialog.setIcon(getattr(QMessageBox, icon))
-  if style!='':
-    dialog.setStyleSheet(style)
   color = 'red' if icon=='Critical' else 'yellow' if icon=='Warning' else 'green'
-  dialog.setStyleSheet(f'QMessageBox {{border: 2px solid {color}; border-radius: 10px;}}')
+  icon = qta.icon('fa5s.minus-circle' if icon=='Critical' else
+                  'fa5s.exclamation-circle' if icon=='Warning' else
+                  'fa5s.info', color=color, scale_factor=1)
+  dialog = QDialog(parent)
+  dialog.setWindowTitle(title)
+  dialogW, dialogL = widgetAndLayout('V', None, 's', top='s', bottom='s')
+  dialog.setLayout(dialogL)
+  label = QLabel('')
+  label.setPixmap(icon.pixmap(30, 30))
+  dialogL.addWidget(label, alignment=Qt.AlignHCenter)  # type: ignore
+  # if icon in {'Information', 'Warning', 'Critical'}:
+  #   dialog.setIcon(getattr(QMessageBox, icon))
+  label = Label(text, 'h2', dialogL)
+  label.setStyleSheet(f'border: 2px solid {color}; border-radius: 10px;')
+  if text.startswith('<') and text.endswith('>'):
+    label.setTextFormat(Qt.TextFormat.RichText)
+  else:
+    label.setTextFormat(Qt.TextFormat.MarkdownText)
+  buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+  buttonBox.clicked.connect(lambda: dialog.accept())
+  dialogL.addWidget(buttonBox)
+  dialogW.setStyleSheet(f'border: 2px solid {color}; border-radius: 10px; {style}')
+  dialogW.setMinimumWidth(800)
   dialog.exec()
   return
 
@@ -380,9 +396,11 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
     return ''
   labelStr = ''
   if key=='tags':
-    tags = ['_curated_' if i=='_curated' else f'#{i}' for i in value]
-    tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
-    labelStr = 'Tags: '+' '.join(tags)
+    rating = ['\u2605'*int(i[1]) for i in value if re.match(r'^_\d$', i)]
+    tags = ['_curated_' if i=='_curated' else i for i in value]
+    tags = [i for i in tags if not re.match(r'^_\d$', i)]
+    labelStr = f'Rating: {rating[0]}' if rating else ''
+    labelStr = f'{labelStr}   Tags: '+' '.join(tags)
     if layout is not None:
       label = QLabel(labelStr)
       label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)

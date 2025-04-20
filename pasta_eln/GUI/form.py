@@ -8,9 +8,8 @@ from pathlib import Path
 from typing import Any, Union
 from PySide6.QtCore import QSize, Qt, QTimer  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit,  # pylint: disable=no-name-in-module
-                               QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout,
-                               QWidget)
+from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit,  QMessageBox, QScrollArea, # pylint: disable=no-name-in-module
+                               QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget)
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
 from ..guiCommunicate import Communicate
 from ..guiStyle import (IconButton, Image, Label, ScrollMessageBox, TextButton, showMessage, widgetAndLayout,
@@ -132,15 +131,17 @@ class Form(QDialog):
           gradeTagStr = '\u2605'*int(gradeTag[0][1]) if gradeTag else ''
           self.gradeChoices.setCurrentText(gradeTagStr)
           tagsBarMainL.addWidget(self.gradeChoices)
+          Label('Tags:', '',  tagsBarMainL, style='margin-left: 20px;')
           _, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL, spacing='s', right='m', left='m') #part which shows all the tags
           self.otherChoices = QComboBox()   #part/combobox that allow user to select
+          self.otherChoices.setToolTip('Choose a tag or type a new one')
           self.otherChoices.setEditable(True)
           self.otherChoices.setMaximumWidth(100)
-          self.otherChoices.setValidator(QRegularExpressionValidator('[a-z]\\w+'))
+          self.otherChoices.setValidator(QRegularExpressionValidator('[a-zA-Z]\\w+'))
           self.otherChoices.setIconSize(QSize(0,0))
           self.otherChoices.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
           tagsBarMainL.addWidget(self.otherChoices)
-          formL.addRow(QLabel('Tags:'), self.tagsBarMainW)
+          formL.addRow(QLabel('Rating:'), self.tagsBarMainW)
           self.allUserElements.append(('tags',''))
           self.updateTagsBar()
           self.otherChoices.currentIndexChanged.connect(self.addTag) #connect to slot only after all painting is done
@@ -435,7 +436,7 @@ class Form(QDialog):
           self.autosave()
       self.checkThreadTimer.stop()
       self.reject()
-    elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT):
+    elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT, Command.FORM_SAVE_DUPL):
       self.checkThreadTimer.stop()
       if (Path.home()/'.pastaELN.temp').is_file(): #if there is a temporary file
         with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp: #open it
@@ -559,10 +560,12 @@ class Form(QDialog):
       self.doc = docBackup
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
-      if command[0] is Command.FORM_SAVE_NEXT:
+      if command[0] in [Command.FORM_SAVE_NEXT, Command.FORM_SAVE_DUPL]:
         for delKey in [i for i in self.doc.keys() if i in ['id'] or i.startswith('meta')]: #delete these keys
           del self.doc[delKey]
-        self.comm.changeTable.emit('', '')
+        if command[0] is Command.FORM_SAVE_NEXT:
+          self.comm.changeTable.emit('', '')
+        #TODO implement a correct refresh of table and project view: send signal and only refresh the view that is open
       else:
         self.accept()  #close
         self.close()
@@ -672,4 +675,5 @@ class Command(Enum):
   FORM_CANCEL      = 8
   FORM_ADD_KV      = 9
   FORM_SHOW_DOC    = 10
-  FORM_SAVE_NEXT   = 11  # same as duplicate
+  FORM_SAVE_NEXT   = 11
+  FORM_SAVE_DUPL   = 12
