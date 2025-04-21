@@ -2,7 +2,23 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.17...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.1...HEAD)
+
+**Closed issues:**
+
+- capitalization of tags [\#437](https://github.com/PASTA-ELN/pasta-eln/issues/437)
+- "Ratings" vs. "tags" [\#432](https://github.com/PASTA-ELN/pasta-eln/issues/432)
+- Checking folder names when creating a new project [\#428](https://github.com/PASTA-ELN/pasta-eln/issues/428)
+- User names in elabFTW [\#425](https://github.com/PASTA-ELN/pasta-eln/issues/425)
+- Details provided in the API-key info box [\#424](https://github.com/PASTA-ELN/pasta-eln/issues/424)
+- Reordering when switching visibility [\#422](https://github.com/PASTA-ELN/pasta-eln/issues/422)
+- Duplication of items: Double clicking and Wrong list view [\#416](https://github.com/PASTA-ELN/pasta-eln/issues/416)
+- Theme: blue-light the icons are in black in the sidebar [\#357](https://github.com/PASTA-ELN/pasta-eln/issues/357)
+- v3.0: fix color issues when using \_amber theme [\#338](https://github.com/PASTA-ELN/pasta-eln/issues/338)
+
+## [v3.1.1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.1) (2025-04-15)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.17...v3.1.1)
 
 **Implemented enhancements:**
 
