@@ -3,7 +3,7 @@ import platform, json
 from pathlib import Path
 from PySide6.QtWidgets import QMainWindow, QApplication
 from qt_material import apply_stylesheet, get_theme  # of https://github.com/UN-GCPDS/qt-material
-from ..fixedStringsJson import CONF_FILE_NAME
+from ..fixedStringsJson import CONF_FILE_NAME, DEFAULT_COLORS_PALETTE
 
 
 class Palette():
@@ -22,19 +22,15 @@ class Palette():
       self.primary       = '#222222'
       self.secondaryText = '#000000'
     else:
-      self.primary       = get_theme(f'{self.theme}.xml')['primaryColor']
-      self.secondaryText =  get_theme(f'{self.theme}.xml')['primaryTextColor']
+      themeData = get_theme(f'{self.theme}.xml')
+      self.primary = themeData['primaryColor']
+      self.secondaryText = themeData['primaryTextColor']
     # for all themes
-    if systemTheme == 'dark':
-      self.text       = '#EEEEEE'
-      self.leafX      = '#222222'
-      self.leafO      = '#333333'
-      self.leafShadow = 'black'
-    else:
-      self.text       = '#111111'
-      self.leafX      = '#EEEEEE'
-      self.leafO      = '#FFFFFF'
-      self.leafShadow = '#AAAAAA'
+    colors = DEFAULT_COLORS_PALETTE[systemTheme]
+    self.text = colors['text']
+    self.leafX = colors['leafX']
+    self.leafO = colors['leafO']
+    self.leafShadow = colors['leafShadow']
 
 
   def setTheme(self, application:QApplication) -> None:
@@ -67,15 +63,16 @@ class Palette():
     return accent
 
 
-  def get(self, color:str, prefix:str) -> str:
-    """ Get color with a prefix for CSS styling
+  def get(self, color: str, prefix: str) -> str:
+    """
+    Get color with a prefix for CSS styling.
 
     Args:
-      color (str): qt-material colors without the trailing color; buttonText is an additional color
-      prefix (str): css-key, e.g. 'background-color'
+        color (str): qt-material colors without the trailing color; 'buttonText' is an additional color.
+        prefix (str): CSS key, e.g., 'background-color'.
 
     Returns:
-      str: css-string, e.g. 'background-color: #333421;'
+        str: CSS string, e.g., 'background-color: #333421;'. Returns an empty string if the theme is 'none'.
     """
     if self.theme=='none':
       return ''

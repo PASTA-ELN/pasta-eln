@@ -109,6 +109,21 @@ configurationGUI: dict[str, Any] = {
   }
 }
 
+DEFAULT_COLORS_PALETTE = {
+    'dark': {
+        'text': '#EEEEEE',
+        'leafX': '#222222',
+        'leafO': '#333333',
+        'leafShadow': 'black',
+    },
+    'light': {
+        'text': '#111111',
+        'leafX': '#EEEEEE',
+        'leafO': '#FFFFFF',
+        'leafShadow': '#AAAAAA',
+    },
+}
+
 SQLiteTranslationDict = {"'":'&prime;'}
 SQLiteTranslation     = str.maketrans(SQLiteTranslationDict)
 
