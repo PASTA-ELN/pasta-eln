@@ -570,7 +570,7 @@ class Backend(CLI_Mixin):
     if success:
       try:
         _ = json.dumps(content['metaVendor'])
-        if not isinstance(content['metaVendor'], [dict,list]):
+        if not isinstance(content['metaVendor'], (dict,list)):
           raise TypeError(' Meta vendor: wrong type')
         report += outputString(outputStyle,'info','Number of vendor entries: '+str(len(content['metaVendor'])))
       except Exception:

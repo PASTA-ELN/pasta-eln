@@ -1,26 +1,31 @@
 """ Color palette allows easy color access """
-import platform
-from PySide6.QtWidgets import QMainWindow
-from qt_material import get_theme
+import platform, json
+from pathlib import Path
+from PySide6.QtWidgets import QMainWindow, QApplication
+from qt_material import apply_stylesheet, get_theme  # of https://github.com/UN-GCPDS/qt-material
+from ..fixedStringsJson import CONF_FILE_NAME
 
 
 class Palette():
   """ Color palette allows easy color access """
-  def __init__(self, mainWindow:QMainWindow|None, theme:str) -> None:
-    self.theme = theme
-    if theme=='none':
-      if platform.system() == 'Linux':
-        self.subtheme = 'light' if mainWindow is None or mainWindow.palette().button().color().red()>128 else 'dark'
-      else:
-        self.subtheme = 'light'
+  def __init__(self, mainWindow:QMainWindow|None, accent:str) -> None:
+    """ Initialize the color palette
+    Args:
+      mainWindow (QMainWindow): main window for getting system theme
+      accent (str): accent color, e.g. 'pink'
+    """
+    accent = self.cleanAccent(accent)                # given theme #TODO temporary
+    systemTheme = 'light' if mainWindow is None or mainWindow.palette().button().color().red()>128 or \
+      platform.system() != 'Linux' else 'dark' # system color mode: dark/light
+    self.theme = 'none' if accent=='none' else f'{systemTheme}_{accent}' # theme name
+    if accent=='none':
       self.primary       = '#222222'
       self.secondaryText = '#000000'
     else:
-      self.subtheme = 'light' if 'light' in theme else 'dark'
-      self.primary       = get_theme(f'{theme}.xml')['primaryColor']
-      self.secondaryText =  get_theme(f'{theme}.xml')['primaryTextColor']
+      self.primary       = get_theme(f'{self.theme}.xml')['primaryColor']
+      self.secondaryText =  get_theme(f'{self.theme}.xml')['primaryTextColor']
     # for all themes
-    if self.subtheme == 'dark':
+    if systemTheme == 'dark':
       self.text       = '#EEEEEE'
       self.leafX      = '#222222'
       self.leafO      = '#333333'
@@ -30,6 +35,36 @@ class Palette():
       self.leafX      = '#EEEEEE'
       self.leafO      = '#FFFFFF'
       self.leafShadow = '#AAAAAA'
+
+
+  def setTheme(self, application:QApplication) -> None:
+    """ set theme of application
+    Args:
+      application (QApplication): application to set the theme
+    """
+    if self.theme != 'none':
+      apply_stylesheet(application, theme=f'{self.theme}.xml')
+    return
+
+
+  def cleanAccent(self, accent:str) -> str:
+    """ Clean accent color name
+
+    Args:
+      accent (str): accent color, e.g. 'pink'
+
+    Returns:
+      str: cleaned accent color
+    """
+    if '_' in accent:
+      newAccent = accent.split('_')[1]
+      with open(Path.home()/CONF_FILE_NAME, encoding='utf-8') as fConf:
+        configuration =json.load(fConf)
+      configuration['GUI']['theme'] = newAccent
+      with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
+        fConf.write(json.dumps(configuration, indent=2))
+      return newAccent
+    return accent
 
 
   def get(self, color:str, prefix:str) -> str:
@@ -45,5 +80,5 @@ class Palette():
     if self.theme=='none':
       return ''
     if color=='buttonText':
-      return  f'{prefix}: #EEEEEE; '
+      return  f'{prefix}: {self.text}; '
     return f'{prefix}: {get_theme(f"{self.theme}.xml")[f"{color}Color"]}; '

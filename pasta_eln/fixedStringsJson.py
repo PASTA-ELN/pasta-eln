@@ -92,11 +92,7 @@ defaultConfiguration: dict[str, Any] = {
 #   within each: array of 3: description, default, all_choices
 configurationGUI: dict[str, Any] = {
   'general': {
-    'theme': ['Theme',
-              'none',
-              ['dark_amber', 'dark_blue', 'dark_cyan', 'dark_pink', 'dark_purple', \
-               'dark_teal', 'dark_yellow', 'light_amber', 'light_blue', 'light_cyan', \
-               'light_pink', 'light_purple', 'light_teal', 'light_yellow', 'none']],
+    'theme': ['Color style', 'none', ['amber', 'blue', 'cyan', 'pink', 'purple', 'teal', 'yellow', 'none']],
     'loggingLevel': ['Logging level (more->less)', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR']],
     'autosave': ['Autosave entries in form', 'No', ['Yes', 'No']],
     'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']]

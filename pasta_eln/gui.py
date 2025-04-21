@@ -10,7 +10,6 @@ from typing import Any, Union
 from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox  # pylint: disable=no-name-in-module
-from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 from pasta_eln import __version__
 from .backend import Backend
 from .elabFTWsync import Pasta2Elab
@@ -115,7 +114,7 @@ class MainWindow(QMainWindow):
   def initialize(self) -> None:
     """ Initialize: things that might change """
     self.comm.backend.initialize(self.backend.configurationProjectGroup)  #restart backend
-    # Test for old datastructures
+    # Test for old datastructures: #TODO
     # start v3.0.17 -> 3.1
     cursor = self.comm.backend.db.cursor
     cursor.execute("SELECT * FROM docTypes WHERE docType LIKE '%procedure%'")
@@ -299,9 +298,7 @@ def mainGUI(projectGroup:str='') -> tuple[Union[QCoreApplication, None], MainWin
     application = QApplication.instance()
   main_window = MainWindow(projectGroup=projectGroup)
   logging.getLogger().setLevel(getattr(logging, main_window.backend.configuration['GUI']['loggingLevel']))
-  theme = main_window.backend.configuration['GUI']['theme']
-  if theme != 'none':
-    apply_stylesheet(application, theme=f'{theme}.xml')
+  main_window.comm.palette.setTheme(application)
   import qtawesome as qta  # qtawesome and matplot cannot coexist
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
