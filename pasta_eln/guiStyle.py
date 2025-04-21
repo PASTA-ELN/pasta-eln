@@ -1,13 +1,14 @@
 """ all styling of buttons and other general widgets, some defined colors... """
-import logging, re
+import logging
+import re
 from typing import Any, Callable, Optional, Union
 import qtawesome as qta
 from PySide6.QtCore import QByteArray, Qt  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap  # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QBoxLayout, QComboBox, QFormLayout, QGridLayout,  # pylint: disable=no-name-in-module
-                               QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox, QPushButton, QScrollArea, QSizePolicy,
-                               QSplitter, QTextEdit, QVBoxLayout, QWidget, QDialog, QDialogButtonBox)
+from PySide6.QtWidgets import (QBoxLayout, QComboBox, QDialog, QDialogButtonBox,  # pylint: disable=no-name-in-module
+                               QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox, QPushButton,
+                               QScrollArea, QSizePolicy, QSplitter, QTextEdit, QVBoxLayout, QWidget)
 from .textTools.handleDictionaries import dict2ul
 from .textTools.stringChanges import markdownEqualizer
 
