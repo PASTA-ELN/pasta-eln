@@ -1,5 +1,5 @@
 """ Long strings and dictionaries/JSON that would obfuscate code """
-from typing import Any, Union
+from typing import Any
 
 defaultDocTypes: list[list[str]] = [
   #docType,       PURL, title,          icon,                   shortcut, view
@@ -15,7 +15,7 @@ defaultDocTypes: list[list[str]] = [
 ]
 
 
-defaultSchema: list[list[Union[str,int]]] = [
+defaultSchema: list[list[str|int]] = [
   #docType,            group,index,key,        unit, mandatory, list
   ['x0',                  '', 0,   'name',      '',   'T',       ''],
   ['x0',                  '', 1,   'tags',      '',   '',        ''],
@@ -52,6 +52,7 @@ defaultSchema: list[list[Union[str,int]]] = [
   ['instrument/extension','', 3,   'vendor',    '',   '',        '']
 ]
 
+
 defaultDefinitions = [
   ['name',              'What is the name this item?',                                    ''],
   ['tags',              'What are the tags?',                                             ''],
@@ -69,11 +70,13 @@ defaultDefinitions = [
   ['geometry.height',   'Sample height',                         'https://schema.org/height']
 ]
 
+
 defaultDataHierarchyNode: list[dict[str, str]] = [
   {'docType':'-','class':'','idx':'0','name':'name',   'query':'What is the name?',     'unit':'','PURL':'','mandatory':'T','list':''},
   {'docType':'-','class':'','idx':'1','name':'tags',   'query':'What are the tags?',    'unit':'','PURL':'','mandatory':'','list':''},
   {'docType':'-','class':'','idx':'2','name':'comment','query':'What are the comments?','unit':'','PURL':'','mandatory':'','list':''}
   ]
+
 
 CONF_FILE_NAME = '.pastaELN.json'
 
@@ -109,7 +112,8 @@ configurationGUI: dict[str, Any] = {
   }
 }
 
-DEFAULT_COLORS_PALETTE = {
+
+DEFAULT_COLORS_PALETTE:dict[str,dict[str,str]] = {
     'dark': {
         'text': '#EEEEEE',
         'leafX': '#222222',
@@ -189,6 +193,7 @@ shortcuts = """
 **Ctrl+0**: Configuration
 """
 
+
 tableHeaderHelp = """
 <h4>You can add custom rows via bottom text area.</h4>
 
@@ -201,6 +206,7 @@ If you want to add a column:
 </ul>
 """
 
+# FontAwesome 5 icons
 allIcons = ['fa5s.address-book', 'fa5s.address-card', 'fa5s.adjust', 'fa5s.align-center', 'fa5s.align-justify',
             'fa5s.align-left', 'fa5s.align-right', 'fa5s.allergies', 'fa5s.ambulance',
             'fa5s.american-sign-language-interpreting', 'fa5s.anchor', 'fa5s.angle-double-down',
