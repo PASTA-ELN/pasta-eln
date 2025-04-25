@@ -1,0 +1,79 @@
+/* No scrollbars */
+html, body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Main page layout */
+  body.index .document {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+  }
+
+  /* Subpage layout */
+  body.subpage .document {
+    padding: 2em;
+  }
+
+  /* Back button */
+  .back-button {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 10px 15px;
+    background-color: #3e3e3e;
+    color: white !important;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.back-button:hover {
+    background-color: #0056b3;
+}
+
+h1, h2, h3, h4 {
+    font-weight: 600;
+}
+
+.three-columns {
+  display: flex;
+  gap: 1em;
+  margin: 2em 0;
+}
+
+.column {
+  flex: 1;
+  background: #f4f4f4;
+  padding: 1em;
+  border-radius: 6px;
+}
+
+
+.card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.2em;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 8px;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+.card .icon {
+  font-size: 2.5em;
+  margin-bottom: 0.5em;
+  color: #333;
+}
+
+.card .text {
+  font-size: 1em;
+  color: #444;
+}

@@ -1,7 +1,12 @@
 .. _userstory:
 
+.. raw:: html
+
+   <a href="index.html" class="back-button">&larr; Back</a>
+
 User Stories
 ************
+
 
 Planning-Based Research
 -----------------------

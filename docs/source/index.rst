@@ -1,9 +1,55 @@
 PASTA-ELN | The favorite ELN for experimental scientists
 ********************************************************
 
-PASTA-ELN (adaPtive mAterials Science meTadatA - Electronic Lab Notebook) provides a streamlined and efficient solution for experimental scientists to manage and organize raw data alongside associated metadata. By leveraging extractors that automate the processing of raw measurement files, PASTA-ELN facilitates the seamless integration of thumbnails, data, and metadata into a centralized database. These extractors can be customized and shared by users, empowering researchers to tailor their workflows to their specific needs. :ref:`To read more ... for advanced users <addons>`.
+PASTA-ELN provides a streamlined and local-installed electronic labnotebook (ELN) for experimental scientists to efficiently organize raw data and associated metadata.
 
-**Data Management Principles**: The raw data at the heart of scientific research must adhere to the FAIR principles (Findable, Accessible, Interoperable, and Reusable). By supporting these principles, PASTA-ELN enables researchers to efficiently locate and organize their data. Furthermore, PASTA-ELN encourages users to adhere to research data management guidelines, which are essential for ensuring the integrity and reproducibility of scientific findings. :ref:`which are given ... <dodonts>`.
+.. raw:: html
+
+   <div class="three-columns">
+      <div class="column">
+         <div class="card">
+            <div class="icon">🔥</div>
+            <div class="text">Fast and powerful</div>
+         </div>
+         <div class="card">
+            <div class="icon">⚡</div>
+            <div class="text">Instant results</div>
+         </div>
+         <div class="card">
+            <div class="icon">🚀</div>
+            <div class="text">Launch ready</div>
+         </div>
+      </div>
+      <div class="column">
+         <div class="card">
+            <div class="icon">🔥</div>
+            <div class="text">Fast and powerful</div>
+         </div>
+         <div class="card">
+            <div class="icon">⚡</div>
+            <div class="text">Instant results</div>
+         </div>
+         <div class="card">
+            <div class="icon">🚀</div>
+            <div class="text">Launch ready</div>
+         </div>
+      </div>
+      <div class="column">
+         <div class="card">
+            <div class="icon">🔥</div>
+            <div class="text">Fast and powerful</div>
+         </div>
+         <div class="card">
+            <div class="icon">⚡</div>
+            <div class="text">Instant results</div>
+         </div>
+         <div class="card">
+            <div class="icon">🚀</div>
+            <div class="text">Launch ready</div>
+         </div>
+      </div>
+   </div>
+
 
 **User-Centered Approaches**: Three distinct user stories illustrate the versatility of PASTA-ELN:
 
@@ -27,6 +73,7 @@ Overview
    dataverse_integration
    definitions
    verify
+   repositories
    faqs
 
 Main contributors
