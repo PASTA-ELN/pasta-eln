@@ -1015,7 +1015,7 @@ class SqlLiteDB:
         elif not minimal:
           reply+= outputString(outputStyle,'perfect',f"procedure/sample with empty path {docID}")
       else:                                                    #if sensible path
-        if len(stack.split('/')) != len(path.split(os.sep)) and path!='*' and not path.startswith('http'):
+        if len(stack.split('/')) != len(path.split('/')) and path!='*' and not path.startswith('http'):
           #check if length of path and stack coincide; ignore path=None=*
           if docType.startswith('procedure'):
             if not minimal:

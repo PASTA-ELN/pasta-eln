@@ -316,6 +316,9 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   backend.editData(doc)
   outputString(outputFormat,'info',backend.output('measurement'))
 
+  ### Create empty project so people can start immediately
+  backend.addData('x0', {'name': 'Blank Project'})
+
   ### VERIFY DATABASE INTEGRITY
   outputString(outputFormat,'h2','VERIFY DATABASE INTEGRITY')
   outputString(outputFormat,'info',backend.checkDB(outputStyle='text'))

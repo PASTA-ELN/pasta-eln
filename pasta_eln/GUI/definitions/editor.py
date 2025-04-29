@@ -31,6 +31,7 @@ class Editor(QDialog):
     self.data:pd.DataFrame = pd.DataFrame()
     self.setMinimumWidth(1000)
     self.setMinimumHeight(1000)
+    self.setWindowTitle('Edit definitions')
 
     ### GUI elements
     mainL = QVBoxLayout()

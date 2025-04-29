@@ -72,26 +72,20 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration of preferences is acceptable' )
         self.text.setMarkdown(self.mainText)
       else:
-        button = QMessageBox.question(self, 'PASTA-ELN configuration', 'Do you want to create/repair the configuration.',
-                                      QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-        if button == QMessageBox.StandardButton.Yes:
-          dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
-          if dirName is None:
-            self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to INVALID folder' )
-            self.text.setMarkdown(self.mainText)
-          elif list(Path(dirName).iterdir()):
-            button = QMessageBox.question(self, 'PASTA-ELN configuration', 'Folder is not empty. Do you want to remove all content?',
-                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-            if button == QMessageBox.StandardButton.Yes:
-              configuration('repair', dirName)
-            else:
-              self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
-              self.text.setMarkdown(self.mainText)
-          else:
-            configuration('repair', dirName)
-        else:
-          self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
+        dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
+        if dirName is None:
+          self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to INVALID folder' )
           self.text.setMarkdown(self.mainText)
+        elif list(Path(dirName).iterdir()):
+          button = QMessageBox.question(self, 'PASTA-ELN configuration', 'Folder is not empty. Do you want to remove all content?',
+                                  QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+          if button == QMessageBox.StandardButton.Yes:
+            configuration('repair', dirName)
+          else:
+            self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
+            self.text.setMarkdown(self.mainText)
+        else:
+          configuration('repair', dirName)
       #Shortcut
       button = QMessageBox.question(self, 'Create shortcut', 'Do you want to create the shortcut for PASTA-ELN on desktop?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
@@ -111,7 +105,6 @@ class ConfigurationSetup(QWidget):
       else:
         self.mainText = self.mainText.replace('- Example data', '- Example data was NOT added, per user choice')
       self.text.setMarkdown(self.mainText)
-      self.comm.backend.addData('x0', {'name': 'Blank Project'})
       #at end
       self.button1.hide()
       self.button2.show()

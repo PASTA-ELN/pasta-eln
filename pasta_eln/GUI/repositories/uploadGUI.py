@@ -28,6 +28,7 @@ class UploadGUI(QDialog):
     """
     super().__init__()
     self.comm    = comm
+    self.setWindowTitle('Upload project to repository')
 
     # GUI elements
     mainL = QVBoxLayout(self)

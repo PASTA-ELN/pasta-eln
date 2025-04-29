@@ -218,27 +218,31 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='Information', sty
     icon (str): icon: 'Information','Warning','Critical'
     style (str): css style
   """
+  iconSize = 40
   color = 'red' if icon=='Critical' else 'yellow' if icon=='Warning' else 'green'
   iconSymbol = qta.icon('fa5s.minus-circle' if icon=='Critical' else
                   'fa5s.exclamation-circle' if icon=='Warning' else
-                  'fa5s.info', color=color, scale_factor=1)
+                  'fa5s.info', color='white', scale_factor=1)
   dialog = QDialog(parent)
   dialog.setWindowTitle(title)
   dialogW, dialogL = widgetAndLayout('V', None, 's', top='s', bottom='s')
   dialog.setLayout(dialogL)
   label = QLabel('')
-  label.setPixmap(iconSymbol.pixmap(30, 30))
+  label.setPixmap(iconSymbol.pixmap(iconSize, iconSize))
+  label.setStyleSheet(f'background: {color};')
+  label.setMinimumSize(iconSize, iconSize)
   dialogL.addWidget(label, alignment=Qt.AlignHCenter)  # type: ignore
   label = Label(text, 'h2', dialogL)
-  label.setStyleSheet(f'border: 2px solid {color}; border-radius: 10px;')
+  label.setStyleSheet(style)
   if text.startswith('<') and text.endswith('>'):
     label.setTextFormat(Qt.TextFormat.RichText)
+    text = text.replace('<font color="black">',f'<font color="{parent.comm.palette.get("secondaryText", "").strip()[2:-1]}">') # type: ignore[attr-defined]
+    label.setText(text)
   else:
     label.setTextFormat(Qt.TextFormat.MarkdownText)
   buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
   buttonBox.clicked.connect(dialog.accept)
   dialogL.addWidget(buttonBox)
-  dialogW.setStyleSheet(f'border: 2px solid {color}; border-radius: 10px; {style}')
   dialogW.setMinimumWidth(800)
   dialog.exec()
   return
