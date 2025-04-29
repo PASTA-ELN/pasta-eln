@@ -53,7 +53,7 @@ h1, h2, h3, h4 {
 }
 
 
-.card {
+.card, .card:visited, .card:active {
   background: #fff;
   border-radius: 8px;
   padding: 1.2em;
@@ -63,11 +63,13 @@ h1, h2, h3, h4 {
   transition: transform 0.2s ease;
   display: block;
   text-decoration: none; /* Prevent underline */
-  color: inherit; /* Ensure the text color is inherited */
+  color: #333;
 }
 
 .card:hover {
   transform: translateY(-4px);
+  text-decoration: none; /* Prevent underline */
+  color: #333;
 }
 
 .card .icon {
@@ -78,12 +80,8 @@ h1, h2, h3, h4 {
 
 .card .text {
   font-size: 1em;
-  color: #444;
+  color: #333;
   text-decoration: none; /* Prevent underline */
   color: inherit; /* Ensure the text color is inherited */
 }
 
-.card a {
-  text-decoration: none; /* Prevent underline */
-  color: inherit; /* Inherit text color */
-}
