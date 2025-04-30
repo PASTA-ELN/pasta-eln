@@ -35,7 +35,16 @@ body.subpage .document {
     background-color: #0056b3;
 }
 
-h1, h2, h3, h4 {
+h1, h3, h4 {
+    font-weight: 600;
+    font-family: 'Inter', sans-serif !important;
+}
+h1 {
+    display: none;
+}
+h2 {
+    font-size: 2.5em !important;
+    margin: 0px !important;
     font-weight: 600;
     font-family: 'Inter', sans-serif !important;
 }

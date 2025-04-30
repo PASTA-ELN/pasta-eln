@@ -2,14 +2,12 @@
 
 .. raw:: html
 
-   <a href="index.html" class="back-button">&larr; Back</a>
-
-User Story Andrew
-*****************
-
-
-Planning-Based Research
------------------------
+   <div class="three-columns">
+      <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
+      <div style="flex: 12;">
+         <h2>User Story Andrew <br>Planning-Based Research</h2>
+      </div>
+   </div>
 
 **Andrew's Scenario**: Andrew, a researcher, utilizes the PASTA-ELN platform to plan and execute his research projects. To achieve this, he follows a structured approach:
 

@@ -1,16 +1,15 @@
-.. title:: PASTA-ELN Documentation
-   :hidden:
+PASTA-ELN Documentation
+=======================
 
 .. raw:: html
 
    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
    <div class="three-columns">
       <div style="flex: 12;">
-         <h1>PASTA-ELN | The favorite ELN<br>for experimental scientists</h1>
+         <h2>PASTA-ELN | The favorite ELN<br>for experimental scientists</h2>
       </div>
       <div style="flex: 2;">
-         <img src="_static/pasta_logo.svg"
-         alt="logo" style="width: 100%;"/>
+         <img src="_static/pasta_logo.svg" alt="logo" style="width: 100%;"/>
       </div>
    </div>
 
