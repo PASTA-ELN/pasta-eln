@@ -17,3 +17,6 @@
 
 This approach enables Andrew to maintain a planning-based project structure and keep track of the steps required to reach his research objective, as well as the corresponding data entries.
 
+.. raw:: html
+
+   <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
