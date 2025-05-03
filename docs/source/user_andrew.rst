@@ -1,21 +1,34 @@
 .. _user_andrew:
 
+User Story: Andrew
+==================
+
 .. raw:: html
 
    <div class="three-columns">
-      <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
+      <a href="index.html" class="back-button"><b>&larr; Back</b></a>
       <div style="flex: 12;">
-         <h2>User Story Andrew <br>Planning-Based Research</h2>
+         <h2>User Story: Plan-Based Research</h2>
       </div>
    </div>
 
-**Andrew's Scenario**: Andrew, a researcher, utilizes the PASTA-ELN platform to plan and execute his research projects. To achieve this, he follows a structured approach:
+**Use Case Overview**: Andrew, a PhD student, leverages the PASTA-ELN platform to meticulously plan and execute his research projects. His structured approach includes the following steps:
 
-*   In the project view of PASTA-ELN, Andrew outlines the steps necessary to reach his research objective and breaks them down into smaller sub-steps, depending on the required level of detail. For each task added to the project view, a corresponding folder is automatically created within the root project directory. As a result, the project hierarchy in PASTA-ELN is reflected in the folders on the harddisk of Andrew's computer.
-*   When executing tasks, Andrew collects relevant data, which is then associated with the corresponding task in his project. To manage data files within PASTA-ELN, Andrew moves or copies them into the respective folder on the harddisk and then scan the project hierarchy to have the metadata automatically extracted by the add-on programs.
-*   To document the samples or instruments used to complete certain tasks, Andrew can link existing sample or instrument items to the measurement entries in the project view. He also utilizes the "Procedures" category to organize experimental workflows and link them to executed tasks or subtasks. Additionally, metadata that requires manual entry, such as Andrew's notes on results quality or experimental process, can be added in the comment section of a task itself or the attached data file.
+* **Project Creation**: Andrew initiates his research by creating a new project with a clear **objective**, such as "Effects of temperature on enzyme activity," to focus his research. The **project status** is set to "active" while he works on it. If paused, he updates the status to "paused" and provides a comment explaining the reason, ensuring seamless resumption of work.
 
-This approach enables Andrew to maintain a planning-based project structure and keep track of the steps required to reach his research objective, as well as the corresponding data entries.
+* **Task Structuring**: Within the project view, Andrew outlines the necessary steps to achieve his research objective, breaking them into smaller, manageable sub-steps. For each task added, a corresponding folder is automatically created on the **hard drive within the project directory**, mirroring the project hierarchy.
+
+* **Including Data**: During task execution, Andrew collects relevant files by moving or copying them into the respective hard drive folder and then **scans the project hierarchy** to extract metadata. Alternatively, he employs the **drag-and-drop feature** to add files directly into the project view, maintaining the project structure.
+
+* **Annotation**: Andrew enhances his research documentation by adding **comments, tags, and ratings** to each measurement and task. This practice aids in recording observations and thoughts, proving invaluable during thesis writing and publication preparation.
+
+* **Linking Resources**: To document the samples or instruments used, Andrew **links measurements to existing samples, instruments, or procedures**. This linkage facilitates future reference when detailing scientific methods.
+
+* **Workflow Organization**: Andrew utilizes the "Workflows" category to manage experimental workflows, which include the subcategories  **Workflow Plan**, **Workflow Log**, and **Procedure**. The Workflow Plan provides a high-level overview, Procedures detail individual steps akin to standard operating procedures, and the Workflow Log captures deviations from the original plan.
+
+* **Metadata Entry**: For manually entered metadata, such as notes on result quality or experimental processes, Andrew uses the **extra field** in the measurement's form view.
+
+This systematic approach enables Andrew to maintain a well-organized, planning-based project structure, ensuring efficient tracking of research steps and associated data entries.
 
 .. raw:: html
 

@@ -41,4 +41,7 @@ In most cases, errors occur due to document duplication. To resolve this, you ca
 
 By following these guidelines, you can effectively troubleshoot and resolve verification errors in PastaELN, ensuring the accuracy and reliability of your results.
 
+Notes for Developers of the documentatino: use agentic mode and
+Can you make the markdown text professional and concise?
+
 .. |---| unicode:: U+02014 .. em dash

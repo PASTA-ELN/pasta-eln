@@ -3,26 +3,45 @@
 Installation and Troubleshooting Instructions
 =============================================
 
+.. raw:: html
+
+   <div class="three-columns">
+      <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
+      <div style="flex: 12;">
+         <h2>Installation instructions and help for Troubleshooting</h2>
+      </div>
+   </div>
+
+**Overview**: You can install Pasta-ELN on :ref:`Windows <windows_installation>`, :ref:`Linux <linux_installation>` and Mac-Computers. :ref:`Troubleshooting <troubleshooting>` hints are given at the end.
+
+
+.. _windows_installation:
+
 Windows Installation
 --------------------
 
-Using Default Python
-^^^^^^^^^^^^^^^^^^^^
+.. raw:: html
 
-We recommend to use the default Python installer:
+   <div class="text-highlight">
 
-1. Visit the Python website at https://www.python.org/downloads/windows/ and download the Windows installer for your architecture (likely 64-bit).
-2. Run the installer and select the option to "Add python.exe to PATH".
-3. Click "Install Now" to complete the installation.
-4. Open the Command Prompt (cmd) and execute the following commands:
+1. Download the current Python installer: https://www.python.org/ftp/python/3.13.3/python-3.13.3-amd64.exe.
+2. Run the installer and select the option to **"Add python.exe to PATH"** on the first screen.
+3. Click **"Install Now"** to complete the installation.
+4. Open the Command Prompt (cmd) and copy-paste the following commands:
 
     .. code-block:: bash
 
        pip install pasta-eln
+       python -m pasta_eln.tools "_ i q" ~/$pastaPath/data
        python -m pasta_eln.gui
 
+.. raw:: html
 
-**Recommendation:** We recommend installing additional packages such as `matplotlib`, `pandas`, and `spyder` to enhance your Python environment. To test your installation, open the Command Prompt and execute the following commands:
+   </div>
+
+Recommendation
+^^^^^^^^^^^^^^
+We recommend installing additional packages such as `matplotlib`, `pandas`, and `spyder` to enhance your Python environment. To test your installation, open the Command Prompt and execute the following commands:
 
 .. code-block:: bash
 
@@ -46,64 +65,49 @@ We recommend **against** using Anaconda as its license agreements prohibit its f
       python -m pasta_eln.gui
 
 
+.. _linux_installation:
+
 Linux Installation
 ------------------
 
-1. Open the terminal and create a new folder to hold all your PASTA related information
+.. raw:: html
+
+   <div class="text-highlight">
+
+Open the terminal and copy-paste the following commands:
 
     .. code-block:: bash
 
-        mkdir ~/PASTA
-
-2. Create a new virtual environment with the name `venvPasta`.
-
-    .. code-block:: bash
-
-        python3 -m venv ~/PASTA/venvPasta
-
-3. Activate the virtual environment by running
-
-    .. code-block:: bash
-
-        source ~/PASTA/venvPastabin/activate
-
-4. Install PASTA-ELN by executing
-
-    .. code-block:: bash
-
+        export pastaPath="PASTA_ELN"
+        mkdir ~/$pastaPath
+        python3 -m venv ~/$pastaPath/venv
+        source ~/$pastaPath/venv/bin/activate
         pip install pasta-eln
-
-5. Run the PASTA-ELN graphical interface by executing
-
-    .. code-block:: bash
-
+        python -m pasta_eln.tools "_ i q" ~/$pastaPath/data
         python3 -m pasta_eln.gui
 
-5. When prompted for data, we suggest to put your data inside a new **DATA** folder inside the Pasta folder you just created.
+.. raw:: html
 
+   </div>
 
+**Command Explanation**:
 
+1. Create a folder to store all PASTA-ELN-related files.
+2. Set up a virtual environment named `venv`.
+3. Activate the virtual environment.
+4. Install PASTA-ELN.
+5. Initialize the PASTA-ELN data folder.
+6. Launch the PASTA-ELN graphical interface.
 
+.. _troubleshooting:
 
-Troubleshooting
----------------
+Troubleshooting Instructions
+----------------------------
 
-If the graphical interface does not open, you can execute the following command to determine the status:
+If the graphical interface does not open, follow these steps to help diagnose the issue:
 
-.. code-block:: bash
+1. Copy the terminal output into an email.
+2. Attach the `pastaELN.log` file (found in your home folder or above "My Documents" on Windows).
+3. Zip the contents of the `pastaELN` folder.
 
-    python -m pasta_eln.installationTools
-
-To start the setup of the requirements, execute:
-
-.. code-block:: bash
-
-    python -m pasta_eln.installationTools install
-
-**Important:** Only execute the next step when setting up PASTA-ELN for the first time. To create the example dataset, execute:
-
-.. code-block:: bash
-
-    python -m pasta_eln.installationTools example
-
-Afterwards, the normal 'pastaELN' command should work, and a desktop icon should be present.
+Send the email with the attachments to our support team for assistance.

@@ -14,6 +14,7 @@ from requests.structures import CaseInsensitiveDict
 from pasta_eln.backend import Backend
 from pasta_eln.elabFTWsync import Pasta2Elab
 from pasta_eln.fixedStringsJson import CONF_FILE_NAME
+from pasta_eln.installationTools import configuration, createShortcut, exampleData
 from pasta_eln.textTools.stringChanges import outputString
 
 
@@ -42,6 +43,13 @@ class Tools:
     helpString += '  [s]can all projects\n'
     if command == 's':
       self.scanAllProjects()
+    helpString += '  [i]nstall PASTA-ELN\n'
+    if command == 'i':
+      dirName = sys.argv[2] if len(sys.argv)>2 else input('Enter path to data: ').strip()
+      if dirName:
+        configuration('repair', dirName.strip())
+        createShortcut()
+        exampleData(True, None, 'research', '')
 
     helpString += 'Commands - update Version 2 -> Version 3:\n'
     helpString += '  [c]onvert couchDB to SQLite\n'
@@ -169,7 +177,7 @@ class Tools:
     Args:
       todos (list): string-commands
     """
-    if todos:
+    if todos and todos[0]!='_':
       self.__setBackend__(todos.pop(0))
     while True:
       command = todos.pop(0) if todos else input('\nImportant commands [h]elp; [q]uit; [v]erify; [r]epair: ')
@@ -470,9 +478,9 @@ def main() -> None:
   print(  '-------------------------------------------------------------------------')
   tools = Tools()
   todos = []
-  if len(sys.argv)==2:
+  if len(sys.argv) in [2,3]:
     todos = sys.argv[1].split()
-    if not re.match(r'^\d+$', todos[0]):
+    if not re.match(r'^\d+$', todos[0]) and todos[0]!='_':
       print('** ERROR Malformed todo list (start with a number), exit')
       return
   tools.run(todos)

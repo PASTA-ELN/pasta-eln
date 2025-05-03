@@ -1,19 +1,26 @@
 .. _user_claire:
 
+User Story: Claire
+==================
+
 .. raw:: html
 
-   <a href="index.html" class="back-button">&larr; Back</a>
+   <div class="three-columns">
+      <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
+      <div style="flex: 12;">
+         <h2>User Story: Recording Meeting Notes</h2>
+      </div>
+   </div>
 
-User Story Claire
-*****************
+**Overview**: Claire, a PhD researcher, uses PASTA-ELN to efficiently organize her meeting notes and related materials.
 
+* Creates a **"Meetings" project** with folders for each meeting, where she records notes in Markdown format. These notes are instantly formatted and displayed in the project view for clarity.
+* **Links meeting insights** to specific **thesis measurements or workflows**, connecting concepts learned during meetings to her research.
+* **Adds relevant documents**, such as agendas or slides, to meeting folders and links them to her notes for centralized information management.
+* For multi-day events like conferences, creates **daily folders** to organize notes by day.
 
-Recording Meeting Notes
------------------------
+The Markdown comment tool offers a flexible and intuitive way to structure and manage notes.
 
-**Claire's Scenario**: Claire, a researcher who frequently attends conferences and meetings, aims to structure her notes using PASTA-ELN.
+.. raw:: html
 
-*   Claire can create an arbitrary structure within a project and record her notes as comments to each item in Markdown format. The comments are then formatted and displayed immediately for each item created in the project view, providing a clear overview of the notes.
-*   The notes in comments can be linked to data files, which can be attached by copying or moving to the respective folder.
-
-The Markdown comment tool provides a versatile and user-friendly way to create and structure notes.
+   <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>

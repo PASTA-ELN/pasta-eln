@@ -1,20 +1,29 @@
 .. _user_brenda:
 
+User Story: Brenda
+==================
+
 .. raw:: html
 
-   <a href="index.html" class="back-button">&larr; Back</a>
+   <div class="three-columns">
+      <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
+      <div style="flex: 12;">
+         <h2>User Story: Importing Previous Data</h2>
+      </div>
+   </div>
 
-User Story Brenda
-*****************
+**Use Case Overview**: Brenda, a Post-Doc, seeks to import existing data from her PhD thesis and leverage PASTA-ELN's features for publishing data in repositories efficiently. Her workflow includes the following steps:
 
-Importing Previous Data
------------------------
+* **Project Creation**: Brenda begins by creating a new project and transferring the central results of her thesis into the objective field.
 
-**Brenda's Scenario**: Brenda, a researcher with existing data from previous projects, aims to integrate this data into PASTA-ELN in a convenient manner.
+* **Data Import**: She imports the entire folder structure of her thesis into the project directory. The folder structure is organized according to her previous preferences, with data files named systematically from the start of her thesis. Brenda then uses the **scan project hierarchy** feature to extract metadata from the data files. Given the large volume of data, she lets this process run overnight, ensuring that metadata is automatically retrieved while preserving the existing folder structure.
 
-*   Brenda's data is already structured according to her preferences
-*   To integrate the existing data into PASTA-ELN, Brenda creates a project and then copies or moves her folders and data files into the project directory. The addons extract the required metadata is retrieved from the data files. After scanning the project hierarchy, Brenda's data and metadata are automatically added to the project, preserving the existing folder structure.
-*   Following the integration of the entire data collection, Brenda can manually fill in additional metadata, comments, and links to other items, such as samples or procedures.
+* **Annotation**: After integrating the data collection, Brenda manually can add **additional metadata, comments, and links** to other items, such as samples or procedures, to enhance the dataset's usability.
 
-This workflow showcases the adaptability of PASTA-ELN in integrating and managing large amounts of data with minimal input required from the user.
+* **Publishing Data to Repositories**: Brenda ensures that the **User Information** and **Repository Configuration** settings are correctly set up. As a newcomer to research data management, she appreciates the **help text** provided in the configuration settings. Once configured, she selects the "Publish to Repository" option to make her data publicly available. Brenda is pleased to see that the **repository** is automatically populated with the metadata she entered, enabling her to publish her data with minimal effort.
 
+This workflow highlights PASTA-ELN's adaptability in managing and integrating large datasets with minimal user input, as well as its user-friendly approach to publishing data in repositories like Zenodo and Dataverse.
+
+.. raw:: html
+
+   <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
