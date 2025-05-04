@@ -12,7 +12,9 @@ Motivation
       </div>
    </div>
 
-**Overview**: PASTA-ELN addresses unique research needs while adhering to principles of good scientific conduct.
+**Overview**: PASTA-ELN addresses unique :ref:`research needs <motivation1>` while :ref:`adhering to principles of good scientific conduct <dodonts>`.
+
+.. _motivation1:
 
 Motivation for PASTA-ELN
 ------------------------

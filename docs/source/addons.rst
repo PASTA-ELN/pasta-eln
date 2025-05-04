@@ -12,7 +12,9 @@ Add-Ons
       </div>
    </div>
 
-**Overview**: Add-ons are small Python programs that extend PASTA-ELN's functionality. Researchers can develop or adopt these tools and share them. Add-ons are categorized into Extractors and other add-ons. Access them via "Configuration" > "Project Group" to specify their location.
+**Overview**: Add-ons are small Python programs that extend PASTA-ELN's functionality. Researchers can develop or adopt these tools and share them. Add-ons are categorized into :ref:`Extractors <extractors` and :ref:`other add-ons <otherAddOns>`. Access them via "Configuration" > "Project Group" to specify their location.
+
+.. _extractors:
 
 Extractors
 ----------
@@ -91,6 +93,8 @@ Understanding file formats is crucial for developing extractors. Refer to:
 .. raw:: html
 
    <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
+
+.. _otherAddOns:
 
 Other Add-ons
 -------------

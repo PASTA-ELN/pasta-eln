@@ -12,7 +12,23 @@ Exchange Data with Other Tools
       </div>
    </div>
 
-**Overview**: Pasta-ELN supports data exchange with other tools. Import data from a Nextcloud server, synchronize between Pasta-ELN installations via an elabFTW server, and upload to repositories like Dataverse and Zenodo.
+**Overview**: Pasta-ELN supports data exchange with other tools. Import data from a :ref:`Nextcloud server <nextcloud>`, synchronize between Pasta-ELN installations via an :ref:`elabFTW server <elabFTW>`, and upload to repositories like :ref:`Dataverse <dataverse>` and :ref:`Zenodo <zenodo>`.
+
+.. _nextcloud:
+
+Nextcloud server integration
+----------------------------
+
+(to be written)
+
+.. _elabFTW:
+
+Syncronize via ElabFTW server
+-----------------------------
+
+(to be written)
+
+.. _dataverse:
 
 Dataverse Repository
 --------------------
@@ -35,6 +51,8 @@ Dataverse integration allows publishing PASTA projects on the `Dataverse platfor
 - *keyword* (list): defaults to the tags of this project
 - *subject* (choice): At least one subject from a controlled vocabulary
 - relatedPublications: is empty
+
+.. _zenodo:
 
 Zenodo
 ------

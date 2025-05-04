@@ -12,7 +12,9 @@ Definitions and Data Hierarchy
       </div>
    </div>
 
-**Overview**: Define metadata structures and data types (data schema) for projects. Specify terms and URLs to relate to ontologies.
+**Overview**: Define metadata structures and data types (data schema) for projects via a :ref:`Editors <dataSchemeEditor>`. Specify terms and URLs to relate to ontologies in a separate :ref:`GUI <definitionGUI>`.
+
+.. _dataSchemeEditor:
 
 Data Schema Editor
 ------------------
@@ -27,6 +29,8 @@ Located under "Project Group," the editor allows users to:
    - **List**: Link metadata to fixed lists (e.g., devices: "Oven," "Fume hood") or other data types (e.g., procedures).
 
 **Note**: Metadata must be unique and include a name, tags, and comments in the general tab.
+
+.. _definitionGUI:
 
 Definition Overview
 -------------------
