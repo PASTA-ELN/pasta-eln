@@ -1,7 +1,7 @@
 .. _exchange:
 
 Exchange Data with Other Tools
-=============================
+==============================
 
 .. raw:: html
 
@@ -12,7 +12,7 @@ Exchange Data with Other Tools
       </div>
    </div>
 
-**Overview**: Pasta-ELN supports data exchange with other tools. Import data from a :ref:`Nextcloud server <nextcloud>`, synchronize between Pasta-ELN installations via an :ref:`elabFTW server <elabFTW>`, and upload to repositories like :ref:`Dataverse <dataverse>` and :ref:`Zenodo <zenodo>`.
+**Overview**: Pasta-ELN supports data exchange with other tools. Import data from a :ref:`Nextcloud server <nextcloud>`, synchronize between Pasta-ELN installations via an :ref:`elabFTW server <elabFTW>`, and upload to repositories like :ref:`Dataverse <dataverse1>` and :ref:`Zenodo <zenodo1>`.
 
 .. _nextcloud:
 
@@ -28,7 +28,7 @@ Syncronize via ElabFTW server
 
 (to be written)
 
-.. _dataverse:
+.. _dataverse1:
 
 Dataverse Repository
 --------------------
@@ -52,7 +52,7 @@ Dataverse integration allows publishing PASTA projects on the `Dataverse platfor
 - *subject* (choice): At least one subject from a controlled vocabulary
 - relatedPublications: is empty
 
-.. _zenodo:
+.. _zenodo1:
 
 Zenodo
 ------
@@ -116,3 +116,4 @@ Comparison of Zenodo and Dataverse Terms
 .. raw:: html
 
    <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
+   <span style="float: right"><img src="_static/pasta_logo.svg" alt="logo" style="width: 60px;"/></span>

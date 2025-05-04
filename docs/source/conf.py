@@ -53,6 +53,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.inheritance_diagram',
     'sphinx.ext.viewcode',
+    'sphinx_copybutton',
     'sphinx.ext.napoleon',
 ]
 

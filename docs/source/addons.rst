@@ -12,12 +12,12 @@ Add-Ons
       </div>
    </div>
 
-**Overview**: Add-ons are small Python programs that extend PASTA-ELN's functionality. Researchers can develop or adopt these tools and share them. Add-ons are categorized into :ref:`Extractors <extractors` and :ref:`other add-ons <otherAddOns>`. Access them via "Configuration" > "Project Group" to specify their location.
+**Overview**: Add-ons are small Python programs that extend PASTA-ELN's functionality. Researchers can develop or adopt these tools and share them. Add-ons are categorized into :ref:`Extractors <extractors>` and :ref:`other add-ons <otherAddOns>`. Access them via "Configuration" > "Project Group" to specify their location.
 
 .. _extractors:
 
-Extractors
-----------
+Extractor add-ons
+-----------------
 
 Extractors generate metadata when scanning projects or dropping files into folders. They provide:
 
@@ -117,3 +117,4 @@ Process data from tables:
 .. raw:: html
 
    <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
+   <span style="float: right"><img src="_static/pasta_logo.svg" alt="logo" style="width: 60px;"/></span>
