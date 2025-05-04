@@ -1,43 +1,46 @@
-.. _faqs:
+.. _motivation:
 
-MAIN TITLE
-**********
+Motivation
+==========
+
+.. raw:: html
+
+   <div class="three-columns">
+      <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
+      <div style="flex: 12;">
+         <h2>Motivation and Unique Features</h2>
+      </div>
+   </div>
+
+**Overview**: PASTA-ELN addresses unique research needs while adhering to principles of good scientific conduct.
 
 Motivation for PASTA-ELN
-========================
+------------------------
 
-**What is the primary objective of the software?**
-    PASTA is designed to provide researchers with the flexibility to collect and manage data from two distinct sources:
+**Primary Objective**: PASTA provides researchers with tools to manage data from:
 
-    * Local hard drives, allowing for the free exchange and analysis of research data
-    * Links to stored data repositories, facilitating collaboration and access to existing research materials
+* Local hard drives for flexible data exchange and analysis.
+* Linked repositories for collaboration and access to existing research materials.
 
-    In line with industry best practices, PASTA adopts an agile project management approach, as outlined in [agile Projects](agileProjects.md).
+PASTA follows agile project management principles ([agile Projects](agileProjects.md)) and offers an open-source alternative to commercial platforms like Labfolder and SciNote.
 
-    By providing an open-source alternative to commercial platforms such as Labfolder and SciNote, PASTA offers a unique combination of features and benefits that cater to the needs of researchers seeking a flexible and collaborative data management solution.
+**Limitations**:
 
+* Not a persistent database for published data; integrates with solutions like Dataverse.
+* Not a primary repository for large-scale raw data; links to existing storage solutions.
+* Not a replacement for Data Management Plans (DMPs); complements tools like RDMO.
 
-**What are the limitations of PASTA?**
-    * PASTA is not intended to serve as a persistent database for published data. Instead, it is designed to integrate with existing solutions, such as Dataverse, which provides a robust and scalable platform for data archiving and sharing.
-    * Similarly, PASTA is not a primary repository for large-scale raw data storage. Instead, it will facilitate the linking and data extraction from existing large storage solutions, including those handling giga-, tera-, and peta-bytes of data.
-    * PASTA is also not intended to replace or replicate data management databases, such as Data Management Plans (DMPs), which are available through tools like RDMO on GitHub. Instead, PASTA will provide a complementary service by linking to and integrating with these databases.
+**Privacy Protection**:
 
-**How is privacy (German Datenschutz) protected?**
-    The lead designer of PASTA-ELN, along with many of their immediate colleagues, takes data protection seriously and demands privacy when using software. PASTA was designed to support privacy on multiple levels:
+* Data is stored locally unless explicitly shared.
+* Authorization and authorship are decoupled, allowing anonymous contributions.
+* Shared data adheres to FAIR principles, with user identification removed.
+* Researchers are advised to avoid entering personal data into database fields.
 
-    * All data and metadata are collected and stored exclusively on the desktop or laptop of the researcher, with no centralized data collection. Data is only uploaded to the research group's database if the researcher explicitly chooses to share it.
-    * A strict decoupling of authorization and authorship is implemented, ensuring that only authorized members of the research group can write to the database (authorization). The identity of the author of each entry can be recorded or remain anonymous (authorship).
-    * Researchers have the option to choose whether they wish to be identified as the author of a particular entry in the research group's database. If they decline, their identity will be replaced with an underscore (_), making it impossible for even another user or the system administrator to identify the author.
-    * Once data and metadata are shared in accordance with the FAIR principles of research, all user identification is intentionally removed, rendering all entries anonymous.
-    * This approach relies on researchers avoiding the entry of personal data into any database field, which is strongly discouraged in order to maintain the highest level of data protection.
-
-
-**Who is responsible for violations or rules? Who owns the data?**
-    The assignment of data ownership and responsibility for adherence to rules is a critical consideration that should be addressed by both the user and their respective institutional stakeholders (e.g. supervisor). This decision should be made in a manner that is flexible and adaptable to changes in user or stakeholder affiliation.
-
+**Data Ownership and Responsibility**: Ownership and rule adherence should be defined by users and institutional stakeholders, ensuring flexibility for changes in affiliation.
 
 Implementation
-==============
+^^^^^^^^^^^^^^
 
 **Why does PASTA not use a web-based interface for its database?**
     While web-based interfaces have become increasingly common, they also present several drawbacks. Specifically:
@@ -81,55 +84,60 @@ Implementation
 
 
 Why does PASTA-ELN work in the way it does?
-===========================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **When a folder is moved within the project hierarchy or deleted through the file system explorer, the original folder may persist in the project view, causing errors during scanning and integrity checks.**
     To prevent data loss, it's essential to avoid removing or moving folders through the file system explorer. We maintain existing database entries to preserve the error messages. In future updates, this solution may be revised to accommodate changes in our system architecture.
 
     This approach fosters transparency by enabling users to clearly visualize the consequences of file removal or relocation on the project. To minimize potential disruptions, we recommend modifying or duplicating unrelated files rather than deleting the project as a whole.
 
+
 .. _dodonts:
 
 Guidelines for Data Management in Research
-==========================================
+------------------------------------------
 
 Regardless of whether PASTA-ELN is used to manage ongoing research or to store existing data, it is crucial to establish a project structure during the planning stage. This involves defining and updating metadata definitions for the project, which may be inspired by agile project planning methodologies. By doing so, scientists can ensure that their data is organized in a logical and coherent manner, facilitating ease of access and comprehension.
 
 Data Organization and Labelling
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To ensure the accessibility and comprehensibility of data, files and entries should be assigned clear and descriptive names, accompanied by comments, tags, and other relevant metadata. PASTA-ELN enables users to add tags, thereby enhancing the searchability of data. By implementing these practices, scientists can guarantee that their data is easily understandable not only by themselves but also by their colleagues in collaborative research projects.
 
 Retention of Data
------------------
+^^^^^^^^^^^^^^^^^
 
 It is essential to maintain data integrity by avoiding the deletion of research data. Deleting data can lead to the manipulation of results, falsification of conclusions, and ultimately, scientific misconduct. Furthermore, data deletion compromises the reproducibility of scientific studies, rendering them unreliable and unverifiable.
 
 PASTA-ELN offers a "Hide" function, which enables users to temporarily conceal data files and other items within a project, thereby maintaining a clear overview while preventing any loss of data. This approach adheres to the principles of a good Electronic Laboratory Notebook (ELN), ensuring the preservation of data and promoting transparent research practices.
 
 Raw Data as the Foundation of Truth
------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In many cases, raw data is compressed or stored in formats that sacrifice metadata in order to conserve disk space. For example, images may be converted from high-resolution TIF files to lower-resolution JPEG files, which omit valuable metadata that TIF files contain. While this approach may seem efficient, it can lead to issues with data analysis, as the JPEG format alters the image when zoomed in, compromising its accuracy. To mitigate these problems, PASTA-ELN extracts data, metadata, and images from raw files, discouraging the use of compressed or secondary formats.
 
 Limitations of Graphical Output
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Instrument software often provides a graphical interface for displaying measurements, which can be useful for gaining a quick overview of results. However, this approach has limitations when it comes to publications, data analysis, and other applications that require accurate and reliable data. Unlike raw data files, these graphical outputs lack the provenance and metadata necessary for rigorous analysis.
 
 Exported Data: A Second-Best Option
------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 While instrument software may allow researchers to export data in CSV format, this approach is not ideal. Exported data may contain pre-processed or modified data, which can complicate analysis and obscure the accuracy of the original measurements. Moreover, this approach often excludes the corresponding metadata, making it difficult to track the provenance of the data. In contrast, raw binary files contain the full accuracy of the data, along with calibration and metadata settings, providing a more reliable foundation for data analysis.
 
 Retaining Raw Data in Excel Files
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When it comes to data storage, Excel files (.xlsx and .xls) have both advantages and disadvantages compared to CSV files. While Excel files use high-precision data, they also group experiments into separate sheets, which can increase the context and convenience of the data. However, researchers should be aware that Excel is not a scientific tool, and data in Excel files should be treated with caution.
 
 Additional Considerations
--------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Note-taking apps, such as Microsoft OneNote, are not suitable substitutes for Electronic Laboratory Notebooks (ELNs). ELNs are designed to facilitate structured research data, while note-taking apps are better suited for personal notes and ideas.
 * Researchers should be mindful of the need to exclude personal information from public research data, ensuring compliance with European data protection legislation.
 * A key principle in data management is to **share as much as possible**: procedures, metadata, and other relevant information.
+
+.. raw:: html
+
+   <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>

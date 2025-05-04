@@ -1,47 +1,50 @@
+.. _develop:
 
-**User-Centered Approaches**: Three distinct user stories illustrate the versatility of PASTA-ELN:
+Guides for Contributors and Developers
+======================================
 
-**Local-First Approach**: PASTA-ELN employs a local-first approach, storing all data and metadata on the user's storage device and synchronizing it with a server upon request. This ensures that data remains accessible through conventional software and maintains its security and confidentiality. Additionally, researchers can customize metadata definitions and create arbitrary folder structures to accommodate their unique workflows and research objectives. This flexibility allows users to easily transfer their data to other computers, collaborators, institutions, or archives by zipping the contents of their hard disk.
+.. raw:: html
 
+   <div class="three-columns">
+      <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
+      <div style="flex: 12;">
+         <h2>Guides for Contributors and Developers</h2>
+      </div>
+   </div>
 
-Main contributors
-=================
-* Steffen Brinckmann: principal investigator, focuses on python backend
-* Jithu Murugan: developer, focuses on front-end and back-end
-* Hanna Tsybenko: testing
-* Thomas Düren: graphical user interfaces
-* Raphael Röske: graphical user interfaces
-* Enmar Al-Khafagi: backend and debugging
-* Velislava Yonkova: first extensive user
-* multiple colleagues that help with their valuable discussions
+**Overview**: PASTA-ELN has benefited from contributions by many individuals. This guide provides hints and rules for those interested in contributing.
 
-Troubleshooting Verification Errors in PastaELN
-===============================================
-
-While PastaELN is designed to be reliable, errors can still occur. In such cases, advanced users can take steps to repair the data structure by modifying the underlying database file. **Before attempting any repairs, it is essential to create a backup of the pastaELN.db file** to prevent any potential data loss. The user can always manually inspect the database by opening the .db file with a sqlite editor (for instance SQLiteBrowser)
-
-Error Resolutions
------------------
-
-### 1. "ERROR: Path of folder is non-unique"
-
-1. Open the 'branches' table in the database using the sqlite editor (see above) and verify that the two affected IDs indeed point to the same path.
-2. Open the 'main' table and check if both IDs correspond to the same document, using the name as a filter.
-3. Identify the document with the lesser quality data and delete it. **Please note that this may require careful consideration to avoid data loss**.
-4. Record the deleted and remaining doc-IDs in the table, as this information may be useful for future reference.
-
-### 2. "ERROR: File on harddisk but not DB"
-
-1. Perform a scan of the folder to locate any new data.
-
-Deleting Documents
+Main Contributors
 ------------------
+- **Steffen Brinckmann**: Principal investigator, Python backend.
+- **Jithu Murugan**: Developer, front-end and back-end.
+- **Hanna Tsybenko**: Testing.
+- **Thomas Düren**: Graphical user interfaces.
+- **Raphael Röske**: Graphical user interfaces.
+- **Enmar Al-Khafagi**: Backend and debugging.
+- **Velislava Yonkova**: First extensive user.
+- **Colleagues**: Valuable discussions and insights.
 
-In most cases, errors occur due to document duplication. To resolve this, you can either use the serverActions API directly or write a small script to remove multiple documents.
+Repair Instructions
+-------------------
 
-By following these guidelines, you can effectively troubleshoot and resolve verification errors in PastaELN, ensuring the accuracy and reliability of your results.
+**Repair Database File**
 
-Notes for Developers of the documentatino: use agentic mode and
-Can you make the markdown text professional and concise?
+While PASTA-ELN is designed for reliability, errors may occur. Advanced users can repair the database by modifying the `pastaELN.db` file. **Always create a backup before making changes**. Use a SQLite editor (e.g., SQLiteBrowser) for manual inspection.
 
-.. |---| unicode:: U+02014 .. em dash
+**"ERROR: Path of folder is non-unique"**
+
+1. Open the `branches` table in the database and verify that the affected IDs point to the same path.
+2. Check the `main` table to confirm if both IDs correspond to the same document using the name as a filter.
+3. Identify and delete the document with lesser quality data. **Proceed carefully to avoid data loss**.
+4. Record the deleted and remaining document IDs for future reference.
+
+Notes for Documentation Developers
+-----------------------------------
+
+When updating the documentation, ensure it is professional and concise. Use tools like GitHub Copilot to assist in refining the text.
+"Can you make the markdown text professional and concise?"
+
+.. raw:: html
+
+   <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
