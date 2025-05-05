@@ -257,7 +257,8 @@ def runSourceVerification() -> None:
            'isort2'    : 'isort releaseVersion.py',
            'pylint2'   : 'pylint releaseVersion.py',
            'mypy2'     : 'mypy --no-warn-unused-ignores releaseVersion.py',
-           'sourcery2' : 'sourcery review releaseVersion.py'}
+           'sourcery2' : 'sourcery review releaseVersion.py',
+           'sphinx-doc': 'make -C docs'}
   for label, cmd in tools.items():
     print(f'------------------ start {label} -----------------')
     os.system(cmd)

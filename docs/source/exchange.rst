@@ -24,7 +24,7 @@ Nextcloud server integration
 .. _elabFTW:
 
 Synchronize via ElabFTW server
------------------------------
+------------------------------
 
 (to be written)
 
