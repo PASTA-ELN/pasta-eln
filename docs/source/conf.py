@@ -53,6 +53,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.inheritance_diagram',
     'sphinx.ext.viewcode',
+    'sphinx_copybutton',
     'sphinx.ext.napoleon',
 ]
 
@@ -105,7 +106,15 @@ intersphinx_mapping = {'<name>': ('https://docs.python.org/', None)}
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'alabaster'
+html_theme_options = {
+    "show_related": False,
+    "sidebar_collapse": False,
+    "show_powered_by": False,
+}
+html_sidebars = {
+    '**': []
+}
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
@@ -115,6 +124,7 @@ html_logo = '_static/pasta_logo.svg'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+html_css_files = ['custom.css']
 
 # If true, the index is split into individual pages for each letter.
 html_split_index = True

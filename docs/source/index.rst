@@ -1,44 +1,86 @@
-PASTA-ELN | The favorite ELN for experimental scientists
-********************************************************
+PASTA-ELN Documentation
+=======================
 
-PASTA-ELN (adaPtive mAterials Science meTadatA - Electronic Lab Notebook) provides a streamlined and efficient solution for experimental scientists to manage and organize raw data alongside associated metadata. By leveraging extractors that automate the processing of raw measurement files, PASTA-ELN facilitates the seamless integration of thumbnails, data, and metadata into a centralized database. These extractors can be customized and shared by users, empowering researchers to tailor their workflows to their specific needs. :ref:`To read more ... for advanced users <addons>`.
+.. raw:: html
 
-**Data Management Principles**: The raw data at the heart of scientific research must adhere to the FAIR principles (Findable, Accessible, Interoperable, and Reusable). By supporting these principles, PASTA-ELN enables researchers to efficiently locate and organize their data. Furthermore, PASTA-ELN encourages users to adhere to research data management guidelines, which are essential for ensuring the integrity and reproducibility of scientific findings. :ref:`which are given ... <dodonts>`.
+   <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+   <div class="three-columns">
+      <div style="flex: 12;">
+         <h2>PASTA-ELN | The favorite ELN<br>for experimental scientists</h2>
+      </div>
+      <div style="flex: 2;">
+         <img src="_static/pasta_logo.svg" alt="logo" style="width: 100%;"/>
+      </div>
+   </div>
 
-**User-Centered Approaches**: Three distinct user stories illustrate the versatility of PASTA-ELN:
+PASTA-ELN provides a streamlined and locally installed electronic labnotebook (ELN) for experimental scientists to efficiently organize raw data and associated metadata.
 
-1.  **Planning-Based Research**: Andrew's approach involves planning his research and then executing tasks. Learn more about how to follow this path by consulting the :ref:`Planning Based Research <Planning-Based Research>` section.
-2.  **Importing Previous Data**: Brenda's workflow involves integrating data from previous research projects. Discover how to import and consolidate your existing data by reading the :ref:`Importing Previous Data <Importing previous data>` section.
-3.  **Recording Meeting Notes**: Claire's workflow focuses on structuring meeting notes and conference materials. Find out how to capture and organize your meeting notes by consulting the :ref:`Recording Meeting Notes <Recording meeting notes>` section.
+.. raw:: html
 
-**Local-First Approach**: PASTA-ELN employs a local-first approach, storing all data and metadata on the user's storage device and synchronizing it with a server upon request. This ensures that data remains accessible through conventional software and maintains its security and confidentiality. Additionally, researchers can customize metadata definitions and create arbitrary folder structures to accommodate their unique workflows and research objectives. This flexibility allows users to easily transfer their data to other computers, collaborators, institutions, or archives by zipping the contents of their hard disk.
+   <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+   <div class="three-columns">
+      <div class="column">
+         <div class="heading">Use cases</div>
+         <a href="user_andrew.html" class="card">
+            <div class="icon"><i data-lucide="square-chart-gantt"></i></div>
+            <div class="text">Andrew <b>plans his research</b> and then executs the tasks ...</div>
+         </a>
+         <a href="user_brenda.html" class="card">
+            <div class="icon"><i data-lucide="file-clock"></i></div>
+            <div class="text">Brenda <b>imports data</b> from a previous research project ...</div>
+         </a>
+         <a href="user_claire.html" class="card">
+            <div class="icon"><i data-lucide="presentation"></i></div>
+            <div class="text">Claire <b>saves &amp; sorts notes</b> of conferences and meetings ...</div>
+         </a>
+      </div>
+      <div class="column">
+         <div class="heading">First steps</div>
+         <a href="install.html" class="card">
+            <div class="icon"><i data-lucide="settings"></i></div>
+            <div class="text"><b>Installation</b> on your desktop computer</div>
+         </a>
+         <a href="addons.html" class="card">
+            <div class="icon"><i data-lucide="blocks"></i></div>
+            <div class="text"><b>Add-ons:</b> extractors, project reporter, etc.</div>
+         </a>
+         <a href="definitions.html" class="card">
+            <div class="icon"><i data-lucide="database"></i></div>
+            <div class="text">Configuration of<br> <b>data structure</b> and their <b>definitions</b></div>
+         </a>
+      </div>
+      <div class="column">
+         <div class="heading">More info</div>
+         <a href="exchange.html" class="card">
+            <div class="icon"><i data-lucide="arrow-right-left"></i></div>
+            <div class="text">Data <b>interoperability</b> with other tools</div>
+         </a>
+         <a href="motivation.html" class="card">
+            <div class="icon"><i data-lucide="lightbulb"></i></div>
+            <div class="text"><b>Motivation</b> and <b>unique features</b> of PASTA-ELN</div>
+         </a>
+         <a href="develop.html" class="card">
+            <div class="icon"><i data-lucide="square-code"></i></div>
+            <div class="text">Guides for <b>contributors and developers</b></div>
+         </a>
+      </div>
+   </div>
+   <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+   <script>
+   lucide.createIcons();
+   </script>
 
-Overview
-========
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
+   user_andrew
+   user_brenda
+   user_claire
    install
-   userstory
-   dodonts
    addons
-   data_hierarchy_configuration
-   dataverse_integration
    definitions
-   verify
-   faqs
-
-Main contributors
-=================
-* Steffen Brinckmann: principal investigator, focuses on python backend
-* Jithu Murugan: developer, focuses on front-end and back-end
-* Hanna Tsybenko: testing
-* Thomas Düren: graphical user interfaces
-* Raphael Röske: graphical user interfaces
-* Enmar Al-Khafagi: backend and debugging
-* Velislava Yonkova: first extensive user
-* multiple colleagues that help with their valuable discussions
-
-
-.. |---| unicode:: U+02014 .. em dash
+   exchange
+   motivation
+   develop

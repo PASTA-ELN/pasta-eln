@@ -1,24 +1,53 @@
 .. _definitions:
 
-Definitions in PASTA-ELN
-************************
+Definitions and Data Hierarchy
+==============================
 
-Definition overview
+.. raw:: html
+
+   <div class="three-columns">
+      <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
+      <div style="flex: 12;">
+         <h2>Define Data Schema and Definitions</h2>
+      </div>
+   </div>
+
+**Overview**: Define metadata structures and data types (data schema) for projects via a :ref:`Editors <dataSchemeEditor>`. Specify terms and URLs to relate to ontologies in a separate :ref:`GUI <definitionGUI>`.
+
+.. _dataSchemeEditor:
+
+Data Schema Editor
+------------------
+
+Located under "Project Group," the editor allows users to:
+
+1. Select, edit, or create data types.
+2. Specify metadata in a table, including:
+   - **Description**
+   - **Unit**
+   - **Mandatory status**
+   - **List**: Link metadata to fixed lists (e.g., devices: "Oven," "Fume hood") or other data types (e.g., procedures).
+
+**Note**: Metadata must be unique and include a name, tags, and comments in the general tab.
+
+.. _definitionGUI:
+
+Definition Overview
 -------------------
 
-In scientific contexts, properties are often defined with specific details. For instance, a temperature measurement might be represented as:
+Scientific properties require detailed definitions. For example:
 
 .. code-block::
 
     temperature_A : 97
 
-Here, **temperature_A** is referred to as the **key**, while 97 represents the **value**, which in this example is a numerical figure. However, this representation lacks essential information, such as:
+Here, **temperature_A** is the **key**, and 97 is the **value**. However, additional details like:
 
-- **Scientific unit**: Units may vary across measurements.
-- **Description**: Could include text in the user's language, an official explanation, or other clarifying details.
-- **IRI/URL**: A reference to an authoritative online resource, such as an ontology node or standardized definition.
+- **Scientific unit**
+- **Description**
+- **PURL/IRI**
 
-To address these gaps, the entry could be restructured as follows:
+are essential. A complete representation:
 
 .. code-block::
 
@@ -26,22 +55,27 @@ To address these gaps, the entry could be restructured as follows:
         'value': 97,
         'unit': 'C',
         'description': 'Temperature inside the instrument’s right side',
-        'IRI': 'https://www.wikidata.org/wiki/Q11466'}
+        'PURL': 'https://www.wikidata.org/wiki/Q11466'}
 
-Additional metadata can further enrich each property, such as:
+Additional metadata can include:
 
-- **Uncertainty**: To account for the margin of error in values.
-- **Data type**: For example, integer, text, date, etc.
-- **Allowable values**: For instance, temperatures cannot be less than 0 K.
+- **Uncertainty**: Margin of error.
+- **Data type**: Integer, text, date, etc.
+- **Allowable values**: E.g., temperatures cannot be below 0 K.
 
-While including this information enhances the metadata's richness, it also increases complexity for both users and developers. PASTA-ELN seeks to strike a balance between usability—minimizing bugs by keeping things straightforward—and offering users the flexibility to include necessary details. Most additional metadata can be incorporated within the **value** or **description** fields.
+PASTA-ELN balances usability and flexibility, allowing most metadata in the **value** or **description** fields.
 
 Handling Multiple Datasets and Data Types
 -----------------------------------------
 
-When a specific definition is used across multiple database locations, duplicating the associated information is inefficient. To optimize this, PASTA-ELN stores the **description** and **IRI** for each **key** in a centralized table (referred to as *definitions*). However, the **value** and **unit** can either be stored independently or inherit from the master definition. In cases where both individual and master definitions specify a unit, precedence is logically given to the individual value's unit.
+To avoid duplication, PASTA-ELN stores **description** and **PURL** for each **key** in a centralized table (*definitions*). The **value** and **unit** can be stored independently or inherit from the master definition. If both individual and master definitions specify a unit, the individual value's unit takes precedence.
 
-This approach ensures that each **key** is unique and appears only once. For example:
+This ensures each **key** is unique. For example:
 
-- If "height" is defined for instruments, the same "height" key applies to samples, sharing the same **description** and **IRI** but potentially differing in units.
-- If distinct descriptions are required, unique **keys** must be assigned to differentiate them.
+- "Height" defined for instruments applies to samples, sharing the same **description** and **PURL** but potentially differing in units.
+- Unique **keys** are required for distinct descriptions.
+
+.. raw:: html
+
+   <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
+   <span style="float: right"><img src="_static/pasta_logo.svg" alt="logo" style="width: 60px;"/></span>
