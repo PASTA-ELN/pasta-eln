@@ -31,7 +31,6 @@ Windows Installation
     .. code-block:: bash
 
        pip install pasta-eln
-       python -m pasta_eln.tools "_ i q" ~/$pastaPath/data
        python -m pasta_eln.gui
 
 .. raw:: html
@@ -55,7 +54,6 @@ Windows Installation
     .. code-block:: bash
 
       pip install pasta-eln
-      python -m pasta_eln.tools "_ i q" ~/$pastaPath/data
       python -m pasta_eln.gui
 
 .. _linux_installation:
