@@ -23,7 +23,7 @@ PASTA-ELN provides a streamlined and locally installed electronic labnotebook (E
          <div class="heading">Use cases</div>
          <a href="user_andrew.html" class="card">
             <div class="icon"><i data-lucide="square-chart-gantt"></i></div>
-            <div class="text">Andrew <b>plans his research</b> and then executs the tasks ...</div>
+            <div class="text">Andrew <b>plans his research</b> and then executes the tasks ...</div>
          </a>
          <a href="user_brenda.html" class="card">
             <div class="icon"><i data-lucide="file-clock"></i></div>

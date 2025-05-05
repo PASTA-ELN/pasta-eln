@@ -74,7 +74,8 @@ Open terminal and execute:
         python3 -m venv ~/$pastaPath/venv
         source ~/$pastaPath/venv/bin/activate
         pip install pasta-eln
-        python -m pasta_eln.tools "_ i q" ~/$pastaPath/data
+        python3 -m pasta_eln.installationTools install ~/$pastaPath/data
+        python3 -m pasta_eln.installationTools example
         python3 -m pasta_eln.gui
 
 .. raw:: html
