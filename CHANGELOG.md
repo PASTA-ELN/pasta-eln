@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.1...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.2...HEAD)
+
+**Closed issues:**
+
+- Description in data schema editos appear for all item types [\#445](https://github.com/PASTA-ELN/pasta-eln/issues/445)
+
+## [v3.1.2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.2) (2025-04-21)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.1...v3.1.2)
 
 **Closed issues:**
 
