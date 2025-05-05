@@ -116,3 +116,12 @@ h2 {
     margin: 0;
     border-left: 4px solid #1f77b4; padding-left: 10px; margin-left: 10px;
 }
+
+.user-story {
+    display: flex;
+    align-items: flex-start;
+}
+.user-story .image {
+    margin-right: 15px;
+    flex: 3;
+}
