@@ -115,7 +115,7 @@ class ElabFTWApi:
     if response.status_code == 200:
       res = json.loads(response.content.decode('utf-8'))
       return res if identifier == -1 else [res]
-    logging.error("Occurred in get of url %s / %s",entryType, identifier)
+    logging.error('Occurred in get of url %s / %s',entryType, identifier)
     return [{}]
 
   def updateEntry(self, entryType:str, identifier:int, content:dict[str,Any]={}) -> bool:
@@ -155,7 +155,7 @@ class ElabFTWApi:
     response = requests.delete(f'{self.url}{entryType}/{identifier}', **self.param)
     if response.status_code == 204:
       return True
-    logging.error("Occurred in delete of url %s", entryType)
+    logging.error('Occurred in delete of url %s', entryType)
     return False
 
 
@@ -196,7 +196,7 @@ class ElabFTWApi:
     response = requests.post(f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}', **self.param)
     if response.status_code == 201:
       return True
-    logging.error("Occurred in create of url %s%s/%s/%s_links/%s : %s",self.url,entryType,identifier,targetType,
+    logging.error('Occurred in create of url %s%s/%s/%s_links/%s : %s',self.url,entryType,identifier,targetType,
                   linkTarget,response.json)
     return False
 
@@ -246,7 +246,7 @@ class ElabFTWApi:
                              files=data, verify=self.param['verify'], timeout=60)
     if response.status_code == 201:
       return int(response.headers['Location'].split('/')[-1])
-    logging.error("occurred in upload of url %s/%s : %s",entryType,identifier,
+    logging.error('occurred in upload of url %s/%s : %s',entryType,identifier,
                   json.loads(response.content.decode('utf-8'))['description'])
     return -1
 
@@ -284,7 +284,7 @@ class ElabFTWApi:
     response = requests.delete(f'{self.url}{entryType}/{identifier}/uploads/{uploadID}', **self.param)
     if response.status_code == 204:
       return True
-    logging.error("occurred in upload delete of url %s/%s/uploads/%s",entryType,identifier,uploadID)
+    logging.error('occurred in upload delete of url %s/%s/uploads/%s',entryType,identifier,uploadID)
     return False
 
 
@@ -326,5 +326,5 @@ class ElabFTWApi:
     if response.status_code == 200:
       res = json.loads(response.content.decode('utf-8'))
       return res if groupID == -1 else [res]
-    logging.error("occurred in get of url: %s",url)
+    logging.error('occurred in get of url: %s',url)
     return [{}]
