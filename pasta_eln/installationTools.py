@@ -410,7 +410,7 @@ def main() -> None:
   print('Add "shortcut" argument to create a desktop shortcut.')
   if len(sys.argv)>1 and 'shortcut' in sys.argv:
     print('---- Create Shortcut ----')
-    print('create shortcut  :', createShortcut())
+    createShortcut()
 
   logging.info('End PASTA Install')
   return
