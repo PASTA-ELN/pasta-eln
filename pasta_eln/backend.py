@@ -176,10 +176,11 @@ class Backend(CLI_Mixin):
         # prevent that projects have the same name: #TODO make this a separate function and merge others
         dirNameBase = createDirName(doc['name'],doc['type'][0],childNum)
         dirName = dirNameBase
-        idx = 0
-        while (parentDirectory/dirName).exists():
-          idx += 1
-          dirName = f'{dirNameBase}_{idx:02d}'
+        if 'branch' not in doc or doc['branch'][0]['path'] != dirName: #only change if it is not the same name as before
+          idx = 0
+          while (parentDirectory/dirName).exists():
+            idx += 1
+            dirName = f'{dirNameBase}_{idx:02d}'
         path = parentDirectory/dirName #update,or create (if new doc, update ignored anyhow)
       else:
         #measurement, sample, procedure
