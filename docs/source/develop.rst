@@ -39,6 +39,24 @@ While PASTA-ELN is designed for reliability, errors may occur. Advanced users ca
 3. Identify and delete the document with lesser quality data. **Proceed carefully to avoid data loss**.
 4. Record the deleted and remaining document IDs for future reference.
 
+Uninstalling
+------------
+
+Windows
+^^^^^^^
+
+* Uninstall both python
+* remove shortcut on Windows desktop
+* execute
+
+.. code-block:: batch
+
+   del %UserProfile%\.pastaELN.json
+   rmdir /s /q %UserProfile%\Documents\PASTA_ELN_DATA
+   rmdir /s /q  %UserProfile%\AppData\Local\Programs\Python
+
+
+
 Notes for Documentation Developers
 -----------------------------------
 

@@ -23,19 +23,29 @@ Windows Installation
 
    <div class="text-highlight">
 
-1. Download Python: https://www.python.org/ftp/python/3.13.3/python-3.13.3-amd64.exe.
-2. Run the installer and select **"Add python.exe to PATH"**.
-3. Click **"Install Now"**.
-4. Open Command Prompt (cmd) and execute:
-
-    .. code-block:: bash
-
-       pip install pasta-eln
-       python -m pasta_eln.gui
+Automatic Installation
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. raw:: html
 
+   Download <a href="_source/InstallPastaELN.bat">Installation batch script</a> and execute it
    </div>
+
+
+Manual Installation
+^^^^^^^^^^^^^^^^^^^
+1. Download Python: https://www.python.org/ftp/python/3.13.3/python-3.13.3-amd64.exe.
+2. Run the installer and select **"Add python.exe to PATH"**.
+3. Click **"Install Now"**.
+4. Open Command Prompt (cmd) and copy-paste following content:
+
+    .. code-block:: bash
+
+      pip install pasta-eln
+      python -m pasta_eln.installationTools install %UserProfile%\Documents\PASTA_ELN_DATA
+      python -m pasta_eln.installationTools shortcut
+      python -m pasta_eln.installationTools example
+      python -m pasta_eln.gui
 
 **Recommendation**: Install additional packages for enhanced functionality and test python installation:
 
@@ -49,7 +59,7 @@ Windows Installation
 1. Download Anaconda: https://www.anaconda.com/download.
 2. Install with default settings.
 3. Create a new environment with Python 3.11.
-4. Execute:
+4. Copy-Paste following content:
 
     .. code-block:: bash
 
@@ -65,7 +75,7 @@ Linux Installation
 
    <div class="text-highlight">
 
-Open terminal and execute:
+Open terminal and copy-paste following content:
 
     .. code-block:: bash
 
@@ -75,6 +85,7 @@ Open terminal and execute:
         source ~/$pastaPath/venv/bin/activate
         pip install pasta-eln
         python3 -m pasta_eln.installationTools install ~/$pastaPath/data
+        python3 -m pasta_eln.installationTools shortcut
         python3 -m pasta_eln.installationTools example
         python3 -m pasta_eln.gui
 

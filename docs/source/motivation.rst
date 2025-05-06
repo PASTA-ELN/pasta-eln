@@ -1,6 +1,6 @@
 .. _motivation:
 
-Motivation and features
+Motivation and Features
 =======================
 
 .. raw:: html
@@ -19,80 +19,47 @@ Motivation and features
 Motivation for PASTA-ELN
 ------------------------
 
-**Primary Objective**: PASTA provides researchers with tools to manage data from:
+**Objective**: Provide tools for managing data from:
 
-* Local hard drives for flexible data exchange and analysis.
-* Linked repositories for collaboration and access to existing research materials.
-
-PASTA follows agile project management principles ([agile Projects](agileProjects.md)) and offers an open-source alternative to commercial platforms like Labfolder and SciNote.
-
-**Limitations**:
-
-* Not a persistent database for published data; integrates with solutions like Dataverse.
-* Not a primary repository for large-scale raw data; links to existing storage solutions.
-* Not a replacement for Data Management Plans (DMPs); complements tools like RDMO.
+* Local hard drives for flexible exchange and analysis.
+* Linked repositories for collaboration and access to research materials.
+* Agile project management principles.
 
 **Privacy Protection**:
 
-* Data is stored locally unless explicitly shared.
-* Authorization and authorship are decoupled, allowing anonymous contributions.
-* Shared data adheres to FAIR principles, with user identification removed.
-* Researchers are advised to avoid entering personal data into database fields.
+* Data remains local unless shared explicitly.
+* Decoupled authorization and authorship enable anonymous contributions.
+* Shared data adheres to FAIR principles, excluding user identification.
+* Avoid entering personal data into database fields.
 
-**Data Ownership and Responsibility**: Ownership and rule adherence should be defined by users and institutional stakeholders, ensuring flexibility for changes in affiliation.
+**Unique Features**:
+
+* Add-ons for metadata extraction, advanced plotting, reporting, and LLM integration.
+* All data and metadata stored locally in one folder for easy access and backup.
 
 Implementation
 ^^^^^^^^^^^^^^
 
-**Why does PASTA not use a web-based interface for its database?**
-    While web-based interfaces have become increasingly common, they also present several drawbacks. Specifically:
+**Why not a web-based interface?**
 
-    * They often incur performance overhead, resulting in slower data access and manipulation compared to native applications.
-    * Synchronizing local files with their cloud-based counterparts can be a cumbersome and error-prone process, requiring users to manually update files in multiple locations.
-    * Consequently, maintaining two versions of each file (one on the user's local machine and another in the cloud) can lead to inconsistencies and version control issues.
+Web-based interfaces have limitations:
 
-    To mitigate these challenges, PASTA adopts a more streamlined approach, where local files are maintained on the user's hard drive and synchronized with a server for the purpose of persistence and collaboration. This design decision allows users to leverage their existing workflow with popular scientific software tools, such as ImageJ, Gwyddion, and Origin, which are optimized for local file handling.
+* Limited support for custom add-ons.
+* Slower data access and manipulation due to performance overhead.
+* Error-prone synchronization between local and cloud files.
+* Risk of inconsistencies from maintaining two file versions.
 
+PASTA-ELN adopts a streamlined approach, keeping files local while synchronizing with a server for persistence and collaboration. This design integrates seamlessly with tools like ImageJ, Gwyddion, and Origin, optimized for local file handling.
 
-**Comparison of Web-Based and Desktop-Based Software**
-    * Web-Based Software
-        * Offers the advantage of operating system independence
-        * Ensures seamless compatibility across various screen sizes
-        * Provides automatic software updates, ensuring users always have the latest version
-    * Desktop-Based Software
-        * Offers faster typing and interaction, allowing for a more fluid and intuitive user experience
-        * Provides users with full control and flexibility to express their ideas and thoughts freely
-        * Does not require internet access, making it ideal for offline use
-        * Offers greater freedom from vendor lock-in, allowing users to choose the best software architecture for their needs
-        * Enables users to work with the best version of the software, optimized for their specific requirements
-    * Hybrid Approach
-        * A scientist may use a desktop-based version to collect and upload data to central servers
-        * Supervisors and guests can access a web-based version to view metadata
-        * The database can be populated using the desktop program, or mobile device
-        * This approach is similar to that of distributed version control systems, such as Git, which is widely used in software development.
+**Why not package PASTA-ELN as a flatpak or snap?**
 
+Containerization isolates software but is unsuitable for PASTA-ELN. The framework requires extending and modifying add-ons, which involves additional libraries not included in default packages. Traditional installation offers greater flexibility and customization.
 
-**Why does the software exhibit varying performance levels among users?**
-    We are aware of disparate execution times across different operating systems, as reflected in our backend testing. Specifically, we have observed the following run-time discrepancies:
+**Why does PASTA-ELN work this way?**
 
-	* Windows (Thinkpad E495): 57.9 seconds
-	* macOS (Macbook Air 2020): 20.8 seconds
-	* Linux (Thinkpad E495): 14.8 seconds
+When folders are moved or deleted via the file system, they may persist in the project view, causing errors during scans and integrity checks. To prevent data loss, avoid such actions. Existing database entries are maintained to preserve error messages. Future updates may revise this approach.
 
-    While the graphical user interface appears to function at a similar pace across all operating systems, we are committed to investigating and addressing performance optimization opportunities for Windows users in future development cycles.
-
-**Why do you not package PASTA-ELN as a flatpak or snap?**
-    While containerization is a valuable concept for isolating software from the host operating system, it is not suitable for PASTA-ELN. Our framework requires the ability to extend and modify existing add-ons, which necessitates the use of additional libraries not included in the default package. These libraries cannot be added to a container without compromising its self-sufficiency and encapsulation. As such, a traditional installation approach allows for greater flexibility and customization is preferred.
-
-
-Why does PASTA-ELN work in the way it does?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**When a folder is moved within the project hierarchy or deleted through the file system explorer, the original folder may persist in the project view, causing errors during scanning and integrity checks.**
-    To prevent data loss, it's essential to avoid removing or moving folders through the file system explorer. We maintain existing database entries to preserve the error messages. In future updates, this solution may be revised to accommodate changes in our system architecture.
-
-    This approach fosters transparency by enabling users to clearly visualize the consequences of file removal or relocation on the project. To minimize potential disruptions, we recommend modifying or duplicating unrelated files rather than deleting the project as a whole.
-
+This method ensures transparency, allowing users to visualize the impact of file removal or relocation. Modify or duplicate unrelated files instead of deleting entire projects.
 
 .. _dodonts:
 
