@@ -167,11 +167,15 @@ class Details(QScrollArea):
     """
     logging.debug('details:testExtractor')
     if len(self.doc)>1:
-      path = Path(self.doc['branch'][0]['path'])
-      if not path.as_posix().startswith('http'):
-        path = self.comm.backend.basePath/path
-      report = self.comm.backend.testExtractor(path, outputStyle='html', style={'main':'/'.join(self.doc['type'])})
-      showMessage(self, 'Report of extractor test', report, style='QLabel {min-width: 800px}')
+      pathStr = self.doc['branch'][0]['path']
+      if pathStr is None:
+        showMessage(self, 'Warning', 'Selected item has no path.')
+      else:
+        path = Path(pathStr)
+        if not path.as_posix().startswith('http'):
+          path = self.comm.backend.basePath/path
+        report = self.comm.backend.testExtractor(path, outputStyle='html', style={'main':'/'.join(self.doc['type'])})
+        showMessage(self, 'Report of extractor test', report, style='QLabel {min-width: 800px}')
     else:
       showMessage(self, 'Warning', 'No item was selected via table-view, i.e. no details are shown.')
     return

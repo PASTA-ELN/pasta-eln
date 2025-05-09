@@ -11,8 +11,8 @@ THIS IS THE BASIC EXTRACTOR TUTORIAL, WHICH TEACHES
 """
 from io import StringIO
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
-
 
 def use(filePath, style={'main':''}, saveFileName=None):
   """
@@ -25,6 +25,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
   Returns:
     dict: containing image, metaVendor, metaUser, style
   """
+  maxLength = 200  #max. number of rows to not cause performance issues
   # this part identifies how the csv-file is formatted: whether it uses , or ; to separate; you can skip this part when learning extractors
   # producer = 'comma separated'
   delimiter = ','
@@ -49,6 +50,10 @@ def use(filePath, style={'main':''}, saveFileName=None):
 
   # THIS IS THE IMPORTANT PART OF THE EXTRACTOR
   data = pd.read_csv(filePath, delimiter=delimiter, skiprows=skipRows-1)     # use pandas to get data
+  # reduce the number of rows
+  if len(data)>maxLength:
+    skipNumber = int(len(data)/maxLength)+1        #only take any k-th item
+    data = data.groupby(np.arange(len(data.index)) // skipNumber).mean()  #reduce
   if style['main'] == 'measurement/csv/lines':    #: draw curve with lines
     plt.plot(data.iloc[:,0], data.iloc[:,1],'-')                             # plot data using matplotlib: check the differences in plotting
   elif style['main'] == 'measurement/csv/dots':     #: draw curve with dots
@@ -85,3 +90,5 @@ def use(filePath, style={'main':''}, saveFileName=None):
 
   # return everything
   return {'image':image, 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser}
+
+use('../Resources/ExampleMeasurements/simple.csv')

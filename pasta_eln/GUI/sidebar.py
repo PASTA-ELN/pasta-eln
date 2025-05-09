@@ -66,8 +66,9 @@ class Sidebar(QWidget):
     if hasattr(backend, 'db'):
       db = self.comm.backend.db
       hierarchy = db.getView('viewDocType/x0')
-      hierarchy['dateCreated'] = [db.getDoc(id_)['dateCreated'] for id_ in hierarchy['id']]
-      hierarchy.sort_values('dateCreated',axis=0, ascending=False, inplace=True)
+      if 'status' in hierarchy.columns:
+        hierarchy = hierarchy[hierarchy['status']=='active']
+      hierarchy.sort_values('name',axis=0, ascending=True, inplace=True)
       maxProjects = int((self.height()-120)/50)-1
       for index, project in hierarchy.iterrows():
         if index>maxProjects:
