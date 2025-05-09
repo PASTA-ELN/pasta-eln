@@ -212,7 +212,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
         module      = importlib.import_module(name)
         description = module.description
         _ = module.reqParameter  # check if reqParameter exists
-        otherAddOns[name] = description
+        otherAddOns[fileName.split('_')[0]][name] = description
       except Exception:
         description = f'** SYNTAX ERROR in add-on **\n{traceback.format_exc()}'
         otherAddOns['_ERRORS_'][name] = description

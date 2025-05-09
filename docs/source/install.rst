@@ -12,7 +12,7 @@ Installation and Troubleshooting Instructions
       </div>
    </div>
 
-**Overview**: Install Pasta-ELN on :ref:`Windows <windows_installation>`, :ref:`Linux <linux_installation>`, and Mac. :ref:`Troubleshooting <troubleshooting>` tips are provided at the end.
+**Overview**: Install Pasta-ELN on :ref:`Windows <windows_installation>`, :ref:`Linux <linux_installation>`, and :ref:`MacOS <macOS_installation>`. :ref:`Troubleshooting <troubleshooting>` tips are provided at the end.
 
 .. _windows_installation:
 
@@ -70,6 +70,53 @@ Manual Installation
 
 Linux Installation
 ------------------
+
+.. raw:: html
+
+   <div class="text-highlight">
+
+Open terminal and copy-paste following content:
+
+    .. code-block:: bash
+
+        export pastaPath="PASTA_ELN"
+        mkdir ~/$pastaPath
+        python3 -m venv ~/$pastaPath/venv
+        source ~/$pastaPath/venv/bin/activate
+        pip install pasta-eln
+        python3 -m pasta_eln.installationTools install ~/$pastaPath/data
+        python3 -m pasta_eln.installationTools shortcut
+        python3 -m pasta_eln.installationTools example
+        python3 -m pasta_eln.gui
+
+.. raw:: html
+
+   </div>
+
+**Command Explanation**:
+
+1. Create a folder for PASTA-ELN files.
+2. Set up and activate a virtual environment.
+3. Install PASTA-ELN.
+4. Initialize the data folder.
+5. Launch the graphical interface.
+
+
+.. _macOS_installation:
+
+MacOS Installation
+------------------
+
+Requirements
+^^^^^^^^^^^^
+
+If not done already, install first Homebrew and then python3 using that
+
+   .. code-block:: bash
+
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      brew install python
+
 
 .. raw:: html
 

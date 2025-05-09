@@ -8,6 +8,8 @@ python -m pasta_eln.installationTools install %UserProfile%\Documents\PASTA_ELN_
 python -m pasta_eln.installationTools shortcut
 python -m pasta_eln.installationTools example
 python -m pasta_eln.gui
+pause
+
 
 :RESTART
 @echo off

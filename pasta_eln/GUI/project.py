@@ -242,7 +242,7 @@ class Project(QWidget):
         self.comm.changeTable.emit('x0','')
     elif command[0] is Command.SCAN:
       for _ in range(2):  #scan twice: convert, extract
-        self.comm.backend.scanProject(None, self.projID, self.docProj['branch'][0]['path'])
+        self.comm.backend.scanProject(None, self.projID)
       self.comm.changeProject.emit(self.projID,'')
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_PROJ_DETAILS:

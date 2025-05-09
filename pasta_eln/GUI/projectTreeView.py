@@ -221,10 +221,13 @@ class TreeView(QTreeView):
         else:
           files +=   list(Path(path).rglob('*'))                                                             # type: ignore[arg-type]
           folders += [x[0] for x in os.walk(path)]
+      if not (folders+[str(i) for i in files]):
+        showMessage(self, 'Error', 'The files seem empty.')
+        return
+      commonBase   = os.path.commonpath(folders+[str(i) for i in files])
       docID = item.data()['hierStack'].split('/')[-1]
       doc = self.comm.backend.db.getDoc(docID)
       targetFolder = Path(self.comm.backend.cwd/doc['branch'][0]['path'])
-      commonBase   = os.path.commonpath(folders+[str(i) for i in files])
       # create folders and copy files
       for folder in folders:
         (targetFolder/(Path(folder).relative_to(commonBase))).mkdir(parents=True, exist_ok=True)
@@ -234,7 +237,7 @@ class TreeView(QTreeView):
           shutil.copy(file, targetFolder/(file.relative_to(commonBase)))
       # scan
       for _ in range(2):  #scan twice: convert, extract
-        self.comm.backend.scanProject(None, docID, str(targetFolder.relative_to(self.comm.backend.basePath)))
+        self.comm.backend.scanProject(None, docID, targetFolder.relative_to(self.comm.backend.basePath))
       self.comm.changeProject.emit(item.data()['hierStack'].split('/')[0],'')
       showMessage(self, 'Information','Drag & drop is finished')
       event.ignore()

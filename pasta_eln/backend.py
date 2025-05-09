@@ -292,8 +292,8 @@ class Backend(CLI_Mixin):
     return
 
 
-  def scanProject(self, progressBar:Callable[...,None]|None, projID:str, projPath:str='') -> None:
-    """ Scan directory tree recursively from project/...
+  def scanProject(self, progressBar:Callable[...,None]|None, projID:str, projPath:Path|None=None) -> None:
+    """ Scan directory tree recursively from project/... or project/task/....
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
     - use shasum to track changes of measurements etc. (one file=one shasum=one entry in DB)
@@ -309,13 +309,16 @@ class Backend(CLI_Mixin):
     Raises:
       ValueError: could not add new measurement to database
     """
-    self.hierStack = [projID]
-    if not projPath:
-      projPath = self.db.getDoc(projID)['branch'][0]['path']
-    self.cwd = self.basePath/projPath
     rerunScanTree = False
+    self.hierStack = [projID]
+    if projPath is None:
+      pathPosix:str = self.db.getDoc(projID)['branch'][0]['path']
+      self.cwd      = self.basePath/pathPosix
+      projPath      = self.cwd.relative_to(self.basePath)
+    else:
+      self.cwd = self.basePath/projPath
     #prepare lists and start iterating
-    inDB_all = self.db.getView('viewHierarchy/viewPathsAll', startKey=projPath)
+    inDB_all = self.db.getView('viewHierarchy/viewPathsAll', startKey=projPath.as_posix())
     pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
     filesCountSum = sum(len(files) for (_, _, files) in os.walk(self.cwd))
