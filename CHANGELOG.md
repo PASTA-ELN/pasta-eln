@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.5...HEAD)
+
+**Fixed bugs:**
+
+- Update project destroys path of this and its children [\#446](https://github.com/PASTA-ELN/pasta-eln/issues/446)
+
+## [v3.1.5](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.5) (2025-05-05)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.4...v3.1.5)
+
 ## [v3.1.4](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.4) (2025-05-05)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.3...v3.1.4)
