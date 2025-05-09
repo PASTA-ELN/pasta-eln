@@ -49,7 +49,7 @@ jobs:
         tree ~/pasta_data
     - name: Run tests
       run: |
-        coverage run -a -m pytest -s --tb=short tests
+        coverage run -a -m pytest -s -x --tb=short tests
         coverage html -i
       shell: bash
       env:
