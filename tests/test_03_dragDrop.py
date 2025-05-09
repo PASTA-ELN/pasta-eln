@@ -39,7 +39,7 @@ def test_simple(qtbot):
 
   # start iteration
   for epoch in range(4):
-    print(f'Start drag-drop {epoch}')
+    print(f'{"*"*40}\nStart drag-drop {epoch}\n{"*"*40}')
     def recursiveRowIteration(index:QModelIndex) -> None:
       item  = window.tree.model().itemFromIndex(index)
       allParentIdx = [index] if item is not None and item.data() is not None and item.data()['docType']==['x1'] else []
@@ -65,6 +65,10 @@ def test_simple(qtbot):
     targetChildRow   = validChoices[choices.pop(0)%len(validChoices)]
     targetParent.setChild(targetChildRow, sourceItem)
     verify(backend)
+    backend.changeHierarchy(projID)
+    print(backend.outputHierarchy(False, True))
+    backend.changeHierarchy(None)
+    print(f'{"*"*40}\nEND TEST 03\n{"*"*40}')
   return
 
 def verify(backend): # Verify DB

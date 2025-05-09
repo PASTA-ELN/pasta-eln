@@ -81,6 +81,9 @@ class TestStringMethods(unittest.TestCase):
     print('Final scanning and verification')
     self.be.scanProject(None, projID)
     self.verify()
+    self.be.changeHierarchy(projID)
+    print(self.be.outputHierarchy(False))
+    print(f'{"*"*40}\nEND TEST 02 \n{"*"*40}')
     return
 
   def verify(self):
