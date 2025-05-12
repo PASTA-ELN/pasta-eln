@@ -1067,7 +1067,7 @@ class SqlLiteDB:
         self.cursor.execute(f"DELETE FROM properties WHERE id='{docID}' AND key='{key}'")
         self.connection.commit()
 
-    cmd = "SELECT branches.id, branches.path, main.shasum FROM branches JOIN main USING(id) "\
+    cmd = 'SELECT branches.id, branches.path, main.shasum FROM branches JOIN main USING(id) '\
           "WHERE branches.path=='*' AND main.shasum!=''"
     self.cursor.execute(cmd)
     for line in self.cursor.fetchall():

@@ -7,8 +7,8 @@ import re
 import shutil
 import sys
 import traceback
-from sqlite3 import IntegrityError
 from pathlib import Path
+from sqlite3 import IntegrityError
 from typing import Any, Callable, Union
 import requests
 from requests.structures import CaseInsensitiveDict
@@ -360,28 +360,28 @@ class Tools:
           print(f'Already up to date: docTypes {row[0]}')
 
     cursor.execute("DELETE FROM docTypeSchema WHERE docType = 'procedure'")
-    for row in defaultSchema:
-      if 'workflow' in row[0]:
-        cmd = f"INSERT INTO docTypeSchema VALUES ({', '.join(['?']*len(row))});"
+    for rowS in defaultSchema:
+      if 'workflow' in str(rowS[0]):
+        cmd = f"INSERT INTO docTypeSchema VALUES ({', '.join(['?']*len(rowS))});"
         try:
-          cursor.executemany(cmd, [row])
+          cursor.executemany(cmd, [rowS])
         except IntegrityError:
-          print(f'Already up to date: docTypeSchema {row[0]}')
+          print(f'Already up to date: docTypeSchema {rowS[0]}')
 
     cursor.execute('SELECT type from main WHERE type LIKE "procedure%"')
-    docTypesOld = set(i[0] for i in cursor.fetchall())
+    docTypesOld = {i[0] for i in cursor.fetchall()}
     for docType in docTypesOld:
       cmd =f'UPDATE main SET type="workflow/{docType}" WHERE type = "{docType}"'
       self.backend.db.cursor.execute(cmd)
 
     cursor.execute('SELECT key from properties WHERE key LIKE ".procedure%"')
-    docTypesOld = set(i[0] for i in cursor.fetchall())
+    docTypesOld = {i[0] for i in cursor.fetchall()}
     for docType in docTypesOld:
       cmd =f"UPDATE properties SET key='.workflow/{docType[1:]}' WHERE key = '{docType}'"
       self.backend.db.cursor.execute(cmd)
 
     cursor.execute('SELECT key from definitions WHERE key LIKE "procedure%"')
-    docTypesOld = set(i[0] for i in cursor.fetchall())
+    docTypesOld = {i[0] for i in cursor.fetchall()}
     for docType in docTypesOld:
       cmd =f"UPDATE definitions SET key='workflow/{docType}' WHERE key = '{docType}'"
       self.backend.db.cursor.execute(cmd)
