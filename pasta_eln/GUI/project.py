@@ -355,7 +355,7 @@ class Project(QWidget):
     if verbose:
       print('\n=============================================\nStep 1: before new siblings')
       print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
-    for idx, line in enumerate(siblingsNew):
+    for idx, line in reversed(list(enumerate(siblingsNew))):
       shift = 1 if idx>=childNew else 0  #shift those before the insertion point by 0 and those after by 1
       if line['id']==docID or line['value'][0]==idx+shift: #ignore id in question and those that are correct already
         continue
