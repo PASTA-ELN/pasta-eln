@@ -114,26 +114,6 @@ class MainWindow(QMainWindow):
   def initialize(self) -> None:
     """ Initialize: things that might change """
     self.comm.backend.initialize(self.backend.configurationProjectGroup)  #restart backend
-    # Test for old datastructures: #TODO
-    # start v3.0.17 -> 3.1
-    cursor = self.comm.backend.db.cursor
-    cursor.execute("SELECT * FROM docTypes WHERE docType LIKE '%procedure%'")
-    lengthOld = len(cursor.fetchall())
-    cursor.execute("SELECT * FROM docTypes WHERE docType LIKE '%workflow%'")
-    lengthNew = len(cursor.fetchall())
-    if lengthOld == 1 and lengthNew == 4:
-      print('Info: your data structure is up to date.')
-    if lengthOld == 1 and lengthNew == 0:
-      button = QMessageBox.question(self, 'Question', 'You seem to have an old data-structure. '\
-                                    'Do you want to update your data structure?',
-                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-      if button == QMessageBox.StandardButton.Yes:
-        self.comm.backend.db.dataHierarchyInit(True)
-        cursor.execute("DELETE FROM definitions WHERE key = 'procedure'")
-        cursor.execute("UPDATE main SET type='workflow/procedure/markdown' WHERE type = 'procedure/markdown'")
-        cursor.execute("UPDATE properties SET key='.workflow/procedure' WHERE key = '.procedure'")
-        self.comm.backend.db.connection.commit()
-        print('Done: your data structure is updated.')
     # Things that are inside the List menu
     self.viewMenu.clear()
     if hasattr(self.backend, 'db'):
