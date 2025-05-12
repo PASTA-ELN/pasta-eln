@@ -1066,6 +1066,18 @@ class SqlLiteDB:
       elif repair(errorStr):
         self.cursor.execute(f"DELETE FROM properties WHERE id='{docID}' AND key='{key}'")
         self.connection.commit()
+
+    cmd = 'SELECT branches.id, branches.path, main.shasum FROM branches JOIN main USING(id) '\
+          "WHERE branches.path=='*' AND main.shasum!=''"
+    self.cursor.execute(cmd)
+    for line in self.cursor.fetchall():
+      errorStr= outputString(outputStyle,'error',f"shasum!='' for item with no path. docID:{line[0]}")
+      if repair is None:
+        reply+= errorStr
+      elif repair(errorStr):
+        self.cursor.execute(f"DELETE FROM branches WHERE id='{line[0]}' AND path='*'")
+        self.connection.commit()
+
     #doc-type specific tests
     cmd = "SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'"
     self.cursor.execute(cmd)

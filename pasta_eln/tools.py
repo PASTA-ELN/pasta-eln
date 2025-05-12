@@ -8,12 +8,13 @@ import shutil
 import sys
 import traceback
 from pathlib import Path
+from sqlite3 import IntegrityError
 from typing import Any, Callable, Union
 import requests
 from requests.structures import CaseInsensitiveDict
 from pasta_eln.backend import Backend
 from pasta_eln.elabFTWsync import Pasta2Elab
-from pasta_eln.fixedStringsJson import CONF_FILE_NAME
+from pasta_eln.fixedStringsJson import CONF_FILE_NAME, defaultDocTypes, defaultSchema
 from pasta_eln.textTools.stringChanges import outputString
 
 
@@ -44,12 +45,17 @@ class Tools:
       self.scanAllProjects()
 
     helpString += 'Commands - update Version 2 -> Version 3:\n'
-    helpString += '  [c]onvert couchDB to SQLite\n'
-    if command == 'c':
+    helpString += '  [u1] convert couchDB to SQLite\n'
+    if command == 'u1':
       self.couchDB2SQLite()
-    helpString += '  [t]ranslate disk structure from V2->v3\n'
-    if command == 't':
+    helpString += '  [u2] update disk structure from V2->v3\n'
+    if command == 'u2':
       self.translateV2_V3()
+
+    helpString += 'Commands - update:\n'
+    helpString += '  [u3] convert from one procedure to 3 workflows\n'
+    if command == 'u3':
+      self.update3Workflow()
 
     helpString += 'Commands - database integrity:\n'
     helpString += '  [v]erify\n'
@@ -64,6 +70,9 @@ class Tools:
     helpString += '  [rS]repair schema: reset the doc-type schema to its original state\n'
     if command == 'rS':
       self.repairSchema()
+    helpString += '  [rp1] repair properties: add missing "."\n'
+    if command == 'rp1':
+      self.repairPropertiesDot()
     helpString += '  [cp]-create a lost and found project: helpful for some repair operations\n'
     if command == 'cp':
       self.createLostAndFound()
@@ -80,10 +89,6 @@ class Tools:
     if command == 'pR':
       self.purgeRemote()
 
-    helpString += 'Commands - deprecated:\n'
-    helpString += '  [rp1] repair properties: add missing "."\n'
-    if command == 'rp1':
-      self.repairPropertiesDot()
     return helpString if command=='h' else 'Done'
 
 
@@ -328,6 +333,59 @@ class Tools:
       docNew['branch'] = [docNew['branch']]
       with open(Path(aPath)/'.id_pastaELN.json','w', encoding='utf-8') as fOut:
         fOut.write(json.dumps(docNew))
+    return
+
+
+  def update3Workflow(self, projectGroup:str='') -> None:
+    """ Update from a 1 procedure into a 3 workflow (plan, procedure, log) version
+    - Starting at 3.1 this new style is the default
+
+    Args:
+      projectGroup (str): name of project group
+    """
+    if not self.projectGroup:
+      self.__setBackend__(projectGroup)
+    if self.backend is None:
+      return
+    cursor = self.backend.db.cursor
+
+    cursor.execute("DELETE FROM docTypes WHERE docType = 'procedure'")
+    for row in defaultDocTypes:
+      if 'workflow' in row[0]:
+        cmd = f"INSERT INTO docTypes VALUES ({', '.join(['?']*len(row))});"
+        try:
+          cursor.executemany(cmd, [row])
+        except IntegrityError:
+          print(f'Already up to date: docTypes {row[0]}')
+
+    cursor.execute("DELETE FROM docTypeSchema WHERE docType = 'procedure'")
+    for rowS in defaultSchema:
+      if 'workflow' in str(rowS[0]):
+        cmd = f"INSERT INTO docTypeSchema VALUES ({', '.join(['?']*len(rowS))});"
+        try:
+          cursor.executemany(cmd, [rowS])
+        except IntegrityError:
+          print(f'Already up to date: docTypeSchema {rowS[0]}')
+
+    cursor.execute('SELECT type from main WHERE type LIKE "procedure%"')
+    docTypesOld = {i[0] for i in cursor.fetchall()}
+    for docType in docTypesOld:
+      cmd =f'UPDATE main SET type="workflow/{docType}" WHERE type = "{docType}"'
+      self.backend.db.cursor.execute(cmd)
+
+    cursor.execute('SELECT key from properties WHERE key LIKE ".procedure%"')
+    docTypesOld = {i[0] for i in cursor.fetchall()}
+    for docType in docTypesOld:
+      cmd =f"UPDATE properties SET key='.workflow/{docType[1:]}' WHERE key = '{docType}'"
+      self.backend.db.cursor.execute(cmd)
+
+    cursor.execute('SELECT key from definitions WHERE key LIKE "procedure%"')
+    docTypesOld = {i[0] for i in cursor.fetchall()}
+    for docType in docTypesOld:
+      cmd =f"UPDATE definitions SET key='workflow/{docType}' WHERE key = '{docType}'"
+      self.backend.db.cursor.execute(cmd)
+
+    self.backend.db.connection.commit()
     return
 
 

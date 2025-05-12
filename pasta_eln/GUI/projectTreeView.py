@@ -121,8 +121,8 @@ class TreeView(QTreeView):
             if oldPath.exists():
               newFileName = f'trash_{oldPath.name}'
               if (oldPath.parent/newFileName).exists():  #ensure target does not exist
-                endText = ' was marked for deletion. Save it or its content now to some place on harddisk. It will be deleted now!!!'
-                showMessage(self, 'Warning', f'Warning! \nThe folder {oldPath.parent/newFileName}{endText}')
+                endText = ' was marked for deletion. Save it to some other place on harddisk. It will be deleted now!!!'
+                showMessage(self, 'Warning', f'Warning! \nThe file/folder {oldPath.parent/newFileName}{endText}')
                 if (oldPath.parent/newFileName).is_file():
                   (oldPath.parent/newFileName).unlink()
                 elif (oldPath.parent/newFileName).is_dir():
