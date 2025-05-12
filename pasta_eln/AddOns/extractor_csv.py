@@ -91,5 +91,3 @@ def use(filePath, style={'main':''}, saveFileName=None):
 
   # return everything
   return {'image':image, 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser}
-
-use('../Resources/ExampleMeasurements/simple.csv')

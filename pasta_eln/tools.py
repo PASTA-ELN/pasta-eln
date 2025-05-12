@@ -70,6 +70,9 @@ class Tools:
     helpString += '  [rS]repair schema: reset the doc-type schema to its original state\n'
     if command == 'rS':
       self.repairSchema()
+    helpString += '  [rp1] repair properties: add missing "."\n'
+    if command == 'rp1':
+      self.repairPropertiesDot()
     helpString += '  [cp]-create a lost and found project: helpful for some repair operations\n'
     if command == 'cp':
       self.createLostAndFound()
@@ -86,10 +89,6 @@ class Tools:
     if command == 'pR':
       self.purgeRemote()
 
-    helpString += 'Commands - deprecated:\n'
-    helpString += '  [rp1] repair properties: add missing "."\n'
-    if command == 'rp1':
-      self.repairPropertiesDot()
     return helpString if command=='h' else 'Done'
 
 
