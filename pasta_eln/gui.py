@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Union
 from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
 from pasta_eln import __version__
 from .backend import Backend
 from .elabFTWsync import Pasta2Elab
