@@ -34,7 +34,7 @@ def test_simple(qtbot):
   window.change(projID,'')
 
   choices = random.choices(range(100), k=16)
-  choices = [65,34,16,97,12,66,78,10,30,41,4,80,83,69,48,51]
+  # choices = [65,34,16,97,12,66,78,10,30,41,4,80,83,69,48,51]
   print(f'Current choice: [{",".join([str(i) for i in choices])}]')
 
   # start iteration

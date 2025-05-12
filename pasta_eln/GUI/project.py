@@ -303,8 +303,7 @@ class Project(QWidget):
     Args:
       item (QStandardItem): item changed, new location
     """
-    print('Start modelChanged')
-    verbose = True # TODO: remove after issue 389 is solved
+    verbose = False # Convenient for testing
     #gather old information
     db       = self.comm.backend.db
     ## print hierarchy of this project for debugging
@@ -395,7 +394,6 @@ class Project(QWidget):
       siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]                    #sorted by childNum (primary) and docID (secondary)
       print('Step 4: end of function')
       print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
-    print('End modelChanged')
     return
 
 
