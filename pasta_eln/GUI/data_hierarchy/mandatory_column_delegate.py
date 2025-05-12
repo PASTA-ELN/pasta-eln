@@ -9,8 +9,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 from typing import Union
-from pandas import DataFrame
-from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QRect, Qt
+from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QRect
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (QApplication, QRadioButton, QStyle, QStyledItemDelegate, QStyleOptionButton,
                                QStyleOptionViewItem, QWidget)
@@ -20,12 +19,6 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
   """
   Delegate for creating the radio buttons for the mandatory column in data hierarchy editor tables
   """
-
-  def __init__(self) -> None:
-    """ Constructor """
-    super().__init__()
-
-
   def paint(self,
             painter: QPainter,
             option: QStyleOptionViewItem,
@@ -40,6 +33,9 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
     Returns: None
 
     """
+    indexName = index.model().index(index.row(), 0)
+    if not indexName.data():
+      return
     widget = option.widget  # type: ignore[attr-defined]
     style = widget.style() if widget else QApplication.style()
     opt = QStyleOptionButton()

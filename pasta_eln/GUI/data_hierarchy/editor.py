@@ -12,10 +12,12 @@ from .docTypeEdit import DocTypeEditor
 from .mandatory_column_delegate import MandatoryColumnDelegate
 from .name_column_delegate import NameColumnDelegate
 from .reorder_column_delegate import ReorderColumnDelegate
+from .listFreeDelegate import ListFreeDelegate
+from .listItemDelegate import ListItemDelegate
 
 #                0       1            2      3           4      5         6
-COLUMN_NAMES = ['name','description','unit','mandatory','list','move up','delete']
-COLUMN_WIDTH = [100,   250,          100,   80,         245,   60,       50]
+COLUMN_NAMES = ['name','description','unit','mandatory','item list','free list','move up','delete']
+COLUMN_WIDTH = [100,   250,          60,    80,         150,        200,        60,       50]
 pd.options.mode.copy_on_write = True
 
 class SchemeEditor(QDialog):
@@ -34,9 +36,10 @@ class SchemeEditor(QDialog):
     self.docType = ''
     self.docLabel= ''
     self.closeButtons:list[IconButton] = []  #close buttons of tabs
+    self.setWindowTitle('Data scheme editor')
 
     # GUI elements
-    self.setMinimumWidth(965)
+    self.setMinimumWidth(int(np.sum(COLUMN_WIDTH))+80)
     self.setMinimumHeight(500)
     mainL = QVBoxLayout(self)
     Label('Schema-editor for document types', 'h1', mainL)
@@ -44,6 +47,7 @@ class SchemeEditor(QDialog):
     _, docTypeL = widgetAndLayout('H', mainL, 's')
     self.selectDocType = QComboBox()
     self.selectDocType.currentTextChanged.connect(self.changeDocType)
+    self.selectDocType.setStyleSheet(self.comm.palette.get('secondaryText','color'))
     docTypeL.addWidget(self.selectDocType)
     docTypeL.addStretch(1)
     IconButton('fa5s.plus',  self, [Command.NEW],  docTypeL, tooltip='New document type')
@@ -57,6 +61,8 @@ class SchemeEditor(QDialog):
     mainL.addWidget(self.tabW, stretch=10)
     self.nameColumnDelegates     :list[NameColumnDelegate]      = []
     self.mandatoryColumnDelegates:list[MandatoryColumnDelegate] = []
+    self.listItemDelegates       :list[ListItemDelegate]        = []
+    self.listFreeDelegates       :list[ListFreeDelegate]        = []
     self.reorderColumnDelegates  :list[ReorderColumnDelegate]   = []
     self.deleteColumnDelegates   :list[DeleteColumnDelegate]    = []
     self.newWidget = QTableWidget()
@@ -80,6 +86,8 @@ class SchemeEditor(QDialog):
     # get data frame
     if not label:
       return
+    if self.docType:
+      self.finishDocType()
     self.docLabel= label
     self.docType = [data for (data, text) in self.db.dataHierarchy('','title') if text==label][0]
     cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
@@ -88,31 +96,39 @@ class SchemeEditor(QDialog):
           f'WHERE docTypeSchema.docType=="{self.docType}"'
     df = pd.read_sql_query(cmd, self.db.connection).fillna('')
     df.rename(columns={'long':'description'}, inplace=True)
+    df['item list'] = df['list'].apply(lambda x: '' if ',' in x else x)
+    df['free list'] = df['list'].apply(lambda x: x  if ',' in x else '')
+    df = df.drop('list', axis=1)
     df['idx'] = df['idx'].astype('int')
     # GUI
     self.tabW.clear()
     self.reorderColumnDelegates.clear()
     for group in df['class'].unique():
       data  = df[df['class']==group]
-      table = QTableWidget(len(data)+1, 7)
+      table = QTableWidget(len(data)+1, 8)
       table.verticalHeader().hide()
       table.setAlternatingRowColors(True)
       table.setHorizontalHeaderLabels(COLUMN_NAMES)
+      table.horizontalHeader().setStyleSheet('QHeaderView::section {padding: 1px; margin: 0px;}')
       for idx, width in enumerate(COLUMN_WIDTH[:-1]):
         table.setColumnWidth(idx, width)
       for _,row in data.iterrows():
         idx = int(row['idx'])
-        for col in range(5):
+        for col in range(6):
           table.setItem(idx, col, QTableWidgetItem(row[COLUMN_NAMES[col]]))
       #Delegates to give function to row
       self.nameColumnDelegates.append(NameColumnDelegate())
       table.setItemDelegateForColumn(0, self.nameColumnDelegates[-1])
       self.mandatoryColumnDelegates.append(MandatoryColumnDelegate())
       table.setItemDelegateForColumn(3, self.mandatoryColumnDelegates[-1])
+      self.listItemDelegates.append(ListItemDelegate(self.db.dataHierarchy('','title')))
+      table.setItemDelegateForColumn(4, self.listItemDelegates[-1])
+      self.listFreeDelegates.append(ListFreeDelegate())
+      table.setItemDelegateForColumn(5, self.listFreeDelegates[-1])
       self.reorderColumnDelegates.append(ReorderColumnDelegate())
-      table.setItemDelegateForColumn(5, self.reorderColumnDelegates[-1])
+      table.setItemDelegateForColumn(6, self.reorderColumnDelegates[-1])
       self.deleteColumnDelegates.append(DeleteColumnDelegate())
-      table.setItemDelegateForColumn(6, self.deleteColumnDelegates[-1])
+      table.setItemDelegateForColumn(7, self.deleteColumnDelegates[-1])
       self.tabW.addTab(table, group or 'default')
     # define close buttons on some of the tabs
     self.closeButtons.clear()
@@ -126,7 +142,10 @@ class SchemeEditor(QDialog):
 
 
   def finishDocType(self) -> None:
-    """ Finish a docType, either by selecting another docType or by pressing save  """
+    """
+    Finish a docType and save to DB,
+    - either by selecting another docType or by pressing save
+    """
     df = self.table2schema()
     # verification: uniqueness in names. etc.
     unique =df['name'].nunique()==df.shape[0]
@@ -230,10 +249,12 @@ class SchemeEditor(QDialog):
         df.at[lastRow, 'docType'] = self.docType
         df.at[lastRow, 'class']   = group
         df.at[lastRow, 'idx']     = str(row)
-        for col in range(5):
+        for col in range(6):
           item = widget.item(row,col)
           df.at[lastRow, COLUMN_NAMES[col]] = '' if item is None else item.text()
         lastRow += 1
+    df['list'] = df['item list']+df['free list']
+    df.drop(['item list','free list'], axis=1, inplace=True)
     return df
 
 
