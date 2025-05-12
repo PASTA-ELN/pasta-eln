@@ -34,7 +34,7 @@ def test_simple(qtbot):
   window.change(projID,'')
 
   choices = random.choices(range(100), k=16)
-  # choices = [52,49,38,44,44,91,7,32,55,66,97,34,54,82,84,9]
+  choices = [65,34,16,97,12,66,78,10,30,41,4,80,83,69,48,51]
   print(f'Current choice: [{",".join([str(i) for i in choices])}]')
 
   # start iteration
@@ -60,9 +60,9 @@ def test_simple(qtbot):
                         if window.tree.model().itemFromIndex(i).data() is not None and
                           window.tree.model().itemFromIndex(i).data()['hierStack'].split('/')[-1] != sourceItem.data()['hierStack'].split('/')[-1] ]
     targetParent     = validChoices[choices.pop(0)%len(validChoices)]
-    print('  ',sourceItem.data(),'->\n  ', targetParent.data())
     validChoices     = range(targetParent.rowCount()+1)
     targetChildRow   = validChoices[choices.pop(0)%len(validChoices)]
+    print('  ',sourceItem.data(),'->\n  ', targetParent.data(),'   child', targetChildRow)
     targetParent.setChild(targetChildRow, sourceItem)
     verify(backend)
     backend.changeHierarchy(projID)
