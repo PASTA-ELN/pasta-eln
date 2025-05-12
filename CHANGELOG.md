@@ -2,7 +2,17 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.5...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.6...HEAD)
+
+**Closed issues:**
+
+- Empty creation windows for workflow subcategories [\#449](https://github.com/PASTA-ELN/pasta-eln/issues/449)
+- Procedures are not accessible anymore in the lists [\#448](https://github.com/PASTA-ELN/pasta-eln/issues/448)
+- Changing the order of projects in the list on the left [\#392](https://github.com/PASTA-ELN/pasta-eln/issues/392)
+
+## [v3.1.6](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.6) (2025-05-09)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.5...v3.1.6)
 
 **Fixed bugs:**
 
