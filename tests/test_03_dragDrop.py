@@ -64,10 +64,10 @@ def test_simple(qtbot):
     targetChildRow   = validChoices[choices.pop(0)%len(validChoices)]
     print('  ',sourceItem.data(),'->\n  ', targetParent.data(),'   child', targetChildRow)
     targetParent.setChild(targetChildRow, sourceItem)
-    verify(backend)
     backend.changeHierarchy(projID)
     print(backend.outputHierarchy(False, True))
     backend.changeHierarchy(None)
+    verify(backend)
     print(f'{"*"*40}\nEND TEST 03\n{"*"*40}')
   return
 
