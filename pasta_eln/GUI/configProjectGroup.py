@@ -16,8 +16,7 @@ from ..elabFTWapi import ElabFTWApi
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, ScrollMessageBox, TextButton, showMessage, widgetAndLayoutGrid
-from ..miscTools import updateAddOnList
-
+from ..miscTools import updateAddOnList, restart
 
 class ProjectGroup(QDialog):
   """ Table Header dialog: change which columns are shown and in which order """
@@ -37,6 +36,7 @@ class ProjectGroup(QDialog):
     self.emptyConfig:dict[str,Any] = {'local':{'path':''}, 'remote':{}, 'addOnDir':''}
     self.elabApi: ElabFTWApi|None = None
     self.serverPG: set[tuple[str,Any,Any,Any]] = set()
+    self.requireHardRestart = False
 
     # GUI elements
     mainL = QVBoxLayout(self)
@@ -151,7 +151,10 @@ class ProjectGroup(QDialog):
 
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
-      self.callbackFinished(True)
+      if self.requireHardRestart:
+        restart()
+      else:
+        self.callbackFinished(True)
     return
 
 
@@ -205,6 +208,7 @@ class ProjectGroup(QDialog):
         source = config['addOnDir'] or \
                  [i['addOnDir'] for i in self.configuration['projectGroups'].values() if i['addOnDir']][0]
         shutil.copytree(source, answer, dirs_exist_ok=True)
+        self.requireHardRestart = True  #because python-path has to change
       config['addOnDir'] = answer
       config['addOns'] = {}
       button = QMessageBox.question(self, 'Question', 'Do you want to update the AddOn list (recommended)?',

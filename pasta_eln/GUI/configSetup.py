@@ -110,9 +110,6 @@ class ConfigurationSetup(QWidget):
       self.button2.show()
       logging.info('Setup analyse end')
     elif command[0] is Command.FINISHED: # What do do when setup is finished: success or unsuccessfully
-      # Jithu's code: comment out for now
-      # db_api = DatabaseAPI()
-      # db_api.initialize_database()
       restart()
       # self.callbackFinished()
     return
