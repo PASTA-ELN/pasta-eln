@@ -22,6 +22,7 @@ class TreeView(QTreeView):
   """ Custom tree view on data model """
   def __init__(self, parent:QWidget, comm:Communicate, model:QStandardItemModel):
     super().__init__(parent)
+    self.parentWidget = parent
     self.comm = comm
     self.setModel(model)
     self.setHeaderHidden(True)
@@ -137,6 +138,8 @@ class TreeView(QTreeView):
         parent = item.parent()
         if parent is None: #top level
           parent = self.model().invisibleRootItem()                                                           # type: ignore[attr-defined]
+          if parent.rowCount()==1:
+            self.parentWidget.btnAddSubfolder.setVisible(True)
         parent.removeRow(item.row())
     elif command[0] is Command.SHOW_DETAILS:
       item = self.model().itemFromIndex(self.currentIndex())                                                 # type: ignore[attr-defined]

@@ -122,7 +122,7 @@ class Project(QWidget):
   @Slot(str, str)                                   # type: ignore[arg-type]
   def change(self, projID:str, docID:str) -> None:
     """
-    What happens when user clicks to change project
+    What happens when user clicks to change project that is shown
 
     Args:
       projID (str): document id of project; if empty, just refresh
