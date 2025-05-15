@@ -206,9 +206,7 @@ class ProjectGroup(QDialog):
       button = QMessageBox.question(self, 'Question', 'Do you want to copy the add-ons from the old directory (recommended)?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
-        # if last source '', take one sensible one from config
-        source = config['addOnDir'] or \
-                 [i['addOnDir'] for i in self.configuration['projectGroups'].values() if i['addOnDir']][0]
+        source =Path(__file__).parent.parent/'AddOns'
         shutil.copytree(source, answer, dirs_exist_ok=True)
         self.requireHardRestart = True  #because python-path has to change
       config['addOnDir'] = answer
