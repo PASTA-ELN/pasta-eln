@@ -8,7 +8,7 @@ from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap  #
 from PySide6.QtSvgWidgets import QSvgWidget  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QBoxLayout, QComboBox, QDialog, QDialogButtonBox,  # pylint: disable=no-name-in-module
                                QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox, QPushButton,
-                               QScrollArea, QSizePolicy, QSplitter, QTextEdit, QVBoxLayout, QWidget)
+                               QScrollArea, QSizePolicy, QSplitter, QTextEdit, QVBoxLayout, QWidget, QApplication)
 from .textTools.handleDictionaries import dict2ul
 from .textTools.stringChanges import markdownEqualizer
 
@@ -16,7 +16,7 @@ space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200} #spaces: padding and margin
 
 class TextButton(QPushButton):
   """ Button that has only text"""
-  def __init__(self, label:str, widget:QWidget, command:list[Any]=[], layout:Optional[QLayout]=None,
+  def __init__(self, label:str, widget:QWidget, command:list[Any]|None=[], layout:Optional[QLayout]=None,
                tooltip:str='', checkable:bool=False, style:str='', hide:bool=False, iconName:str=''):
     """
     Args:
@@ -35,7 +35,8 @@ class TextButton(QPushButton):
     self.setChecked(checkable)
     self.setAutoDefault(False)
     self.setDefault(False)
-    self.clicked.connect(lambda: widget.execute(command))                                                    # type: ignore[attr-defined]
+    if command is not None:
+      self.clicked.connect(lambda: widget.execute(command))                                             # type: ignore[attr-defined]
     if tooltip:
       self.setToolTip(tooltip)
     if style:
@@ -240,9 +241,16 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='Information', sty
     label.setText(text)
   else:
     label.setTextFormat(Qt.TextFormat.MarkdownText)
-  buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
-  buttonBox.clicked.connect(dialog.accept)
-  dialogL.addWidget(buttonBox)
+  # final button box
+  _, buttonLineL = widgetAndLayout('H', dialogL, 'm', 'm', '0', 'm', 's')
+  copyButton = TextButton('Copy message', parent, None, buttonLineL, 'Copy to clipboard')
+  def copyToClipboard():
+    clipboard = QApplication.clipboard()
+    clipboard.setText(text)
+  copyButton.clicked.connect(copyToClipboard)
+  buttonLineL.addStretch(2)
+  okButton   = TextButton('OK',   parent, None, buttonLineL, 'Accept')
+  okButton.clicked.connect(dialog.accept)
   dialogW.setMinimumWidth(800)
   dialog.exec()
   return
