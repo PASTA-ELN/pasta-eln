@@ -7,7 +7,7 @@ import subprocess
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import Qt  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt, QModelIndex  # pylint: disable=no-name-in-module
 from PySide6.QtGui import (QDropEvent, QEventPoint, QStandardItem,  # pylint: disable=no-name-in-module
                            QStandardItemModel)
 from PySide6.QtWidgets import (QAbstractItemView, QMenu, QMessageBox, QTreeView,  # pylint: disable=no-name-in-module
@@ -142,15 +142,23 @@ class TreeView(QTreeView):
             self.parentWidget.btnAddSubfolder.setVisible(True)
         parent.removeRow(item.row())
     elif command[0] is Command.SHOW_DETAILS:
-      item = self.model().itemFromIndex(self.currentIndex())                                                 # type: ignore[attr-defined]
-      gui  = item.data()['gui']
-      docID = item.data()['hierStack'].split('/')[-1]
+      gui    = item.data()['gui']
       gui[0] = not gui[0]
-      item.setData({ **item.data(), **{'gui':gui}})
+      def iterate(currentItem:QStandardItem):
+        currentIndex = self.model().indexFromItem(currentItem)
+        if currentItem.data() is not None:
+          if hierStack[-1]==currentItem.data()['hierStack'].split('/')[-1]:
+            currentItem.setData({ **currentItem.data(), **{'gui':gui}})
+        for row in range(self.model().rowCount(currentIndex)):
+          for column in range(self.model().columnCount(currentIndex)):
+            childIndex = self.model().index(row, column, currentIndex)
+            iterate(self.model().itemFromIndex(childIndex))
+      iterate(self.model().invisibleRootItem())
+      # only one change once the DB
       self.comm.backend.db.setGUI(docID, gui)
     elif command[0] is Command.HIDE:
       logging.debug('hide document %s',hierStack[-1])
-      self.comm.backend.db.hideShow(hierStack[-1])
+      self.comm.backend.db.hideShow(hierStack[-1]) #TODO: current implementation: you hide one; all others are hidden as well. Talk to GW what is the default expectation; system allows for individual hiding
       # self.comm.changeProject.emit('','') #refresh project
       # after hide, do not hide immediately but wait on next refresh
     elif command[0] is Command.OPEN_EXTERNAL or command[0] is Command.OPEN_FILEBROWSER:
