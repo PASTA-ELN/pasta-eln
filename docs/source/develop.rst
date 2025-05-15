@@ -56,6 +56,12 @@ Windows
    rmdir /s /q  %UserProfile%\AppData\Local\Programs\Python
 
 
+Subscription to RSS feed announcing new versions
+-------------------------------------------------
+
+In your email client (e.g. Thunderbird) you can subscribe to News. Create a new entry with "PastaELN" as the
+title and "https://pypi.org/rss/project/pasta-eln/releases.xml" as the URL.
+
 
 Notes for Documentation Developers
 -----------------------------------
