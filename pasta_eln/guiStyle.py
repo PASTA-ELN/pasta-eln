@@ -7,8 +7,8 @@ from PySide6.QtCore import QByteArray, Qt  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap  # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QApplication, QBoxLayout, QComboBox, QDialog,  # pylint: disable=no-name-in-module
-                               QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox,
-                               QPushButton, QScrollArea, QSizePolicy, QSplitter, QTextEdit, QVBoxLayout, QWidget)
+                               QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox, QPushButton,
+                               QScrollArea, QSizePolicy, QSplitter, QTextEdit, QVBoxLayout, QWidget)
 from .textTools.handleDictionaries import dict2ul
 from .textTools.stringChanges import markdownEqualizer
 
