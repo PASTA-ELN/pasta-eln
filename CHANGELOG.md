@@ -2,7 +2,40 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.6...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.7...HEAD)
+
+**Implemented enhancements:**
+
+- Make "aiohttp" dependency optional [\#188](https://github.com/PASTA-ELN/pasta-eln/issues/188)
+
+**Fixed bugs:**
+
+- Dot in properties table is lost [\#452](https://github.com/PASTA-ELN/pasta-eln/issues/452)
+
+**Closed issues:**
+
+- Update of extractors in the current project group [\#466](https://github.com/PASTA-ELN/pasta-eln/issues/466)
+- Making the messages from the test extraction copy-able [\#464](https://github.com/PASTA-ELN/pasta-eln/issues/464)
+- Making the folder paths copy-able in the configurations [\#462](https://github.com/PASTA-ELN/pasta-eln/issues/462)
+- Instruction for RSS feed on website [\#461](https://github.com/PASTA-ELN/pasta-eln/issues/461)
+- "size 0" for imported tif file? [\#460](https://github.com/PASTA-ELN/pasta-eln/issues/460)
+- No automated restart when a new project group add-on folder is created [\#459](https://github.com/PASTA-ELN/pasta-eln/issues/459)
+- Projects not visible in sidebar [\#457](https://github.com/PASTA-ELN/pasta-eln/issues/457)
+- Progress bar for drag+drop progress [\#456](https://github.com/PASTA-ELN/pasta-eln/issues/456)
+- Toggling detail visibility for identical files [\#455](https://github.com/PASTA-ELN/pasta-eln/issues/455)
+- "Show all item details"-option missing [\#454](https://github.com/PASTA-ELN/pasta-eln/issues/454)
+- Sorting files by name in the project view [\#453](https://github.com/PASTA-ELN/pasta-eln/issues/453)
+- list of instruments in the data schema editor is called "instrument" [\#450](https://github.com/PASTA-ELN/pasta-eln/issues/450)
+- There is sometimes a bug during the github actions [\#444](https://github.com/PASTA-ELN/pasta-eln/issues/444)
+- Automated scan when drag/drop-ing files [\#440](https://github.com/PASTA-ELN/pasta-eln/issues/440)
+- Drag/Drop of folders? [\#438](https://github.com/PASTA-ELN/pasta-eln/issues/438)
+- When moving addOn directory in project group editor, there should be three options [\#419](https://github.com/PASTA-ELN/pasta-eln/issues/419)
+- Deleting the only folder in a project [\#396](https://github.com/PASTA-ELN/pasta-eln/issues/396)
+- Install requirements in scanNewExtractors [\#156](https://github.com/PASTA-ELN/pasta-eln/issues/156)
+
+## [v3.1.7](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.7) (2025-05-12)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.6...v3.1.7)
 
 **Closed issues:**
 
