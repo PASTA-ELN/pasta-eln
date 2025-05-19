@@ -16,6 +16,10 @@ PASTA-ELN (adaPtive mAterials Science meTadatA - Electronic Lab Notebook) provid
 > **This page / area is for developers and contains some helpful information for them**
 
 
+**MOVE THIS STUFF TO DOCUMENTATION AND CLEAN THIS PAGE**
+- run new pylint
+- check that guiStyle buttons are added; Just using layout is not enough
+
 ---
 
 ## Developers: Windows
