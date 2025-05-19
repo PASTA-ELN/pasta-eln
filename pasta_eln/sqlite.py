@@ -233,7 +233,7 @@ class SqlLiteDB:
     Save to database
     - not helpful to convert _id to int since sqlite does not digest such long integer
       doc['id']  = int(doc['id'][2:], 16)
-    - **metaUser, metaVendor and branch as dict, everything else flattend**
+    - **metaUser, metaVendor and branch as dict, everything else flattened**
     - Example{
         name: PASTAs Example Project
         type: ['measurement', 'image']
