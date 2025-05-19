@@ -8,7 +8,7 @@ class QtLocalWidgetChecker(BaseChecker):
                   'qt-local-widget',
                   'Qt widgets used beyond construction should be assigned to instance variables.')}
   qt_classes = {'QPushButton', 'QLineEdit', 'QCheckBox', 'QComboBox', 'QSlider', 'QTextEdit', 'QTableView',
-                'QTreeView', 'QTimer', 'QShortcut'}
+                'QTreeView', 'QTimer', 'QShortcut', 'IconButton', 'TextButton'}
 
   def visit_assign(self, node: astroid.nodes.Assign):
     try:
