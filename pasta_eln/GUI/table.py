@@ -9,7 +9,7 @@ import pandas as pd
 from PySide6.QtCore import QModelIndex, QSortFilterProxyModel, Qt, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItem, QStandardItemModel  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QComboBox, QFileDialog, QHeaderView, QLineEdit,  # pylint: disable=no-name-in-module
-                               QMenu, QMessageBox, QTableView, QVBoxLayout, QWidget)
+                               QMenu, QMessageBox, QTableView, QVBoxLayout, QWidget, QApplication)
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
 from .tableHeader import TableHeader
@@ -36,6 +36,7 @@ class Table(QWidget):
     self.projID = ''
     self.filterHeader:list[str] = []
     self.showAll= True
+    self.lastClickedRow = None
 
     ### GUI elements
     mainL = QVBoxLayout()
@@ -83,6 +84,7 @@ class Table(QWidget):
     _, self.filterL = widgetAndLayoutGrid(mainL, top='s', bottom='s')
     # table
     self.table = QTableView(self)
+    self.table.setStyleSheet('QTableView::indicator {width: 24px; height: 24px;}')
     self.table.verticalHeader().hide()
     self.table.clicked.connect(self.cellClicked)
     self.table.doubleClicked.connect(self.cell2Clicked)
@@ -209,16 +211,16 @@ class Table(QWidget):
         else:
           text = value
         item = QStandardItem(text)
-      if j==0:
+      if j == 0:
         doc = self.comm.backend.db.getDoc(self.data['id'][i])
         if [b for b in doc['branch'] if False in b['show']]:
-          item.setText( item.text()+'  \U0001F441' )
+            item.setText(f'{item.text()}  \U0001F441')
         item.setAccessibleText(doc['id'])
-        if self.docType!='x0':
-          item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
-          item.setCheckState(Qt.CheckState.Unchecked)
+        if self.docType != 'x0':
+            item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+            item.setCheckState(Qt.CheckState.Unchecked)
       else:
-        item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+        item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
       model.setItem(i, j, item)
     self.models.append(model)                                                                                # type: ignore[arg-type]
     self.table.setModel(self.models[-1])
@@ -400,21 +402,34 @@ class Table(QWidget):
     return
 
 
-  def cellClicked(self, item:QStandardItem) -> None:
+  def cellClicked(self, index: QModelIndex) -> None:
     """
     What happens when user clicks cell in table of tags, projects, samples, ...
     -> show details
 
     Args:
-      item (QStandardItem): cell clicked
+      index (QModelIndex): cell clicked
     """
-    row = item.row()
+    row = index.row()
     _, docID = self.itemFromRow(row)
-    # column = item.column()
-    if docID[0]=='x': #only show items for non-folders
+
+    # Check if shift is held and lastClickedRow is set
+    modifiers = QApplication.keyboardModifiers()
+    if modifiers == Qt.ShiftModifier and self.lastClickedRow is not None:
+      start = min(self.lastClickedRow, row)
+      end = max(self.lastClickedRow, row)
+      target_state = Qt.CheckState.Checked if self.itemFromRow(row)[0].checkState() == Qt.CheckState.Checked \
+                      else Qt.CheckState.Unchecked
+      for r in range(start, end + 1):
+        item, _ = self.itemFromRow(r)
+        item.setCheckState(target_state)
+    else: # No need to toggle only the clicked row, just record it
+      self.lastClickedRow = row
+
+    if docID[0] == 'x':  # only show items for non-folders
       doc = self.comm.backend.db.getDoc(docID)
-      if doc['type'][0]=='x0':
-        self.comm.changeProject.emit(docID,'')
+      if doc['type'][0] == 'x0':
+        self.comm.changeProject.emit(docID, '')
         self.comm.changeSidebar.emit(docID)
       else:
         projID = doc['branch'][0]['stack'][0]
@@ -425,14 +440,14 @@ class Table(QWidget):
     return
 
 
-  def cell2Clicked(self, item:QStandardItem) -> None:
+  def cell2Clicked(self, index: QModelIndex) -> None:
     """
     What happens when user double clicks cell in table of projects
 
     Args:
-      item (QStandardItem): cell clicked
+      index (QModelIndex): cell clicked
     """
-    row = item.row()
+    row = index.row()
     _, docID = self.itemFromRow(row)
     if self.docType=='x0':
       self.comm.changeProject.emit(docID, '')
