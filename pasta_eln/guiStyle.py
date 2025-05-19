@@ -226,7 +226,7 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='Information', sty
                   'fa5s.info', color='white', scale_factor=1)
   dialog = QDialog(parent)
   dialog.setWindowTitle(title)
-  dialogW, dialogL = widgetAndLayout('V', None, 's', top='s', bottom='s')
+  dialogW, dialogL = widgetAndLayout('V', None, 's', top='s', bottom='s', left='s', right='s')
   dialog.setLayout(dialogL)
   label = QLabel('')
   label.setPixmap(iconSymbol.pixmap(iconSize, iconSize))

@@ -591,7 +591,7 @@ class Backend(CLI_Mixin):
     if success:
       try:
         _ = json.dumps(content['metaUser'])
-        if not isinstance(content['metaUser'], dict):
+        if not isinstance(content['metaUser'], (dict,list)):
           raise TypeError(' Meta user: wrong type')
         report += 'Number of user entries: '+str(len(content['metaUser']))+'<br>'
       except Exception:

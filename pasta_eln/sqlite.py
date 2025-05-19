@@ -233,24 +233,37 @@ class SqlLiteDB:
     Save to database
     - not helpful to convert _id to int since sqlite does not digest such long integer
       doc['id']  = int(doc['id'][2:], 16)
+    - **metaUser, metaVendor and branch as dict, everything else flattend**
     - Example{
-        'name': 'G200X',
-        'user': 'somebody',
-        'type': ['instrument'],
-        'branch': {'stack': ['x-9f74f79c96754d4c9065435ddd466c56', 'x-04b5e323d3ae4364bcd310a3e5fd653e'],
-                  'child': 9999, 'path': None, 'show': [True, True, True], 'op': 'c'},
-        'id': 'i-180212be6c7d4365ac647f266c5698f1',
-        'externalId': '',
-        'dateCreated': '2024-07-31T22:03:39.530666',
-        'dateModified': '2024-07-31T22:03:39.530727',
-        'gui': [True, True],
-        'comment': '',
-        '.vendor': 'KLA',
-        '.model': 'KLA G200X',
-        'metaVendor': {'j': 258},
-        'tags': []}
+        name: PASTAs Example Project
+        type: ['measurement', 'image']
+        type: ['-']
+        tags: ['_3']
+        comment: Can be used as reference or deleted
+        user: sb-0bacab30726e181fe1e34d82e59a8ce9
+        branch: {'stack': [], 'child': 0, 'path': 'PastasExampleProject', 'show': [True], 'op': 'u'}
+        id: x-3cb1932eb3c4440cb5ca22cf57a6083f
+        externalId:
+        dateCreated: 2025-05-18T22:19:57.051393
+        dateModified: 2025-05-18T22:19:57.051415
+        gui: [True, True]
+        content: # Put sample in instrument
+        shasum: 74fd0aea706e0c51d1fd92e9c8e731f83cf92009
+        qrCodes: ['13214124', '99698708']
+        image: data:image/jpg;base64...
 
-    Discussion on -branch['path']:
+        .objective: Test if everything is working as intended.
+        .status: active
+        .chemistry: A2B2C3
+        geometry.height: 4
+        geometry.width: 2
+        .workflow/procedure: w-e1ae41142b38416bb9332b3e01bf10a5
+
+        metaVendor: {'fileExtension': 'md'}
+        metaUser: {'Sample frequency [Hz]': 2.5, 'Maximum y-data [m]': 0.9996}
+        metaUser: [{'key': 'imageWidth', 'value': 800, 'unit': 'mm', 'label': 'Largeur de l`image', 'PURL': 'http://purl.allotrope.org/ontologies/result#AFR_0002468'}, {'key': 'imageHeight', 'value': '600+/- 3', 'unit': 'mm', 'label': 'Höhe des Bildes', 'PURL': 'http://purl.allotrope.org/ontologies/result#AFR_0002467'}]
+
+    Discussion on branch['path']:
     - full path (from basePath) allows to easily create a view of all paths and search through them
       during each scan, which happens rather often
     - just the incremental path (file-name, folder-name) allows to easily change that if the user wants
@@ -264,6 +277,10 @@ class SqlLiteDB:
         dict: json representation of submitted document
     """
     # print('\nsave\n'+'\n'.join([f'{k}: {v}' for k,v in doc.items()]))
+    # for k,v in doc.items():
+    #   if isinstance(v, dict) and k not in ['metaUser','metaVendor','branch']:
+    #     print('ERROR',k,v)
+    # end initial testing
     docOrg = copy.deepcopy(doc)
     # save into branch table
     self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",

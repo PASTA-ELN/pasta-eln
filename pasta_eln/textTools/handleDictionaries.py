@@ -63,15 +63,18 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     if isinstance(data['qrCodes'], str):
       data['qrCodes'] = data['qrCodes'].split(' ')
   # cleaning at end of all changes
-  toDelete = []
-  for key in data:
-    if isinstance(data[key], str):
-      if data[key]=='' and key not in protectedKeys:
-        toDelete.append(key)
+  initialKeys = list(data.keys())
+  for key in initialKeys:
+    value = data[key]
+    if isinstance(value, str):
+      if value=='' and key not in protectedKeys:
+        del data[key]
       else:
-        data[key] = data[key].strip()
-  for key in toDelete:
-    del data[key]
+        data[key] = value.strip()
+    if isinstance(value, dict) and key not in ['metaVendor','metaUser','branch']:
+      for subKey,subValue in value.items():
+        data[f'{key}.{subKey}'] = subValue
+      del data[key]
   return data
 
 
