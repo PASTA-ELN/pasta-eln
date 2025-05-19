@@ -244,14 +244,16 @@ class Table(QWidget):
     elif command[0] is Command.ADD_FILTER:
       # gui
       _, rowL = widgetAndLayout('H', self.filterL, 'm', 'xl', '0', 'xl')
-      text = QLineEdit('')
-      rowL.addWidget(text)
       select = QComboBox()
+      select.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
       select.addItems(self.filterHeader)
       select.currentIndexChanged.connect(self.filterChoice)
       select.setMinimumWidth(max(len(i) for i in self.filterHeader)*14)
       select.setAccessibleName(str(len(self.models)))
       rowL.addWidget(select)
+      text = QLineEdit('')
+      text.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
+      rowL.addWidget(text)
       IconButton('fa5s.minus-square', self, [Command.DELETE_FILTER, len(self.models)], rowL)
       # data
       filterModel = QSortFilterProxyModel()
