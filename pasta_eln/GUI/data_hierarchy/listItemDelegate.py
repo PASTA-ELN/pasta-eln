@@ -1,6 +1,7 @@
 """ ListItemDelegate module used for the table views """
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Qt, QAbstractItemModel
+from PySide6.QtCore import QAbstractItemModel, QModelIndex, QPersistentModelIndex, Qt
 from PySide6.QtWidgets import QComboBox, QStyledItemDelegate, QStyleOptionViewItem, QWidget
+
 
 class ListItemDelegate(QStyledItemDelegate):
   """

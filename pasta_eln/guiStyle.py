@@ -6,9 +6,9 @@ import qtawesome as qta
 from PySide6.QtCore import QByteArray, Qt  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap  # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QBoxLayout, QComboBox, QDialog, QDialogButtonBox,  # pylint: disable=no-name-in-module
-                               QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox, QPushButton,
-                               QScrollArea, QSizePolicy, QSplitter, QTextEdit, QVBoxLayout, QWidget, QApplication)
+from PySide6.QtWidgets import (QApplication, QBoxLayout, QComboBox, QDialog,  # pylint: disable=no-name-in-module
+                               QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox,
+                               QPushButton, QScrollArea, QSizePolicy, QSplitter, QTextEdit, QVBoxLayout, QWidget)
 from .textTools.handleDictionaries import dict2ul
 from .textTools.stringChanges import markdownEqualizer
 
@@ -244,7 +244,8 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='Information', sty
   # final button box
   _, buttonLineL = widgetAndLayout('H', dialogL, 'm', 'm', '0', 'm', 's')
   copyButton = TextButton('Copy message', parent, None, buttonLineL, 'Copy to clipboard')
-  def copyToClipboard():
+  def copyToClipboard() -> None:
+    """ Copy text to clipboard """
     clipboard = QApplication.clipboard()
     clipboard.setText(text)
   copyButton.clicked.connect(copyToClipboard)

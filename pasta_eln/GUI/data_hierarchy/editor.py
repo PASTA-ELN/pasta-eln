@@ -9,11 +9,11 @@ from ...guiCommunicate import Communicate
 from ...guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout
 from .delete_column_delegate import DeleteColumnDelegate
 from .docTypeEdit import DocTypeEditor
+from .listFreeDelegate import ListFreeDelegate
+from .listItemDelegate import ListItemDelegate
 from .mandatory_column_delegate import MandatoryColumnDelegate
 from .name_column_delegate import NameColumnDelegate
 from .reorder_column_delegate import ReorderColumnDelegate
-from .listFreeDelegate import ListFreeDelegate
-from .listItemDelegate import ListItemDelegate
 
 #                0       1            2      3           4      5         6
 COLUMN_NAMES = ['name','description','unit','mandatory','item list','free list','move up','delete']

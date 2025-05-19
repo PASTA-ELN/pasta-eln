@@ -7,11 +7,9 @@ import subprocess
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import Qt, QModelIndex  # pylint: disable=no-name-in-module
-from PySide6.QtGui import (QDropEvent, QEventPoint, QStandardItem,  # pylint: disable=no-name-in-module
-                           QStandardItemModel)
-from PySide6.QtWidgets import (QAbstractItemView, QMenu, QMessageBox, QTreeView,  # pylint: disable=no-name-in-module
-                               QWidget)
+from PySide6.QtCore import Qt  # pylint: disable=no-name-in-module
+from PySide6.QtGui import (QDropEvent, QEventPoint, QStandardItem,  QStandardItemModel)# pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget) # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, showMessage
 from ..miscTools import callAddOn
@@ -22,7 +20,7 @@ class TreeView(QTreeView):
   """ Custom tree view on data model """
   def __init__(self, parent:QWidget, comm:Communicate, model:QStandardItemModel):
     super().__init__(parent)
-    self.parentWidget = parent
+    self.aParentWidget = parent
     self.comm = comm
     self.setModel(model)
     self.setHeaderHidden(True)
@@ -134,31 +132,38 @@ class TreeView(QTreeView):
         for line in children:
           self.comm.backend.db.remove(line['id'], stack='/'.join(doc['branch'][0]['stack']+[docID,'']))
         # remove leaf from GUI
-        item  = self.model().itemFromIndex(self.currentIndex())                                              # type: ignore[attr-defined]
+        item  = self.model().itemFromIndex(self.currentIndex())                                               # type: ignore[attr-defined]
         parent = item.parent()
         if parent is None: #top level
           parent = self.model().invisibleRootItem()                                                           # type: ignore[attr-defined]
           if parent.rowCount()==1:
-            self.parentWidget.btnAddSubfolder.setVisible(True)
+            self.aParentWidget.btnAddSubfolder.setVisible(True)                                               # type: ignore[attr-defined]
         parent.removeRow(item.row())
     elif command[0] is Command.SHOW_DETAILS:
       gui    = item.data()['gui']
       gui[0] = not gui[0]
-      def iterate(currentItem:QStandardItem):
-        currentIndex = self.model().indexFromItem(currentItem)
-        if currentItem.data() is not None:
-          if hierStack[-1]==currentItem.data()['hierStack'].split('/')[-1]:
-            currentItem.setData({ **currentItem.data(), **{'gui':gui}})
+      docID  = hierStack[-1]
+      def iterate(currentItem:QStandardItem) -> None:
+        """ iterate through all branches and leaves and find items matching the docID
+        Args:
+          currentItem (QStandardItem): item to iterate to its children
+        """
+        currentIndex = self.model().indexFromItem(currentItem)                                                # type: ignore[attr-defined]
+        if currentItem.data() is not None and docID==currentItem.data()['hierStack'].split('/')[-1]:
+          currentItem.setData({ **currentItem.data(), **{'gui':gui}})
         for row in range(self.model().rowCount(currentIndex)):
           for column in range(self.model().columnCount(currentIndex)):
             childIndex = self.model().index(row, column, currentIndex)
-            iterate(self.model().itemFromIndex(childIndex))
-      iterate(self.model().invisibleRootItem())
+            iterate(self.model().itemFromIndex(childIndex))                                                   # type: ignore[attr-defined]
+      iterate(self.model().invisibleRootItem())                                                               # type: ignore[attr-defined]
       # only one change once the DB
       self.comm.backend.db.setGUI(docID, gui)
     elif command[0] is Command.HIDE:
       logging.debug('hide document %s',hierStack[-1])
-      self.comm.backend.db.hideShow(hierStack[-1]) #TODO: current implementation: you hide one; all others are hidden as well. Talk to GW what is the default expectation; system allows for individual hiding
+      self.comm.backend.db.hideShow(hierStack[-1])
+      #TODO: current implementation: you hide one; all others are hidden as well.
+      # Talk to GW what is the default expectation; system allows for individual hiding
+      #
       # self.comm.changeProject.emit('','') #refresh project
       # after hide, do not hide immediately but wait on next refresh
     elif command[0] is Command.OPEN_EXTERNAL or command[0] is Command.OPEN_FILEBROWSER:

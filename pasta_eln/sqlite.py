@@ -261,7 +261,8 @@ class SqlLiteDB:
 
         metaVendor: {'fileExtension': 'md'}
         metaUser: {'Sample frequency [Hz]': 2.5, 'Maximum y-data [m]': 0.9996}
-        metaUser: [{'key': 'imageWidth', 'value': 800, 'unit': 'mm', 'label': 'Largeur de l`image', 'PURL': 'http://purl.allotrope.org/ontologies/result#AFR_0002468'}, {'key': 'imageHeight', 'value': '600+/- 3', 'unit': 'mm', 'label': 'Höhe des Bildes', 'PURL': 'http://purl.allotrope.org/ontologies/result#AFR_0002467'}]
+        metaUser: [{'key': 'imageWidth', 'value': 800, 'unit': 'mm', 'label': 'Largeur de l`image', 'PURL': '...'},
+                   {'key': 'imageHeight', 'value': '600+/- 3', 'unit': 'mm', 'label': 'Höhe des Bildes', 'PURL': '...'}]
 
     Discussion on branch['path']:
     - full path (from basePath) allows to easily create a view of all paths and search through them

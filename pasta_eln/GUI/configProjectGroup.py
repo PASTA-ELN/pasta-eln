@@ -16,7 +16,8 @@ from ..elabFTWapi import ElabFTWApi
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, ScrollMessageBox, TextButton, showMessage, widgetAndLayoutGrid
-from ..miscTools import updateAddOnList, restart
+from ..miscTools import restart, updateAddOnList
+
 
 class ProjectGroup(QDialog):
   """ Table Header dialog: change which columns are shown and in which order """

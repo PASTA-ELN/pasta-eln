@@ -25,5 +25,4 @@ class ListFreeDelegate(QStyledItemDelegate):
     indexListItem = index.model().index(index.row(), 4)
     index.model().setData(indexListItem, '')
     #normal stuff
-    res = QLineEdit(parent)
-    return res
+    return QLineEdit(parent)
