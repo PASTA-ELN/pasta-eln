@@ -381,6 +381,7 @@ class Table(QWidget):
     elif command[0] is Command.DELETE_FILTER: # Remove filter from list of filters
       row = command[1]
       #print('Delete filter row', row)
+      # change the information in the minus-button command
       for i in range(row, self.filterL.count()):        #e.g. model 1 is in row=0, so start in 1 for renumbering
         item_1 = self.filterL.itemAt(i)
         if item_1 is not None:
@@ -388,12 +389,13 @@ class Table(QWidget):
           if layout_2 is not None:
             item_2   = layout_2.itemAt(2)
             if item_2 is not None:
-              minusBtnW = item_2.widget()
-              minusBtnW.setAccessibleName( str(int(minusBtnW.accessibleName())-1) )  #rename: -1 from accessibleName
-      del self.models[row]
+              item_2.widget().command[1] -= 1
+      # remove row in GUI
       item_1 = self.filterL.itemAt(row-1)
       if item_1 is not None:
         item_1.widget().setParent(None) # e.g. model 1 is in row=0 for deletion
+      # delete one row in models and adopt the sources
+      del self.models[row]
       for i in range(1, len(self.models)):
         self.models[i].setSourceModel(self.models[i-1])
       self.table.setModel(self.models[-1])

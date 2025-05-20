@@ -71,7 +71,8 @@ class IconButton(QPushButton):
     super().__init__()
     icon = qta.icon(iconName, scale_factor=1)  #color change here
     self.setIcon(icon)
-    self.clicked.connect(lambda: widget.execute(command))                                                    # type: ignore[attr-defined]
+    self.command = command
+    self.clicked.connect(lambda: widget.execute(self.command))                                                    # type: ignore[attr-defined]
     self.setFixedHeight(30)
     if tooltip:
       self.setToolTip(tooltip)
