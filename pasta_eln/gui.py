@@ -11,8 +11,6 @@ from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
 from pasta_eln import __version__
-from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
-from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from pasta_eln.GUI.workflow_creator_dialog.workflow_creator_dialog import WorkflowCreatorDialog
 from .backend import Backend
 from .elabFTWsync import Pasta2Elab
