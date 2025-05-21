@@ -151,15 +151,11 @@ class StepWidget(QWidget):
         """
         Highlights the parameter_button green/yellow/red depending on filled/default/empty parameters
         """
-        palette = self.parameter_button.palette()
-        color = Qt.GlobalColor.green
-
+        color = '#8fce00'
         for widget in self.param_widgets:
             if not widget.line_edit.text():
-                color = Qt.GlobalColor.yellow
+                color = '#f1c232'
                 if not widget.line_edit.placeholderText():
-                    color = Qt.GlobalColor.red
+                    color = "#cc0000"
                     break
-        palette.setColor(QPalette.ColorRole.Button, QColor(color))
-        self.parameter_button.setPalette(palette)
-        self.parameter_button.setAutoFillBackground(True)
+        self.parameter_button.setStyleSheet(f'background-color: {color}')

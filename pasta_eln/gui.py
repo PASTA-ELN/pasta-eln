@@ -15,6 +15,7 @@ from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-ma
 from pasta_eln import __version__
 from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.GUI.dataverse.main_dialog import MainDialog
+from pasta_eln.GUI.workflow_creator_dialog.workflow_creator_dialog import WorkflowCreatorDialog
 from .backend import Backend
 from .elabFTWsync import MERGE_LABELS, Pasta2Elab
 from .fixedStringsJson import CONF_FILE_NAME, shortcuts
@@ -93,6 +94,7 @@ class MainWindow(QMainWindow):
       # Action('Get',                          self, [Command.SYNC_GET],       syncMenu)
       # Action('Smart synce',                  self, [Command.SYNC_SMART],       syncMenu)
       Action('&Editor to change data type schema', self, [Command.SCHEMA],   systemMenu, shortcut='F8')
+      Action('&Open Workflow Creator', self, [Command.WORKFLOW_CREATOR], systemMenu)
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
@@ -226,6 +228,9 @@ class MainWindow(QMainWindow):
       showMessage(self, 'Keyboard shortcuts', shortcuts)
     elif command[0] is Command.RESTART:
       restart()
+    elif command[0] is Command.WORKFLOW_CREATOR:
+      workflow_dialog = WorkflowCreatorDialog(self.comm)
+      workflow_dialog.exec()
     else:
       print('**ERROR gui menu unknown:', command)
     return
@@ -286,6 +291,7 @@ class Command(Enum):
   VERIFY_DB = 16
   SHORTCUTS = 17
   RESTART   = 18
+  WORKFLOW_CREATOR = 19
 
 
 def startMain(projectGroup:str='') -> None:

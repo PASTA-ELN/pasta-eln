@@ -60,7 +60,7 @@ class CentralListWidget(QWidget):
         sample_name = self.parent().sample_name
         procedures = self.step_list.get_procedures()
         parameters = self.step_list.get_parameters()
-        docType = "procedure" # TODO
+        docType = "procedure/workflow_scheme"
         if not procedures:
             QMessageBox.warning(self.step_list,
                                 "Export Failed",

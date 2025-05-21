@@ -9,8 +9,6 @@ from PySide6.QtWidgets import (QFrame, QProgressBar, QTreeWidgetItem, QVBoxLayou
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, TextButton, showMessage, space, widgetAndLayout, widgetAndLayoutGrid
 from .config import Configuration
-from .workflow_creator_dialog.workflow_creator_dialog import WorkflowCreatorDialog
-
 
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """
@@ -41,8 +39,6 @@ class Sidebar(QWidget):
     self.progress.hide()
     self.comm.progressBar = self.progress
     mainL.addWidget(self.progress)
-    #if 'develop' in self.comm.backend.configuration:
-    TextButton('Create Workflow', self, [Command.WORKFLOW_DIALOG], mainL, 'Create new workflow')
     self.setLayout(mainL)
 
     self.widgetsAction:dict[str,QWidget] = {}
@@ -187,9 +183,6 @@ class Sidebar(QWidget):
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_FOLDER:
       self.comm.changeProject.emit(command[1], command[2])
-    elif command[0] is Command.WORKFLOW_DIALOG:
-      workflow_dialog = WorkflowCreatorDialog(self.comm)
-      workflow_dialog.exec()
     else:
       print('**ERROR sidebar menu unknown:',command)
     return
@@ -236,4 +229,3 @@ class Command(Enum):
   SCAN_PROJECT = 3
   SHOW_FOLDER  = 4
   LIST_PROJECTS= 5
-  WORKFLOW_DIALOG = 6
