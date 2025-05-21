@@ -4,27 +4,26 @@ import logging
 import os
 import sys
 import webbrowser
-from collections import Counter
 from enum import Enum
 from pathlib import Path
 from typing import Any, Union
 from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
-from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 from pasta_eln import __version__
 from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from pasta_eln.GUI.workflow_creator_dialog.workflow_creator_dialog import WorkflowCreatorDialog
 from .backend import Backend
-from .elabFTWsync import MERGE_LABELS, Pasta2Elab
-from .fixedStringsJson import CONF_FILE_NAME, shortcuts
-# from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
-# from pasta_eln.GUI.dataverse.main_dialog import MainDialog
+from .elabFTWsync import Pasta2Elab
+from .fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
 from .GUI.body import Body
 from .GUI.config import Configuration
+from .GUI.data_hierarchy.editor import SchemeEditor
+from .GUI.definitions.editor import Editor as DefinitionsEditor
 from .GUI.form import Form
 from .GUI.palette import Palette
+from .GUI.repositories.uploadGUI import UploadGUI
 from .GUI.sidebar import Sidebar
 from .GUI.data_hierarchy.editor import SchemeEditor
 from .guiCommunicate import Communicate
@@ -47,8 +46,7 @@ class MainWindow(QMainWindow):
     """
     # global setting
     super().__init__()
-    venv = ' without venv' if sys.prefix == sys.base_prefix and 'CONDA_PREFIX' not in os.environ else ' in venv'
-    self.setWindowTitle(f"PASTA-ELN {__version__}{venv}")
+    self.setWindowTitle(f"PASTA-ELN {__version__}")
     self.resize(self.screen().size()) #self.setWindowState(Qt.WindowMaximized) #TODO https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
@@ -57,60 +55,51 @@ class MainWindow(QMainWindow):
     palette      = Palette(self, theme)
     self.comm = Communicate(self.backend, palette)
     self.comm.formDoc.connect(self.formDoc)
-    self.dataverseMainDialog: MainDialog | None = None
-    self.dataverseConfig: ConfigDialog | None = None
+    self.comm.restart.connect(self.initialize)
 
     # Menubar
     menu = self.menuBar()
     projectMenu = menu.addMenu('&Project')
     Action('&Export project to .eln',        self, [Command.EXPORT],         projectMenu)
     if 'develop' in self.comm.backend.configuration:
-      Action('&Import .eln into project',      self, [Command.IMPORT],         projectMenu)
-    # Action('&Upload to Dataverse',           self, [Command.DATAVERSE_MAIN], projectMenu)
+      Action('&Import .eln into project',    self, [Command.IMPORT],         projectMenu)
+      Action('&Upload to repository',        self, [Command.REPOSITORY], projectMenu)
     Action('&Exit',                          self, [Command.EXIT],           projectMenu)
 
-    viewMenu = menu.addMenu('&Lists')
-    if hasattr(self.backend, 'db'):
-      for docType, docLabel in self.comm.backend.db.dataHierarchy('', 'title'):
-        if docType[0] == 'x' and docType[1] != '0':
-          continue
-        shortcut = self.comm.backend.db.dataHierarchy(docType,'shortcut')[0]
-        shortcut = None if shortcut=='' else f"Ctrl+{shortcut}"
-        Action(docLabel,                     self, [Command.VIEW, docType],  viewMenu, shortcut=shortcut)
-        if docType == 'x0':
-          viewMenu.addSeparator()
-      viewMenu.addSeparator()
-      Action('&Tags',                        self, [Command.VIEW, '_tags_'], viewMenu, shortcut='Ctrl+T')
-      Action('&Unidentified',                self, [Command.VIEW, '-'],      viewMenu, shortcut='Ctrl+U')
+    self.viewMenu = menu.addMenu('&Lists')
 
     systemMenu = menu.addMenu('Project &group')
-    changeProjectGroups = systemMenu.addMenu('&Change project group')
-    if hasattr(self.backend, 'configuration'):                            # not case in fresh install
-      for name in self.backend.configuration['projectGroups'].keys():
-        Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
+    self.changeProjectGroups = systemMenu.addMenu('&Change project group')
+    syncMenu = systemMenu.addMenu('&Synchronize')
+    Action('Send',                         self, [Command.SYNC_SEND],       syncMenu, shortcut='F5')
     if 'develop' in self.comm.backend.configuration:
-      syncMenu = systemMenu.addMenu('&Synchronize')
-      Action('Send',                         self, [Command.SYNC_SEND],       syncMenu, shortcut='F5')
-      # Action('Get',                          self, [Command.SYNC_GET],       syncMenu)
+      Action('Get',                          self, [Command.SYNC_GET],        syncMenu, shortcut='F4')
       # Action('Smart synce',                  self, [Command.SYNC_SMART],       syncMenu)
+    Action('&Editor to change data type schema', self, [Command.SCHEMA],      systemMenu, shortcut='F8')
+    if 'develop' in self.comm.backend.configuration:
+      Action('&Definitions editor',          self, [Command.DEFINITIONS],     systemMenu)
       Action('&Editor to change data type schema', self, [Command.SCHEMA],   systemMenu, shortcut='F8')
       Action('&Open Workflow Creator', self, [Command.WORKFLOW_CREATOR], systemMenu)
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
     Action('Update &Add-on list',            self, [Command.UPDATE],          systemMenu)
-    systemMenu.addSeparator()
-    Action('&Verify database',               self, [Command.VERIFY_DB],       systemMenu, shortcut='Ctrl+?')
+    if 'develop' in self.comm.backend.configuration:
+      systemMenu.addSeparator()
+      Action('&Verify database',             self, [Command.VERIFY_DB],       systemMenu, shortcut='Ctrl+?')
 
     helpMenu = menu.addMenu('&Help')
     Action('&Website',                       self, [Command.WEBSITE],         helpMenu)
     Action('Shortcuts',                      self, [Command.SHORTCUTS],       helpMenu)
+    Action('About',                          self, [Command.ABOUT],           helpMenu)
     systemMenu.addSeparator()
     Action('&Configuration',                 self, [Command.CONFIG],          helpMenu, shortcut='Ctrl+0')
     # Action('&Dataverse Configuration',       self, [Command.DATAVERSE_CONFIG],helpMenu, shortcut='F10')
 
     # shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda: self.execute([Command.RESTART]))
+    if 'develop' not in self.comm.backend.configuration:
+      QShortcut('Ctrl+?', self, lambda: self.execute([Command.VERIFY_DB]))
 
     # GUI elements
     mainWidget, mainLayout = widgetAndLayout('H')
@@ -124,7 +113,32 @@ class MainWindow(QMainWindow):
     # mainLayout.addWidget(sidebarScroll)
     mainLayout.addWidget(self.sidebar)
     mainLayout.addWidget(body)
+    self.initialize()
+
+
+  @Slot()
+  def initialize(self) -> None:
+    """ Initialize: things that might change """
+    self.comm.backend.initialize(self.backend.configurationProjectGroup)  #restart backend
+    # Things that are inside the List menu
+    self.viewMenu.clear()
+    if hasattr(self.backend, 'db'):
+      for docType, docLabel in self.comm.backend.db.dataHierarchy('', 'title'):
+        if docType[0] == 'x' and docType[1] != '0':
+          continue
+        shortcut = self.comm.backend.db.dataHierarchy(docType,'shortcut')[0]
+        shortcut = None if shortcut=='' else f"Ctrl+{shortcut}"
+        Action(docLabel,            self, [Command.VIEW, docType],  self.viewMenu, shortcut=shortcut)
+      self.viewMenu.addSeparator()
+      Action('&Tags',               self, [Command.VIEW, '_tags_'], self.viewMenu, shortcut='Ctrl+T')
+      Action('&Unidentified',       self, [Command.VIEW, '-'],      self.viewMenu, shortcut='Ctrl+U')
+    # Things that are related to project group
+    self.changeProjectGroups.clear()
+    if hasattr(self.backend, 'configuration'):                            # not case in fresh install
+      for name in self.backend.configuration['projectGroups'].keys():
+        Action(name,                         self, [Command.CHANGE_PG, name], self.changeProjectGroups)
     self.comm.changeTable.emit('x0', '')
+    return
 
 
   @Slot(dict)                                         # type: ignore[arg-type]
@@ -166,6 +180,12 @@ class MainWindow(QMainWindow):
         showMessage(self, 'Finished', f'{status}\n{statistics}', 'Information')
         self.comm.changeSidebar.emit('redraw')
         self.comm.changeTable.emit('x0', '')
+    elif command[0] is Command.REPOSITORY:
+      if self.comm.projectID == '':
+        showMessage(self, 'Error', 'You have to open a project to upload', 'Warning')
+        return
+      dialogR = UploadGUI(self.comm)
+      dialogR.exec()
     elif command[0] is Command.EXIT:
       self.close()
     # view menu
@@ -178,25 +198,30 @@ class MainWindow(QMainWindow):
         fConf.write(json.dumps(self.backend.configuration, indent=2))
       restart()
     elif command[0] is Command.SYNC_SEND:
+      if 'ERROR' in self.backend.checkDB(minimal=True):
+        showMessage(self, 'ERROR', 'There are errors in your database: fix before upload')
+        return
       sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
-      if hasattr(sync, 'api'):  #if hostname and api-key given
-        report = sync.sync('sA')
-        reportSum = Counter([i[1] for i in report])
-        reportText = '\n  - '.join(['']+[f'{v:>4}:{MERGE_LABELS[k][2:]}' for k,v in reportSum.items()])
-        showMessage(self, 'Information', f'Send all data to server: success\n{reportText}', 'Information')
+      if hasattr(sync, 'api') and sync.api.url:  #if hostname and api-key given
+        self.comm.progressWindow(lambda func1: sync.sync('sA', progressCallback=func1))
       else:                     #if not given
         showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
         dialogC = Configuration(self.comm)
         dialogC.exec()
     elif command[0] is Command.SYNC_GET:
-      sync = Pasta2Elab(self.backend)
-      sync.sync('gA')
+      sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
+      self.comm.progressWindow(lambda func1: sync.sync('gA', progressCallback=func1))
+      self.comm.changeSidebar.emit('redraw')
+      self.comm.changeTable.emit('x0', '')
     elif command[0] is Command.SYNC_SMART:
       sync = Pasta2Elab(self.backend)
       sync.sync('')
-    elif command[0] is Command.SCHEMA and 'develop' in self.comm.backend.configuration:
-      dialog = SchemeEditor(self.comm)
-      dialog.show()
+    elif command[0] is Command.SCHEMA:
+      dialogS = SchemeEditor(self.comm)
+      dialogS.exec()
+    elif command[0] is Command.DEFINITIONS:
+      dialogD = DefinitionsEditor(self.comm)
+      dialogD.show()
     # elif command[0] is Command.DATAVERSE_CONFIG:
     #   self.dataverseConfig = ConfigDialog()
     #   self.dataverseConfig.show()
@@ -226,6 +251,8 @@ class MainWindow(QMainWindow):
       showMessage(self, 'Report of database verification', reportText, style='QLabel {min-width: 800px}')
     elif command[0] is Command.SHORTCUTS:
       showMessage(self, 'Keyboard shortcuts', shortcuts)
+    elif command[0] is Command.ABOUT:
+      showMessage(self, 'About', f'{AboutMessage}Environment: {sys.prefix}\n', '')
     elif command[0] is Command.RESTART:
       restart()
     elif command[0] is Command.WORKFLOW_CREATOR:
@@ -260,9 +287,7 @@ def mainGUI(projectGroup:str='') -> tuple[Union[QCoreApplication, None], MainWin
     application = QApplication.instance()
   main_window = MainWindow(projectGroup=projectGroup)
   logging.getLogger().setLevel(getattr(logging, main_window.backend.configuration['GUI']['loggingLevel']))
-  theme = main_window.backend.configuration['GUI']['theme']
-  if theme != 'none':
-    apply_stylesheet(application, theme=f'{theme}.xml')
+  main_window.comm.palette.setTheme(application)
   import qtawesome as qta  # qtawesome and matplot cannot coexist
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
@@ -291,7 +316,10 @@ class Command(Enum):
   VERIFY_DB = 16
   SHORTCUTS = 17
   RESTART   = 18
-  WORKFLOW_CREATOR = 19
+  ABOUT     = 19
+  DEFINITIONS= 20
+  REPOSITORY = 21
+  WORKFLOW_CREATOR = 22
 
 
 def startMain(projectGroup:str='') -> None:

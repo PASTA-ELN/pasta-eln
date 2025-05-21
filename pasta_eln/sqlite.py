@@ -589,17 +589,6 @@ class SqlLiteDB:
       stackINew = stackNew+stackIOld[len(stackOld):]                           if stackNew else stackIOld
       showINew  = self.createShowFromStack(stackIOld.split('/'), showIOld[-1]) if stackNew else showIOld
       updatedInfo.append((pathINew, stackINew, showINew, docID, idx))
-      # update .json on disk
-      if stackINew.split('/')[-1][0]=='x' and (self.basePath/pathINew).is_dir():
-        with open(self.basePath/pathINew/'.id_pastaELN.json', encoding='utf-8') as fIn:
-          doc = json.load(fIn)
-        doc['branch'] = [{'stack':stackINew.split('/')[:-1],
-                          'show':[i=='T' for i in showINew],
-                          'path':pathINew,
-                          'child':i['child']}
-                         for i in doc['branch'] if i['stack']==stackIOld.split('/')[:-1]]
-        with open(self.basePath/pathINew/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
-          fOut.write(json.dumps(doc))
     cmd = 'UPDATE branches SET path=?, stack=?, show=? WHERE id == ? and idx == ?'
     self.cursor.executemany(cmd, updatedInfo)
     self.connection.commit()
@@ -703,7 +692,7 @@ class SqlLiteDB:
     if thePath.endswith('All'):
       thePath = thePath.removesuffix('All')
       allFlag = True
-    viewType, docType = thePath.split('/', maxsplit=1)  # maxsplit by Raphael for procedure/sop.
+    viewType, docType = thePath.split('/', 1)
     if viewType=='viewDocType':
       viewColumns = self.dataHierarchy(docType, 'view')
       viewColumns = viewColumns+['id'] if viewColumns else ['name','tags','comment','id']

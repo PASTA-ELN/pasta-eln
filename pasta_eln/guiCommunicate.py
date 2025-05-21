@@ -1,10 +1,11 @@
 """ Communication class that sends signals between widgets, incl. backend"""
-from typing import Any, Optional
+from typing import Any, Callable
 from PySide6.QtCore import QObject, Signal  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
 from .GUI.workflow_creator_dialog.common_workflow_description import Storage
 
 from .backend import Backend
+from .GUI.waitDialog import WaitDialog, Worker
 
 
 class Communicate(QObject):
@@ -16,6 +17,21 @@ class Communicate(QObject):
     self.projectID             = ''
     self.storage: Optional[Storage] = None
     self.progressBar:Optional[QProgressBar] = None
+    self.waitDialog            = WaitDialog()
+    self.worker:Worker|None    = None
+
+  def progressWindow(self, taskFunction:Callable[[Callable[[str,str],None]],Any]) -> None:
+    """ Show a progress window and execute function
+    Args:
+      taskFunction (func): function to execute
+    """
+    self.waitDialog.show()
+    self.worker = Worker(taskFunction)
+    self.worker.progress.connect(self.waitDialog.updateProgressBar)
+    self.worker.start()
+    return
+
+
 
   # Signals: specify emitter and receiver
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES
@@ -28,3 +44,4 @@ class Communicate(QObject):
   formDoc            = Signal(dict)      # send doc from details to new/edit dialog: dialogForm
   testExtractor      = Signal()          # execute extractorTest in widgetDetails
   stopSequentialEdit = Signal()          # in sequential edit, stop if there is a cancel
+  restart            = Signal()          # restart GUI

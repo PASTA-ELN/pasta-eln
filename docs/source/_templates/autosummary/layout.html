@@ -1,0 +1,15 @@
+{%- extends "!layout.html" %}
+
+{% block extrahead %}
+  {{ super() }}
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block doctype %}
+<!DOCTYPE html>
+<html lang="en" class="{% if pagename == 'index' %}index{% else %}subpage{% endif %}">
+{% endblock %}
+
+{% block body_tag %}
+  <body class="{% if pagename == 'index' %}index{% else %}subpage{% endif %}">
+{% endblock %}

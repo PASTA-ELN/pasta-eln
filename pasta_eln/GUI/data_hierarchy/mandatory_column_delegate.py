@@ -9,8 +9,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 from typing import Union
-from pandas import DataFrame
-from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QRect, Qt
+from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QRect
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (QApplication, QRadioButton, QStyle, QStyledItemDelegate, QStyleOptionButton,
                                QStyleOptionViewItem, QWidget)
@@ -20,19 +19,6 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
   """
   Delegate for creating the radio buttons for the mandatory column in data hierarchy editor tables
   """
-
-  def __init__(self, df:DataFrame, group:str) -> None:
-    """
-      Constructor
-
-    Args:
-      df (DataFrame): pandas dataframe containing the entire schema
-      group (str): string of this group/class
-    """
-    super().__init__()
-    self.df = df
-    self.group = group
-
   def paint(self,
             painter: QPainter,
             option: QStyleOptionViewItem,
@@ -47,6 +33,9 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
     Returns: None
 
     """
+    indexName = index.model().index(index.row(), 0)
+    if not indexName.data():
+      return
     widget = option.widget  # type: ignore[attr-defined]
     style = widget.style() if widget else QApplication.style()
     opt = QStyleOptionButton()
@@ -56,11 +45,8 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
                      option_rect.top(),
                      option_rect.width(),
                      option_rect.height())
-    dfSub = self.df[self.df['class']==self.group]
-    if index.row()>len(dfSub):
-      return
-    trues = dfSub[dfSub['idx']==index.row()]['mandatory'].values
-    isMandatory = len(trues)==1 and trues[0]=='T'
+    indexName = index.model().index(index.row(), 0)
+    isMandatory = index.data()=='T' and indexName.data()
     opt.state = QStyle.StateFlag.State_On if isMandatory else QStyle.StateFlag.State_Off  # type: ignore[attr-defined]
     style.drawControl(QStyle.ControlElement.CE_RadioButton, opt, painter, radio_button)
 
@@ -81,10 +67,10 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
     Returns (bool): True/False
     """
     if event.type() == QEvent.Type.MouseButtonRelease:
-      column= (self.df['class']==self.group) & (self.df['idx']==index.row())
-      trues = self.df[column]['mandatory'].values
-      isMandatory = len(trues)==1 and trues[0]=='T'
-      self.df.loc[column,   'mandatory']= '' if isMandatory else 'T'
+      indexName = model.index(index.row(), 0)
+      if indexName.data():
+        isMandatory = index.data()=='T'
+        model.setData(index, '' if isMandatory else 'T')                # invert mandatory after click
     return super().editorEvent(event, model, option, index)
 
 

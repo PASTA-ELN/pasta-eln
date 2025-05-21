@@ -2,6 +2,7 @@
 import base64
 import copy
 import json
+import logging
 import mimetypes
 from pathlib import Path
 from typing import Any, TypedDict
@@ -14,6 +15,7 @@ class ElabFTWApi:
   def __init__(self, url:str='invalid', apiKey:str='', verifySSL:bool=True):
     '''
     initiate an elab instance to allow for syncing
+    - test success by testing for self.url being set
 
     Args:
       url (str): url
@@ -27,31 +29,33 @@ class ElabFTWApi:
       print('Log-in to elabFTW server.')
       print(f'Go to website: {url}ucp.php?tab=4, enter a name and as permission: read/write. Create the API key')
       apiKey = input('Copy-paste the api-key: ').strip()
-    self.url     = url
-    self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
+
     class Param(TypedDict):
       """ class for parameters """
       headers: dict[str, str]
       verify: bool
       timeout: int
-    self.param : Param = {'headers':self.headers, 'verify':verifySSL, 'timeout':60}
+
     # test server
+    self.url = ''  #initialize: indicator if initialization successful
+    self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
+    self.param:Param = {'headers':self.headers, 'verify':verifySSL, 'timeout':10}
     try:
-      response = requests.get(f'{self.url}info', **self.param)
+      response = requests.get(f'{url}info', **self.param)
       if response.status_code == 200:
         elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
         if elabVersion<5:
-          print('**ERROR old elab-ftw version')
+          logging.error('Old elab-ftw version')
+        else:
+          self.url   = url
       else:
-        print('**ERROR not an elab-ftw server')
+        logging.error('Not an elab-ftw server')
     except requests.ConnectionError:
       try:
         response = requests.get('https://www.google.com', headers={'Content-type': 'application/json'}, timeout=60)
-        print('**ERROR not an elab-ftw server')
+        logging.error('Not an elab-ftw server or cannot connect to that server.')
       except requests.ConnectionError:
-        print('**ERROR: cannot connect to google. You are not online')
-        self.url = ''
-        self.headers = {}
+        logging.error('Cannot connect to google. You are not online')
     return
 
 
@@ -70,7 +74,7 @@ class ElabFTWApi:
     if response.status_code == 201:
       return int(response.headers['Location'].split('/')[-1])
     if response.status_code == 400:
-      print(f"**ERROR occurred in touch of url '{entryType}': {json.loads(response.content.decode('utf-8'))['description']}")
+      logging.error("Occurred in touch of url '%s': %s",entryType, json.loads(response.content.decode('utf-8'))['description'])
     return -1
 
 
@@ -90,7 +94,7 @@ class ElabFTWApi:
     # print("**TODO", content)
     # if response.status_code == 201:
     #   return True
-    # print(f"**ERROR occurred in create of url {entryType}: {response.json}")
+    # logging.error("occurred in create of url %s: %s", entryType, response.json)
     # return False
 
 
@@ -111,7 +115,7 @@ class ElabFTWApi:
     if response.status_code == 200:
       res = json.loads(response.content.decode('utf-8'))
       return res if identifier == -1 else [res]
-    print(f"**ERROR occurred in get of url {entryType} / {identifier}")
+    logging.error('Occurred in get of url %s / %s',entryType, identifier)
     return [{}]
 
   def updateEntry(self, entryType:str, identifier:int, content:dict[str,Any]={}) -> bool:
@@ -151,7 +155,7 @@ class ElabFTWApi:
     response = requests.delete(f'{self.url}{entryType}/{identifier}', **self.param)
     if response.status_code == 204:
       return True
-    print(f"**ERROR occurred in delete of url {entryType}")
+    logging.error('Occurred in delete of url %s', entryType)
     return False
 
 
@@ -169,7 +173,7 @@ class ElabFTWApi:
       for identifier in [i['id'] for i in json.loads(response.content.decode('utf-8'))]:
         response = requests.delete(f'{self.url}{entryType}/{identifier}', **self.param)
         if response.status_code != 204:
-          print(f'**ERROR purge delete {entryType}: {identifier}')
+          logging.error('Purge delete %s : %s',entryType, identifier)
     return
 
 
@@ -192,7 +196,8 @@ class ElabFTWApi:
     response = requests.post(f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}', **self.param)
     if response.status_code == 201:
       return True
-    print(f"**ERROR occurred in create of url f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}': {response.json}")
+    logging.error('Occurred in create of url %s%s/%s/%s_links/%s : %s',self.url,entryType,identifier,targetType,
+                  linkTarget,response.json)
     return False
 
 
@@ -215,6 +220,7 @@ class ElabFTWApi:
     Returns:
       int: id of upload; -1 on failure
     """
+    # prepare upload data
     data:dict[str,Any] = {}
     if content.startswith('<?xml'):
       data = {'comment':comment, 'file': ('thumbnail.svg', content.encode(), 'image/svg')}
@@ -233,13 +239,15 @@ class ElabFTWApi:
       data = {'comment':comment, 'file': ('do_not_change.json', jsonContent.encode(), 'text/json')}
     else:  #default for fast testing
       data = {'comment':comment, 'file': ('README.md', b'Read me!\n', 'text/markdown')}
+    # upload that data
     headers = copy.deepcopy(self.headers)
     del headers['Content-type'] #will automatically become 'multipart/form-data'
     response = requests.post(f'{self.url}{entryType}/{identifier}/uploads', headers=headers,
                              files=data, verify=self.param['verify'], timeout=60)
     if response.status_code == 201:
       return int(response.headers['Location'].split('/')[-1])
-    print(f"**ERROR occurred in upload of url '{entryType}/{identifier}': {json.loads(response.content.decode('utf-8'))['description']}")
+    logging.error('occurred in upload of url %s/%s : %s',entryType,identifier,
+                  json.loads(response.content.decode('utf-8'))['description'])
     return -1
 
 
@@ -257,7 +265,6 @@ class ElabFTWApi:
       bool: success of operation
     """
     url = f'{self.url}{entryType}/{identifier}/uploads/{uploadID}'
-    print(url)
     response = requests.patch(url, data=json.dumps(content), **self.param)
     return response.status_code == 200
 
@@ -277,7 +284,7 @@ class ElabFTWApi:
     response = requests.delete(f'{self.url}{entryType}/{identifier}/uploads/{uploadID}', **self.param)
     if response.status_code == 204:
       return True
-    print(f"**ERROR occurred in upload delete of url {entryType}/{identifier}/uploads/{uploadID}")
+    logging.error('occurred in upload delete of url %s/%s/uploads/%s',entryType,identifier,uploadID)
     return False
 
 
@@ -297,8 +304,7 @@ class ElabFTWApi:
     if response.status_code == 200:
       if elabData['real_name']== 'do_not_change.json':
         return json.loads(response.content.decode('utf-8'))
-      print('**ERROR I do not know what to do')
-    print(elabData,response.status_code, url)
+      return {'data':response.content}
     return {}
 
 
@@ -320,5 +326,5 @@ class ElabFTWApi:
     if response.status_code == 200:
       res = json.loads(response.content.decode('utf-8'))
       return res if groupID == -1 else [res]
-    print(f"**ERROR occurred in get of url: {url}")
+    logging.error('occurred in get of url: %s',url)
     return [{}]

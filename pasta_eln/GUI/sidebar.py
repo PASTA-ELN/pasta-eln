@@ -4,8 +4,7 @@ from typing import Any
 from anytree import Node
 from PySide6.QtCore import Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QResizeEvent  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QFrame, QProgressBar, QTreeWidgetItem, QVBoxLayout,  # pylint: disable=no-name-in-module
-                               QWidget)
+from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QVBoxLayout, QWidget  # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, TextButton, showMessage, space, widgetAndLayout, widgetAndLayoutGrid
 from .config import Configuration
@@ -35,10 +34,6 @@ class Sidebar(QWidget):
     # scrollSection = QScrollArea()
     # scrollSection.setWidget(projectListW)
     # mainL.addWidget(scrollSection)
-    self.progress = QProgressBar(self)
-    self.progress.hide()
-    self.comm.progressBar = self.progress
-    mainL.addWidget(self.progress)
     self.setLayout(mainL)
 
     self.widgetsAction:dict[str,QWidget] = {}
@@ -70,8 +65,11 @@ class Sidebar(QWidget):
     if hasattr(backend, 'db'):
       db = self.comm.backend.db
       hierarchy = db.getView('viewDocType/x0')
-      hierarchy['dateCreated'] = [db.getDoc(id_)['dateCreated'] for id_ in hierarchy['id']]
-      hierarchy.sort_values('dateCreated',axis=0, ascending=False, inplace=True)
+      if 'status' in hierarchy.columns and len(hierarchy)>5:
+        temp = hierarchy[hierarchy['status']=='active']
+        if len(temp)>2:
+          hierarchy = temp
+      hierarchy = hierarchy.sort_values('name', axis=0).reset_index(drop=True)
       maxProjects = int((self.height()-120)/50)-1
       for index, project in hierarchy.iterrows():
         if index>maxProjects:
@@ -110,7 +108,7 @@ class Sidebar(QWidget):
           listW.hide()
         docTypes = db.dataHierarchy('', '')
         for idx, doctype in enumerate(docTypes):
-          if doctype[0]!='x':
+          if doctype[0]!='x' and '/' not in doctype:
             icon = self.comm.backend.db.dataHierarchy(doctype,'icon')[0]
             icon = 'fa5s.asterisk' if icon=='' else icon
             btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projID], None,db.dataHierarchy(doctype,'title')[0])
@@ -178,7 +176,7 @@ class Sidebar(QWidget):
       self.comm.changeProject.emit(projID, item)
     elif command[0] is Command.SCAN_PROJECT:
       for _ in range(2):  #scan twice: convert, extract
-        self.comm.backend.scanProject(self.progress, self.openProjectId, '')
+        self.comm.backend.scanProject(None, self.openProjectId)
       self.comm.changeProject.emit(self.openProjectId,'')
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_FOLDER:
@@ -218,7 +216,7 @@ class Sidebar(QWidget):
     Args:
       event (QResizeEvent): event
     """
-    self.change()
+    self.change('redraw')
     return super().resizeEvent(event)
 
 

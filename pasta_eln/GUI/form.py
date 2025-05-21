@@ -9,16 +9,17 @@ from typing import Any, Union
 from PySide6.QtCore import QSize, Qt, QTimer  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit,  # pylint: disable=no-name-in-module
-                               QMessageBox, QPlainTextEdit, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit,
-                               QVBoxLayout, QWidget)
+                               QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout,
+                               QWidget)
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
 from ..guiCommunicate import Communicate
 from ..guiStyle import (IconButton, Image, Label, ScrollMessageBox, TextButton, showMessage, widgetAndLayout,
                         widgetAndLayoutForm)
 from ..miscTools import flatten
 from ..sqlite import MAIN_ORDER
-from ..stringChanges import createDirName, markdownEqualizer
+from ..textTools.stringChanges import createDirName, markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
+from .textEditor import TextEditor
 
 
 class Form(QDialog):
@@ -45,7 +46,7 @@ class Form(QDialog):
       self.doc['name'] = ''
     else:
       self.setWindowTitle('Edit information')
-    self.skipKeys = ['image','metaVendor','metaUser','shasum','._projectID','._ids','.name']
+    self.skipKeys = ['image','metaVendor','metaUser','shasum','._projectID','._ids','.name','.elnIdentifier']
     self.allHidden = False
     self.doc = minimalDocInForm | self.doc
 
@@ -79,18 +80,18 @@ class Form(QDialog):
       self.doc['type'] = ['x1']
     if self.doc['type'][0] in self.db.dataHierarchy('', ''):
       rawData = self.db.dataHierarchy(self.doc['type'][0], 'meta')
-      dataHierarchyNode = copy.deepcopy([dict(i) for i in rawData])
+      self.dataHierarchyNode = copy.deepcopy([dict(i) for i in rawData])
     else:
-      dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
-    keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in dataHierarchyNode]
+      self.dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
+    keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in self.dataHierarchyNode]
     keysDocOrg = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k])] if isinstance(self.doc[k], dict) else [f'.{k}']
                for k in self.doc if k not in MAIN_ORDER+['branch','qrCodes','tags']]
     for keyInDocNotHierarchy in {i for row in keysDocOrg for i in row}.difference(keysDataHierarchy):
       group = keyInDocNotHierarchy.split('.')[0]
       key = keyInDocNotHierarchy.split('.')[1]
-      idx = len([1 for i in dataHierarchyNode if i['class']==group])
-      dataHierarchyNode.append({'docType': self.doc['type'][0], 'class':group, 'idx':idx, 'name':key, 'list':''})
-    groups = {i['class'] for i in dataHierarchyNode}.difference({'metaVendor','metaUser'})
+      idx = len([1 for i in self.dataHierarchyNode if i['class']==group])
+      self.dataHierarchyNode.append({'docType': self.doc['type'][0], 'class':group, 'idx':idx, 'name':key, 'list':''})
+    groups = {i['class'] for i in self.dataHierarchyNode}.difference({'metaVendor','metaUser'})
     # create tabs or not: depending on the number of groups
     self.tabW = QTabWidget() #has count=0 if not connected
     if len(groups)>1:
@@ -108,7 +109,7 @@ class Form(QDialog):
         formW, formL = widgetAndLayoutForm(None, 's', top='m')
         self.tabW.addTab(formW, 'Home' if group=='' else group)
       self.formsL.append(formL)
-      for name in [i['name'] for i in dataHierarchyNode if i['class']==group]:
+      for name in [i['name'] for i in self.dataHierarchyNode if i['class']==group]:
         key = f"{group}.{name}"
         defaultValue = self.doc['qrCodes'] if key=='.qrCodes' and 'qrCodes' in self.doc else \
                        self.doc.get(group, {}).get(name, ('','','','')) #tags, name, comment are handled separately
@@ -131,15 +132,17 @@ class Form(QDialog):
           gradeTagStr = '\u2605'*int(gradeTag[0][1]) if gradeTag else ''
           self.gradeChoices.setCurrentText(gradeTagStr)
           tagsBarMainL.addWidget(self.gradeChoices)
+          Label('Tags:', '',  tagsBarMainL, style='margin-left: 20px;')
           _, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL, spacing='s', right='m', left='m') #part which shows all the tags
           self.otherChoices = QComboBox()   #part/combobox that allow user to select
+          self.otherChoices.setToolTip('Choose a tag or type a new one')
           self.otherChoices.setEditable(True)
           self.otherChoices.setMaximumWidth(100)
-          self.otherChoices.setValidator(QRegularExpressionValidator('[a-z]\\w+'))
+          self.otherChoices.setValidator(QRegularExpressionValidator('[a-zA-Z]\\w+'))
           self.otherChoices.setIconSize(QSize(0,0))
           self.otherChoices.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
           tagsBarMainL.addWidget(self.otherChoices)
-          formL.addRow(QLabel('Tags:'), self.tagsBarMainW)
+          formL.addRow(QLabel('Rating:'), self.tagsBarMainW)
           self.allUserElements.append(('tags',''))
           self.updateTagsBar()
           self.otherChoices.currentIndexChanged.connect(self.addTag) #connect to slot only after all painting is done
@@ -162,9 +165,8 @@ class Form(QDialog):
           textStr = self.doc.get(key, '')
           for k,v in SQLiteTranslationDict.items():
             textStr = textStr.replace(v,k)
-          setattr(self, f'textEdit_{key}', QPlainTextEdit(textStr))
+          setattr(self, f'textEdit_{key}', TextEditor(textStr))
           getattr(self, f'textEdit_{key}').setAccessibleName(key)
-          getattr(self, f'textEdit_{key}').setTabStopDistance(20)
           getattr(self, f'textEdit_{key}').textChanged.connect(self.textChanged)
           setattr(self, f'textShow_{key}', QTextEdit())
           getattr(self, f'textShow_{key}').setMarkdown(markdownEqualizer(self.doc.get(key, '')))
@@ -189,7 +191,7 @@ class Form(QDialog):
                          key, str(defaultValue), self.doc['id'])
         elif (isinstance(defaultValue, tuple) and len(defaultValue)==4 and isinstance(defaultValue[0], str)) or \
               isinstance(defaultValue, str):    #string or tuple
-          dataHierarchyItem = [i for i in dataHierarchyNode if i['class']==group and f"{i['class']}.{i['name']}"==key]
+          dataHierarchyItem = [i for i in self.dataHierarchyNode if i['class']==group and f"{i['class']}.{i['name']}"==key]
           if len(dataHierarchyItem)!=1:
             raise ValueError('more than one dataHierarchyItem')
           label = dataHierarchyItem[0]['name'].capitalize()
@@ -300,13 +302,17 @@ class Form(QDialog):
           if ret==QMessageBox.StandardButton.Yes:
             subContent = content[self.doc.get('id', '')]
             for key in subContent.keys():
+              try:
+                elementName = f'key_{[idx for idx, (k,_) in enumerate(self.allUserElements) if key==k][0]}'
+              except Exception:
+                continue
               if key in ('comment', 'content'):
                 getattr(self, f'textEdit_{key}').setPlainText(subContent[key])
               elif key in ('tags'):
                 self.doc[key] = subContent[key]
                 self.updateTagsBar()
-              elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
-                getattr(self, f'key_{key}').setText(subContent[key])
+              elif isinstance(getattr(self, elementName), QLineEdit):
+                getattr(self, elementName).setText(subContent[key])
               # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
           del content[self.doc.get('id', '')]
       with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
@@ -321,21 +327,33 @@ class Form(QDialog):
     """ Autosave comment to file """
     if self.comm.backend.configuration['GUI']['autosave'] == 'No':
       return
-    # subContent = {'name':getattr(self, 'key_-name').text().strip(), 'tags':self.doc['tags']}
-    # for key in self.allKeys:
-    #   if key in ['comment','content']:
-    #     subContent[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
-    #   elif key in self.skipKeys or not hasattr(self, f'key_{key}'):
-    #     continue
-    #   elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
-    #     subContent[key] = getattr(self, f'key_{key}').text().strip()
+    subContent = {'name':getattr(self, f"key_{self.allUserElements.index(('name','LineEdit'))}").text().strip(),
+                  'tags':self.doc['tags']}
+    for idx, (key, guiType) in enumerate(self.allUserElements):
+      if key in ['tags', 'name']:
+        continue
+      elementName = f"key_{idx}"
+      if key in ['comment','content']:
+        subContent[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
+      elif key in self.skipKeys:
+        continue
+      elif guiType=='ComboBox':
+        valueNew = getattr(self, elementName).currentText()
+        dataNew  = getattr(self, elementName).currentData()  #if docID is stored in currentData
+        if ((dataNew is not None and re.search(r'^[a-z\-]-[a-z0-9]{32}$',dataNew) is not None)
+            or dataNew==''):
+          subContent[key] = dataNew
+        elif valueNew!='- no link -' or dataNew is None:
+          subContent[key] = valueNew
+      else:                          #normal text field
+        subContent[key] = getattr(self, elementName).text().strip()
     # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
     if (Path.home()/'.pastaELN.temp').is_file():
       with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
     else:
       content = {}
-    content[self.doc.get('id', '')] = '' #subContent
+    content[self.doc.get('id', '')] = subContent
     with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
       fTemp.write(json.dumps(content))
     return
@@ -419,7 +437,7 @@ class Form(QDialog):
           self.autosave()
       self.checkThreadTimer.stop()
       self.reject()
-    elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT):
+    elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT, Command.FORM_SAVE_DUPL):
       self.checkThreadTimer.stop()
       if (Path.home()/'.pastaELN.temp').is_file(): #if there is a temporary file
         with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp: #open it
@@ -436,11 +454,17 @@ class Form(QDialog):
       for idx, (key, guiType) in enumerate(self.allUserElements):
         elementName = f"key_{idx}"
         valueOld = self.doc.get(key, '')
+        if '.' in key:
+          group, subItem = key.split('.')
+        else:
+          group, subItem = '', key
+        if [i['mandatory'] for i in self.dataHierarchyNode if i['class']==group and i['name']==subItem] == ['T'] and \
+          getattr(self, elementName).text().strip()=='':
+          print(group,key,subItem)
+          showMessage(self, 'Error', f'The created item must have a valid {subItem}')
+          return
         if key=='name':
           self.doc['name'] = getattr(self, elementName).text().strip()
-          if self.doc['name'] == '':
-            showMessage(self, 'Error', 'A created item has to have a valid name')
-            return
           if self.doc['type'][0]=='x0':  #prevent project-directory names that are identical
             others = self.comm.backend.db.getView('viewDocType/x0All')
             if 'id' in self.doc:
@@ -537,10 +561,12 @@ class Form(QDialog):
       self.doc = docBackup
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
-      if command[0] is Command.FORM_SAVE_NEXT:
+      if command[0] in [Command.FORM_SAVE_NEXT, Command.FORM_SAVE_DUPL]:
         for delKey in [i for i in self.doc.keys() if i in ['id'] or i.startswith('meta')]: #delete these keys
           del self.doc[delKey]
-        self.comm.changeTable.emit('', '')
+        if command[0] is Command.FORM_SAVE_NEXT:
+          self.comm.changeTable.emit('', '')
+        #TODO implement a correct refresh of table and project view: send signal and only refresh the view that is open
       else:
         self.accept()  #close
         self.close()
@@ -650,4 +676,5 @@ class Command(Enum):
   FORM_CANCEL      = 8
   FORM_ADD_KV      = 9
   FORM_SHOW_DOC    = 10
-  FORM_SAVE_NEXT   = 11  # same as duplicate
+  FORM_SAVE_NEXT   = 11
+  FORM_SAVE_DUPL   = 12

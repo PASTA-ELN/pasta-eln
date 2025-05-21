@@ -34,12 +34,12 @@ def test_simple(qtbot):
   window.change(projID,'')
 
   choices = random.choices(range(100), k=16)
-  # choices = [52,49,38,44,44,91,7,32,55,66,97,34,54,82,84,9]
+  # choices =
   print(f'Current choice: [{",".join([str(i) for i in choices])}]')
 
   # start iteration
   for epoch in range(4):
-    print(f'Start drag-drop {epoch}')
+    print(f'{"*"*40}\nStart drag-drop {epoch}\n{"*"*40}')
     def recursiveRowIteration(index:QModelIndex) -> None:
       item  = window.tree.model().itemFromIndex(index)
       allParentIdx = [index] if item is not None and item.data() is not None and item.data()['docType']==['x1'] else []
@@ -60,11 +60,15 @@ def test_simple(qtbot):
                         if window.tree.model().itemFromIndex(i).data() is not None and
                           window.tree.model().itemFromIndex(i).data()['hierStack'].split('/')[-1] != sourceItem.data()['hierStack'].split('/')[-1] ]
     targetParent     = validChoices[choices.pop(0)%len(validChoices)]
-    print('  ',sourceItem.data(),'->\n  ', targetParent.data())
     validChoices     = range(targetParent.rowCount()+1)
     targetChildRow   = validChoices[choices.pop(0)%len(validChoices)]
+    print('  ',sourceItem.data(),'->\n  ', targetParent.data(),'   child', targetChildRow)
     targetParent.setChild(targetChildRow, sourceItem)
+    backend.changeHierarchy(projID)
+    print(backend.outputHierarchy(False, True))
+    backend.changeHierarchy(None)
     verify(backend)
+    print(f'{"*"*40}\nEND TEST 03\n{"*"*40}')
   return
 
 def verify(backend): # Verify DB

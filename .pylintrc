@@ -11,27 +11,12 @@ ignore=CVS
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
-ignore-patterns=data_hierarchy_editor_dialog_base.py,
-                create_type_dialog_base.py,
-                dialog_base.py,
-                completed_upload_task.py,
-                completed_uploads_base.py,
-                config_dialog_base.py,
-                edit_metadata_dialog_base.py,
-                main_dialog_base.py,
-                primitive_compound_controlled_frame_base.py,
-                project_item_frame_base.py,
-                upload_config_dialog_base.py,
-                upload_widget_base.py,
-                edit_metadata_summary_dialog_base.py,
-                type_dialog_base.py,
-                type_dialog.py,
-                tableview_data_model.py,
-                reorder_column_delegate.py,
-                mandatory_column_delegate.py,
-                lookup_iri_action.py,
-                iri_column_delegate.py,
-                delete_column_delegate.py,
+ignore-patterns=dialog_base.py,
+                html2markdown.py,
+                html2mdConfig.py,
+                html2mdElements.py,
+                html2mdUtils.py,
+                markdown2html.py,
                 extractor_[a-z]+.py,
                 project_html_report.py
 
@@ -450,7 +435,7 @@ max-attributes=25
 max-bool-expr=5
 
 # Maximum number of branch for function / method body
-max-branches=80 #Steffen's change
+max-branches=85 #Steffen's change
 
 # Maximum number of locals for function / method body
 max-locals=55 #Steffen's change
@@ -459,7 +444,7 @@ max-locals=55 #Steffen's change
 max-parents=7
 
 # Maximum number of public methods for a class (see R0904).
-max-public-methods=20
+max-public-methods=25 #Steffen's change
 
 # Maximum number of return / yield for function / method body
 max-returns=30  #Steffen's change

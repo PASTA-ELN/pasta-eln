@@ -6,15 +6,17 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 import qrcode
+import qtawesome as qta
 import requests
 from PIL.ImageQt import ImageQt
-from PySide6.QtGui import QPixmap, QRegularExpressionValidator  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QPixmap, QRegularExpressionValidator, Qt  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog,  # pylint: disable=no-name-in-module
                                QLabel, QLineEdit, QMessageBox, QTextEdit, QVBoxLayout)
 from ..elabFTWapi import ElabFTWApi
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
-from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayoutGrid
+from ..guiStyle import IconButton, Label, ScrollMessageBox, TextButton, showMessage, widgetAndLayoutGrid
+from ..miscTools import restart, updateAddOnList
 
 
 class ProjectGroup(QDialog):
@@ -32,9 +34,10 @@ class ProjectGroup(QDialog):
     self.projectGroupTested = False
     self.callbackFinished = callbackFinished
     self.configuration = self.comm.backend.configuration
-    self.emptyConfig:dict[str,Any] = {'local':{},'remote':{}}
+    self.emptyConfig:dict[str,Any] = {'local':{'path':''}, 'remote':{}, 'addOnDir':''}
     self.elabApi: ElabFTWApi|None = None
     self.serverPG: set[tuple[str,Any,Any,Any]] = set()
+    self.requireHardRestart = False
 
     # GUI elements
     mainL = QVBoxLayout(self)
@@ -45,6 +48,7 @@ class ProjectGroup(QDialog):
     self.selectGroup = QComboBox()
     self.selectGroup.addItems(self.configuration['projectGroups'].keys())
     self.selectGroup.currentTextChanged.connect(self.changeProjectGroup)
+    self.selectGroup.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     self.formL.addWidget(self.selectGroup, 0, 0)
     self.groupTextField = QLineEdit()
     self.groupTextField.setValidator(QRegularExpressionValidator('\\w{3,}'))
@@ -56,11 +60,13 @@ class ProjectGroup(QDialog):
     self.formL.addWidget(delButton, 0, 3)
 
     self.directoryLabel = QLabel('label')
+    self.directoryLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
     self.formL.addWidget(self.directoryLabel, 1, 0, 1, 2)
     row1Button = IconButton('fa5.edit',   self, [Command.CHANGE_DIR], tooltip='Edit data path')
     self.formL.addWidget(row1Button, 1, 3)
 
     self.addOnLabel = QLabel('addon')
+    self.addOnLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
     self.formL.addWidget(self.addOnLabel, 2, 0, 1, 2)
     row2Button = IconButton('fa5.edit',   self, [Command.CHANGE_ADDON], tooltip='Edit add-on path')
     self.formL.addWidget(row2Button, 2, 3)
@@ -68,8 +74,9 @@ class ProjectGroup(QDialog):
     self.formL.addWidget(QLabel('Server address:'), 3, 0)
     self.serverLabel = QLineEdit('server')
     self.serverLabel.setPlaceholderText('Enter server address')
+    self.serverLabel.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     self.formL.addWidget(self.serverLabel, 3, 1)
-    self.row3Button = IconButton('fa5s.check-square',   self, [Command.TEST_SERVER], tooltip='Check server')
+    self.row3Button = TextButton('Verify',   self, [Command.TEST_SERVER], tooltip='Check server')
     self.formL.addWidget(self.row3Button, 3, 3)
 
     self.formL.addWidget(QLabel('API-key:'), 4, 0)
@@ -80,13 +87,14 @@ class ProjectGroup(QDialog):
     self.formL.addWidget(self.apiKeyLabel, 4, 1)
     row4Button1 = IconButton('fa5s.question-circle', self,      [Command.TEST_API_HELP], tooltip='Help on obtaining API key')
     self.formL.addWidget(row4Button1, 4, 2)
-    self.row4Button2 = IconButton('fa5s.check-square',   self, [Command.TEST_APIKEY], tooltip='Check API-key')
+    self.row4Button2 = TextButton('Verify',   self, [Command.TEST_APIKEY], tooltip='Check API-key')
     self.formL.addWidget(self.row4Button2, 4, 3)
 
     self.formL.addWidget(QLabel('Storage block:'), 5, 0)
     self.serverProjectGroupLabel = QComboBox()
+    self.serverProjectGroupLabel.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     self.formL.addWidget(self.serverProjectGroupLabel, 5, 1)
-    self.row5Button2 = IconButton('fa5s.check-square',   self, [Command.TEST_SERVERPG], tooltip='Check access to storage block')
+    self.row5Button2 = TextButton('Verify',   self, [Command.TEST_SERVERPG], tooltip='Check access to storage block')
     self.formL.addWidget(self.row5Button2, 5, 3)
 
     # RIGHT SIDE: button and image
@@ -118,6 +126,9 @@ class ProjectGroup(QDialog):
       self.reject()
       self.callbackFinished(False)
     elif 'Save' in btn.text() and not self.selectGroup.isHidden():
+      if not self.comboboxActive:
+        showMessage(self, 'Error', 'Fill out data and add-on location, first.')
+        return
       # all information (excl. storage block) is already in self.configuration saved
       key      = self.selectGroup.currentText()
       config   = self.configuration['projectGroups'][key]
@@ -137,9 +148,16 @@ class ProjectGroup(QDialog):
                                       'id':choices[0][1],
                                       'canRead':choices[0][2],
                                       'canWrite':choices[0][3]}
+      defaultProjectGroup = self.configuration['defaultProjectGroup']
+      if defaultProjectGroup not in self.configuration['projectGroups']:
+        self.configuration['defaultProjectGroup'] = list(self.configuration['projectGroups'].keys())[0]
+
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
-      self.callbackFinished(True)
+      if self.requireHardRestart:
+        restart()
+      else:
+        self.callbackFinished(True)
     return
 
 
@@ -189,8 +207,18 @@ class ProjectGroup(QDialog):
       button = QMessageBox.question(self, 'Question', 'Do you want to copy the add-ons from the old directory (recommended)?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
-        shutil.copytree(config['addOnDir'], answer, dirs_exist_ok=True)
+        source =Path(__file__).parent.parent/'AddOns'
+        shutil.copytree(source, answer, dirs_exist_ok=True)
+        self.requireHardRestart = True  #because python-path has to change
       config['addOnDir'] = answer
+      config['addOns'] = {}
+      button = QMessageBox.question(self, 'Question', 'Do you want to update the AddOn list (recommended)?',
+                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+      if button == QMessageBox.StandardButton.Yes:
+        reportDict = updateAddOnList(self.comm.backend.configurationProjectGroup)
+        messageWindow = ScrollMessageBox('Extractor list updated', reportDict,
+                                       style='QScrollArea{min-width:600 px; min-height:400px}')
+        messageWindow.exec()
       self.addOnLabel.setText('Add on directory: ' + config['addOnDir'])
 
     elif command[0] is Command.TEST_SERVER:
@@ -208,17 +236,17 @@ class ProjectGroup(QDialog):
       self.serverLabel.setText(url)
       try:
         requests.get(f'{url}info', headers=headers, verify=True, timeout=15)
-        self.row3Button.setStyleSheet('background: #00FF00')
+        self.changeButtonOnTest(True, self.row3Button)
       except Exception:
-        showMessage(self, 'Error', 'Wrong server address')
-        self.row3Button.setStyleSheet('background: #FF0000')
+        self.changeButtonOnTest(False, self.row3Button, 'Wrong server address')
 
     elif command[0] is Command.TEST_API_HELP:
       link = f'OR go to {config["remote"]["url"][:-7]}ucp.php?tab=4\n\n' if config['remote'].get('url','') else ''
-      showMessage(self, 'Help', '### How to get an api key to access the server:\nOn the elabFTW server:\n1. go to the USER SYMBOL\n2. User-(Control) panel\n3. API KEYS\n\n'\
-                  f'{link}'\
-                  '1. Specify a name: e.g. "pasta_eln"\n2. change the permissions to "Read/Write"\n3. click "Generate new API key"\n\nCopy-paste that key into the text box on the right-hand-side')
-
+      showMessage(self, 'Help', f'### How to get an api key to access the server:\n\nGo to f{link}\n\n'
+                  'On the elabFTW server:\n\nClick on the User Symbol in the top right\n\nGo to "Settings"\n\n'
+                  'Open the tab "API keys"\n\nCreate a new API key:\n\n  a) Specify a name, like "pasta_eln"\n\n  b) '
+                  'Change the permissions to "Read/Write"\n\n  c) Click on "Generate new API key"\n\nCopy+Paste that '
+                  'key into the text box on the right-hand side')
     elif command[0] is Command.TEST_APIKEY:
       if self.apiKeyLabel.toPlainText()!='--- API key hidden ---':
         config['remote']['key'] = self.apiKeyLabel.toPlainText().strip()
@@ -231,19 +259,18 @@ class ProjectGroup(QDialog):
           if elabVersion<5:
             showMessage(self, 'Error', 'Old elabFTW server installation')
           # success
-          self.row4Button2.setStyleSheet('background: #00FF00')
+          self.changeButtonOnTest(True, self.row4Button2)
           self.elabApi   = ElabFTWApi(url, config['remote']['key'])
           response = self.elabApi.readEntry('items?q=category%3AProjectGroup&archived=on')
           if not response:
             showMessage(self, 'Error', 'Please ask your database admin to add your project-group(s).')
           self.serverPG = {(i['title'],i['id'],i['canread'],i['canwrite']) for i in response}
+          self.serverProjectGroupLabel.clear()
           self.serverProjectGroupLabel.addItems([i[0] for i in self.serverPG])
         else:
-          showMessage(self, 'Error', 'Wrong API key')
-          self.row4Button2.setStyleSheet('background: #FF0000')
+          self.changeButtonOnTest(False, self.row4Button2, 'Wrong API key')
       except Exception:
-        showMessage(self, 'Error', 'Wrong API key')
-        self.row4Button2.setStyleSheet('background: #FF0000')
+        self.changeButtonOnTest(False, self.row4Button2, 'Wrong API key')
 
     elif command[0] is Command.TEST_SERVERPG and self.elabApi is not None:
       idxList = [i[1] for i in self.serverPG if i[0]==self.serverProjectGroupLabel.currentText()]
@@ -254,10 +281,9 @@ class ProjectGroup(QDialog):
       currentBody+= f'<br>Tested access by {self.configuration["userID"]} on {datetime.now().isoformat()} <br>'
       if self.elabApi.updateEntry('items',idx, {'body':currentBody}):
         self.projectGroupTested = True
-        self.row5Button2.setStyleSheet('background: #00FF00')
+        self.changeButtonOnTest(True, self.row5Button2)
       else:
-        self.row5Button2.setStyleSheet('background: #FF0000')
-        showMessage(self, 'Error', 'You do not have access to this project group')
+        self.changeButtonOnTest(False, self.row5Button2, 'You do not have access to this project group')
 
     elif command[0] is Command.CREATE_QRCODE:
       text   = json.dumps(config['remote'])
@@ -276,10 +302,14 @@ class ProjectGroup(QDialog):
       self.comboboxActive = False
 
     elif command[0] is Command.DEL:
-      del self.configuration['projectGroups'][key]
-      self.selectGroup.removeItem(self.selectGroup.currentIndex())
-      self.selectGroup.setCurrentIndex(0)
-
+      button = QMessageBox.question(self, 'Question', 'Do you really want to delete this project group from the configuration (Data will remain)?',
+                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+      if button == QMessageBox.StandardButton.Yes:
+        del self.configuration['projectGroups'][key]
+        self.selectGroup.removeItem(self.selectGroup.currentIndex())
+        self.selectGroup.setCurrentIndex(0)
+        self.execute([Command.TEST_APIKEY])
+        self.execute([Command.TEST_SERVERPG])
     else:
       print('Got some button, without definition', command)
     return
@@ -300,6 +330,27 @@ class ProjectGroup(QDialog):
       self.apiKeyLabel.setText('--- API key hidden ---')
     else:
       self.apiKeyLabel.setText('')
+    return
+
+
+  def changeButtonOnTest(self, success:bool, button:TextButton, message:str='') -> None:
+    """ Helper function to change buttons upon success/failure
+
+    Args:
+      success (bool): change to successful state
+      button (TextBotton): button to change
+      message (str): optional message on failure
+    """
+    if success:
+      button.setStyleSheet('background: #00FF00')
+      button.setText('')
+      button.setIcon(qta.icon('fa5s.check-square', scale_factor=1))
+    else:
+      if message:
+        showMessage(self, 'Error', message)
+      button.setStyleSheet('background: #FF0000')
+      button.setText('')
+      button.setIcon(qta.icon('fa5.times-circle', scale_factor=1))
     return
 
 

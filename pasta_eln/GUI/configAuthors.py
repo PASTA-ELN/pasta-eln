@@ -29,6 +29,7 @@ class ConfigurationAuthors(QDialog):
     self.comm = comm
     self.callbackFinished = callbackFinished
     mainL = QVBoxLayout(self)
+    self.setStyleSheet(f"QLineEdit {{ {self.comm.palette.get('secondaryText', 'color')} }}")
 
     #GUI elements
     if hasattr(self.comm.backend, 'configuration'):
@@ -42,6 +43,7 @@ class ConfigurationAuthors(QDialog):
       #headline of organizations
       orgaW, orgaL = widgetAndLayout('H', None, spacing='s', top='l')
       self.orgaCB = QComboBox()
+      self.orgaCB.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
       self.orgaCB.addItems([i['organization'] for i in self.author['organizations']])
       orgaL.addStretch(1)
       orgaL.addWidget(self.orgaCB, stretch=2)

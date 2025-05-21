@@ -24,7 +24,6 @@ def test_simple(qtbot):
                       datefmt='%m-%d %H:%M:%S')   #This logging is always info, since for installation only
   for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
-  logging.info('Start 12 test: deterministic process')
 
   # start app and load project
   exampleData(True, None, 'research', '')

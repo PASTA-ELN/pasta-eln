@@ -17,8 +17,10 @@ def use(filePath, style={'main':''}, saveFileName=None):
   # HERE MAIN PART OF EXTRACTOR
   metaVendor = {}
   metaUser   = {}
-  style      = {'main':'procedure/python'}
+  style      = {'main':'workflow/procedure/python'}
   content    = ''
   with open(filePath, encoding='utf-8') as fIn:
     content = '``` python\n'+fIn.read()+'```'
+  if 'common_workflow_description.common_workflow_description import Workflow' in content:
+    style      = {'main':'workflow/workplan'}
   return {'image':'', 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser, 'content':content}

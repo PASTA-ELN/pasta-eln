@@ -12,12 +12,12 @@ from typing import Any
 from zipfile import ZIP_DEFLATED, ZipFile
 import requests
 from anytree import Node
-from PySide6.QtGui import QTextDocument
+from PySide6.QtGui import QTextDocument  # TODO switch to html-markdown since also run as pytest
 from pasta_eln import __version__, minisign
 from .backend import Backend
 from .fixedStringsJson import CONF_FILE_NAME
 from .miscTools import flatten
-from .stringChanges import camelCase
+from .textTools.stringChanges import camelCase
 
 # .eln file: common between all ELNs
 # - can be exported / imported generally; not a 1:1 backup (just zip it)
@@ -155,7 +155,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         doc['tags'] = [i.strip() for i in doc['tags'].split(',')]
       else:
         doc['tags'] = []
-      if elnName!='PASTA ELN' and 'id' in doc:
+      if 'id' in doc:
         doc['.oldIdentifier'] = doc.pop('id')
       doc['.elnIdentifier'] = elnID
       if (children and ('type' not in doc or doc['type']!='x1')):

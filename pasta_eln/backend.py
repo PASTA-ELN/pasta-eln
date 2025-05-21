@@ -7,18 +7,15 @@ import sys
 import tempfile
 import traceback
 from datetime import datetime, timezone
-from os.path import exists, join
 from pathlib import Path
 from typing import Any, Callable, Optional, Union
 from urllib import request
-from PySide6 import QtCore
-from PySide6.QtCore import QFileSystemWatcher
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
-from .handleDictionaries import diffDicts, fillDocBeforeCreate
 from .miscTools import generic_hash
 from .mixin_cli import CLI_Mixin
 from .sqlite import SqlLiteDB
-from .stringChanges import camelCase, createDirName, outputString
+from .textTools.handleDictionaries import diffDicts, fillDocBeforeCreate
+from .textTools.stringChanges import camelCase, createDirName, outputString
 
 
 class Backend(CLI_Mixin):
@@ -39,41 +36,7 @@ class Backend(CLI_Mixin):
     self.hierStack:list[str] = []
     self.cwd:Optional[Path]  = Path('.')
     self.initialize(defaultProjectGroup)
-    self.fsWatcher = QFileSystemWatcher()
-    self.fsWatcher.addPath(join(Path.home(), CONF_FILE_NAME))
-    if exists(self.configFileName):
-      self.fsWatcher.fileChanged.connect(self.configFileChanged)
 
-  def readPastaConfig(self) -> None:
-    """
-    Read the configuration file and update the internal configuration.
-
-    This method logs the action of reading the configuration file and attempts to load its contents into the internal configuration dictionary.
-    If the configuration file does not exist, it raises a ConfigError to indicate an issue with the installation.
-
-    Raises:
-        ConfigError: If the configuration file does not exist.
-    """
-    if not exists(self.configFileName):
-      raise TypeError('Config file not found, Corrupt installation!')
-    with open(self.configFileName, encoding='utf-8') as confFile:
-      self.configuration = json.load(confFile)
-
-  @QtCore.Slot()                                          # type: ignore[arg-type]
-  def configFileChanged(self, configFilePath: str) -> None:
-    """
-    Handle changes to the configuration file.
-
-    This method is triggered when the configuration file changes. It reads the updated configuration and refreshes the file system watcher to ensure it continues to monitor the correct file path.
-
-    Args:
-        configFilePath (str): The path to the configuration file that has changed.
-    """
-
-    self.readPastaConfig()
-    if exists(configFilePath):
-      self.fsWatcher.removePath(configFilePath)
-      self.fsWatcher.addPath(configFilePath)
 
   def initialize(self, defaultProjectGroup:str='') -> None:
     """
@@ -90,8 +53,8 @@ class Backend(CLI_Mixin):
       for k,v in items.items():
         if k not in self.configuration['GUI']:
           self.configuration['GUI'][k] = v[1]
-    if self.configuration['version']!=3:
-      print('**Info: configuration file does not exist or version is < 3')
+    if self.configuration['version'] != 3:
+      print('**Info: configuration file does not exist or version is != 3')
       return
     defaultProjectGroup = defaultProjectGroup or self.configuration['defaultProjectGroup']
     if defaultProjectGroup not in self.configuration['projectGroups']:
@@ -209,8 +172,16 @@ class Backend(CLI_Mixin):
         #  edit: cwd of the project/step/task: remove last directory from cwd (since cwd contains a / at end: remove two)
         #  new: below the current project/step/task
         parentDirectory = self.cwd.parent if edit else self.cwd
-        path = parentDirectory/createDirName(doc['name'],doc['type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
         operation = 'u'
+        # prevent that projects have the same name: #TODO make this a separate function and merge others
+        dirNameBase = createDirName(doc['name'],doc['type'][0],childNum)
+        dirName = dirNameBase
+        if 'branch' not in doc or doc['branch'][0]['path'] != dirName: #only change if it is not the same name as before
+          idx = 0
+          while (parentDirectory/dirName).exists():
+            idx += 1
+            dirName = f'{dirNameBase}_{idx:02d}'
+        path = parentDirectory/dirName #update,or create (if new doc, update ignored anyhow)
       else:
         #measurement, sample, procedure
         shasum = ''
@@ -321,8 +292,8 @@ class Backend(CLI_Mixin):
     return
 
 
-  def scanProject(self, progressBar:Any , projID:str, projPath:str='') -> None:
-    """ Scan directory tree recursively from project/...
+  def scanProject(self, progressBar:Callable[...,None]|None, projID:str, projPath:Path|None=None) -> None:
+    """ Scan directory tree recursively from project/... or project/task/....
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
     - use shasum to track changes of measurements etc. (one file=one shasum=one entry in DB)
@@ -331,21 +302,23 @@ class Backend(CLI_Mixin):
       doc['path'] is adopted once changes are observed
 
     Args:
-      progressBar (QProgressBar): gui - qt progress bar
+      progressBar (func): progress bar
       projID (str): project's docID
       projPath (str): project's path from basePath; if not given, will be determined
 
     Raises:
       ValueError: could not add new measurement to database
     """
-    progressBar.show()
-    self.hierStack = [projID]
-    if not projPath:
-      projPath = self.db.getDoc(projID)['branch'][0]['path']
-    self.cwd = self.basePath/projPath
     rerunScanTree = False
+    self.hierStack = [projID]
+    if projPath is None:
+      pathPosix:str = self.db.getDoc(projID)['branch'][0]['path']
+      self.cwd      = self.basePath/pathPosix
+      projPath      = self.cwd.relative_to(self.basePath)
+    else:
+      self.cwd = self.basePath/projPath
     #prepare lists and start iterating
-    inDB_all = self.db.getView('viewHierarchy/viewPathsAll', startKey=projPath)
+    inDB_all = self.db.getView('viewHierarchy/viewPathsAll', startKey=projPath.as_posix())
     pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
     filesCountSum = sum(len(files) for (_, _, files) in os.walk(self.cwd))
@@ -364,9 +337,9 @@ class Backend(CLI_Mixin):
       parentDoc = self.db.getDoc(parentID)
       hierStack = parentDoc['branch'][0]['stack']+[parentID]
       # handle directories
+      dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i not in ('__pycache__')
+                 and not (Path(root)/i/'pyvenv.cfg').is_file()]
       for dirName in dirs[::-1]: #sorted forward in Linux
-        if dirName.startswith(('.','trash_')) or dirName in ('.git', '__pycache__'):            # ignore directories
-          continue
         path = (Path(root)/dirName).relative_to(self.basePath).as_posix()
         if path in pathsInDB_x: #path already in database
           pathsInDB_x.remove(path)
@@ -386,7 +359,7 @@ class Backend(CLI_Mixin):
             newPath = path
           else:
             #determine childNumber
-            thisStack = ' '.join(hierStack)
+            thisStack = '/'.join(hierStack)
             view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack)
             childNum = 0
             for item in view:
@@ -410,7 +383,8 @@ class Backend(CLI_Mixin):
       # handle files
       for fileName in files:
         filesCount += 1
-        progressBar.setValue(int(100*filesCount/filesCountSum))
+        if progressBar is not None:
+          progressBar(int(100*filesCount/filesCountSum))
         if fileName.startswith(('.', 'trash_')) or '_PastaExport' in fileName:  #ignore files
           continue
         path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
@@ -448,7 +422,6 @@ class Backend(CLI_Mixin):
     self.cwd = Path(self.basePath)
     if rerunScanTree:
       self.scanProject(progressBar, projID, projPath)
-    progressBar.hide()
     return
 
 
@@ -601,6 +574,8 @@ class Backend(CLI_Mixin):
     if success:
       try:
         _ = json.dumps(content['metaVendor'])
+        if not isinstance(content['metaVendor'], (dict,list)):
+          raise TypeError(' Meta vendor: wrong type')
         report += outputString(outputStyle,'info','Number of vendor entries: '+str(len(content['metaVendor'])))
       except Exception:
         # possible cause of failure: make sure that no int64 but normal int
@@ -616,6 +591,8 @@ class Backend(CLI_Mixin):
     if success:
       try:
         _ = json.dumps(content['metaUser'])
+        if not isinstance(content['metaUser'], (dict,list)):
+          raise TypeError(' Meta user: wrong type')
         report += 'Number of user entries: '+str(len(content['metaUser']))+'<br>'
       except Exception:
         report += outputString(outputStyle,'error', 'Some json format does not fit in metaUser')
@@ -715,12 +692,12 @@ class Backend(CLI_Mixin):
             count += 1
           else:
             pathsInDB_data.remove(path)
+        dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i not in ('__pycache__')
+                  and not (Path(root)/i/'pyvenv.cfg').is_file()]
         for dirName in dirs:
-          if dirName.startswith('.') or dirName.startswith('trash_'):
-            continue
           path = (Path(root).relative_to(self.basePath) /dirName).as_posix()
           if path not in pathsInDB_folder:
-            output += outputString(outputStyle, 'error', f'Directory on harddisk but not DB:{path}')
+            output += outputString(outputStyle, 'error', f'Folder on disk but not DB  :{path}')
             count += 1
           else:
             pathsInDB_folder.remove(path)

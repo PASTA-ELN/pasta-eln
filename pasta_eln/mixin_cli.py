@@ -34,6 +34,7 @@ class CLI_Mixin:
     output hierarchical structure in database
     - convert view into native dictionary
     - ignore key since it is always the same
+    - children sorted by childNum (primary) and docID (secondary)
 
     Args:
        onlyHierarchy (bool): only print project,steps,tasks or print all (incl. measurements...)[default print all]

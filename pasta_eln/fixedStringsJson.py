@@ -1,17 +1,21 @@
 """ Long strings and dictionaries/JSON that would obfuscate code """
-from typing import Any, Union
+from typing import Any
 
 defaultDocTypes: list[list[str]] = [
   #docType,       PURL, title,          icon,                   shortcut, view
-  ['x0',          '',  'Projects',     '',                     'space', 'name,tags,.status,.objective,comment'],
-  ['x1',          '',  'Folders',      '',                      '',     ''],
-  ['measurement', '',  'Measurements', 'fa5s.thermometer-half', 'm',    'name,tags,comment,type,image,.sample,.procedure'],
-  ['sample',      '',  'Samples',      'fa5s.vial',             's',    'name,tags,.chemistry,comment,qrCodes'],
-  ['procedure',   '',  'Procedures',   'fa5s.list-ol',          'p',    'name,tags,comment,content'],
-  ['instrument',  '',  'Instruments',  'ri.scales-2-line',      'i',    'name,tags,comment,.vendor']
+  ['x0',                 'http://purl.obolibrary.org/obo/NCIT_C47885',  'Projects',     '',                     'space', 'name,tags,.status,.objective,comment'],
+  ['x1',                 'http://purl.obolibrary.org/obo/NCIT_C101129', 'Folders',      '',                      '',     ''],
+  ['measurement',        'http://purl.obolibrary.org/obo/NCIT_C42790',  'Measurements', 'fa5s.thermometer-half', 'm',    'name,tags,comment,type,image,.sample,.workflow/procedure'],
+  ['sample',             'http://purl.obolibrary.org/obo/NCIT_C19157',  'Samples',      'fa5s.vial',             's',    'name,tags,.chemistry,comment,qrCodes'],
+  ['workflow',           'http://purl.obolibrary.org/obo/NCIT_C42753',  'Workflows',    'fa5s.list-ol',          'w',    'name,tags,comment'],
+  ['workflow/procedure', 'https://schema.org/procedure',                'Procedure',    '',                      '',     'name,tags,comment,content'],
+  ['workflow/workplan' , 'http://purl.obolibrary.org/obo/PROCO_0000093','Work plan',    '',                      '',     'name,tags,comment,content'],
+  ['workflow/worklog'  , '',                                            'Work log',     '',                      '',     'name,tags,comment,content'],
+  ['instrument',         'http://purl.obolibrary.org/obo/NCIT_C16742',  'Instruments',  'ri.scales-2-line',      'i',    'name,tags,comment,.vendor']
 ]
 
-defaultSchema: list[list[Union[str,int]]] = [
+
+defaultSchema: list[list[str|int]] = [
   #docType,            group,index,key,        unit, mandatory, list
   ['x0',                  '', 0,   'name',      '',   'T',       ''],
   ['x0',                  '', 1,   'tags',      '',   '',        ''],
@@ -25,7 +29,7 @@ defaultSchema: list[list[Union[str,int]]] = [
   ['measurement',         '', 1,   'tags',      '',   '',        ''],
   ['measurement',         '', 2,   'comment',   '',   '',        ''],
   ['measurement',         '', 3,   'sample',    '',   '',        'sample'],
-  ['measurement',         '', 4,   'procedure', '',   '',        'procedure'],
+  ['measurement',         '', 4,   'workflow/procedure','','','workflow/procedure'],
   ['sample',              '', 0,   'name',      '',   'T',       ''],
   ['sample',              '', 1,   'tags',      '',   '',        ''],
   ['sample',              '', 2,   'chemistry', '',   '',        ''],
@@ -34,10 +38,22 @@ defaultSchema: list[list[Union[str,int]]] = [
   ['sample',      'geometry', 0,   'height',    'mm', '',        ''],
   ['sample',      'geometry', 1,   'width',     'mm', '',        ''],
   ['sample',      'geometry', 2,   'length',    'mm', '',        ''],
-  ['procedure',           '', 0,   'name',      '',   'T',       ''],
-  ['procedure',           '', 1,   'tags',      '',   '',        ''],
-  ['procedure',           '', 2,   'comment',   '',   '',        ''],
-  ['procedure',           '', 3,   'content',   '',   '',        ''],
+  ['workflow',            '', 0,   'name',      '',   'T',       ''],
+  ['workflow',            '', 1,   'tags',      '',   '',        ''],
+  ['workflow',            '', 2,   'comment',   '',   '',        ''],
+  ['workflow',            '', 3,   'content',   '',   '',        ''],
+  ['workflow/procedure',  '', 0,   'name',      '',   'T',       ''],
+  ['workflow/procedure',  '', 1,   'tags',      '',   '',        ''],
+  ['workflow/procedure',  '', 2,   'comment',   '',   '',        ''],
+  ['workflow/procedure',  '', 3,   'content',   '',   '',        ''],
+  ['workflow/workplan',   '', 0,   'name',      '',   'T',       ''],
+  ['workflow/workplan',   '', 1,   'tags',      '',   '',        ''],
+  ['workflow/workplan',   '', 2,   'comment',   '',   '',        ''],
+  ['workflow/workplan',   '', 3,   'content',   '',   '',        ''],
+  ['workflow/worklog',    '', 0,   'name',      '',   'T',       ''],
+  ['workflow/worklog',    '', 1,   'tags',      '',   '',        ''],
+  ['workflow/worklog',    '', 2,   'comment',   '',   '',        ''],
+  ['workflow/worklog',    '', 3,   'content',   '',   '',        ''],
   ['instrument',          '', 0,   'name',      '',   'T',       ''],
   ['instrument',          '', 1,   'tags',      '',   '',        ''],
   ['instrument',          '', 2,   'comment',   '',   '',        ''],
@@ -48,28 +64,31 @@ defaultSchema: list[list[Union[str,int]]] = [
   ['instrument/extension','', 3,   'vendor',    '',   '',        '']
 ]
 
+
 defaultDefinitions = [
-  ['name',            'What is the name this item?',                                    ''],
-  ['tags',            'What are the tags?',                                             ''],
-  ['status',          'What is the project status',                                     ''],
-  ['objective',       'What is the objective?',                                         ''],
-  ['comment',         'What are the comments?',                                         ''],
-  ['content',         'What is procedure (Markdown possible; autofill if file given)?', ''],
-  ['vendor',          'Who is the vendor?',                                             ''],
-  ['sample',          'Which sample was used?',                                         ''],
-  ['procedure',       'Which procedure was used?',                                      ''],
-  ['chemistry',       'What is its chemical composition?',                              ''],
-  ['qrCodes',         '',                                                               ''],
-  ['geometry.width',  'Sample width',                                                   ''],
-  ['geometry.length', 'Sample length',                                                  ''],
-  ['geometry.height', 'Sample height',                         'https://schema.org/height']
+  ['name',              'What is the name this item?',                                    ''],
+  ['tags',              'What are the tags?',                                             ''],
+  ['status',            'What is the project status',                                     ''],
+  ['objective',         'What is the objective?',                                         ''],
+  ['comment',           'What are the comments?',                                         ''],
+  ['content',           'What is procedure (Markdown possible; autofill if file given)?', ''],
+  ['vendor',            'Who is the vendor?',                                             ''],
+  ['sample',            'Which sample was used?',                                         ''],
+  ['workflow/procedure','Which procedure was used?',                                      ''],
+  ['chemistry',         'What is its chemical composition?',                              ''],
+  ['qrCodes',           '',                                                               ''],
+  ['geometry.width',    'Sample width',                                                   ''],
+  ['geometry.length',   'Sample length',                                                  ''],
+  ['geometry.height',   'Sample height',                         'https://schema.org/height']
 ]
+
 
 defaultDataHierarchyNode: list[dict[str, str]] = [
   {'docType':'-','class':'','idx':'0','name':'name',   'query':'What is the name?',     'unit':'','PURL':'','mandatory':'T','list':''},
   {'docType':'-','class':'','idx':'1','name':'tags',   'query':'What are the tags?',    'unit':'','PURL':'','mandatory':'','list':''},
   {'docType':'-','class':'','idx':'2','name':'comment','query':'What are the comments?','unit':'','PURL':'','mandatory':'','list':''}
   ]
+
 
 CONF_FILE_NAME = '.pastaELN.json'
 
@@ -88,11 +107,7 @@ defaultConfiguration: dict[str, Any] = {
 #   within each: array of 3: description, default, all_choices
 configurationGUI: dict[str, Any] = {
   'general': {
-    'theme': ['Theme',
-              'none',
-              ['dark_amber', 'dark_blue', 'dark_cyan', 'dark_lightgreen', 'dark_pink', 'dark_purple', 'dark_red', \
-               'dark_teal', 'dark_yellow', 'light_amber', 'light_blue', 'light_cyan', 'light_lightgreen', \
-               'light_pink', 'light_purple', 'light_red', 'light_teal', 'light_yellow', 'none']],
+    'theme': ['Color style', 'none', ['amber', 'blue', 'cyan', 'pink', 'purple', 'teal', 'yellow', 'none']],
     'loggingLevel': ['Logging level (more->less)', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR']],
     'autosave': ['Autosave entries in form', 'No', ['Yes', 'No']],
     'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']]
@@ -109,6 +124,22 @@ configurationGUI: dict[str, Any] = {
   }
 }
 
+
+DEFAULT_COLORS_PALETTE:dict[str,dict[str,str]] = {
+    'dark': {
+        'text': '#EEEEEE',
+        'leafX': '#222222',
+        'leafO': '#333333',
+        'leafShadow': 'black',
+    },
+    'light': {
+        'text': '#111111',
+        'leafX': '#EEEEEE',
+        'leafO': '#FFFFFF',
+        'leafShadow': '#AAAAAA',
+    },
+}
+
 SQLiteTranslationDict = {"'":'&prime;'}
 SQLiteTranslation     = str.maketrans(SQLiteTranslationDict)
 
@@ -118,6 +149,10 @@ SORTED_KEYS     = ['name', 'tags', 'comment', 'metaUser', '']
 SORTED_DB_KEYS  = ['id', 'type', 'dateCreated','dateModified','dateSync', 'user','branch','gui','client','externalId','shasum']
 DO_NOT_RENDER   = ['image','content','metaVendor','shasum','type','branch','gui','dateCreated',
                  'dateModified','id','user','name','externalId','client','elnIdentifier','oldIdentifier']
+
+AboutMessage  = '### PASTA-ELN | The favorite ELN for experimental scientists\n\nPASTA-ELN provides a streamlined '\
+                'and efficient solution for experimental scientists\n\n to manage and organize raw data alongside '\
+                'associated metadata.\n\n'
 
 setupText = """
 ### Welcome to the PASTA-ELN setup
@@ -151,7 +186,7 @@ shortcuts = """
 
 **Ctrl+S**: List samples
 
-**Ctrl+P**: List procedures
+**Ctrl+W**: List workflows
 
 **Ctrl+I**: List instruments
 
@@ -170,6 +205,7 @@ shortcuts = """
 **Ctrl+0**: Configuration
 """
 
+
 tableHeaderHelp = """
 <h4>You can add custom rows via bottom text area.</h4>
 
@@ -182,6 +218,7 @@ If you want to add a column:
 </ul>
 """
 
+# FontAwesome 5 icons
 allIcons = ['fa5s.address-book', 'fa5s.address-card', 'fa5s.adjust', 'fa5s.align-center', 'fa5s.align-justify',
             'fa5s.align-left', 'fa5s.align-right', 'fa5s.allergies', 'fa5s.ambulance',
             'fa5s.american-sign-language-interpreting', 'fa5s.anchor', 'fa5s.angle-double-down',

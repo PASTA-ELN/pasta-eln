@@ -9,8 +9,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Union
 import qtawesome as qta
-from pandas import DataFrame
-from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize, Signal
+from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (QApplication, QPushButton, QStyle, QStyledItemDelegate, QStyleOption, QStyleOptionButton,
                                QStyleOptionViewItem, QWidget)
@@ -21,22 +20,6 @@ class DeleteColumnDelegate(QStyledItemDelegate):
   """
   Delegate for creating the delete icon for the delete column in the data hierarchy table views
   """
-  delete_clicked_signal = Signal(
-    int)  # Signal to inform the delete button click with the position in the table as the parameter
-
-  def __init__(self, df:DataFrame, group:str) -> None:
-    """
-      Constructor
-
-    Args:
-      df (DataFrame): pandas dataframe containing the entire schema
-      group (str): string of this group/class
-    """
-    super().__init__()
-    self.df = df
-    self.group = group
-
-
   def paint(self,
             painter: QPainter,
             option: QStyleOption,
@@ -48,10 +31,8 @@ class DeleteColumnDelegate(QStyledItemDelegate):
       option (QStyleOptionViewItem): Style option for the cell represented by index.
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
     """
-    dfSub = self.df[self.df['class']==self.group]
-    if index.row()>=len(dfSub):
-      return
-    if self.group=='' and dfSub[dfSub['idx']==index.row()]['name'].isin(['name','tags','comment']).values[0]:
+    indexName = index.model().index(index.row(), 0)
+    if not indexName.data() or indexName.data() in ['name','tags','comment']:
       return
     button = QPushButton()
     opt = QStyleOptionButton()
@@ -92,12 +73,9 @@ class DeleteColumnDelegate(QStyledItemDelegate):
 
     Returns (bool): True if deleted otherwise False
     """
-    dfSub = self.df[self.df['class']==self.group]
-    if index.row()>=len(dfSub):
-      return False
-    if self.group=='' and dfSub[dfSub['idx']==index.row()]['name'].isin(['name','tags','comment']).values[0]:
-      return False
-    if is_click_within_bounds(event, option):
-      self.delete_clicked_signal.emit(index.row())
+    indexName = index.model().index(index.row(), 0)
+    if indexName.data() and indexName.data() not in ['name','tags','comment'] and \
+        is_click_within_bounds(event, option) and isinstance(index, QModelIndex):
+      index.model().removeRow(index.row())
       return True
     return False

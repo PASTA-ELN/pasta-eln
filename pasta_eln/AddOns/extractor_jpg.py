@@ -3,7 +3,6 @@
 For tutorials, see extractor_csv.py and extractor_png.py
 """
 import base64
-import copy
 import json
 import re
 from io import BytesIO

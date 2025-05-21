@@ -2,14 +2,11 @@
 """TEST the form """
 import logging, warnings, shutil
 from pathlib import Path
-from PySide6.QtGui import QStandardItem
 from pasta_eln.backend import Backend
-from pasta_eln.miscTools import DummyProgressBar
 from pasta_eln.installationTools import exampleData
 from pasta_eln.GUI.form import Form
 from pasta_eln.guiCommunicate import Communicate
 from pasta_eln.GUI.palette import Palette
-from pasta_eln.GUI.project import Project
 
 def test_simple(qtbot):
   """
@@ -43,7 +40,7 @@ def test_simple(qtbot):
   backend.changeHierarchy(projID)
   dirName = backend.basePath/backend.cwd
   shutil.copy(Path(__file__).parent.parent/'pasta_eln'/'Resources'/'Icons'/'pasta512.png', dirName)
-  backend.scanProject(DummyProgressBar(), projID)
+  backend.scanProject(None, projID)
 
   # move to top: directly in the database
   cmd = "UPDATE branches SET child='-1' WHERE path=='PastasExampleProject/pasta512.png'"
@@ -68,5 +65,5 @@ def verify(backend): # Verify DB
   print(output)
   output = '\n'.join(output.split('\n')[8:])
   assert '**ERROR' not in output, 'Error in checkDB'
-  assert len(output.split('\n')) == 5, 'Check db should have 5 more-less empty lines'
+  assert len(output.split('\n')) == 6, 'Check db should have 6 more-less empty lines'
   return

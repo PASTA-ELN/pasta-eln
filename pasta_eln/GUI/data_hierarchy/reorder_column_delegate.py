@@ -9,8 +9,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Union
 import qtawesome as qta
-from pandas import DataFrame
-from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize, Signal
+from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (QApplication, QPushButton, QStyle, QStyledItemDelegate, QStyleOptionButton,
                                QStyleOptionViewItem, QWidget)
@@ -21,21 +20,6 @@ class ReorderColumnDelegate(QStyledItemDelegate):
   """
   Delegate for creating the icons for the re-order column in the data hierarchy editor tables
   """
-  re_order_signal = Signal(int)
-
-  def __init__(self, df:DataFrame, group:str) -> None:
-    """
-      Constructor
-
-    Args:
-      df (DataFrame): pandas dataframe containing the entire schema
-      group (str): string of this group/class
-    """
-    super().__init__()
-    self.df = df
-    self.group = group
-
-
   def paint(self,
             painter: QPainter,
             option: QStyleOptionViewItem,
@@ -47,7 +31,8 @@ class ReorderColumnDelegate(QStyledItemDelegate):
       option (QStyleOptionViewItem): Style option for the cell represented by index.
       index (Union[QModelIndex, QPersistentModelIndex]): Table cell index
     """
-    if index.row()>=len(self.df[self.df['class']==self.group]):
+    indexName = index.model().index(index.row(), 0)
+    if not indexName.data():
       return
     button = QPushButton()
     opt = QStyleOptionButton()
@@ -88,7 +73,14 @@ class ReorderColumnDelegate(QStyledItemDelegate):
 
     Returns (bool): True/False
     """
-    if is_click_within_bounds(event, option):
-      self.re_order_signal.emit(index.row())
+    indexName = index.model().index(index.row(), 0)
+    if indexName.data() and is_click_within_bounds(event, option):
+      for idx in range(7):
+        indexTop    = model.index(index.row()-1, idx)
+        indexBottom = model.index(index.row(),   idx)
+        helper = model.data(indexTop)
+        model.setData(indexTop, model.data(indexBottom))
+        model.setData(indexBottom, helper)
+      model.layoutChanged.emit()
       return True
     return False

@@ -1,0 +1,118 @@
+/* No scrollbars */
+html, body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Main page layout */
+body.index .document {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+}
+
+/* Subpage layout */
+body.subpage .document {
+    padding: 2em;
+}
+body ul.simple p {
+    margin-bottom: 16px !important; /* Adjust the value as needed */
+}
+
+/* Back button */
+.back-button {
+    display: inline-block;
+    margin-top: auto;
+    margin-bottom: auto;
+    padding: 7px 10px;
+    background-color: #1f77b4;
+    color: white !important;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 14px;
+    flex: 1;
+    height: 25px;
+}
+
+.back-button:hover {
+    transform: translateY(-4px);
+}
+
+h1, h3, h4 {
+    font-weight: 600;
+    font-family: 'Inter', sans-serif !important;
+}
+h1 {
+    display: none;
+}
+h2 {
+    font-size: 2.5em !important;
+    margin: 0px !important;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif !important;
+}
+
+.three-columns {
+    display: flex;
+    gap: 1em;
+    margin: 2em 0;
+}
+
+.heading {
+    font-size: 1.5em;
+    text-align: center;
+    margin-bottom: 0.5em;
+}
+
+.column {
+    flex: 1;
+    background: #f4f4f4;
+    padding: 1em;
+    border-radius: 6px;
+}
+
+.card, .card:visited, .card:active {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.2em;
+    height: 126px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 8px;
+    text-align: center;
+    transition: transform 0.2s ease;
+    display: block;
+    text-decoration: none;
+    color: #333;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    text-decoration: none;
+    color: #333;
+}
+
+.card .icon {
+    font-size: 3%;
+    margin: 0px;
+    margin-bottom: 5px;
+    color: #1f77b4;
+}
+
+[data-lucide] {
+  width: 48px; /* Set the width */
+  height: 48px; /* Set the height */
+}
+
+.card .text {
+    font-size: 1em;
+
+}
+
+.text-highlight {
+    padding: 0;
+    margin: 0;
+    border-left: 4px solid #1f77b4; padding-left: 10px; margin-left: 10px;
+}

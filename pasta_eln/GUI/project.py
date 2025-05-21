@@ -1,5 +1,4 @@
 """ Widget that shows the content of project in a electronic labnotebook """
-import importlib
 import logging
 from enum import Enum
 from pathlib import Path
@@ -12,8 +11,9 @@ from PySide6.QtWidgets import (QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayou
 from ..fixedStringsJson import DO_NOT_RENDER
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, Label, TextButton, showMessage, widgetAndLayout
-from ..handleDictionaries import doc2markdown
-from ..stringChanges import createDirName
+from ..miscTools import callAddOn
+from ..textTools.handleDictionaries import doc2markdown
+from ..textTools.stringChanges import createDirName
 from .projectTreeView import TreeView
 
 
@@ -122,7 +122,7 @@ class Project(QWidget):
   @Slot(str, str)                                   # type: ignore[arg-type]
   def change(self, projID:str, docID:str) -> None:
     """
-    What happens when user clicks to change project
+    What happens when user clicks to change project that is shown
 
     Args:
       projID (str): document id of project; if empty, just refresh
@@ -242,7 +242,7 @@ class Project(QWidget):
         self.comm.changeTable.emit('x0','')
     elif command[0] is Command.SCAN:
       for _ in range(2):  #scan twice: convert, extract
-        self.comm.backend.scanProject(self.comm.progressBar, self.projID, self.docProj['branch'][0]['path'])
+        self.comm.backend.scanProject(None, self.projID)
       self.comm.changeProject.emit(self.projID,'')
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_PROJ_DETAILS:
@@ -290,8 +290,7 @@ class Project(QWidget):
     elif command[0] is Command.SHOW_TABLE:
       self.comm.changeTable.emit(command[1], self.projID)
     elif command[0] is Command.ADD_ON:
-      module      = importlib.import_module(command[1])
-      module.main(self.comm.backend, self.projID, self)
+      callAddOn(command[1], self.comm.backend, self.projID, self)
     else:
       print('**ERROR project menu unknown:',command)
     return
@@ -304,8 +303,13 @@ class Project(QWidget):
     Args:
       item (QStandardItem): item changed, new location
     """
+    verbose = False # Convenient for testing
     #gather old information
     db       = self.comm.backend.db
+    ## print hierarchy of this project for debugging
+    # self.comm.backend.changeHierarchy(self.projID)
+    # print(self.comm.backend.outputHierarchy(False, True))
+    # self.comm.backend.changeHierarchy(None)
     if not item.data():
       return
     stackOld = item.data()['hierStack'].split('/')[:-1]
@@ -319,9 +323,6 @@ class Project(QWidget):
       return
     branchOld = branchOldList[0]
     childOld = branchOld['child']
-    siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackOld))
-    siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(stackOld)+1 and \
-                                                  i['value'][0]>branchOld['child'] and i['value'][0]<9999]
     #gather new information
     stackNew = []  #create reversed
     currentItem = item
@@ -340,24 +341,59 @@ class Project(QWidget):
       pathNew = f'{parentDir}/{dirNameNew}'
     else:
       pathNew = branchOld['path']
-    siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackNew))
-    siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(stackNew)+1 and \
-                                                   i['value'][0]>=childNew and i['value'][0]<9999]
+    siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackNew)) #sorted by docID
+    siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(stackNew)+1]
+    childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
+    siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]                    #sorted by childNum (primary) and docID (secondary)
     logging.debug('Change project: docID %s | old stack %s child %i | new stack %s child %i path %s'\
                   , docID, str(stackOld), childOld, str(stackNew), childNew, pathNew)
     if stackOld==stackNew and childOld==childNew:  #nothing changed, just redraw
       return
-    # CHANGE
+    # --- CHANGE ----
     # change new siblings
-    for line in siblingsNew:
-      if line['id']!=docID:
-        db.updateBranch(docID=line['id'], branch=line['value'][4], child=line['value'][0]+1)
+    if verbose:
+      print('\n=============================================\nStep 1: before new siblings')
+      print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
+    for idx, line in reversed(list(enumerate(siblingsNew))):
+      shift = 1 if idx>=childNew else 0  #shift those before the insertion point by 0 and those after by 1
+      if line['id']==docID or line['value'][0]==idx+shift: #ignore id in question and those that are correct already
+        continue
+      if verbose:
+        print(f'  {line["id"]}: move: {idx} {shift}')
+      db.updateBranch(docID=line['id'], branch=line['value'][4], child=idx+shift)
+    if verbose:
+      siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackNew)) #sorted by docID
+      siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(stackNew)+1]
+      childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
+      siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]                    #sorted by childNum (primary) and docID (secondary)
+      print('Step 2: after new siblings')
+      print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
     # change item in question
+    if verbose:
+      print(f'  manual move {childOld} -> {childNew}: {docID}')
     db.updateBranch(docID=docID, branch=-99, stack=stackNew, path=pathNew, child=childNew, stackOld=stackOld+[docID])
     item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID])})
     # change old siblings
-    for line in siblingsOld:
-      db.updateBranch(  docID=line['id'], branch=line['value'][4], child=line['value'][0]-1)
+    siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackOld))  #sorted by docID
+    siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(stackOld)+1]
+    childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
+    siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]                    #sorted by childNum (primary) and docID (secondary)
+    if verbose:
+      print('Step 3: before old siblings')
+      print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
+    for idx, line in enumerate(siblingsOld):
+      if line['value'][0]==idx: #ignore id in question and those that are correct already
+        continue
+      if verbose:
+        print(f'  {line["id"]}: move: {idx} {shift}')
+      db.updateBranch(  docID=line['id'], branch=line['value'][4], child=idx)
+    if verbose:
+      siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackOld))  #sorted by docID
+      siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(stackOld)+1]
+      childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
+      siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]                    #sorted by childNum (primary) and docID (secondary)
+      print('Step 4: end of function')
+      print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
     return
 
 

@@ -1,5 +1,184 @@
 # Changelog
 
+## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.7...HEAD)
+
+**Implemented enhancements:**
+
+- Make "aiohttp" dependency optional [\#188](https://github.com/PASTA-ELN/pasta-eln/issues/188)
+
+**Fixed bugs:**
+
+- Dot in properties table is lost [\#452](https://github.com/PASTA-ELN/pasta-eln/issues/452)
+
+**Closed issues:**
+
+- Update of extractors in the current project group [\#466](https://github.com/PASTA-ELN/pasta-eln/issues/466)
+- Making the messages from the test extraction copy-able [\#464](https://github.com/PASTA-ELN/pasta-eln/issues/464)
+- Making the folder paths copy-able in the configurations [\#462](https://github.com/PASTA-ELN/pasta-eln/issues/462)
+- Instruction for RSS feed on website [\#461](https://github.com/PASTA-ELN/pasta-eln/issues/461)
+- "size 0" for imported tif file? [\#460](https://github.com/PASTA-ELN/pasta-eln/issues/460)
+- No automated restart when a new project group add-on folder is created [\#459](https://github.com/PASTA-ELN/pasta-eln/issues/459)
+- Projects not visible in sidebar [\#457](https://github.com/PASTA-ELN/pasta-eln/issues/457)
+- Progress bar for drag+drop progress [\#456](https://github.com/PASTA-ELN/pasta-eln/issues/456)
+- Toggling detail visibility for identical files [\#455](https://github.com/PASTA-ELN/pasta-eln/issues/455)
+- "Show all item details"-option missing [\#454](https://github.com/PASTA-ELN/pasta-eln/issues/454)
+- Sorting files by name in the project view [\#453](https://github.com/PASTA-ELN/pasta-eln/issues/453)
+- list of instruments in the data schema editor is called "instrument" [\#450](https://github.com/PASTA-ELN/pasta-eln/issues/450)
+- There is sometimes a bug during the github actions [\#444](https://github.com/PASTA-ELN/pasta-eln/issues/444)
+- Automated scan when drag/drop-ing files [\#440](https://github.com/PASTA-ELN/pasta-eln/issues/440)
+- Drag/Drop of folders? [\#438](https://github.com/PASTA-ELN/pasta-eln/issues/438)
+- When moving addOn directory in project group editor, there should be three options [\#419](https://github.com/PASTA-ELN/pasta-eln/issues/419)
+- Deleting the only folder in a project [\#396](https://github.com/PASTA-ELN/pasta-eln/issues/396)
+- Install requirements in scanNewExtractors [\#156](https://github.com/PASTA-ELN/pasta-eln/issues/156)
+
+## [v3.1.7](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.7) (2025-05-12)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.6...v3.1.7)
+
+**Closed issues:**
+
+- Empty creation windows for workflow subcategories [\#449](https://github.com/PASTA-ELN/pasta-eln/issues/449)
+- Procedures are not accessible anymore in the lists [\#448](https://github.com/PASTA-ELN/pasta-eln/issues/448)
+- Changing the order of projects in the list on the left [\#392](https://github.com/PASTA-ELN/pasta-eln/issues/392)
+
+## [v3.1.6](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.6) (2025-05-09)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.5...v3.1.6)
+
+**Fixed bugs:**
+
+- Update project destroys path of this and its children [\#446](https://github.com/PASTA-ELN/pasta-eln/issues/446)
+
+## [v3.1.5](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.5) (2025-05-05)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.4...v3.1.5)
+
+## [v3.1.4](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.4) (2025-05-05)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.3...v3.1.4)
+
+## [v3.1.3](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.3) (2025-05-05)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.2...v3.1.3)
+
+**Closed issues:**
+
+- Description in data schema editos appear for all item types [\#445](https://github.com/PASTA-ELN/pasta-eln/issues/445)
+
+## [v3.1.2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.2) (2025-04-21)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.1...v3.1.2)
+
+**Closed issues:**
+
+- capitalization of tags [\#437](https://github.com/PASTA-ELN/pasta-eln/issues/437)
+- "Ratings" vs. "tags" [\#432](https://github.com/PASTA-ELN/pasta-eln/issues/432)
+- Checking folder names when creating a new project [\#428](https://github.com/PASTA-ELN/pasta-eln/issues/428)
+- User names in elabFTW [\#425](https://github.com/PASTA-ELN/pasta-eln/issues/425)
+- Details provided in the API-key info box [\#424](https://github.com/PASTA-ELN/pasta-eln/issues/424)
+- Reordering when switching visibility [\#422](https://github.com/PASTA-ELN/pasta-eln/issues/422)
+- Duplication of items: Double clicking and Wrong list view [\#416](https://github.com/PASTA-ELN/pasta-eln/issues/416)
+- Theme: blue-light the icons are in black in the sidebar [\#357](https://github.com/PASTA-ELN/pasta-eln/issues/357)
+- v3.0: fix color issues when using \_amber theme [\#338](https://github.com/PASTA-ELN/pasta-eln/issues/338)
+
+## [v3.1.1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.1) (2025-04-15)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.17...v3.1.1)
+
+**Implemented enhancements:**
+
+- Dataverse upload window [\#316](https://github.com/PASTA-ELN/pasta-eln/issues/316)
+
+**Fixed bugs:**
+
+- Data-verse: Repeatedly changing "metadata block" in metadata editor throws segmentation fault [\#330](https://github.com/PASTA-ELN/pasta-eln/issues/330)
+- ELN file generation for Dataverse upload [\#321](https://github.com/PASTA-ELN/pasta-eln/issues/321)
+- Dataverse: Saving the Metadata form reverts changes in Configure [\#320](https://github.com/PASTA-ELN/pasta-eln/issues/320)
+
+**Closed issues:**
+
+- Tags not searchable when using \*\*\*-ratings [\#434](https://github.com/PASTA-ELN/pasta-eln/issues/434)
+- Case sensitivity for folder names [\#427](https://github.com/PASTA-ELN/pasta-eln/issues/427)
+- Mandatoriness in the data schema editor [\#418](https://github.com/PASTA-ELN/pasta-eln/issues/418)
+- svg's do not appear in pasta as in VScode [\#391](https://github.com/PASTA-ELN/pasta-eln/issues/391)
+- The qr code line shows \[''\] after sample dimensions are added [\#387](https://github.com/PASTA-ELN/pasta-eln/issues/387)
+
+## [v3.0.17](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.17) (2025-03-29)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.16...v3.0.17)
+
+**Closed issues:**
+
+- Data scheme editor -\> same name in different tabs yield error [\#417](https://github.com/PASTA-ELN/pasta-eln/issues/417)
+- Deletion of project group + subsequent saving error [\#414](https://github.com/PASTA-ELN/pasta-eln/issues/414)
+- Warning message for folder creation during installation [\#413](https://github.com/PASTA-ELN/pasta-eln/issues/413)
+- Project group editor \(during programming lesson\) [\#409](https://github.com/PASTA-ELN/pasta-eln/issues/409)
+
+## [v3.0.16](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.16) (2025-03-25)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.15...v3.0.16)
+
+**Closed issues:**
+
+- Restart of pasta after creating a new project group [\#412](https://github.com/PASTA-ELN/pasta-eln/issues/412)
+- Renaming x0 and x1 into project/folder in the schema editor [\#411](https://github.com/PASTA-ELN/pasta-eln/issues/411)
+- items in schema editor vanish [\#410](https://github.com/PASTA-ELN/pasta-eln/issues/410)
+- Larger \(and/or more obvious\) notification windows [\#406](https://github.com/PASTA-ELN/pasta-eln/issues/406)
+- Add-On updater not working [\#405](https://github.com/PASTA-ELN/pasta-eln/issues/405)
+- Export as html [\#402](https://github.com/PASTA-ELN/pasta-eln/issues/402)
+- Schema editor - List [\#401](https://github.com/PASTA-ELN/pasta-eln/issues/401)
+- Error in item editor [\#399](https://github.com/PASTA-ELN/pasta-eln/issues/399)
+- List of tags shows \_all\_ items in that project [\#394](https://github.com/PASTA-ELN/pasta-eln/issues/394)
+- Adding instruments to the links in a measurement [\#393](https://github.com/PASTA-ELN/pasta-eln/issues/393)
+- Selection of extractors for a multiply used file format [\#388](https://github.com/PASTA-ELN/pasta-eln/issues/388)
+
+## [v3.0.15](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.15) (2025-03-21)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.14...v3.0.15)
+
+**Closed issues:**
+
+- Breaking pasta completely using the schema editor [\#408](https://github.com/PASTA-ELN/pasta-eln/issues/408)
+- Use Alt-Up  Alt-Down to move up and down in form editor [\#407](https://github.com/PASTA-ELN/pasta-eln/issues/407)
+- elnidentifier key-value pair [\#403](https://github.com/PASTA-ELN/pasta-eln/issues/403)
+- Schema editor - mandatoriness [\#400](https://github.com/PASTA-ELN/pasta-eln/issues/400)
+- Test selected item extraction [\#397](https://github.com/PASTA-ELN/pasta-eln/issues/397)
+- "Test extraction from a file" [\#395](https://github.com/PASTA-ELN/pasta-eln/issues/395)
+- Form: autosave is not working anymore [\#364](https://github.com/PASTA-ELN/pasta-eln/issues/364)
+
+## [v3.0.14](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.14) (2025-03-15)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.13...v3.0.14)
+
+**Fixed bugs:**
+
+- Importing eln file multiple times [\#229](https://github.com/PASTA-ELN/pasta-eln/issues/229)
+- Editing comments in imported eln projects [\#228](https://github.com/PASTA-ELN/pasta-eln/issues/228)
+
+**Closed issues:**
+
+- Creation of project groups not working [\#404](https://github.com/PASTA-ELN/pasta-eln/issues/404)
+- Adding metadata to the list instead of showing only the one from the current item [\#390](https://github.com/PASTA-ELN/pasta-eln/issues/390)
+- Showing the sample dimensions in the details column in the sample list [\#386](https://github.com/PASTA-ELN/pasta-eln/issues/386)
+- Wrong version number in window title [\#380](https://github.com/PASTA-ELN/pasta-eln/issues/380)
+- Sidebar buttons vanish on resizing window [\#378](https://github.com/PASTA-ELN/pasta-eln/issues/378)
+- Double clicking on empty cells in metadata table throws console errors [\#305](https://github.com/PASTA-ELN/pasta-eln/issues/305)
+- Import and edit the eLabFTW project [\#141](https://github.com/PASTA-ELN/pasta-eln/issues/141)
+
+## [v3.0.13](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.13) (2025-03-11)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.12...v3.0.13)
+
+## [v3.0.12](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.12) (2025-03-11)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.11...v3.0.12)
+
+## [v3.0.11](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.11) (2025-02-24)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.10...v3.0.11)
+
 ## [v3.0.10](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.10) (2025-02-20)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.9...v3.0.10)

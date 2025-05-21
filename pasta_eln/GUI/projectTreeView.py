@@ -1,5 +1,4 @@
 """ Custom tree view on data model """
-import importlib
 import logging
 import os
 import platform
@@ -15,6 +14,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QMenu, QMessageBox, QTreeView,
                                QWidget)
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, showMessage
+from ..miscTools import callAddOn
 from .projectLeafRenderer import ProjectLeafRenderer
 
 
@@ -22,6 +22,7 @@ class TreeView(QTreeView):
   """ Custom tree view on data model """
   def __init__(self, parent:QWidget, comm:Communicate, model:QStandardItemModel):
     super().__init__(parent)
+    self.aParentWidget = parent
     self.comm = comm
     self.setModel(model)
     self.setHeaderHidden(True)
@@ -121,8 +122,8 @@ class TreeView(QTreeView):
             if oldPath.exists():
               newFileName = f'trash_{oldPath.name}'
               if (oldPath.parent/newFileName).exists():  #ensure target does not exist
-                endText = ' was marked for deletion. Save it or its content now to some place on harddisk. It will be deleted now!!!'
-                showMessage(self, 'Warning', f'Warning! \nThe folder {oldPath.parent/newFileName}{endText}')
+                endText = ' was marked for deletion. Save it to some other place on harddisk. It will be deleted now!!!'
+                showMessage(self, 'Warning', f'Warning! \nThe file/folder {oldPath.parent/newFileName}{endText}')
                 if (oldPath.parent/newFileName).is_file():
                   (oldPath.parent/newFileName).unlink()
                 elif (oldPath.parent/newFileName).is_dir():
@@ -133,21 +134,38 @@ class TreeView(QTreeView):
         for line in children:
           self.comm.backend.db.remove(line['id'], stack='/'.join(doc['branch'][0]['stack']+[docID,'']))
         # remove leaf from GUI
-        item  = self.model().itemFromIndex(self.currentIndex())                                              # type: ignore[attr-defined]
+        item  = self.model().itemFromIndex(self.currentIndex())                                               # type: ignore[attr-defined]
         parent = item.parent()
         if parent is None: #top level
           parent = self.model().invisibleRootItem()                                                           # type: ignore[attr-defined]
+          if parent.rowCount()==1:
+            self.aParentWidget.btnAddSubfolder.setVisible(True)                                               # type: ignore[attr-defined]
         parent.removeRow(item.row())
     elif command[0] is Command.SHOW_DETAILS:
-      item = self.model().itemFromIndex(self.currentIndex())                                                 # type: ignore[attr-defined]
-      gui  = item.data()['gui']
-      docID = item.data()['hierStack'].split('/')[-1]
+      gui    = item.data()['gui']
       gui[0] = not gui[0]
-      item.setData({ **item.data(), **{'gui':gui}})
+      docID  = hierStack[-1]
+      def iterate(currentItem:QStandardItem) -> None:
+        """ iterate through all branches and leaves and find items matching the docID
+        Args:
+          currentItem (QStandardItem): item to iterate to its children
+        """
+        currentIndex = self.model().indexFromItem(currentItem)                                                # type: ignore[attr-defined]
+        if currentItem.data() is not None and docID==currentItem.data()['hierStack'].split('/')[-1]:
+          currentItem.setData({ **currentItem.data(), **{'gui':gui}})
+        for row in range(self.model().rowCount(currentIndex)):
+          for column in range(self.model().columnCount(currentIndex)):
+            childIndex = self.model().index(row, column, currentIndex)
+            iterate(self.model().itemFromIndex(childIndex))                                                   # type: ignore[attr-defined]
+      iterate(self.model().invisibleRootItem())                                                               # type: ignore[attr-defined]
+      # only one change once the DB
       self.comm.backend.db.setGUI(docID, gui)
     elif command[0] is Command.HIDE:
       logging.debug('hide document %s',hierStack[-1])
       self.comm.backend.db.hideShow(hierStack[-1])
+      #TODO: current implementation: you hide one; all others are hidden as well.
+      # Talk to GW what is the default expectation; system allows for individual hiding
+      #
       # self.comm.changeProject.emit('','') #refresh project
       # after hide, do not hide immediately but wait on next refresh
     elif command[0] is Command.OPEN_EXTERNAL or command[0] is Command.OPEN_FILEBROWSER:
@@ -167,8 +185,7 @@ class TreeView(QTreeView):
         else:                                   # linux variants
           subprocess.call(('xdg-open', path))
     elif command[0] is Command.ADD_ON:
-      module      = importlib.import_module(command[1])
-      module.main(self.comm.backend, item.data()['hierStack'], self)
+      callAddOn(command[1], self.comm.backend, item.data()['hierStack'], self)
     else:
       print('**ERROR**: unknown context menu', command)
     return
@@ -222,10 +239,13 @@ class TreeView(QTreeView):
         else:
           files +=   list(Path(path).rglob('*'))                                                             # type: ignore[arg-type]
           folders += [x[0] for x in os.walk(path)]
+      if not (folders+[str(i) for i in files]):
+        showMessage(self, 'Error', 'The files seem empty.')
+        return
+      commonBase   = os.path.commonpath(folders+[str(i) for i in files])
       docID = item.data()['hierStack'].split('/')[-1]
       doc = self.comm.backend.db.getDoc(docID)
       targetFolder = Path(self.comm.backend.cwd/doc['branch'][0]['path'])
-      commonBase   = os.path.commonpath(folders+[str(i) for i in files])
       # create folders and copy files
       for folder in folders:
         (targetFolder/(Path(folder).relative_to(commonBase))).mkdir(parents=True, exist_ok=True)
@@ -235,8 +255,7 @@ class TreeView(QTreeView):
           shutil.copy(file, targetFolder/(file.relative_to(commonBase)))
       # scan
       for _ in range(2):  #scan twice: convert, extract
-        self.comm.backend.scanProject(self.comm.progressBar, docID,
-                                      str(targetFolder.relative_to(self.comm.backend.basePath)) )
+        self.comm.backend.scanProject(None, docID, targetFolder.relative_to(self.comm.backend.basePath))
       self.comm.changeProject.emit(item.data()['hierStack'].split('/')[0],'')
       showMessage(self, 'Information','Drag & drop is finished')
       event.ignore()

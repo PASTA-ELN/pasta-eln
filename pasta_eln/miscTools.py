@@ -11,6 +11,7 @@ from io import BufferedReader
 from pathlib import Path
 from typing import Any, Union
 from urllib import request
+from PySide6.QtWidgets import QWidget  # pylint: disable=no-name-in-module
 from .fixedStringsJson import CONF_FILE_NAME
 
 
@@ -152,11 +153,12 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
     projectGroup = configuration['defaultProjectGroup']
   directory = Path(configuration['projectGroups'][projectGroup]['addOnDir'])
   sys.path.append(str(directory))  #allow add-ons
-  # Extractors
+  # Add-Ons
   verboseDebug = False
-  extractorsAll = {}
-  projectAll    = {}
+  extractorsAll= {}
+  otherAddOns:dict[str,dict[str,str]]  = {'project':{}, 'table':{} ,'definition':{} ,'form':{}, '_ERRORS_':{}}
   for fileName in os.listdir(directory):
+    # Extractor
     if fileName.endswith('.py') and fileName.startswith('extractor_'):
       #start with file
       with open(directory/fileName, encoding='utf-8') as fIn:
@@ -203,19 +205,42 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
         ending = fileName.split('_')[1].split('.')[0]
         extractorsAll[ending]=extractorsThis
                     #header not used for now
-    if fileName.endswith('.py') and fileName.startswith('project_'):
+    # Project, et al.
+    if fileName.endswith('.py') and '_' in fileName and fileName.split('_')[0] in ['project','table','definition','form']:
       name        = fileName[:-3]
-      module      = importlib.import_module(fileName[:-3])
-      description = module.description
-      projectAll[name] = description
+      try:
+        module      = importlib.import_module(name)
+        description = module.description
+        _ = module.reqParameter  # check if reqParameter exists
+        otherAddOns[fileName.split('_')[0]][name] = description
+      except Exception:
+        description = f'** SYNTAX ERROR in add-on **\n{traceback.format_exc()}'
+        otherAddOns['_ERRORS_'][name] = description
   #update configuration file
-  confProjectGroup = configuration['projectGroups'][projectGroup]['addOns']
-  confProjectGroup['extractors'] = extractorsAll
-  confProjectGroup['project']    = projectAll
-  confProjectGroup['table']      = {}
+  configuration['projectGroups'][projectGroup]['addOns']['extractors'] = extractorsAll
+  configuration['projectGroups'][projectGroup]['addOns'] |= otherAddOns
   with open(Path.home()/CONF_FILE_NAME,'w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
-  return {'addon directory':directory} | extractorsAll | projectAll
+  return {'addon directory':directory} | extractorsAll | otherAddOns
+
+
+def callAddOn(name:str, backend:Any, projID:str, widget:QWidget) -> None:
+  """ Call add-ons
+  Args:
+    name (str): name of the add-on
+    backend (str): backend to be used
+    projID (str): project ID
+    widget: widget to be used
+  """
+  module      = importlib.import_module(name)
+  parameter   = backend.configuration['addOnParameter']
+  try:
+    subParameter = parameter[name]
+  except KeyError:
+    print('**ERROR: No parameter for this add-on')
+    subParameter = {}
+  module.main(backend, projID, widget, subParameter)
+  return
 
 
 def restart() -> None:
