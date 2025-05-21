@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 from PySide6.QtCore import QModelIndex, QSortFilterProxyModel, Qt, Slot  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItem, QStandardItemModel  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QComboBox, QFileDialog, QHeaderView, QLineEdit,  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItem, QStandardItemModel, QRegularExpressionValidator  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QComboBox, QFileDialog, QHeaderView, QLineEdit, QPushButton, # pylint: disable=no-name-in-module
                                QMenu, QMessageBox, QTableView, QVBoxLayout, QWidget, QApplication)
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
@@ -30,13 +30,17 @@ class Table(QWidget):
     comm.changeTable.connect(self.change)
     comm.stopSequentialEdit.connect(self.stopSequentialEditFunction)
     self.stopSequentialEdit = False
-    self.data:pd.DataFrame = pd.DataFrame()
-    self.models:list[QSortFilterProxyModel] = []
+    self.data         :pd.DataFrame = pd.DataFrame()
+    self.models       :list[QSortFilterProxyModel] = []
+    self.filterSelect :list[QComboBox]             = []
+    self.filterText   :list[QLineEdit]             = []
+    self.filterInverse:list[QPushButton]           = []
+    self.filterDelete :list[QPushButton]           = []
     self.docType = ''
     self.projID = ''
     self.filterHeader:list[str] = []
     self.showAll= True
-    self.lastClickedRow = None
+    self.lastClickedRow = -1
 
     ### GUI elements
     mainL = QVBoxLayout()
@@ -112,6 +116,10 @@ class Table(QWidget):
     if docType!=self.docType or projID!=self.projID:
       logging.debug('table:changeTable |%s|%s|',docType, projID)
     self.models = []
+    self.filterSelect = []
+    self.filterText   = []
+    self.filterInverse= []
+    self.filterDelete = []
     #if not docType:  #only remove old filters, when docType changes
     #   make sure internal updates are accounted for: i.e. comment
     for i in reversed(range(self.filterL.count())):
@@ -243,28 +251,6 @@ class Table(QWidget):
       self.comm.changeTable.emit(self.docType, self.projID)
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')
-    elif command[0] is Command.ADD_FILTER:
-      # gui
-      _, rowL = widgetAndLayout('H', self.filterL, 'm', 'xl', '0', 'xl')
-      select = QComboBox()
-      select.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
-      select.addItems(self.filterHeader)
-      select.currentIndexChanged.connect(self.filterChoice)
-      select.setMinimumWidth(max(len(i) for i in self.filterHeader)*14)
-      select.setAccessibleName(str(len(self.models)))
-      rowL.addWidget(select)
-      text = QLineEdit('')
-      text.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
-      rowL.addWidget(text)
-      IconButton('fa5s.minus-square', self, [Command.DELETE_FILTER, len(self.models)], rowL)
-      # data
-      filterModel = QSortFilterProxyModel()
-      text.textChanged.connect(filterModel.setFilterRegularExpression)
-      filterModel.setSourceModel(self.models[-1])
-      filterModel.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-      filterModel.setFilterKeyColumn(0)
-      self.models.append(filterModel)
-      self.table.setModel(self.models[-1])
     elif command[0] is Command.GROUP_EDIT:
       intersection = None
       docIDs = []
@@ -378,9 +364,35 @@ class Table(QWidget):
       if redraw:
         self.change('','')  # redraw table
         self.comm.changeDetails.emit('redraw')
+    elif command[0] is Command.ADD_FILTER:
+      # gui
+      _, rowL = widgetAndLayout('H', self.filterL, 'm', 'xl', '0', 'xl')
+      self.filterSelect.append(QComboBox())
+      self.filterSelect[-1].setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
+      self.filterSelect[-1].addItems(self.filterHeader+['rating'] if 'tag' in self.filterHeader else
+                                     self.filterHeader)
+      self.filterSelect[-1].currentIndexChanged.connect(self.filterChoice)
+      self.filterSelect[-1].setMinimumWidth(max(len(i) for i in self.filterHeader)*14)
+      rowL.addWidget(self.filterSelect[-1])
+      self.filterText.append(QLineEdit(''))
+      self.filterText[-1].setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
+      self.filterText[-1].setValidator(QRegularExpressionValidator('[a-zA-Z0-9_]+'))
+      rowL.addWidget(self.filterText[-1])
+      btnInverse = IconButton('ph.selection-inverse-fill', self, [Command.SET_FILTER,    len(self.models), 'invert'], rowL, checkable=True)
+      self.filterInverse.append(btnInverse)
+      btnDelete  = IconButton('fa5s.minus-square',         self, [Command.DELETE_FILTER, len(self.models)],           rowL)
+      self.filterDelete.append(btnDelete)
+
+      # data
+      filterModel = QSortFilterProxyModel()
+      self.filterText[-1].textChanged.connect(self.filterTextChanged)
+      filterModel.setSourceModel(self.models[-1])
+      filterModel.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+      filterModel.setFilterKeyColumn(0)
+      self.models.append(filterModel)
+      self.table.setModel(self.models[-1])
     elif command[0] is Command.DELETE_FILTER: # Remove filter from list of filters
       row = command[1]
-      #print('Delete filter row', row)
       # change the information in the minus-button command
       for i in range(row, self.filterL.count()):        #e.g. model 1 is in row=0, so start in 1 for renumbering
         item_1 = self.filterL.itemAt(i)
@@ -389,7 +401,7 @@ class Table(QWidget):
           if layout_2 is not None:
             item_2   = layout_2.itemAt(2)
             if item_2 is not None:
-              item_2.widget().command[1] -= 1
+              item_2.widget().command[1] -= 1   # type: ignore[attr-defined]
       # remove row in GUI
       item_1 = self.filterL.itemAt(row-1)
       if item_1 is not None:
@@ -399,8 +411,30 @@ class Table(QWidget):
       for i in range(1, len(self.models)):
         self.models[i].setSourceModel(self.models[i-1])
       self.table.setModel(self.models[-1])
+    elif command[0] is Command.SET_FILTER:
+      self.filterTextChanged('', command[1])
     else:
       print('**ERROR table menu unknown:',command)
+    return
+
+
+  def filterTextChanged(self, _:Any, row:int=-1) -> None:
+    if row<0:
+      for idx,lineEdit in enumerate(self.filterText):
+        if lineEdit==self.sender():
+          row = idx
+    else:
+      row -= 1
+    regexStr = self.filterText[row].text()
+    if '*' in regexStr:
+      regexStr = regexStr.replace('*','\u2605')
+      if self.filterInverse[row].isChecked():
+        regexStr = f'^((?!{regexStr}).)*$'
+      else:
+        regexStr = f'^{regexStr}$'
+    elif self.filterInverse[row].isChecked():
+      regexStr = f'^((?!{regexStr}).)*$'
+    self.models[row+1].setFilterRegularExpression(regexStr)
     return
 
 
@@ -417,7 +451,7 @@ class Table(QWidget):
 
     # Check if shift is held and lastClickedRow is set
     modifiers = QApplication.keyboardModifiers()
-    if modifiers == Qt.ShiftModifier and self.lastClickedRow is not None:
+    if modifiers == Qt.ShiftModifier and self.lastClickedRow > -1:   # type: ignore[attr-defined]
       start = min(self.lastClickedRow, row)
       end = max(self.lastClickedRow, row)
       target_state = Qt.CheckState.Checked if self.itemFromRow(row)[0].checkState() == Qt.CheckState.Checked \
@@ -493,8 +527,18 @@ class Table(QWidget):
     Args:
        item (int): column number to filter by
     """
-    row = self.sender().accessibleName()                                                                     # type: ignore[attr-defined]
-    self.models[int(row)].setFilterKeyColumn(item)
+    rating = False
+    if item == self.models[-1].columnCount():  # ratings
+      item = self.filterHeader.index('tag')
+      rating = True
+    for idx,combobox in enumerate(self.filterSelect):
+      if combobox==self.sender():
+        self.models[idx+1].setFilterKeyColumn(item)
+        self.filterText[idx].setText('')
+        if rating:
+          self.filterText[idx].setValidator(QRegularExpressionValidator(r'\*+'))
+        else:
+          self.filterText[idx].setValidator(QRegularExpressionValidator(r'[a-zA-Z0-9_]+'))
     return
 
 
@@ -512,3 +556,4 @@ class Command(Enum):
   EXPORT           = 10
   CHANGE_COLUMNS   = 11
   DELETE_FILTER    = 12
+  SET_FILTER       = 13

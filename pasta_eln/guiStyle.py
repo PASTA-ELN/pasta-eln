@@ -57,7 +57,7 @@ class TextButton(QPushButton):
 class IconButton(QPushButton):
   """ Button that has only an icon"""
   def __init__(self, iconName:str, widget:QWidget, command:list[Any]=[], layout:Optional[QLayout]=None,
-               tooltip:str='', style:str='', hide:bool=False):
+               tooltip:str='', style:str='', hide:bool=False, checkable:bool=False):
     """
     Args:
       iconName (str): icon to show on button
@@ -67,21 +67,23 @@ class IconButton(QPushButton):
       tooltip (str): tooltip shown when mouse hovers the button
       style (str): css style
       hide (bool): hidden or shown initially
+      checkable (bool): can the button change its background color
     """
     super().__init__()
     icon = qta.icon(iconName, scale_factor=1)  #color change here
     self.setIcon(icon)
+    self.setCheckable(checkable)
     self.command = command
     self.clicked.connect(lambda: widget.execute(self.command))                                                    # type: ignore[attr-defined]
     self.setFixedHeight(30)
     if tooltip:
       self.setToolTip(tooltip)
     if style:
-      self.setStyleSheet(style)
+      self.setStyleSheet(f'QPushButton {{{style}}} QPushButton:checked {{border: "red"; border-width: 5px; {style}}}')
     else:
       primaryColor   = widget.comm.palette.get('primary', 'background-color')                          # type: ignore[attr-defined]
       secondaryColor = widget.comm.palette.get('secondary','color')                                    # type: ignore[attr-defined]
-      self.setStyleSheet(f'border-width: 0px; {primaryColor} {secondaryColor}')
+      self.setStyleSheet(f'QPushButton {{border-width: 0px; {primaryColor} {secondaryColor}}} QPushButton:checked {{border: 3px solid red; {primaryColor} {secondaryColor}}}')
     if hide:
       self.hide()
     if layout is not None:
