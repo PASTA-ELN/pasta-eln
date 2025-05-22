@@ -11,8 +11,9 @@ from PySide6.QtGui import QStandardItem, QStandardItemModel, QRegularExpressionV
 from PySide6.QtWidgets import (QComboBox, QFileDialog, QHeaderView, QLineEdit, QPushButton, # pylint: disable=no-name-in-module
                                QMenu, QMessageBox, QTableView, QVBoxLayout, QWidget, QApplication)
 from ..guiCommunicate import Communicate
-from ..guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
+from ..guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid, Image
 from .tableHeader import TableHeader
+from .gallery import ImageGallery
 
 
 #Scan button to more button
@@ -41,6 +42,7 @@ class Table(QWidget):
     self.filterHeader:list[str] = []
     self.showAll= True
     self.lastClickedRow = -1
+    self.flagGallery = False
 
     ### GUI elements
     mainL = QVBoxLayout()
@@ -73,9 +75,11 @@ class Table(QWidget):
 
     self.visibilityBtn = TextButton('Visibility', self, [], headerL)
     visibilityMenu = QMenu(self)
-    Action(                    'Add Filter',                       self, [Command.ADD_FILTER],  visibilityMenu)
-    self.showHidden   = Action('Show/hide hidden ___',             self, [Command.SHOW_ALL],    visibilityMenu)
-    self.toggleHidden = Action('Invert hidden status of selected', self, [Command.TOGGLE_HIDE], visibilityMenu)
+    Action(                    'Add Filter',                        self, [Command.ADD_FILTER],     visibilityMenu)
+    self.showHidden    = Action('Show/hide hidden ___',             self, [Command.SHOW_ALL],       visibilityMenu)
+    self.toggleHidden  = Action('Invert hidden status of selected', self, [Command.TOGGLE_HIDE],    visibilityMenu)
+    self.toggleGallery = Action('Toggle gallery view',              self, [Command.TOGGLE_GALLERY], visibilityMenu)
+    self.toggleGallery.setVisible(False)
     self.visibilityBtn.setMenu(visibilityMenu)
 
     more = TextButton('More', self, [], headerL)
@@ -100,8 +104,10 @@ class Table(QWidget):
     header.setMaximumSectionSize(self.comm.backend.configuration['GUI']['maxTableColumnWidth'])
     header.setStretchLastSection(True)
     mainL.addWidget(self.table)
+    self.gallery = ImageGallery(self.comm)
+    self.gallery.setVisible(False)
+    mainL.addWidget(self.gallery)
     self.setLayout(mainL)
-
 
 
   @Slot(str, str)                                       # type: ignore[arg-type]
@@ -144,6 +150,12 @@ class Table(QWidget):
     if docType!='':
       self.docType = docType
       self.projID  = projID
+    if 'measurement' in self.docType:
+      self.toggleGallery.setVisible(True)
+    else:
+      self.toggleGallery.setVisible(False)
+      self.flagGallery = False
+    # start tables: collect data
     if self.docType=='_tags_':
       self.addBtn.hide()
       if self.showAll:
@@ -231,11 +243,19 @@ class Table(QWidget):
         item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
       model.setItem(i, j, item)
     self.models.append(model)                                                                                # type: ignore[arg-type]
-    self.table.setModel(self.models[-1])
-    self.table.show()
-    self.table.horizontalHeader().resizeSections(QHeaderView.ResizeMode.ResizeToContents)
-    self.table.horizontalHeader().setStretchLastSection(True)
-    self.table.sortByColumn(0, Qt.SortOrder.AscendingOrder)
+    if self.flagGallery:
+      print('create gallery')
+      self.gallery.updateGrid(model)
+      self.gallery.setVisible(True)
+      self.table.setVisible(False)
+    else:
+      self.table.setModel(self.models[-1])
+      self.table.horizontalHeader().resizeSections(QHeaderView.ResizeMode.ResizeToContents)
+      self.table.horizontalHeader().setStretchLastSection(True)
+      self.table.sortByColumn(0, Qt.SortOrder.AscendingOrder)
+      self.table.show()
+      self.gallery.setVisible(False)
+      self.table.setVisible(True)
     return
 
 
@@ -364,6 +384,9 @@ class Table(QWidget):
       if redraw:
         self.change('','')  # redraw table
         self.comm.changeDetails.emit('redraw')
+    elif command[0] is Command.TOGGLE_GALLERY:
+      self.flagGallery = not self.flagGallery
+      self.change('','')    # redraw table/gallery
     elif command[0] is Command.ADD_FILTER:
       # gui
       _, rowL = widgetAndLayout('H', self.filterL, 'm', 'xl', '0', 'xl')
@@ -557,3 +580,4 @@ class Command(Enum):
   CHANGE_COLUMNS   = 11
   DELETE_FILTER    = 12
   SET_FILTER       = 13
+  TOGGLE_GALLERY   = 14
