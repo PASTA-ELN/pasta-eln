@@ -1,45 +1,116 @@
+""" Displays a scrollable grid of images (PNG, JPG, SVG) """
 from PySide6.QtWidgets import (QWidget, QLabel, QVBoxLayout, QScrollArea, QGridLayout, QPushButton)
-from PySide6.QtGui import QPixmap, QImage
+from PySide6.QtGui import QPixmap, QImage, QMouseEvent, QStandardItemModel
 from PySide6.QtCore import Qt, Signal, QByteArray
 from PySide6.QtSvgWidgets import QSvgWidget
+from ..guiCommunicate import Communicate
 
 IMG_SIZE = 300
 
 class ClickableImage(QLabel):
+  """
+  A QLabel subclass that emits signals when clicked or double-clicked
+  """
   clicked = Signal(str)
   doubleClicked = Signal(str)
 
-  def __init__(self, image_id):
+  def __init__(self, docID: str):
+    """
+    Initializes the ClickableImage
+
+    Args:
+      docID: The unique identifier for the image
+    """
     super().__init__()
-    self.image_id = image_id
+    self.docID = docID
 
-  def mousePressEvent(self, event):
-    if event.button() == Qt.LeftButton:
-      self.clicked.emit(self.image_id)
 
-  def mouseDoubleClickEvent(self, event):
-    if event.button() == Qt.LeftButton:
-      self.doubleClicked.emit(self.image_id)
+  def mousePressEvent(self, event:QMouseEvent) -> None:
+    """
+    Handles mouse press events. Emits 'clicked' signal on left-button press
+
+    Args:
+      event: The QMouseEvent
+    """
+    if event.button() == Qt.LeftButton:                                           # type: ignore[attr-defined]
+      self.clicked.emit(self.docID)
+    return
+
+
+  def mouseDoubleClickEvent(self, event:QMouseEvent) -> None:
+    """
+    Handles mouse double-click events. Emits 'doubleClicked' signal on left-button double-click
+
+    Args:
+      event: The QMouseEvent
+    """
+    if event.button() == Qt.LeftButton:                                           # type: ignore[attr-defined]
+      self.doubleClicked.emit(self.docID)
+    return
+
 
 
 
 class ClickableSvgButton(QPushButton):
+  """
+  A QPushButton subclass specifically for displaying SVG images that
+  emits a signal when double-clicked
+  #TODO merge with ClickableImage and Image (guiStyle)
+  """
+  clicked = Signal(str)
   doubleClicked = Signal(str)
 
-  def __init__(self, image_id):
+  def __init__(self, docID:str):
+    """
+    Initializes the ClickableSvgButton
+
+    Args:
+      docID: The unique identifier for the SVG image
+    """
     super().__init__()
-    self.image_id = image_id
+    self.docID = docID
     self.setFixedSize(200, 200)
     self.setStyleSheet("border: none;")
 
-  def mouseDoubleClickEvent(self, event):
-    if event.button() == Qt.LeftButton:
-      self.doubleClicked.emit(self.image_id)
+
+  def mousePressEvent(self, event:QMouseEvent) -> None:
+    """
+    Handles mouse press events. Emits 'clicked' signal on left-button press
+
+    Args:
+      event: The QMouseEvent
+    """
+    if event.button() == Qt.LeftButton:                                           # type: ignore[attr-defined]
+      self.clicked.emit(self.docID)
+    return
+
+
+  def mouseDoubleClickEvent(self, event:QMouseEvent) -> None:
+    """
+    Handles mouse double-click events. Emits 'doubleClicked' signal on left-button double-click
+
+    Args:
+      event: The QMouseEvent
+    """
+    if event.button() == Qt.LeftButton:                                           # type: ignore[attr-defined]
+      self.doubleClicked.emit(self.docID)
+    return
+
 
 
 
 class ImageGallery(QWidget):
-  def __init__(self, comm):
+  """
+  A widget that displays a scrollable grid of images (PNG, JPG, SVG)
+  Images can be clicked or double-clicked to trigger actions
+  """
+  def __init__(self, comm:Communicate):
+    """
+    Initializes the ImageGallery
+
+    Args:
+      comm: The communication object used to interact with the backend and other UI components
+    """
     super().__init__()
     self.comm = comm
     layout = QVBoxLayout(self)
@@ -50,50 +121,116 @@ class ImageGallery(QWidget):
     scrollArea.setWidget(scrollContent)
     layout.addWidget(scrollArea)
 
-  def updateGrid(self, model) -> None:
+  def updateGrid(self, model:QStandardItemModel) -> None:
+    """
+    Populates or updates the image grid based on the provided model
+
+    Clears the existing grid and then iterates through the model to fetch
+    and display images. It handles both SVG and raster image formats (like PNG, JPG)
+
+    Args:
+      model: The data model containing information about the images to display.
+             The first column of each row is expected to have an 'accessibleText'
+    """
+    # Clear existing widgets from the grid
+    while self.gridL.count():
+      child = self.gridL.takeAt(0)
+      if child.widget():
+        child.widget().deleteLater()
+
     row, col = 0, 0
     for idx in range(model.rowCount()):
       docID = model.itemFromIndex(model.index(idx,0)).accessibleText()
-      image = self.comm.backend.db.getDoc(docID)['image']
+      image_data = self.comm.backend.db.getDoc(docID)
+      if not image_data or 'image' not in image_data:
+        # Handle cases where image data might be missing or malformed
+        print(f"Warning: Image data not found or malformed for docID: {docID}")
+        continue
+      image = image_data['image']
+
       if image.startswith('<?xml version="1.0"'):
         # Wrap QSvgWidget in a Clickable subclass of QPushButton
         button = ClickableSvgButton(docID)
         button.setFixedSize(IMG_SIZE, IMG_SIZE)
-        button.setStyleSheet("border: none;")  # Hide button border
+        # button.setStyleSheet("border: none;") # Already set in ClickableSvgButton.__init__
         svgWidget = QSvgWidget()
         svgWidget.renderer().load(bytearray(image, encoding='utf-8'))
-        if svgWidget.height()>svgWidget.width():
-          svgWidget.setMaximumSize(int(float(svgWidget.width())/float(svgWidget.height())*IMG_SIZE-4) ,IMG_SIZE-4)
+        # Calculate aspect ratio for SVG
+        svg_width = svgWidget.renderer().defaultSize().width()
+        svg_height = svgWidget.renderer().defaultSize().height()
+
+        if svg_width == 0 or svg_height == 0: # Avoid division by zero
+          new_width, new_height = IMG_SIZE -4, IMG_SIZE -4
+        elif svg_height > svg_width:
+          new_width = int(float(svg_width) / float(svg_height) * (IMG_SIZE - 4))
+          new_height = IMG_SIZE - 4
         else:
-          svgWidget.setMaximumSize(IMG_SIZE-4, int(float(svgWidget.height())/float(svgWidget.width())*IMG_SIZE-4))
+          new_width = IMG_SIZE - 4
+          new_height = int(float(svg_height) / float(svg_width) * (IMG_SIZE - 4))
+        svgWidget.setMaximumSize(new_width, new_height)
+
         layout = QVBoxLayout(button)
         layout.addWidget(svgWidget)
-        layout.setAlignment(Qt.AlignCenter)
-        button.clicked.connect(lambda id=docID: self.imageClicked(id))
+        layout.setAlignment(Qt.AlignCenter)                                       # type: ignore[attr-defined]
+        button.clicked.connect(lambda checked=False, docID=docID: self.imageClicked(docID))
         button.doubleClicked.connect(self.image2Clicked)
         self.gridL.addWidget(button, row, col)
       else:  # PNG et al
-        byteArr = QByteArray.fromBase64(bytearray(image[22:] if image[21]==',' else image[23:], encoding='utf-8'))
-        imageW = QImage()
-        imageType = image[11:15].upper()
-        imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType) #type: ignore[arg-type]
-        pixmap = QPixmap.fromImage(imageW).scaled(IMG_SIZE, IMG_SIZE, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        label = ClickableImage(docID)
-        label.setPixmap(pixmap)
-        label.setAlignment(Qt.AlignCenter)
-        label.clicked.connect(self.imageClicked)
-        label.doubleClicked.connect(self.image2Clicked)
-        self.gridL.addWidget(label, row, col)
+        # Basic check for base64 data URI
+        if "base64," in image:
+          try:
+            header, base64_data = image.split(',', 1)
+            # Extract image type from header (e.g., "data:image/png;base64")
+            img_type_part = header.split(';')[0].split('/')[-1]
+            imageType = img_type_part.upper()
+
+            byteArr = QByteArray.fromBase64(bytearray(base64_data, encoding='utf-8'))
+            imageW = QImage()
+            # Ensure format string is clean (e.g. PNG, JPEG)
+            fmt = imageType.replace(';', '')
+            if imageW.loadFromData(byteArr, format=fmt):
+              pixmap = QPixmap.fromImage(imageW).scaled(IMG_SIZE,IMG_SIZE,Qt.KeepAspectRatio,Qt.SmoothTransformation) # type: ignore[attr-defined]
+              label = ClickableImage(docID)
+              label.setPixmap(pixmap)
+              label.setAlignment(Qt.AlignCenter)                            # type: ignore[attr-defined]
+              label.clicked.connect(self.imageClicked)
+              label.doubleClicked.connect(self.image2Clicked)
+              self.gridL.addWidget(label, row, col)
+            else:
+              #TODO next lines should be in details
+              print(f"Warning: Could not load image data for docID: {docID} with format {fmt}")
+          except ValueError:
+            print(f"Warning: Malformed base64 image data URI for docID: {docID}")
+          except Exception as e:
+            print(f"Error processing image for docID {docID}: {e}")
+        else:
+          print(f"Warning: Image for docID {docID} is not in expected base64 format.")
       # end of loop
       col += 1
-      if col >= 4:
+      if col >= 4: # Assuming 4 columns
         col = 0
         row += 1
     return
 
-  def imageClicked(self, docID):
-    self.comm.changeDetails.emit(docID)
 
-  def image2Clicked(self, docID):
+  def imageClicked(self, docID:str) -> None:
+    """
+    Handles single-click events on an image
+
+    Args:
+      docID: The unique identifier of the clicked image/document
+    """
+    self.comm.changeDetails.emit(docID)
+    return
+
+
+  def image2Clicked(self, docID:str) -> None:
+    """
+    Handles double-click events on an image
+
+    Args:
+      docID: The unique identifier of the double-clicked image/document
+    """
     doc = self.comm.backend.db.getDoc(docID)
     self.comm.formDoc.emit(doc)
+    return

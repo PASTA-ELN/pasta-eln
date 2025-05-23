@@ -244,7 +244,6 @@ class Table(QWidget):
       model.setItem(i, j, item)
     self.models.append(model)                                                                                # type: ignore[arg-type]
     if self.flagGallery:
-      print('create gallery')
       self.gallery.updateGrid(model)
       self.gallery.setVisible(True)
       self.table.setVisible(False)
