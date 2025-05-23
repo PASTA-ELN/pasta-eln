@@ -20,6 +20,14 @@ PASTA-ELN (adaPtive mAterials Science meTadatA - Electronic Lab Notebook) provid
 - run new pylint
 - check that guiStyle buttons are added; Just using layout is not enough
 
+USE LLMs to
+- ensure that two empty lines between functions
+- ensure return statements
+- right-align #type: ignore
+- no period at end of line
+- find edge cases, with if end except
+- print(error) statements into logging.error
+
 ---
 
 ## Developers: Windows
