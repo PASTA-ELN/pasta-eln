@@ -39,13 +39,13 @@ Manual Installation
 3. Click **"Install Now"**.
 4. Open Command Prompt (cmd) and copy-paste following content:
 
-    .. code-block:: bash
+.. code-block:: bash
 
-      pip install pasta-eln
-      python -m pasta_eln.installationTools install %UserProfile%\Documents\PASTA_ELN_DATA
-      python -m pasta_eln.installationTools shortcut
-      python -m pasta_eln.installationTools example
-      python -m pasta_eln.gui
+   pip install pasta-eln
+   python -m pasta_eln.installationTools install %UserProfile%\Documents\PASTA_ELN_DATA
+   python -m pasta_eln.installationTools shortcut
+   python -m pasta_eln.installationTools example
+   python -m pasta_eln.gui
 
 **Recommendation**: Install additional packages for enhanced functionality and test python installation:
 
