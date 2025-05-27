@@ -28,7 +28,8 @@ Automatic Installation
 
 .. raw:: html
 
-   Download <a href="_source/InstallPastaELN.bat">Installation batch script</a> and execute it
+   Download <a href="https://raw.githubusercontent.com/PASTA-ELN/pasta-eln/refs/heads/main/docs/source/_static/InstallPastaELN.bat">
+   Installation batch script</a> and execute it
    </div>
 
 
@@ -42,7 +43,7 @@ Manual Installation
 .. code-block:: bash
 
    pip install pasta-eln
-   python -m pasta_eln.installationTools install %UserProfile%\Documents\PASTA_ELN_DATA
+   python -m pasta_eln.installationTools install "%UserProfile%\Documents\PASTA_ELN_DATA"
    python -m pasta_eln.installationTools shortcut
    python -m pasta_eln.installationTools example
    python -m pasta_eln.gui
