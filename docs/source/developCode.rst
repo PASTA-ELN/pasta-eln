@@ -152,4 +152,3 @@ General notes
 
 - Find qt-awesome icons: qta-browser
 - print works great in frontend and backend
-

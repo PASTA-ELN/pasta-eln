@@ -1,8 +1,8 @@
 """ Displays a scrollable grid of images (PNG, JPG, SVG) """
-from PySide6.QtWidgets import (QWidget, QLabel, QVBoxLayout, QScrollArea, QGridLayout, QPushButton)
-from PySide6.QtGui import QPixmap, QImage, QMouseEvent, QStandardItemModel
-from PySide6.QtCore import Qt, Signal, QByteArray
+from PySide6.QtCore import QByteArray, Qt, Signal
+from PySide6.QtGui import QImage, QMouseEvent, QPixmap, QStandardItemModel
 from PySide6.QtSvgWidgets import QSvgWidget
+from PySide6.QtWidgets import QGridLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
 from ..guiCommunicate import Communicate
 
 IMG_SIZE = 300
@@ -70,7 +70,7 @@ class ClickableSvgButton(QPushButton):
     super().__init__()
     self.docID = docID
     self.setFixedSize(200, 200)
-    self.setStyleSheet("border: none;")
+    self.setStyleSheet('border: none;')
 
 
   def mousePressEvent(self, event:QMouseEvent) -> None:
@@ -175,36 +175,34 @@ class ImageGallery(QWidget):
         button.clicked.connect(lambda checked=False, docID=docID: self.imageClicked(docID))
         button.doubleClicked.connect(self.image2Clicked)
         self.gridL.addWidget(button, row, col)
-      else:  # PNG et al
-        # Basic check for base64 data URI
-        if "base64," in image:
-          try:
-            header, base64_data = image.split(',', 1)
-            # Extract image type from header (e.g., "data:image/png;base64")
-            img_type_part = header.split(';')[0].split('/')[-1]
-            imageType = img_type_part.upper()
+      elif 'base64,' in image:  # Basic check for base64 data URI
+        try:
+          header, base64_data = image.split(',', 1)
+          # Extract image type from header (e.g., "data:image/png;base64")
+          img_type_part = header.split(';')[0].split('/')[-1]
+          imageType = img_type_part.upper()
 
-            byteArr = QByteArray.fromBase64(bytearray(base64_data, encoding='utf-8'))
-            imageW = QImage()
-            # Ensure format string is clean (e.g. PNG, JPEG)
-            fmt = imageType.replace(';', '')
-            if imageW.loadFromData(byteArr, format=fmt):
-              pixmap = QPixmap.fromImage(imageW).scaled(IMG_SIZE,IMG_SIZE,Qt.KeepAspectRatio,Qt.SmoothTransformation) # type: ignore[attr-defined]
-              label = ClickableImage(docID)
-              label.setPixmap(pixmap)
-              label.setAlignment(Qt.AlignCenter)                            # type: ignore[attr-defined]
-              label.clicked.connect(self.imageClicked)
-              label.doubleClicked.connect(self.image2Clicked)
-              self.gridL.addWidget(label, row, col)
-            else:
-              #TODO next lines should be in details
-              print(f"Warning: Could not load image data for docID: {docID} with format {fmt}")
-          except ValueError:
-            print(f"Warning: Malformed base64 image data URI for docID: {docID}")
-          except Exception as e:
-            print(f"Error processing image for docID {docID}: {e}")
-        else:
-          print(f"Warning: Image for docID {docID} is not in expected base64 format.")
+          byteArr = QByteArray.fromBase64(bytearray(base64_data, encoding='utf-8'))
+          imageW = QImage()
+          # Ensure format string is clean (e.g. PNG, JPEG)
+          fmt = imageType.replace(';', '')
+          if imageW.loadFromData(byteArr, format=fmt):
+            pixmap = QPixmap.fromImage(imageW).scaled(IMG_SIZE,IMG_SIZE,Qt.KeepAspectRatio,Qt.SmoothTransformation) # type: ignore[attr-defined]
+            label = ClickableImage(docID)
+            label.setPixmap(pixmap)
+            label.setAlignment(Qt.AlignCenter)                            # type: ignore[attr-defined]
+            label.clicked.connect(self.imageClicked)
+            label.doubleClicked.connect(self.image2Clicked)
+            self.gridL.addWidget(label, row, col)
+          else:
+            #TODO next lines should be in details
+            print(f"Warning: Could not load image data for docID: {docID} with format {fmt}")
+        except ValueError:
+          print(f"Warning: Malformed base64 image data URI for docID: {docID}")
+        except Exception as e:
+          print(f"Error processing image for docID {docID}: {e}")
+      else:
+        print(f"Warning: Image for docID {docID} is not in expected base64 format.")
       # end of loop
       col += 1
       if col >= 4: # Assuming 4 columns

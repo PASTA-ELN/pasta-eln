@@ -429,7 +429,7 @@ max-args=10  #Steffen's change
 max-positional-arguments=10
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=25
+max-attributes=32 #Steffen's change
 
 # Maximum number of boolean expressions in a if statement
 max-bool-expr=5

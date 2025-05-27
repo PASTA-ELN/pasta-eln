@@ -7,13 +7,14 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 from PySide6.QtCore import QModelIndex, QSortFilterProxyModel, Qt, Slot  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItem, QStandardItemModel, QRegularExpressionValidator  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QComboBox, QFileDialog, QHeaderView, QLineEdit, QPushButton, # pylint: disable=no-name-in-module
-                               QMenu, QMessageBox, QTableView, QVBoxLayout, QWidget, QApplication)
+from PySide6.QtGui import (QRegularExpressionValidator, QStandardItem,  # pylint: disable=no-name-in-module
+                           QStandardItemModel)
+from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView,  # pylint: disable=no-name-in-module
+                               QLineEdit, QMenu, QMessageBox, QPushButton, QTableView, QVBoxLayout, QWidget)
 from ..guiCommunicate import Communicate
-from ..guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid, Image
-from .tableHeader import TableHeader
+from ..guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
 from .gallery import ImageGallery
+from .tableHeader import TableHeader
 
 
 #Scan button to more button
@@ -234,11 +235,11 @@ class Table(QWidget):
       if j == 0:
         doc = self.comm.backend.db.getDoc(self.data['id'][i])
         if [b for b in doc['branch'] if False in b['show']]:
-            item.setText(f'{item.text()}  \U0001F441')
+          item.setText(f'{item.text()}  \U0001F441')
         item.setAccessibleText(doc['id'])
         if self.docType != 'x0':
-            item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
-            item.setCheckState(Qt.CheckState.Unchecked)
+          item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+          item.setCheckState(Qt.CheckState.Unchecked)
       else:
         item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
       model.setItem(i, j, item)
@@ -441,6 +442,12 @@ class Table(QWidget):
 
 
   def filterTextChanged(self, _:Any, row:int=-1) -> None:
+    """ text in line-edit in the filter is changed: update regex
+
+    Args:
+      _ (Any): some item pyside uses
+      row (int): row number
+    """
     if row<0:
       for idx,lineEdit in enumerate(self.filterText):
         if lineEdit==self.sender():

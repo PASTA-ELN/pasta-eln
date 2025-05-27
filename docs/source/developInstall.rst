@@ -89,4 +89,3 @@ Test (you can edit the code in venvPastaTest/lib/python3.12/site-packages/pasta_
 
    <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
    <span style="float: right"><img src="_static/pasta_logo.svg" alt="logo" style="width: 60px;"/></span>
-

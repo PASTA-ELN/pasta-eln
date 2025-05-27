@@ -4,8 +4,8 @@ THIS IS A VERY ADVANCED ADDON TUTORIAL
 This tutorial teaches
 - how to group import metadata
 """
-import pandas as pd
 from pathlib import Path
+import pandas as pd
 from PySide6.QtWidgets import QFileDialog
 from pasta_eln.guiStyle import showMessage
 from pasta_eln.sqlite import MAIN_ORDER
