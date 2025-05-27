@@ -445,7 +445,6 @@ class Table(QWidget):
     """ text in line-edit in the filter is changed: update regex
 
     Args:
-      _ (Any): some item pyside uses
       row (int): row number
     """
     if row<0:
