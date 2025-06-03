@@ -5,6 +5,7 @@ import os
 import platform
 import shutil
 import sys
+import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -143,9 +144,9 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
       shutil.rmtree(dirName)
       os.makedirs(dirName)
       if platform.system()=='Windows':
-        print('Try-Except unnecessary')
+        logging.info('recreate example data: remove folder went as expected')
     except Exception:
-      pass
+      logging.error('recreate example data: remove folder impossible possible %s', traceback.format_exc())
   if callbackPercent is not None:
     callbackPercent(1)
   backend = Backend(projectGroup)
