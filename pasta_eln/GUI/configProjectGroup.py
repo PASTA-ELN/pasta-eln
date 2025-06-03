@@ -241,8 +241,8 @@ class ProjectGroup(QDialog):
         self.changeButtonOnTest(False, self.row3Button, 'Wrong server address')
 
     elif command[0] is Command.TEST_API_HELP:
-      link = f'OR go to {config["remote"]["url"][:-7]}ucp.php?tab=4\n\n' if config['remote'].get('url','') else ''
-      showMessage(self, 'Help', f'### How to get an api key to access the server:\n\nGo to f{link}\n\n'
+      link = f'Go to: {config["remote"]["url"][:-7]}ucp.php?tab=4\n\n' if config['remote'].get('url','') else ''
+      showMessage(self, 'Help', f'### How to get an api key to access the server:\n\n{link}'
                   'On the elabFTW server:\n\nClick on the User Symbol in the top right\n\nGo to "Settings"\n\n'
                   'Open the tab "API keys"\n\nCreate a new API key:\n\n  a) Specify a name, like "pasta_eln"\n\n  b) '
                   'Change the permissions to "Read/Write"\n\n  c) Click on "Generate new API key"\n\nCopy+Paste that '

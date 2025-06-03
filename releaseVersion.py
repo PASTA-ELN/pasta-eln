@@ -81,6 +81,7 @@ def prevVersionsFromPypi(k:int=15) -> None:
   releases = [x for _, x in sorted(zip(uploadTimes, releases))]
   uploadTimes = sorted(uploadTimes)
   print('Version information from pypi')
+  k = min(k, len(releases)+1)
   for i in range(1, k):
     print(f'  {releases[-i]:8s} was released {(datetime.datetime.now()-datetime.datetime.strptime(uploadTimes[-i],"%Y-%m-%dT%H:%M:%S")).days:3d} days ago')
   return
@@ -93,16 +94,6 @@ def newVersion(level:int=2) -> None:
   Args:
     level (int): which number of the version to increase 0=mayor,1=minor,2=sub
   """
-  # last 10 releases from pypi
-  url = 'https://pypi.python.org/pypi/pasta-eln/json'
-  with urlopen(url) as response:
-    data_json = json.loads(response.read())
-  labels, dates = [], []
-  for release in data_json['releases']:
-    labels.append(release)
-    dates.append(data_json['releases'][release][0]['upload_time'])
-  print('Latest versions on Pypi')
-  print('  '+', '.join([x for _, x in sorted(zip(dates, labels))][-10:]))
   print('Create new version...')
   prevVersionsFromPypi()
   #get old version number
