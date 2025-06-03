@@ -740,6 +740,7 @@ class SqlLiteDB:
           cmd += f" and branches.stack LIKE '{startKey}%'"
         dfTags = pd.read_sql_query(cmd, self.connection, index_col='id').fillna('')
         dfTags = dfTags.groupby(['id'])['tag'].apply(lambda x: ', '.join(set(x))).reset_index().set_index('id')
+        dfTags.rename(columns={'tag':'tags'}, inplace=True)
         df = df.join(dfTags)
       if 'qrCodes' in viewColumns:
         cmd = 'SELECT main.id, qrCodes.qrCode FROM main INNER JOIN qrCodes USING(id) INNER JOIN branches '\
@@ -750,6 +751,7 @@ class SqlLiteDB:
           cmd += f" and branches.stack LIKE '{startKey}%'"
         dfQrCodes = pd.read_sql_query(cmd, self.connection, index_col='id').fillna('')
         dfQrCodes = dfQrCodes.groupby(['id'])['qrCode'].apply(', '.join).reset_index().set_index('id')
+        dfQrCodes.rename(columns={'qrCode':'qrCodes'}, inplace=True)
         df = df.join(dfQrCodes)
       if metadataKeys:= [f'properties.key == "{i}"' for i in viewColumns if i not in MAIN_ORDER+['tags']]:
         cmd = 'SELECT main.id, properties.key, properties.value FROM main INNER JOIN properties USING(id) '\
@@ -763,7 +765,7 @@ class SqlLiteDB:
         dfParams.columns.name = None                                                            # Flatten the columns
         df = df.join(dfParams)
       # final sorting of columns
-      columnOrder = ['tag' if i=='tags' else 'qrCode' if i=='qrCodes'
+      columnOrder = ['qrCode' if i=='qrCodes'
                      else i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]
       df = df.reset_index().reindex(columnOrder, axis=1)
       df = df.rename(columns={i:i[1:] for i in columnOrder if i.startswith('.') })

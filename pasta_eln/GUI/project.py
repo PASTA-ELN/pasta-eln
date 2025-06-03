@@ -113,9 +113,10 @@ class Project(QWidget):
     """
     if self.allDetails is None:
       return
-    self.allDetails.document().setTextWidth(self.width())
+    self.allDetails.document().setTextWidth(self.width()-20)
     height:int = self.allDetails.document().size().toTuple()[1]  # type: ignore[index]
     self.allDetails.setMaximumHeight(height+12)
+    self.allDetails.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     return
 
 

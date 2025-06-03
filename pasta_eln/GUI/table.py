@@ -198,6 +198,7 @@ class Table(QWidget):
     nRows, nCols = self.data.shape
     model = QStandardItemModel(nRows, nCols-1)
     model.setHorizontalHeaderLabels(self.filterHeader)
+    print('steffen', self.filterHeader)
     for i, j in itertools.product(range(nRows), range(nCols-1)):
       value = self.data.iloc[i,j]
       if self.docType=='_tags_':  #tags list
@@ -220,7 +221,7 @@ class Table(QWidget):
         item = QStandardItem('oo') # \u260D')
         # item.setFont(QFont("Helvetica [Cronyx]", 16))
       else:
-        if self.filterHeader[j]=='tag':
+        if self.filterHeader[j]=='tags':
           tags = [i.strip() for i in value.split(',')]
           if '_curated' in tags:
             tags[tags.index('_curated')] = '_curated_'
