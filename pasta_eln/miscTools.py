@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import platform
+import subprocess
 import sys
 import traceback
 from collections.abc import Mapping
@@ -13,7 +14,7 @@ from typing import Any, Union
 from urllib import request
 from PySide6.QtWidgets import QWidget  # pylint: disable=no-name-in-module
 from .fixedStringsJson import CONF_FILE_NAME
-
+import pasta_eln
 
 class Bcolors:
   """
@@ -252,6 +253,26 @@ def restart() -> None:
   except Exception:
     os.execv(sys.executable, ['python3','-m','pasta_eln.gui']) #started for programming or debugging
   return
+
+
+def testNewPastaVersion(update:bool=False) -> bool:
+  """ Test if this version is up to date with the latest version on pypi
+  Args:
+    update (bool): update to latest version
+
+  Returns:
+    bool: if up to date
+  """
+  if update:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pasta-eln"])
+    restart()
+  url = 'https://pypi.org/pypi/pasta-eln/json'
+  with request.urlopen(url) as response:
+      data = json.loads(response.read())
+  releases = list(data['releases'].keys())
+  largestVersionOnPypi = sorted(releases)[-1]
+  upToDate = largestVersionOnPypi == pasta_eln.__version__
+  return upToDate
 
 
 class DummyProgressBar():

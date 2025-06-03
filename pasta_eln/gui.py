@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Union
 from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox # pylint: disable=no-name-in-module
 from pasta_eln import __version__
 from .backend import Backend
 from .elabFTWsync import Pasta2Elab
@@ -25,7 +25,7 @@ from .GUI.sidebar import Sidebar
 from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN, importELN
-from .miscTools import restart, updateAddOnList
+from .miscTools import restart, updateAddOnList, testNewPastaVersion
 
 os.environ['QT_API'] = 'pyside6'
 
@@ -107,6 +107,13 @@ class MainWindow(QMainWindow):
     # mainLayout.addWidget(sidebarScroll)
     mainLayout.addWidget(self.sidebar)
     mainLayout.addWidget(body)
+    # tests that run at start-up
+    if not testNewPastaVersion(False):
+      button = QMessageBox.question(self, 'Update?', 'There is a new version of PASTA-ELN available. Do you want to update?',
+                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+      if button == QMessageBox.StandardButton.Yes:
+        testNewPastaVersion(update=True)
+    # initialize things that might change
     self.initialize()
 
 
