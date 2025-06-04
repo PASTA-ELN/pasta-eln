@@ -108,7 +108,7 @@ class MainWindow(QMainWindow):
     mainLayout.addWidget(self.sidebar)
     mainLayout.addWidget(body)
     # tests that run at start-up
-    if not testNewPastaVersion(False):
+    if self.backend.configuration['GUI']['checkForUpdates']=='Yes' or not testNewPastaVersion(False):
       button = QMessageBox.question(self, 'Update?', 'There is a new version of PASTA-ELN available. Do you want to update?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:

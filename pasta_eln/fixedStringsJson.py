@@ -110,7 +110,8 @@ configurationGUI: dict[str, Any] = {
     'theme': ['Color style', 'none', ['amber', 'blue', 'cyan', 'pink', 'purple', 'teal', 'yellow', 'none']],
     'loggingLevel': ['Logging level (more->less)', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR']],
     'autosave': ['Autosave entries in form', 'No', ['Yes', 'No']],
-    'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']]
+    'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']],
+    'checkForUpdates': ['Check for updates on startup', 'Yes', ['Yes', 'No']]
   },
   'dimensions': {
     'sidebarWidth': ['Sidebar width', 280, [220, 280, 340]],
