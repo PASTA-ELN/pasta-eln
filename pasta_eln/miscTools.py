@@ -13,8 +13,8 @@ from pathlib import Path
 from typing import Any, Union
 from urllib import request
 from PySide6.QtWidgets import QWidget  # pylint: disable=no-name-in-module
-from .fixedStringsJson import CONF_FILE_NAME
 import pasta_eln
+from .fixedStringsJson import CONF_FILE_NAME
 
 class Bcolors:
   """
@@ -268,7 +268,7 @@ def testNewPastaVersion(update:bool=False) -> bool:
     restart()
   url = 'https://pypi.org/pypi/pasta-eln/json'
   with request.urlopen(url) as response:
-      data = json.loads(response.read())
+    data = json.loads(response.read())
   releases = list(data['releases'].keys())
   largestVersionOnPypi = sorted(releases)[-1]
   upToDate = largestVersionOnPypi == pasta_eln.__version__
