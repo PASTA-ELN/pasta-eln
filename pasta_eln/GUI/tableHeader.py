@@ -41,6 +41,7 @@ class TableHeader(QDialog):
     self.choicesW.addItems(list(self.allSet.difference(self.selectedList)))
     leftL.addWidget(self.choicesW)
     self.inputLine = QLineEdit()
+    self.inputLine.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     leftL.addWidget(self.inputLine)
     _, centerL = widgetAndLayout('V', bodyL)
     IconButton('fa5s.angle-right',        self, [Command.ADD],      centerL, 'add to right')
@@ -101,7 +102,7 @@ class TableHeader(QDialog):
     if btn.text().endswith('Cancel'):
       self.reject()
     elif btn.text().endswith('Save'):
-      self.selectedList = [f'.{i}' if i not in MAIN_ORDER else i for i in self.selectedList]
+      self.selectedList = [f'.{i}' if i not in MAIN_ORDER and '.' not in i else i for i in self.selectedList]
       self.db.dataHierarchyChangeView(self.docType, self.selectedList)
       restart()
     elif btn.text().endswith('Help'):
