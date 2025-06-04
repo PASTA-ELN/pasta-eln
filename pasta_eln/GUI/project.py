@@ -166,6 +166,8 @@ class Project(QWidget):
       self.btnAddSubfolder.setVisible(False)
     self.tree.expanded.connect(lambda index: self.actionExpandCollapse(index, True))
     self.tree.collapsed.connect(lambda index: self.actionExpandCollapse(index, False))
+    if docID:
+      self.tree.scrollToDoc(docID)
     return
 
 

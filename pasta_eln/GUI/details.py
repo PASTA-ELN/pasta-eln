@@ -29,7 +29,7 @@ class Details(QScrollArea):
     self.setWidgetResizable(True)
     self.setWidget(self.mainW)
 
-    headerW, self.headerL = widgetAndLayout('H', self.mainL, top='s')
+    headerW, self.headerL = widgetAndLayout('H', self.mainL, spacing='m', top='s', right='m')
     headerW.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     headerW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
     self.specialW, self.specialL = widgetAndLayout('V', self.mainL, top='s')
@@ -106,7 +106,8 @@ class Details(QScrollArea):
     label = self.doc['name'] if len(self.doc['name'])<80 else self.doc['name'][:77]+'...'
     Label(label,'h1', self.headerL)
     self.headerL.addStretch(1)
-    IconButton('fa5s.times-circle', self, [Command.CLOSE], self.headerL, tooltip='Close')
+    IconButton('mdi.file-tree-outline', self, [Command.TO_PROJECT], self.headerL, tooltip='Change to project')
+    IconButton('fa5s.times-circle',     self, [Command.CLOSE],      self.headerL, tooltip='Close')
     if 'metaVendor' not in self.doc:
       self.btnVendor.hide()
     if 'metUser' not in self.doc:
@@ -157,6 +158,8 @@ class Details(QScrollArea):
         getattr(self, f'meta{command[1]}W').hide()
     elif command[0] is Command.CLOSE:
       self.comm.changeTable.emit('','')
+    elif command[0] is Command.TO_PROJECT:
+      self.comm.changeProject.emit(self.doc['branch'][0]['stack'][0], self.doc['id'])
     elif isinstance(command[0], CommandMenu):
       if executeContextMenu(self, command):
         self.comm.changeTable.emit('','')
@@ -205,3 +208,4 @@ class Command(Enum):
   """ Commands used in this file """
   SHOW             = 1
   CLOSE            = 2
+  TO_PROJECT       = 3

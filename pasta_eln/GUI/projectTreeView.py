@@ -8,10 +8,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 from PySide6.QtCore import Qt  # pylint: disable=no-name-in-module
-from PySide6.QtGui import (QDropEvent, QEventPoint, QStandardItem,  # pylint: disable=no-name-in-module
-                           QStandardItemModel)
-from PySide6.QtWidgets import (QAbstractItemView, QMenu, QMessageBox, QTreeView,  # pylint: disable=no-name-in-module
-                               QWidget)
+from PySide6.QtGui import (QDropEvent, QEventPoint, QStandardItem, QStandardItemModel) # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget) # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, showMessage
 from ..miscTools import callAddOn
@@ -188,6 +186,36 @@ class TreeView(QTreeView):
       callAddOn(command[1], self.comm.backend, item.data()['hierStack'], self)
     else:
       print('**ERROR**: unknown context menu', command)
+    return
+
+
+  def scrollToDoc(self, docID:str) -> None:
+    """
+    Scroll to document with docID
+
+    Args:
+      docID (str): document ID
+    """
+    def iterate(currentItem:QStandardItem) -> QStandardItem | None:
+      """ iterate through all branches and leaves and find items matching the docID
+      Args:
+        currentItem (QStandardItem): item to iterate to its children
+      Returns:
+        QStandardItem | None: item with docID or None if not found
+      """
+      currentIndex = self.model().indexFromItem(currentItem)                                                # type: ignore[attr-defined]
+      if currentItem.data() is not None and docID==currentItem.data()['hierStack'].split('/')[-1]:
+        return currentItem
+      for row in range(self.model().rowCount(currentIndex)):
+        for column in range(self.model().columnCount(currentIndex)):
+          childIndex = self.model().index(row, column, currentIndex)
+          found = iterate(self.model().itemFromIndex(childIndex))                                            # type: ignore[attr-defined]
+          if found is not None:
+            return found
+      return None
+    item = iterate(self.model().invisibleRootItem())                                                         # type: ignore[attr-defined]
+    if item is not None:
+      self.scrollTo(item.index(), QAbstractItemView.EnsureVisible)                                           # type: ignore[attr-defined]
     return
 
 
