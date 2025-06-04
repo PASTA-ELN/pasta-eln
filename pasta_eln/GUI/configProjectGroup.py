@@ -212,13 +212,6 @@ class ProjectGroup(QDialog):
         self.requireHardRestart = True  #because python-path has to change
       config['addOnDir'] = answer
       config['addOns'] = {}
-      button = QMessageBox.question(self, 'Question', 'Do you want to update the AddOn list (recommended)?',
-                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-      if button == QMessageBox.StandardButton.Yes:
-        reportDict = updateAddOnList(self.comm.backend.configurationProjectGroup)
-        messageWindow = ScrollMessageBox('Extractor list updated', reportDict,
-                                       style='QScrollArea{min-width:600 px; min-height:400px}')
-        messageWindow.exec()
       self.addOnLabel.setText('Add on directory: ' + config['addOnDir'])
 
     elif command[0] is Command.TEST_SERVER:

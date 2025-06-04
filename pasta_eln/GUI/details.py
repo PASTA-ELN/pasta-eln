@@ -29,7 +29,7 @@ class Details(QScrollArea):
     self.setWidgetResizable(True)
     self.setWidget(self.mainW)
 
-    headerW, self.headerL = widgetAndLayout('H', self.mainL, spacing='m', top='s', right='m')
+    headerW, self.headerL = widgetAndLayout('H', self.mainL, spacing='m', top='s', right='s')
     headerW.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     headerW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
     self.specialW, self.specialL = widgetAndLayout('V', self.mainL, top='s')
