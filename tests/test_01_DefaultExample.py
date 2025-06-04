@@ -40,7 +40,7 @@ class TestStringMethods(unittest.TestCase):
     self.be = Backend('research')
     output = self.be.output('x0')
     self.assertEqual(output.split('\n')[0][:129],
-                      'name                   | tag       | status | objective                                | comment                             | id')
+                      'name                   | tags      | status | objective                                | comment                             | id')
     self.assertEqual(output.split('\n')[2][:126],
                       'PASTAs Example Project | Important | active | Test if everything is working as inte... | Can be used as reference or deleted |')
     projID = output.split('|')[-1].strip()
@@ -68,25 +68,25 @@ class TestStringMethods(unittest.TestCase):
       self.assertIn(line, output.split('\n'))
 
     output = self.be.output('workflow')
-    self.assertIn('name           | tag | comment | id', output)
-    self.assertIn('Example_SOP.md |  v1 |         |'   , output)
-    self.assertIn('procedure.md | nan |', output)
-    self.assertIn('workplan.py | nan |', output)
-    self.assertIn('worklog.log | nan |', output)
+    self.assertIn('name           | tags | comment | id', output)
+    self.assertIn('Example_SOP.md |  v1  |         |'   , output)
+    self.assertIn('procedure.md | nan  |', output)
+    self.assertIn('workplan.py | nan  |', output)
+    self.assertIn('worklog.log | nan  |', output)
 
     output = self.be.output('sample')
-    self.assertEqual(output.split('\n')[0][:101], 'name           | tag | chemistry | comment                                  | qrCode             | id')
-    self.assertEqual(output.split('\n')[2][:101], 'Example sample | nan | A2B2C3    | this sample has multiple groups of me... | 13214124, 99698708 | s-')
+    self.assertEqual(output.split('\n')[0][:102], 'name           | tags | chemistry | comment                                  | qrCodes            | id')
+    self.assertEqual(output.split('\n')[2][:102], 'Example sample | nan  | A2B2C3    | this sample has multiple groups of me... | 13214124, 99698708 | s-')
 
     output = self.be.output('instrument')
-    self.assertEqual(output.split('\n')[0][:81], 'name           | tag | comment                                  | vendor    | id ')
-    self.assertIn('Big instrument | nan | Instrument onto which attachments can... | Company A | i-', output)
-    self.assertIn('        Sensor | nan | Attachment that increases functionali... | Company B | i-', output)
+    self.assertEqual(output.split('\n')[0][:82], 'name           | tags | comment                                  | vendor    | id ')
+    self.assertIn('Big instrument | nan  | Instrument onto which attachments can... | Company A | i-', output)
+    self.assertIn('        Sensor | nan  | Attachment that increases functionali... | Company B | i-', output)
 
     output = self.be.output('measurement')
-    self.assertIn('https://upload.wikimedia.org/wikipedi... |  _3 | - Remote image from wikipedia. Used f... |            measurement/image | True  | nan    ', output)
-    self.assertIn('simple.csv | nan | # These .csv files use the simple con... | measurement/csv/linesAndDots | True  | nan    |                                nan | m-', output)
-    self.assertIn('simple.png | nan | # File with two locations', output)
+    self.assertIn('https://upload.wikimedia.org/wikipedi... |  _3  | - Remote image from wikipedia. Used f... |            measurement/image | True  | nan    ', output)
+    self.assertIn('simple.csv | nan  | # These .csv files use the simple con... | measurement/csv/linesAndDots | True  | nan    |                                nan | m-', output)
+    self.assertIn('simple.png | nan  | # File with two locations', output)
     self.assertIn('- The sam... |            measurement/image | True  | nan    |                                nan | m-', output)
 
     #Verify DB

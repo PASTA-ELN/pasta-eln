@@ -765,8 +765,7 @@ class SqlLiteDB:
         dfParams.columns.name = None                                                            # Flatten the columns
         df = df.join(dfParams)
       # final sorting of columns
-      columnOrder = ['qrCode' if i=='qrCodes'
-                     else i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]
+      columnOrder = [i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]
       df = df.reset_index().reindex(columnOrder, axis=1)
       df = df.rename(columns={i:i[1:] for i in columnOrder if i.startswith('.') })
       df = df.astype('str').fillna('')
