@@ -77,6 +77,7 @@ class Project(QWidget):
     for doctype in self.comm.backend.db.dataHierarchy('', ''):
       if doctype[0]!='x':
         icon = self.comm.backend.db.dataHierarchy(doctype, 'icon')[0]
+        #TODO icon color incorrect in blue theme
         icon = 'fa5s.asterisk' if icon=='' else icon
         Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
@@ -238,8 +239,8 @@ class Project(QWidget):
           oldPath.rename(newPath)
         # go through children, remove from DB
         children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=self.projID)
-        for line in children:
-          self.comm.backend.db.remove(line['id'])
+        for docID in set(line['id'] for line in children if line['id']!=self.projID):
+          self.comm.backend.db.remove(docID)
         #update sidebar, show projects
         self.comm.changeSidebar.emit('redraw')
         self.comm.changeTable.emit('x0','')

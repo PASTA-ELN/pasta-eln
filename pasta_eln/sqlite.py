@@ -975,6 +975,13 @@ class SqlLiteDB:
       else:
         lostAndFoundProjId   = idProjects[0]
         lostAndFoundProjPath = Path('LostAndFound')  #by definition
+    if not lostAndFoundProjId and repair is not None:
+      errorStr = outputString(outputStyle,'error','No Lost and Found project found. Some repair impossible. '\
+                                          'Repair: exit repair mode and manually create LostAndFound project.')
+      if repair is None:
+        reply+= errorStr
+      elif repair(errorStr):
+        return 'Repair aborted: no Lost and Found project found. Exit repair mode and create it manually.'
     # tests
     self.cursor.execute('SELECT main.id, main.name FROM main WHERE id NOT IN (SELECT id FROM branches)')
     if res:= self.cursor.fetchall():
@@ -1048,7 +1055,7 @@ class SqlLiteDB:
           for parentID in stack.split('/')[:-1]:            #check if all parents in doc have a corresponding path
             parentDoc = self.getDoc(parentID)
             if not parentDoc:
-              errorStr= outputString(outputStyle,'error',f"branch stack parent is bad: {docID}")
+              errorStr= outputString(outputStyle,'error',f"branch stack parent is bad: {docID}. Repair: move to lost and found.")
               if repair is None:
                 reply+= errorStr
               elif repair(errorStr):
@@ -1090,11 +1097,11 @@ class SqlLiteDB:
           "WHERE branches.path=='*' AND main.shasum!=''"
     self.cursor.execute(cmd)
     for line in self.cursor.fetchall():
-      errorStr= outputString(outputStyle,'error',f"shasum!='' for item with no path. docID:{line[0]}")
+      errorStr= outputString(outputStyle,'error',f"shasum!='' for item with no path docID:{line[0]}. Repair: remove shasum")
       if repair is None:
         reply+= errorStr
       elif repair(errorStr):
-        self.cursor.execute(f"DELETE FROM branches WHERE id='{line[0]}' AND path='*'")
+        self.cursor.execute(f"UPDATE main SET shasum='' WHERE id = '{line[0]}'")
         self.connection.commit()
 
     #doc-type specific tests
