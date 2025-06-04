@@ -400,7 +400,7 @@ class Table(QWidget):
       rowL.addWidget(self.filterSelect[-1])
       self.filterText.append(QLineEdit(''))
       self.filterText[-1].setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
-      self.filterText[-1].setValidator(QRegularExpressionValidator('[a-zA-Z0-9_\.]+'))
+      self.filterText[-1].setValidator(QRegularExpressionValidator(r'[a-zA-Z0-9_\.]+'))
       rowL.addWidget(self.filterText[-1])
       btnInverse = IconButton('ph.selection-inverse-fill', self, [Command.SET_FILTER,    len(self.models), 'invert'], rowL, checkable=True)
       self.filterInverse.append(btnInverse)

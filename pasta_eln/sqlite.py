@@ -729,7 +729,7 @@ class SqlLiteDB:
       #clean main df
       df      = df[~df.index.duplicated(keep='first')]
       if 'image' in viewColumns:
-        df['image'] = str(len(df['image'])>1)
+        df['image'] = df['image'].apply(lambda x: 'Y' if len(str(x)) > 1 else 'N')
       # add: tags, qrCodes, parameters
       if 'tags' in viewColumns:
         cmd = 'SELECT main.id, tags.tag FROM main INNER JOIN tags USING(id) INNER JOIN branches USING(id) '\
