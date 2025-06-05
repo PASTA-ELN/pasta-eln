@@ -688,7 +688,7 @@ class Backend(CLI_Mixin):
             continue
           path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
           if path not in pathsInDB_data:
-            output += outputString(outputStyle, 'error', f'File on harddisk but not DB (2): {path}')
+            output += outputString(outputStyle, 'error', f'File   on disk but not DB (2): {path}')
             count += 1
           else:
             pathsInDB_data.remove(path)
@@ -697,7 +697,7 @@ class Backend(CLI_Mixin):
         for dirName in dirs:
           path = (Path(root).relative_to(self.basePath) /dirName).as_posix()
           if path not in pathsInDB_folder:
-            output += outputString(outputStyle, 'error', f'Folder on disk but not DB  :{path}')
+            output += outputString(outputStyle, 'error', f'Folder on disk but not DB    : {path}')
             count += 1
           else:
             pathsInDB_folder.remove(path)
