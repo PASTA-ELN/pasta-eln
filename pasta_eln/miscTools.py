@@ -10,6 +10,7 @@ import traceback
 from collections.abc import Mapping
 from io import BufferedReader
 from pathlib import Path
+import pandas as pd
 from typing import Any, Union
 from urllib import request
 from PySide6.QtWidgets import QWidget  # pylint: disable=no-name-in-module
@@ -238,10 +239,43 @@ def callAddOn(name:str, backend:Any, projID:str, widget:QWidget) -> None:
   try:
     subParameter = parameter[name]
   except KeyError:
-    print('**ERROR: No parameter for this add-on')
+    print('**Info: No parameter for this add-on')
     subParameter = {}
   module.main(backend, projID, widget, subParameter)
   return
+
+
+def isFloat(val:str) -> bool:
+  """Check if a value can be converted to float.
+  Args:
+    val (str): value to check
+  Returns:
+    bool: True if value can be converted to float, False otherwise
+  """
+  try:
+    float(val)
+    return True
+  except (ValueError, TypeError):
+    return False
+
+
+def dfConvertColumns(df:pd.DataFrame, ratio:int=10) -> pd.DataFrame:
+  """Convert columns in a DataFrame to numeric if a significant
+  portion of the column can be converted
+
+  Args:
+    df (pd.DataFrame): DataFrame with columns to convert
+    ratio (int): threshold ratio to determine if a column should be converted
+
+  Returns:
+    pd.DataFrame: DataFrame with converted columns
+  """
+  for col in df.columns:
+    num_convertible = df[col].apply(isFloat).sum()
+    if num_convertible > len(df) / ratio:
+      df[col] = pd.to_numeric(df[col], errors='coerce')
+  return df
+
 
 
 def restart() -> None:

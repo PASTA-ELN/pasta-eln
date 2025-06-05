@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView
                                QLineEdit, QMenu, QMessageBox, QPushButton, QTableView, QVBoxLayout, QWidget)
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
+from ..miscTools import callAddOn, dfConvertColumns
 from .gallery import ImageGallery
 from .tableHeader import TableHeader
 
@@ -86,6 +87,12 @@ class Table(QWidget):
     more = TextButton('More', self, [], headerL)
     self.moreMenu = QMenu(self)
     Action('Export to csv',            self, [Command.EXPORT],   self.moreMenu)
+    self.moreMenu.addSeparator()
+    projectGroup = self.comm.backend.configuration['projectGroups'][self.comm.backend.configurationProjectGroup]
+    if projectAddOns := projectGroup.get('addOns',{}).get('table',''):
+      for label, description in projectAddOns.items():
+        Action(description, self, [Command.ADD_ON, label], self.moreMenu)
+      self.moreMenu.addSeparator()
     self.actionChangeColums = Action('Change columns',  self, [Command.CHANGE_COLUMNS], self.moreMenu)  #add this action at end
     more.setMenu(self.moreMenu)
 
@@ -337,9 +344,22 @@ class Table(QWidget):
         for row in range(self.models[-1].rowCount()):
           rowContent = []
           for col in range(self.models[-1].columnCount()):
-            value = self.models[-1].index( row, col, QModelIndex() ).data( Qt.ItemDataRole.DisplayRole )
+            value = self.models[-1].index( row, col, QModelIndex()).data(Qt.ItemDataRole.DisplayRole)
             rowContent.append(f'"{value}"')
           fOut.write(','.join(rowContent)+'\n')
+    elif command[0] is Command.ADD_ON:
+      data   = []
+      for row in range(self.models[-1].rowCount()):
+        _, docID = self.itemFromRow(row)
+        path = self.comm.backend.db.getDoc(docID)['branch'][0]['path']
+        dataRow = [docID, self.comm.backend.basePath/path]
+        for col in range(self.models[-1].columnCount()):
+          value = self.models[-1].index(row, col).data(Qt.ItemDataRole.DisplayRole)
+          dataRow.append(value)
+        data.append(dataRow)
+      df = pd.DataFrame(data, columns=['docID','path']+self.filterHeader)
+      df = dfConvertColumns(df, 10)
+      callAddOn(command[1], self.comm.backend, df, self)
     elif command[0] is Command.TOGGLE_HIDE:
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)
@@ -587,3 +607,4 @@ class Command(Enum):
   DELETE_FILTER    = 12
   SET_FILTER       = 13
   TOGGLE_GALLERY   = 14
+  ADD_ON           = 15
