@@ -208,14 +208,13 @@ shortcuts = """
 
 
 tableHeaderHelp = """
-<h4>You can add custom rows via bottom text area.</h4>
+## You can add custom rows via bottom text area.
 
 If you want to add a column:
-<ul>
-<li> for a normal data-field (comment, content, name, type, tags, user, date), enter this field : 'comment'
-<li> to check the existence of an image: enter 'image'
-<li> to check if a tag is present: "#tag", in which you replace "tag" by the tag you want to look for. "_curated" is a special tag for measurements.
-<li> for information inside the metadata, use a "/": e.g. "metaVendor/fileExtension", "metaUser/stress". Capitalization is important.
+- to add a normal data-field (comment, content, name, type, tags, user, date), enter this field : 'comment'
+- to check the existence of an image: enter 'image'
+- to check if a tag is present: "#tag", in which you replace "tag" by the tag you want to look for. "_curated" is a special tag for measurements.
+- to get metadata, use a ".": e.g. "metaVendor.fileExtension", "metaUser.stress". Capitalization is important.
 </ul>
 """
 

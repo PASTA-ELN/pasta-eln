@@ -100,6 +100,7 @@ class Table(QWidget):
     self.table.setSortingEnabled(True)
     self.table.setAlternatingRowColors(True)
     header = self.table.horizontalHeader()
+    header.setStyleSheet("QHeaderView::section {padding: 0px 5px; margin: 0px;}")
     header.setSectionsMovable(True)
     header.setSortIndicatorShown(True)
     header.setMaximumSectionSize(self.comm.backend.configuration['GUI']['maxTableColumnWidth'])
@@ -198,7 +199,6 @@ class Table(QWidget):
     nRows, nCols = self.data.shape
     model = QStandardItemModel(nRows, nCols-1)
     model.setHorizontalHeaderLabels(self.filterHeader)
-    print('steffen', self.filterHeader)
     for i, j in itertools.product(range(nRows), range(nCols-1)):
       value = self.data.iloc[i,j]
       if self.docType=='_tags_':  #tags list
