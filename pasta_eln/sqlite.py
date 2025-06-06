@@ -718,7 +718,7 @@ class SqlLiteDB:
     viewType, docType = thePath.split('/', 1)
     if viewType=='viewDocType':
       viewColumns = self.dataHierarchy(docType, 'view')
-      viewColumns = viewColumns+['id'] if viewColumns else ['name','tags','comment','id']
+      viewColumns = viewColumns+['id'] if viewColumns and viewColumns != [''] else ['name','tags','comment','id']
       textSelect = ', '.join([f'main.{i}' for i in viewColumns if i in MAIN_ORDER or i[1:] in MAIN_ORDER])
       cmd = f"SELECT {textSelect} FROM main INNER JOIN branches USING(id) WHERE main.type LIKE '{docType}%'"
       if not allFlag:

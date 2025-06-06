@@ -125,8 +125,6 @@ class MainWindow(QMainWindow):
     self.viewMenu.clear()
     if hasattr(self.backend, 'db'):
       for docType, docLabel in self.comm.backend.db.dataHierarchy('', 'title'):
-        if docType[0] == 'x' and docType[1] != '0':
-          continue
         shortcut = self.comm.backend.db.dataHierarchy(docType,'shortcut')[0]
         shortcut = None if shortcut=='' else f"Ctrl+{shortcut}"
         Action(docLabel,            self, [Command.VIEW, docType],  self.viewMenu, shortcut=shortcut)
