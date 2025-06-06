@@ -6,6 +6,7 @@ This tutorial teaches
 """
 import matplotlib.pyplot as plt
 import pandas as pd
+from pasta_eln.miscTools import dfConvertColumns
 
 # The following two variables are mandatory
 description  = 'Default metadata plot'  #short description that is shown in the menu
@@ -22,6 +23,7 @@ def main(backend, df, widget, parameter={}):
     Returns:
         bool: success
     """
+    df = dfConvertColumns(df, 10) # every 10th value should be numeric to convert to numeric
     for col in df.columns:
         numeric_series = pd.to_numeric(df[col], errors='coerce')
         if numeric_series.notna().any():

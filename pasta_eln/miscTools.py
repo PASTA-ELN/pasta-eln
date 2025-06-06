@@ -6,6 +6,7 @@ import os
 import platform
 import subprocess
 import sys
+import tempfile
 import traceback
 from collections.abc import Mapping
 from io import BufferedReader
@@ -215,8 +216,8 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
         description = module.description
         _ = module.reqParameter  # check if reqParameter exists
         otherAddOns[fileName.split('_')[0]][name] = description
-      except Exception:
-        description = f'** SYNTAX ERROR in add-on **\n{traceback.format_exc()}'
+      except Exception as e:
+        description = f'** SYNTAX ERROR in add-on **: {e}'
         otherAddOns['_ERRORS_'][name] = description
   #update configuration file
   configuration['projectGroups'][projectGroup]['addOns']['extractors'] = extractorsAll
@@ -226,13 +227,16 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   return {'addon directory':directory} | extractorsAll | otherAddOns
 
 
-def callAddOn(name:str, backend:Any, projID:str, widget:QWidget) -> None:
+def callAddOn(name:str, backend:Any, projID:str, widget:QWidget) -> Any:
   """ Call add-ons
   Args:
     name (str): name of the add-on
     backend (str): backend to be used
     projID (str): project ID
     widget: widget to be used
+
+  Returns:
+    Any: result of the add-on
   """
   module      = importlib.import_module(name)
   parameter   = backend.configuration['addOnParameter']
@@ -241,8 +245,43 @@ def callAddOn(name:str, backend:Any, projID:str, widget:QWidget) -> None:
   except KeyError:
     print('**Info: No parameter for this add-on')
     subParameter = {}
-  module.main(backend, projID, widget, subParameter)
-  return
+  res = module.main(backend, projID, widget, subParameter)
+  return res
+
+
+def callDataExtractor(filePath:str, backend:Any) -> Any:
+  """ Call data extractor for a given file path: CALL THE DATA FUNCTION
+
+  Args:
+    filePath (str): path to file
+    backend (str): backend
+
+  Returns:
+    Any: result of the data extractor
+  """
+  extension = filePath.suffix[1:]  #cut off initial . of .jpg
+  if str(filePath).startswith('http'):
+    absFilePath = Path(tempfile.gettempdir())/filePath.name
+    with request.urlopen(filePath.as_posix().replace(':/','://'), timeout=60) as urlRequest:
+      with open(absFilePath, 'wb') as f:
+        try:
+          f.write(urlRequest.read())
+        except Exception:
+          print('Error saving downloaded file to temporary disk')
+  else:
+    if filePath.is_absolute():
+      filePath  = filePath.relative_to(backend.basePath)
+    absFilePath = backend.basePath/filePath
+  pyFile = f'extractor_{extension.lower()}.py'
+  pyPath = backend.addOnPath/pyFile
+  if pyPath.is_file():
+    # import module and use to get data
+    try:
+      module = importlib.import_module(pyFile[:-3])
+      return module.data(absFilePath, {})
+    except Exception as e:
+      print('**Warning** CallDataExtractor:',e)
+  return None
 
 
 def isFloat(val:str) -> bool:
@@ -271,8 +310,8 @@ def dfConvertColumns(df:pd.DataFrame, ratio:int=10) -> pd.DataFrame:
     pd.DataFrame: DataFrame with converted columns
   """
   for col in df.columns:
-    num_convertible = df[col].apply(isFloat).sum()
-    if num_convertible > len(df) / ratio:
+    numConvertible = df[col].apply(isFloat).sum()
+    if numConvertible > len(df) / ratio:
       df[col] = pd.to_numeric(df[col], errors='coerce')
   return df
 

@@ -15,7 +15,7 @@ from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, 
 from ..guiCommunicate import Communicate
 from ..guiStyle import (IconButton, Image, Label, ScrollMessageBox, TextButton, showMessage, widgetAndLayout,
                         widgetAndLayoutForm)
-from ..miscTools import flatten
+from ..miscTools import flatten, callAddOn
 from ..sqlite import MAIN_ORDER
 from ..textTools.stringChanges import createDirName, markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
@@ -148,9 +148,12 @@ class Form(QDialog):
           self.otherChoices.currentIndexChanged.connect(self.addTag) #connect to slot only after all painting is done
         elif key in ['.comment', '.content']:
           key = key[1:]
-          labelW, labelL = widgetAndLayout('V')
+          labelW, labelL = widgetAndLayout('V', spacing='s')
           labelL.addWidget(QLabel(key.capitalize()))
           TextButton('More', self, [Command.FOCUS_AREA, key], labelL, checkable=True)
+          projectGroup = self.comm.backend.configuration['projectGroups'][self.comm.backend.configurationProjectGroup]
+          if addOns := projectGroup.get('addOns',{}).get('definition',''):
+            TextButton('Auto', self, [Command.AUTO_COMMENT],    labelL, checkable=True)
           rightSideW, rightSideL = widgetAndLayout('V')
           setattr(self, f'buttonBarW_{key}', QWidget())
           getattr(self, f'buttonBarW_{key}').hide()
@@ -425,6 +428,14 @@ class Form(QDialog):
           self.formsL[idx].itemAt(unknownWidget[2]).widget().hide()
           self.formsL[idx].itemAt(unknownWidget[3]).widget().hide()
       self.allHidden = not self.allHidden
+    elif command[0] is Command.AUTO_COMMENT:
+      try:
+        text  = f'\n{"-"*20}\n'
+        text += callAddOn('form_auto', self.comm.backend, self.doc, self)
+        text += f'\n{"-"*20}\n'
+        self.textEdit_comment.insertPlainText(text)
+      except Exception:
+        pass
     elif command[0] is Command.FORM_CANCEL:
       if self.comm.backend.configuration['GUI']['autosave'] == 'Yes':
         ret = QMessageBox.critical(self, 'Warning', 'You will lose the entered information. Do you want to '+
@@ -672,9 +683,10 @@ class Command(Enum):
   OPEN_FILEBROWSER = 4
   OPEN_EXTERNAL    = 5
   FOCUS_AREA       = 6
-  FORM_SAVE        = 7
-  FORM_CANCEL      = 8
-  FORM_ADD_KV      = 9
-  FORM_SHOW_DOC    = 10
-  FORM_SAVE_NEXT   = 11
-  FORM_SAVE_DUPL   = 12
+  AUTO_COMMENT     = 7
+  FORM_SAVE        = 8
+  FORM_CANCEL      = 9
+  FORM_ADD_KV      = 10
+  FORM_SHOW_DOC    = 11
+  FORM_SAVE_NEXT   = 12
+  FORM_SAVE_DUPL   = 13

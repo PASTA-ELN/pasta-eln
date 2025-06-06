@@ -358,7 +358,6 @@ class Table(QWidget):
           dataRow.append(value)
         data.append(dataRow)
       df = pd.DataFrame(data, columns=['docID','path']+self.filterHeader)
-      df = dfConvertColumns(df, 10)
       callAddOn(command[1], self.comm.backend, df, self)
     elif command[0] is Command.TOGGLE_HIDE:
       for row in range(self.models[-1].rowCount()):

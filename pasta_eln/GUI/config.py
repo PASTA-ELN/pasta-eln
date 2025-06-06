@@ -5,6 +5,7 @@ from .configAuthors import ConfigurationAuthors
 from .configGUI import ConfigurationGUI
 from .configProjectGroup import ProjectGroup
 from .configSetup import ConfigurationSetup
+from .configAddOnParameter import ConfigurationAddOnParameter
 from .repositories.configGUI import ConfigurationRepositories
 
 
@@ -39,6 +40,9 @@ class Configuration(QDialog):
 
     tabRepository = ConfigurationRepositories(self.comm, self.closeWidget)  # Repositories
     tabW.addTab(tabRepository, 'Repository')
+
+    tabAddOnParameter = ConfigurationAddOnParameter(self.comm, self.closeWidget)  # Add-on parameters
+    tabW.addTab(tabAddOnParameter, 'Add-on parameters')
 
     tabSetup = ConfigurationSetup(self.comm, self.closeWidget)      # Setup / Troubleshoot Pasta
     tabW.addTab(tabSetup, 'Setup')

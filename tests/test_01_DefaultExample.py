@@ -84,10 +84,10 @@ class TestStringMethods(unittest.TestCase):
     self.assertIn('        Sensor | nan  | Attachment that increases functionali... | Company B | i-', output)
 
     output = self.be.output('measurement')
-    self.assertIn('https://upload.wikimedia.org/wikipedi... |  _3  | - Remote image from wikipedia. Used f... |            measurement/image | True  | nan    ', output)
-    self.assertIn('simple.csv | nan  | # These .csv files use the simple con... | measurement/csv/linesAndDots | True  | nan    |                                nan | m-', output)
+    self.assertIn('https://upload.wikimedia.org/wikipedi... |  _3  | - Remote image from wikipedia. Used f... |            measurement/image | Y     | nan    ', output)
+    self.assertIn('simple.csv | nan  | # These .csv files use the simple con... | measurement/csv/linesAndDots | Y     | nan    |                                nan | m-', output)
     self.assertIn('simple.png | nan  | # File with two locations', output)
-    self.assertIn('- The sam... |            measurement/image | True  | nan    |                                nan | m-', output)
+    self.assertIn('- The sam... |            measurement/image | Y     | nan    |                                nan | m-', output)
 
     #Verify DB
     output = self.be.checkDB(outputStyle='text')
