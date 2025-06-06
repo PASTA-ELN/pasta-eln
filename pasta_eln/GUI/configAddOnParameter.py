@@ -3,8 +3,7 @@ import importlib
 import json
 from pathlib import Path
 from typing import Callable
-from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QVBoxLayout, QLabel,  # pylint: disable=no-name-in-module
-                               QLineEdit)
+from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QVBoxLayout, QLineEdit)  # pylint: disable=no-name-in-module
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
 from ..guiStyle import TextButton, Label, widgetAndLayout, showMessage

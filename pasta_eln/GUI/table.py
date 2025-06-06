@@ -7,13 +7,12 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 from PySide6.QtCore import QModelIndex, QSortFilterProxyModel, Qt, Slot  # pylint: disable=no-name-in-module
-from PySide6.QtGui import (QRegularExpressionValidator, QStandardItem,  # pylint: disable=no-name-in-module
-                           QStandardItemModel)
+from PySide6.QtGui import (QRegularExpressionValidator, QStandardItem, QStandardItemModel)  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView,  # pylint: disable=no-name-in-module
                                QLineEdit, QMenu, QMessageBox, QPushButton, QTableView, QVBoxLayout, QWidget)
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
-from ..miscTools import callAddOn, dfConvertColumns
+from ..miscTools import callAddOn
 from .gallery import ImageGallery
 from .tableHeader import TableHeader
 

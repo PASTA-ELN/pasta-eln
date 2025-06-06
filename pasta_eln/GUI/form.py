@@ -152,7 +152,7 @@ class Form(QDialog):
           labelL.addWidget(QLabel(key.capitalize()))
           TextButton('More', self, [Command.FOCUS_AREA, key], labelL, checkable=True)
           projectGroup = self.comm.backend.configuration['projectGroups'][self.comm.backend.configurationProjectGroup]
-          if addOns := projectGroup.get('addOns',{}).get('definition',''):
+          if 'form' in projectGroup.get('addOns',{}):
             TextButton('Auto', self, [Command.AUTO_COMMENT],    labelL, checkable=True)
           rightSideW, rightSideL = widgetAndLayout('V')
           setattr(self, f'buttonBarW_{key}', QWidget())
@@ -433,7 +433,7 @@ class Form(QDialog):
         text  = f'\n{"-"*20}\n'
         text += callAddOn('form_auto', self.comm.backend, self.doc, self)
         text += f'\n{"-"*20}\n'
-        self.textEdit_comment.insertPlainText(text)
+        self.textEdit_comment.insertPlainText(text)                               # type: ignore[attr-defined]
       except Exception:
         pass
     elif command[0] is Command.FORM_CANCEL:

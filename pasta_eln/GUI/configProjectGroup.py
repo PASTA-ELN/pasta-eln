@@ -15,8 +15,8 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog
 from ..elabFTWapi import ElabFTWApi
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
-from ..guiStyle import IconButton, Label, ScrollMessageBox, TextButton, showMessage, widgetAndLayoutGrid
-from ..miscTools import restart, updateAddOnList
+from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayoutGrid
+from ..miscTools import restart
 
 
 class ProjectGroup(QDialog):

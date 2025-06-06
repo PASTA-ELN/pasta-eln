@@ -11,9 +11,9 @@ import traceback
 from collections.abc import Mapping
 from io import BufferedReader
 from pathlib import Path
-import pandas as pd
 from typing import Any, Union
 from urllib import request
+import pandas as pd
 from PySide6.QtWidgets import QWidget  # pylint: disable=no-name-in-module
 import pasta_eln
 from .fixedStringsJson import CONF_FILE_NAME
@@ -227,12 +227,12 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   return {'addon directory':directory} | extractorsAll | otherAddOns
 
 
-def callAddOn(name:str, backend:Any, projID:str, widget:QWidget) -> Any:
+def callAddOn(name:str, backend:Any, content:Any, widget:QWidget) -> Any:
   """ Call add-ons
   Args:
     name (str): name of the add-on
     backend (str): backend to be used
-    projID (str): project ID
+    content (Any): content to be consumed by addon, e.g. projectID, document
     widget: widget to be used
 
   Returns:
@@ -245,15 +245,15 @@ def callAddOn(name:str, backend:Any, projID:str, widget:QWidget) -> Any:
   except KeyError:
     print('**Info: No parameter for this add-on')
     subParameter = {}
-  res = module.main(backend, projID, widget, subParameter)
+  res = module.main(backend, content, widget, subParameter)
   return res
 
 
-def callDataExtractor(filePath:str, backend:Any) -> Any:
+def callDataExtractor(filePath:Path, backend:Any) -> Any:
   """ Call data extractor for a given file path: CALL THE DATA FUNCTION
 
   Args:
-    filePath (str): path to file
+    filePath (Path): path to file
     backend (str): backend
 
   Returns:
