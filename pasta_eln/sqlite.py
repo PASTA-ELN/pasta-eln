@@ -172,7 +172,10 @@ class SqlLiteDB:
     """
     Shutting down things
     """
+    self.cursor.close()
+    del self.cursor
     self.connection.close()
+    del self.connection
     return
 
 

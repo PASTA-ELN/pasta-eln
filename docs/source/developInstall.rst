@@ -32,23 +32,23 @@ Installation location
 
 Default installation
 
-  - C:\Users\...\AppData\Local\Programs\Python\Python311\Scripts
-  - C:\Users\...\AppData\Local\Programs\Python\Python311\Lib\site-packages\pasta_eln
+  - C:\\Users\\...\\AppData\\Local\\Programs\\Python\\Python311\\Scripts
+  - C:\\Users\\...\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pasta_eln
 
 Anaconda
 
-  - C:\Users\...\anaconda3\envs\...\Scripts>
-  - C:\Users\...\anaconda3\envs\...\Lib\site-packages\pasta_eln
+  - C:\\Users\\...\\anaconda3\\envs\\...\\Scripts>
+  - C:\\Users\\...\\anaconda3\\envs\\...\\Lib\\site-packages\\pasta_eln
 
 Reinstall / retry windows installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - remove directories
 
-  - C:\Users\....\AppData\Local\Programs\Python [If deleted python]
+  - C:\\Users\\....\\AppData\\Local\\Programs\\Python [If deleted python]
   - Pasta-Folder in Documents
 
-- remove Users\...\.pastaELN.json
+- remove Users\\...\\.pastaELN.json
 - remove shortcut on Windows desktop
 - **python -m pasta_eln.gui**
 
@@ -57,7 +57,7 @@ Create an installer using pyInstaller
 
 In terminal
 
-  - cd Documents\PastaELN_src: all files in pasta-eln
+  - cd Documents\\PastaELN_src: all files in pasta-eln
   - pyinstaller pastaELN.py -F
 
 File is in /dist/ folder

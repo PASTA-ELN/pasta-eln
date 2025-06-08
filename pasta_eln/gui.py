@@ -88,7 +88,6 @@ class MainWindow(QMainWindow):
     Action('About',                          self, [Command.ABOUT],           helpMenu)
     systemMenu.addSeparator()
     Action('&Configuration',                 self, [Command.CONFIG],          helpMenu, shortcut='Ctrl+0')
-    # Action('&Dataverse Configuration',       self, [Command.DATAVERSE_CONFIG],helpMenu, shortcut='F10')
 
     # shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda: self.execute([Command.RESTART]))
@@ -98,23 +97,21 @@ class MainWindow(QMainWindow):
     # GUI elements
     mainWidget, mainLayout = widgetAndLayout('H')
     self.setCentralWidget(mainWidget)  # Set the central widget of the Window
-    body = Body(self.comm)  # body with information
-    self.sidebar = Sidebar(self.comm)  # sidebar with buttons
-    # sidebarScroll = QScrollArea()
-    # sidebarScroll.setWidget(self.sidebar)
-    # if hasattr(self.comm.backend, 'configuration'):
-    #   sidebarScroll.setFixedWidth(self.comm.backend.configuration['GUI']['sidebarWidth']+10)
-    # mainLayout.addWidget(sidebarScroll)
-    mainLayout.addWidget(self.sidebar)
-    mainLayout.addWidget(body)
-    # tests that run at start-up
-    if self.backend.configuration['GUI']['checkForUpdates']=='Yes' and not testNewPastaVersion(False):
-      button = QMessageBox.question(self, 'Update?', 'There is a new version of PASTA-ELN available. Do you want to update?',
-                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-      if button == QMessageBox.StandardButton.Yes:
-        testNewPastaVersion(update=True)
-    # initialize things that might change
-    self.initialize()
+    try:
+      body = Body(self.comm)  # body with information
+      self.sidebar = Sidebar(self.comm)  # sidebar with buttons
+      mainLayout.addWidget(self.sidebar)
+      mainLayout.addWidget(body)
+      # tests that run at start-up
+      if self.backend.configuration['GUI']['checkForUpdates']=='Yes' and not testNewPastaVersion(False):
+        button = QMessageBox.question(self, 'Update?', 'There is a new version of PASTA-ELN available. Do you want to update?',
+                                      QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+        if button == QMessageBox.StandardButton.Yes:
+          testNewPastaVersion(update=True)
+      # initialize things that might change
+      self.initialize()
+    except Exception as e:
+      logging.error('Error in GUI initialization %s', e)
 
 
   @Slot()

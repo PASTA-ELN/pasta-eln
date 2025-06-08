@@ -14,6 +14,7 @@ class Configuration(QDialog):
   def __init__(self, comm:Communicate, startTab:str=''):
     """
     Initialization
+    - if sidebar.py notices no database, it will call this dialog with 'setup' as only tab
 
     Args:
       backend (Pasta): backend, not communication
@@ -29,30 +30,35 @@ class Configuration(QDialog):
     tabW = QTabWidget(self)
     mainL.addWidget(tabW)
 
-    tabProjectGroup = ProjectGroup(self.comm, self.closeWidget)     # Project group. Restart app
-    tabW.addTab(tabProjectGroup, 'Project group')
+    try:
+      tabProjectGroup = ProjectGroup(self.comm, self.closeWidget)     # Project group. Restart app
+      tabW.addTab(tabProjectGroup, 'Project group')
 
-    tabGUI = ConfigurationGUI(self.comm, self.closeWidget)          # Misc configuration: e.g. theming. Restart app
-    tabW.addTab(tabGUI, 'Appearance')
+      tabGUI = ConfigurationGUI(self.comm, self.closeWidget)          # Misc configuration: e.g. theming. Restart app
+      tabW.addTab(tabGUI, 'Appearance')
 
-    tabAuthors = ConfigurationAuthors(self.comm, self.closeWidget)  # Author(s)
-    tabW.addTab(tabAuthors, 'Author')
+      tabAuthors = ConfigurationAuthors(self.comm, self.closeWidget)  # Author(s)
+      tabW.addTab(tabAuthors, 'Author')
 
-    tabRepository = ConfigurationRepositories(self.comm, self.closeWidget)  # Repositories
-    tabW.addTab(tabRepository, 'Repository')
+      tabRepository = ConfigurationRepositories(self.comm, self.closeWidget)  # Repositories
+      tabW.addTab(tabRepository, 'Repository')
 
-    tabAddOnParameter = ConfigurationAddOnParameter(self.comm, self.closeWidget)  # Add-on parameters
-    tabW.addTab(tabAddOnParameter, 'Add-on parameters')
+      tabAddOnParameter = ConfigurationAddOnParameter(self.comm, self.closeWidget)  # Add-on parameters
+      tabW.addTab(tabAddOnParameter, 'Add-on parameters')
+
+      # initialize when setup is called
+      if startTab=='setup':
+        tabW.setCurrentWidget(tabSetup)
+        tabW.setTabEnabled(0, False)
+        tabW.setTabEnabled(1, False)
+        tabW.setTabEnabled(2, False)
+        tabW.setTabEnabled(3, False)
+        tabW.setTabEnabled(4, False)
+    except Exception as e:
+      print('**ERROR: could not create configuration dialog:', e)
 
     tabSetup = ConfigurationSetup(self.comm, self.closeWidget)      # Setup / Troubleshoot Pasta
     tabW.addTab(tabSetup, 'Setup')
-
-    # initialize when setup is called
-    if startTab=='setup':
-      tabW.setCurrentWidget(tabSetup)
-      tabW.setTabEnabled(0, False)
-      tabW.setTabEnabled(1, False)
-      tabW.setTabEnabled(2, False)
 
 
   def closeWidget(self, restart:bool=True) -> None:

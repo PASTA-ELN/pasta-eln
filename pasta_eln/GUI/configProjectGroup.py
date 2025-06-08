@@ -285,6 +285,11 @@ class ProjectGroup(QDialog):
       self.image.setPixmap(pixmap)
 
     elif command[0] is Command.NEW:
+      #TODO: the self.selectGroup does not disappear
+      # TODO: widget want you to create an addon folder, but it is not needed
+      # when new project group: api-key is highlighted
+      # new pg name has to be small letters, no spaces, no special characters
+      #
       self.formL.removeWidget(self.selectGroup)
       self.formL.addWidget(self.groupTextField, 0, 0)
       self.directoryLabel.setText('Data directory: ')
