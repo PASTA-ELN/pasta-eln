@@ -243,6 +243,9 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         backend.hierStack = []
       childrenStack[-1] += 1
       doc['childNum'] = childrenStack[-1]
+      qrCodes = [v[0] for k,v in doc.items() if 'qrCodes.' in k]
+      doc = {k:v for k,v in doc.items() if 'qrCodes.' not in k}
+      doc['qrCodes'] = qrCodes
       # print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
       try:
         docID = backend.addData(docType, doc)['id']

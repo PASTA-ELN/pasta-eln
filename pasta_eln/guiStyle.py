@@ -173,7 +173,10 @@ class Label(QLabel):
   """ Label widget: headline, ... """
   def __init__(self, text:str='', size:str='', layout:Optional[QLayout]=None,
                function:Optional[Callable[[str, str],None]]=None, docID:str='', tooltip:str='', style:str=''):
-    """
+    """ Label widget with given font-size and functions:
+    - text selection: if only character, easy selection
+      - if formatted text: right-mouse-button to select all (There is no other way, apperently)
+
     Args:
       text (str): text on label
       size (str): size ['h1','h2','h3']
@@ -185,6 +188,9 @@ class Label(QLabel):
     """
     super().__init__()
     self.setText(text)
+    if text.startswith('#') or text.startswith('<'):
+      self.setTextFormat(Qt.TextFormat.RichText)
+    self.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
     if size == 'h1':
       style += 'font-size: 14pt'
     elif size == 'h2':
@@ -464,7 +470,6 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
     if layout is not None:
       label = Label(labelStr, function=lambda x,y: clickLink(widget,x,y) if link else None, docID=docID)
       label.setOpenExternalLinks(True)
-      label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
       label.setWordWrap(True)
       layout.addWidget(label)
   return labelStr

@@ -130,9 +130,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if not index.data(Qt.ItemDataRole.UserRole+1)['gui'][0]:  # only show the headline, no details
       return QSize(400, self.lineSep*2)
     docID   = hierStack.split('/')[-1]
-    doc = self.comm.backend.db.getDoc(docID)
+    doc = self.comm.backend.db.getDoc(docID, noError=True) # No error plotted if doc not found: after deleting project,...
+    # ... its items cannot be found and it would give many false negatives
     if len(doc)<2:
-      if len(self.comm.backend.db.getDoc(hierStack.split('/')[0]))>2: #only refresh when project still exists
+      if len(self.comm.backend.db.getDoc(hierStack.split('/')[0], noError=True))>2: #only refresh when project still exists
         self.comm.changeProject.emit('','')
       return QSize()
     widthContent = min(self.widthContent,  \
