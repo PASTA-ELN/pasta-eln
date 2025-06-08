@@ -250,7 +250,7 @@ class Table(QWidget):
       else:
         item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
       model.setItem(i, j, item)
-    self.models.append(model)                                                                                # type: ignore[arg-type]
+    self.models = [model]
     if self.flagGallery:
       self.gallery.updateGrid(model)
       self.gallery.setVisible(True)
