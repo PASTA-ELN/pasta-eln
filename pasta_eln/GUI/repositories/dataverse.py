@@ -156,8 +156,9 @@ class DataverseClient(RepositoryClient):
     if resp.status_code == 200:
       element_tree: ElementTree = ElementTree(fromstring(resp.text))
       dataverse_list: list[dict[str, str]] = []
-      allElements = [] if element_tree.getroot() is None else \
-                    element_tree.getroot().findall('.//{http://www.w3.org/2007/app}workspace')
+      allElements = []
+      if element_tree.getroot() is not None:
+        allElements = element_tree.getroot().findall('.//{http://www.w3.org/2007/app}workspace')
       for element in allElements:
         title = element.find('.//{http://www.w3.org/2005/Atom}title')
         if title is not None:
