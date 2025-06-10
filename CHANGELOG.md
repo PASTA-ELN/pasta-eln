@@ -2,7 +2,35 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.8...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.9...HEAD)
+
+**Closed issues:**
+
+- AttributeError in workflow [\#484](https://github.com/PASTA-ELN/pasta-eln/issues/484)
+- Typo in API-key info box [\#482](https://github.com/PASTA-ELN/pasta-eln/issues/482)
+- Repair/install stuck at 75% [\#481](https://github.com/PASTA-ELN/pasta-eln/issues/481)
+- Feature Request: Filter list of items by key-value pair [\#478](https://github.com/PASTA-ELN/pasta-eln/issues/478)
+- Feature request: Compile data from different items [\#473](https://github.com/PASTA-ELN/pasta-eln/issues/473)
+- Feature request: Update notification/auto-update in pasta? [\#472](https://github.com/PASTA-ELN/pasta-eln/issues/472)
+- Imported projects are folders? [\#470](https://github.com/PASTA-ELN/pasta-eln/issues/470)
+- Update of extractors in the current project group [\#466](https://github.com/PASTA-ELN/pasta-eln/issues/466)
+- Alternative to cairo package? [\#465](https://github.com/PASTA-ELN/pasta-eln/issues/465)
+- List of folders [\#458](https://github.com/PASTA-ELN/pasta-eln/issues/458)
+- Warning message about folders when repeatedly deleting the same file [\#447](https://github.com/PASTA-ELN/pasta-eln/issues/447)
+- Selecting a folder when creating new items [\#423](https://github.com/PASTA-ELN/pasta-eln/issues/423)
+- Windows 10: initial window looks strange [\#420](https://github.com/PASTA-ELN/pasta-eln/issues/420)
+- Instrument details open automatically but it can't be closed [\#382](https://github.com/PASTA-ELN/pasta-eln/issues/382)
+- Project head: has scrollbar and width that do not make sense [\#374](https://github.com/PASTA-ELN/pasta-eln/issues/374)
+- Attachments part of the document type or the individual entry [\#372](https://github.com/PASTA-ELN/pasta-eln/issues/372)
+- Display bug in eln-Details [\#350](https://github.com/PASTA-ELN/pasta-eln/issues/350)
+- Ability to change from table row item to project and backward [\#332](https://github.com/PASTA-ELN/pasta-eln/issues/332)
+- Ability to lock property definitions [\#331](https://github.com/PASTA-ELN/pasta-eln/issues/331)
+- Add "Change columns" option to the Unidentified table view. [\#170](https://github.com/PASTA-ELN/pasta-eln/issues/170)
+- Sidebar change functionality \(depends on working project tree\) [\#13](https://github.com/PASTA-ELN/pasta-eln/issues/13)
+
+## [v3.1.9](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.9) (2025-05-27)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.8...v3.1.9)
 
 **Closed issues:**
 
