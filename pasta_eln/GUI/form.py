@@ -125,7 +125,8 @@ class Form(QDialog):
         elif key == '.tags':
           self.tagsBarMainW, tagsBarMainL = widgetAndLayout('H', spacing='s')
           self.gradeChoices = QComboBox()   #part/combobox that shows grades
-          self.gradeChoices.setMaximumWidth(80)
+          self.gradeChoices.setMaximumWidth(85)
+          self.gradeChoices.setStyleSheet(self.comm.palette.get('secondaryText','color')+'padding: 3px;')
           self.gradeChoices.setIconSize(QSize(0,0))
           self.gradeChoices.addItems(['','\u2605','\u2605'*2,'\u2605'*3,'\u2605'*4,'\u2605'*5])
           gradeTag = [i for i in self.doc['tags'] if i.startswith('_')]
@@ -152,7 +153,7 @@ class Form(QDialog):
           labelL.addWidget(QLabel(key.capitalize()))
           TextButton('More', self, [Command.FOCUS_AREA, key], labelL, checkable=True)
           projectGroup = self.comm.backend.configuration['projectGroups'][self.comm.backend.configurationProjectGroup]
-          if 'form' in projectGroup.get('addOns',{}):
+          if 'form' in projectGroup.get('addOns',{}) and projectGroup['addOns']['form']:
             TextButton('Auto', self, [Command.AUTO_COMMENT],    labelL, checkable=True)
           rightSideW, rightSideL = widgetAndLayout('V')
           setattr(self, f'buttonBarW_{key}', QWidget())

@@ -102,8 +102,8 @@ class TableHeader(QDialog):
     if btn.text().endswith('Cancel'):
       self.reject()
     elif btn.text().endswith('Save'):
-      self.selectedList = [f'.{i}' if i not in MAIN_ORDER and '.' not in i else i for i in self.selectedList]
-      self.db.dataHierarchyChangeView(self.docType, self.selectedList)
+      newList = [i if i in MAIN_ORDER+['tags','qrCodes'] or '.' in i else f'.{i}' for i in self.selectedList]
+      self.db.dataHierarchyChangeView(self.docType, newList)
       restart()
     elif btn.text().endswith('Help'):
       showMessage(self, 'Help on individual entry', tableHeaderHelp)

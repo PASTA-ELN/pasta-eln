@@ -59,7 +59,7 @@ class Editor(QDialog):
     TextButton('Export', self, [Command.Export], buttonLineL, 'Export to Excel')
     buttonLineL.addStretch(1)
     projectGroup = self.comm.backend.configuration['projectGroups'][self.comm.backend.configurationProjectGroup]
-    if 'definition' in projectGroup.get('addOns',{}):
+    if 'definition' in projectGroup.get('addOns',{}) and projectGroup['addOns']['definition']:
       TextButton('Autofill PURL',  self, [Command.AddOn], buttonLineL, 'Autofill by using addon')
       buttonLineL.addStretch(1)
     saveBtn = TextButton('Save', self, [Command.Save], buttonLineL, 'Save changes')

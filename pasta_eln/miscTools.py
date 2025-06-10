@@ -330,11 +330,13 @@ def restart() -> None:
 
 def testNewPastaVersion(update:bool=False) -> bool:
   """ Test if this version is up to date with the latest version on pypi
+  - variable largestVersionOnPypi is the latest NON-BETA version on pypi
+
   Args:
     update (bool): update to latest version
 
   Returns:
-    bool: if up to date
+    bool: if up-to-date or if current version is a beta
   """
   if update:
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pasta-eln'])
@@ -344,7 +346,7 @@ def testNewPastaVersion(update:bool=False) -> bool:
     data = json.loads(response.read())
   releases = list(data['releases'].keys())
   largestVersionOnPypi = sorted(releases)[-1]
-  return largestVersionOnPypi == pasta_eln.__version__
+  return largestVersionOnPypi == pasta_eln.__version__ or 'b' in pasta_eln.__version__
 
 
 class DummyProgressBar():
