@@ -18,6 +18,7 @@ from PySide6.QtWidgets import QWidget  # pylint: disable=no-name-in-module
 import pasta_eln
 from .fixedStringsJson import CONF_FILE_NAME
 
+
 class Bcolors:
   """
   Colors for Command-Line-Interface and output
@@ -245,8 +246,7 @@ def callAddOn(name:str, backend:Any, content:Any, widget:QWidget) -> Any:
   except KeyError:
     print('**Info: No parameter for this add-on')
     subParameter = {}
-  res = module.main(backend, content, widget, subParameter)
-  return res
+  return module.main(backend, content, widget, subParameter)
 
 
 def callDataExtractor(filePath:Path, backend:Any) -> Any:
@@ -337,15 +337,14 @@ def testNewPastaVersion(update:bool=False) -> bool:
     bool: if up to date
   """
   if update:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pasta-eln"])
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pasta-eln'])
     restart()
   url = 'https://pypi.org/pypi/pasta-eln/json'
   with request.urlopen(url) as response:
     data = json.loads(response.read())
   releases = list(data['releases'].keys())
   largestVersionOnPypi = sorted(releases)[-1]
-  upToDate = largestVersionOnPypi == pasta_eln.__version__
-  return upToDate
+  return largestVersionOnPypi == pasta_eln.__version__
 
 
 class DummyProgressBar():

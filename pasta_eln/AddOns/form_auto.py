@@ -29,20 +29,20 @@ def main(backend, doc, widget, parameter={}):
     """
     apiKey = parameter.get('key')
     if not apiKey:
-        return "API key not provided in parameters. Please configure it in the addon settings."
+        return 'API key not provided in parameters. Please configure it in the addon settings.'
     if not doc['comment']:
-        return "No comment provided in the document. Please add a comment to expand."
+        return 'No comment provided in the document. Please add a comment to expand.'
     promptText = f"Expand the following text: '{doc['comment']}'."
     url        = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={apiKey}'
-    headers    = {"Content-Type": "application/json"}
-    data       = {"contents": [{"parts": [{"text": promptText}]}]}
+    headers    = {'Content-Type': 'application/json'}
+    data       = {'contents': [{'parts': [{'text': promptText}]}]}
     # main try block: if it fails, it will return an error message
     try:
         response = requests.post(url, headers=headers, json=data, timeout=30)
         response.raise_for_status()  # Raises an HTTPError for bad responses (4XX or 5XX)
         result = response.json()
         # text might be result['candidates'][0]['content']['parts'][0]['text']
-        reply = result.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', "Could not extract text.")
+        reply = result.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', 'Could not extract text.')
         return reply
     except Exception as e:
         return f"Error calling Gemini API: {e}"

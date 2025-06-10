@@ -7,7 +7,8 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 from PySide6.QtCore import QModelIndex, QSortFilterProxyModel, Qt, Slot  # pylint: disable=no-name-in-module
-from PySide6.QtGui import (QRegularExpressionValidator, QStandardItem, QStandardItemModel)  # pylint: disable=no-name-in-module
+from PySide6.QtGui import (QRegularExpressionValidator, QStandardItem,  # pylint: disable=no-name-in-module
+                           QStandardItemModel)
 from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView,  # pylint: disable=no-name-in-module
                                QLineEdit, QMenu, QMessageBox, QPushButton, QTableView, QVBoxLayout, QWidget)
 from ..guiCommunicate import Communicate
@@ -106,7 +107,7 @@ class Table(QWidget):
     self.table.setSortingEnabled(True)
     self.table.setAlternatingRowColors(True)
     header = self.table.horizontalHeader()
-    header.setStyleSheet("QHeaderView::section {padding: 0px 5px; margin: 0px;}")
+    header.setStyleSheet('QHeaderView::section {padding: 0px 5px; margin: 0px;}')
     header.setSectionsMovable(True)
     header.setSortIndicatorShown(True)
     header.setMaximumSectionSize(self.comm.backend.configuration['GUI']['maxTableColumnWidth'])

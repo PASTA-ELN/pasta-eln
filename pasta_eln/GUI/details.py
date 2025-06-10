@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QScrollArea, QTextEdit  # pylint: disable=no-name-in-module
 from ..fixedStringsJson import SORTED_DB_KEYS, defaultDataHierarchyNode
 from ..guiCommunicate import Communicate
-from ..guiStyle import Image, Label, TextButton, IconButton, addDocDetails, showMessage, widgetAndLayout
+from ..guiStyle import IconButton, Image, Label, TextButton, addDocDetails, showMessage, widgetAndLayout
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
 
 

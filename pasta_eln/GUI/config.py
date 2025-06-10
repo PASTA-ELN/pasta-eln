@@ -1,11 +1,11 @@
 """ Entire config dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
 from PySide6.QtWidgets import QDialog, QTabWidget, QVBoxLayout  # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
+from .configAddOnParameter import ConfigurationAddOnParameter
 from .configAuthors import ConfigurationAuthors
 from .configGUI import ConfigurationGUI
 from .configProjectGroup import ProjectGroup
 from .configSetup import ConfigurationSetup
-from .configAddOnParameter import ConfigurationAddOnParameter
 from .repositories.configGUI import ConfigurationRepositories
 
 

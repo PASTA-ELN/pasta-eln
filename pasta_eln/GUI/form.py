@@ -15,7 +15,7 @@ from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, 
 from ..guiCommunicate import Communicate
 from ..guiStyle import (IconButton, Image, Label, ScrollMessageBox, TextButton, showMessage, widgetAndLayout,
                         widgetAndLayoutForm)
-from ..miscTools import flatten, callAddOn
+from ..miscTools import callAddOn, flatten
 from ..sqlite import MAIN_ORDER
 from ..textTools.stringChanges import createDirName, markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu

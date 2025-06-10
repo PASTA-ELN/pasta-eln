@@ -8,8 +8,10 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 from PySide6.QtCore import Qt  # pylint: disable=no-name-in-module
-from PySide6.QtGui import (QDropEvent, QEventPoint, QStandardItem, QStandardItemModel) # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget) # pylint: disable=no-name-in-module
+from PySide6.QtGui import (QDropEvent, QEventPoint, QStandardItem,  # pylint: disable=no-name-in-module
+                           QStandardItemModel)
+from PySide6.QtWidgets import (QAbstractItemView, QMenu, QMessageBox, QTreeView,  # pylint: disable=no-name-in-module
+                               QWidget)
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, showMessage
 from ..miscTools import callAddOn

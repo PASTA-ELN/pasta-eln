@@ -239,7 +239,7 @@ class Project(QWidget):
           oldPath.rename(newPath)
         # go through children, remove from DB
         children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=self.projID)
-        for docID in set(line['id'] for line in children if line['id']!=self.projID):
+        for docID in {line['id'] for line in children if line['id']!=self.projID}:
           self.comm.backend.db.remove(docID)
         #update sidebar, show projects
         self.comm.changeSidebar.emit('redraw')
