@@ -31,18 +31,13 @@ class Sidebar(QWidget):
     if self.comm.backend.configuration['GUI']['showProjectBtn']=='Yes':
       TextButton('List projects', self, [Command.LIST_PROJECTS], mainL, 'Show list of all projects')
     _, self.projectsListL = widgetAndLayout('V', mainL, spacing='m')
-    # projectListW, self.projectsListL = widgetAndLayout('V', None, spacing='s')
-    # scrollSection = QScrollArea()
-    # scrollSection.setWidget(projectListW)
-    # mainL.addWidget(scrollSection)
+
     self.setLayout(mainL)
 
     self.widgetsAction:dict[str,QWidget] = {}
     self.widgetsList:dict[str,QWidget]   = {}
     self.widgetsProject:dict[str,Any]    = {} #title bar and widget that contains all of project
     self.change()
-    #++ TODO projectView: allow size changegable, drag-and-drop to move
-    #   more below and other files
 
 
   @Slot(str)

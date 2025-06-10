@@ -101,6 +101,7 @@ class Project(QWidget):
     self.allDetails.resizeEvent = self.commentResize # type: ignore
     bgColor = self.comm.palette.get('secondaryDark', 'background-color')
     fgColor = self.comm.palette.get('secondaryText', 'color')
+    #TODO: For none: no color is set, as it should; but then the Windows10 color is white not the default background
     self.allDetails.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
     self.allDetails.setReadOnly(True)
     self.mainL.addWidget(self.allDetails)

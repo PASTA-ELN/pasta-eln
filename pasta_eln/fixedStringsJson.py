@@ -135,8 +135,8 @@ DEFAULT_COLORS_PALETTE:dict[str,dict[str,str]] = {
     },
     'light': {
         'text': '#111111',
-        'leafX': '#EEEEEE',
-        'leafO': '#FFFFFF',
+        'leafX': '#DDDDDD',
+        'leafO': '#EEEEEE',
         'leafShadow': '#AAAAAA',
     },
 }
