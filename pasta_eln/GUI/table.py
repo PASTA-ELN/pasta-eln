@@ -33,11 +33,11 @@ class Table(QWidget):
     comm.stopSequentialEdit.connect(self.stopSequentialEditFunction)
     self.stopSequentialEdit = False
     self.data         :pd.DataFrame = pd.DataFrame()
-    self.models       :list[QSortFilterProxyModel] = []
-    self.filterSelect :list[QComboBox]             = []
-    self.filterText   :list[QLineEdit]             = []
-    self.filterInverse:list[QPushButton]           = []
-    self.filterDelete :list[QPushButton]           = []
+    self.models       :list[QStandardItemModel | QSortFilterProxyModel] = []
+    self.filterSelect :list[QComboBox]   = []
+    self.filterText   :list[QLineEdit]   = []
+    self.filterInverse:list[QPushButton] = []
+    self.filterDelete :list[QPushButton] = []
     self.docType = ''
     self.projID = ''
     self.filterHeader:list[str] = []
@@ -451,7 +451,7 @@ class Table(QWidget):
       # delete one row in models and adopt the sources
       del self.models[row]
       for i in range(1, len(self.models)):
-        self.models[i].setSourceModel(self.models[i-1])
+        self.models[i].setSourceModel(self.models[i-1])                             # type: ignore[union-attr]
       self.table.setModel(self.models[-1])
     elif command[0] is Command.SET_FILTER:
       self.filterTextChanged('', command[1])
@@ -481,7 +481,7 @@ class Table(QWidget):
         regexStr = f'^{regexStr}$'
     elif self.filterInverse[row].isChecked():
       regexStr = f'^((?!{regexStr}).)*$'
-    self.models[row+1].setFilterRegularExpression(regexStr)
+    self.models[row+1].setFilterRegularExpression(regexStr)                         # type: ignore[union-attr]
     return
 
 
@@ -562,8 +562,8 @@ class Table(QWidget):
     """
     index = self.models[-1].index(row,0)
     for idxModel in range(len(self.models)-1,0,-1):
-      index = self.models[idxModel].mapToSource(index)
-    item = self.models[0].itemFromIndex(index)                                                               # type: ignore[attr-defined]
+      index = self.models[idxModel].mapToSource(index)                              # type: ignore[union-attr]
+    item = self.models[0].itemFromIndex(index)                                      # type: ignore[union-attr]
     return item, item.accessibleText()
 
 
@@ -580,7 +580,7 @@ class Table(QWidget):
       rating = True
     for idx,combobox in enumerate(self.filterSelect):
       if combobox==self.sender():
-        self.models[idx+1].setFilterKeyColumn(item)
+        self.models[idx+1].setFilterKeyColumn(item)                                 # type: ignore[union-attr]
         self.filterText[idx].setText('')
         if rating:
           self.filterText[idx].setValidator(QRegularExpressionValidator(r'\*+'))

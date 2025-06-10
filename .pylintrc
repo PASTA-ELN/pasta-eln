@@ -18,7 +18,11 @@ ignore-patterns=dialog_base.py,
                 html2mdUtils.py,
                 markdown2html.py,
                 extractor_[a-z]+.py,
-                project_html_report.py
+                project_html_report.py,
+                table_plot*.py,
+                form_auto.py,
+                definition_autofill.py
+
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().

@@ -30,6 +30,10 @@ class Configuration(QDialog):
     tabW = QTabWidget(self)
     mainL.addWidget(tabW)
 
+    # tab has to always exist
+    tabSetup = ConfigurationSetup(self.comm, self.closeWidget)      # Setup / Troubleshoot Pasta
+
+    # optional tabs
     try:
       tabProjectGroup = ProjectGroup(self.comm, self.closeWidget)     # Project group. Restart app
       tabW.addTab(tabProjectGroup, 'Project group')
@@ -57,7 +61,7 @@ class Configuration(QDialog):
     except Exception as e:
       print('**ERROR: could not create configuration dialog:', e)
 
-    tabSetup = ConfigurationSetup(self.comm, self.closeWidget)      # Setup / Troubleshoot Pasta
+    # always add setup tab
     tabW.addTab(tabSetup, 'Setup')
 
 
