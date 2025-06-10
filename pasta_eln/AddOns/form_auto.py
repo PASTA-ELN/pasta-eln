@@ -20,7 +20,7 @@ def main(backend, doc, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
         backend (pasta backend): allow to extract data
-        doc (dict): dictionary of the content: comment, title, image might be helpfull
+        doc (dict): dictionary of the content: comment, title, image might be helpful
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters
 

@@ -175,7 +175,7 @@ class Label(QLabel):
                function:Optional[Callable[[str, str],None]]=None, docID:str='', tooltip:str='', style:str=''):
     """ Label widget with given font-size and functions:
     - text selection: if only character, easy selection
-      - if formatted text: right-mouse-button to select all (There is no other way, apperently)
+      - if formatted text: right-mouse-button to select all (There is no other way, apparently)
 
     Args:
       text (str): text on label
