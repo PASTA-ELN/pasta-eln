@@ -6,7 +6,7 @@ from datetime import datetime
 from json import dumps
 from os.path import basename
 from typing import Any
-from xml.etree.ElementTree import ElementTree, Element, fromstring
+from xml.etree.ElementTree import ElementTree, fromstring
 # Dataverse: remember to always publish everything before using it!!
 import requests
 from requests.auth import HTTPBasicAuth
@@ -154,12 +154,9 @@ class DataverseClient(RepositoryClient):
       headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token},
       auth=HTTPBasicAuth(self.api_token, ''), timeout=10)
     if resp.status_code == 200:
-      element_tree:ElementTree = ElementTree(fromstring(resp.text))
+      element_tree: ElementTree = ElementTree(fromstring(resp.text))
       dataverse_list: list[dict[str, str]] = []
-      allElements:list[Element[str]] = []
-      if element_tree.getroot() is not None:
-        allElements = element_tree.getroot().findall('.//{http://www.w3.org/2007/app}workspace')
-      for element in allElements:
+      for element in element_tree.getroot().findall('.//{http://www.w3.org/2007/app}collection'):# type:ignore[union-attr]
         title = element.find('.//{http://www.w3.org/2005/Atom}title')
         if title is not None:
           title_val = title.text if title.text is not None else ''
