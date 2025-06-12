@@ -2,16 +2,17 @@
 from typing import Any
 
 defaultDocTypes: list[list[str]] = [
-  #docType,       PURL, title,          icon,                   shortcut, view
-  ['x0',                 'http://purl.obolibrary.org/obo/NCIT_C47885',  'Projects',     '',                     'space', 'name,tags,.status,.objective,comment'],
-  ['x1',                 'http://purl.obolibrary.org/obo/NCIT_C101129', 'Folders',      '',                      '',     ''],
-  ['measurement',        'http://purl.obolibrary.org/obo/NCIT_C42790',  'Measurements', 'fa5s.thermometer-half', 'm',    'name,tags,comment,type,image,.sample,.workflow/procedure'],
-  ['sample',             'http://purl.obolibrary.org/obo/NCIT_C19157',  'Samples',      'fa5s.vial',             's',    'name,tags,.chemistry,comment,qrCodes'],
-  ['workflow',           'http://purl.obolibrary.org/obo/NCIT_C42753',  'Workflows',    'fa5s.list-ol',          'w',    'name,tags,comment'],
-  ['workflow/procedure', 'https://schema.org/procedure',                'Procedure',    '',                      '',     'name,tags,comment,content'],
-  ['workflow/workplan' , 'http://purl.obolibrary.org/obo/PROCO_0000093','Work plan',    '',                      '',     'name,tags,comment,content'],
-  ['workflow/worklog'  , '',                                            'Work log',     '',                      '',     'name,tags,comment,content'],
-  ['instrument',         'http://purl.obolibrary.org/obo/NCIT_C16742',  'Instruments',  'ri.scales-2-line',      'i',    'name,tags,comment,.vendor']
+  #docType,               PURL,                                              title,          icon,                   shortcut, view
+  ['x0',                  'http://purl.obolibrary.org/obo/NCIT_C47885',      'Projects',     '',                     'space', 'name,tags,.status,.objective,comment'],
+  ['x1',                  'http://purl.obolibrary.org/obo/NCIT_C101129',     'Folders',      '',                      '',     ''],
+  ['measurement',         'http://purl.obolibrary.org/obo/NCIT_C42790',      'Measurements', 'fa5s.thermometer-half', 'm',    'name,tags,comment,type,image,.sample,.workflow/procedure'],
+  ['sample',              'http://purl.obolibrary.org/obo/NCIT_C19157',      'Samples',      'fa5s.vial',             's',    'name,tags,.chemistry,comment,qrCodes'],
+  ['workflow',            'http://purl.obolibrary.org/obo/NCIT_C42753',      'Workflows',    'fa5s.list-ol',          'w',    'name,tags,comment'],
+  ['workflow/procedure',  'https://schema.org/procedure',                    'Procedure',    '',                      '',     'name,tags,comment,content'],
+  ['workflow/workplan' ,  'http://purl.obolibrary.org/obo/PROCO_0000093',    'Work plan',    '',                      '',     'name,tags,comment,content'],
+  ['workflow/worklog'  ,  'http://dicom.nema.org/resources/ontology/DCM/LOG','Work log',     '',                      '',     'name,tags,comment,content'],
+  ['instrument',          'http://purl.obolibrary.org/obo/NCIT_C16742',      'Instruments',  'ri.scales-2-line',      'i',    'name,tags,comment,.vendor'],
+  ['instrument/extension','https://www.wikidata.org/wiki/Q19841649',         'Extensions',   '',                      '',     'name,tags,comment,.vendor'],
 ]
 
 
@@ -76,7 +77,7 @@ defaultDefinitions = [
   ['sample',            'Which sample was used?',                                         ''],
   ['workflow/procedure','Which procedure was used?',                                      ''],
   ['chemistry',         'What is its chemical composition?',                              ''],
-  ['qrCodes',           '',                                                               ''],
+  ['qrCodes',           '',                           'https://www.wikidata.org/wiki/Q12203'],
   ['geometry.width',    'Sample width',                                                   ''],
   ['geometry.length',   'Sample length',                                                  ''],
   ['geometry.height',   'Sample height',                         'https://schema.org/height']
@@ -100,7 +101,10 @@ defaultConfiguration: dict[str, Any] = {
   'authors': [{'first': '', 'last': '', 'title': '', 'email': '', 'orcid': '',
                'organizations': [{'organization': '', 'rorid': ''}]}],
   'GUI': {},
-  'projectGroups': {}
+  'projectGroups': {},
+  "signingKeyPair": {},
+  "repositories": {},
+  "addOnParameter": {}
 }
 
 # level 1: type of property

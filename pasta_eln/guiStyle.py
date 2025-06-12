@@ -229,7 +229,7 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='Information', sty
     style (str): css style
   """
   iconSize = 40
-  color = 'red' if icon=='Critical' else 'yellow' if icon=='Warning' else 'green'
+  color = 'red' if icon=='Critical' else '#ffbc00' if icon=='Warning' else '#'
   iconSymbol = qta.icon('fa5s.minus-circle' if icon=='Critical' else
                   'fa5s.exclamation-circle' if icon=='Warning' else
                   'fa5s.info', color='white', scale_factor=1)

@@ -240,7 +240,7 @@ def callAddOn(name:str, backend:Any, content:Any, widget:QWidget) -> Any:
     Any: result of the add-on
   """
   module      = importlib.import_module(name)
-  parameter   = backend.configuration['addOnParameter']
+  parameter   = backend.configuration.get('addOnParameter', {})
   try:
     subParameter = parameter[name]
   except KeyError:

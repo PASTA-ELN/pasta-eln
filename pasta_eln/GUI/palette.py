@@ -15,7 +15,7 @@ class Palette():
       mainWindow (QMainWindow): main window for getting system theme
       accent (str): accent color, e.g. 'pink'
     """
-    accent = self.cleanAccent(accent)                # given theme #TODO temporary
+    accent = self.cleanAccent(accent)                # given theme
     systemTheme = 'light' if mainWindow is None or mainWindow.palette().button().color().red()>128 or \
       platform.system() != 'Linux' else 'dark' # system color mode: dark/light
     self.theme = 'none' if accent=='none' else f'{systemTheme}_{accent}' # theme name

@@ -39,4 +39,4 @@ class Communicate(QObject):
   formDoc            = Signal(dict)      # send doc from details to new/edit dialog: dialogForm
   testExtractor      = Signal()          # execute extractorTest in widgetDetails
   stopSequentialEdit = Signal()          # in sequential edit, stop if there is a cancel
-  restart            = Signal()          # restart GUI
+  restart            = Signal()          # restart GUI  #TODO rename to softRestart to avoid confusion

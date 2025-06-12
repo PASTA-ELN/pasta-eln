@@ -58,6 +58,7 @@ class Table(QWidget):
     self.subDocTypeL= Label('      subType:', 'h3', headerL)
     self.subDocTypeL.hide()
     self.subDocType=QComboBox(self)
+    self.subDocType.setMinimumWidth(200)
     self.subDocType.setStyleSheet(self.comm.palette.get('secondaryText','color'))
     self.subDocType.currentTextChanged.connect(lambda dt: self.change(dt, self.projID))
     self.subDocType.hide()
