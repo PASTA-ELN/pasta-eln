@@ -102,9 +102,9 @@ defaultConfiguration: dict[str, Any] = {
                'organizations': [{'organization': '', 'rorid': ''}]}],
   'GUI': {},
   'projectGroups': {},
-  "signingKeyPair": {},
-  "repositories": {},
-  "addOnParameter": {}
+  'signingKeyPair': {},
+  'repositories': {},
+  'addOnParameter': {}
 }
 
 # level 1: type of property

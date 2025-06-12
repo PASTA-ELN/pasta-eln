@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QLabel,  # 
                                QLineEdit, QVBoxLayout)
 from ...fixedStringsJson import allIcons
 from ...guiCommunicate import Communicate
-from ...guiStyle import TextButton, widgetAndLayout, widgetAndLayoutForm, showMessage
+from ...guiStyle import TextButton, showMessage, widgetAndLayout, widgetAndLayoutForm
 
 
 class DocTypeEditor(QDialog):
