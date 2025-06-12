@@ -481,7 +481,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json', json.dumps(index, indent=2))
 
     #sign file
-    if 'signingKeyPair' not in backend.configuration:  #create a key-pair of secret and public key and save it locally
+    if 'signingKeyPair' not in backend.configuration or not backend.configuration['signingKeyPair']:
+      #create a key-pair of secret and public key and save it locally
       keyPairRaw = minisign.KeyPair.generate()
       keyPair    = {'id':str(uuid.uuid4()), 'secret':bytes(keyPairRaw.secret_key).decode(), 'public':bytes(keyPairRaw.public_key).decode()}
       backend.configuration['signingKeyPair'] = keyPair
