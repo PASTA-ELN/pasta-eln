@@ -156,7 +156,7 @@ class DataverseClient(RepositoryClient):
     if resp.status_code == 200:
       element_tree: ElementTree = ElementTree(fromstring(resp.text))
       dataverse_list: list[dict[str, str]] = []
-      for element in element_tree.getroot().findall('.//{http://www.w3.org/2007/app}collection'):
+      for element in element_tree.getroot().findall('.//{http://www.w3.org/2007/app}collection'):# type:ignore[union-attr]
         title = element.find('.//{http://www.w3.org/2005/Atom}title')
         if title is not None:
           title_val = title.text if title.text is not None else ''

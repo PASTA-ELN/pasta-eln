@@ -15,8 +15,8 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog
 from ..elabFTWapi import ElabFTWApi
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
-from ..guiStyle import IconButton, Label, ScrollMessageBox, TextButton, showMessage, widgetAndLayoutGrid
-from ..miscTools import restart, updateAddOnList
+from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayoutGrid
+from ..miscTools import restart
 
 
 class ProjectGroup(QDialog):
@@ -212,13 +212,6 @@ class ProjectGroup(QDialog):
         self.requireHardRestart = True  #because python-path has to change
       config['addOnDir'] = answer
       config['addOns'] = {}
-      button = QMessageBox.question(self, 'Question', 'Do you want to update the AddOn list (recommended)?',
-                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-      if button == QMessageBox.StandardButton.Yes:
-        reportDict = updateAddOnList(self.comm.backend.configurationProjectGroup)
-        messageWindow = ScrollMessageBox('Extractor list updated', reportDict,
-                                       style='QScrollArea{min-width:600 px; min-height:400px}')
-        messageWindow.exec()
       self.addOnLabel.setText('Add on directory: ' + config['addOnDir'])
 
     elif command[0] is Command.TEST_SERVER:
@@ -241,8 +234,8 @@ class ProjectGroup(QDialog):
         self.changeButtonOnTest(False, self.row3Button, 'Wrong server address')
 
     elif command[0] is Command.TEST_API_HELP:
-      link = f'OR go to {config["remote"]["url"][:-7]}ucp.php?tab=4\n\n' if config['remote'].get('url','') else ''
-      showMessage(self, 'Help', f'### How to get an api key to access the server:\n\nGo to f{link}\n\n'
+      link = f'Go to: {config["remote"]["url"][:-7]}ucp.php?tab=4\n\n' if config['remote'].get('url','') else ''
+      showMessage(self, 'Help', f'### How to get an api key to access the server:\n\n{link}'
                   'On the elabFTW server:\n\nClick on the User Symbol in the top right\n\nGo to "Settings"\n\n'
                   'Open the tab "API keys"\n\nCreate a new API key:\n\n  a) Specify a name, like "pasta_eln"\n\n  b) '
                   'Change the permissions to "Read/Write"\n\n  c) Click on "Generate new API key"\n\nCopy+Paste that '
@@ -292,6 +285,11 @@ class ProjectGroup(QDialog):
       self.image.setPixmap(pixmap)
 
     elif command[0] is Command.NEW:
+      #TODO: the self.selectGroup does not disappear
+      # TODO: widget want you to create an addon folder, but it is not needed
+      # when new project group: api-key is highlighted
+      # new pg name has to be small letters, no spaces, no special characters
+      #
       self.formL.removeWidget(self.selectGroup)
       self.formL.addWidget(self.groupTextField, 0, 0)
       self.directoryLabel.setText('Data directory: ')

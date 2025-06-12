@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Union
 from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox  # pylint: disable=no-name-in-module
 from pasta_eln import __version__
 from .backend import Backend
 from .elabFTWsync import Pasta2Elab
@@ -25,7 +25,7 @@ from .GUI.sidebar import Sidebar
 from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN, importELN
-from .miscTools import restart, updateAddOnList
+from .miscTools import restart, testNewPastaVersion, updateAddOnList
 
 os.environ['QT_API'] = 'pyside6'
 
@@ -72,8 +72,7 @@ class MainWindow(QMainWindow):
       Action('Get',                          self, [Command.SYNC_GET],        syncMenu, shortcut='F4')
       # Action('Smart synce',                  self, [Command.SYNC_SMART],       syncMenu)
     Action('&Editor to change data type schema', self, [Command.SCHEMA],      systemMenu, shortcut='F8')
-    if 'develop' in self.comm.backend.configuration:
-      Action('&Definitions editor',          self, [Command.DEFINITIONS],     systemMenu)
+    Action('&Definitions editor',          self, [Command.DEFINITIONS],     systemMenu)
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
@@ -88,7 +87,6 @@ class MainWindow(QMainWindow):
     Action('About',                          self, [Command.ABOUT],           helpMenu)
     systemMenu.addSeparator()
     Action('&Configuration',                 self, [Command.CONFIG],          helpMenu, shortcut='Ctrl+0')
-    # Action('&Dataverse Configuration',       self, [Command.DATAVERSE_CONFIG],helpMenu, shortcut='F10')
 
     # shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda: self.execute([Command.RESTART]))
@@ -98,16 +96,21 @@ class MainWindow(QMainWindow):
     # GUI elements
     mainWidget, mainLayout = widgetAndLayout('H')
     self.setCentralWidget(mainWidget)  # Set the central widget of the Window
-    body = Body(self.comm)  # body with information
-    self.sidebar = Sidebar(self.comm)  # sidebar with buttons
-    # sidebarScroll = QScrollArea()
-    # sidebarScroll.setWidget(self.sidebar)
-    # if hasattr(self.comm.backend, 'configuration'):
-    #   sidebarScroll.setFixedWidth(self.comm.backend.configuration['GUI']['sidebarWidth']+10)
-    # mainLayout.addWidget(sidebarScroll)
-    mainLayout.addWidget(self.sidebar)
-    mainLayout.addWidget(body)
-    self.initialize()
+    try:
+      body = Body(self.comm)  # body with information
+      self.sidebar = Sidebar(self.comm)  # sidebar with buttons
+      mainLayout.addWidget(self.sidebar)
+      mainLayout.addWidget(body)
+      # tests that run at start-up
+      if self.backend.configuration['GUI']['checkForUpdates']=='Yes' and not testNewPastaVersion(False):
+        button = QMessageBox.question(self, 'Update?', 'There is a new version of PASTA-ELN available. Do you want to update?',
+                                      QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+        if button == QMessageBox.StandardButton.Yes:
+          testNewPastaVersion(update=True)
+      # initialize things that might change
+      self.initialize()
+    except Exception as e:
+      logging.error('Error in GUI initialization %s', e)
 
 
   @Slot()
@@ -118,8 +121,6 @@ class MainWindow(QMainWindow):
     self.viewMenu.clear()
     if hasattr(self.backend, 'db'):
       for docType, docLabel in self.comm.backend.db.dataHierarchy('', 'title'):
-        if docType[0] == 'x' and docType[1] != '0':
-          continue
         shortcut = self.comm.backend.db.dataHierarchy(docType,'shortcut')[0]
         shortcut = None if shortcut=='' else f"Ctrl+{shortcut}"
         Action(docLabel,            self, [Command.VIEW, docType],  self.viewMenu, shortcut=shortcut)

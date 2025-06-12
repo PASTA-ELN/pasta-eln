@@ -172,7 +172,10 @@ class SqlLiteDB:
     """
     Shutting down things
     """
+    self.cursor.close()
+    del self.cursor
     self.connection.close()
+    del self.connection
     return
 
 
@@ -718,7 +721,7 @@ class SqlLiteDB:
     viewType, docType = thePath.split('/', 1)
     if viewType=='viewDocType':
       viewColumns = self.dataHierarchy(docType, 'view')
-      viewColumns = viewColumns+['id'] if viewColumns else ['name','tags','comment','id']
+      viewColumns = viewColumns+['id'] if viewColumns and viewColumns != [''] else ['name','tags','comment','id']
       textSelect = ', '.join([f'main.{i}' for i in viewColumns if i in MAIN_ORDER or i[1:] in MAIN_ORDER])
       cmd = f"SELECT {textSelect} FROM main INNER JOIN branches USING(id) WHERE main.type LIKE '{docType}%'"
       if not allFlag:
@@ -729,7 +732,7 @@ class SqlLiteDB:
       #clean main df
       df      = df[~df.index.duplicated(keep='first')]
       if 'image' in viewColumns:
-        df['image'] = str(len(df['image'])>1)
+        df['image'] = df['image'].apply(lambda x: 'Y' if len(str(x)) > 1 else 'N')
       # add: tags, qrCodes, parameters
       if 'tags' in viewColumns:
         cmd = 'SELECT main.id, tags.tag FROM main INNER JOIN tags USING(id) INNER JOIN branches USING(id) '\
@@ -740,6 +743,7 @@ class SqlLiteDB:
           cmd += f" and branches.stack LIKE '{startKey}%'"
         dfTags = pd.read_sql_query(cmd, self.connection, index_col='id').fillna('')
         dfTags = dfTags.groupby(['id'])['tag'].apply(lambda x: ', '.join(set(x))).reset_index().set_index('id')
+        dfTags.rename(columns={'tag':'tags'}, inplace=True)
         df = df.join(dfTags)
       if 'qrCodes' in viewColumns:
         cmd = 'SELECT main.id, qrCodes.qrCode FROM main INNER JOIN qrCodes USING(id) INNER JOIN branches '\
@@ -750,6 +754,7 @@ class SqlLiteDB:
           cmd += f" and branches.stack LIKE '{startKey}%'"
         dfQrCodes = pd.read_sql_query(cmd, self.connection, index_col='id').fillna('')
         dfQrCodes = dfQrCodes.groupby(['id'])['qrCode'].apply(', '.join).reset_index().set_index('id')
+        dfQrCodes.rename(columns={'qrCode':'qrCodes'}, inplace=True)
         df = df.join(dfQrCodes)
       if metadataKeys:= [f'properties.key == "{i}"' for i in viewColumns if i not in MAIN_ORDER+['tags']]:
         cmd = 'SELECT main.id, properties.key, properties.value FROM main INNER JOIN properties USING(id) '\
@@ -763,8 +768,7 @@ class SqlLiteDB:
         dfParams.columns.name = None                                                            # Flatten the columns
         df = df.join(dfParams)
       # final sorting of columns
-      columnOrder = ['tag' if i=='tags' else 'qrCode' if i=='qrCodes'
-                     else i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]
+      columnOrder = [i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]
       df = df.reset_index().reindex(columnOrder, axis=1)
       df = df.rename(columns={i:i[1:] for i in columnOrder if i.startswith('.') })
       df = df.astype('str').fillna('')
@@ -974,6 +978,13 @@ class SqlLiteDB:
       else:
         lostAndFoundProjId   = idProjects[0]
         lostAndFoundProjPath = Path('LostAndFound')  #by definition
+    if not lostAndFoundProjId and repair is not None:
+      errorStr = outputString(outputStyle,'error','No Lost and Found project found. Some repair impossible. '\
+                                          'Repair: exit repair mode and manually create LostAndFound project.')
+      if repair is None:
+        reply+= errorStr
+      elif repair(errorStr):
+        return 'Repair aborted: no Lost and Found project found. Exit repair mode and create it manually.'
     # tests
     self.cursor.execute('SELECT main.id, main.name FROM main WHERE id NOT IN (SELECT id FROM branches)')
     if res:= self.cursor.fetchall():
@@ -1047,7 +1058,7 @@ class SqlLiteDB:
           for parentID in stack.split('/')[:-1]:            #check if all parents in doc have a corresponding path
             parentDoc = self.getDoc(parentID)
             if not parentDoc:
-              errorStr= outputString(outputStyle,'error',f"branch stack parent is bad: {docID}")
+              errorStr= outputString(outputStyle,'error',f"branch stack parent is bad: {docID}. Repair: move to lost and found.")
               if repair is None:
                 reply+= errorStr
               elif repair(errorStr):
@@ -1089,11 +1100,11 @@ class SqlLiteDB:
           "WHERE branches.path=='*' AND main.shasum!=''"
     self.cursor.execute(cmd)
     for line in self.cursor.fetchall():
-      errorStr= outputString(outputStyle,'error',f"shasum!='' for item with no path. docID:{line[0]}")
+      errorStr= outputString(outputStyle,'error',f"shasum!='' for item with no path docID:{line[0]}. Repair: remove shasum")
       if repair is None:
         reply+= errorStr
       elif repair(errorStr):
-        self.cursor.execute(f"DELETE FROM branches WHERE id='{line[0]}' AND path='*'")
+        self.cursor.execute(f"UPDATE main SET shasum='' WHERE id = '{line[0]}'")
         self.connection.commit()
 
     #doc-type specific tests

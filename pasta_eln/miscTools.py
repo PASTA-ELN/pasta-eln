@@ -4,14 +4,18 @@ import json
 import logging
 import os
 import platform
+import subprocess
 import sys
+import tempfile
 import traceback
 from collections.abc import Mapping
 from io import BufferedReader
 from pathlib import Path
 from typing import Any, Union
 from urllib import request
+import pandas as pd
 from PySide6.QtWidgets import QWidget  # pylint: disable=no-name-in-module
+import pasta_eln
 from .fixedStringsJson import CONF_FILE_NAME
 
 
@@ -213,8 +217,8 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
         description = module.description
         _ = module.reqParameter  # check if reqParameter exists
         otherAddOns[fileName.split('_')[0]][name] = description
-      except Exception:
-        description = f'** SYNTAX ERROR in add-on **\n{traceback.format_exc()}'
+      except Exception as e:
+        description = f'** SYNTAX ERROR in add-on **: {e}'
         otherAddOns['_ERRORS_'][name] = description
   #update configuration file
   configuration['projectGroups'][projectGroup]['addOns']['extractors'] = extractorsAll
@@ -224,23 +228,93 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   return {'addon directory':directory} | extractorsAll | otherAddOns
 
 
-def callAddOn(name:str, backend:Any, projID:str, widget:QWidget) -> None:
+def callAddOn(name:str, backend:Any, content:Any, widget:QWidget) -> Any:
   """ Call add-ons
   Args:
     name (str): name of the add-on
     backend (str): backend to be used
-    projID (str): project ID
+    content (Any): content to be consumed by addon, e.g. projectID, document
     widget: widget to be used
+
+  Returns:
+    Any: result of the add-on
   """
   module      = importlib.import_module(name)
-  parameter   = backend.configuration['addOnParameter']
+  parameter   = backend.configuration.get('addOnParameter', {})
   try:
     subParameter = parameter[name]
   except KeyError:
-    print('**ERROR: No parameter for this add-on')
+    print('**Info: No parameter for this add-on')
     subParameter = {}
-  module.main(backend, projID, widget, subParameter)
-  return
+  return module.main(backend, content, widget, subParameter)
+
+
+def callDataExtractor(filePath:Path, backend:Any) -> Any:
+  """ Call data extractor for a given file path: CALL THE DATA FUNCTION
+
+  Args:
+    filePath (Path): path to file
+    backend (str): backend
+
+  Returns:
+    Any: result of the data extractor
+  """
+  extension = filePath.suffix[1:]  #cut off initial . of .jpg
+  if str(filePath).startswith('http'):
+    absFilePath = Path(tempfile.gettempdir())/filePath.name
+    with request.urlopen(filePath.as_posix().replace(':/','://'), timeout=60) as urlRequest:
+      with open(absFilePath, 'wb') as f:
+        try:
+          f.write(urlRequest.read())
+        except Exception:
+          print('Error saving downloaded file to temporary disk')
+  else:
+    if filePath.is_absolute():
+      filePath  = filePath.relative_to(backend.basePath)
+    absFilePath = backend.basePath/filePath
+  pyFile = f'extractor_{extension.lower()}.py'
+  pyPath = backend.addOnPath/pyFile
+  if pyPath.is_file():
+    # import module and use to get data
+    try:
+      module = importlib.import_module(pyFile[:-3])
+      return module.data(absFilePath, {})
+    except Exception as e:
+      print('**Warning** CallDataExtractor:',e)
+  return None
+
+
+def isFloat(val:str) -> bool:
+  """Check if a value can be converted to float.
+  Args:
+    val (str): value to check
+  Returns:
+    bool: True if value can be converted to float, False otherwise
+  """
+  try:
+    float(val)
+    return True
+  except (ValueError, TypeError):
+    return False
+
+
+def dfConvertColumns(df:pd.DataFrame, ratio:int=10) -> pd.DataFrame:
+  """Convert columns in a DataFrame to numeric if a significant
+  portion of the column can be converted
+
+  Args:
+    df (pd.DataFrame): DataFrame with columns to convert
+    ratio (int): threshold ratio to determine if a column should be converted
+
+  Returns:
+    pd.DataFrame: DataFrame with converted columns
+  """
+  for col in df.columns:
+    numConvertible = df[col].apply(isFloat).sum()
+    if numConvertible > len(df) / ratio:
+      df[col] = pd.to_numeric(df[col], errors='coerce')
+  return df
+
 
 
 def restart() -> None:
@@ -252,6 +326,27 @@ def restart() -> None:
   except Exception:
     os.execv(sys.executable, ['python3','-m','pasta_eln.gui']) #started for programming or debugging
   return
+
+
+def testNewPastaVersion(update:bool=False) -> bool:
+  """ Test if this version is up to date with the latest version on pypi
+  - variable largestVersionOnPypi is the latest NON-BETA version on pypi
+
+  Args:
+    update (bool): update to latest version
+
+  Returns:
+    bool: if up-to-date or if current version is a beta
+  """
+  if update:
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pasta-eln'])
+    restart()
+  url = 'https://pypi.org/pypi/pasta-eln/json'
+  with request.urlopen(url) as response:
+    data = json.loads(response.read())
+  releases = list(data['releases'].keys())
+  largestVersionOnPypi = sorted(releases)[-1]
+  return largestVersionOnPypi == pasta_eln.__version__ or 'b' in pasta_eln.__version__
 
 
 class DummyProgressBar():

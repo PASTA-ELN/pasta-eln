@@ -57,7 +57,7 @@ class TextButton(QPushButton):
 class IconButton(QPushButton):
   """ Button that has only an icon"""
   def __init__(self, iconName:str, widget:QWidget, command:list[Any]=[], layout:Optional[QLayout]=None,
-               tooltip:str='', style:str='', hide:bool=False):
+               tooltip:str='', style:str='', hide:bool=False, checkable:bool=False):
     """
     Args:
       iconName (str): icon to show on button
@@ -67,20 +67,23 @@ class IconButton(QPushButton):
       tooltip (str): tooltip shown when mouse hovers the button
       style (str): css style
       hide (bool): hidden or shown initially
+      checkable (bool): can the button change its background color
     """
     super().__init__()
     icon = qta.icon(iconName, scale_factor=1)  #color change here
     self.setIcon(icon)
-    self.clicked.connect(lambda: widget.execute(command))                                                    # type: ignore[attr-defined]
+    self.setCheckable(checkable)
+    self.command = command
+    self.clicked.connect(lambda: widget.execute(self.command))                                                    # type: ignore[attr-defined]
     self.setFixedHeight(30)
     if tooltip:
       self.setToolTip(tooltip)
     if style:
-      self.setStyleSheet(style)
+      self.setStyleSheet(f'QPushButton {{{style}}} QPushButton:checked {{border: "red"; border-width: 5px; {style}}}')
     else:
       primaryColor   = widget.comm.palette.get('primary', 'background-color')                          # type: ignore[attr-defined]
       secondaryColor = widget.comm.palette.get('secondary','color')                                    # type: ignore[attr-defined]
-      self.setStyleSheet(f'border-width: 0px; {primaryColor} {secondaryColor}')
+      self.setStyleSheet(f'QPushButton {{border-width: 0px; {primaryColor} {secondaryColor}}} QPushButton:checked {{border: 3px solid red; {primaryColor} {secondaryColor}}}')
     if hide:
       self.hide()
     if layout is not None:
@@ -170,7 +173,10 @@ class Label(QLabel):
   """ Label widget: headline, ... """
   def __init__(self, text:str='', size:str='', layout:Optional[QLayout]=None,
                function:Optional[Callable[[str, str],None]]=None, docID:str='', tooltip:str='', style:str=''):
-    """
+    """ Label widget with given font-size and functions:
+    - text selection: if only character, easy selection
+      - if formatted text: right-mouse-button to select all (There is no other way, apparently)
+
     Args:
       text (str): text on label
       size (str): size ['h1','h2','h3']
@@ -182,6 +188,9 @@ class Label(QLabel):
     """
     super().__init__()
     self.setText(text)
+    if text.startswith('#') or text.startswith('<'):
+      self.setTextFormat(Qt.TextFormat.RichText)
+    self.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
     if size == 'h1':
       style += 'font-size: 14pt'
     elif size == 'h2':
@@ -220,7 +229,7 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='Information', sty
     style (str): css style
   """
   iconSize = 40
-  color = 'red' if icon=='Critical' else 'yellow' if icon=='Warning' else 'green'
+  color = 'red' if icon=='Critical' else '#ffbc00' if icon=='Warning' else '#'
   iconSymbol = qta.icon('fa5s.minus-circle' if icon=='Critical' else
                   'fa5s.exclamation-circle' if icon=='Warning' else
                   'fa5s.info', color='white', scale_factor=1)
@@ -461,7 +470,6 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
     if layout is not None:
       label = Label(labelStr, function=lambda x,y: clickLink(widget,x,y) if link else None, docID=docID)
       label.setOpenExternalLinks(True)
-      label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
       label.setWordWrap(True)
       layout.addWidget(label)
   return labelStr

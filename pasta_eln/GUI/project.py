@@ -77,6 +77,7 @@ class Project(QWidget):
     for doctype in self.comm.backend.db.dataHierarchy('', ''):
       if doctype[0]!='x':
         icon = self.comm.backend.db.dataHierarchy(doctype, 'icon')[0]
+        #TODO icon color incorrect in blue theme
         icon = 'fa5s.asterisk' if icon=='' else icon
         Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
@@ -100,6 +101,7 @@ class Project(QWidget):
     self.allDetails.resizeEvent = self.commentResize # type: ignore
     bgColor = self.comm.palette.get('secondaryDark', 'background-color')
     fgColor = self.comm.palette.get('secondaryText', 'color')
+    #TODO: For none: no color is set, as it should; but then the Windows10 color is white not the default background
     self.allDetails.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
     self.allDetails.setReadOnly(True)
     self.mainL.addWidget(self.allDetails)
@@ -113,9 +115,10 @@ class Project(QWidget):
     """
     if self.allDetails is None:
       return
-    self.allDetails.document().setTextWidth(self.width())
+    self.allDetails.document().setTextWidth(self.width()-20)
     height:int = self.allDetails.document().size().toTuple()[1]  # type: ignore[index]
     self.allDetails.setMaximumHeight(height+12)
+    self.allDetails.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     return
 
 
@@ -165,6 +168,8 @@ class Project(QWidget):
       self.btnAddSubfolder.setVisible(False)
     self.tree.expanded.connect(lambda index: self.actionExpandCollapse(index, True))
     self.tree.collapsed.connect(lambda index: self.actionExpandCollapse(index, False))
+    if docID:
+      self.tree.scrollToDoc(docID)
     return
 
 
@@ -235,8 +240,8 @@ class Project(QWidget):
           oldPath.rename(newPath)
         # go through children, remove from DB
         children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=self.projID)
-        for line in children:
-          self.comm.backend.db.remove(line['id'])
+        for docID in {line['id'] for line in children if line['id']!=self.projID}:
+          self.comm.backend.db.remove(docID)
         #update sidebar, show projects
         self.comm.changeSidebar.emit('redraw')
         self.comm.changeTable.emit('x0','')

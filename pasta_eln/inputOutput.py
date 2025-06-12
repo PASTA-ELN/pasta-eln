@@ -243,6 +243,9 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         backend.hierStack = []
       childrenStack[-1] += 1
       doc['childNum'] = childrenStack[-1]
+      qrCodes = [v[0] for k,v in doc.items() if 'qrCodes.' in k]
+      doc = {k:v for k,v in doc.items() if 'qrCodes.' not in k}
+      doc['qrCodes'] = qrCodes
       # print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
       try:
         docID = backend.addData(docType, doc)['id']
@@ -478,7 +481,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json', json.dumps(index, indent=2))
 
     #sign file
-    if 'signingKeyPair' not in backend.configuration:  #create a key-pair of secret and public key and save it locally
+    if 'signingKeyPair' not in backend.configuration or not backend.configuration['signingKeyPair']:
+      #create a key-pair of secret and public key and save it locally
       keyPairRaw = minisign.KeyPair.generate()
       keyPair    = {'id':str(uuid.uuid4()), 'secret':bytes(keyPairRaw.secret_key).decode(), 'public':bytes(keyPairRaw.public_key).decode()}
       backend.configuration['signingKeyPair'] = keyPair

@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QScrollArea, QTextEdit  # pylint: disable=no-name-in-module
 from ..fixedStringsJson import SORTED_DB_KEYS, defaultDataHierarchyNode
 from ..guiCommunicate import Communicate
-from ..guiStyle import Image, Label, TextButton, addDocDetails, showMessage, widgetAndLayout
+from ..guiStyle import IconButton, Image, Label, TextButton, addDocDetails, showMessage, widgetAndLayout
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
 
 
@@ -29,7 +29,7 @@ class Details(QScrollArea):
     self.setWidgetResizable(True)
     self.setWidget(self.mainW)
 
-    headerW, self.headerL = widgetAndLayout('H', self.mainL, top='s')
+    headerW, self.headerL = widgetAndLayout('H', self.mainL, spacing='m', top='s', right='s')
     headerW.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     headerW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
     self.specialW, self.specialL = widgetAndLayout('V', self.mainL, top='s')
@@ -65,7 +65,9 @@ class Details(QScrollArea):
     logging.debug('details:changeDetails |%s|',docID)
     # Delete old widgets from layout
     for i in reversed(range(self.headerL.count())):
-      self.headerL.itemAt(i).widget().setParent(None)
+      aWidget = self.headerL.itemAt(i).widget()
+      if aWidget is not None:
+        aWidget.setParent(None)
     for i in reversed(range(self.metaDetailsL.count())):
       self.metaDetailsL.itemAt(i).widget().setParent(None)
     for i in reversed(range(self.metaVendorL.count())):
@@ -103,6 +105,9 @@ class Details(QScrollArea):
       dataHierarchyNode = self.comm.backend.db.dataHierarchy(self.doc['type'][0], 'meta')
     label = self.doc['name'] if len(self.doc['name'])<80 else self.doc['name'][:77]+'...'
     Label(label,'h1', self.headerL)
+    self.headerL.addStretch(1)
+    IconButton('mdi.file-tree-outline', self, [Command.TO_PROJECT], self.headerL, tooltip='Change to project')
+    IconButton('fa5s.times-circle',     self, [Command.CLOSE],      self.headerL, tooltip='Close')
     if 'metaVendor' not in self.doc:
       self.btnVendor.hide()
     if 'metUser' not in self.doc:
@@ -151,6 +156,10 @@ class Details(QScrollArea):
         getattr(self, f'meta{command[1]}W').show()
       else:
         getattr(self, f'meta{command[1]}W').hide()
+    elif command[0] is Command.CLOSE:
+      self.comm.changeTable.emit('','')
+    elif command[0] is Command.TO_PROJECT:
+      self.comm.changeProject.emit(self.doc['branch'][0]['stack'][0], self.doc['id'])
     elif isinstance(command[0], CommandMenu):
       if executeContextMenu(self, command):
         self.comm.changeTable.emit('','')
@@ -189,7 +198,7 @@ class Details(QScrollArea):
       return
     self.metaDetailsW.setFixedWidth(width)
     for text in self.rescaleTexts:
-      text.document().setTextWidth(width)
+      text.document().setTextWidth(width-80)
       height:int = text.document().size().toTuple()[1] # type:ignore[index]
       text.setFixedHeight(height)
     return
@@ -198,3 +207,5 @@ class Details(QScrollArea):
 class Command(Enum):
   """ Commands used in this file """
   SHOW             = 1
+  CLOSE            = 2
+  TO_PROJECT       = 3

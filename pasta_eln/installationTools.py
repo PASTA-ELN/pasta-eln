@@ -5,6 +5,7 @@ import os
 import platform
 import shutil
 import sys
+import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -143,9 +144,9 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
       shutil.rmtree(dirName)
       os.makedirs(dirName)
       if platform.system()=='Windows':
-        print('Try-Except unnecessary')
+        logging.info('recreate example data: remove folder went as expected')
     except Exception:
-      pass
+      logging.error('recreate example data: remove folder impossible possible %s', traceback.format_exc())
   if callbackPercent is not None:
     callbackPercent(1)
   backend = Backend(projectGroup)
@@ -237,7 +238,6 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   ### TEST SAMPLES
   outputString(outputFormat,'h2','TEST SAMPLES')
   backend.changeHierarchy(projID1)
-  #TODO: qrCodes correct??
   backend.addData('sample',    {'name': 'Example sample', '.chemistry': 'A2B2C3', 'qrCodes': '13214124 99698708', 'comment':'this sample has multiple groups of metadata',
                                 'geometry.height':4, 'geometry.width':2, 'weight.initial':6})
   if callbackPercent is not None:

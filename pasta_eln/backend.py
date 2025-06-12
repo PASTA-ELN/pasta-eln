@@ -688,7 +688,7 @@ class Backend(CLI_Mixin):
             continue
           path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
           if path not in pathsInDB_data:
-            output += outputString(outputStyle, 'error', f'File on harddisk but not DB (2): {path}')
+            output += outputString(outputStyle, 'error', f'File   on disk but not DB (2): {path}')
             count += 1
           else:
             pathsInDB_data.remove(path)
@@ -697,7 +697,7 @@ class Backend(CLI_Mixin):
         for dirName in dirs:
           path = (Path(root).relative_to(self.basePath) /dirName).as_posix()
           if path not in pathsInDB_folder:
-            output += outputString(outputStyle, 'error', f'Folder on disk but not DB  :{path}')
+            output += outputString(outputStyle, 'error', f'Folder on disk but not DB    : {path}')
             count += 1
           else:
             pathsInDB_folder.remove(path)
@@ -736,7 +736,7 @@ class Backend(CLI_Mixin):
           self.db.cursor.execute(f'SELECT main.name, main.type, branches.path, main.id, main.comment FROM main JOIN branches USING(id) WHERE branches.path == "{orphan}"')
           res = self.db.cursor.fetchall()
           resString = '\n  '.join(str(i) for i in res)
-          if repair(f'Path of database not on filesystem:\n  {resString}'):
+          if repair(f'Path of database not on filesystem:\n  {resString}. Repair: file-remove path; folder-create folder and .id_pastaELN'):
             if res[0][1].startswith('x'):
               (self.basePath/orphan).mkdir(parents=True)
               with open(self.basePath/orphan/'.id_pastaELN.json','w',encoding='utf-8') as fOut:

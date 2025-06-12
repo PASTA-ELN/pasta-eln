@@ -2,16 +2,17 @@
 from typing import Any
 
 defaultDocTypes: list[list[str]] = [
-  #docType,       PURL, title,          icon,                   shortcut, view
-  ['x0',                 'http://purl.obolibrary.org/obo/NCIT_C47885',  'Projects',     '',                     'space', 'name,tags,.status,.objective,comment'],
-  ['x1',                 'http://purl.obolibrary.org/obo/NCIT_C101129', 'Folders',      '',                      '',     ''],
-  ['measurement',        'http://purl.obolibrary.org/obo/NCIT_C42790',  'Measurements', 'fa5s.thermometer-half', 'm',    'name,tags,comment,type,image,.sample,.workflow/procedure'],
-  ['sample',             'http://purl.obolibrary.org/obo/NCIT_C19157',  'Samples',      'fa5s.vial',             's',    'name,tags,.chemistry,comment,qrCodes'],
-  ['workflow',           'http://purl.obolibrary.org/obo/NCIT_C42753',  'Workflows',    'fa5s.list-ol',          'w',    'name,tags,comment'],
-  ['workflow/procedure', 'https://schema.org/procedure',                'Procedure',    '',                      '',     'name,tags,comment,content'],
-  ['workflow/workplan' , 'http://purl.obolibrary.org/obo/PROCO_0000093','Work plan',    '',                      '',     'name,tags,comment,content'],
-  ['workflow/worklog'  , '',                                            'Work log',     '',                      '',     'name,tags,comment,content'],
-  ['instrument',         'http://purl.obolibrary.org/obo/NCIT_C16742',  'Instruments',  'ri.scales-2-line',      'i',    'name,tags,comment,.vendor']
+  #docType,               PURL,                                              title,          icon,                   shortcut, view
+  ['x0',                  'http://purl.obolibrary.org/obo/NCIT_C47885',      'Projects',     '',                     'space', 'name,tags,.status,.objective,comment'],
+  ['x1',                  'http://purl.obolibrary.org/obo/NCIT_C101129',     'Folders',      '',                      '',     ''],
+  ['measurement',         'http://purl.obolibrary.org/obo/NCIT_C42790',      'Measurements', 'fa5s.thermometer-half', 'm',    'name,tags,comment,type,image,.sample,.workflow/procedure'],
+  ['sample',              'http://purl.obolibrary.org/obo/NCIT_C19157',      'Samples',      'fa5s.vial',             's',    'name,tags,.chemistry,comment,qrCodes'],
+  ['workflow',            'http://purl.obolibrary.org/obo/NCIT_C42753',      'Workflows',    'fa5s.list-ol',          'w',    'name,tags,comment'],
+  ['workflow/procedure',  'https://schema.org/procedure',                    'Procedure',    '',                      '',     'name,tags,comment,content'],
+  ['workflow/workplan' ,  'http://purl.obolibrary.org/obo/PROCO_0000093',    'Work plan',    '',                      '',     'name,tags,comment,content'],
+  ['workflow/worklog'  ,  'http://dicom.nema.org/resources/ontology/DCM/LOG','Work log',     '',                      '',     'name,tags,comment,content'],
+  ['instrument',          'http://purl.obolibrary.org/obo/NCIT_C16742',      'Instruments',  'ri.scales-2-line',      'i',    'name,tags,comment,.vendor'],
+  ['instrument/extension','https://www.wikidata.org/wiki/Q19841649',         'Extensions',   '',                      '',     'name,tags,comment,.vendor'],
 ]
 
 
@@ -76,7 +77,7 @@ defaultDefinitions = [
   ['sample',            'Which sample was used?',                                         ''],
   ['workflow/procedure','Which procedure was used?',                                      ''],
   ['chemistry',         'What is its chemical composition?',                              ''],
-  ['qrCodes',           '',                                                               ''],
+  ['qrCodes',           '',                           'https://www.wikidata.org/wiki/Q12203'],
   ['geometry.width',    'Sample width',                                                   ''],
   ['geometry.length',   'Sample length',                                                  ''],
   ['geometry.height',   'Sample height',                         'https://schema.org/height']
@@ -100,7 +101,10 @@ defaultConfiguration: dict[str, Any] = {
   'authors': [{'first': '', 'last': '', 'title': '', 'email': '', 'orcid': '',
                'organizations': [{'organization': '', 'rorid': ''}]}],
   'GUI': {},
-  'projectGroups': {}
+  'projectGroups': {},
+  'signingKeyPair': {},
+  'repositories': {},
+  'addOnParameter': {}
 }
 
 # level 1: type of property
@@ -110,7 +114,8 @@ configurationGUI: dict[str, Any] = {
     'theme': ['Color style', 'none', ['amber', 'blue', 'cyan', 'pink', 'purple', 'teal', 'yellow', 'none']],
     'loggingLevel': ['Logging level (more->less)', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR']],
     'autosave': ['Autosave entries in form', 'No', ['Yes', 'No']],
-    'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']]
+    'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']],
+    'checkForUpdates': ['Check for updates on startup', 'Yes', ['Yes', 'No']]
   },
   'dimensions': {
     'sidebarWidth': ['Sidebar width', 280, [220, 280, 340]],
@@ -134,8 +139,8 @@ DEFAULT_COLORS_PALETTE:dict[str,dict[str,str]] = {
     },
     'light': {
         'text': '#111111',
-        'leafX': '#EEEEEE',
-        'leafO': '#FFFFFF',
+        'leafX': '#DDDDDD',
+        'leafO': '#EEEEEE',
         'leafShadow': '#AAAAAA',
     },
 }
@@ -207,14 +212,13 @@ shortcuts = """
 
 
 tableHeaderHelp = """
-<h4>You can add custom rows via bottom text area.</h4>
+## You can add custom rows via bottom text area.
 
 If you want to add a column:
-<ul>
-<li> for a normal data-field (comment, content, name, type, tags, user, date), enter this field : 'comment'
-<li> to check the existence of an image: enter 'image'
-<li> to check if a tag is present: "#tag", in which you replace "tag" by the tag you want to look for. "_curated" is a special tag for measurements.
-<li> for information inside the metadata, use a "/": e.g. "metaVendor/fileExtension", "metaUser/stress". Capitalization is important.
+- to add a normal data-field (comment, content, name, type, tags, user, date), enter this field : 'comment'
+- to check the existence of an image: enter 'image'
+- to check if a tag is present: "#tag", in which you replace "tag" by the tag you want to look for. "_curated" is a special tag for measurements.
+- to get metadata, use a ".": e.g. "metaVendor.fileExtension", "metaUser.stress". Capitalization is important.
 </ul>
 """
 

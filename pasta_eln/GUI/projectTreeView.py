@@ -122,8 +122,8 @@ class TreeView(QTreeView):
             if oldPath.exists():
               newFileName = f'trash_{oldPath.name}'
               if (oldPath.parent/newFileName).exists():  #ensure target does not exist
-                endText = ' was marked for deletion. Save it to some other place on harddisk. It will be deleted now!!!'
-                showMessage(self, 'Warning', f'Warning! \nThe file/folder {oldPath.parent/newFileName}{endText}')
+                endText = ' will be deleted after closing this window. Now, you can still save it to some other place on disk'
+                showMessage(self, 'Warning', f'Warning! \nThe file/folder {oldPath.parent/newFileName} {endText}')
                 if (oldPath.parent/newFileName).is_file():
                   (oldPath.parent/newFileName).unlink()
                 elif (oldPath.parent/newFileName).is_dir():
@@ -188,6 +188,36 @@ class TreeView(QTreeView):
       callAddOn(command[1], self.comm.backend, item.data()['hierStack'], self)
     else:
       print('**ERROR**: unknown context menu', command)
+    return
+
+
+  def scrollToDoc(self, docID:str) -> None:
+    """
+    Scroll to document with docID
+
+    Args:
+      docID (str): document ID
+    """
+    def iterate(currentItem:QStandardItem) -> QStandardItem | None:
+      """ iterate through all branches and leaves and find items matching the docID
+      Args:
+        currentItem (QStandardItem): item to iterate to its children
+      Returns:
+        QStandardItem | None: item with docID or None if not found
+      """
+      currentIndex = self.model().indexFromItem(currentItem)                                                # type: ignore[attr-defined]
+      if currentItem.data() is not None and docID==currentItem.data()['hierStack'].split('/')[-1]:
+        return currentItem
+      for row in range(self.model().rowCount(currentIndex)):
+        for column in range(self.model().columnCount(currentIndex)):
+          childIndex = self.model().index(row, column, currentIndex)
+          found = iterate(self.model().itemFromIndex(childIndex))                                            # type: ignore[attr-defined]
+          if found is not None:
+            return found
+      return None
+    item = iterate(self.model().invisibleRootItem())                                                         # type: ignore[attr-defined]
+    if item is not None:
+      self.scrollTo(item.index(), QAbstractItemView.EnsureVisible)                                           # type: ignore[attr-defined]
     return
 
 
