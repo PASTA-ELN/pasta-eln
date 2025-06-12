@@ -353,7 +353,7 @@ class Table(QWidget):
       for row in range(self.models[-1].rowCount()):
         _, docID = self.itemFromRow(row)
         path = self.comm.backend.db.getDoc(docID)['branch'][0]['path']
-        dataRow = [docID, self.comm.backend.basePath/path]
+        dataRow = [docID, '' if path is None else str(self.comm.backend.basePath/path)]
         for col in range(self.models[-1].columnCount()):
           value = self.models[-1].index(row, col).data(Qt.ItemDataRole.DisplayRole)
           dataRow.append(value)
