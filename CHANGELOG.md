@@ -2,7 +2,22 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.9...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.10b1...HEAD)
+
+**Fixed bugs:**
+
+- Details: long comment does not render fully [\#485](https://github.com/PASTA-ELN/pasta-eln/issues/485)
+
+**Closed issues:**
+
+- Feature Request: Editing history/changelog per item [\#495](https://github.com/PASTA-ELN/pasta-eln/issues/495)
+- Example project item categories? [\#493](https://github.com/PASTA-ELN/pasta-eln/issues/493)
+- Why show auto button in form when no add-on present? [\#487](https://github.com/PASTA-ELN/pasta-eln/issues/487)
+- Error message after deleting the example project [\#474](https://github.com/PASTA-ELN/pasta-eln/issues/474)
+
+## [v3.1.10b1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.10b1) (2025-06-10)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.9...v3.1.10b1)
 
 **Closed issues:**
 
