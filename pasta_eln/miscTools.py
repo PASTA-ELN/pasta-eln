@@ -3,6 +3,7 @@ import importlib
 import json
 import logging
 import os
+from packaging.version import parse as parse_version
 import platform
 import subprocess
 import sys
@@ -345,7 +346,7 @@ def testNewPastaVersion(update:bool=False) -> bool:
   with request.urlopen(url) as response:
     data = json.loads(response.read())
   releases = list(data['releases'].keys())
-  largestVersionOnPypi = sorted(releases)[-1]
+  largestVersionOnPypi = sorted(releases, key=parse_version)[-1]
   return largestVersionOnPypi == pasta_eln.__version__ or 'b' in pasta_eln.__version__
 
 
