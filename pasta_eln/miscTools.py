@@ -3,7 +3,6 @@ import importlib
 import json
 import logging
 import os
-from packaging.version import parse as parse_version
 import platform
 import subprocess
 import sys
@@ -15,6 +14,7 @@ from pathlib import Path
 from typing import Any, Union
 from urllib import request
 import pandas as pd
+from packaging.version import parse as parse_version
 from PySide6.QtWidgets import QWidget  # pylint: disable=no-name-in-module
 import pasta_eln
 from .fixedStringsJson import CONF_FILE_NAME
