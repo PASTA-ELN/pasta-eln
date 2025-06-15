@@ -35,6 +35,11 @@ class TestStringMethods(unittest.TestCase):
     path = 'testsComplicated/Data_CorrosionDB/'
     idBase = uuid.uuid4().hex[:-9]
     self.be = Backend(projectGroup)
+
+    #TODO temporary test issue with output
+    # outputString(outputFormat, 'info', self.be.output('measurement'))
+    # return
+
     self.dirName = self.be.basePath
     self.be.exit()
     shutil.rmtree(self.dirName)
@@ -52,12 +57,16 @@ class TestStringMethods(unittest.TestCase):
     self.be.db.cursor.execute('INSERT INTO definitions VALUES (?, ?, ?)',['bh4',   'Melt, batch or heat identifier',''])
     self.be.db.cursor.execute('INSERT INTO definitions VALUES (?, ?, ?)',['spec4', 'Internal material specification',''])
     self.be.db.cursor.execute('INSERT INTO definitions VALUES (?, ?, ?)',['cd',    'Date of data entry',''])
-    measurementView = 'name,type,.duration,.en2,.initialweight,.si5,.surftreatment'
+    measurementView = 'name,type' #,.duration,.en2,.initialweight,.si5,.surftreatment
     self.be.db.cursor.execute(f'UPDATE docTypes SET view = "{measurementView}" WHERE docType = "measurement"')
     sampleView = 'name,.bh4,.spec4,.cd,'
     self.be.db.cursor.execute(f'UPDATE docTypes SET view = "{sampleView}" WHERE docType = "sample"')
     projectView = 'name,.resp1,.dr1'
     self.be.db.cursor.execute(f'UPDATE docTypes SET view = "{projectView}" WHERE docType = "x0"')
+    for docType in ['instrument','instrument/extension','workflow','workflow/worklog','workflow/workplan','workflow/procedure']:
+      self.be.db.cursor.execute(f'DELETE FROM docTypes WHERE docType = "{docType}"')
+      self.be.db.cursor.execute(f'DELETE FROM docTypeSchema WHERE docType = "{docType}"')
+    self.be.db.connection.commit()
     self.be.db.connection.commit()
 
     # # COPY GENERAL FILES
@@ -128,7 +137,8 @@ class TestStringMethods(unittest.TestCase):
             metaDesigna[newK] = v
         doc['.material_designa'] = metaDesigna
       else:
-        print('***Warning designa',rows)
+        pass
+        # print('***Warning designa',rows)
       if id==1740015:
         doc['.ccbm'] = [{"el4":"Al","mec4":5.54},{"el4":"C","mec4":0.028},{"el4":"Ca","mec4":0.0006},{"el4":"Co","mec4":0.023}\
                        ,{"el4":"Cr","mec4":20.3},{"el4":"Cu","mec4":0.013},{"el4":"Fe","mec4":72.8},{"el4":"Hf","mec4":0.013,"mac4":0.0156,"mic4":0.0104}\
@@ -177,10 +187,10 @@ class TestStringMethods(unittest.TestCase):
     majorTCor=['mach5','tdate5','si5','duration','tt5']
     delTCor  = ['rn5','cu']
 
+    numMeasurements= len(rel['results'][0]['items'])
     for idx, item in enumerate(rel['results'][0]['items']):
       doc = {}
       #relation.json
-      metaRel = {}
       id1 = item['rn1']
       id2 = item.get('rn2','')
       id3 = item.get('rn3','')
@@ -193,10 +203,8 @@ class TestStringMethods(unittest.TestCase):
         if k in majorRel:
           doc[f'.{k}'] = v
         else:
-          metaRel[k] = v
-      doc['.relation'] = metaRel
+          doc[f'relation.{k}'] = v
       #Dimension
-      metaDimension = {}
       rows = [i for i in dimension['results'][0]['items'] if i['rn3']==id3]
       if len(rows)==1:
         for k,v in rows[0].items():
@@ -205,12 +213,11 @@ class TestStringMethods(unittest.TestCase):
           if k in majorDimension:
             doc[f'.{k}'] = v
           else:
-            metaDimension[k] = v
-        doc['.specimen_dimension'] = metaDimension
+            doc[f'specimen_dimension.{k}'] = v
       else:
-        print('***Warning dimension',rows)
+        pass
+        # print('***Warning dimension',rows)
       # Condition
-      metaCondition = {}
       rows = [i for i in condition['results'][0]['items'] if i['rn2']==id2]
       if len(rows)==1:
         for k,v in rows[0].items():
@@ -219,12 +226,11 @@ class TestStringMethods(unittest.TestCase):
           if k in majorCondition:
             doc[f'.{k}'] = v
           else:
-            metaCondition[k] = v
-        doc['.condition_test'] = metaCondition
+            doc[f'condition_test.{k}'] = v
       else:
-        print('***Warning condition',rows)
+        pass
+        # print('***Warning condition',rows)
       #Geopro
-      metaGeopro = {}
       rows = [i for i in geopro['results'][0]['items'] if i['rn3']==id3]
       if len(rows)==1:
         for k,v in rows[0].items():
@@ -233,12 +239,11 @@ class TestStringMethods(unittest.TestCase):
           if k in majorGeopro:
             doc[f'.{k}'] = v
           else:
-            metaGeopro[k] = v
-        doc['.specimen_geopro'] = metaGeopro
+            doc[f'specimen_geopro.{k}'] = v
       else:
-        print('***Warning geopro',rows)
+        pass
+        # print('***Warning geopro',rows)
       #Surface
-      metaSurface = {}
       rows = [i for i in surface['results'][0]['items'] if i['rn3']==id3]
       if len(rows)==1:
         for k,v in rows[0].items():
@@ -247,12 +252,11 @@ class TestStringMethods(unittest.TestCase):
           if k in majorSurface:
             doc[f'.{k}'] = v
           else:
-            metaSurface[k] = v
-        doc['.specimen_surface'] = metaSurface
+            doc[f'specimen_surface.{k}'] = v
       else:
-        print('***Warning surface',rows)
+        pass
+        # print('***Warning surface',rows)
       # t_Cor
-      metaTCor = {}
       rows = [i for i in t_cor['results'][0]['items'] if i['rn5']==id5]
       if len(rows)==1:
         for k,v in rows[0].items():
@@ -261,16 +265,17 @@ class TestStringMethods(unittest.TestCase):
           if k in majorTCor:
             doc[f'.{k}'] = v
           else:
-            metaTCor[k] = v
-        doc['.t_cor'] = metaTCor
+            doc[f't_cor.{k}'] = v
       else:
-        print('***Warning t_cor',rows)
+        pass
+        # print('***Warning t_cor',rows)
       # finish
       doc['id'] = f'm-{idBase}_{id5:08d}'
       doc['name'] = f'{id5}.csv'
       doc['.sample'] = f's-{idBase[:-2]}_{id4:08d}_0'
       doc['.rawFile'] = id7
-      print('SAVE DOC ',doc['id'])
+      if idx%1000==0:
+        print('SAVE DOC ',doc['id'], round(100.*idx/numMeasurements, 2),'%')
 
       projIDs = df[df['RN5']==id5]['RN1']
       if len(projIDs)==0:
