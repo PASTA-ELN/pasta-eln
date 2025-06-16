@@ -135,7 +135,7 @@ class ElabFTWApi:
     if response.status_code != 200:
       return False
     # separate tags handling
-    response = requests.get(f'{self.url}{entryType}/{identifier}/tags', **self.param)
+    # response = requests.get(f'{self.url}{entryType}/{identifier}/tags', **self.param) #allow to check existing tags
     for tag in tags:
       response = requests.post(f'{self.url}{entryType}/{identifier}/tags', data=json.dumps({'tag':tag}), **self.param)
     return response.status_code == 201 if tags else True
