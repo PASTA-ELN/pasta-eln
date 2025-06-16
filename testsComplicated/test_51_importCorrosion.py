@@ -10,6 +10,9 @@ from pasta_eln.backend import Backend
 from pasta_eln.miscTools import DummyProgressBar
 from pasta_eln.textTools.stringChanges import outputString
 
+fastTesting = [140211,240037,440182,540113,840047,940160,940372,1240182,1940004,2040113,2040353,2040561,2040768,2040970,2041178,2041400,2240058,2240276,2440166,3440008,4640004,6840020,8340039,8640153,8940012,9140206,9440033,9540062,9740103,9840032,10240079,48240105,48240317,48240521,48240733,48840006,48840221,49740035,49840099,51740129,]
+flagfastTesting = True  #test only some entries with those sample numbers; False=test all
+
 class TestStringMethods(unittest.TestCase):
   """
   derived class for this test
@@ -36,10 +39,6 @@ class TestStringMethods(unittest.TestCase):
     idBase = uuid.uuid4().hex[:-9]
     self.be = Backend(projectGroup)
 
-    #TODO temporary test issue with output
-    # outputString(outputFormat, 'info', self.be.output('measurement'))
-    # return
-
     self.dirName = self.be.basePath
     self.be.exit()
     shutil.rmtree(self.dirName)
@@ -57,7 +56,7 @@ class TestStringMethods(unittest.TestCase):
     self.be.db.cursor.execute('INSERT INTO definitions VALUES (?, ?, ?)',['bh4',   'Melt, batch or heat identifier',''])
     self.be.db.cursor.execute('INSERT INTO definitions VALUES (?, ?, ?)',['spec4', 'Internal material specification',''])
     self.be.db.cursor.execute('INSERT INTO definitions VALUES (?, ?, ?)',['cd',    'Date of data entry',''])
-    measurementView = 'name,type' #,.duration,.en2,.initialweight,.si5,.surftreatment
+    measurementView = 'name,type,.duration,.en2,.initialweight,.si5,.surftreatment'
     self.be.db.cursor.execute(f'UPDATE docTypes SET view = "{measurementView}" WHERE docType = "measurement"')
     sampleView = 'name,.bh4,.spec4,.cd,'
     self.be.db.cursor.execute(f'UPDATE docTypes SET view = "{sampleView}" WHERE docType = "sample"')
@@ -114,6 +113,8 @@ class TestStringMethods(unittest.TestCase):
       #pro
       metaPro = {}
       id = item['rn4']
+      if flagfastTesting and id not in fastTesting:
+        continue
       for k,v in item.items():
         if k in delPro:
           continue
@@ -192,10 +193,12 @@ class TestStringMethods(unittest.TestCase):
       doc = {}
       #relation.json
       id1 = item['rn1']
-      id2 = item.get('rn2','')
-      id3 = item.get('rn3','')
-      id4 = item.get('rn4','')
-      id5 = item.get('rn5','')
+      id2 = item.get('rn2',-1)
+      id3 = item.get('rn3',-1)
+      id4 = item.get('rn4',-1)
+      if flagfastTesting and id4 not in fastTesting:
+        continue
+      id5 = item.get('rn5',-1)
       id7 = item.get('rn7','')
       for k,v in item.items():
         if k in delRel:

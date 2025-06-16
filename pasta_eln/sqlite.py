@@ -280,7 +280,7 @@ class SqlLiteDB:
     Returns:
         dict: json representation of submitted document
     """
-    # print('\nsave\n'+'\n'.join([f'{k}: {v}' for k,v in doc.items()]))
+    # print('\nsave\n'+'\n'.join([f'{k}: {v}' for k,v in doc.items() if k not in ['image']]))
     # for k,v in doc.items():
     #   if isinstance(v, dict) and k not in ['metaUser','metaVendor','branch']:
     #     print('ERROR',k,v)
@@ -763,9 +763,10 @@ class SqlLiteDB:
           cmd += r" and NOT branches.show LIKE '%F%'"
         if startKey:
           cmd += f" and branches.stack LIKE '{startKey}%'"
-        dfParams = pd.read_sql_query(cmd, self.connection, index_col='id').fillna('')
-        dfParams = dfParams.pivot(columns='key', values='value').reset_index().set_index('id')  # Pivot the DataFrame
-        dfParams.columns.name = None                                                            # Flatten the columns
+        dfParams = pd.read_sql_query(cmd, self.connection).fillna('')
+        dfParams = dfParams.drop_duplicates(subset=['key', 'id'], keep='first').set_index('id') # drop duplicates if there are multiple branches
+        dfParams = dfParams.pivot(columns='key', values='value')                                # Pivot the DataFrame
+        #dfParams.columns.name = None                                                            # Flatten the columns; seems not necessary
         df = df.join(dfParams)
       # final sorting of columns
       columnOrder = [i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]
