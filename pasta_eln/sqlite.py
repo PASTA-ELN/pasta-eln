@@ -678,7 +678,7 @@ class SqlLiteDB:
       name (str): description of attachment location
       docType (str): document type what can be attached. Use empty string if these are remarks, i.e. no items are attached
     """
-    cmd = 'INSERT INTO attachments VALUES (?,?,?,?,?,?)'
+    cmd = 'INSERT OR REPLACE INTO attachments VALUES (?,?,?,?,?,?)'
     self.cursor.execute(cmd, [docID, name, '', docType, '', ''])
     self.connection.commit()
     return

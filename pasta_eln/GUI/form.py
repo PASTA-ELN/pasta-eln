@@ -91,6 +91,7 @@ class Form(QDialog):
       key = keyInDocNotHierarchy.split('.')[1]
       idx = len([1 for i in self.dataHierarchyNode if i['class']==group])
       self.dataHierarchyNode.append({'docType': self.doc['type'][0], 'class':group, 'idx':idx, 'name':key, 'list':''})
+    #TODO: fill dataHierarchyNode to have all items: incl. mandatory
     groups = {i['class'] for i in self.dataHierarchyNode}.difference({'metaVendor','metaUser'})
     # create tabs or not: depending on the number of groups
     self.tabW = QTabWidget() #has count=0 if not connected
