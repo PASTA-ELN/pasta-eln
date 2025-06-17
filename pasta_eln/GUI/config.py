@@ -1,4 +1,5 @@
 """ Entire config dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
+import logging
 from PySide6.QtWidgets import QDialog, QTabWidget, QVBoxLayout  # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from .configAddOnParameter import ConfigurationAddOnParameter
@@ -59,7 +60,7 @@ class Configuration(QDialog):
         tabW.setTabEnabled(3, False)
         tabW.setTabEnabled(4, False)
     except Exception as e:
-      print('**ERROR: could not create configuration dialog:', e)
+      logging.error('Could not create configuration dialog: %s', e)
 
     # always add setup tab
     tabW.addTab(tabSetup, 'Setup')

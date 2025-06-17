@@ -1,4 +1,5 @@
 """ Displays a scrollable grid of images (PNG, JPG, SVG) """
+import logging
 from PySide6.QtCore import QByteArray, Qt, Signal
 from PySide6.QtGui import QImage, QMouseEvent, QPixmap, QStandardItemModel
 from PySide6.QtSvgWidgets import QSvgWidget
@@ -144,7 +145,7 @@ class ImageGallery(QWidget):
       image_data = self.comm.backend.db.getDoc(docID)
       if not image_data or 'image' not in image_data:
         # Handle cases where image data might be missing or malformed
-        print(f"Warning: Image data not found or malformed for docID: {docID}")
+        logging.warning("Image data not found or malformed for docID: %s", docID)
         continue
       image = image_data['image']
 
@@ -196,13 +197,13 @@ class ImageGallery(QWidget):
             self.gridL.addWidget(label, row, col)
           else:
             #TODO next lines should be in details
-            print(f"Warning: Could not load image data for docID: {docID} with format {fmt}")
+            logging.warning("Could not load image data for docID: %s with format %s", docID, fmt)
         except ValueError:
-          print(f"Warning: Malformed base64 image data URI for docID: {docID}")
+          logging.warning("Malformed base64 image data URI for docID: %s", docID)
         except Exception as e:
-          print(f"Error processing image for docID {docID}: {e}")
+          logging.warning("Error processing image for docID %s: %s", docID, e)
       else:
-        print(f"Warning: Image for docID {docID} is not in expected base64 format.")
+        logging.warning("Image for docID is not in expected base64 format. %s", docID)
       # end of loop
       col += 1
       if col >= 4: # Assuming 4 columns

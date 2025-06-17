@@ -297,7 +297,7 @@ class Project(QWidget):
     elif command[0] is Command.ADD_ON:
       callAddOn(command[1], self.comm.backend, self.projID, self)
     else:
-      print('**ERROR project menu unknown:',command)
+      logging.error('Project menu unknown: %s',command)
     return
 
 

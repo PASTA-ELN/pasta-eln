@@ -1,6 +1,7 @@
 """Change the format of dictionaries"""
 import difflib
 import json
+import logging
 import traceback
 import uuid
 from datetime import datetime
@@ -163,7 +164,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
           markdown += f'{key.capitalize()}: {value}'
     except Exception:
       doc.pop('image','')
-      print(f'**ERROR** Could not convert to markdown value: {value}\n  doc: {doc}\n',traceback.format_exc())
+      logging.error('Could not convert to markdown value: %s\n  doc: %s\n%s',value, doc,traceback.format_exc())
   return markdown
 
 

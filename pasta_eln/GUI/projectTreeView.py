@@ -187,7 +187,7 @@ class TreeView(QTreeView):
     elif command[0] is Command.ADD_ON:
       callAddOn(command[1], self.comm.backend, item.data()['hierStack'], self)
     else:
-      print('**ERROR**: unknown context menu', command)
+      logging.error('Unknown context menu %s', command)
     return
 
 

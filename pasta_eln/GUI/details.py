@@ -165,7 +165,7 @@ class Details(QScrollArea):
         self.comm.changeTable.emit('','')
         self.comm.changeDetails.emit(self.doc['id'])
     else:
-      print('**ERROR details command unknown:',command)
+      logging.error('Details command unknown: %s',command)
     return
 
 

@@ -1,4 +1,5 @@
 """ Sidebar widget that includes the navigation items """
+import logging
 from enum import Enum
 from typing import Any
 from anytree import Node
@@ -178,7 +179,7 @@ class Sidebar(QWidget):
     elif command[0] is Command.SHOW_FOLDER:
       self.comm.changeProject.emit(command[1], command[2])
     else:
-      print('**ERROR sidebar menu unknown:',command)
+      logging.error('Sidebar menu unknown: %s',command)
     return
 
 

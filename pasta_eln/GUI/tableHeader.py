@@ -1,8 +1,8 @@
 """ Table Header dialog: change which columns are shown and in which order """
+import logging
 from enum import Enum
 from typing import Any
-from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QLineEdit, QListWidget,  # pylint: disable=no-name-in-module
-                               QVBoxLayout)
+from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QLineEdit, QListWidget, QVBoxLayout) # pylint: disable=no-name-in-module
 from ..fixedStringsJson import tableHeaderHelp
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, showMessage, widgetAndLayout
@@ -84,7 +84,7 @@ class TableHeader(QDialog):
       self.selectedList += [self.inputLine.text()]
       self.allSet.add(self.inputLine.text())
     else:
-      print('**ERROR tableHeader menu unknown:',command)
+      logging.error('Menu unknown: %s',command)
     #change content
     if oldIndex>-1 and newIndex>-1:
       self.selectedList.insert(newIndex, self.selectedList.pop(oldIndex))

@@ -79,7 +79,6 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     else:
       dataHierarchyNode = self.comm.backend.db.dataHierarchy(doc['type'][0], 'meta')
     if len(doc)<2:
-      print(f'**ERROR cannot read docID: {docID}')
       logging.error('LeafRenderer: Cannot read docID %s',docID)
       return
     hiddenText = ('     \U0001F441' if [b for b in doc['branch'] if False in b['show']] else '')

@@ -458,7 +458,7 @@ class Table(QWidget):
     elif command[0] is Command.SET_FILTER:
       self.filterTextChanged('', command[1])
     else:
-      print('**ERROR table menu unknown:',command)
+      logging.error('Menu unknown: %s',command)
     return
 
 

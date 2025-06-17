@@ -196,7 +196,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
               if len(possLines)==1:
                 linePart=possLines[0].split('=')[1].strip(" '"+'"')
               elif len(possLines)>1:
-                print(f'**Warning: Could not decipher {fileName} Take shortest!')
+                logging.warning('Could not decipher %s. Take shortest!', fileName)
                 linePart=sorted(possLines)[0].split('=')[1].strip(" '"+'"')
               else:
                 otherAddOns['_ERRORS_'][fileName] = 'ERROR could not decipher code'
@@ -280,7 +280,7 @@ def callDataExtractor(filePath:Path, backend:Any) -> Any:
       module = importlib.import_module(pyFile[:-3])
       return module.data(absFilePath, {})
     except Exception as e:
-      print('**Warning** CallDataExtractor:',e)
+      logging.warning('CallDataExtractor: %s',e)
   return None
 
 

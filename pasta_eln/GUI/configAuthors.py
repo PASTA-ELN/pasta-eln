@@ -1,6 +1,6 @@
 """ Main class of config tab on authors """
 import json
-import re
+import re, logging
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
@@ -110,7 +110,7 @@ class ConfigurationAuthors(QDialog):
     elif sender == 'organization':
       self.orgaCB.setItemText(self.orgaCB.currentIndex(), self.userOrg.text())
     else:
-      print('**ERROR: did not understand sender:',sender)
+      logging.error('Did not understand sender: %s',sender)
     return
 
 

@@ -518,11 +518,11 @@ class Form(QDialog):
               self.doc[key] = valueNew
           else:                          #normal text field
             self.doc[key] = getattr(self, elementName).text().strip()
-        elif valueOld is None and key in self.doc:  #important entry, set to empty string
-          self.doc[key]=''
-          print('Is this really needed?')
+        # elif valueOld is None and key in self.doc:  #important entry, set to empty string
+        #   self.doc[key]=''
+        #   print('Is this really needed?')
         else:
-          print('**ERROR dialogForm unknown value type',key, valueOld)
+          logging.error('Unknown value type %s %s',key, valueOld)
       # new key-value pairs
       keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]# type: ignore[attr-defined]
       keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
@@ -600,7 +600,7 @@ class Form(QDialog):
       messageWindow = ScrollMessageBox('Details', doc, style='QScrollArea{min-width:600 px; min-height:400px}')
       ret = messageWindow.exec()
     else:
-      print('**ERROR dialogForm: unknown Command ', command)
+      logging.error('Unknown Command %s', command)
     return
 
 

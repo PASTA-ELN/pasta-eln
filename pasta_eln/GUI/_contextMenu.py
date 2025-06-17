@@ -1,5 +1,5 @@
 """ Common functions in a number of widgets """
-import os
+import os, logging
 import platform
 import subprocess
 from enum import Enum
@@ -82,7 +82,7 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
     else:
       return False
   else:
-    print(f'**ERROR: command not found in _contextMenu {command}')
+    logging.error('Command not found in _contextMenu %s', command)
   return True
 
 
