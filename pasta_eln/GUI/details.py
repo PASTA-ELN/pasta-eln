@@ -119,7 +119,7 @@ class Details(QScrollArea):
         Image(self.doc['image'], self.specialL, anyDimension=size)
         self.specialW.show()
       elif key=='content':
-        text = QTextEdit()
+        text = QTextEdit()                                                   # pylint: disable=qt-local-widget
         text.setMarkdown(self.doc['content'])
         text.setFixedHeight(int(size/3*2))
         text.setReadOnly(True)

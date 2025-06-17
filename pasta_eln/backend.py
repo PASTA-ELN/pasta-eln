@@ -253,8 +253,8 @@ class Backend(CLI_Mixin):
       path = Path(doc['branch'][0]['path'])
       if edit and oldPath is not None:
         if not (self.basePath/oldPath).is_dir():
-          logging.warning(f'AddData edit of folder should have oldPath and that should exist:{oldPath}'
-                f'\n This can be triggered if user moved the folder.')
+          logging.warning('AddData edit of folder should have oldPath and that should exist: %s\n This can be '\
+            'triggered if user moved the folder.',oldPath)
           return  {'id':''}
         (self.basePath/oldPath).rename(self.basePath/path)
       else:

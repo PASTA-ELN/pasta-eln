@@ -71,7 +71,7 @@ class UploadGUI(QDialog):
     rightSide.addWidget(self.allCheckboxes[0])
     for i in self.allDocTypes:
       if not i[0].startswith('x') and '/' not in i[0]:
-        checkbox = QCheckBox(i[1], self)
+        checkbox = QCheckBox(i[1], self)                                         # pylint: disable=qt-local-widget
         checkbox.setChecked(True)
         self.allCheckboxes.append(checkbox)
         rightSide.addWidget(checkbox)

@@ -30,6 +30,7 @@ class ConfigurationAuthors(QDialog):
     self.callbackFinished = callbackFinished
     mainL = QVBoxLayout(self)
     self.setStyleSheet(f"QLineEdit {{ {self.comm.palette.get('secondaryText', 'color')} }}")
+    self.textFields:dict[str, QLineEdit] = {}
 
     #GUI elements
     if hasattr(self.comm.backend, 'configuration'):
@@ -77,16 +78,16 @@ class ConfigurationAuthors(QDialog):
     Returns:
       QTextEdit: text-edit widget with content
     """
-    rightW = QLineEdit()
+    self.textFields[item]  = QLineEdit()
     if item in {'organization','rorid'}:
-      rightW.setText(self.author['organizations'][0][item] if self.author['organizations'] else '')
+      self.textFields[item].setText(self.author['organizations'][0][item] if self.author['organizations'] else '')
     else:
-      rightW.setText(self.author[item])
-    rightW.setAccessibleName(item)
+      self.textFields[item].setText(self.author[item])
+    self.textFields[item].setAccessibleName(item)
     if item in {'organization', 'rorid','orcid'}:
-      rightW.editingFinished.connect(self.changedID)
-    self.tabAuthorL.addRow(QLabel(label), rightW)
-    return rightW
+      self.textFields[item] .editingFinished.connect(self.changedID)
+    self.tabAuthorL.addRow(QLabel(label), self.textFields[item] )
+    return self.textFields[item]
 
 
   def changedID(self) -> None:

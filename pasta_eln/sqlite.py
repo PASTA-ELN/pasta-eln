@@ -197,7 +197,6 @@ class SqlLiteDB:
     if res is None:
       if not noError:
         logging.error('sqlite: could not get docID: %s | %s', docID, tracebackString(True, docID))
-        pass
       return {}
     doc = dict(res)
     self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")
@@ -340,7 +339,6 @@ class SqlLiteDB:
             self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), ''])
           except Exception:
             logging.error('SQL command %s did not succeed %s', cmd, [doc['id'], parentKeys+key, str(value), ''])
-            pass
       self.connection.commit()
       return
     # properties

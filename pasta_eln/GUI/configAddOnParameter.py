@@ -42,7 +42,7 @@ class ConfigurationAddOnParameter(QDialog):
             for param, tooltip in requiredParam.items():    # loop over parameters
               _, barL = widgetAndLayout('H', mainL, 'm', 's', 's', 's', 's')
               Label(f'{addOnType}/{name}.py: {param}', 'h4', barL, tooltip=tooltip)
-              lineEdit = QLineEdit()
+              lineEdit = QLineEdit()                                         # pylint: disable=qt-local-widget
               barL.addWidget(lineEdit)
               if helpText:
                 TextButton('?', self, command=[helpText], layout=barL)

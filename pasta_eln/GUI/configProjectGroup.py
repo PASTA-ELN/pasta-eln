@@ -54,22 +54,22 @@ class ProjectGroup(QDialog):
     self.groupTextField.setValidator(QRegularExpressionValidator('\\w{3,}'))
     self.comboboxActive = True
 
-    newButton = IconButton('fa5s.plus',    self, [Command.NEW], tooltip='New project group')
-    self.formL.addWidget(newButton, 0, 2)
-    delButton = IconButton('fa5s.trash',   self, [Command.DEL], tooltip='Delete project group')
-    self.formL.addWidget(delButton, 0, 3)
+    self.newButton = IconButton('fa5s.plus',    self, [Command.NEW], tooltip='New project group')
+    self.formL.addWidget(self.newButton, 0, 2)
+    self.delButton = IconButton('fa5s.trash',   self, [Command.DEL], tooltip='Delete project group')
+    self.formL.addWidget(self.delButton, 0, 3)
 
     self.directoryLabel = QLabel('label')
     self.directoryLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
     self.formL.addWidget(self.directoryLabel, 1, 0, 1, 2)
-    row1Button = IconButton('fa5.edit',   self, [Command.CHANGE_DIR], tooltip='Edit data path')
-    self.formL.addWidget(row1Button, 1, 3)
+    self.row1Button = IconButton('fa5.edit',   self, [Command.CHANGE_DIR], tooltip='Edit data path')
+    self.formL.addWidget(self.row1Button, 1, 3)
 
     self.addOnLabel = QLabel('addon')
     self.addOnLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
     self.formL.addWidget(self.addOnLabel, 2, 0, 1, 2)
-    row2Button = IconButton('fa5.edit',   self, [Command.CHANGE_ADDON], tooltip='Edit add-on path')
-    self.formL.addWidget(row2Button, 2, 3)
+    self.row2Button = IconButton('fa5.edit',   self, [Command.CHANGE_ADDON], tooltip='Edit add-on path')
+    self.formL.addWidget(self.row2Button, 2, 3)
 
     self.formL.addWidget(QLabel('Server address:'), 3, 0)
     self.serverLabel = QLineEdit('server')
@@ -85,8 +85,8 @@ class ProjectGroup(QDialog):
     self.apiKeyLabel.setFixedHeight(48)
     # self.apiKeyLabel.setValidator(QRegularExpressionValidator(r"\d+-[0-9a-f]{85}"))
     self.formL.addWidget(self.apiKeyLabel, 4, 1)
-    row4Button1 = IconButton('fa5s.question-circle', self,      [Command.TEST_API_HELP], tooltip='Help on obtaining API key')
-    self.formL.addWidget(row4Button1, 4, 2)
+    self.row4Button1 = IconButton('fa5s.question-circle', self,      [Command.TEST_API_HELP], tooltip='Help on obtaining API key')
+    self.formL.addWidget(self.row4Button1, 4, 2)
     self.row4Button2 = TextButton('Verify',   self, [Command.TEST_APIKEY], tooltip='Check API-key')
     self.formL.addWidget(self.row4Button2, 4, 3)
 
@@ -98,8 +98,8 @@ class ProjectGroup(QDialog):
     self.formL.addWidget(self.row5Button2, 5, 3)
 
     # RIGHT SIDE: button and image
-    qrButton = TextButton('Create QR code', self, [Command.CREATE_QRCODE])
-    self.formL.addWidget(qrButton, 0, 6)
+    self.qrButton = TextButton('Create QR code', self, [Command.CREATE_QRCODE])
+    self.formL.addWidget(self.qrButton, 0, 6)
     self.image = QLabel()
     self.formL.addWidget(self.image, 1, 6, 4, 1)
 

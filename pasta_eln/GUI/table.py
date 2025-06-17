@@ -85,7 +85,7 @@ class Table(QWidget):
     self.toggleGallery.setVisible(False)
     self.visibilityBtn.setMenu(visibilityMenu)
 
-    more = TextButton('More', self, [], headerL)
+    self.btnMore = TextButton('More', self, [], headerL)
     self.moreMenu = QMenu(self)
     Action('Export to csv',            self, [Command.EXPORT],   self.moreMenu)
     self.moreMenu.addSeparator()
@@ -95,7 +95,7 @@ class Table(QWidget):
         Action(description, self, [Command.ADD_ON, label], self.moreMenu)
       self.moreMenu.addSeparator()
     self.actionChangeColums = Action('Change columns',  self, [Command.CHANGE_COLUMNS], self.moreMenu)  #add this action at end
-    more.setMenu(self.moreMenu)
+    self.btnMore.setMenu(self.moreMenu)
 
     # filter
     _, self.filterL = widgetAndLayoutGrid(mainL, top='s', bottom='s')

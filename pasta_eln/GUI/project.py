@@ -35,6 +35,9 @@ class Project(QWidget):
     self.showAll= True
     self.showDetailsAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
+    self.btnEditProject:Optional[TextButton]  = None
+    self.btnMore:Optional[TextButton]         = None
+    self.btnVisibility:Optional[TextButton]   = None
     self.lineSep = 20
 
 
@@ -61,8 +64,8 @@ class Project(QWidget):
     buttonW, buttonL = widgetAndLayout('H', spacing='m')
     topLineL.addWidget(buttonW, alignment=Qt.AlignTop)  # type: ignore
     self.btnAddSubfolder = TextButton('Add subfolder', self, [Command.ADD_CHILD], buttonL)
-    TextButton('Edit project',                         self, [Command.EDIT],      buttonL)
-    visibility = TextButton(          'Visibility',    self, [],                  buttonL)
+    self.btnEditProject =  TextButton('Edit project',  self, [Command.EDIT],      buttonL)
+    self.btnVisibility = TextButton(  'Visibility',    self, [],                  buttonL)
     visibilityMenu = QMenu(self)
     self.actHideDetail = Action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
     menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
@@ -70,8 +73,8 @@ class Project(QWidget):
     Action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
     Action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
     self.actionFoldAll     = Action( minimizeItems,    self, [Command.SHOW_DETAILS],     visibilityMenu)
-    visibility.setMenu(visibilityMenu)
-    more = TextButton('More',           self, [], buttonL)
+    self.btnVisibility.setMenu(visibilityMenu)
+    self.btnMore = TextButton('More',           self, [], buttonL)
     moreMenu = QMenu(self)
     Action('Scan',                      self, [Command.SCAN], moreMenu)
     for doctype in self.comm.backend.db.dataHierarchy('', ''):
@@ -88,7 +91,7 @@ class Project(QWidget):
         Action(description, self, [Command.ADD_ON, label], moreMenu)
       moreMenu.addSeparator()
     Action('Delete project',            self, [Command.DELETE], moreMenu)
-    more.setMenu(moreMenu)
+    self.btnMore.setMenu(moreMenu)
 
     # Details section
     # self.infoW = QScrollArea()

@@ -21,6 +21,10 @@ class LinkOnlineDelegate(QStyledItemDelegate):
   """
   Delegate for creating the icons for the re-order column in the data hierarchy editor tables
   """
+  def __init__(self, parent = ...):
+    super().__init__(parent)
+    self.button = QPushButton()
+
   def paint(self,
             painter: QPainter,
             option: QStyleOptionViewItem,
@@ -35,13 +39,12 @@ class LinkOnlineDelegate(QStyledItemDelegate):
     link = index.model().index(index.row(), 2).data()
     if not link or 'http' not in link or '://' not in link:
       return
-    button = QPushButton()
     opt = QStyleOptionButton()
     opt.state = QStyle.StateFlag.State_Active | QStyle.StateFlag.State_Enabled  # type: ignore[attr-defined]
     opt.rect = option.rect                                                      # type: ignore[attr-defined]
     opt.icon = qta.icon('mdi.earth-arrow-right', scale_factor=1.0)              # type: ignore[attr-defined]
     opt.iconSize = QSize(15, 15)                                                # type: ignore[attr-defined]
-    QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, opt, painter, button)
+    QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, opt, painter, self.button)
     return
 
 

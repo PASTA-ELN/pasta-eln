@@ -21,6 +21,11 @@ class LookupDelegate(QStyledItemDelegate):
   """
   Delegate for creating the icons for the re-order column in the data hierarchy editor tables
   """
+  def __init__(self, parent = ...):
+    super().__init__(parent)
+    self.button = QPushButton()
+
+
   def paint(self,
             painter: QPainter,
             option: QStyleOptionViewItem,
@@ -32,13 +37,12 @@ class LookupDelegate(QStyledItemDelegate):
       option (QStyleOptionViewItem): Style option for the cell represented by index.
       index (Union[QModelIndex, QPersistentModelIndex]): Table cell index
     """
-    button = QPushButton()
     opt = QStyleOptionButton()
     opt.state = QStyle.StateFlag.State_Active | QStyle.StateFlag.State_Enabled  # type: ignore[attr-defined]
     opt.rect = option.rect                                                      # type: ignore[attr-defined]
     opt.icon = qta.icon('fa5s.search', scale_factor=1.0)                        # type: ignore[attr-defined]
     opt.iconSize = QSize(15, 15)                                                # type: ignore[attr-defined]
-    QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, opt, painter, button)
+    QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, opt, painter, self.button)
     return
 
 

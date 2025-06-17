@@ -72,11 +72,11 @@ class ConfigurationRepositories(QDialog):
 
     #final button box
     _, buttonLineL = widgetAndLayout('H', mainL, 'm')
-    TextButton('Help',           self, [Command.HELP],   buttonLineL, 'Help for this dialog')
+    TextButton('Help',                self, [Command.HELP],   buttonLineL, 'Help for this dialog')
     buttonLineL.addStretch(1)
-    saveBtn = TextButton('Save', self, [Command.SAVE],   buttonLineL, 'Save changes')
-    saveBtn.setShortcut('Ctrl+Return')
-    TextButton('Cancel',         self, [Command.CANCEL], buttonLineL, 'Discard changes')
+    self.saveBtn = TextButton('Save', self, [Command.SAVE],   buttonLineL, 'Save changes')
+    self.saveBtn.setShortcut('Ctrl+Return')
+    TextButton('Cancel',              self, [Command.CANCEL], buttonLineL, 'Discard changes')
 
 
   def execute(self, command:list[Any]) -> None:
