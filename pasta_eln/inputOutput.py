@@ -78,8 +78,8 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
     dirName=Path(files[0]).parts[0]
     statistics['num. files'] = len([i for i in files if Path(i).parent!=Path(dirName)])
     if f'{dirName}/ro-crate-metadata.json' not in files:
-      print('**ERROR: ro-crate does not exist in folder. EXIT')
-      return '**ERROR: ro-crate does not exist in folder. EXIT',{}
+      logging.error('ro-crate does not exist in folder. EXIT')
+      return 'ERROR: ro-crate does not exist in folder. EXIT',{}
     graph = json.loads(elnFile.read(f'{dirName}/ro-crate-metadata.json'))['@graph']
     listAllTypes = [i['@type'] for i in graph if isinstance(i['@type'],str)]
     statistics['types'] = {i:listAllTypes.count(i) for i in listAllTypes}
@@ -198,13 +198,13 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       """
       addedDocs = 1
       if not isinstance(part, dict): #leave these tests in since other .elns might do funky stuff
-        print('**ERROR in part',part)
+        logging.error('in part %s', part)
         return 0
       # print('\nProcess: '+part['@id'])
       # find next node to process
       docS = [i for i in graph if '@id' in i and i['@id']==part['@id']]
       if len(docS)!=1 or backend.cwd is None:
-        print('**ERROR zero or multiple nodes with same id', docS,' or cwd is None in '+part['@id'])
+        logging.error('zero or multiple nodes with same id %s or cwd is None in %s', docS, part['@id'])
         return -1
       # pull all subentries (variableMeasured, comments, ...) into this dict: do not pull hasPart-entries in
       keys = [k for k,v in docS[0].items() if k!='hasPart' and (isinstance(v,dict) or (isinstance(v,list) and len(v)>0 and isinstance(v[0], dict)))]
@@ -219,7 +219,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
           docS[0][key] = [ [j for j in graph if j['@id']==i][0] for i in items]
         except Exception:
           docS[0][key] = 'not resolvable connection'
-          print(f'**ERROR** Could not replace {key} -entries using ids: {items}. Are all items once in the graph?')
+          logging.error('Could not replace %s -entries using ids: %s. Are all items once in the graph?', key, items)
       # convert to Pasta's style
       doc, elnID, children, dataType = json2pastaFunction(docS[0])
       if elnName == 'PASTA ELN' and elnID.startswith('http') and ':/' in elnID:
@@ -250,9 +250,9 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       try:
         docID = backend.addData(docType, doc)['id']
       except Exception:
-        print('============= ERROR OCCURRED ============')
-        print(json.dumps(doc,indent=2),'\n')
-        print(traceback.format_exc())
+        logging.error('============= OCCURRED ============')
+        logging.error(json.dumps(doc,indent=2))
+        logging.error(traceback.format_exc())
         docID = None
       if docID[0]=='x':
         backend.changeHierarchy(docID)
@@ -535,12 +535,12 @@ def validateSignature(fileName:str) -> bool:
         if response.ok:
           pubKeyRemote = response.content.strip()
           if pubKeyRemote.decode() == str(bytes(publicKey))[2:-1]:
-            print('Success: remote and local key match')
+            logging.info('Success: remote and local key match')
           else:
-            print('**ERROR remote and local key differ')
+            logging.error('remote and local key differ')
             raise minisign.VerifyError
       print('Signature is acceptable:\n', json.dumps(json.loads(signature.trusted_comment), indent=2))
       return True
     except minisign.VerifyError:
-      print('**ERROR VERIFICATION ERROR')
+      logging.error('VERIFICATION')
     return False

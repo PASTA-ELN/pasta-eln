@@ -197,7 +197,7 @@ class Backend(CLI_Mixin):
             try:
               shasum  = generic_hash(path)
             except Exception:
-              print('**ERROR bad01: fetch remote content failed. Data not added')
+              logging.error('bad01: fetch remote content failed. Data not added')
               return {'id':''}
         elif doc['name']!='' and (self.basePath/doc['name']).is_file():          #file exists
           path = self.basePath/doc['name']
@@ -253,7 +253,7 @@ class Backend(CLI_Mixin):
       path = Path(doc['branch'][0]['path'])
       if edit and oldPath is not None:
         if not (self.basePath/oldPath).is_dir():
-          print(f'**WARNING: addData edit of folder should have oldPath and that should exist:{oldPath}'
+          logging.warning(f'AddData edit of folder should have oldPath and that should exist:{oldPath}'
                 f'\n This can be triggered if user moved the folder.')
           return  {'id':''}
         (self.basePath/oldPath).rename(self.basePath/path)
@@ -319,7 +319,7 @@ class Backend(CLI_Mixin):
       self.cwd = self.basePath/projPath
     #prepare lists and start iterating
     inDB_all = self.db.getView('viewHierarchy/viewPathsAll', startKey=projPath.as_posix())
-    pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
+    pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasks
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
     filesCountSum = sum(len(files) for (_, _, files) in os.walk(self.cwd))
     filesCount = 0
@@ -369,7 +369,7 @@ class Backend(CLI_Mixin):
                 childNum += 1
             newPath = '/'.join(path.split('/')[:-1])+'/'+createDirName(doc['name'],doc['type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
             if (self.basePath/newPath).exists():                     #can be either file or directory
-              print('**ERROR new path should not exist',newPath)
+              logging.error('New path should not exist %s',newPath)
             else:
               (self.basePath/path).rename(self.basePath/newPath)
           self.db.updateBranch(doc['id'], 0, childNum, hierStack, newPath)
@@ -443,7 +443,7 @@ class Backend(CLI_Mixin):
           try:
             f.write(urlRequest.read())
           except Exception:
-            print('Error saving downloaded file to temporary disk')
+            logging.error('Saving downloaded file to temporary disk')
     else:
       if filePath.is_absolute():
         filePath = filePath.relative_to(self.basePath)
@@ -472,7 +472,7 @@ class Backend(CLI_Mixin):
                 _ = json.dumps(doc[meta][item])
               except (ValueError, TypeError):
                 doc[meta][item] = str(doc[meta][item])
-                print('**Warning -> stringified  ',meta, item)
+                logging.warning('stringified  %s %s',meta, item)
           else:
             for item in doc[meta]:
               if not (isinstance(item, dict) and 'key' in item and 'value' in item and 'unit' in item):
@@ -489,7 +489,6 @@ class Backend(CLI_Mixin):
         if 'links' in doc and len(doc['links'])==0:
           del doc['links']
       except Exception:
-        print(f'  **Warning, issue with extractor {pyFile} {absFilePath}')
         logging.warning('Issue with extractor %s\n %s', pyFile, traceback.format_exc())
         doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
           'filesize':absFilePath.stat().st_size,
@@ -643,7 +642,7 @@ class Backend(CLI_Mixin):
           image.show()
       del content['image']
     if outputStyle=='print':
-      print('Identified metadata',content)
+      logging.info('Identified metadata %s',content)
     os.environ['QT_API'] = 'pyside6'
     return report
 

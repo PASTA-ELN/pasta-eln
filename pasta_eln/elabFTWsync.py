@@ -30,7 +30,7 @@ def cliCallback(api:ElabFTWApi , entry:str, idx:int) -> str:
   Returns:
     str: mode of processing: g,gA,s,sA
   """
-  print(f'**ERROR**: default callback function should not be called. API:{api}, entry:{entry}, idx:{idx}')
+  logging.error('Default callback function should not be called. API:%s, entry:%s, idx:%s', api, entry, idx)
   return ''
 
 
@@ -119,7 +119,7 @@ class Pasta2Elab:
         progressCallback('append', 'Done\n#### Sync missing entries\nStart...')
       report += self.syncMissingEntries(mode, callback, progressCallback)
     else:
-      print('**ERROR Not connected to elab server!')
+      logging.error('Not connected to elab server!')
       return []
     if progressCallback is not None:
       reportSum = Counter([i[1] for i in report])
@@ -297,7 +297,7 @@ class Pasta2Elab:
       flagUpdateClient = False
       docMerged = copy.deepcopy(docClient)
     if mergeCase<=0:
-      print(f'**ERROR** No merge case set! {mode}')
+      logging.error('No merge case set! %s', mode)
       return node.id, -1
 
     docMerged['dateSync'] = datetime.now().isoformat()
@@ -368,7 +368,7 @@ class Pasta2Elab:
                'items':       {i['entityid'] for i in data['related_items_links']} }
     for count0, entryType in enumerate(['experiments','items']):
       if diff := inPasta[entryType].difference(inELAB[entryType]):
-        print(f'**ERROR** There is a difference in {entryType} between CLIENT and SERVER. Ids on server: {diff}.')
+        logging.error('There is a difference in %s between CLIENT and SERVER. Ids on server: %s.', entryType, diff)
       if diff := inELAB[entryType].difference(inPasta[entryType]):
         if self.verbose:
           print(f'**INFO** There is a difference in {entryType} between SERVER and CLIENT. Ids on server: {diff}.')
@@ -411,8 +411,8 @@ class Pasta2Elab:
                 for k in list(docOther.keys()):
                   if k.startswith('metaVendor.'):
                     docOther.pop(k,'')
-                print(f'**ERROR** Tried to add to client elab:{entryType} {idx}: {json.dumps(docOther,indent=2)}')
-                print(traceback.format_exc())
+                logging.error('Tried to add to client elab:%s %s: %s', entryType, idx, json.dumps(docOther,indent=2))
+                logging.error(traceback.format_exc())
                 report.append((docOther['id'], -1))
     return report
 

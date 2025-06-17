@@ -251,7 +251,7 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.RESTART:
       restart()
     else:
-      print('**ERROR gui menu unknown:', command)
+      logging.error('Gui menu unknown: %s', command)
     return
 
 

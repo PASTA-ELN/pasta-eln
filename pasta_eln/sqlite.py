@@ -71,7 +71,7 @@ class SqlLiteDB:
     # check if default documents exist and create
     if 'docTypes' not in tables or resetDataHierarchy:
       if 'docTypes' in tables:
-        print('Info: remove old docTypes')
+        logging.info('Remove old docTypes')
         self.cursor.execute('DROP TABLE docTypes')
       self.createSQLTable('docTypes',  DOC_TYPES,    'docType')
       command = f"INSERT INTO docTypes ({', '.join(DOC_TYPES)}) VALUES ({', '.join(['?']*len(DOC_TYPES))});"
@@ -79,7 +79,7 @@ class SqlLiteDB:
       # docTypeSchema table (see below)
       # - define the key of the metadata table, units, icons, ...
       if 'docTypeSchema' in tables:
-        print('Info: remove old docTypeSchema')
+        logging.info('Remove old docTypeSchema')
         self.cursor.execute('DROP TABLE docTypeSchema')
       self.createSQLTable('docTypeSchema', DOC_TYPE_SCHEMA,  'docType, class, idx')
       command = f"INSERT INTO docTypeSchema ({', '.join(DOC_TYPE_SCHEMA)}) VALUES ({', '.join(['?']*len(DOC_TYPE_SCHEMA))});"
@@ -196,7 +196,8 @@ class SqlLiteDB:
     res = cursor.fetchone()
     if res is None:
       if not noError:
-        print(f'**ERROR sqlite: could not get docID: {docID} | {tracebackString(True, docID)}')
+        logging.error('sqlite: could not get docID: %s | %s', docID, tracebackString(True, docID))
+        pass
       return {}
     doc = dict(res)
     self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")
@@ -338,7 +339,8 @@ class SqlLiteDB:
           try:
             self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), ''])
           except Exception:
-            print('**ERROR ', cmd, [doc['id'], parentKeys+key, str(value), ''])
+            logging.error('SQL command %s did not succeed %s', cmd, [doc['id'], parentKeys+key, str(value), ''])
+            pass
       self.connection.commit()
       return
     # properties
@@ -831,7 +833,7 @@ class SqlLiteDB:
       results = self.cursor.fetchall()
       results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':i[2]} for i in results if i[1] is not None]
     else:
-      print('continue here with view', thePath, startKey, preciseKey)
+      print('Not implemented view', thePath, startKey, preciseKey)
       raise ValueError('Not implemented')
     return results
 
@@ -871,7 +873,7 @@ class SqlLiteDB:
           parentNode = id2Node[parent]
         else:
           parentNode, error = (dataTree, True)
-          print(f'**ERROR** there is an error in the hierarchy tree structure with parent {parent} missing')
+          logging.error('There is an error in the hierarchy tree structure with parent %s missing', parent)
         subNode = Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum)
         id2Node[_id] = subNode
     # add non-folders into tree

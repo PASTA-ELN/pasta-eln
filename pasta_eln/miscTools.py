@@ -185,7 +185,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
             extractorsThis[specialType] = line.split('#:')[1].strip()
             ifInFile = True
           elif 'else:' in line and '#:' in line:
-            print('**ERROR there should not be an else in the code')
+            otherAddOns['_ERRORS_'][fileName] = 'ERROR there should not be an else in the code'
           elif 'return' in line and 'recipe' in line and not ifInFile:
             if verboseDebug: print('line', line)
             if line.count('recipe')==1:
@@ -199,7 +199,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
                 print(f'**Warning: Could not decipher {fileName} Take shortest!')
                 linePart=sorted(possLines)[0].split('=')[1].strip(" '"+'"')
               else:
-                print(f'**ERROR: Could not decipher {fileName} File does not work!')
+                otherAddOns['_ERRORS_'][fileName] = 'ERROR could not decipher code'
                 linePart=''
             extractorsThis[linePart]='Default'
             if verboseDebug:
