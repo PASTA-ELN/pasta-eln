@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Union
 from urllib import request
 import pandas as pd
+from packaging.version import parse as parse_version
 from PySide6.QtWidgets import QWidget                                      # pylint: disable=no-name-in-module
 import pasta_eln
 from .fixedStringsJson import CONF_FILE_NAME
@@ -345,7 +346,7 @@ def testNewPastaVersion(update:bool=False) -> bool:
   with request.urlopen(url) as response:
     data = json.loads(response.read())
   releases = list(data['releases'].keys())
-  largestVersionOnPypi = sorted(releases)[-1]
+  largestVersionOnPypi = sorted(releases, key=parse_version)[-1]
   return largestVersionOnPypi == pasta_eln.__version__ or 'b' in pasta_eln.__version__
 
 
