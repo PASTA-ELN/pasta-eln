@@ -3,7 +3,7 @@ import json
 import platform
 from pathlib import Path
 from PySide6.QtWidgets import QApplication, QMainWindow
-from qt_material import apply_stylesheet, get_theme  # of https://github.com/UN-GCPDS/qt-material
+from qt_material import apply_stylesheet, get_theme               # of https://github.com/UN-GCPDS/qt-material
 from ..fixedStringsJson import CONF_FILE_NAME, DEFAULT_COLORS_PALETTE
 
 
@@ -15,10 +15,10 @@ class Palette():
       mainWindow (QMainWindow): main window for getting system theme
       accent (str): accent color, e.g. 'pink'
     """
-    accent = self.cleanAccent(accent)                # given theme
+    accent = self.cleanAccent(accent)                                                            # given theme
     systemTheme = 'light' if mainWindow is None or mainWindow.palette().button().color().red()>128 or \
-      platform.system() != 'Linux' else 'dark' # system color mode: dark/light
-    self.theme = 'none' if accent=='none' else f'{systemTheme}_{accent}' # theme name
+      platform.system() != 'Linux' else 'dark'                                 # system color mode: dark/light
+    self.theme = 'none' if accent=='none' else f'{systemTheme}_{accent}'                          # theme name
     if accent=='none':
       self.primary       = '#222222'
       self.secondaryText = '#000000'

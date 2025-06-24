@@ -134,7 +134,7 @@ class DataverseClient(RepositoryClient):
     resp = requests.post(f"{self.server_url}/api/dataverses/{dv_parent}",
       headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token},
       data=dumps(dv_json), timeout=10)
-    if resp.status_code == 201:  # Success
+    if resp.status_code == 201:                                                                      # Success
       pub_resp = requests.post(f"{self.server_url}/api/dataverses/{resp.json().get('data').get('alias')}/actions/:publish",
         headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token}, timeout=10)
       if pub_resp.status_code == 200:
@@ -225,7 +225,7 @@ class DataverseClient(RepositoryClient):
       metadata['datasetVersion']['license'] = ds_metadata['license']
     else:
       del metadata['datasetVersion']['license']
-    for _, metablock in metadata['datasetVersion']['metadataBlocks'].items():  # type:ignore[attr-defined]
+    for _, metablock in metadata['datasetVersion']['metadataBlocks'].items():      # type:ignore[attr-defined]
       field_copy = metablock['fields'].copy()
       del metablock['displayName']
       metablock['fields'].clear()

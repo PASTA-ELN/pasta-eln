@@ -2,11 +2,10 @@
 import base64
 import logging
 from typing import Any
-from PySide6.QtCore import QMargins, QModelIndex, QPoint, QRectF, QSize, Qt  # pylint: disable=no-name-in-module
-from PySide6.QtGui import (QColor, QPainter, QPen, QPixmap, QStaticText,  # pylint: disable=no-name-in-module
-                           QTextDocument)
-from PySide6.QtSvg import QSvgRenderer  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem  # pylint: disable=no-name-in-module
+from PySide6.QtCore import QMargins, QModelIndex, QPoint, QRectF, QSize, Qt# pylint: disable=no-name-in-module
+from PySide6.QtGui import QColor, QPainter, QPen, QPixmap, QStaticText, QTextDocument# pylint: disable=no-name-in-module
+from PySide6.QtSvg import QSvgRenderer                                     # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem    # pylint: disable=no-name-in-module
 from ..fixedStringsJson import DO_NOT_RENDER, defaultDataHierarchyNode
 from ..guiCommunicate import Communicate
 from ..textTools.handleDictionaries import doc2markdown
@@ -29,7 +28,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.penHighlight  = QPen(QColor(self.comm.palette.primary))
     self.penHighlight.setWidth(2)
 
-  def paint(self, painter:QPainter, option:QStyleOptionViewItem, index:QModelIndex) -> None:                 # type: ignore
+  def paint(self, painter:QPainter, option:QStyleOptionViewItem, index:QModelIndex) -> None:    # type: ignore
     """
     Paint this item
     - coordinates: left, top
@@ -46,17 +45,17 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       return
     docID   = data['hierStack'].split('/')[-1]
     painter.setPen(self.penDefault)
-    x0, y0 = option.rect.topLeft().toTuple()                                                                  # type: ignore[attr-defined]
+    x0, y0 = option.rect.topLeft().toTuple()                                      # type: ignore[attr-defined]
     widthContent = min(self.widthContent,  \
-                       int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )                # type: ignore[attr-defined]
+                       int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )# type: ignore[attr-defined]
     docTypeOffset = min(self.docTypeOffset, \
-                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/3.5) )             # type: ignore[attr-defined]
-    bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)                       # type: ignore[attr-defined]
-    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.comm.palette.leafShadow)            # type: ignore[attr-defined]
+                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/3.5) )# type: ignore[attr-defined]
+    bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)# type: ignore[attr-defined]
+    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.comm.palette.leafShadow)# type: ignore[attr-defined]
     if data['docType'][0][0]=='x':
-      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafX)         # type: ignore[attr-defined]
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafX)# type: ignore[attr-defined]
     else:
-      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafO)        # type: ignore[attr-defined]
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafO)# type: ignore[attr-defined]
     # header
     y = self.lineSep/2
     docTypeText= '/'.join(data['docType'])
@@ -64,7 +63,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       docTypeText = self.comm.backend.db.dataHierarchy('x1', 'title')[0].lower()[:-1]
     maxCharacter = int(docTypeOffset/7.5)
     nameText = name if len(name)<maxCharacter else f'...{name[-maxCharacter+3:]}'
-    if not data['gui'][0]:  #Only draw first line
+    if not data['gui'][0]:                                                               #Only draw first line
       staticText = QStaticText(f'<strong>{nameText} (...)</strong>')
       staticText.setTextWidth(docTypeOffset)
       painter.drawStaticText(x0, y0+y, staticText)
@@ -98,26 +97,26 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       textDoc = QTextDocument()
       textDoc.setMarkdown(markdownEqualizer(doc['content']))
       textDoc.setTextWidth(widthContent)
-      width:int = textDoc.size().toTuple()[0] # type: ignore
-      topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)           # type: ignore[attr-defined]
+      width:int = textDoc.size().toTuple()[0]                                                   # type: ignore
+      topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)# type: ignore[attr-defined]
       painter.translate(topLeftContent)
       self.drawTextDocument(painter, textDoc, int(self.maxHeight-3*self.frameSize))
-      topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)           # type: ignore[attr-defined]
+      topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)# type: ignore[attr-defined]
       painter.translate(-topLeftContent)
     if 'image' in doc and doc['image']:
       if doc['image'].startswith('data:image/'):
         pixmap = self.imageFromDoc(doc)
         width2nd = min(self.widthImage, pixmap.width()+self.frameSize)
-        topLeft2nd     = option.rect.topRight()   - QPoint(width2nd+self.frameSize+1,-self.frameSize)        # type: ignore[attr-defined]
+        topLeft2nd     = option.rect.topRight()   - QPoint(width2nd+self.frameSize+1,-self.frameSize)# type: ignore[attr-defined]
         painter.drawPixmap(topLeft2nd, pixmap)
       elif doc['image'].startswith('<?xml'):
-        topLeft2nd     = option.rect.topRight()   - QPoint(self.widthImage+self.frameSize+1,-self.frameSize) # type: ignore[attr-defined]
+        topLeft2nd     = option.rect.topRight()   - QPoint(self.widthImage+self.frameSize+1,-self.frameSize)# type: ignore[attr-defined]
         image = QSvgRenderer(bytearray(doc['image'], encoding='utf-8'))
         image.render(painter,    QRectF(topLeft2nd, bottomRight2nd))
     return
 
 
-  def sizeHint(self, option:QStyleOptionViewItem, index:QModelIndex) -> QSize:                               # type: ignore
+  def sizeHint(self, option:QStyleOptionViewItem, index:QModelIndex) -> QSize:                  # type: ignore
     """
     determine size of this leaf
     """
@@ -126,17 +125,17 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     hierStack = index.data(Qt.ItemDataRole.UserRole+1)['hierStack']
     if hierStack is None or self.comm is None:
       return QSize()
-    if not index.data(Qt.ItemDataRole.UserRole+1)['gui'][0]:  # only show the headline, no details
+    if not index.data(Qt.ItemDataRole.UserRole+1)['gui'][0]:              # only show the headline, no details
       return QSize(400, self.lineSep*2)
     docID   = hierStack.split('/')[-1]
-    doc = self.comm.backend.db.getDoc(docID, noError=True) # No error plotted if doc not found: after deleting project,...
-    # ... its items cannot be found and it would give many false negatives
+    doc = self.comm.backend.db.getDoc(docID, noError=True)# No error plotted if doc not found: ...
+    # ... after deleting project, its items cannot be found and it would give many false negatives
     if len(doc)<2:
-      if len(self.comm.backend.db.getDoc(hierStack.split('/')[0], noError=True))>2: #only refresh when project still exists
+      if len(self.comm.backend.db.getDoc(hierStack.split('/')[0], noError=True))>2:#only refresh if project still exists
         self.comm.changeProject.emit('','')
       return QSize()
     widthContent = min(self.widthContent,  \
-                       int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )               # type: ignore[attr-defined]
+                       int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )# type: ignore[attr-defined]
     if doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
       dataHierarchyNode = defaultDataHierarchyNode
     else:
@@ -144,11 +143,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     textDoc = QTextDocument()
     textDoc.setMarkdown(doc2markdown(doc, DO_NOT_RENDER, dataHierarchyNode, self))
     textDoc.setTextWidth(widthContent)
-    heightDetails = int(textDoc.size().toTuple()[1])+self.frameSize+20 # type: ignore
+    heightDetails = int(textDoc.size().toTuple()[1])+self.frameSize+20                          # type: ignore
     heightRightSide = -1
     if 'content' in doc:
       textDoc.setMarkdown(doc['content'])
-      heightRightSide = int(textDoc.size().toTuple()[1]) # type: ignore
+      heightRightSide = int(textDoc.size().toTuple()[1])                                        # type: ignore
     elif 'image' in doc and doc['image']:
       if doc['image'].startswith('data:image/'):
         pixmap = self.imageFromDoc(doc)
@@ -166,8 +165,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       textDoc (QTextDocument): text document
       yMax (int): maximum height of document in surrounding frame
     """
-    width:int  = textDoc.size().toTuple()[0] # type: ignore
-    height:int = textDoc.size().toTuple()[1] # type: ignore
+    width:int  = textDoc.size().toTuple()[0]                                                    # type: ignore
+    height:int = textDoc.size().toTuple()[1]                                                    # type: ignore
     textDoc.drawContents(painter, QRectF(0, 0, width, yMax))
     if height > yMax+self.frameSize:
       painter.setPen(self.penHighlight)

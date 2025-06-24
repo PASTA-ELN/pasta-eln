@@ -3,8 +3,8 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import Qt, Slot  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QScrollArea, QTextEdit  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt, Slot                                        # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QScrollArea, QTextEdit                       # pylint: disable=no-name-in-module
 from ..fixedStringsJson import SORTED_DB_KEYS, defaultDataHierarchyNode
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Image, Label, TextButton, addDocDetails, showMessage, widgetAndLayout
@@ -54,7 +54,7 @@ class Details(QScrollArea):
     self.mainL.addStretch(1)
 
 
-  @Slot(str)                                # type: ignore[arg-type]
+  @Slot(str)                                                                          # type: ignore[arg-type]
   def change(self, docID:str) -> None:
     """
     What happens when details should change
@@ -88,7 +88,7 @@ class Details(QScrollArea):
     self.btnUser.setChecked(True)
     self.btnDatabase.setChecked(False)
     self.rescaleTexts = []
-    if not docID:  #if given '' docID, return
+    if not docID:                                                                   #if given '' docID, return
       return
     # Create new
     if docID!='redraw':
@@ -96,7 +96,7 @@ class Details(QScrollArea):
     if self.docID=='':
       return
     self.doc   = self.comm.backend.db.getDoc(self.docID, noError=True)
-    if 'name' not in self.doc:  #keep empty details and wait for user to click
+    if 'name' not in self.doc:                                  #keep empty details and wait for user to click
       self.comm.changeTable.emit('','')
       return
     if self.doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
@@ -125,7 +125,7 @@ class Details(QScrollArea):
         text.setReadOnly(True)
         self.specialL.addWidget(text)
         self.specialW.show()
-      elif key in ['name']:  #skip
+      elif key in ['name']:                                                                              #skip
         continue
       elif key in SORTED_DB_KEYS:
         addDocDetails(self, self.metaDatabaseL, key, self.doc[key], dataHierarchyNode)
@@ -152,7 +152,7 @@ class Details(QScrollArea):
       command (list): area to show/hide
     """
     if command[0] is Command.SHOW:
-      if getattr(self, f'btn{command[1]}').isChecked(): #get button in question
+      if getattr(self, f'btn{command[1]}').isChecked():                                #get button in question
         getattr(self, f'meta{command[1]}W').show()
       else:
         getattr(self, f'meta{command[1]}W').hide()
@@ -199,7 +199,7 @@ class Details(QScrollArea):
     self.metaDetailsW.setFixedWidth(width)
     for text in self.rescaleTexts:
       text.document().setTextWidth(width-80)
-      height:int = text.document().size().toTuple()[1] # type:ignore[index]
+      height:int = text.document().size().toTuple()[1]                                    # type:ignore[index]
       text.setFixedHeight(height)
     return
 

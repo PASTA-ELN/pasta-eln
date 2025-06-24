@@ -1,6 +1,6 @@
 """ Communication class that sends signals between widgets, incl. backend"""
 from typing import Any, Callable
-from PySide6.QtCore import QObject, Signal  # pylint: disable=no-name-in-module
+from PySide6.QtCore import QObject, Signal                                 # pylint: disable=no-name-in-module
 from .backend import Backend
 from .GUI.waitDialog import WaitDialog, Worker
 

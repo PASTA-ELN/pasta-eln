@@ -9,8 +9,8 @@ import qrcode
 import qtawesome as qta
 import requests
 from PIL.ImageQt import ImageQt
-from PySide6.QtGui import QPixmap, QRegularExpressionValidator, Qt  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog,  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QPixmap, QRegularExpressionValidator, Qt         # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog,# pylint: disable=no-name-in-module
                                QLabel, QLineEdit, QMessageBox, QTextEdit, QVBoxLayout)
 from ..elabFTWapi import ElabFTWApi
 from ..fixedStringsJson import CONF_FILE_NAME
@@ -168,7 +168,7 @@ class ProjectGroup(QDialog):
     Args:
       command (list): list of commands
     """
-    if not self.comboboxActive:  #first button press after entering a new group name
+    if not self.comboboxActive:                            #first button press after entering a new group name
       newKey = self.groupTextField.text()
       self.selectGroup.addItem(newKey)
       self.selectGroup.setCurrentText(newKey)
@@ -209,7 +209,7 @@ class ProjectGroup(QDialog):
       if button == QMessageBox.StandardButton.Yes:
         source =Path(__file__).parent.parent/'AddOns'
         shutil.copytree(source, answer, dirs_exist_ok=True)
-        self.requireHardRestart = True  #because python-path has to change
+        self.requireHardRestart = True                                      #because python-path has to change
       config['addOnDir'] = answer
       config['addOns'] = {}
       self.addOnLabel.setText('Add on directory: ' + config['addOnDir'])

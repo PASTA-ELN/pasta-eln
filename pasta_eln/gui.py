@@ -7,9 +7,9 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any, Union
-from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox  # pylint: disable=no-name-in-module
+from PySide6.QtCore import QCoreApplication, Slot                          # pylint: disable=no-name-in-module
+from PySide6.QtGui import QIcon, QPixmap, QShortcut                        # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox# pylint: disable=no-name-in-module
 from pasta_eln import __version__
 from .backend import Backend
 from .elabFTWsync import Pasta2Elab
@@ -44,7 +44,8 @@ class MainWindow(QMainWindow):
     # global setting
     super().__init__()
     self.setWindowTitle(f"PASTA-ELN {__version__}")
-    self.resize(self.screen().size()) #self.setWindowState(Qt.WindowMaximized) #TODO https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
+    self.resize(self.screen().size())                                 #self.setWindowState(Qt.WindowMaximized)
+    #TODO https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
     self.backend = Backend(defaultProjectGroup=projectGroup)
@@ -96,10 +97,10 @@ class MainWindow(QMainWindow):
 
     # GUI elements
     mainWidget, mainLayout = widgetAndLayout('H')
-    self.setCentralWidget(mainWidget)  # Set the central widget of the Window
+    self.setCentralWidget(mainWidget)                                   # Set the central widget of the Window
     try:
-      body = Body(self.comm)  # body with information
-      self.sidebar = Sidebar(self.comm)  # sidebar with buttons
+      body = Body(self.comm)                                                           # body with information
+      self.sidebar = Sidebar(self.comm)                                                 # sidebar with buttons
       mainLayout.addWidget(self.sidebar)
       mainLayout.addWidget(body)
       # tests that run at start-up
@@ -117,7 +118,7 @@ class MainWindow(QMainWindow):
   @Slot()
   def initialize(self) -> None:
     """ Initialize: things that might change """
-    self.comm.backend.initialize(self.backend.configurationProjectGroup)  #restart backend
+    self.comm.backend.initialize(self.backend.configurationProjectGroup)                      #restart backend
     # Things that are inside the List menu
     self.viewMenu.clear()
     if hasattr(self.backend, 'db'):
@@ -130,14 +131,14 @@ class MainWindow(QMainWindow):
       Action('&Unidentified',       self, [Command.VIEW, '-'],      self.viewMenu, shortcut='Ctrl+U')
     # Things that are related to project group
     self.changeProjectGroups.clear()
-    if hasattr(self.backend, 'configuration'):                            # not case in fresh install
+    if hasattr(self.backend, 'configuration'):                                     # not case in fresh install
       for name in self.backend.configuration['projectGroups'].keys():
         Action(name,                         self, [Command.CHANGE_PG, name], self.changeProjectGroups)
     self.comm.changeTable.emit('x0', '')
     return
 
 
-  @Slot(dict)                                         # type: ignore[arg-type]
+  @Slot(dict)                                                                         # type: ignore[arg-type]
   def formDoc(self, doc: dict[str, Any]) -> None:
     """
     What happens when new/edit dialog is shown
@@ -198,9 +199,9 @@ class MainWindow(QMainWindow):
         showMessage(self, 'ERROR', 'There are errors in your database: fix before upload')
         return
       sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
-      if hasattr(sync, 'api') and sync.api.url:  #if hostname and api-key given
+      if hasattr(sync, 'api') and sync.api.url:                                 #if hostname and api-key given
         self.comm.progressWindow(lambda func1: sync.sync('sA', progressCallback=func1))
-      else:                     #if not given
+      else:                                                                                      #if not given
         showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
         dialogC = Configuration(self.comm)
         dialogC.exec()
@@ -281,7 +282,7 @@ def mainGUI(projectGroup:str='') -> tuple[Union[QCoreApplication, None], MainWin
   main_window = MainWindow(projectGroup=projectGroup)
   logging.getLogger().setLevel(getattr(logging, main_window.backend.configuration['GUI']['loggingLevel']))
   main_window.comm.palette.setTheme(application)
-  import qtawesome as qta  # qtawesome and matplot cannot coexist
+  import qtawesome as qta                                               # qtawesome and matplot cannot coexist
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
     print('qtawesome: could not load. Likely matplotlib is included and can not coexist.')

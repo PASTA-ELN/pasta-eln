@@ -6,8 +6,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 import qtawesome as qta
-from PySide6.QtCore import Qt  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QCheckBox, QDialog, QLabel, QLineEdit, QVBoxLayout  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt                                              # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QCheckBox, QDialog, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
 from ...fixedStringsJson import CONF_FILE_NAME
 from ...guiCommunicate import Communicate
 from ...guiStyle import Label, TextButton, showMessage, widgetAndLayout, widgetAndLayoutGrid
@@ -71,7 +71,7 @@ class UploadGUI(QDialog):
     rightSide.addWidget(self.allCheckboxes[0])
     for i in self.allDocTypes:
       if not i[0].startswith('x') and '/' not in i[0]:
-        checkbox = QCheckBox(i[1], self)                                         # pylint: disable=qt-local-widget
+        checkbox = QCheckBox(i[1], self)                                     # pylint: disable=qt-local-widget
         checkbox.setChecked(True)
         self.allCheckboxes.append(checkbox)
         rightSide.addWidget(checkbox)
@@ -115,11 +115,11 @@ class UploadGUI(QDialog):
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
       # convert to repository specific and upload to repository
-      if command[1]: #Zenodo
+      if command[1]:                                                                                   #Zenodo
         clientZ = ZenodoClient(repositories['zenodo']['url'], repositories['zenodo']['key'])
         metadataZ = clientZ.prepareMetadata(metadata)
         res = clientZ.uploadRepository(metadataZ, tempELN)
-      else:          #Dataverse
+      else:                                                                                         #Dataverse
         clientD = DataverseClient(repositories['dataverse']['url'], repositories['dataverse']['key'],
                                   repositories['dataverse']['dataverse'])
         metadataD = clientD.prepareMetadata(metadata)

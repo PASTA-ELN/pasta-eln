@@ -12,7 +12,7 @@ from typing import Any
 from zipfile import ZIP_DEFLATED, ZipFile
 import requests
 from anytree import Node
-from PySide6.QtGui import QTextDocument  # TODO switch to html-markdown since also run as pytest
+from PySide6.QtGui import QTextDocument                # TODO switch to html-markdown since also run as pytest
 from pasta_eln import __version__, minisign
 from .backend import Backend
 from .fixedStringsJson import CONF_FILE_NAME
@@ -73,7 +73,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
     str: success message, statistics
   '''
   elnName = ''
-  qtDocument = QTextDocument()   #used for html -> markdown conversion
+  qtDocument = QTextDocument()                                           #used for html -> markdown conversion
   statistics:dict[str,Any] = {}
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     files = elnFile.namelist()
@@ -133,11 +133,11 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       for key, value in inputData.items():
         if key in ['@id','@type','hasPart','author','contentSize', 'sha256']:
           continue
-        if key in json2pasta:  #use known translation
+        if key in json2pasta:                                                           #use known translation
           doc[json2pasta[key]] = value
         elif key == 'encodingFormat':
           encodingFormat = inputData[key]
-        elif value:                  #keep name, only prevent causes for errors
+        elif value:                                                 #keep name, only prevent causes for errors
           doc[f'.{key}'] = value
       # change into Pasta's native format
       if isinstance(doc.get('comment',''), (dict,list)):
@@ -199,7 +199,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         int: number of documents added
       """
       addedDocs = 1
-      if not isinstance(part, dict): #leave these tests in since other .elns might do funky stuff
+      if not isinstance(part, dict):              #leave these tests in since other .elns might do funky stuff
         logging.error('in part %s', part)
         return 0
       # print('\nProcess: '+part['@id'])
@@ -228,10 +228,10 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         fullPath = None
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
-      if fullPath is not None and f'{dirName}/{elnID}' in elnFile.namelist():  #Copy file onto hard disk
+      if fullPath is not None and f'{dirName}/{elnID}' in elnFile.namelist():        #Copy file onto hard disk
         target = open(fullPath, 'wb')
         source = elnFile.open(f'{dirName}/{elnID}')
-        with source, target:  #extract one file to its target directly
+        with source, target:                                          #extract one file to its target directly
           shutil.copyfileobj(source, target)
       # FOR ALL ELNs
       if elnName == 'PASTA ELN':
@@ -259,11 +259,11 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       if docID[0]=='x':
         backend.changeHierarchy(docID)
         childrenStack.append(0)
-        with open(backend.basePath/backend.cwd/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
+        with open(backend.basePath/backend.cwd/'.id_pastaELN.json','w', encoding='utf-8') as f:#local path, update in any case
           f.write(json.dumps(backend.db.getDoc(docID)))
         # children, aka recursive part
         for child in children:
-          if child['@id'].endswith('/metadata.json') or child['@id'].endswith('_metadata.json'):  #skip own metadata
+          if child['@id'].endswith('/metadata.json') or child['@id'].endswith('_metadata.json'):#skip own metadata
             continue
           addedDocs += processPart(child)
         backend.changeHierarchy(None)
@@ -384,7 +384,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         else:
           print(f"Info: could not get file {path}")
         docELN['@type'] = 'File'
-      elif '@type' not in docELN:  #samples will be here
+      elif '@type' not in docELN:                                                        #samples will be here
         docELN['@type'] = 'Dataset'
         docELN['@id'] = docELN['@id'] if docELN['@id'].endswith('/') else f"{docELN['@id']}/"
         # elnFile.mkdir(docELN['@id'][:-1]) #NOT REQUIRED for standard and does not work in python 3.10
@@ -417,13 +417,13 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     for projectID in projectIDs:
       docProject = backend.db.getDoc(projectID)
       dirNameProject = docProject['branch'][0]['path']
-      listHier, _ = backend.db.getHierarchy(projectID, allItems=False) #error not handled since should not occur during export
+      listHier, _ = backend.db.getHierarchy(projectID, allItems=False)#error not handled since should not occur during export
       processNode(listHier)
       masterParts.append(f'./{dirNameProject}/')
 
     # all items have to appear in hasPart of ./ -> masterParts are changed
     # https://github.com/TheELNConsortium/TheELNFileFormat/issues/98
-    somethingChanged = True  #starting condition
+    somethingChanged = True                                                                #starting condition
     nodesProcessed = set()
     while somethingChanged:
       somethingChanged = False
@@ -434,7 +434,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         possNodes = [i for i in graph if i['@id']==node]
         if len(possNodes)==1:
           idx = masterParts.index(node)
-          variables:list[str] = [] # [i['@id'] for i in possNodes[0].get('variableMeasured',[])] #variables go not into ./
+          variables:list[str] = []
+          # variables = [i['@id'] for i in possNodes[0].get('variableMeasured',[])] #variables go not into ./
           children            = [i['@id'] for i in possNodes[0].get('hasPart',[])]
           masterParts = masterParts[:idx+1] + variables + children + masterParts[idx+1:]
           if variables or children:

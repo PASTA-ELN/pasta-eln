@@ -5,8 +5,7 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 import qtawesome as qta
-from PySide6.QtWidgets import (QDialog, QFileDialog, QTableWidget,  # pylint: disable=no-name-in-module
-                               QTableWidgetItem, QVBoxLayout)
+from PySide6.QtWidgets import QDialog, QFileDialog, QTableWidget, QTableWidgetItem, QVBoxLayout# pylint: disable=no-name-in-module
 from ...guiCommunicate import Communicate
 from ...guiStyle import TextButton, showMessage, space, widgetAndLayout
 from ...miscTools import callAddOn
@@ -88,7 +87,7 @@ class Editor(QDialog):
       if fileName != '':
         self.getDataframe().to_csv(fileName, index=False)
     elif command[0] is Command.Import:
-      fileName = '/home/steffen/test.csv' # QFileDialog.getOpenFileName(self, 'Read table from .csv file', str(Path.home()), '*.csv')[0]
+      fileName = QFileDialog.getOpenFileName(self, 'Read table from .csv file', str(Path.home()), '*.csv')[0]
       if fileName != '':
         self.data = pd.read_csv(fileName).fillna('')
         self.showDataframe()

@@ -2,7 +2,7 @@
 import logging
 from enum import Enum
 from typing import Any
-from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QLineEdit, QListWidget, QVBoxLayout) # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QListWidget, QVBoxLayout# pylint: disable=no-name-in-module
 from ..fixedStringsJson import tableHeaderHelp
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, showMessage, widgetAndLayout

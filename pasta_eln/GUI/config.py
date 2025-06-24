@@ -1,6 +1,6 @@
 """ Entire config dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
 import logging
-from PySide6.QtWidgets import QDialog, QTabWidget, QVBoxLayout  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QTabWidget, QVBoxLayout             # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from .configAddOnParameter import ConfigurationAddOnParameter
 from .configAuthors import ConfigurationAuthors
@@ -32,23 +32,23 @@ class Configuration(QDialog):
     mainL.addWidget(tabW)
 
     # tab has to always exist
-    tabSetup = ConfigurationSetup(self.comm, self.closeWidget)      # Setup / Troubleshoot Pasta
+    tabSetup = ConfigurationSetup(self.comm, self.closeWidget)                    # Setup / Troubleshoot Pasta
 
     # optional tabs
     try:
-      tabProjectGroup = ProjectGroup(self.comm, self.closeWidget)     # Project group. Restart app
+      tabProjectGroup = ProjectGroup(self.comm, self.closeWidget)                 # Project group. Restart app
       tabW.addTab(tabProjectGroup, 'Project group')
 
-      tabGUI = ConfigurationGUI(self.comm, self.closeWidget)          # Misc configuration: e.g. theming. Restart app
+      tabGUI = ConfigurationGUI(self.comm, self.closeWidget)   # Misc configuration: e.g. theming. Restart app
       tabW.addTab(tabGUI, 'Appearance')
 
-      tabAuthors = ConfigurationAuthors(self.comm, self.closeWidget)  # Author(s)
+      tabAuthors = ConfigurationAuthors(self.comm, self.closeWidget)                               # Author(s)
       tabW.addTab(tabAuthors, 'Author')
 
-      tabRepository = ConfigurationRepositories(self.comm, self.closeWidget)  # Repositories
+      tabRepository = ConfigurationRepositories(self.comm, self.closeWidget)                    # Repositories
       tabW.addTab(tabRepository, 'Repository')
 
-      tabAddOnParameter = ConfigurationAddOnParameter(self.comm, self.closeWidget)  # Add-on parameters
+      tabAddOnParameter = ConfigurationAddOnParameter(self.comm, self.closeWidget)         # Add-on parameters
       tabW.addTab(tabAddOnParameter, 'Add-on parameters')
 
       # initialize when setup is called
@@ -75,5 +75,5 @@ class Configuration(QDialog):
     """
     self.close()
     if restart:
-      self.comm.restart.emit()        #send signal
+      self.comm.restart.emit()                                                                    #send signal
     return

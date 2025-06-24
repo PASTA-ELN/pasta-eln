@@ -22,7 +22,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
 
   def __init__(self,
                default_lookup_term: str | None = None,
-               accepted_callback: Callable[[list[str]], None] = None) -> None:  # type: ignore[assignment]
+               accepted_callback: Callable[[list[str]], None] = None) -> None:      # type: ignore[assignment]
     """
     Initializes the dialog
     Args:
@@ -72,7 +72,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     self.check_box.setToolTip(checkbox_tooltip)
     entry_layout.addWidget(self.check_box)
     entry_layout.addStretch(1)
-    entry_layout.addWidget(QLabel(pixmap=pixmap))  # type: ignore[call-overload]
+    entry_layout.addWidget(QLabel(pixmap=pixmap))                                # type: ignore[call-overload]
     # Create a widget for the entry with the created layout
     entry_widget = QWidget()
     entry_widget.setLayout(entry_layout)

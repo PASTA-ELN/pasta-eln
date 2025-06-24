@@ -69,7 +69,7 @@ class SqlLiteDB:
       resetDataHierarchy (bool): recreate the data hierarchy from default state
     """
     self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = [i[0] for i in self.cursor.fetchall()] # all tables
+    tables = [i[0] for i in self.cursor.fetchall()]                                               # all tables
     self.connection.commit()
     # check if default documents exist and create
     if 'docTypes' not in tables or resetDataHierarchy:
@@ -143,14 +143,14 @@ class SqlLiteDB:
       list: information inquired
     """
     ### return column information
-    if not docType: #if all docTypes
+    if not docType:                                                                           #if all docTypes
       column = f', {column}' if column else ''
       self.cursor.execute(f"SELECT docType {column} FROM docTypes")
       results = self.cursor.fetchall()
       return [i[0] for i in results] if column=='' else results
     ### if metadata = docTypeSchema of data
     if column == 'meta':
-      self.connection.row_factory = sqlite3.Row  #default None
+      self.connection.row_factory = sqlite3.Row                                                  #default None
       cursor = self.connection.cursor()
       if group:
         cursor.execute(f"SELECT * FROM docTypeSchema WHERE docType == '{docType}' and class == '{group}'")
@@ -194,7 +194,7 @@ class SqlLiteDB:
     Returns:
         dict: json representation of document
     """
-    self.connection.row_factory = sqlite3.Row  #default None
+    self.connection.row_factory = sqlite3.Row                                                    #default None
     cursor = self.connection.cursor()
     cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
     res = cursor.fetchone()
@@ -226,10 +226,10 @@ class SqlLiteDB:
           f"WHERE properties.id == '{docID}'"
     self.cursor.execute(cmd)
     res = self.cursor.fetchall()
-    metadataFlat:dict[str, tuple[str,str,str,str]]  = {i[0]:(    i[1],            #value
-                ('' if i[2] is None else i[2]) or ('' if i[5] is None else i[5]), #unit (priority: property.unit)
-                ('' if i[3] is None else i[3]),                                   #long
-                ('' if i[4] is None else i[4])                                    #PURL
+    metadataFlat:dict[str, tuple[str,str,str,str]]  = {i[0]:(    i[1],                                  #value
+                ('' if i[2] is None else i[2]) or ('' if i[5] is None else i[5]),#unit(priority:property.unit)
+                ('' if i[3] is None else i[3]),                                                          #long
+                ('' if i[4] is None else i[4])                                                           #PURL
                 ) for i in res}
     doc |= hierarchy(metadataFlat)
     return doc
@@ -254,7 +254,7 @@ class SqlLiteDB:
         dateCreated: 2025-05-18T22:19:57.051393
         dateModified: 2025-05-18T22:19:57.051415
         gui: [True, True]
-        content: # Put sample in instrument
+        content:# Put sample in instrument
         shasum: 74fd0aea706e0c51d1fd92e9c8e731f83cf92009
         qrCodes: ['13214124', '99698708']
         image: data:image/jpg;base64...
@@ -374,15 +374,15 @@ class SqlLiteDB:
     Returns:
         dict: json representation of updated document
     """
-    if set(dataNew.keys()) == {'type','image'}: #if only type and image in update = change of extractor
+    if set(dataNew.keys()) == {'type','image'}:        #if only type and image in update = change of extractor
       self.cursor.execute(f"UPDATE main SET type='{'/'.join(dataNew['type'])}', image='{dataNew['image']}' WHERE id = '{docID}'")
       self.connection.commit()
       return {'id':docID}
     dataNew['client'] = tracebackString(False, f'updateDoc:{docID}')
-    if 'edit' in dataNew:     #if delete
+    if 'edit' in dataNew:                                                                           #if delete
       dataNew = {'id':dataNew['id'], 'branch':dataNew['branch'], 'user':dataNew['user'], 'externalId':dataNew['externalId'], 'name':''}
     changesDict:dict[str,Any]         = {}
-    self.connection.row_factory = sqlite3.Row  #default None
+    self.connection.row_factory = sqlite3.Row                                                    #default None
     cursor = self.connection.cursor()
 
     # tags and qrCodes
@@ -418,17 +418,17 @@ class SqlLiteDB:
     branchOld[0]['stack'] = branchOld[0]['stack'].split('/')[:-1]
     # print(f'do something with branch: \nnew {branchNew} \nold: {branchOld}')
     if branchNew:
-      op      = branchNew.pop('op')             #operation
+      op      = branchNew.pop('op')                                                                 #operation
       oldPath = branchNew.pop('oldPath',None)
       if not branchNew['path']:
         branchNew['path'] = branchOld[0]['path']
-      if branchNew not in branchOld:            #only do things if the newBranch is not already in oldBranch
+      if branchNew not in branchOld:              #only do things if the newBranch is not already in oldBranch
         changesDict['branch'] = branchOld.copy()
         idx = None
         for branch in branchOld:                #check if the path is already exist, then it is only an update
           if op=='c' and branch['path']==branchNew['path']:
             op='u'
-        if op=='c':    #create, append
+        if op=='c':                                                                            #create, append
           if isinstance(branchNew['stack'], str):
             raise ValueError('Should be list')
           branchNew['show'] = self.createShowFromStack(branchNew['stack'])
@@ -439,8 +439,8 @@ class SqlLiteDB:
                          branchNew['child'],
                          '*' if branchNew['path'] is None else branchNew['path'],
                          ''.join(['T' if j else 'F' for j in branchNew['show']])])
-        elif op=='u':  #update
-          if oldPath is not None:              # search by using old path
+        elif op=='u':                                                                                  #update
+          if oldPath is not None:                                                   # search by using old path
             for branch in branchOld:
               if branch['path'].startswith(oldPath):
                 if   os.path.basename(branch['path']) == mainNew['name'] and \
@@ -452,14 +452,14 @@ class SqlLiteDB:
                 break
           else:
             idx = 0
-            branchOld[idx] = branchNew           #change branch 0 aka the default
-          if idx is None:                          # create new branch: should not happen here
+            branchOld[idx] = branchNew                                        #change branch 0 aka the default
+          if idx is None:                                          # create new branch: should not happen here
             raise ValueError(f'sqlite.2: idx unset: {mainNew["id"]} {mainNew["name"]}')
           self.cursor.execute(f"UPDATE branches SET stack='{'/'.join(branchOld[idx]['stack']+[docID])}', "
                               f"path='{branchOld[idx]['path']}', child='{branchOld[idx]['child']}', "
                               f"show='{''.join(['T' if j else 'F' for j in branchOld[idx]['show']])}' "
                               f"WHERE id = '{docID}' and idx = {idx}")
-        elif op=='d':  #delete
+        elif op=='d':                                                                                  #delete
           branchOld = [branch for branch in branchOld if branch['path']!=branchNew['path']]
         else:
           raise ValueError(f'sqlite.1: unknown branch op: {mainNew["id"]} {mainNew["name"]}: {branchNew} of doc {dataNew}')
@@ -515,7 +515,7 @@ class SqlLiteDB:
     if set(changesDict.keys()).difference(('dateModified','client','user')):
       changeString = ', '.join([f"{k}='{v}'" for k,v in changesDB['main'].items()])
       self.cursor.execute(f"UPDATE main SET {changeString} WHERE id = '{docID}'")
-      if 'name' not in changesDict or changesDict['name']!='new item':  #do not save initial change from new item
+      if 'name' not in changesDict or changesDict['name']!='new item':#don't save initial change from new item
         self.cursor.execute('INSERT INTO changes VALUES (?,?,?)', [docID, datetime.now().isoformat(), json.dumps(changesDict)])
       self.connection.commit()
     return mainOld | mainNew | {'branch':branchOld, '__version__':'short'}
@@ -539,7 +539,7 @@ class SqlLiteDB:
     """
     #convert into db style
     path = '*' if path is None else path
-    if branch == -2: #delete this path
+    if branch == -2:                                                                         #delete this path
       self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}' and path == '{path}'")
       self.connection.commit()
       # test if there is a branch remaining, if not delete document
@@ -549,7 +549,7 @@ class SqlLiteDB:
         self.remove(docID)
       return (path, None)
 
-    if branch == -1: #append a new branch
+    if branch == -1:                                                                      #append a new branch
       self.cursor.execute(f"SELECT idx FROM branches WHERE id == '{docID}'")
       idxOld = [i[0] for i in self.cursor.fetchall()]
       idxNew  = min(set(range(max(idxOld)+2)).difference(idxOld))
@@ -573,7 +573,7 @@ class SqlLiteDB:
     if reply is None:
       raise ValueError(f"FAILED AT: {cmd}")
     pathOld, stackOld, showOld = reply
-    stack = stack or stackOld.split('/')[:-1]           # stack without current id
+    stack = stack or stackOld.split('/')[:-1]                                       # stack without current id
     if pathOld=='*':
       path = '*'
     elif path=='':
@@ -657,10 +657,10 @@ class SqlLiteDB:
       dict: document that was removed
     """
     doc = self.getDoc(docID)
-    if len(doc['branch'])>1 and stack:  #only remove one branch
+    if len(doc['branch'])>1 and stack:                                                 #only remove one branch
       stack = stack[:-1] if stack.endswith('/') else stack
       self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}' and stack LIKE '{stack}%'")
-    else:                               #remove everything
+    else:                                                                                   #remove everything
       doc.pop('image','')
       doc.pop('content','')
       self.cursor.execute(f"DELETE FROM main WHERE id == '{docID}'")
@@ -717,7 +717,7 @@ class SqlLiteDB:
         df: data-frame with human-readable column names
     """
     if (startKey is not None and ' ' in startKey) or (preciseKey is not None and ' ' in preciseKey):
-      raise ValueError(f'key cannot have a space inside |{startKey}|{preciseKey}|')  #TODO: remove this safeguard in 2026
+      raise ValueError(f'key cannot have a space inside |{startKey}|{preciseKey}|')#TODO: remove this safeguard in 2026
     allFlag = False
     if thePath.endswith('All'):
       thePath = thePath.removesuffix('All')
@@ -768,9 +768,9 @@ class SqlLiteDB:
         if startKey:
           cmd += f" and branches.stack LIKE '{startKey}%'"
         dfParams = pd.read_sql_query(cmd, self.connection).fillna('')
-        dfParams = dfParams.drop_duplicates(subset=['key', 'id'], keep='first').set_index('id') # drop duplicates if there are multiple branches
-        dfParams = dfParams.pivot(columns='key', values='value')                                # Pivot the DataFrame
-        #dfParams.columns.name = None                                                            # Flatten the columns; seems not necessary
+        dfParams = dfParams.drop_duplicates(subset=['key', 'id'], keep='first').set_index('id')# drop duplicates if there are multiple branches
+        dfParams = dfParams.pivot(columns='key', values='value')                         # Pivot the DataFrame
+        #dfParams.columns.name = None                               # Flatten the columns; seems not necessary
         df = df.join(dfParams)
       # final sorting of columns
       columnOrder = [i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]
@@ -982,7 +982,7 @@ class SqlLiteDB:
         print('**Warning: manually create "LostAndFound" project to allow full repair')
       else:
         lostAndFoundProjId   = idProjects[0]
-        lostAndFoundProjPath = Path('LostAndFound')  #by definition
+        lostAndFoundProjPath = Path('LostAndFound')                                             #by definition
     if not lostAndFoundProjId and repair is not None:
       errorStr = outputString(outputStyle,'error','No Lost and Found project found. Some repair impossible. '\
                                           'Repair: exit repair mode and manually create LostAndFound project.')
@@ -1028,7 +1028,7 @@ class SqlLiteDB:
           self.cursor.execute(f"UPDATE main SET type='x1' WHERE id = '{docID}'")
       if not all(k.startswith('x-') for k in stack.split('/')[:-1]):
         reply+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {docID}")
-      if any(len(i)==0 for i in stack) and not docType.startswith('x0'): #if no inheritance
+      if any(len(i)==0 for i in stack) and not docType.startswith('x0'):                    #if no inheritance
         if docType.startswith(('measurement','x')):
           reply+= outputString(outputStyle,'warning',f"branch stack length = 0: no parent {docID}")
         elif not minimal:
@@ -1036,10 +1036,10 @@ class SqlLiteDB:
                                    f"branch stack length = 0: no parent for procedure/sample {docID}")
       try:
         dirNamePrefix = path.split(os.sep)[-1].split('_')[0]
-        if dirNamePrefix.isdigit() and child!=int(dirNamePrefix) and docType.startswith('x'): #compare child-number to start of directory name
+        if dirNamePrefix.isdigit() and child!=int(dirNamePrefix) and docType.startswith('x'):#compare child-number to start of directory name
           reply+= outputString(outputStyle,'error',f"dch05: child-number and dirName dont match {docID}")
       except Exception:
-        pass  #handled next lines
+        pass                                                                               #handled next lines
       if path is None:
         if docType.startswith('x'):
           reply+= outputString(outputStyle,'error',f"dch06: branch path is None {docID}")
@@ -1048,7 +1048,7 @@ class SqlLiteDB:
             reply+= outputString(outputStyle,'ok', f'measurement branch path is None=no data {docID}')
         elif not minimal:
           reply+= outputString(outputStyle,'perfect',f"procedure/sample with empty path {docID}")
-      else:                                                    #if sensible path
+      else:                                                                                  #if sensible path
         if len(stack.split('/')) != len(path.split('/')) and path!='*' and not path.startswith('http'):
           #check if length of path and stack coincide; ignore path=None=*
           if docType.startswith('procedure'):
@@ -1060,7 +1060,7 @@ class SqlLiteDB:
               f"branch stack and path lengths not equal: {docID}: {name} {len(stack.split('/'))}"
               f" {len(path.split(os.sep))}")
         if path!='*' and not path.startswith('http'):
-          for parentID in stack.split('/')[:-1]:            #check if all parents in doc have a corresponding path
+          for parentID in stack.split('/')[:-1]:        #check if all parents in doc have a corresponding path
             parentDoc = self.getDoc(parentID)
             if not parentDoc:
               errorStr= outputString(outputStyle,'error',f"branch stack parent is bad: {docID}. Repair: move to lost and found.")
@@ -1122,10 +1122,10 @@ class SqlLiteDB:
       docID, shasum, image, comment = row
       if shasum is None:
         reply+= outputString(outputStyle,'warning',f"dch10: shasum not in measurement {docID}")
-      if image.startswith('data:image'):  #for jpg and png
+      if image.startswith('data:image'):                                                      #for jpg and png
         try:
           imgData = base64.b64decode(image[22:])
-          Image.open(io.BytesIO(imgData))  #can convert, that is all that needs to be tested
+          Image.open(io.BytesIO(imgData))                    #can convert, that is all that needs to be tested
         except Exception:
           reply+= outputString(outputStyle,'error',f"dch12: jpg-image not valid {docID}")
       elif image.startswith('<?xml'):

@@ -3,9 +3,8 @@ import random
 import string
 from typing import Callable, Optional
 import qtawesome as qta
-from PySide6.QtGui import QRegularExpressionValidator  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QLabel,  # pylint: disable=no-name-in-module
-                               QLineEdit, QVBoxLayout)
+from PySide6.QtGui import QRegularExpressionValidator                      # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
 from ...fixedStringsJson import allIcons
 from ...guiCommunicate import Communicate
 from ...guiStyle import TextButton, showMessage, widgetAndLayout, widgetAndLayoutForm
@@ -92,10 +91,10 @@ class DocTypeEditor(QDialog):
         label = 'Random_'+''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
       icon     = '' if self.docType.startswith('x') else self.comboIcon.currentText()
       shortcut = '' if self.docType.startswith('x') else self.row4.text()
-      if self.docType:   # update existing docType
+      if self.docType:                                                               # update existing docType
         self.comm.backend.db.cursor.execute(f"UPDATE docTypes SET title='{label}', shortcut='{shortcut}', "\
                                             f"icon='{icon}' WHERE docType = '{self.docType}'")
-      else:              # create new docType, with default schema entries
+      else:                                                  # create new docType, with default schema entries
         docType = self.row1.text()
         if not docType or docType in self.comm.backend.db.dataHierarchy('',''):
           showMessage(self, 'Error', 'DocType name is not valid or already exists', 'Warning')

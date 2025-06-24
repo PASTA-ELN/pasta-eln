@@ -60,7 +60,7 @@ def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
       'version': 3}
   try:
     conf['userID']      = os.getlogin()
-  except Exception:   #github action
+  except Exception:                                                                             #github action
     conf['userID']      = 'github_user'
   #create pastaDir if it does not exist
   if not pathPasta.is_dir():
@@ -99,7 +99,7 @@ def configuration(command:str, pathData:str) -> str:
     if k not in conf:
       if command == 'repair':
         if isinstance(v,str) and v.startswith('$') and v.startswith('$'):
-          v = eval(v[1:-1]) # pylint: disable=eval-used
+          v = eval(v[1:-1])                                                        # pylint: disable=eval-used
         conf[k] = v
       else:
         output += outputString('text','error', f'No {k} in config file')
@@ -333,9 +333,9 @@ def createShortcut() -> None:
   logging.info('Create shortcut starting')
   if platform.system()=='Linux':
     content ='[Desktop Entry]\nName=PASTA ELN\nComment=PASTA electronic labnotebook\n'
-    if sys.prefix==sys.base_prefix:   #normal installation into user-space
+    if sys.prefix==sys.base_prefix:                                       #normal installation into user-space
       content+='Exec=pastaELN\n'
-    else:                             #installation in a virtual environment
+    else:                                                               #installation in a virtual environment
       logging.info('In virtual environment, create an alias')
       with open(Path.home()/'.bashrc','a', encoding='utf-8') as fOut:
         alias = f"alias pastaELN='{sys.prefix}/bin/python3 -m pasta_eln.gui'"
@@ -348,7 +348,7 @@ def createShortcut() -> None:
       linkString = (Path.home()/'Desktop'/'pastaELN.desktop').as_posix()
       with open(linkString,'w', encoding='utf-8') as fOut:
         fOut.write(content)
-        os.system(f'gio set {linkString} metadata::trusted true') #for ubuntu systems
+        os.system(f'gio set {linkString} metadata::trusted true')                          #for ubuntu systems
         os.chmod(Path.home()/'Desktop'/'pastaELN.desktop', 0o775)
     except Exception:
       pass
@@ -364,7 +364,7 @@ def createShortcut() -> None:
     shell = Dispatch('WScript.Shell')
     shortcut = shell.CreateShortCut( os.path.join(winshell.desktop(), 'pastaELN.lnk') )
     if env := os.environ.get('CONDA_PREFIX', ''):
-      env = env.split('\\')[-1]  #just the env name
+      env = env.split('\\')[-1]                                                             #just the env name
       user = os.getlogin()
       batContent = f"cmd.exe /c \"C:\\Users\\{user}\\anaconda3\\Scripts\\activate {env} && python -m pasta_eln.gui\""
       batLocation= f"C:\\Users\\{user}\\startPastaELN.bat"
@@ -386,7 +386,7 @@ def main() -> None:
   logPath = Path.home()/'pastaELN.log'
   #old versions of basicConfig do not know "encoding='utf-8'"
   logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
-                      datefmt='%m-%d %H:%M:%S')   #This logging is always info, since for installation only
+                      datefmt='%m-%d %H:%M:%S')      #This logging is always info, since for installation only
   for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA Install')

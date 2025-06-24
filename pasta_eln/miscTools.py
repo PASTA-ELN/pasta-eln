@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Union
 from urllib import request
 import pandas as pd
-from PySide6.QtWidgets import QWidget  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget                                      # pylint: disable=no-name-in-module
 import pasta_eln
 from .fixedStringsJson import CONF_FILE_NAME
 
@@ -64,7 +64,7 @@ def generic_hash(path:Path, forceFile:bool=False) -> str:
   Raises:
     ValueError: shasum of directory not supported
   """
-  if str(path).startswith('http'):                      #Remote file:
+  if str(path).startswith('http'):                                                               #Remote file:
     try:
       with request.urlopen(path.as_posix().replace(':/','://'), timeout=60) as site:
         meta = site.headers
@@ -78,9 +78,9 @@ def generic_hash(path:Path, forceFile:bool=False) -> str:
   if forceFile and path.is_symlink():
     path = path.resolve()
   shasum = ''
-  if path.is_symlink():    #if link, hash the link
+  if path.is_symlink():                                                                #if link, hash the link
     shasum = symlink_hash(path)
-  elif path.is_file():  #Local file
+  elif path.is_file():                                                                             #Local file
     with open(path, 'rb') as stream:
       shasum = blob_hash(stream, path.stat().st_size)
   return shasum
@@ -126,7 +126,7 @@ def blob_hash(stream:BufferedReader, size:int) -> str:
   hasher.update(f'blob {size}\0'.encode('ascii'))
   nRead = 0
   while True:
-    data = stream.read(65536)     # read 64K at a time for storage requirements
+    data = stream.read(65536)                                    # read 64K at a time for storage requirements
     if data == b'':
       break
     nRead += len(data)
@@ -156,7 +156,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   if not projectGroup:
     projectGroup = configuration['defaultProjectGroup']
   directory = Path(configuration['projectGroups'][projectGroup]['addOnDir'])
-  sys.path.append(str(directory))  #allow add-ons
+  sys.path.append(str(directory))                                                               #allow add-ons
   # Add-Ons
   verboseDebug = False
   extractorsAll= {}
@@ -208,14 +208,14 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
           print('Extractors', extractorsThis)
         ending = fileName.split('_')[1].split('.')[0]
         extractorsAll[ending]=extractorsThis
-                    #header not used for now
+    # header not used for now
     # Project, et al.
     if fileName.endswith('.py') and '_' in fileName and fileName.split('_')[0] in ['project','table','definition','form']:
       name        = fileName[:-3]
       try:
         module      = importlib.import_module(name)
         description = module.description
-        _ = module.reqParameter  # check if reqParameter exists
+        _ = module.reqParameter                                                 # check if reqParameter exists
         otherAddOns[fileName.split('_')[0]][name] = description
       except Exception as e:
         description = f'** SYNTAX ERROR in add-on **: {e}'
@@ -259,7 +259,7 @@ def callDataExtractor(filePath:Path, backend:Any) -> Any:
   Returns:
     Any: result of the data extractor
   """
-  extension = filePath.suffix[1:]  #cut off initial . of .jpg
+  extension = filePath.suffix[1:]                                                   #cut off initial . of .jpg
   if str(filePath).startswith('http'):
     absFilePath = Path(tempfile.gettempdir())/filePath.name
     with request.urlopen(filePath.as_posix().replace(':/','://'), timeout=60) as urlRequest:
@@ -322,10 +322,10 @@ def restart() -> None:
   Complete restart: cold restart
   """
   try:
-    os.execv('pastaELN',[''])  #installed version
+    os.execv('pastaELN',[''])                                                               #installed version
   except Exception:
-    os.execv(sys.executable, ['python3','-m','pasta_eln.gui']) #started for programming or debugging
-  return
+    os.execv(sys.executable, ['python3','-m','pasta_eln.gui'])           #started for programming or debugging
+  return                                                             #TODO replace python3 with sys.executable
 
 
 def testNewPastaVersion(update:bool=False) -> bool:
@@ -401,7 +401,7 @@ def flatten(d:dict[Any,Any], keepPastaStruct:bool=False) -> dict[object, Any]:
       if isinstance(value, flatten_types):
         # recursively build the result
         has_child = _flatten(value, depth=depth + 1, parent=flat_key)
-        if has_child or not isinstance(value, ()): # ignore the key in this level because it already has child key or its value is empty
+        if has_child or not isinstance(value, ()):# ignore key in this level because it already has child key or its value is empty
           continue
       # add an item to the result
       if flat_key in flat_dict:
@@ -456,7 +456,7 @@ def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
       if isinstance(d[key], dict):
         d[key] = dict2list(d[key])
     if all(i.isdigit() for i in d):
-      d = list(d.values())                                                           # type: ignore[assignment]
+      d = list(d.values())                                                          # type: ignore[assignment]
     return d
 
   # start recursion
@@ -464,5 +464,5 @@ def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
   for flat_key, value in d.items():
     key_tuple = dot_splitter(flat_key)
     nested_set_dict(normalDict, key_tuple, value)
-  normalDict =  dict2list(normalDict)                                                # type: ignore[assignment]
+  normalDict =  dict2list(normalDict)                                               # type: ignore[assignment]
   return normalDict

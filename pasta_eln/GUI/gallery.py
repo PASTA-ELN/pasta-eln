@@ -154,14 +154,13 @@ class ImageGallery(QWidget):
         # Wrap QSvgWidget in a Clickable subclass of QPushButton
         button = ClickableSvgButton(docID)
         button.setFixedSize(IMG_SIZE, IMG_SIZE)
-        # button.setStyleSheet("border: none;") # Already set in ClickableSvgButton.__init__
         svgWidget = QSvgWidget()
         svgWidget.renderer().load(bytearray(image, encoding='utf-8'))
         # Calculate aspect ratio for SVG
         svg_width = svgWidget.renderer().defaultSize().width()
         svg_height = svgWidget.renderer().defaultSize().height()
 
-        if svg_width == 0 or svg_height == 0: # Avoid division by zero
+        if svg_width == 0 or svg_height == 0:                                         # Avoid division by zero
           new_width, new_height = IMG_SIZE -4, IMG_SIZE -4
         elif svg_height > svg_width:
           new_width = int(float(svg_width) / float(svg_height) * (IMG_SIZE - 4))
@@ -177,7 +176,7 @@ class ImageGallery(QWidget):
         button.clicked.connect(lambda checked=False, docID=docID: self.imageClicked(docID))
         button.doubleClicked.connect(self.image2Clicked)
         self.gridL.addWidget(button, row, col)
-      elif 'base64,' in image:  # Basic check for base64 data URI
+      elif 'base64,' in image:                                               # Basic check for base64 data URI
         try:
           header, base64_data = image.split(',', 1)
           # Extract image type from header (e.g., "data:image/png;base64")
@@ -189,10 +188,10 @@ class ImageGallery(QWidget):
           # Ensure format string is clean (e.g. PNG, JPEG)
           fmt = imageType.replace(';', '')
           if imageW.loadFromData(byteArr, format=fmt):
-            pixmap = QPixmap.fromImage(imageW).scaled(IMG_SIZE,IMG_SIZE,Qt.KeepAspectRatio,Qt.SmoothTransformation) # type: ignore[attr-defined]
+            pixmap = QPixmap.fromImage(imageW).scaled(IMG_SIZE,IMG_SIZE,Qt.KeepAspectRatio,Qt.SmoothTransformation)# type: ignore[attr-defined]
             label = ClickableImage(docID)
             label.setPixmap(pixmap)
-            label.setAlignment(Qt.AlignCenter)                            # type: ignore[attr-defined]
+            label.setAlignment(Qt.AlignCenter)                                    # type: ignore[attr-defined]
             label.clicked.connect(self.imageClicked)
             label.doubleClicked.connect(self.image2Clicked)
             self.gridL.addWidget(label, row, col)
@@ -207,7 +206,7 @@ class ImageGallery(QWidget):
         logging.warning("Image for docID is not in expected base64 format. %s", docID)
       # end of loop
       col += 1
-      if col >= 4: # Assuming 4 columns
+      if col >= 4:                                                                        # Assuming 4 columns
         col = 0
         row += 1
     return

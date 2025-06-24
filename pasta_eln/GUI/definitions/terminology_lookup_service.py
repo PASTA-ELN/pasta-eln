@@ -27,7 +27,7 @@ class TerminologyLookupService:
   """
 
   def __init__(self) -> None:
-    self.session_timeout = 10  # Timeout in seconds for the requests send to the lookup services
+    self.session_timeout = 10                # Timeout in seconds for the requests send to the lookup services
     current_path = realpath(join(getcwd(), dirname(__file__)))
     self.lookupConfig = join(current_path, 'terminology_lookup_config.json')
 
@@ -101,10 +101,10 @@ class TerminologyLookupService:
     duplicate_ontology_names = lookup_service.get('duplicate_ontology_names')
     skip_desc = lookup_service.get('skip_description')
     duplicate_ontology_key = lookup_service['search_criteria'].get('ontology_name_key')
-    results = reduce(lambda d, key: d.get(key) if d else None, result_keys,  web_result) # type: ignore[arg-type, return-value]
+    results = reduce(lambda d, key: d.get(key) if d else None, result_keys,  web_result)# type: ignore[arg-type, return-value]
     for item in results or []:
-      description = reduce(lambda d, key: d.get(key) if d else '', desc_keys, item)  # type: ignore[attr-defined]
-      is_duplicate = (item[duplicate_ontology_key] in duplicate_ontology_names) if duplicate_ontology_key else False # type: ignore[operator]
+      description = reduce(lambda d, key: d.get(key) if d else '', desc_keys, item)# type: ignore[attr-defined]
+      is_duplicate = (item[duplicate_ontology_key] in duplicate_ontology_names) if duplicate_ontology_key else False# type: ignore[operator]
       if (description and description != skip_desc and not is_duplicate):
         retrieved_results['results'].append({
             'iri': f"{lookup_service['iri_prefix']}{item[id_key]}"

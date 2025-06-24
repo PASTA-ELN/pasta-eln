@@ -62,16 +62,16 @@ class WaitDialog(QWidget):
 
 class Worker(QThread):
   """A generic worker thread that runs a given function."""
-  progress = Signal(str, str)  # Signal to update the progress bar
+  progress = Signal(str, str)                                              # Signal to update the progress bar
 
   def __init__(self, taskFunction:Callable[[Callable[[str,str],None]],Any]):
     super().__init__()
-    self.taskFunction = taskFunction  # Function to execute
+    self.taskFunction = taskFunction                                                     # Function to execute
 
   def run(self) -> None:
     """Runs the assigned function, providing a callback for progress updates."""
     try:
-      self.taskFunction(self.progress.emit)  # Pass progress emitter as callback
+      self.taskFunction(self.progress.emit)                                # Pass progress emitter as callback
     except Exception:
       pass
     return

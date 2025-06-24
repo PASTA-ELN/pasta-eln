@@ -3,15 +3,12 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
-from PySide6.QtWidgets import (QFileDialog, QMessageBox, QProgressBar, QTextEdit,  # pylint: disable=no-name-in-module
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QProgressBar, QTextEdit, QVBoxLayout, QWidget# pylint: disable=no-name-in-module
 from ..fixedStringsJson import exampleDataString, setupText
 from ..guiCommunicate import Communicate
 from ..guiStyle import TextButton, widgetAndLayout
 from ..installationTools import configuration, createShortcut, exampleData
 from ..miscTools import restart
-
-# from ..dataverse.database_api import DatabaseAPI
 
 
 class ConfigurationSetup(QWidget):
@@ -110,7 +107,7 @@ class ConfigurationSetup(QWidget):
       self.button1.hide()
       self.button2.show()
       logging.info('Setup analyse end')
-    elif command[0] is Command.FINISHED: # What do do when setup is finished: success or unsuccessfully
+    elif command[0] is Command.FINISHED:        # What do do when setup is finished: success or unsuccessfully
       restart()
       # self.callbackFinished()
     return

@@ -4,10 +4,9 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 from anytree import Node, PreOrderIter
-from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayout,  # pylint: disable=no-name-in-module
-                               QWidget)
+from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot      # pylint: disable=no-name-in-module
+from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel       # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayout, QWidget# pylint: disable=no-name-in-module
 from ..fixedStringsJson import DO_NOT_RENDER
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, Label, TextButton, showMessage, widgetAndLayout
@@ -48,7 +47,7 @@ class Project(QWidget):
     self.docProj = self.comm.backend.db.getDoc(self.projID)
     dataHierarchyNode = self.comm.backend.db.dataHierarchy('x0', 'meta')
     # remove if still there
-    for i in reversed(range(self.mainL.count())): #remove old
+    for i in reversed(range(self.mainL.count())):                                                  #remove old
       self.mainL.itemAt(i).widget().setParent(None)
     logging.debug('ProjectView elements at 2: %i',self.mainL.count())
     # TOP LINE includes name on left, buttons on right
@@ -62,7 +61,7 @@ class Project(QWidget):
     topLineL.addStretch(1)
     # buttons in top line
     buttonW, buttonL = widgetAndLayout('H', spacing='m')
-    topLineL.addWidget(buttonW, alignment=Qt.AlignTop)  # type: ignore
+    topLineL.addWidget(buttonW, alignment=Qt.AlignTop)                                          # type: ignore
     self.btnAddSubfolder = TextButton('Add subfolder', self, [Command.ADD_CHILD], buttonL)
     self.btnEditProject =  TextButton('Edit project',  self, [Command.EDIT],      buttonL)
     self.btnVisibility = TextButton(  'Visibility',    self, [],                  buttonL)
@@ -101,7 +100,7 @@ class Project(QWidget):
     if not self.docProj['gui'][0]:
       self.allDetails.hide()
       self.actHideDetail.setText('Show project details')
-    self.allDetails.resizeEvent = self.commentResize # type: ignore
+    self.allDetails.resizeEvent = self.commentResize                                            # type: ignore
     bgColor = self.comm.palette.get('secondaryDark', 'background-color')
     fgColor = self.comm.palette.get('secondaryText', 'color')
     #TODO: For none: no color is set, as it should; but then the Windows10 color is white not the default background
@@ -119,13 +118,13 @@ class Project(QWidget):
     if self.allDetails is None:
       return
     self.allDetails.document().setTextWidth(self.width()-20)
-    height:int = self.allDetails.document().size().toTuple()[1]  # type: ignore[index]
+    height:int = self.allDetails.document().size().toTuple()[1]                          # type: ignore[index]
     self.allDetails.setMaximumHeight(height+12)
     self.allDetails.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     return
 
 
-  @Slot(str, str)                                   # type: ignore[arg-type]
+  @Slot(str, str)                                                                     # type: ignore[arg-type]
   def change(self, projID:str, docID:str) -> None:
     """
     What happens when user clicks to change project that is shown
@@ -136,7 +135,7 @@ class Project(QWidget):
     """
     logging.debug('project:changeProject |%s|%s|',projID,docID)
     #initialize
-    for i in reversed(range(self.mainL.count())): #remove old
+    for i in reversed(range(self.mainL.count())):                                                  #remove old
       self.mainL.itemAt(i).widget().setParent(None)
     logging.debug('ProjectView elements at 1: %i',self.mainL.count())
     if projID!='':
@@ -154,7 +153,7 @@ class Project(QWidget):
     if error:
       showMessage(self, 'Error', 'There is an error in the project hierarchy: a parent of a node is incorrect.', 'Critical')
     for node in PreOrderIter(nodeHier, maxlevel=2):
-      if node.is_root:         #Project header
+      if node.is_root:                                                                        # Project header
         self.projHeader()
       else:
         rootItem.appendRow(self.iterateTree(node))
@@ -164,7 +163,7 @@ class Project(QWidget):
     self.setExpandedState(root)
     if selectedIndex is not None:
       self.tree.selectionModel().select(selectedIndex, QItemSelectionModel.Select)
-      self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
+      self.tree.setCurrentIndex(selectedIndex)
     self.mainL.addWidget(self.tree)
     logging.debug('ProjectView elements at 4: %i',self.mainL.count())
     if len(nodeHier.children)>0 and self.btnAddSubfolder is not None:
@@ -249,7 +248,7 @@ class Project(QWidget):
         self.comm.changeSidebar.emit('redraw')
         self.comm.changeTable.emit('x0','')
     elif command[0] is Command.SCAN:
-      for _ in range(2):  #scan twice: convert, extract
+      for _ in range(2):                                                         #scan twice: convert, extract
         self.comm.backend.scanProject(None, self.projID)
       self.comm.changeProject.emit(self.projID,'')
       showMessage(self, 'Information','Scanning finished')
@@ -265,17 +264,17 @@ class Project(QWidget):
     elif command[0] is Command.HIDE:
       self.comm.backend.db.hideShow(self.projID)
       self.docProj = self.comm.backend.db.getDoc(self.projID)
-      if [b for b in self.docProj['branch'] if False in b['show']]: # hidden->go back to project table
+      if [b for b in self.docProj['branch'] if False in b['show']]:         # hidden->go back to project table
         self.comm.changeSidebar.emit('')
-        self.comm.changeTable.emit('x0','') # go back to project table
+        self.comm.changeTable.emit('x0','')                                         # go back to project table
       else:
         self.change('', '')
         self.comm.changeSidebar.emit('')
     elif command[0] is Command.SHOW_DETAILS and self.tree is not None:
       def recursiveRowIteration(index:QModelIndex) -> None:
-        for subRow in range(self.tree.model().rowCount(index)):   # type: ignore[union-attr]
-          subIndex = self.tree.model().index(subRow,0, index)     # type: ignore[union-attr]
-          subItem  = self.tree.model().itemFromIndex(subIndex)    # type: ignore[union-attr]
+        for subRow in range(self.tree.model().rowCount(index)):                     # type: ignore[union-attr]
+          subIndex = self.tree.model().index(subRow,0, index)                       # type: ignore[union-attr]
+          subItem  = self.tree.model().itemFromIndex(subIndex)                      # type: ignore[union-attr]
           docID    = subItem.data()['hierStack'].split('/')[-1]
           gui      = subItem.data()['gui']
           gui[0]   = self.showDetailsAll
@@ -294,7 +293,7 @@ class Project(QWidget):
     elif command[0] is Command.ADD_CHILD:
       self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['branch'][0]['path']
       self.comm.backend.addData('x1', {'name':'new item'}, [self.projID])
-      self.change('','') #refresh project
+      self.change('','')                                                                      #refresh project
     elif command[0] is Command.SHOW_TABLE:
       self.comm.changeTable.emit(command[1], self.projID)
     elif command[0] is Command.ADD_ON:
@@ -311,7 +310,7 @@ class Project(QWidget):
     Args:
       item (QStandardItem): item changed, new location
     """
-    verbose = False # Convenient for testing
+    verbose = False                                                                   # Convenient for testing
     #gather old information
     db       = self.comm.backend.db
     ## print hierarchy of this project for debugging
@@ -323,7 +322,7 @@ class Project(QWidget):
     stackOld = item.data()['hierStack'].split('/')[:-1]
     docID    = item.data()['hierStack'].split('/')[-1]
     doc      = db.getDoc(docID)
-    if 'branch' not in doc or not stackOld: #skip everything if project or not contain branch
+    if 'branch' not in doc or not stackOld:                  #skip everything if project or not contain branch
       return
     branchOldList= [i for i in doc['branch'] if i['stack']==stackOld]
     if len(branchOldList)!=1:
@@ -332,30 +331,30 @@ class Project(QWidget):
     branchOld = branchOldList[0]
     childOld = branchOld['child']
     #gather new information
-    stackNew = []  #create reversed
+    stackNew = []                                                                             #create reversed
     currentItem = item
     while currentItem.parent() is not None:
       currentItem = currentItem.parent()
       docIDj = currentItem.data()['hierStack'].split('/')[-1]
       stackNew.append(docIDj)
-    stackNew = [self.projID] + stackNew[::-1]  #add project id and reverse
+    stackNew = [self.projID] + stackNew[::-1]                                      #add project id and reverse
     childNew = item.row()
     if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
       if doc['type'][0][0]=='x':
-        dirNameNew= createDirName(doc['name'],doc['type'][0],childNew) # create path name: do not create directory on storage yet
+        dirNameNew= createDirName(doc['name'],doc['type'][0],childNew)# create path name: do not create directory on disk yet
       else:
-        dirNameNew= Path(branchOld['path']).name                         # use old name
+        dirNameNew= Path(branchOld['path']).name                                                # use old name
       parentDir = db.getDoc(stackNew[-1])['branch'][0]['path']
       pathNew = f'{parentDir}/{dirNameNew}'
     else:
       pathNew = branchOld['path']
-    siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackNew)) #sorted by docID
+    siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackNew))      #sorted by docID
     siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(stackNew)+1]
     childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
-    siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]                    #sorted by childNum (primary) and docID (secondary)
+    siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]    #sorted by childNum 1st and docID 2nd
     logging.debug('Change project: docID %s | old stack %s child %i | new stack %s child %i path %s'\
                   , docID, str(stackOld), childOld, str(stackNew), childNew, pathNew)
-    if stackOld==stackNew and childOld==childNew:  #nothing changed, just redraw
+    if stackOld==stackNew and childOld==childNew:                                #nothing changed, just redraw
       return
     # --- CHANGE ----
     # change new siblings
@@ -363,17 +362,17 @@ class Project(QWidget):
       print('\n=============================================\nStep 1: before new siblings')
       print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
     for idx, line in reversed(list(enumerate(siblingsNew))):
-      shift = 1 if idx>=childNew else 0  #shift those before the insertion point by 0 and those after by 1
-      if line['id']==docID or line['value'][0]==idx+shift: #ignore id in question and those that are correct already
+      shift = 1 if idx>=childNew else 0      #shift those before the insertion point by 0 and those after by 1
+      if line['id']==docID or line['value'][0]==idx+shift:    #ignore this id & those that are correct already
         continue
       if verbose:
         print(f'  {line["id"]}: move: {idx} {shift}')
       db.updateBranch(docID=line['id'], branch=line['value'][4], child=idx+shift)
     if verbose:
-      siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackNew)) #sorted by docID
+      siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackNew))    #sorted by docID
       siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(stackNew)+1]
       childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
-      siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]                    #sorted by childNum (primary) and docID (secondary)
+      siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]  #sorted by childNum 1st and docID 2nd
       print('Step 2: after new siblings')
       print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
     # change item in question
@@ -382,24 +381,24 @@ class Project(QWidget):
     db.updateBranch(docID=docID, branch=-99, stack=stackNew, path=pathNew, child=childNew, stackOld=stackOld+[docID])
     item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID])})
     # change old siblings
-    siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackOld))  #sorted by docID
+    siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackOld))      #sorted by docID
     siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(stackOld)+1]
     childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
-    siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]                    #sorted by childNum (primary) and docID (secondary)
+    siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]    #sorted by childNum 1st and docID 2nd
     if verbose:
       print('Step 3: before old siblings')
       print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
     for idx, line in enumerate(siblingsOld):
-      if line['value'][0]==idx: #ignore id in question and those that are correct already
+      if line['value'][0]==idx:                      #ignore id in question and those that are correct already
         continue
       if verbose:
         print(f'  {line["id"]}: move: {idx} {shift}')
       db.updateBranch(  docID=line['id'], branch=line['value'][4], child=idx)
     if verbose:
-      siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackOld))  #sorted by docID
+      siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackOld))    #sorted by docID
       siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(stackOld)+1]
       childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
-      siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]                    #sorted by childNum (primary) and docID (secondary)
+      siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]  #sorted by childNum 1st and docID 2nd
       print('Step 4: end of function')
       print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
     return
@@ -421,9 +420,9 @@ class Project(QWidget):
     nodeTree = QStandardItem(nodeHier.name)
     nodeTree.setData({'hierStack':hierStack, 'docType':nodeHier.docType, 'gui':gui})
     if nodeHier.id[0]=='x':
-      nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
+      nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)# type: ignore
     else:
-      nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled) # type: ignore
+      nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled)          # type: ignore
     children = []
     for childHier in nodeHier.children:
       childTree = self.iterateTree(childHier)

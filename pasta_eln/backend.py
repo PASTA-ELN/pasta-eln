@@ -68,7 +68,7 @@ class Backend(CLI_Mixin):
     self.basePath   = Path(projectGroup['local']['path'])
     self.cwd        = Path(projectGroup['local']['path'])
     self.addOnPath  = Path(projectGroup['addOnDir'])
-    sys.path.append(str(self.addOnPath))  #allow add-ons
+    sys.path.append(str(self.addOnPath))                                                        #allow add-ons
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database
@@ -107,7 +107,7 @@ class Backend(CLI_Mixin):
     if doc['id'].startswith('x'):
       pathStr = '' if self.cwd is None else str(self.cwd.relative_to(self.basePath))
       self.db.updateChildrenOfParentsChanges(pathStr, doc['branch'][0]['path'], '/'.join(self.hierStack),'')
-    self.cwd = self.basePath #reset to sensible before continuing
+    self.cwd = self.basePath                                              #reset to sensible before continuing
     self.hierStack = []
     return
 
@@ -131,7 +131,7 @@ class Backend(CLI_Mixin):
     childNum     = doc.pop('childNum',None)
     path         = None
     oldPath      = None
-    operation    = 'c'  #operation of branch/path
+    operation    = 'c'                                                               #operation of branch/path
     if docType == '-edit-':
       edit = True
       if 'type' not in doc:
@@ -145,7 +145,7 @@ class Backend(CLI_Mixin):
         oldPath    =  doc['branch'][0]['path']
       elif 'branch' in doc:
         hierStack   = doc['branch'][0]['stack']
-    else:  #new doc
+    else:                                                                                             #new doc
       edit = False
       doc['type'] = docType.split('/')
       if len(hierStack) == 0:
@@ -155,12 +155,12 @@ class Backend(CLI_Mixin):
     if doc['type'][0] and doc['type'][0][0]=='x' and doc['type'][0]!='x0' and childNum is None:
       #should not have childnumber in other cases
       thisStack = '/'.join(hierStack)+'/'
-      view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack) #not faster with cT.getChildren
+      view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack)#not faster with cT.getChildren
       childNum = 0
       for item in view:
         if item['value'][1][0][0]!='x':
           continue
-        if thisStack == '/'.join(item['key'].split('/')[:-1])+'/': #remove last item from string
+        if thisStack == '/'.join(item['key'].split('/')[:-1])+'/':               #remove last item from string
           childNum += 1
 
     # find path name on local file system; name can be anything
@@ -177,16 +177,16 @@ class Backend(CLI_Mixin):
         # prevent that projects have the same name: #TODO make this a separate function and merge others
         dirNameBase = createDirName(doc['name'],doc['type'][0],childNum)
         dirName = dirNameBase
-        if 'branch' not in doc or doc['branch'][0]['path'] != dirName: #only change if it is not the same name as before
+        if 'branch' not in doc or doc['branch'][0]['path'] != dirName:#only change if it is not the same name as before
           idx = 0
           while (parentDirectory/dirName).exists():
             idx += 1
             dirName = f'{dirNameBase}_{idx:02d}'
-        path = parentDirectory/dirName #update,or create (if new doc, update ignored anyhow)
+        path = parentDirectory/dirName                   #update,or create (if new doc, update ignored anyhow)
       else:
         #measurement, sample, procedure
         shasum = ''
-        if '://' in doc['name']:                           #make up name
+        if '://' in doc['name']:                                                                 #make up name
           if localCopy:
             baseName  = Path(doc['name']).stem
             extension = Path(doc['name']).suffix
@@ -200,10 +200,10 @@ class Backend(CLI_Mixin):
             except Exception:
               logging.error('bad01: fetch remote content failed. Data not added')
               return {'id':''}
-        elif doc['name']!='' and (self.basePath/doc['name']).is_file():          #file exists
+        elif doc['name']!='' and (self.basePath/doc['name']).is_file():                          # file exists
           path = self.basePath/doc['name']
           doc['name'] = Path(doc['name']).name
-        elif doc['name']!='' and (self.cwd/doc['name']).is_file():               #file exists
+        elif doc['name']!='' and (self.cwd/doc['name']).is_file():                               # file exists
           path = self.cwd/doc['name']
         elif 'branch' in doc:
           if len(doc['branch'])==1:
@@ -212,18 +212,18 @@ class Backend(CLI_Mixin):
           else:
             logging.warning('backend - known issue: add/edit document with multiple branches %s.', doc['id'])
             # I might change the wrong one if I change the branch, but there is nothing in table that can distinguish which branch to change
-        else:                                                                     #make up name
+        else:                                                                                   # make up name
           shasum  = '-'
         if shasum!='-' and path is not None:
           if shasum == '':
             shasum = generic_hash(path, forceFile=True)
           view = self.db.getView('viewIdentify/viewSHAsum',shasum)
-          if len(view)==0 or forceNewImage:  #measurement not in database: create doc
-            self.useExtractors(path,shasum,doc)  #create image/content
+          if len(view)==0 or forceNewImage:                           #measurement not in database: create doc
+            self.useExtractors(path,shasum,doc)                                          #create image/content
             # All files should appear in database
             # if not 'image' in doc and not 'content' in doc and not 'otherELNName' in doc:  #did not get valuable data: extractor does not exit
             #   return ''
-          if len(view)==1:  #measurement is already in database
+          if len(view)==1:                                                 #measurement is already in database
             doc['id'] = view[0]['id']
             doc['shasum'] = shasum
             edit = True
@@ -259,8 +259,8 @@ class Backend(CLI_Mixin):
           return  {'id':''}
         (self.basePath/oldPath).rename(self.basePath/path)
       else:
-        (self.basePath/path).mkdir(exist_ok=True)   #if exist, create again; moving not necessary since directory moved in changeHierarchy
-      with open(self.basePath/path/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
+        (self.basePath/path).mkdir(exist_ok=True)#if exist, create again; moving not necessary since directory moved in changeHierarchy
+      with open(self.basePath/path/'.id_pastaELN.json','w', encoding='utf-8') as f:#local path, update in any case
         f.write(json.dumps(doc))
     return doc
 
@@ -280,10 +280,10 @@ class Backend(CLI_Mixin):
     logging.debug('changeHierarchy should only be used in CLI mode')
     if self.cwd is None:
       return
-    if docID is None or (docID[0]=='x' and docID[1]!='-'):  #cd ..: none. close 'project', 'task'
+    if docID is None or (docID[0]=='x' and docID[1]!='-'):               #cd ..: none. close 'project', 'task'
       self.hierStack.pop()
       self.cwd = self.cwd.parent
-    elif dirName is None:  # existing ID is given: open that
+    elif dirName is None:                                                    # existing ID is given: open that
       doc = self.db.getDoc(docID)
       self.cwd = self.basePath/doc['branch'][0]['path']
       self.hierStack = doc['branch'][0]['stack']+[docID]
@@ -320,7 +320,7 @@ class Backend(CLI_Mixin):
       self.cwd = self.basePath/projPath
     #prepare lists and start iterating
     inDB_all = self.db.getView('viewHierarchy/viewPathsAll', startKey=projPath.as_posix())
-    pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasks
+    pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x'] #all structure elements: folders
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
     filesCountSum = sum(len(files) for (_, _, files) in os.walk(self.cwd))
     filesCount = 0
@@ -331,8 +331,8 @@ class Backend(CLI_Mixin):
         del dirs
         del files
         continue
-      parentIDs = [i for i in inDB_all if i['key']==self.cwd.as_posix()]  #parent of this folder
-      if not parentIDs: #skip newly moved folder, will be scanned upon re-scanning
+      parentIDs = [i for i in inDB_all if i['key']==self.cwd.as_posix()]                #parent of this folder
+      if not parentIDs:                             #skip newly moved folder, will be scanned upon re-scanning
         continue
       parentID = parentIDs[0]['id']
       parentDoc = self.db.getDoc(parentID)
@@ -340,12 +340,12 @@ class Backend(CLI_Mixin):
       # handle directories
       dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i not in ('__pycache__')
                  and not (Path(root)/i/'pyvenv.cfg').is_file()]
-      for dirName in dirs[::-1]: #sorted forward in Linux
+      for dirName in dirs[::-1]:                                                     # sorted forward in Linux
         path = (Path(root)/dirName).relative_to(self.basePath).as_posix()
-        if path in pathsInDB_x: #path already in database
+        if path in pathsInDB_x:                                                     # path already in database
           pathsInDB_x.remove(path)
           continue
-        if (self.basePath/path/'.id_pastaELN.json').is_file(): # update branch: path and stack
+        if (self.basePath/path/'.id_pastaELN.json').is_file():                 # update branch: path and stack
           with open(self.basePath/path/'.id_pastaELN.json', encoding='utf-8') as fIn:
             doc = json.loads(fIn.read())
             doc = self.db.getDoc(doc['id'])
@@ -366,10 +366,10 @@ class Backend(CLI_Mixin):
             for item in view:
               if item['value'][1][0]=='x0' or item['value'][1][0][0]!='x':
                 continue
-              if thisStack == ' '.join(item['key'].split(' ')[:-1]): #remove last item from string
+              if thisStack == ' '.join(item['key'].split(' ')[:-1]):            # remove last item from string
                 childNum += 1
-            newPath = '/'.join(path.split('/')[:-1])+'/'+createDirName(doc['name'],doc['type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
-            if (self.basePath/newPath).exists():                     #can be either file or directory
+            newPath = '/'.join(path.split('/')[:-1])+'/'+createDirName(doc['name'],doc['type'][0],childNum)#update,or create (if new doc, update ignored anyhow)
+            if (self.basePath/newPath).exists():                             # can be either file or directory
               logging.error('New path should not exist %s',newPath)
             else:
               (self.basePath/path).rename(self.basePath/newPath)
@@ -377,16 +377,16 @@ class Backend(CLI_Mixin):
         else:
           currentID = self.addData('x1', {'name': dirName}, hierStack)['id']
           newDir = self.basePath/self.db.getDoc(currentID)['branch'][0]['path']
-          (newDir/'.id_pastaELN.json').rename(self.basePath/root/dirName/'.id_pastaELN.json') #move index file into old folder
-          newDir.rmdir()                     #remove created path
-          (self.basePath/root/dirName).rename(newDir) #move old to new path
+          (newDir/'.id_pastaELN.json').rename(self.basePath/root/dirName/'.id_pastaELN.json')#move index file into old folder
+          newDir.rmdir()                                                                  #remove created path
+          (self.basePath/root/dirName).rename(newDir)                                    #move old to new path
         rerunScanTree = True
       # handle files
       for fileName in files:
         filesCount += 1
         if progressBar is not None:
           progressBar(int(100*filesCount/filesCountSum))
-        if fileName.startswith(('.', 'trash_')) or '_PastaExport' in fileName:  #ignore files
+        if fileName.startswith(('.', 'trash_')) or '_PastaExport' in fileName:                   #ignore files
           continue
         path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
         if path in pathsInDB_data:
@@ -398,7 +398,7 @@ class Backend(CLI_Mixin):
           if not shasum:
             raise NameError(f'Filepath does not exist {self.basePath/path}')
           view = self.db.getView('viewIdentify/viewSHAsum',shasum)
-          if len(view)==0:                             #not in database: create doc
+          if len(view)==0:                                                        #not in database: create doc
             self.addData('', {'name':path}, hierStack)
           else:
             self.db.updateBranch(view[0]['id'], -1, 9999, hierStack, path)
@@ -436,7 +436,7 @@ class Backend(CLI_Mixin):
         shasum (string): shasum (git-style hash) to store in database (not used here)
         doc (dict): pass known data/measurement type, can be used to create image; This doc is altered
     """
-    extension = filePath.suffix[1:]  #cut off initial . of .jpg
+    extension = filePath.suffix[1:]                                                 #cut off initial . of .jpg
     if str(filePath).startswith('http'):
       absFilePath = Path(tempfile.gettempdir())/filePath.name
       with request.urlopen(filePath.as_posix().replace(':/','://'), timeout=60) as urlRequest:
@@ -454,18 +454,18 @@ class Backend(CLI_Mixin):
     if pyPath.is_file():
       # import module and use to get data
       os.environ['QT_API'] = 'pyside2'
-      import matplotlib.pyplot as plt  # IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
+      import matplotlib.pyplot as plt                         # IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
       plt.clf()
       try:
         module  = importlib.import_module(pyFile[:-3])
         content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
-        for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','links','style']]:  #only allow accepted keys
+        for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','links','style']]:#only allow accepted keys
           del content[key]
         doc |= content
         for meta in ['metaVendor','metaUser']:
           if meta not in doc:
             doc[meta] = {}
-          if isinstance(doc[meta], dict):  #convenient type
+          if isinstance(doc[meta], dict):                                                     #convenient type
             for item in doc[meta]:
               if isinstance(doc[meta][item], tuple):
                 doc[meta][item] = list(doc[meta][item])
@@ -497,7 +497,7 @@ class Backend(CLI_Mixin):
           'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
     #combine into document
     os.environ['QT_API'] = 'pyside6'
-    doc['shasum']=shasum  #essential for logic, always save, unlike image
+    doc['shasum']=shasum                                       #essential for logic, always save, unlike image
     return
 
 
@@ -616,7 +616,7 @@ class Backend(CLI_Mixin):
         # print('image.save(figfile, format="PNG")')
         # print('imageData = base64.b64encode(figfile.getvalue()).decode()')
         # print('image = "data:image/jpg;base64," + imageData')
-    if success and isinstance(content['image'], mpaxes._axes.Axes): # pylint: disable=protected-access
+    if success and isinstance(content['image'], mpaxes._axes.Axes): #         pylint: disable=protected-access
       success = False
       report += outputString(outputStyle,'error','Image is a matplotlib axis: not a base64 string')
       report += outputString(outputStyle, 'error', f'{htmlStr}matplotlib">website</a>')
@@ -664,9 +664,9 @@ class Backend(CLI_Mixin):
     Returns:
         string: output incl. \n
     """
-    ### check database itself for consistency
+    # check database itself for consistency
     output = self.db.checkDB(outputStyle=outputStyle, minimal=minimal, repair=repair)
-    ### compare with file system
+    # compare with file system
     if not minimal:
       output += outputString(outputStyle,'h2','File status')
     viewProjects   = self.db.getView('viewDocType/x0All')
@@ -717,7 +717,7 @@ class Backend(CLI_Mixin):
                   elif repair(errorStr):
                     with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
                       json.dump(docDB, fOut)
-                  # #use only for resetting the content in the .id_pastaELN.json
+                  #use only for resetting the content in the .id_pastaELN.json
             else:
               count += 1
               errorStr = outputString(outputStyle, 'error', f'Folder has no .id_pastaELN.json:{path}')
@@ -726,7 +726,7 @@ class Backend(CLI_Mixin):
               elif repair(errorStr):
                 with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
                   json.dump({'id':docDB['id']}, fOut)
-    orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ':/' not in i and i!='*']  #paths can be files or directories
+    orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ':/' not in i and i!='*']#paths can be files or directories
     orphans+= [i for i in pathsInDB_folder if not (self.basePath/i).exists() ]
     if orphans:
       if repair is None:

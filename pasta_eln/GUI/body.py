@@ -1,6 +1,6 @@
 """ Central widget: everything that is not sidebar: switches between project-view and table-details """
-from PySide6.QtCore import Slot  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QVBoxLayout, QWidget  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot                                            # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QVBoxLayout, QWidget                         # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from .docTypes import DocTypes
 from .project import Project

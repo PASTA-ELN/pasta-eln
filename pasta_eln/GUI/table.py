@@ -6,10 +6,9 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 import pandas as pd
-from PySide6.QtCore import QModelIndex, QSortFilterProxyModel, Qt, Slot  # pylint: disable=no-name-in-module
-from PySide6.QtGui import (QRegularExpressionValidator, QStandardItem,  # pylint: disable=no-name-in-module
-                           QStandardItemModel)
-from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView,  # pylint: disable=no-name-in-module
+from PySide6.QtCore import QModelIndex, QSortFilterProxyModel, Qt, Slot    # pylint: disable=no-name-in-module
+from PySide6.QtGui import QRegularExpressionValidator, QStandardItem, QStandardItemModel# pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView,# pylint: disable=no-name-in-module
                                QLineEdit, QMenu, QMessageBox, QPushButton, QTableView, QVBoxLayout, QWidget)
 from ..guiCommunicate import Communicate
 from ..guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
@@ -94,7 +93,7 @@ class Table(QWidget):
       for label, description in projectAddOns.items():
         Action(description, self, [Command.ADD_ON, label], self.moreMenu)
       self.moreMenu.addSeparator()
-    self.actionChangeColums = Action('Change columns',  self, [Command.CHANGE_COLUMNS], self.moreMenu)  #add this action at end
+    self.actionChangeColums = Action('Change columns',  self, [Command.CHANGE_COLUMNS], self.moreMenu)#add this action at end
     self.btnMore.setMenu(self.moreMenu)
 
     # filter
@@ -120,7 +119,7 @@ class Table(QWidget):
     self.setLayout(mainL)
 
 
-  @Slot(str, str)                                       # type: ignore[arg-type]
+  @Slot(str, str)                                                                     # type: ignore[arg-type]
   def change(self, docType:str, projID:str) -> None:
     """
     What happens when the table changes its raw information
@@ -199,7 +198,7 @@ class Table(QWidget):
         self.headline.setText(docLabel)
         self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
       else:
-        self.comm.changeSidebar.emit('')  #close the project in sidebar
+        self.comm.changeSidebar.emit('')                                         #close the project in sidebar
         self.headline.setText(f'All {docLabel.lower()}')
         self.showHidden.setText(f'Show/hide all hidden {docLabel.lower()}')
       self.filterHeader = list(self.data.columns)[:-1]
@@ -209,25 +208,22 @@ class Table(QWidget):
     model.setHorizontalHeaderLabels(self.filterHeader)
     for i, j in itertools.product(range(nRows), range(nCols-1)):
       value = self.data.iloc[i,j]
-      if self.docType=='_tags_':  #tags list
+      if self.docType=='_tags_':                                                                   # tags list
         if j==0:
-          if value=='_curated':          # curated
+          if value=='_curated':                                                                       #curated
             item = QStandardItem('_curated_')
-          elif re.match(r'_\d', value):  # star
+          elif re.match(r'_\d', value):                                                                 # star
             item = QStandardItem('\u2605'*int(value[1]))
           else:
             item = QStandardItem(value)
         else:
           item = QStandardItem(value)
-      elif value in ('None','','nan'):  #None, False
-        item = QStandardItem('-') # if you want to add nice glyphs, see also below \u00D7')
-        # item.setFont(QFont("Helvetica [Cronyx]", 16))
-      elif value=='True': #True
-        item = QStandardItem('Y') # \u2713')
-        # item.setFont(QFont("Helvetica [Cronyx]", 16))
-      elif isinstance(value, str) and re.match(r'^[a-z\-]-[a-z0-9]{32}$',value):      #Link
-        item = QStandardItem('oo') # \u260D')
-        # item.setFont(QFont("Helvetica [Cronyx]", 16))
+      elif value in ('None','','nan'):                                                           # None, False
+        item = QStandardItem('-')
+      elif value=='True':                                                                               # True
+        item = QStandardItem('Y')
+      elif isinstance(value, str) and re.match(r'^[a-z\-]-[a-z0-9]{32}$',value):                        # Link
+        item = QStandardItem('oo')
       else:
         if self.filterHeader[j]=='tags':
           tags = [i.strip() for i in value.split(',')]
@@ -367,7 +363,7 @@ class Table(QWidget):
           self.comm.backend.db.hideShow(docID)
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')
-      self.change('','')  # redraw table
+      self.change('','')                                                                        # redraw table
     elif command[0] is Command.TOGGLE_SELECTION:
       for row in range(self.models[-1].rowCount()):
         item,_ = self.itemFromRow(row)
@@ -377,7 +373,7 @@ class Table(QWidget):
           item.setCheckState(Qt.CheckState.Checked)
     elif command[0] is Command.SHOW_ALL:
       self.showAll = not self.showAll
-      self.change('','')  # redraw table
+      self.change('','')                                                                        # redraw table
     elif command[0] is Command.RERUN_EXTRACTORS:
       redraw = False
       for row in range(self.models[-1].rowCount()):
@@ -395,7 +391,7 @@ class Table(QWidget):
             path = self.comm.backend.basePath/doc['branch'][0]['path']
           self.comm.backend.useExtractors(path, doc.get('shasum',''), doc)
           if doc['type'][0] == oldDocType[0]:
-            del doc['branch']  #don't update
+            del doc['branch']                                                                    #don't update
             self.comm.backend.db.updateDoc(doc, docID)
           else:
             self.comm.backend.db.remove( docID )
@@ -403,11 +399,11 @@ class Table(QWidget):
             doc['name'] = doc['branch'][0]['path']
             self.comm.backend.addData('/'.join(doc['type']), doc, doc['branch'][0]['stack'])
       if redraw:
-        self.change('','')  # redraw table
+        self.change('','')                                                                      # redraw table
         self.comm.changeDetails.emit('redraw')
     elif command[0] is Command.TOGGLE_GALLERY:
       self.flagGallery = not self.flagGallery
-      self.change('','')    # redraw table/gallery
+      self.change('','')                                                                # redraw table/gallery
     elif command[0] is Command.ADD_FILTER:
       # gui
       _, rowL = widgetAndLayout('H', self.filterL, 'm', 'xl', '0', 'xl')
@@ -435,21 +431,21 @@ class Table(QWidget):
       filterModel.setFilterKeyColumn(0)
       self.models.append(filterModel)
       self.table.setModel(self.models[-1])
-    elif command[0] is Command.DELETE_FILTER: # Remove filter from list of filters
+    elif command[0] is Command.DELETE_FILTER:                             # Remove filter from list of filters
       row = command[1]
       # change the information in the minus-button command
-      for i in range(row, self.filterL.count()):        #e.g. model 1 is in row=0, so start in 1 for renumbering
+      for i in range(row, self.filterL.count()):      #e.g. model 1 is in row=0, so start in 1 for renumbering
         item_1 = self.filterL.itemAt(i)
         if item_1 is not None:
           layout_2 = item_1.widget().layout()
           if layout_2 is not None:
             item_2   = layout_2.itemAt(2)
             if item_2 is not None:
-              item_2.widget().command[1] -= 1   # type: ignore[attr-defined]
+              item_2.widget().command[1] -= 1                                     # type: ignore[attr-defined]
       # remove row in GUI
       item_1 = self.filterL.itemAt(row-1)
       if item_1 is not None:
-        item_1.widget().setParent(None) # e.g. model 1 is in row=0 for deletion
+        item_1.widget().setParent(None)                                # e.g. model 1 is in row=0 for deletion
       # delete one row in models and adopt the sources
       del self.models[row]
       for i in range(1, len(self.models)):
@@ -500,7 +496,7 @@ class Table(QWidget):
 
     # Check if shift is held and lastClickedRow is set
     modifiers = QApplication.keyboardModifiers()
-    if modifiers == Qt.ShiftModifier and self.lastClickedRow > -1:   # type: ignore[attr-defined]
+    if modifiers == Qt.ShiftModifier and self.lastClickedRow > -1:                # type: ignore[attr-defined]
       start = min(self.lastClickedRow, row)
       end = max(self.lastClickedRow, row)
       target_state = Qt.CheckState.Checked if self.itemFromRow(row)[0].checkState() == Qt.CheckState.Checked \
@@ -508,10 +504,10 @@ class Table(QWidget):
       for r in range(start, end + 1):
         item, _ = self.itemFromRow(r)
         item.setCheckState(target_state)
-    else: # No need to toggle only the clicked row, just record it
+    else:                                             # No need to toggle only the clicked row, just record it
       self.lastClickedRow = row
 
-    if docID[0] == 'x':  # only show items for non-folders
+    if docID[0] == 'x':                                                      # only show items for non-folders
       doc = self.comm.backend.db.getDoc(docID)
       if doc['type'][0] == 'x0':
         self.comm.changeProject.emit(docID, '')
@@ -577,7 +573,7 @@ class Table(QWidget):
        item (int): column number to filter by
     """
     rating = False
-    if item == self.models[-1].columnCount():  # ratings
+    if item == self.models[-1].columnCount():                                                        # ratings
       item = self.filterHeader.index('tag')
       rating = True
     for idx,combobox in enumerate(self.filterSelect):

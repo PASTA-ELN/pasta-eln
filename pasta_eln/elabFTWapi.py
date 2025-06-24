@@ -6,7 +6,7 @@ import logging
 import mimetypes
 from pathlib import Path
 from typing import Any, TypedDict
-import requests  # only requirement; could be replaced with urllib to eliminate requirements
+import requests                    # only requirement; could be replaced with urllib to eliminate requirements
 
 
 class ElabFTWApi:
@@ -38,7 +38,7 @@ class ElabFTWApi:
       timeout: int
 
     # test server
-    self.url = ''  #initialize: indicator if initialization successful
+    self.url = ''                                          #initialize: indicator if initialization successful
     self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
     self.param:Param = {'headers':self.headers, 'verify':verifySSL, 'timeout':10}
     try:
@@ -239,11 +239,11 @@ class ElabFTWApi:
         data = {'comment':comment, 'file': (Path(fileName).name, fIn.read(), mime)}
     elif jsonContent:
       data = {'comment':comment, 'file': ('do_not_change.json', jsonContent.encode(), 'text/json')}
-    else:  #default for fast testing
+    else:                                                                            #default for fast testing
       data = {'comment':comment, 'file': ('README.md', b'Read me!\n', 'text/markdown')}
     # upload that data
     headers = copy.deepcopy(self.headers)
-    del headers['Content-type'] #will automatically become 'multipart/form-data'
+    del headers['Content-type']                               #will automatically become 'multipart/form-data'
     response = requests.post(f'{self.url}{entryType}/{identifier}/uploads', headers=headers,
                              files=data, verify=self.param['verify'], timeout=60)
     if response.status_code == 201:

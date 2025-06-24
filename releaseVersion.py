@@ -4,6 +4,7 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -34,6 +35,7 @@ def getVersion() -> str:
   if lastVersion.count('.')==3:
     lastVersion = '.'.join(lastVersion.split('.')[:3]) + f'b{lastVersion.split(".")[-1]}'
   return f'v{lastVersion}'
+
 
 def createContributors() -> None:
   """
@@ -228,6 +230,32 @@ def copyAddOns() -> None:
     if fileI in skipFiles or not fileI.endswith('.py'):
       continue
     shutil.copy(f'../AddOns/{fileI}', f'{basePath}/{fileI}')
+  return
+
+
+def rightAlignComments() -> None:
+  """
+  Check if comments are right-aligned to column 110
+  """
+  pattern1 = re.compile(r'\S+.+#')  # Line has non-whitespace, then whitespace, then #
+  pattern2 = re.compile(r'\s#')
+
+  for root, dirs, files in os.walk('pasta_eln'):
+    for file in files:
+      if file.endswith('.py') and \
+        file not in ['markdown2html.py','html2markdown.py','html2mdConfig.py','html2mdUtils.py','guiCommunicate.py'] and\
+        'Resources/' not in root and '/AddOns' not in root:
+          file_path = os.path.join(root, file)
+          output = ''
+          with open(file_path, 'r') as f:
+            content = f.read()
+          for number, line in enumerate(content.splitlines()):
+            if pattern1.search(line) and not line.strip().startswith('#') and len(line)!=110 and \
+              pattern2.search(line) and 'background' not in line:
+                output += f'{number+1}: {line.strip()}\n'
+          if output and 'Resources/' not in file_path:
+            print('\nProcessing file:', file_path)
+            print(output)
   return
 
 

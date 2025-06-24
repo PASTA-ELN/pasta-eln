@@ -5,8 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 import requests
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QLabel,  # pylint: disable=no-name-in-module
-                               QLineEdit, QVBoxLayout)
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, TextButton, widgetAndLayout, widgetAndLayoutForm
@@ -64,7 +63,7 @@ class ConfigurationAuthors(QDialog):
     #initialize
     self.orgaCB_previousIndex = 0
     self.lockSelfAuthor = False
-    self.orgaCB.currentIndexChanged.connect(lambda: self.execute([Command.CHANGE])) #connect to slot only after all painting is done
+    self.orgaCB.currentIndexChanged.connect(lambda: self.execute([Command.CHANGE]))#connect to slot only after all painting is done
 
 
   def addRowText(self, item:str, label:str) -> QLineEdit:
@@ -94,7 +93,7 @@ class ConfigurationAuthors(QDialog):
     """
     Autofill based on orcid and rorid
     """
-    sender = self.sender().accessibleName()                                                                  # type: ignore[attr-defined]
+    sender = self.sender().accessibleName()                                       # type: ignore[attr-defined]
     if sender == 'rorid':
       if re.match(r'^\w{9}$', self.userRorid.text().strip() ) is not None:
         reply = requests.get(f'https://api.ror.org/organizations/{self.userRorid.text().strip()}', timeout=10)

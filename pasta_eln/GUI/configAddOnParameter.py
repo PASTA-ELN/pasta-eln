@@ -3,7 +3,7 @@ import importlib
 import json
 from pathlib import Path
 from typing import Callable
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QVBoxLayout  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
 from ..guiStyle import Label, TextButton, showMessage, widgetAndLayout
@@ -30,16 +30,16 @@ class ConfigurationAddOnParameter(QDialog):
     self.allLineEdits = []
     if hasattr(comm.backend, 'configuration'):
       addOns = comm.backend.configuration['projectGroups'][comm.backend.configurationProjectGroup]['addOns']
-      for addOnType in addOns:                               # loop over add-on types
+      for addOnType in addOns:                                                        # loop over add-on types
         if addOnType != 'extractors' and addOns[addOnType]:
-          for name, _ in addOns[addOnType].items():          # loop over add-ons
+          for name, _ in addOns[addOnType].items():                                        # loop over add-ons
             module      = importlib.import_module(name)
             requiredParam = module.reqParameter
             try:
               helpText = module.helpText
             except AttributeError:
               helpText = ''
-            for param, tooltip in requiredParam.items():    # loop over parameters
+            for param, tooltip in requiredParam.items():                                # loop over parameters
               _, barL = widgetAndLayout('H', mainL, 'm', 's', 's', 's', 's')
               Label(f'{addOnType}/{name}.py: {param}', 'h4', barL, tooltip=tooltip)
               lineEdit = QLineEdit()                                         # pylint: disable=qt-local-widget

@@ -6,7 +6,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 import qtawesome as qta
-from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit, QVBoxLayout  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
 from ...fixedStringsJson import CONF_FILE_NAME
 from ...guiCommunicate import Communicate
 from ...guiStyle import Label, TextButton, showMessage, widgetAndLayout, widgetAndLayoutGrid

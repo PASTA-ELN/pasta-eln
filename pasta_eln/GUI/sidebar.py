@@ -3,9 +3,9 @@ import logging
 from enum import Enum
 from typing import Any
 from anytree import Node
-from PySide6.QtCore import Slot  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QResizeEvent  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QVBoxLayout, QWidget  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot                                            # pylint: disable=no-name-in-module
+from PySide6.QtGui import QResizeEvent                                     # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QVBoxLayout, QWidget# pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, TextButton, showMessage, space, widgetAndLayout, widgetAndLayoutGrid
 from .config import Configuration
@@ -20,7 +20,7 @@ class Sidebar(QWidget):
     if hasattr(self.comm.backend, 'configuration'):
       self.sideBarWidth = self.comm.backend.configuration['GUI']['sidebarWidth']
       self.setFixedWidth(self.sideBarWidth)
-    if not hasattr(comm.backend, 'db'):  #if no backend
+    if not hasattr(comm.backend, 'db'):                                                        # if no backend
       configWindow = Configuration(comm, 'setup')
       configWindow.exec()
     self.openProjectId = ''
@@ -37,7 +37,7 @@ class Sidebar(QWidget):
 
     self.widgetsAction:dict[str,QWidget] = {}
     self.widgetsList:dict[str,QWidget]   = {}
-    self.widgetsProject:dict[str,Any]    = {} #title bar and widget that contains all of project
+    self.widgetsProject:dict[str,Any]    = {}               #title bar and widget that contains all of project
     self.change()
 
 
@@ -56,7 +56,7 @@ class Sidebar(QWidget):
       self.openProjectId = projectChoice
     self.widgetsAction = {}
     self.widgetsList = {}
-    self.widgetsProject = {} #title bar and widget that contains all of project
+    self.widgetsProject = {}                                #title bar and widget that contains all of project
     backend = self.comm.backend
 
     if hasattr(backend, 'db'):
@@ -75,7 +75,7 @@ class Sidebar(QWidget):
         projName = project['name']
         #head: show project name as button
         projectW = QFrame()
-        # projectW.setMinimumHeight(300) #convenience: allow scroll in sidebar
+        # projectW.setMinimumHeight(300) # convenience: allow scroll in sidebar
         projectL = QVBoxLayout(projectW)
         projectL.setSpacing(3)
         projectL.setContentsMargins(3,3,3,3)
@@ -86,7 +86,7 @@ class Sidebar(QWidget):
 
         # actions: scan, curate, ...
         actionW, actionL = widgetAndLayoutGrid(projectL)
-        if self.openProjectId != projID: #depending which project is open
+        if self.openProjectId != projID:                                      #depending which project is open
           actionW.hide()
           projectW.setStyleSheet(self.comm.palette.get('secondaryDark', 'background-color'))
         else:
@@ -153,7 +153,7 @@ class Sidebar(QWidget):
     elif command[0] is Command.SHOW_PROJECT:
       projID = command[1]
       item   = command[2]
-      if item=='': #clicked on project-button, not tree view
+      if item=='':                                                   #clicked on project-button, not tree view
         self.openProjectId = projID
         for docID, widget in self.widgetsAction.items():
           if docID == projID:
@@ -172,7 +172,7 @@ class Sidebar(QWidget):
             projWidget.setStyleSheet(self.comm.palette.get('secondaryDark','background-color'))
       self.comm.changeProject.emit(projID, item)
     elif command[0] is Command.SCAN_PROJECT:
-      for _ in range(2):  #scan twice: convert, extract
+      for _ in range(2):                                                         #scan twice: convert, extract
         self.comm.backend.scanProject(None, self.openProjectId)
       self.comm.changeProject.emit(self.openProjectId,'')
       showMessage(self, 'Information','Scanning finished')

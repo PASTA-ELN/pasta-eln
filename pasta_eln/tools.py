@@ -297,7 +297,7 @@ class Tools:
     try:
       doc['id'] = doc.pop('_id')
       for key in ('name','user','type','gui','tags','client','branch','date'):
-        if key in doc:      #skip if key is already in correct format
+        if key in doc:                                               #skip if key is already in correct format
           continue
         if key in defaultValues and f'-{key}' not in doc:
           doc[key] = defaultValues[key]
@@ -448,7 +448,7 @@ class Tools:
     if self.backend is None:
       return
     dirName = self.backend.basePath
-    if dirName.as_posix() != '/home/steffen/FZJ/pasta_misc/testing': #TODO temporary safeguard
+    if dirName.as_posix() != '/home/steffen/FZJ/pasta_misc/testing':                 #TODO temporary safeguard
       print('DO NOT DELETE THIS')
       return
     self.backend.exit()
