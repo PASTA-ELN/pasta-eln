@@ -13,6 +13,7 @@ from ..miscTools import restart
 
 # from ..dataverse.database_api import DatabaseAPI
 
+
 class ConfigurationSetup(QWidget):
   """
   Main class

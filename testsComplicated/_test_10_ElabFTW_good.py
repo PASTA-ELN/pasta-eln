@@ -21,7 +21,6 @@ class TestStringMethods(unittest.TestCase):
     self.dirName = ''
 
 
-
   def test_main(self):
     """
     main function
@@ -128,6 +127,7 @@ class TestStringMethods(unittest.TestCase):
     handleReports(reports)
     verify(self.be)
     return
+
 
   def tearDown(self):
     logging.info('End test')

@@ -34,6 +34,7 @@ os.environ['QT_API'] = 'pyside6'
 class MainWindow(QMainWindow):
   """ Graphical user interface includes all widgets """
 
+
   def __init__(self, projectGroup:str='') -> None:
     """ Init main window
 

@@ -1,5 +1,6 @@
 """ Misc PRINTER functions that do not require instances """
 
+
 def createQRcodeSheet() -> None:
   """
   Documentation QR-codes
@@ -11,7 +12,7 @@ def createQRcodeSheet() -> None:
   - Page size 18x27cm; 6x9 = 54
   """
   # fileName:str="../qrCodes.pdf"
-  # this code currently does not work, but not used anyhow. Have to fix it in the future
+  # this code currently does not work, but not used anyhow
   # import qrcode
   # import numpy as np
   # from PIL import Image
@@ -56,7 +57,7 @@ def printQRcodeSticker() -> None:
      execute 'lsusb -v'; find printer
    - size: label size in mm
   """
-  # this code currently does not work, but not used anyhow. Have to fix it in the future
+  # this code currently does not work, but not used anyhow
 
   # import qrcode, tempfile
   # import numpy as np

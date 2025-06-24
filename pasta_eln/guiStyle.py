@@ -14,6 +14,7 @@ from .textTools.stringChanges import markdownEqualizer
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200} #spaces: padding and margin
 
+
 class TextButton(QPushButton):
   """ Button that has only text"""
   def __init__(self, label:str, widget:QWidget, command:list[Any]|None=[], layout:Optional[QLayout]=None,

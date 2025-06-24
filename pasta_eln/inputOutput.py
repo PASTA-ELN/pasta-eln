@@ -55,9 +55,11 @@ json2pasta:dict[str,Any] = {v:k for k,v in pasta2json.items() if v is not None}
 
 METADATA_FILE = 'ro-crate-metadata.json'
 
+
 ##########################################
 ###               IMPORT               ###
 ##########################################
+
 def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[str,Any]]:
   '''
   import .eln file from other ELN or from PASTA
@@ -285,6 +287,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
 ##########################################
 ###               EXPORT               ###
 ##########################################
+
 def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[str], verbose:bool=False) -> str:
   """
   export eln to file

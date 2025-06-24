@@ -4,6 +4,7 @@ from pasta_eln.guiCommunicate import Communicate
 from pasta_eln.GUI.palette import Palette
 from pasta_eln.GUI.form import Form
 
+
 def test_simple(qtbot):
   app = QMainWindow()
   backend = Backend('research')

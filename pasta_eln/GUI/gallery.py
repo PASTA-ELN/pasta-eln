@@ -8,6 +8,7 @@ from ..guiCommunicate import Communicate
 
 IMG_SIZE = 300
 
+
 class ClickableImage(QLabel):
   """
   A QLabel subclass that emits signals when clicked or double-clicked

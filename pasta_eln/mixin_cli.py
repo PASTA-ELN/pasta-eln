@@ -1,8 +1,10 @@
 """ PYTHON MIXIN FOR BACKEND containing all the functions that output to CLI """
 # mypy: ignore-errors
 
+
 class CLI_Mixin:
   """ Python Mixin for backend containing all the functions that output to CLI """
+
 
   def output(self, docType, printID=False):
     """
@@ -27,6 +29,7 @@ class CLI_Mixin:
     outputList.insert(1, '-'*len(max(outputList, key = len)) )
     output = '\n'.join(outputList)
     return output
+
 
 
   def outputHierarchy(self, onlyHierarchy=True, addID=False):

@@ -7,6 +7,8 @@ from .GUI.waitDialog import WaitDialog, Worker
 
 class Communicate(QObject):
   """ Communication class that sends signals between widgets, incl. backend"""
+
+
   def __init__(self, backend:Backend, palette:Any):
     super().__init__()
     self.backend               = backend
@@ -14,6 +16,7 @@ class Communicate(QObject):
     self.projectID             = ''
     self.waitDialog            = WaitDialog()
     self.worker:Worker|None    = None
+
 
   def progressWindow(self, taskFunction:Callable[[Callable[[str,str],None]],Any]) -> None:
     """ Show a progress window and execute function
@@ -25,7 +28,6 @@ class Communicate(QObject):
     self.worker.progress.connect(self.waitDialog.updateProgressBar)
     self.worker.start()
     return
-
 
 
   # Signals: specify emitter and receiver

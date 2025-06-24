@@ -5,14 +5,18 @@ from pathlib import Path
 from pasta_eln.backend import Backend
 from pasta_eln.AddOns.project_importCSV import main
 
+
 class TestStringMethods(unittest.TestCase):
   """
   derived class for this test
   """
+
+
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.be = None
     self.dirName = ''
+
 
   def test_main(self):
     """
@@ -64,6 +68,7 @@ class TestStringMethods(unittest.TestCase):
   def tearDown(self):
     logging.info('End test')
     return
+
 
 if __name__ == '__main__':
   unittest.main()

@@ -23,10 +23,13 @@ MAIN_TYPE      =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varch
 DOC_TYPES      =['docType', 'PURL','title','icon','shortcut','view']
 DOC_TYPE_SCHEMA=['docType', 'class', 'idx', 'name', 'unit', 'mandatory', 'list']
 
+
 class SqlLiteDB:
   """
   Class for interaction with sqlite
   """
+
+
   def __init__(self, resetDataHierarchy:bool=False, basePath:Path=Path()):
     """
     Args:
@@ -90,6 +93,7 @@ class SqlLiteDB:
       self.cursor.executemany(command, defaultDefinitions)
       self.connection.commit()
     return
+
 
   def dataHierarchyChangeView(self, docType:str, columns:list[str]) -> None:
     """ Set different view of docType in data hierarchy

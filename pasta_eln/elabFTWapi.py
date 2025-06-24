@@ -12,6 +12,7 @@ import requests  # only requirement; could be replaced with urllib to eliminate 
 class ElabFTWApi:
   """ API for accessing an elabFTW server. That's API is inconvenient, complicated, ..."""
 
+
   def __init__(self, url:str='invalid', apiKey:str='', verifySSL:bool=True):
     '''
     initiate an elab instance to allow for syncing
@@ -117,6 +118,7 @@ class ElabFTWApi:
       return res if identifier == -1 else [res]
     logging.error('Occurred in get of url %s / %s',entryType, identifier)
     return [{}]
+
 
   def updateEntry(self, entryType:str, identifier:int, content:dict[str,Any]={}) -> bool:
     """

@@ -15,9 +15,11 @@ from .textTools.handleDictionaries import squashTupleIntoValue
 from .textTools.html2markdown import html2markdown
 from .textTools.markdown2html import markdown2html  # type: ignore[attr-defined]
 
+
 # - consider hiding metadata.json (requires hiding the upload (state=2) and ability to read (it is even hidden in the API-read))
 #   - hide an upload  api.upLoadUpdate('experiments', 66, 596, {'action':'update', 'state':'2'})
 #   - listing all uploads (incl. archived) is not possible in elab currently -> leave visible; change to invisible once in elab
+
 
 def cliCallback(api:ElabFTWApi , entry:str, idx:int) -> str:
   """ Default callback function for the syncMissingEntries function
@@ -34,6 +36,7 @@ def cliCallback(api:ElabFTWApi , entry:str, idx:int) -> str:
   return ''
 
 
+
 MERGE_LABELS = {
      -1:'-1: ERROR',
       1:'1: client -> server',
@@ -44,8 +47,10 @@ MERGE_LABELS = {
     }
 
 
+
 class Pasta2Elab:
   """ Allow syncing to elabFTW server"""
+
 
   def __init__(self, backend:Backend, projectGroup:str='', purge:bool=False):
     '''

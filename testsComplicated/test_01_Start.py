@@ -10,6 +10,7 @@ from pasta_eln.GUI.palette import Palette
 from pasta_eln.elabFTWsync import Pasta2Elab
 from .misc import verify
 
+
 def test_simple(qtbot):
   """
   main function
