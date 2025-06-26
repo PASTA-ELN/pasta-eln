@@ -240,22 +240,22 @@ def rightAlignComments() -> None:
   pattern1 = re.compile(r'\S+.+#')  # Line has non-whitespace, then whitespace, then #
   pattern2 = re.compile(r'\s#')
 
-  for root, dirs, files in os.walk('pasta_eln'):
+  for root, _, files in os.walk('pasta_eln'):
     for file in files:
       if file.endswith('.py') and \
-        file not in ['markdown2html.py','html2markdown.py','html2mdConfig.py','html2mdUtils.py','guiCommunicate.py'] and\
-        'Resources/' not in root and '/AddOns' not in root:
-          file_path = os.path.join(root, file)
-          output = ''
-          with open(file_path) as f:
-            content = f.read()
-          for number, line in enumerate(content.splitlines()):
-            if pattern1.search(line) and not line.strip().startswith('#') and len(line)!=110 and \
-              pattern2.search(line) and 'background' not in line:
-                output += f'{number+1}: {line.strip()}\n'
-          if output and 'Resources/' not in file_path:
-            print('\nProcessing file:', file_path)
-            print(output)
+          file not in ['markdown2html.py','html2markdown.py','html2mdConfig.py','html2mdUtils.py','guiCommunicate.py'] and\
+          'Resources/' not in root and '/AddOns' not in root:
+        file_path = os.path.join(root, file)
+        output = ''
+        with open(file_path, encoding='utf-8') as f:
+          content = f.read()
+        for number, line in enumerate(content.splitlines()):
+          if pattern1.search(line) and not line.strip().startswith('#') and len(line)!=110 and \
+            pattern2.search(line) and 'background' not in line:
+              output += f'{number+1}: {line.strip()}\n'
+        if output and 'Resources/' not in file_path:
+          print('\nProcessing file:', file_path)
+          print(output)
   return
 
 
@@ -269,11 +269,11 @@ def runSourceVerification() -> None:
   - sourcery
   """
   tools = {'pre-commit': 'pre-commit run --all-files',
-           'isort'     : 'isort --ca -l 120 pasta_eln/',
+           #'isort'     : 'isort --ca pasta_eln/',
            'pylint'    : 'pylint pasta_eln/',
            'mypy'      : 'mypy --no-warn-unused-ignores pasta_eln/',
            'sourcery'  : 'sourcery review pasta_eln/',
-           'isort2'    : 'isort releaseVersion.py',
+           #'isort2'    : 'isort releaseVersion.py',
            'pylint2'   : 'pylint releaseVersion.py',
            'mypy2'     : 'mypy --no-warn-unused-ignores releaseVersion.py',
            'sourcery2' : 'sourcery review releaseVersion.py',
