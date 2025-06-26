@@ -18,7 +18,7 @@ class QtLocalWidgetChecker(BaseChecker):
           widget_type = rhs.func.attrname if isinstance(rhs.func, astroid.Attribute) else rhs.func.name
           if widget_type in self.qt_classes:
             for target in node.targets:
-              if isinstance(target, astroid.AssignName) and not target.name.startswith("self."):
+              if isinstance(target, astroid.AssignName) and not target.name.startswith('self.'):
                 self.add_message('qt-local-widget', node=node, args=(widget_type, target.name))
     except Exception:
       pass

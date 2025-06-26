@@ -247,7 +247,7 @@ def rightAlignComments() -> None:
         'Resources/' not in root and '/AddOns' not in root:
           file_path = os.path.join(root, file)
           output = ''
-          with open(file_path, 'r') as f:
+          with open(file_path) as f:
             content = f.read()
           for number, line in enumerate(content.splitlines()):
             if pattern1.search(line) and not line.strip().startswith('#') and len(line)!=110 and \
@@ -282,6 +282,7 @@ def runSourceVerification() -> None:
     print(f'------------------ start {label} -----------------')
     os.system(cmd)
     print(f'---------------- end {label} ---------------')
+  rightAlignComments()
   return
 
 

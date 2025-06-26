@@ -191,8 +191,11 @@ class Backend(CLI_Mixin):
             baseName  = Path(doc['name']).stem
             extension = Path(doc['name']).suffix
             path = self.cwd/(camelCase(baseName)+extension)
-            request.urlretrieve(doc['name'], path)
-            doc['name'] = camelCase(baseName)+extension
+            try:
+              request.urlretrieve(doc['name'], path)
+              doc['name'] = camelCase(baseName)+extension
+            except Exception:
+              path = Path(doc['name'])
           else:
             path = Path(doc['name'])
             try:
@@ -439,12 +442,17 @@ class Backend(CLI_Mixin):
     extension = filePath.suffix[1:]                                                 #cut off initial . of .jpg
     if str(filePath).startswith('http'):
       absFilePath = Path(tempfile.gettempdir())/filePath.name
-      with request.urlopen(filePath.as_posix().replace(':/','://'), timeout=60) as urlRequest:
-        with open(absFilePath, 'wb') as f:
-          try:
-            f.write(urlRequest.read())
-          except Exception:
-            logging.error('Saving downloaded file to temporary disk')
+      try:
+        with request.urlopen(filePath.as_posix().replace(':/','://'), timeout=60) as urlRequest:
+          with open(absFilePath, 'wb') as f:
+            try:
+              f.write(urlRequest.read())
+            except Exception:
+              logging.error('Saving downloaded file to temporary disk')
+              return
+      except Exception:
+        logging.error('Could not download file from internet %s', filePath.as_posix())
+        return
     else:
       if filePath.is_absolute():
         filePath = filePath.relative_to(self.basePath)
@@ -454,7 +462,7 @@ class Backend(CLI_Mixin):
     if pyPath.is_file():
       # import module and use to get data
       os.environ['QT_API'] = 'pyside2'
-      import matplotlib.pyplot as plt                         # IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
+      import matplotlib.pyplot as plt  # IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
       plt.clf()
       try:
         module  = importlib.import_module(pyFile[:-3])
@@ -522,15 +530,21 @@ class Backend(CLI_Mixin):
     import matplotlib.axes as mpaxes
     import matplotlib.pyplot as plt
 
+    report = outputString(outputStyle, 'h2', 'Report on extractor test')
     htmlStr= 'Please visit <a href="https://pasta-eln.github.io/pasta-eln/extractors.html#'
     success = True
     if isinstance(filePath, str):
       filePath = Path(filePath)
     if filePath.as_posix().startswith('http'):
       tempFilePath = Path(tempfile.gettempdir())/filePath.name
-      request.urlretrieve(filePath.as_posix().replace(':/','://'), tempFilePath)
+      try:
+        request.urlretrieve(filePath.as_posix().replace(':/','://'), tempFilePath)
+      except Exception:
+        success = False
+        report += outputString(outputStyle, 'error', 'Could not download file from internet')
+        report += outputString(outputStyle, 'error', f'{htmlStr}download-error">website</a>')
+        return report
       filePath = tempFilePath
-    report = outputString(outputStyle, 'h2', 'Report on extractor test')
     report += outputString(outputStyle, 'info', f'check file: {str(filePath)}')
     extension = filePath.suffix[1:]
     pyFile = f'extractor_{extension.lower()}.py'
@@ -606,25 +620,25 @@ class Backend(CLI_Mixin):
       if 'image' not in content:
         success = False
         report += outputString(outputStyle,'error','Image does not exist')
-    if success and isinstance(content['image'],Image.Image):
+    if success and isinstance(content.get('image',''),Image.Image):
       success = False
       report += outputString(outputStyle,'error','Image is a PIL image: not a base64 string')
       report += outputString(outputStyle, 'error', f'{htmlStr}pillow-image">website</a>')
-        # print('Encode image via the following: pay attention to jpg/png which is encoded twice\n```')
-        # print('from io import BytesIO')
-        # print('figfile = BytesIO()')
-        # print('image.save(figfile, format="PNG")')
-        # print('imageData = base64.b64encode(figfile.getvalue()).decode()')
-        # print('image = "data:image/jpg;base64," + imageData')
-    if success and isinstance(content['image'], mpaxes._axes.Axes): #         pylint: disable=protected-access
+      # print('Encode image via the following: pay attention to jpg/png which is encoded twice\n```')
+      # print('from io import BytesIO')
+      # print('figfile = BytesIO()')
+      # print('image.save(figfile, format="PNG")')
+      # print('imageData = base64.b64encode(figfile.getvalue()).decode()')
+      # print('image = "data:image/jpg;base64," + imageData')
+    if success and isinstance(content.get('image',''), mpaxes._axes.Axes): #         pylint: disable=protected-access
       success = False
       report += outputString(outputStyle,'error','Image is a matplotlib axis: not a base64 string')
       report += outputString(outputStyle, 'error', f'{htmlStr}matplotlib">website</a>')
-        # print('**Warning: image is a matplotlib axis: not a svg string')
-        # print('  figfile = StringIO()')
-        # print('plt.savefig(figfile, format="svg")')
-        # print('image = figfile.getvalue()')
-    if success and isinstance(content['image'], str):#show content
+      # print('**Warning: image is a matplotlib axis: not a svg string')
+      # print('  figfile = StringIO()')
+      # print('plt.savefig(figfile, format="svg")')
+      # print('image = figfile.getvalue()')
+    if success and isinstance(content.get('image',''), str):#show content
       size = len(content['image'])
       report += outputString(outputStyle, 'info', f'Image size {str(size // 1024)}kB')
       if outputStyle!='text':
