@@ -98,7 +98,7 @@ class TestStringMethods(unittest.TestCase):
     toDrop = ['JFLAG', 'CMN4', 'CBH4', 'VA5', 'CD', 'CU', 'SI5']
     for label in toDrop:
       df = df.drop(label, axis=1)
-    self.be.changeHierarchy(itemsCopy["id"])
+    self.be.changeHierarchy(itemsCopy['id'])
 
     ### MATERIAL => SAMPLES
     outputString(outputFormat,'h2','read materials_pro&designa.json  = SAMPLES = MATERIALS')
@@ -143,13 +143,13 @@ class TestStringMethods(unittest.TestCase):
         pass
         # print('***Warning designa',rows)
       if id==1740015:
-        doc['.ccbm'] = [{"el4":"Al","mec4":5.54},{"el4":"C","mec4":0.028},{"el4":"Ca","mec4":0.0006},{"el4":"Co","mec4":0.023}\
-                       ,{"el4":"Cr","mec4":20.3},{"el4":"Cu","mec4":0.013},{"el4":"Fe","mec4":72.8},{"el4":"Hf","mec4":0.013,"mac4":0.0156,"mic4":0.0104}\
-                       ,{"el4":"Mg","mec4":0.0085},{"el4":"Mn","mec4":0.176},{"el4":"Mo","mec4":0.006,"mac4":0.0072,"mic4":0.0048}\
-                       ,{"el4":"N","mec4":0.0038},{"el4":"Nb","mac4":0.001},{"el4":"Ni","mec4":0.163},{"el4":"O","mac4":0.001}\
-                       ,{"el4":"P","mac4":0.000001},{"el4":"S","mec4":0.002},{"el4":"Si","mec4":0.038,"mac4":0.054,"mic4":0.022}\
-                       ,{"el4":"Ti","mec4":0.005},{"el4":"V","mec4":0.0027,"mac4":0.0032,"mic4":0.0022},{"el4":"Y","mec4":0.039}\
-                       ,{"el4":"Zr","mec4":0.0052,"mac4":0.006,"mic4":0.0044}]
+        doc['.ccbm'] = [{'el4':'Al','mec4':5.54},{'el4':'C','mec4':0.028},{'el4':'Ca','mec4':0.0006},{'el4':'Co','mec4':0.023}\
+                       ,{'el4':'Cr','mec4':20.3},{'el4':'Cu','mec4':0.013},{'el4':'Fe','mec4':72.8},{'el4':'Hf','mec4':0.013,'mac4':0.0156,'mic4':0.0104}\
+                       ,{'el4':'Mg','mec4':0.0085},{'el4':'Mn','mec4':0.176},{'el4':'Mo','mec4':0.006,'mac4':0.0072,'mic4':0.0048}\
+                       ,{'el4':'N','mec4':0.0038},{'el4':'Nb','mac4':0.001},{'el4':'Ni','mec4':0.163},{'el4':'O','mac4':0.001}\
+                       ,{'el4':'P','mac4':0.000001},{'el4':'S','mec4':0.002},{'el4':'Si','mec4':0.038,'mac4':0.054,'mic4':0.022}\
+                       ,{'el4':'Ti','mec4':0.005},{'el4':'V','mec4':0.0027,'mac4':0.0032,'mic4':0.0022},{'el4':'Y','mec4':0.039}\
+                       ,{'el4':'Zr','mec4':0.0052,'mac4':0.006,'mic4':0.0044}]
       projIDs = df[df['RN4']==id]['RN1']
       if len(projIDs)==0:
         print('Could not find unique proj id for material')
@@ -296,4 +296,3 @@ class TestStringMethods(unittest.TestCase):
         shutil.copy(fromPath, self.be.basePath/self.be.cwd/f'{id5}.csv')
       self.be.addData('measurement', doc)
     outputString(outputFormat, 'info', self.be.output('measurement'))
-

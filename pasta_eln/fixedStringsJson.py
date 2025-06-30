@@ -116,6 +116,7 @@ configurationGUI: dict[str, Any] = {
     'loggingLevel': ['Logging level (more->less)', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR']],
     'autosave': ['Autosave entries in form', 'No', ['Yes', 'No']],
     'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']],
+    'showHidden': ['Show hidden items by default', 'Yes', ['Yes','No']],
     'checkForUpdates': ['Check for updates on startup', 'Yes', ['Yes', 'No']]
   },
   'dimensions': {

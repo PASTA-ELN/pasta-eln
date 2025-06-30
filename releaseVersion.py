@@ -251,8 +251,8 @@ def rightAlignComments() -> None:
           content = f.read()
         for number, line in enumerate(content.splitlines()):
           if pattern1.search(line) and not line.strip().startswith('#') and len(line)!=110 and \
-            pattern2.search(line) and 'background' not in line:
-              output += f'{number+1}: {line.strip()}\n'
+             pattern2.search(line) and 'background' not in line:
+            output += f'{number+1}: {line.strip()}\n'
         if output and 'Resources/' not in file_path:
           print('\nProcessing file:', file_path)
           print(output)

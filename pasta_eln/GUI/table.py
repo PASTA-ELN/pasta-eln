@@ -41,7 +41,7 @@ class Table(QWidget):
     self.docType = ''
     self.projID = ''
     self.filterHeader:list[str] = []
-    self.showAll= True
+    self.showAll= self.comm.backend.configuration['GUI']['showHidden']=='Yes'
     self.lastClickedRow = -1
     self.flagGallery = False
 
@@ -345,15 +345,23 @@ class Table(QWidget):
             rowContent.append(f'"{value}"')
           fOut.write(','.join(rowContent)+'\n')
     elif command[0] is Command.ADD_ON:
+      # check if one is selected, if yes, only export selected; otherwise use All
+      useAll = True
+      for row in range(self.models[-1].rowCount()):
+        item, _ = self.itemFromRow(row)
+        if item.checkState() == Qt.CheckState.Checked:
+          useAll = False
+          break
       data   = []
       for row in range(self.models[-1].rowCount()):
-        _, docID = self.itemFromRow(row)
-        path = self.comm.backend.db.getDoc(docID)['branch'][0]['path']
-        dataRow = [docID, '' if path is None else str(self.comm.backend.basePath/path)]
-        for col in range(self.models[-1].columnCount()):
-          value = self.models[-1].index(row, col).data(Qt.ItemDataRole.DisplayRole)
-          dataRow.append(value)
-        data.append(dataRow)
+        item, docID = self.itemFromRow(row)
+        if useAll or  item.checkState() == Qt.CheckState.Checked:
+          path = self.comm.backend.db.getDoc(docID)['branch'][0]['path']
+          dataRow = [docID, '' if path is None else str(self.comm.backend.basePath/path)]
+          for col in range(self.models[-1].columnCount()):
+            value = self.models[-1].index(row, col).data(Qt.ItemDataRole.DisplayRole)
+            dataRow.append(value)
+          data.append(dataRow)
       df = pd.DataFrame(data, columns=['docID','path']+self.filterHeader)
       callAddOn(command[1], self.comm.backend, df, self)
     elif command[0] is Command.TOGGLE_HIDE:

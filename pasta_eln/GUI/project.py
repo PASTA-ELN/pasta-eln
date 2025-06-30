@@ -31,7 +31,7 @@ class Project(QWidget):
     self.actionFoldAll                       = QAction()
     self.projID = ''
     self.docProj:dict[str,Any]= {}
-    self.showAll= True
+    self.showAll= self.showAll= self.comm.backend.configuration['GUI']['showHidden']=='Yes'
     self.showDetailsAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
     self.btnEditProject:Optional[TextButton]  = None

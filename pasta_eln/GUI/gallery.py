@@ -146,7 +146,7 @@ class ImageGallery(QWidget):
       image_data = self.comm.backend.db.getDoc(docID)
       if not image_data or 'image' not in image_data:
         # Handle cases where image data might be missing or malformed
-        logging.warning("Image data not found or malformed for docID: %s", docID)
+        logging.warning('Image data not found or malformed for docID: %s', docID)
         continue
       image = image_data['image']
 
@@ -197,13 +197,13 @@ class ImageGallery(QWidget):
             self.gridL.addWidget(label, row, col)
           else:
             #TODO next lines should be in details
-            logging.warning("Could not load image data for docID: %s with format %s", docID, fmt)
+            logging.warning('Could not load image data for docID: %s with format %s', docID, fmt)
         except ValueError:
-          logging.warning("Malformed base64 image data URI for docID: %s", docID)
+          logging.warning('Malformed base64 image data URI for docID: %s', docID)
         except Exception as e:
-          logging.warning("Error processing image for docID %s: %s", docID, e)
+          logging.warning('Error processing image for docID %s: %s', docID, e)
       else:
-        logging.warning("Image for docID is not in expected base64 format. %s", docID)
+        logging.warning('Image for docID is not in expected base64 format. %s', docID)
       # end of loop
       col += 1
       if col >= 4:                                                                        # Assuming 4 columns

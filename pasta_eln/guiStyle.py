@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QApplication, QBoxLayout, QComboBox, QDialog,# py
 from .textTools.handleDictionaries import dict2ul
 from .textTools.stringChanges import markdownEqualizer
 
-space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200}                                  # spaces: padding and margin
+space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                  # spaces: padding and margin
 
 
 class TextButton(QPushButton):
