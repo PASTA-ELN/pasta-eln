@@ -260,6 +260,8 @@ def callDataExtractor(filePath:Path, backend:Any) -> Any:
   Returns:
     Any: result of the data extractor
   """
+  if not isinstance(filePath, Path):
+    filePath = Path(filePath)
   extension = filePath.suffix[1:]                                                   #cut off initial . of .jpg
   if str(filePath).startswith('http'):
     absFilePath = Path(tempfile.gettempdir())/filePath.name

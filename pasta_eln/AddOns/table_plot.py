@@ -1,16 +1,14 @@
 """ Analyser add-on with much functionality: shows how complex add-ons can be. But do not have to."""
 import itertools
-from typing import Optional
 import matplotlib.pyplot
 import numpy as np
 import pandas as pd
-import sys
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import matplotlib
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QDialogButtonBox, QLineEdit, QComboBox, \
-                              QWidget, QApplication  # pylint: disable=no-name-in-module
+from PySide6.QtCore import QSize
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QDialogButtonBox, QLineEdit, QComboBox # pylint: disable=no-name-in-module
 from scipy import stats
 from sklearn.metrics import r2_score
 from pasta_eln.miscTools import dfConvertColumns
@@ -30,17 +28,18 @@ def isFloat(s):
 
 class DataAnalyse(QDialog):
   """ Editor to change metadata of binary file """
-  def __init__(self, df):
+  def __init__(self, df, widget):
     """
     Initialization
 
     Args:
       comm (Communicate): communication channel
-      start (int): location of section which should be edited
+      df (pandas dataframe): all data
     """
     super().__init__()
     prop_cycle = matplotlib.pyplot.rcParams['axes.prop_cycle']
     self.colors = itertools.cycle(prop_cycle.by_key()['color'])
+    self.setStyleSheet(f"QLineEdit, QComboBox {{  {widget.comm.palette.get('secondaryText','color')} }}")
     self.df = df
     columns = []
     for col in df.columns:
@@ -48,7 +47,7 @@ class DataAnalyse(QDialog):
         columns.append(col)
 
     # GUI elements
-    self.setWindowTitle('Analyze data')
+    self.setWindowTitle('Analyze metadata')
     self.setMinimumWidth(1050)  #set size to match 4 blocks of 8bytes
     mainL = QVBoxLayout(self)
     mainL.setSpacing(space['s'])
@@ -57,6 +56,8 @@ class DataAnalyse(QDialog):
     self.graphW, graphL = widgetAndLayout('V', None)
     self.graph = MplCanvas(self, width=5, height=4, dpi=100)
     self.graphToolbar = NavigationToolbar(self.graph, self)
+    self.graphToolbar.setIconSize(QSize(24, 24))
+    self.graphToolbar.setStyleSheet('QToolButton {min-width: 18px; min-height: 24px;}')
     graphL.addWidget(self.graphToolbar)
     graphL.addWidget(self.graph)
     mainL.addWidget(self.graphW, stretch=1)
@@ -225,7 +226,7 @@ class DataAnalyse(QDialog):
 
 class MplCanvas(FigureCanvas):
   """ Canvas to draw upon """
-  def __init__(self, _:Optional[QWidget]=None, width:float=5, height:float=4, dpi:int=100):
+  def __init__(self, _=None, width:float=5, height:float=4, dpi:int=100):
     """
     Args:
       width (float): width in inch
@@ -235,7 +236,6 @@ class MplCanvas(FigureCanvas):
     fig = Figure(figsize=(width, height), dpi=dpi)
     self.axes = fig.add_subplot(111)
     super().__init__(fig)
-
 
 
 def main(backend, df, widget, parameter={}):
@@ -249,13 +249,5 @@ def main(backend, df, widget, parameter={}):
     Returns:
         bool: success
     """
-    dataAnalyse = DataAnalyse(dfConvertColumns(df, 10))
+    dataAnalyse = DataAnalyse(dfConvertColumns(df, 10), widget)
     dataAnalyse.exec()
-
-
-# just for testing
-if __name__ == '__main__':
-  df = pd.read_csv('/home/steffen/aditisData2.csv')
-  app = QApplication(sys.argv)
-  main(None, df, app)
-  app.quit()

@@ -19,7 +19,7 @@ import pandas as pd
 def use(filePath, style={'main':''}, saveFileName=None):
   """
   Args:
-    filePath (string): full path file name
+    filePath (Path): full path file name
     style    (dict): supplied to guide the display / extraction style = recipe
                      main is / separated hierarchical elements parent->child
                      can contain more elements
@@ -97,7 +97,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
 def data(filePath, style):
   """
   Args:
-    filePath (string): full path file name
+    filePath (Path): full path file name
     style    (dict): supplied to guide the display / extraction style
 
   Returns:
