@@ -595,7 +595,7 @@ class Form(QDialog):
       if 'image' in doc:
         del doc['image']
       messageWindow = ScrollMessageBox('Details', doc, style='QScrollArea{min-width:600 px; min-height:400px}')
-      ret = messageWindow.exec()
+      messageWindow.exec()
     else:
       logging.error('Unknown Command %s', command)
     return

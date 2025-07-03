@@ -139,7 +139,7 @@ class MainWindow(QMainWindow):
     return
 
 
-  @Slot(dict)                                                                         # type: ignore[arg-type]
+  @Slot(dict)
   def formDoc(self, doc: dict[str, Any]) -> None:
     """
     What happens when new/edit dialog is shown

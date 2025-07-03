@@ -119,7 +119,7 @@ class Table(QWidget):
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
 
 
-  @Slot(str, str)                                                                     # type: ignore[arg-type]
+  @Slot(str, str)
   def change(self, docType:str, projID:str) -> None:
     """
     What happens when the table changes its raw information

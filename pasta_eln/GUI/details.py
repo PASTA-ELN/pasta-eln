@@ -58,7 +58,7 @@ class Details(QScrollArea):
     self.mainL.addStretch(1)
 
 
-  @Slot(str)                                                                          # type: ignore[arg-type]
+  @Slot(str)
   def change(self, docID:str) -> None:
     """
     What happens when details should change

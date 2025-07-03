@@ -72,7 +72,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     self.check_box.setToolTip(checkbox_tooltip)
     entry_layout.addWidget(self.check_box)
     entry_layout.addStretch(1)
-    entry_layout.addWidget(QLabel(pixmap=pixmap))                                # type: ignore[call-overload]
+    entry_layout.addWidget(QLabel(pixmap=pixmap))
     # Create a widget for the entry with the created layout
     entry_widget = QWidget()
     entry_widget.setLayout(entry_layout)
