@@ -24,9 +24,9 @@ class ListItemDelegate(QStyledItemDelegate):
     """
     Disable the editor for the whole column by simply returning None
     Args:
-      parent (QWidget): Parent table view.
-      option (QStyleOptionViewItem): Style option for the cell represented by index.
-      index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
+      parent (QWidget): Parent table view
+      option (QStyleOptionViewItem): Style option for the cell represented by index
+      index (Union[QModelIndex, QPersistentModelIndex]): Cell index
 
     Returns: QLineEdit widget
     """
@@ -50,7 +50,7 @@ class ListItemDelegate(QStyledItemDelegate):
 
     Args:
       editor (QWidget): widget to set data in
-      index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
+      index (Union[QModelIndex, QPersistentModelIndex]): Cell index
     """
     current_text = index.data(Qt. EditRole)                                       # type: ignore[attr-defined]
     editor.setCurrentText(current_text)                                           # type: ignore[attr-defined]
@@ -67,7 +67,7 @@ class ListItemDelegate(QStyledItemDelegate):
     Args:
       editor (QWidget): widget to set data in
       model (QAbstractItemModel): model to change
-      index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
+      index (Union[QModelIndex, QPersistentModelIndex]): Cell index
     """
     model.setData(index, editor.currentText(), Qt.EditRole)                       # type: ignore[attr-defined]
     return
@@ -83,7 +83,7 @@ class ListItemDelegate(QStyledItemDelegate):
     Args:
       editor (QWidget): widget to set data in
       option (QStyledOptionViewItem): information on the geometry, same as paint
-      index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
+      index (Union[QModelIndex, QPersistentModelIndex]): Cell index
     """
     editor.setGeometry(option.rect)                                               # type: ignore[attr-defined]
     return

@@ -67,7 +67,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
   Args:
     backend (backend): backend
     elnFileName (str): name of file
-    projID (str): project to import data into.
+    projID (str): project to import data into
 
   Returns:
     str: success message, statistics
@@ -363,7 +363,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         docELN['url'] = path
       else:
         docELN['@id'] = f'./{path}'
-      # include content size, etc.
+      # include content size, etc
       fullPath = backend.basePath/path
       if path is not None and fullPath.exists() and fullPath.is_file():
         with open(fullPath, 'rb') as fIn:

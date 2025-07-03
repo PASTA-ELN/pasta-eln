@@ -168,20 +168,20 @@ Three components are needed for proper functioning of PASTA-ELN:
 - Shortcut creation
 - Example project creation
 
-This setup will analyse and (possibly) correct these items.
-If an attempt fails: please follow to this [website](https://pasta-eln.github.io/pasta-eln/install.html).
+This setup will analyse and (possibly) correct these items
+If an attempt fails: please follow to this [website](https://pasta-eln.github.io/pasta-eln/install.html)
 """
 
 
 exampleDataString = """
 Do you want to create an example project?
 
-This step helps to verify the installation and provides an helpful example for new users.
+This step helps to verify the installation and provides an helpful example for new users
 
-!WARNING! This process will RESET everything and thereby DELETE EVERYTHING since you installed pastaELN.
+!WARNING! This process will RESET everything and thereby DELETE EVERYTHING since you installed pastaELN
 
 This step usually takes up to 20sec, so please be patient. Sometimes, Linux mentions that the program
-is not responding and asks if to close/wait. Please WAIT.
+is not responding and asks if to close/wait. Please WAIT
 """
 
 shortcuts = """
@@ -214,13 +214,13 @@ shortcuts = """
 
 
 tableHeaderHelp = """
-## You can add custom rows via bottom text area.
+## You can add custom rows via bottom text area
 
 If you want to add a column:
 - to add a normal data-field (comment, content, name, type, tags, user, date), enter this field : 'comment'
 - to check the existence of an image: enter 'image'
-- to check if a tag is present: "#tag", in which you replace "tag" by the tag you want to look for. "_curated" is a special tag for measurements.
-- to get metadata, use a ".": e.g. "metaVendor.fileExtension", "metaUser.stress". Capitalization is important.
+- to check if a tag is present: "#tag", in which you replace "tag" by the tag you want to look for. "_curated" is a special tag for measurements
+- to get metadata, use a ".": e.g. "metaVendor.fileExtension", "metaUser.stress". Capitalization is important
 </ul>
 """
 

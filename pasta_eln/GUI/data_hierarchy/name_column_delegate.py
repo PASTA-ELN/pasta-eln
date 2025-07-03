@@ -22,9 +22,9 @@ class NameColumnDelegate(QStyledItemDelegate):
     Creates the line edit
 
     Args:
-      parent (QWidget): Parent table view.
-      option (QStyleOptionViewItem): Style option for the cell represented by index.
-      index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
+      parent (QWidget): Parent table view
+      option (QStyleOptionViewItem): Style option for the cell represented by index
+      index (Union[QModelIndex, QPersistentModelIndex]): Cell index
 
     Returns: QLineEdit widget
     """
@@ -38,7 +38,7 @@ class NameColumnDelegate(QStyledItemDelegate):
 
     Args:
       editor (QWidget): Parent table view
-      index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
+      index (Union[QModelIndex, QPersistentModelIndex]): Cell index
     """
     if index.row()+1==index.model().rowCount():
       index.model().insertRow(index.model().rowCount())

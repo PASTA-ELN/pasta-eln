@@ -492,7 +492,7 @@ class Table(QWidget):
 
   def cellClicked(self, index: QModelIndex) -> None:
     """
-    What happens when user clicks cell in table of tags, projects, samples, ...
+    What happens when user clicks cell in table of tags, projects, samples, ..
     -> show details
 
     Args:

@@ -1,12 +1,12 @@
 """ Terminology Lookup Dialog class which handles the IRI lookup online """
-#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#  PASTA-ELN and all its sub-parts are covered by the MIT license
 #
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
 #  Filename: terminology_lookup_dialog.py
 #
-#  You should have received a copy of the license with this file. Please refer the license file for more information.
+#  You should have received a copy of the license with this file. Please refer the license file for more information
 import textwrap
 from asyncio import get_event_loop
 from typing import Callable
@@ -26,8 +26,8 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     """
     Initializes the dialog
     Args:
-      default_lookup_term (str): Default search term to be used by the terminology lookup service.
-      accepted_callback (Callable[[], None]): Accepted button parent callback.
+      default_lookup_term (str): Default search term to be used by the terminology lookup service
+      accepted_callback (Callable[[], None]): Accepted button parent callback
     """
     self.accepted_callback: Callable[[list[str]], None] = accepted_callback
     # Set up the UI elements
@@ -58,7 +58,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
 
   def add_scroll_area_entry(self, pixmap: QPixmap, checkbox_text: str, checkbox_tooltip: str) -> None:
     """
-    Adds an entry to the scroll area of terminology lookup dialog.
+    Adds an entry to the scroll area of terminology lookup dialog
     Entry consists of a checkbox and a label
     The search result is added as a checkbox and a label (icon) to the end of the entry
     Args:

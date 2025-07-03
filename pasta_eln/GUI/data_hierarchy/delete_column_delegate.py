@@ -1,12 +1,12 @@
 """ DeleteColumnDelegate for the table views """
-#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#  PASTA-ELN and all its sub-parts are covered by the MIT license
 #
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
 #  Filename: delete_column_delegate.py
 #
-#  You should have received a copy of the license with this file. Please refer the license file for more information.
+#  You should have received a copy of the license with this file. Please refer the license file for more information
 from typing import Any, Union
 import qtawesome as qta
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize
@@ -31,9 +31,9 @@ class DeleteColumnDelegate(QStyledItemDelegate):
     """
     Draws the delete button within the cell represented by index
     Args:
-      painter (QPainter): Painter instance for painting the button.
-      option (QStyleOptionViewItem): Style option for the cell represented by index.
-      index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
+      painter (QPainter): Painter instance for painting the button
+      option (QStyleOptionViewItem): Style option for the cell represented by index
+      index (Union[QModelIndex, QPersistentModelIndex]): Cell index
     """
     indexName = index.model().index(index.row(), 0)
     if not indexName.data() or indexName.data() in ['name','tags','comment']:
@@ -54,9 +54,9 @@ class DeleteColumnDelegate(QStyledItemDelegate):
     """
     Disable the editor for the delete column by simply returning None
     Args:
-      parent (QWidget): Parent table view.
-      option (QStyleOptionViewItem): Style option for the cell represented by index.
-      index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
+      parent (QWidget): Parent table view
+      option (QStyleOptionViewItem): Style option for the cell represented by index
+      index (Union[QModelIndex, QPersistentModelIndex]): Cell index
     """
     return None                                                                   # type: ignore[return-value]
 
@@ -69,10 +69,10 @@ class DeleteColumnDelegate(QStyledItemDelegate):
     """
     In case of click detected within the cell represented by index, the respective delete signal is emitted
     Args:
-      event (QEvent): The editor event information.
-      model (QAbstractItemModel): Model data representing the table view.
-      option (QStyleOptionViewItem): QStyleOption for the table cell.
-      index (Union[QModelIndex, QPersistentModelIndex]): Table cell index.
+      event (QEvent): The editor event information
+      model (QAbstractItemModel): Model data representing the table view
+      option (QStyleOptionViewItem): QStyleOption for the table cell
+      index (Union[QModelIndex, QPersistentModelIndex]): Table cell index
 
     Returns (bool): True if deleted otherwise False
     """

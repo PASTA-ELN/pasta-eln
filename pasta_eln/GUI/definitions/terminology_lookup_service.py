@@ -1,12 +1,12 @@
 """ Terminology Lookup service """
-#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#  PASTA-ELN and all its sub-parts are covered by the MIT license
 #
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
 #  Filename: terminology_lookup_service.py
 #
-#  You should have received a copy of the license with this file. Please refer the license file for more information.
+#  You should have received a copy of the license with this file. Please refer the license file for more information
 import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor

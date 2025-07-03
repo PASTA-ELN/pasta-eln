@@ -80,7 +80,7 @@ class SqlLiteDB:
       command = f"INSERT INTO docTypes ({', '.join(DOC_TYPES)}) VALUES ({', '.join(['?']*len(DOC_TYPES))});"
       self.cursor.executemany(command, defaultDocTypes)
       # docTypeSchema table (see below)
-      # - define the key of the metadata table, units, icons, ...
+      # - define the key of the metadata table, units, icons, ..
       if 'docTypeSchema' in tables:
         logging.info('Remove old docTypeSchema')
         self.cursor.execute('DROP TABLE docTypeSchema')
@@ -137,7 +137,7 @@ class SqlLiteDB:
 
     Args:
       docType (str): document typ
-      column (str): column name as in meta, title, shortcut, ...
+      column (str): column name as in meta, title, shortcut, ..
       group (str): group of metadata rows; if group not given: return all
     Returns:
       list: information inquired
@@ -257,9 +257,9 @@ class SqlLiteDB:
         content:# Put sample in instrument
         shasum: 74fd0aea706e0c51d1fd92e9c8e731f83cf92009
         qrCodes: ['13214124', '99698708']
-        image: data:image/jpg;base64...
+        image: data:image/jpg;base64..
 
-        .objective: Test if everything is working as intended.
+        .objective: Test if everything is working as intended
         .status: active
         .chemistry: A2B2C3
         geometry.height: 4
@@ -276,7 +276,7 @@ class SqlLiteDB:
       during each scan, which happens rather often
     - just the incremental path (file-name, folder-name) allows to easily change that if the user wants
       and not change all the children paths, too. However, the renaming of the folder is likely occurring
-      less often.
+      less often
 
     Args:
         doc (dict): document to save
@@ -842,7 +842,7 @@ class SqlLiteDB:
 
   def getHierarchy(self, start:str, allItems:bool=False) -> tuple[Node,bool]:
     """
-    get hierarchy tree for projects, ...
+    get hierarchy tree for projects, ..
 
     Args:
       start (str): start of the hierarchy (most parent)

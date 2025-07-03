@@ -19,11 +19,11 @@ class DataverseClient(RepositoryClient):
 
   def __init__(self, server_url: str, api_token: str, identifier:str) -> None:
     """
-    Initializes the client.
+    Initializes the client
 
     Args:
-        server_url (str): The URL of the server.
-        api_token (str): The API token for authentication.
+        server_url (str): The URL of the server
+        api_token (str): The API token for authentication
         identifier (str): sub-dataverse, category; use '' for void
     """
     super().__init__(server_url, api_token)
@@ -33,10 +33,10 @@ class DataverseClient(RepositoryClient):
 
   def recreateAPIKey(self) -> str | Any:
     """
-    Recreates the API token using existing token.
+    Recreates the API token using existing token
 
     Returns:
-        str | Any: The new API token or any error message if the token recreation fails.
+        str | Any: The new API token or any error message if the token recreation fails
     """
     resp = requests.post(f"{self.server_url}/api/users/token/recreate", headers=self.headers, timeout=10)
     if resp.status_code == 200:
@@ -61,18 +61,18 @@ class DataverseClient(RepositoryClient):
 
   def checkAPIKey(self) -> bool:
     """
-    Checks if the given API token is valid.
+    Checks if the given API token is valid
 
     Explanation:
-        This method checks if the provided API token is valid by making a request to the server.
-        It logs the server URL and sends a GET request to the token endpoint with the API token.
-        It returns True if the response is successful and the status code is not 401, 403, or 500.
+        This method checks if the provided API token is valid by making a request to the server
+        It logs the server URL and sends a GET request to the token endpoint with the API token
+        It returns True if the response is successful and the status code is not 401, 403, or 500
 
     Args:
-        self: The instance of the class.
+        self: The instance of the class
 
     Returns:
-        bool: True if the API token is valid, False otherwise.
+        bool: True if the API token is valid, False otherwise
     """
     resp = requests.get(f"{self.server_url}/api/users/token", headers=self.headers, timeout=10)
     return (bool(resp) and resp.status_code is not None
@@ -120,7 +120,7 @@ class DataverseClient(RepositoryClient):
         UNCATEGORIZED
 
     Returns(dict[Any, Any] | Any):
-      A dictionary representing the created and published dataverse, or an error message.
+      A dictionary representing the created and published dataverse, or an error message
     """
     dv_json = {
       'name': dv_name,
@@ -148,7 +148,7 @@ class DataverseClient(RepositoryClient):
     Gets the list of data verses
     Returns:
       A dictionary of dataverses (identifier & title) for successful request,
-      otherwise the error message is returned.
+      otherwise the error message is returned
     """
     resp = requests.get(f"{self.server_url}/dvn/api/data-deposit/v1.1/swordv2/service-document",
       headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token},
@@ -168,10 +168,10 @@ class DataverseClient(RepositoryClient):
 
   def getDataverseContent(self) -> dict[Any, Any] | Any:
     """
-    Retrieves the contents of a dataverse.
+    Retrieves the contents of a dataverse
 
     Returns (dict[Any, Any] | Any):
-      A dictionary of dataverse contents for successful request, otherwise the error message is returned.
+      A dictionary of dataverse contents for successful request, otherwise the error message is returned
     """
     resp = requests.get(f"{self.server_url}/api/dataverses/{self.identifier}/contents", headers=self.headers,
                         timeout=10)
@@ -181,9 +181,9 @@ class DataverseClient(RepositoryClient):
 
   def getDataverseSize(self) -> str | Any:
     """
-    Retrieves the size of a dataverse.
+    Retrieves the size of a dataverse
     Returns (str):
-      Dataverse size in bytes for successful request, otherwise the error message is returned.
+      Dataverse size in bytes for successful request, otherwise the error message is returned
     """
     resp = requests.get(f"{self.server_url}/api/dataverses/{self.identifier}/storagesize", headers=self.headers,
                         timeout=10)
@@ -194,10 +194,10 @@ class DataverseClient(RepositoryClient):
 
   def getDataverseInfo(self) -> str | Any:
     """
-    Retrieves information about a dataverse.
+    Retrieves information about a dataverse
 
     Returns:
-        str | Any: The data associated with the dataverse if the request is successful, otherwise an error message.
+        str | Any: The data associated with the dataverse if the request is successful, otherwise an error message
     """
     resp = requests.get(f"{self.server_url}/api/dataverses/{self.identifier}", headers=self.headers,
                         timeout=10)
@@ -210,15 +210,15 @@ class DataverseClient(RepositoryClient):
   def createDataset(self, ds_metadata: dict[str, Any], ds_validate_metadata: bool = False
                                        ) -> dict[Any, Any] | Any:
     """
-    Creates and publishes a dataset to the parent dataverse.
+    Creates and publishes a dataset to the parent dataverse
     Args:
-      ds_metadata (dict[str, Any]): The dataset metadata.
-        Refer the https://guides.dataverse.org/en/latest/_downloads/4e04c8120d51efab20e480c6427f139c/dataset-create-new-all-default-fields.json for the default values to be used in the metadata.
-        The type names to be used in the metadata along with the values can be found in the metadata blocks and should correspond to the dataset-create-new-all-default-fields.json.
-      ds_validate_metadata (bool): Whether to validate the metadata.
+      ds_metadata (dict[str, Any]): The dataset metadata
+        Refer the https://guides.dataverse.org/en/latest/_downloads/4e04c8120d51efab20e480c6427f139c/dataset-create-new-all-default-fields.json for the default values to be used in the metadata
+        The type names to be used in the metadata along with the values can be found in the metadata blocks and should correspond to the dataset-create-new-all-default-fields.json
+      ds_validate_metadata (bool): Whether to validate the metadata
 
     Returns:
-      A dictionary of dataset metadata with the persistent identifier for successful request, otherwise the error message is returned.
+      A dictionary of dataset metadata with the persistent identifier for successful request, otherwise the error message is returned
     """
     metadata = DATAVERSE_METADATA
     if 'license' in ds_metadata:
@@ -250,17 +250,17 @@ class DataverseClient(RepositoryClient):
 
   def uploadFile(self, ds_pid: str, df_file_path: str, df_description: str, df_categories: list[str]) -> dict[Any, Any] | Any:
     """
-    Uploads a file to a dataset.
+    Uploads a file to a dataset
     Args:
-      ds_pid (str): The identifier of the dataset.
-      df_file_path (str): The absolute path to the file to be uploaded.
-      df_description (str): The description of the file.
-      df_categories (list[str]): The categories/tags for the file.
+      ds_pid (str): The identifier of the dataset
+      df_file_path (str): The absolute path to the file to be uploaded
+      df_description (str): The description of the file
+      df_categories (list[str]): The categories/tags for the file
 
     Returns:
       {   'file_upload_result': file_upload_response,
           'dataset_publish_result': dataset_publish_response
-      } for successful request, otherwise the error message is returned.
+      } for successful request, otherwise the error message is returned
     """
     filename = basename(df_file_path)
     metadata = dumps({'description': df_description, 'categories': df_categories})
@@ -291,11 +291,11 @@ class DataverseClient(RepositoryClient):
 
   def uploadRepository(self, metadata:dict[str,Any], file_path:str) -> tuple[bool, str]:
     """
-    Uploads a file and metadata to become a dataset.
+    Uploads a file and metadata to become a dataset
 
     Args:
       metadata (dict): metadata to this file according to dataverse standard
-      file_path (str): The absolute path to the file to be uploaded.
+      file_path (str): The absolute path to the file to be uploaded
 
     Returns:
       tuple: success of function, message
@@ -312,19 +312,19 @@ class DataverseClient(RepositoryClient):
 
   def getDatasetInfo(self, ds_persistent_id: str, version: str = ':latest-published') -> dict[Any, Any] | Any:
     """
-    Fetch JSON representation of a dataset.
+    Fetch JSON representation of a dataset
     Args:
-      ds_persistent_id (str): The identifier of the dataset.
-      version (str): The version of the dataset.
+      ds_persistent_id (str): The identifier of the dataset
+      version (str): The version of the dataset
         Note dataset versions can be referred to as:
           :draft the draft version, if any
-          :latest either a draft (if exists) or the latest published version.
+          :latest either a draft (if exists) or the latest published version
           :latest-published the latest published version
-          x.y a specific version, where x is the major version number and y is the minor version number.
+          x.y a specific version, where x is the major version number and y is the minor version number
           x same as x.0
 
     Returns:
-      JSON representation of the dataset for successful request, otherwise the error message is returned.
+      JSON representation of the dataset for successful request, otherwise the error message is returned
     """
     resp = requests.get(
       f"{self.server_url}/api/datasets/:persistentId/versions/{version}?persistentId={ds_persistent_id}",
@@ -337,12 +337,12 @@ class DataverseClient(RepositoryClient):
 
   def getDatasetVersions(self, ds_persistent_id: str) -> dict[Any, Any] | Any:
     """
-    Fetch the version list for dataset.
+    Fetch the version list for dataset
     Args:
-      ds_persistent_id (str): The identifier of the dataset.
+      ds_persistent_id (str): The identifier of the dataset
 
     Returns:
-      Version list for the dataset for successful request, otherwise the error message is returned.
+      Version list for the dataset for successful request, otherwise the error message is returned
     """
     resp = requests.get(
       f"{self.server_url}/api/datasets/:persistentId/versions?persistentId={ds_persistent_id}",
@@ -355,17 +355,17 @@ class DataverseClient(RepositoryClient):
 
   def getDatasetLocks(self, ds_persistent_id: str) -> dict[Any, Any] | Any:
     """
-    Fetches locks for a dataset.
+    Fetches locks for a dataset
 
     Explanation:
-        This method fetches the locks for a dataset identified by the persistent ID.
-        It makes an asynchronous HTTP GET request to retrieve the locks information and handles exceptions.
+        This method fetches the locks for a dataset identified by the persistent ID
+        It makes an asynchronous HTTP GET request to retrieve the locks information and handles exceptions
 
     Args:
-        ds_persistent_id (str): The persistent ID of the dataset to fetch locks for.
+        ds_persistent_id (str): The persistent ID of the dataset to fetch locks for
 
     Returns:
-        dict[Any, Any] | Any: A dictionary containing the locks information if successful, or an error message.
+        dict[Any, Any] | Any: A dictionary containing the locks information if successful, or an error message
     """
     resp = requests.get(
       f"{self.server_url}/api/datasets/:persistentId/locks?persistentId={ds_persistent_id}",
@@ -378,19 +378,19 @@ class DataverseClient(RepositoryClient):
 
   def getDatasetFiles(self, ds_persistent_id: str, version: str = ':latest-published') -> dict[Any, Any] | Any:
     """
-    Fetch the file list for dataset.
+    Fetch the file list for dataset
     Args:
-      ds_persistent_id (str): The identifier of the dataset.
-      version (str): The version of the dataset.
+      ds_persistent_id (str): The identifier of the dataset
+      version (str): The version of the dataset
         Note dataset versions can be referred to as:
           :draft the draft version, if any
-          :latest either a draft (if exists) or the latest published version.
+          :latest either a draft (if exists) or the latest published version
           :latest-published the latest published version
-          x.y a specific version, where x is the major version number and y is the minor version number.
+          x.y a specific version, where x is the major version number and y is the minor version number
           x same as x.0
 
     Returns:
-      File list for the dataset for successful request, otherwise the error message is returned.
+      File list for the dataset for successful request, otherwise the error message is returned
     """
     resp = requests.get(
       f"{self.server_url}/api/datasets/:persistentId/versions/{version}/files?persistentId={ds_persistent_id}",
@@ -403,19 +403,19 @@ class DataverseClient(RepositoryClient):
 
   def getDatasetMetadata(self, ds_persistent_id: str, version: str = ':latest-published') -> dict[Any, Any] | Any:
     """
-    Fetch the metadata block for dataset.
+    Fetch the metadata block for dataset
     Args:
-      ds_persistent_id (str): The identifier of the dataset.
-      version (str): The version of the dataset.
+      ds_persistent_id (str): The identifier of the dataset
+      version (str): The version of the dataset
         Note dataset versions can be referred to as:
           :draft the draft version, if any
-          :latest either a draft (if exists) or the latest published version.
+          :latest either a draft (if exists) or the latest published version
           :latest-published the latest published version
-          x.y a specific version, where x is the major version number and y is the minor version number.
+          x.y a specific version, where x is the major version number and y is the minor version number
           x same as x.0
 
     Returns:
-      Metadata block for the dataset for successful request, otherwise the error message is returned.
+      Metadata block for the dataset for successful request, otherwise the error message is returned
     """
     resp = requests.get(
       f"{self.server_url}/api/datasets/:persistentId/versions/{version}/metadata?persistentId={ds_persistent_id}",
@@ -428,10 +428,10 @@ class DataverseClient(RepositoryClient):
 
   def deleteEmptyDataverse(self) -> str | Any:
     """
-    Deletes an empty dataverse.
+    Deletes an empty dataverse
 
     Returns:
-      Message for successful request, otherwise the error message is returned.
+      Message for successful request, otherwise the error message is returned
     """
     resp = requests.delete(f"{self.server_url}/api/dataverses/{self.identifier}", headers=self.headers, timeout=10)
     if resp.status_code == 200:
@@ -441,14 +441,14 @@ class DataverseClient(RepositoryClient):
 
   def deletePublishedDataset(self, ds_persistent_id: str) -> str | Any:
     """
-    Deletes a published dataset.
-    Note: The method fails presently due to a bug in dataverse API.
-          Every time the API returns 403 errors saying the user needs to be superuser.
+    Deletes a published dataset
+    Note: The method fails presently due to a bug in dataverse API
+          Every time the API returns 403 errors saying the user needs to be superuser
     Args:
-      ds_persistent_id (str): The identifier of the dataset.
+      ds_persistent_id (str): The identifier of the dataset
 
     Returns:
-      Message for successful request, otherwise the error message is returned.
+      Message for successful request, otherwise the error message is returned
     """
     resp = requests.delete(
       f"{self.server_url}/api/datasets/:persistentId/destroy/",
@@ -461,12 +461,12 @@ class DataverseClient(RepositoryClient):
 
   def deleteNonEmptyDataverse(self) -> str | Any:
     """
-    Deletes a non-empty dataverse.
+    Deletes a non-empty dataverse
 
-    Note: The method fails presently due to a bug in dataverse API while invoking the delete_published_dataset method.
+    Note: The method fails presently due to a bug in dataverse API while invoking the delete_published_dataset method
 
     Returns:
-      Message for successful request, otherwise the error message is returned.
+      Message for successful request, otherwise the error message is returned
     """
     contents = self.getDataverseContent()
     for content in contents:
@@ -485,13 +485,13 @@ class DataverseClient(RepositoryClient):
 
   def prepareMetadata(self, metadata:dict[str,Any]) -> dict[str,Any]:
     """
-    Prepares the metadata for uploading.
+    Prepares the metadata for uploading
 
     Args:
-        metadata (dict): The metadata to be prepared.
+        metadata (dict): The metadata to be prepared
 
     Returns:
-        dict: The prepared metadata.
+        dict: The prepared metadata
     """
     author = metadata['author']
     fields = [{'typeName': 'title', 'value': metadata['title'], 'typeClass': 'primitive'},

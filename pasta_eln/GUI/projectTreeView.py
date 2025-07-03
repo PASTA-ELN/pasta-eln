@@ -162,7 +162,7 @@ class TreeView(QTreeView):
     elif command[0] is Command.HIDE:
       logging.debug('hide document %s',hierStack[-1])
       self.comm.backend.db.hideShow(hierStack[-1])
-      #TODO: current implementation: you hide one; all others are hidden as well.
+      #TODO: current implementation: you hide one; all others are hidden as well
       # Talk to GW what is the default expectation; system allows for individual hiding
       #
       # self.comm.changeProject.emit('','') #refresh project

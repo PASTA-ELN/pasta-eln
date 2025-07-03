@@ -66,14 +66,14 @@ class Palette():
 
   def get(self, color: str, prefix: str) -> str:
     """
-    Get color with a prefix for CSS styling.
+    Get color with a prefix for CSS styling
 
     Args:
-        color (str): qt-material colors without the trailing color; 'buttonText' is an additional color.
-        prefix (str): CSS key, e.g., 'background-color'.
+        color (str): qt-material colors without the trailing color; 'buttonText' is an additional color
+        prefix (str): CSS key, e.g., 'background-color'
 
     Returns:
-        str: CSS string, e.g., 'background-color: #333421;'. Returns an empty string if the theme is 'none'.
+        str: CSS string, e.g., 'background-color: #333421;'. Returns an empty string if the theme is 'none'
     """
     if self.theme=='none':
       return ''

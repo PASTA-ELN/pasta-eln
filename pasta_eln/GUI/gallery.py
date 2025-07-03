@@ -131,7 +131,7 @@ class ImageGallery(QWidget):
     and display images. It handles both SVG and raster image formats (like PNG, JPG)
 
     Args:
-      model: The data model containing information about the images to display.
+      model: The data model containing information about the images to display
              The first column of each row is expected to have an 'accessibleText'
     """
     # Clear existing widgets from the grid

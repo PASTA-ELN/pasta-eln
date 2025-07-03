@@ -61,7 +61,7 @@ class ConfigurationSetup(QWidget):
 
   def execute(self, command:list[Any]) -> None:
     """
-    Main method that does all the analysis: open dialogs, ...
+    Main method that does all the analysis: open dialogs, ..
     """
     if command[0] is Command.ANALYSE:
       #Configuration

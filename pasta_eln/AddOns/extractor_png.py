@@ -1,10 +1,10 @@
 """extract data from vendor
 - default png file
 
-THIS IS THE ADVANCED EXTRACTOR TUTORIAL, READ THE BASIC TUTORIAL (_csv.py) FIRST.
+THIS IS THE ADVANCED EXTRACTOR TUTORIAL, READ THE BASIC TUTORIAL (_csv.py) FIRST
 This tutorial teaches
 - how to use style recipes with choices
-  - you can specify sub-choices with the dict, as shown.
+  - you can specify sub-choices with the dict, as shown
   - what you from the calling function is a string
   - for getting the value from the string, you might have to use split / strip, as shown
   - you can use as many dictionary entries as you want
@@ -74,7 +74,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
   return {'image':imageB64, 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser}
 
   #other datatypes could follow here if statements are used
-  #...
+  #..
 
   #final return if nothing successful
   #return {'style': '-', 'metaVendor':{}, 'metaUser':{}}

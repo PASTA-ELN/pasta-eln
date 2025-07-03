@@ -63,7 +63,7 @@ def tracebackString(log:bool=False, docID:str='') -> str:
 
 def markdownEqualizer(text:str) -> str:
   """
-  Create a markdown that well balanced with regard to font size, etc.
+  Create a markdown that well balanced with regard to font size, etc
 
   Args:
     text (str): input string
@@ -96,7 +96,7 @@ def createDirName(name:str, docType:str, thisChildNumber:int) -> str:
   """ create directory-name by using camelCase and a prefix
 
   Args:
-      name (string): name with spaces etc.
+      name (string): name with spaces etc
       docType (string): document type used for prefix
       thisChildNumber (int): number of myself
 

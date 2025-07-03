@@ -88,7 +88,7 @@ class Sidebar(QWidget):
         self.btnProjects.append(TextButton(label, self, [Command.SHOW_PROJECT, projID, ''], projectL))
         self.widgetsProject[projID] = [self.btnProjects[-1], projectW]
 
-        # actions: scan, curate, ...
+        # actions: scan, curate, ..
         actionW, actionL = widgetAndLayoutGrid(projectL)
         if self.openProjectId != projID:                                      #depending which project is open
           actionW.hide()

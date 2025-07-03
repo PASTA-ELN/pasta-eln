@@ -49,7 +49,7 @@ class Bcolors:
 
 def generic_hash(path:Path, forceFile:bool=False) -> str:
   """
-  Hash an object based on its mode.
+  Hash an object based on its mode
 
   inspired by:
   https://github.com/chris3torek/scripts/blob/master/githash.py
@@ -92,9 +92,9 @@ def generic_hash(path:Path, forceFile:bool=False) -> str:
 
 def symlink_hash(path:Path) -> str:
   """
-  Return (as hash instance) the hash of a symlink.
+  Return (as hash instance) the hash of a symlink
   Caller must use hexdigest() or digest() as needed on
-  the result.
+  the result
 
   Args:
     path (string): path to symlink
@@ -113,7 +113,7 @@ def symlink_hash(path:Path) -> str:
 def blob_hash(stream:BufferedReader, size:int) -> str:
   """
   Return (as hash instance) the hash of a blob,
-  as read from the given stream.
+  as read from the given stream
 
   Args:
     stream (string): content to be hashed
@@ -213,7 +213,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
         ending = fileName.split('_')[1].split('.')[0]
         extractorsAll[ending]=extractorsThis
     # header not used for now
-    # Project, et al.
+    # Project, et al
     if fileName.endswith('.py') and '_' in fileName and fileName.split('_')[0] in ['project','table','definition','form']:
       name        = fileName[:-3]
       try:
@@ -291,7 +291,7 @@ def callDataExtractor(filePath:Path, backend:Any) -> Any:
 
 
 def isFloat(val:str) -> bool:
-  """Check if a value can be converted to float.
+  """Check if a value can be converted to float
   Args:
     val (str): value to check
   Returns:
@@ -373,11 +373,11 @@ def testNewPastaVersion(update:bool=False) -> bool:
 # - reduce dependencies and only have python 3 code
 # - add conversion of dict to list if applicable
 def flatten(d:dict[Any,Any], keepPastaStruct:bool=False) -> dict[object, Any]:
-  """Flatten `Mapping` object.
+  """Flatten `Mapping` object
 
   Args:
     d : dict-like object
-        The dict that will be flattened.
+        The dict that will be flattened
     keepPastaStruct : bool
         keep pasta elements from flattening
 

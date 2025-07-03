@@ -13,8 +13,8 @@ class TextEditor(QPlainTextEdit):
 
   def keyPressEvent(self, event: QKeyEvent) -> None:
     """
-    Captures key press events. If Alt+Up is pressed, move selected lines up.
-    Otherwise, call the default behavior.
+    Captures key press events. If Alt+Up is pressed, move selected lines up
+    Otherwise, call the default behavior
     """
     if event.key() == Qt.Key_Up and event.modifiers() == Qt.AltModifier:          # type: ignore[attr-defined]
       self.move_selected_lines(True)

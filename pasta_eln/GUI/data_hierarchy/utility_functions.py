@@ -1,12 +1,12 @@
 """ Utility function used by the data hierarchy configuration module """
-#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#  PASTA-ELN and all its sub-parts are covered by the MIT license
 #
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
 #  Filename: utility_functions.py
 #
-#  You should have received a copy of the license with this file. Please refer the license file for more information.
+#  You should have received a copy of the license with this file. Please refer the license file for more information
 
 from PySide6.QtCore import QEvent
 from PySide6.QtGui import QMouseEvent

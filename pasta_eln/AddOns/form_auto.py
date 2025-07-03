@@ -1,4 +1,4 @@
-"""example addon: adds to the form content.
+"""example addon: adds to the form content
 
 **This file has to be called form_auto.py and only this file is called from form.**
 

@@ -128,7 +128,7 @@ class DataAnalyse(QDialog):
     self.graph.axes.set_xlim(left=xMin, right=xMax)
     self.graph.axes.set_ylim(bottom=yMin, top=yMax)
     self.graph.axes.tick_params(axis='both', direction='in')
-    self.graph.draw() # Trigger the canvas to update and redraw.
+    self.graph.draw() # Trigger the canvas to update and redraw
     self.graphToolbar.show()
     self.graph.show()
 

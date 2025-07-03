@@ -148,7 +148,7 @@ class SchemeEditor(QDialog):
     - either by selecting another docType or by pressing save
     """
     df = self.table2schema()
-    # verification: uniqueness in names. etc.
+    # verification: uniqueness in names. etc
     unique =df['name'].nunique()==df.shape[0]
     if not unique:
       showMessage(self, 'Error', 'Within each table, the text in the first column has to be unique. E.g. no '

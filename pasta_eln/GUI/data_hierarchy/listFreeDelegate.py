@@ -15,9 +15,9 @@ class ListFreeDelegate(QStyledItemDelegate):
     Creates the line edit
 
     Args:
-      parent (QWidget): Parent table view.
-      option (QStyleOptionViewItem): Style option for the cell represented by index.
-      index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
+      parent (QWidget): Parent table view
+      option (QStyleOptionViewItem): Style option for the cell represented by index
+      index (Union[QModelIndex, QPersistentModelIndex]): Cell index
 
     Returns: QLineEdit widget
     """

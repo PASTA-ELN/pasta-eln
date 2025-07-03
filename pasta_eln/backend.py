@@ -68,7 +68,7 @@ class Backend(CLI_Mixin):
     self.basePath   = Path(projectGroup['local']['path'])
     self.cwd        = Path(projectGroup['local']['path'])
     self.addOnPath  = Path(projectGroup['addOnDir'])
-    sys.path.append(str(self.addOnPath))                                                        #allow add-ons
+    sys.path.append(str(self.addOnPath))                                                                                                              #allow add-ons
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database
@@ -297,7 +297,7 @@ class Backend(CLI_Mixin):
 
 
   def scanProject(self, progressBar:Callable[...,None]|None, projID:str, projPath:Path|None=None) -> None:
-    """ Scan directory tree recursively from project/... or project/task/....
+    """ Scan directory tree recursively from project/... or project/task/...
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
     - use shasum to track changes of measurements etc. (one file=one shasum=one entry in DB)

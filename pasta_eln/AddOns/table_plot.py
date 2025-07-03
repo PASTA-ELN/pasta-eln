@@ -205,7 +205,7 @@ class DataAnalyse(QDialog):
     if infoText:
       self.graph.axes.text((xlim[0]+xlim[1])/2, ylim[1], infoText , horizontalalignment='center', verticalalignment='top')
     self.graph.axes.tick_params(axis='both', direction='in')
-    self.graph.draw() # Trigger the canvas to update and redraw.
+    self.graph.draw() # Trigger the canvas to update and redraw
     self.graphToolbar.show()
     self.graph.show()
     return
