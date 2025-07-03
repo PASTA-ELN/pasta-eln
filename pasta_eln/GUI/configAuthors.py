@@ -28,7 +28,6 @@ class ConfigurationAuthors(QDialog):
     self.comm = comm
     self.callbackFinished = callbackFinished
     mainL = QVBoxLayout(self)
-    self.setStyleSheet(f"QLineEdit {{ {self.comm.palette.get('secondaryText', 'color')} }}")
     self.textFields:dict[str, QLineEdit] = {}
 
     #GUI elements
@@ -43,7 +42,6 @@ class ConfigurationAuthors(QDialog):
       #headline of organizations
       orgaW, orgaL = widgetAndLayout('H', None, spacing='s', top='l')
       self.orgaCB = QComboBox()
-      self.orgaCB.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
       self.orgaCB.addItems([i['organization'] for i in self.author['organizations']])
       orgaL.addStretch(1)
       orgaL.addWidget(self.orgaCB, stretch=2)
@@ -64,6 +62,7 @@ class ConfigurationAuthors(QDialog):
     self.orgaCB_previousIndex = 0
     self.lockSelfAuthor = False
     self.orgaCB.currentIndexChanged.connect(lambda: self.execute([Command.CHANGE]))#connect to slot only after all painting is done
+    self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
 
 
   def addRowText(self, item:str, label:str) -> QLineEdit:

@@ -48,7 +48,6 @@ class ProjectGroup(QDialog):
     self.selectGroup = QComboBox()
     self.selectGroup.addItems(self.configuration['projectGroups'].keys())
     self.selectGroup.currentTextChanged.connect(self.changeProjectGroup)
-    self.selectGroup.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     self.formL.addWidget(self.selectGroup, 0, 0)
     self.groupTextField = QLineEdit()
     self.groupTextField.setValidator(QRegularExpressionValidator('\\w{3,}'))
@@ -74,7 +73,6 @@ class ProjectGroup(QDialog):
     self.formL.addWidget(QLabel('Server address:'), 3, 0)
     self.serverLabel = QLineEdit('server')
     self.serverLabel.setPlaceholderText('Enter server address')
-    self.serverLabel.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     self.formL.addWidget(self.serverLabel, 3, 1)
     self.row3Button = TextButton('Verify',   self, [Command.TEST_SERVER], tooltip='Check server')
     self.formL.addWidget(self.row3Button, 3, 3)
@@ -92,7 +90,6 @@ class ProjectGroup(QDialog):
 
     self.formL.addWidget(QLabel('Storage block:'), 5, 0)
     self.serverProjectGroupLabel = QComboBox()
-    self.serverProjectGroupLabel.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     self.formL.addWidget(self.serverProjectGroupLabel, 5, 1)
     self.row5Button2 = TextButton('Verify',   self, [Command.TEST_SERVERPG], tooltip='Check access to storage block')
     self.formL.addWidget(self.row5Button2, 5, 3)
@@ -113,6 +110,7 @@ class ProjectGroup(QDialog):
     if hasattr(self.comm.backend, 'configurationProjectGroup'):
       self.selectGroup.setCurrentText(self.comm.backend.configurationProjectGroup)
       self.selectGroup.currentTextChanged.emit(self.comm.backend.configurationProjectGroup)
+    self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
 
 
   def closeDialog(self, btn:TextButton) -> None:

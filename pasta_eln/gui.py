@@ -219,12 +219,6 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.DEFINITIONS:
       dialogD = DefinitionsEditor(self.comm)
       dialogD.show()
-    # elif command[0] is Command.DATAVERSE_CONFIG:
-    #   self.dataverseConfig = ConfigDialog()
-    #   self.dataverseConfig.show()
-    # elif command[0] is Command.DATAVERSE_MAIN:
-    #   self.dataverseMainDialog = MainDialog(self.comm.backend)
-    #   self.dataverseMainDialog.show()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       reportText = self.comm.backend.testExtractor(fileName, outputStyle='html')

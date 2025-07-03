@@ -503,8 +503,8 @@ class Backend(CLI_Mixin):
           'filesize':absFilePath.stat().st_size,
           'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
           'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
+      plt.close('all')
     #combine into document
-    plt.close('all')
     os.environ['QT_API'] = 'pyside6'
     doc['shasum']=shasum                                       #essential for logic, always save, unlike image
     return

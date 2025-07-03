@@ -58,7 +58,6 @@ class Table(QWidget):
     self.subDocTypeL.hide()
     self.subDocType=QComboBox(self)
     self.subDocType.setMinimumWidth(200)
-    self.subDocType.setStyleSheet(self.comm.palette.get('secondaryText','color'))
     self.subDocType.currentTextChanged.connect(lambda dt: self.change(dt, self.projID))
     self.subDocType.hide()
     headerL.addWidget(self.subDocType)
@@ -117,6 +116,7 @@ class Table(QWidget):
     self.gallery.setVisible(False)
     mainL.addWidget(self.gallery)
     self.setLayout(mainL)
+    self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
 
 
   @Slot(str, str)                                                                     # type: ignore[arg-type]
@@ -416,14 +416,12 @@ class Table(QWidget):
       # gui
       _, rowL = widgetAndLayout('H', self.filterL, 'm', 'xl', '0', 'xl')
       self.filterSelect.append(QComboBox())
-      self.filterSelect[-1].setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
       self.filterSelect[-1].addItems(self.filterHeader+['rating'] if 'tag' in self.filterHeader else
                                      self.filterHeader)
       self.filterSelect[-1].currentIndexChanged.connect(self.filterChoice)
       self.filterSelect[-1].setMinimumWidth(max(len(i) for i in self.filterHeader)*14)
       rowL.addWidget(self.filterSelect[-1])
       self.filterText.append(QLineEdit(''))
-      self.filterText[-1].setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
       self.filterText[-1].setValidator(QRegularExpressionValidator(r'[a-zA-Z0-9_\.]+'))
       rowL.addWidget(self.filterText[-1])
       btnInverse = IconButton('ph.selection-inverse-fill', self, [Command.SET_FILTER,    len(self.models), 'invert'], rowL, checkable=True)
@@ -463,6 +461,7 @@ class Table(QWidget):
       self.filterTextChanged('', command[1])
     else:
       logging.error('Menu unknown: %s',command)
+    self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
     return
 
 

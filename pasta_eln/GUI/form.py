@@ -118,7 +118,6 @@ class Form(QDialog):
         # case list
         if key == '.name' and '_ids' not in self.doc:
           setattr(self, elementName, QLineEdit(self.doc['name']))
-          getattr(self, elementName).setStyleSheet(self.comm.palette.get('secondaryText','color'))
           getattr(self, elementName).setValidator(QRegularExpressionValidator('[\\w\\ .-]+'))
           formL.addRow('Name', getattr(self, elementName))
           self.allUserElements.append(('name','LineEdit'))
@@ -126,7 +125,7 @@ class Form(QDialog):
           self.tagsBarMainW, tagsBarMainL = widgetAndLayout('H', spacing='s')
           self.gradeChoices = QComboBox()                                     #part/combobox that shows grades
           self.gradeChoices.setMaximumWidth(85)
-          self.gradeChoices.setStyleSheet(self.comm.palette.get('secondaryText','color')+'padding: 3px;')
+          self.gradeChoices.setStyleSheet('padding: 3px;')
           self.gradeChoices.setIconSize(QSize(0,0))
           self.gradeChoices.addItems(['','\u2605','\u2605'*2,'\u2605'*3,'\u2605'*4,'\u2605'*5])
           gradeTag = [i for i in self.doc['tags'] if i.startswith('_')]
@@ -221,7 +220,6 @@ class Form(QDialog):
           else:                                                                                     #text area
             setattr(self, elementName, QLineEdit(value))
             self.allUserElements.append((key,'LineEdit'))
-          getattr(self, elementName).setStyleSheet(self.comm.palette.get('secondaryText','color'))
           formLabelW = QLabel(label)
           formLabelW.setOpenExternalLinks(True)
           formLabelW.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse)
@@ -250,7 +248,6 @@ class Form(QDialog):
         # project change
         if allowProjectChange:
           self.projectComboBox = QComboBox()
-          self.projectComboBox.setStyleSheet(self.comm.palette.get('secondaryText','color'))
           self.projectComboBox.addItem(label, userData='')
           for _, line in self.db.getView('viewDocType/x0').iterrows():
             # add all projects but the one that is present
@@ -265,7 +262,6 @@ class Form(QDialog):
         # docType change
         if allowDocTypeChange:                                                      #if not-new and non-folder
           self.docTypeComboBox = QComboBox()
-          self.docTypeComboBox.setStyleSheet(self.comm.palette.get('secondaryText','color'))
           self.docTypeComboBox.addItem(label, userData='')
           for key, value in self.db.dataHierarchy('', 'title'):
             if key[0]!='x':
@@ -293,6 +289,7 @@ class Form(QDialog):
     TextButton('Cancel',           self, [Command.FORM_CANCEL],   buttonLineL, 'Discard changes')
     if self.flagNewDoc:                                                                           #new dataset
       TextButton('Save && Next', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Save this and handle next')
+    self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
     # end of creating form autosave
     if (Path.home()/'.pastaELN.temp').is_file():
       with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:

@@ -32,11 +32,11 @@ class ConfigurationGUI(QDialog):
         sectionL = QFormLayout(groupbox)
         for k,v in items.items():
           setattr(self, k, addRowList(sectionL, label=v[0], default=str(onDisk[k]), itemList=[str(i) for i in v[2]]))
-          getattr(self, k).setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
+    self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
 
 
   def closeDialog(self, btn:TextButton) -> None:
