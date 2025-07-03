@@ -1,5 +1,21 @@
 # Changelog
 
+## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.11...HEAD)
+
+**Closed issues:**
+
+- Feature request: Adding a list via "Add key-value" button [\#511](https://github.com/PASTA-ELN/pasta-eln/issues/511)
+- Recognizing folders on "project level" as new projects [\#508](https://github.com/PASTA-ELN/pasta-eln/issues/508)
+- Windows: default desktop icon does not work [\#497](https://github.com/PASTA-ELN/pasta-eln/issues/497)
+- Question: Formatting in comment box [\#489](https://github.com/PASTA-ELN/pasta-eln/issues/489)
+- Repair/install stuck at 75% [\#481](https://github.com/PASTA-ELN/pasta-eln/issues/481)
+
+## [v3.1.11](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.11) (2025-06-15)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.10...v3.1.11)
+
 ## [v3.1.10](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.10) (2025-06-12)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.10b2...v3.1.10)
@@ -27,7 +43,6 @@
 
 - AttributeError in workflow [\#484](https://github.com/PASTA-ELN/pasta-eln/issues/484)
 - Typo in API-key info box [\#482](https://github.com/PASTA-ELN/pasta-eln/issues/482)
-- Repair/install stuck at 75% [\#481](https://github.com/PASTA-ELN/pasta-eln/issues/481)
 - Feature Request: Filter list of items by key-value pair [\#478](https://github.com/PASTA-ELN/pasta-eln/issues/478)
 - Feature request: Compile data from different items [\#473](https://github.com/PASTA-ELN/pasta-eln/issues/473)
 - Feature request: Update notification/auto-update in pasta? [\#472](https://github.com/PASTA-ELN/pasta-eln/issues/472)
