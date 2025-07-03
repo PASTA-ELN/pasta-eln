@@ -324,9 +324,10 @@ def dfConvertColumns(df:pd.DataFrame, ratio:int=10) -> pd.DataFrame:
 
 class MplCanvas(FigureCanvas):
   """ Canvas to draw upon """
-  def __init__(self, _=None, width:float=5, height:float=4, dpi:int=100):
+  def __init__(self, _:Any=None, width:float=5, height:float=4, dpi:int=100):
     """
     Args:
+      _ (Any): figure
       width (float): width in inch
       height (float): height in inch
       dpi (int): dots per inch
