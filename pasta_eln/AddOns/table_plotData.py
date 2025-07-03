@@ -4,26 +4,18 @@ THIS IS A VERY ADVANCED ADDON TUTORIAL
 This tutorial teaches
 - how to plot the data from files
 """
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtWidgets import QDialog, QComboBox, QLineEdit, QHBoxLayout, QTableWidget, QTableWidgetItem
 import matplotlib
 import pandas as pd
-from pasta_eln.miscTools import callDataExtractor
-from pasta_eln.guiStyle import widgetAndLayout, space, Label
+from pasta_eln.miscTools import callDataExtractor, isFloat, MplCanvas
+from pasta_eln.GUI.guiStyle import widgetAndLayout, space, Label
 
 # The following two variables are mandatory
 description  = 'Default data plot'  #short description that is shown in the menu
 reqParameter = {} #possibility for required parameters: like API-key, etc. {'API': 'text'}
 
-def isFloat(s):
-    try:
-        float(s)
-        return True
-    except (ValueError, TypeError):
-        return False
 
 class DataAnalyse(QDialog):
   """ Editor to change metadata of binary file """
@@ -74,7 +66,7 @@ class DataAnalyse(QDialog):
     mainL.addWidget(self.graphW, stretch=1)
 
     #X-Axis
-    self.rowXW, rowXL = widgetAndLayout('H', mainL, 'm', 's', '0', 's')
+    _, rowXL = widgetAndLayout('H', mainL, 'm', 's', '0', 's')
     Label('x-axis:','h2',rowXL)
     self.xAxisCB = QComboBox()
     self.xAxisCB.addItems(self.columns)
@@ -144,22 +136,6 @@ class DataAnalyse(QDialog):
   def cellClicked(self, item):
     """ after table is clicked: refresh graph """
     self.refresh()
-
-
-
-
-class MplCanvas(FigureCanvas):
-  """ Canvas to draw upon """
-  def __init__(self, _=None, width:float=5, height:float=4, dpi:int=100):
-    """
-    Args:
-      width (float): width in inch
-      height (float): height in inch
-      dpi (int): dots per inch
-    """
-    fig = Figure(figsize=(width, height), dpi=dpi)
-    self.axes = fig.add_subplot(111)
-    super().__init__(fig)
 
 
 def main(backend, df, widget, parameter={}):

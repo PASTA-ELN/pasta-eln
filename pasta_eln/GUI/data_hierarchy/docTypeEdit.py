@@ -87,7 +87,7 @@ class DocTypeEditor(QDialog):
       self.reject()
     else:
       label    = self.row2.text()
-      if not label or label in [v1 for v0,v1 in self.db.dataHierarchy('','title')]:
+      if not label or label in [v1 for _,v1 in self.db.dataHierarchy('','title')]:
         label = 'Random_'+''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
       icon     = '' if self.docType.startswith('x') else self.comboIcon.currentText()
       shortcut = '' if self.docType.startswith('x') else self.row4.text()

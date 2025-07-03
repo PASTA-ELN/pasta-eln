@@ -13,11 +13,14 @@ from io import BufferedReader
 from pathlib import Path
 from typing import Any, Union
 from urllib import request
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 import pandas as pd
 from packaging.version import parse as parse_version
 from PySide6.QtWidgets import QWidget                                      # pylint: disable=no-name-in-module
 import pasta_eln
 from .fixedStringsJson import CONF_FILE_NAME
+
 
 
 class Bcolors:
@@ -319,6 +322,19 @@ def dfConvertColumns(df:pd.DataFrame, ratio:int=10) -> pd.DataFrame:
   return df
 
 
+class MplCanvas(FigureCanvas):
+  """ Canvas to draw upon """
+  def __init__(self, _=None, width:float=5, height:float=4, dpi:int=100):
+    """
+    Args:
+      width (float): width in inch
+      height (float): height in inch
+      dpi (int): dots per inch
+    """
+    fig = Figure(figsize=(width, height), dpi=dpi)
+    self.axes = fig.add_subplot(111)
+    super().__init__(fig)
+
 
 def restart() -> None:
   """
@@ -350,25 +366,6 @@ def testNewPastaVersion(update:bool=False) -> bool:
   releases = list(data['releases'].keys())
   largestVersionOnPypi = sorted(releases, key=parse_version)[-1]
   return largestVersionOnPypi == pasta_eln.__version__ or 'b' in pasta_eln.__version__
-
-
-class DummyProgressBar():
-  """ Class representing a progressbar that does not do anything
-  """
-  def setValue(self, value:int) -> int:
-    """
-    Set value
-
-    Args:
-      value (int): value to be set
-    """
-    return value
-  def show(self) -> None:
-    """ show progress bar """
-    return
-  def hide(self) -> None:
-    """ hide progress bar """
-    return
 
 
 # adapted from flatten-dict https://github.com/ianlini/flatten-dict

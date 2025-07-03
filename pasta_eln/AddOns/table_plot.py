@@ -3,27 +3,18 @@ import itertools
 import matplotlib.pyplot
 import numpy as np
 import pandas as pd
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
 import matplotlib
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QDialogButtonBox, QLineEdit, QComboBox # pylint: disable=no-name-in-module
-from scipy import stats
-from sklearn.metrics import r2_score
-from pasta_eln.miscTools import dfConvertColumns
-from pasta_eln.guiStyle import widgetAndLayout, space, Label
+# from scipy import stats
+# from sklearn.metrics import r2_score
+from pasta_eln.miscTools import dfConvertColumns, isFloat, MplCanvas
+from pasta_eln.GUI.guiStyle import widgetAndLayout, space, Label
 
 # The following two variables are mandatory
 description  = 'Default metadata plot'  #short description that is shown in the menu
 reqParameter = {} #possibility for required parameters: like API-key, etc. {'API': 'text'}
-
-def isFloat(s):
-    try:
-        float(s)
-        return True
-    except (ValueError, TypeError):
-        return False
 
 
 class DataAnalyse(QDialog):
@@ -173,7 +164,7 @@ class DataAnalyse(QDialog):
     if self.typeCB.currentText()=='x-y plot':
       # fit
       self.graph.axes.plot(x, np.polyval(fit, x), 'k--')
-      text = f'y={fit[0]:.3f}*x+{fit[1]:.3f}: $R^2$={round(r2_score(y, np.polyval(fit, x)), 2)}'
+      text = f'y={fit[0]:.3f}*x+{fit[1]:.3f}' # : $R^2$={round(r2_score(y, np.polyval(fit, x)), 2)}' #Comment in and install sklearn
       self.graph.axes.text(x.mean(), np.polyval(fit, x.mean()), text, verticalalignment='top')
       self.graph.axes.set_ylim(bottom=yMin, top=yMax)
       self.graph.axes.set_ylabel(self.yAxisLabel.text() or self.yAxisCB.currentText())
@@ -194,16 +185,17 @@ class DataAnalyse(QDialog):
         if self.subtypeCB.currentText()=='cumulative distribution':
           self.graph.axes.ecdf(x[mask], label=ci)
           self.graph.axes.set_ylabel('cumulative distribution')
-        if self.subtypeCB.currentText()=='distribution':
-          res = stats.ecdf(x[mask])
-          y_ = (res.cdf.probabilities[1:]-res.cdf.probabilities[:-1])/(res.cdf.quantiles[1:]-res.cdf.quantiles[:-1])
-          x_ = (res.cdf.quantiles[1:]+res.cdf.quantiles[:-1])/2
-          w_ = (res.cdf.quantiles[1:]-res.cdf.quantiles[:-1])
-          color = next(self.colors)
-          self.graph.axes.bar(x_, y_, width=w_, label=ci, facecolor='none', linestyle='-', linewidth=1, edgecolor=color)
-          self.graph.axes.set_ylabel('relative distribution')
-      ksStats = stats.ks_2samp(x[mask], x[~mask])
-      infoText = f'p-value={ksStats.pvalue:.3f}'
+      # --- install scipy to use the following code ---
+      #   if self.subtypeCB.currentText()=='distribution':
+      #     res = stats.ecdf(x[mask])
+      #     y_ = (res.cdf.probabilities[1:]-res.cdf.probabilities[:-1])/(res.cdf.quantiles[1:]-res.cdf.quantiles[:-1])
+      #     x_ = (res.cdf.quantiles[1:]+res.cdf.quantiles[:-1])/2
+      #     w_ = (res.cdf.quantiles[1:]-res.cdf.quantiles[:-1])
+      #     color = next(self.colors)
+      #     self.graph.axes.bar(x_, y_, width=w_, label=ci, facecolor='none', linestyle='-', linewidth=1, edgecolor=color)
+      #     self.graph.axes.set_ylabel('relative distribution')
+      # ksStats = stats.ks_2samp(x[mask], x[~mask])
+      # infoText = f'p-value={ksStats.pvalue:.3f}'
 
     # for all plots
     self.graph.axes.legend(title = self.cAxisLabel.text() or self.cAxisCB.currentText())
@@ -222,20 +214,6 @@ class DataAnalyse(QDialog):
     """ cancel selectedList to configuration and exit """
     self.reject()
     return
-
-
-class MplCanvas(FigureCanvas):
-  """ Canvas to draw upon """
-  def __init__(self, _=None, width:float=5, height:float=4, dpi:int=100):
-    """
-    Args:
-      width (float): width in inch
-      height (float): height in inch
-      dpi (int): dots per inch
-    """
-    fig = Figure(figsize=(width, height), dpi=dpi)
-    self.axes = fig.add_subplot(111)
-    super().__init__(fig)
 
 
 def main(backend, df, widget, parameter={}):

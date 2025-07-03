@@ -152,3 +152,5 @@ General notes
 
 - Find qt-awesome icons: qta-browser
 - print works great in frontend and backend
+- vulture: vulture pasta_eln --exclude "markdown2html.py,html2markdown.py,minisign.py,html2mdUtils.py,html2mdConfig.py,html2mdElements.py,minisign/helpers.py,printer.py,workplan.py"
+
