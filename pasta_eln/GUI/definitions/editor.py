@@ -1,6 +1,7 @@
 """ widget that shows the table of the items """
-import itertools
 from enum import Enum
+import itertools
+import logging
 from pathlib import Path
 from typing import Any
 import pandas as pd
@@ -115,7 +116,7 @@ class Editor(QDialog):
       db.connection.commit()
       self.accept()
     else:
-      print('**ERROR table menu unknown:',command)
+      logging.error('Command unknown: %s',command)
     return
 
 
