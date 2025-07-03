@@ -7,7 +7,7 @@ from .configAuthors import ConfigurationAuthors
 from .configGUI import ConfigurationGUI
 from .configProjectGroup import ProjectGroup
 from .configSetup import ConfigurationSetup
-from .repositories.configGUI import ConfigurationRepositories
+from .repositories.config import ConfigurationRepositories
 
 
 class Configuration(QDialog):

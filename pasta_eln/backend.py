@@ -462,7 +462,7 @@ class Backend(CLI_Mixin):
     if pyPath.is_file():
       # import module and use to get data
       os.environ['QT_API'] = 'pyside2'
-      import matplotlib.pyplot as plt  # IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
+      import matplotlib.pyplot as plt                         # IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
       plt.clf()
       try:
         module  = importlib.import_module(pyFile[:-3])
@@ -628,7 +628,7 @@ class Backend(CLI_Mixin):
       # print('image.save(figfile, format="PNG")')
       # print('imageData = base64.b64encode(figfile.getvalue()).decode()')
       # print('image = "data:image/jpg;base64," + imageData')
-    if success and isinstance(content.get('image',''), mpaxes._axes.Axes): #         pylint: disable=protected-access
+    if success and isinstance(content.get('image',''), mpaxes._axes.Axes):  # pylint: disable=protected-access
       success = False
       report += outputString(outputStyle,'error','Image is a matplotlib axis: not a base64 string')
       report += outputString(outputStyle, 'error', f'{htmlStr}matplotlib">website</a>')

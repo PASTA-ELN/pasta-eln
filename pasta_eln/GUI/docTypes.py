@@ -22,7 +22,8 @@ class DocTypes(QWidget):
     splitter.addWidget(table)
     splitter.addWidget(self.details)
     splitter.setContentsMargins(0,0,0,0)
-    splitter.setSizes([1,1])   # TODO: allow to change that default: has to be present, but if numbers are changed does not change view
+    splitter.setSizes([1,1])
+    # TODO: allow to change that default: has to be present, but if numbers are changed does not change view
     mainL = QVBoxLayout()
     mainL.setSpacing(0)
     mainL.setContentsMargins(0, 0, 0, 0)

@@ -220,23 +220,24 @@ def rightAlignComments() -> None:
   """
   pattern1 = re.compile(r'\S+.+#')  # Line has non-whitespace, then whitespace, then #
   pattern2 = re.compile(r'\s#')
-
+  print('================ START RIGHT-ALIGNMENT CHECK ================')
   for root, _, files in os.walk('pasta_eln'):
     for file in files:
       if file.endswith('.py') and \
           file not in ['markdown2html.py','html2markdown.py','html2mdConfig.py','html2mdUtils.py','guiCommunicate.py'] and\
           'Resources/' not in root and '/AddOns' not in root:
         file_path = os.path.join(root, file)
-        output = ''
         with open(file_path, encoding='utf-8') as f:
           content = f.read()
+        output = ''                                                                  # sourcery skip: use-join
         for number, line in enumerate(content.splitlines()):
           if pattern1.search(line) and not line.strip().startswith('#') and len(line)!=110 and \
              pattern2.search(line) and 'background' not in line:
             output += f'{number+1}: {line.strip()}\n'
         if output and 'Resources/' not in file_path:
-          print('\nProcessing file:', file_path)
+          print('Processing file:', file_path)
           print(output)
+  print('================ END RIGHT-ALIGNMENT CHECK ================')
   return
 
 

@@ -1,8 +1,10 @@
 """ Dialog that shows a message and possibly an image """
 import qtawesome as qta
-from PySide6.QtCore import Qt                                  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt                                              # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QWidget, QLabel, QApplication, QDialog, QVBoxLayout
-from .guiStyle import TextButton, Label, Image, widgetAndLayout  # pylint: disable=relative-beyond-top-level
+from .guiStyle import TextButton, Label, Image, widgetAndLayout    # pylint: disable=relative-beyond-top-level
+
+ICON_SIZE = 40                                                             # size of the icon at top of dialog
 
 class MessageDialog(QDialog):
   """ Dialog that shows a message and the progress-bar """
@@ -19,7 +21,6 @@ class MessageDialog(QDialog):
       minWidth (int): minimum width of dialog
     """
     super().__init__(parent)
-    iconSize = 40
     color = 'red' if icon=='Critical' else '#ffbc00' if icon=='Warning' else '#'
     iconSymbol = qta.icon('fa5s.minus-circle' if icon=='Critical' else
                     'fa5s.exclamation-circle' if icon=='Warning' else
@@ -30,10 +31,10 @@ class MessageDialog(QDialog):
     mainL = QVBoxLayout(self)
     if icon:
       iconLabel = QLabel('')
-      iconLabel.setPixmap(iconSymbol.pixmap(iconSize, iconSize))
+      iconLabel.setPixmap(iconSymbol.pixmap(ICON_SIZE, ICON_SIZE))
       iconLabel.setStyleSheet(f'background: {color};')
-      iconLabel.setMinimumSize(iconSize, iconSize)
-      mainL.addWidget(iconLabel, alignment=Qt.AlignHCenter)                                           # type: ignore
+      iconLabel.setMinimumSize(ICON_SIZE, ICON_SIZE)
+      mainL.addWidget(iconLabel, alignment=Qt.AlignHCenter)                                     # type: ignore
     if image is not None:
       Image(image, mainL, anyDimension=400)
     textLabel = Label(text, 'h2', mainL)

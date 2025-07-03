@@ -26,7 +26,7 @@ class ConfigurationGUI(QDialog):
     if hasattr(self.comm.backend, 'configuration'):
       onDisk = self.comm.backend.configuration['GUI']
       mainL  = QVBoxLayout(self)
-      for label, items  in configurationGUI.items():  # section
+      for label, items  in configurationGUI.items():                                                 # section
         groupbox = QGroupBox(label.capitalize())
         mainL.addWidget(groupbox)
         sectionL = QFormLayout(groupbox)
