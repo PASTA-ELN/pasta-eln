@@ -224,6 +224,12 @@ If you want to add a column:
 </ul>
 """
 
+cssStyleHtmlEditors = """
+<style> ul {list-style-type: none; padding-left: 0; margin: 0;} a:link {text-decoration: none;}
+a:visited {text-decoration: none;} a:hover {text-decoration: none;} a:active {text-decoration: none;} </style>
+"""
+
+
 # FontAwesome 5 icons
 allIcons = ['fa5s.address-book', 'fa5s.address-card', 'fa5s.adjust', 'fa5s.align-center', 'fa5s.align-justify',
             'fa5s.align-left', 'fa5s.align-right', 'fa5s.allergies', 'fa5s.ambulance',

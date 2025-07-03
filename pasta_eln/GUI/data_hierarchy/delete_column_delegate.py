@@ -7,7 +7,7 @@
 #  Filename: delete_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-from typing import Union
+from typing import Any, Union
 import qtawesome as qta
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize
 from PySide6.QtGui import QPainter
@@ -20,7 +20,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
   """
   Delegate for creating the delete icon for the delete column in the data hierarchy table views
   """
-  def __init__(self, parent = ...):
+  def __init__(self, parent:Any = ...):
     super().__init__(parent)
     self.button = QPushButton()
 

@@ -511,7 +511,7 @@ class Backend(CLI_Mixin):
 
 
   def testExtractor(self, filePath:Union[Path,str], extractorPath:Optional[Path]=None, style:dict[str,Any]={'main':''},
-                    outputStyle:str='text', saveFig:str='') -> str:
+                    outputStyle:str='text', saveFig:str='') -> tuple[str, str]:
     """
     Args:
       filePath (Path, str): path to the file to be tested
@@ -521,11 +521,8 @@ class Backend(CLI_Mixin):
       saveFig (str): save figure to...; if given stop testing after generating image
 
     Returns:
-      str: short summary or long report
+      str, str: short summary or long report and image (as svg or base64 string)
     """
-    import base64
-    from io import BytesIO
-    import cairosvg
     from PIL import Image
     os.environ['QT_API'] = 'pyside2'
     import matplotlib.axes as mpaxes
@@ -544,7 +541,7 @@ class Backend(CLI_Mixin):
         success = False
         report += outputString(outputStyle, 'error', 'Could not download file from internet')
         report += outputString(outputStyle, 'error', f'{htmlStr}download-error">website</a>')
-        return report
+        return report, ''
       filePath = tempFilePath
     report += outputString(outputStyle, 'info', f'check file: {str(filePath)}')
     extension = filePath.suffix[1:]
@@ -563,7 +560,7 @@ class Backend(CLI_Mixin):
         plt.clf()
         content = module.use(filePath, style, saveFig or None )
         if saveFig:
-          return report
+          return report, content.get('image','')
       except Exception:
         success = False
         report += outputString(outputStyle, 'error', 'Python error in extractor')
@@ -642,25 +639,10 @@ class Backend(CLI_Mixin):
     if success and isinstance(content.get('image',''), str):#show content
       size = len(content['image'])
       report += outputString(outputStyle, 'info', f'Image size {str(size // 1024)}kB')
-      if outputStyle!='text':
-        report += outputString(outputStyle,'h2','Additional window shows the image')
-      if len(content['image'])>20:
-        if content['image'].startswith('data:image/'):
-          #png or jpg encoded base64
-          extension = content['image'][11:14]
-          img = base64.b64decode(content['image'][22:])
-        else:
-          #svg data
-          img = cairosvg.svg2png(bytestring=content['image'].encode())
-        i = BytesIO(img)
-        image = Image.open(i)
-        if outputStyle!='text':
-          image.show()
-      del content['image']
     if outputStyle=='print':
       logging.info('Identified metadata %s',content)
     os.environ['QT_API'] = 'pyside6'
-    return report
+    return report, content.get('image','')
 
 
   ######################################################

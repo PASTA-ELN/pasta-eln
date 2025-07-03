@@ -9,10 +9,11 @@ from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel       # pyl
 from PySide6.QtWidgets import QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayout, QWidget# pylint: disable=no-name-in-module
 from ..fixedStringsJson import DO_NOT_RENDER
 from ..guiCommunicate import Communicate
-from ..guiStyle import Action, Label, TextButton, showMessage, widgetAndLayout
 from ..miscTools import callAddOn
 from ..textTools.handleDictionaries import doc2markdown
 from ..textTools.stringChanges import createDirName
+from .guiStyle import Action, Label, TextButton, widgetAndLayout
+from .messageDialog import showMessage
 from .projectTreeView import TreeView
 
 
@@ -31,7 +32,7 @@ class Project(QWidget):
     self.actionFoldAll                       = QAction()
     self.projID = ''
     self.docProj:dict[str,Any]= {}
-    self.showAll= self.showAll= self.comm.backend.configuration['GUI']['showHidden']=='Yes'
+    self.showAll= self.comm.backend.configuration['GUI']['showHidden']=='Yes'
     self.showDetailsAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
     self.btnEditProject:Optional[TextButton]  = None

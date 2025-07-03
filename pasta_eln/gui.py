@@ -23,7 +23,8 @@ from .GUI.palette import Palette
 from .GUI.repositories.uploadGUI import UploadGUI
 from .GUI.sidebar import Sidebar
 from .guiCommunicate import Communicate
-from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
+from .GUI.guiStyle import Action, ScrollMessageBox, widgetAndLayout
+from .GUI.messageDialog import showMessage
 from .inputOutput import exportELN, importELN
 from .miscTools import restart, testNewPastaVersion, updateAddOnList
 
@@ -160,7 +161,7 @@ class MainWindow(QMainWindow):
     # file menu
     if command[0] is Command.EXPORT:
       if self.comm.projectID == '':
-        showMessage(self, 'Error', 'You have to open a project to export', 'Warning')
+        showMessage(self, 'Error', 'You have to open a project to export', 'Critical')
         return
       fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '' and hasattr(self.backend, 'db'):
@@ -169,7 +170,7 @@ class MainWindow(QMainWindow):
         showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.IMPORT:
       if self.comm.projectID == '':
-        showMessage(self, 'Error', 'You have to open a project to import', 'Warning')
+        showMessage(self, 'Error', 'You have to open a project to import', 'Critical')
         return
       fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
@@ -179,7 +180,7 @@ class MainWindow(QMainWindow):
         self.comm.changeTable.emit('x0', '')
     elif command[0] is Command.REPOSITORY:
       if self.comm.projectID == '':
-        showMessage(self, 'Error', 'You have to open a project to upload', 'Warning')
+        showMessage(self, 'Error', 'You have to open a project to upload', 'Critical')
         return
       dialogR = UploadGUI(self.comm)
       dialogR.exec()
@@ -196,13 +197,13 @@ class MainWindow(QMainWindow):
       restart()
     elif command[0] is Command.SYNC_SEND:
       if 'ERROR' in self.backend.checkDB(minimal=True):
-        showMessage(self, 'ERROR', 'There are errors in your database: fix before upload')
+        showMessage(self, 'Error', 'There are errors in your database: fix before upload', 'Critical')
         return
       sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
       if hasattr(sync, 'api') and sync.api.url:                                 #if hostname and api-key given
         self.comm.progressWindow(lambda func1: sync.sync('sA', progressCallback=func1))
       else:                                                                                      #if not given
-        showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
+        showMessage(self, 'Error', 'Please give server address and API-key in Configuration', 'Critical')
         dialogC = Configuration(self.comm)
         dialogC.exec()
     elif command[0] is Command.SYNC_GET:
@@ -221,8 +222,8 @@ class MainWindow(QMainWindow):
       dialogD.show()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
-      reportText = self.comm.backend.testExtractor(fileName, outputStyle='html')
-      showMessage(self, 'Report of extractor test', reportText)
+      reportText, image = self.comm.backend.testExtractor(fileName, outputStyle='html')
+      showMessage(self, 'Report of extractor test', reportText, image=image)
     elif command[0] is Command.TEST2:
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
@@ -239,11 +240,11 @@ class MainWindow(QMainWindow):
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
     elif command[0] is Command.VERIFY_DB:
       reportText = self.comm.backend.checkDB(outputStyle='html', minimal=True)
-      showMessage(self, 'Report of database verification', reportText, style='QLabel {min-width: 800px}')
+      showMessage(self, 'Report of database verification', reportText, minWidth=800)
     elif command[0] is Command.SHORTCUTS:
-      showMessage(self, 'Keyboard shortcuts', shortcuts)
+      showMessage(self, 'Keyboard shortcuts', shortcuts, 'Information')
     elif command[0] is Command.ABOUT:
-      showMessage(self, 'About', f'{AboutMessage}Environment: {sys.prefix}\n', '')
+      showMessage(self, 'About', f'{AboutMessage}Environment: {sys.prefix}\n','Information')
     elif command[0] is Command.RESTART:
       restart()
     else:

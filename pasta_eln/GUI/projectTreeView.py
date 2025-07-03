@@ -11,8 +11,9 @@ from PySide6.QtCore import Qt                                              # pyl
 from PySide6.QtGui import QDropEvent, QEventPoint, QStandardItem, QStandardItemModel# pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget# pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
-from ..guiStyle import Action, showMessage
 from ..miscTools import callAddOn
+from .guiStyle import Action
+from .messageDialog import showMessage
 from .projectLeafRenderer import ProjectLeafRenderer
 
 
@@ -173,7 +174,7 @@ class TreeView(QTreeView):
         else hierStack[-1]
       doc   = self.comm.backend.db.getDoc(docID)
       if doc['branch'][0]['path'] is None:
-        showMessage(self, 'ERROR', 'Cannot open file that is only in the database','Warning')
+        showMessage(self, 'Error', 'Cannot open file that is only in the database','Critical')
       else:
         path  = Path(self.comm.backend.basePath)/doc['branch'][0]['path']
         if platform.system() == 'Darwin':                                                              # macOS

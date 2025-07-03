@@ -6,7 +6,8 @@ import pandas as pd
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QInputDialog,# pylint: disable=no-name-in-module
                                QMessageBox, QTabBar, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout)
 from ...guiCommunicate import Communicate
-from ...guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout
+from ..guiStyle import IconButton, Label, TextButton, widgetAndLayout
+from ..messageDialog import showMessage
 from .delete_column_delegate import DeleteColumnDelegate
 from .docTypeEdit import DocTypeEditor
 from .listFreeDelegate import ListFreeDelegate

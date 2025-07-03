@@ -7,8 +7,9 @@ from PySide6.QtCore import Slot                                            # pyl
 from PySide6.QtGui import QResizeEvent                                     # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QVBoxLayout, QWidget# pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
-from ..guiStyle import IconButton, TextButton, showMessage, space, widgetAndLayout, widgetAndLayoutGrid
 from .config import Configuration
+from .guiStyle import IconButton, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
+from .messageDialog import showMessage
 
 
 class Sidebar(QWidget):
@@ -32,12 +33,15 @@ class Sidebar(QWidget):
     if self.comm.backend.configuration['GUI']['showProjectBtn']=='Yes':
       TextButton('List projects', self, [Command.LIST_PROJECTS], mainL, 'Show list of all projects')
     _, self.projectsListL = widgetAndLayout('V', mainL, spacing='m')
-
     self.setLayout(mainL)
 
     self.widgetsAction:dict[str,QWidget] = {}
     self.widgetsList:dict[str,QWidget]   = {}
     self.widgetsProject:dict[str,Any]    = {}               #title bar and widget that contains all of project
+    self.btnProjects:list[TextButton]    = []                               # list of buttons to show projects
+    self.btnScan:TextButton|None         = None
+    self.btnDocTypes:list[IconButton]    = []                         # list of buttons to show docType tables
+    self.btnUnknown:IconButton|None      = None
     self.change()
 
 
@@ -81,8 +85,8 @@ class Sidebar(QWidget):
         projectL.setContentsMargins(3,3,3,3)
         maxLabelCharacters = int((self.sideBarWidth-50)/7.1)
         label = (projName if len(projName) < maxLabelCharacters else f'{projName[:maxLabelCharacters - 3]}...')
-        btnProj = TextButton(label, self, [Command.SHOW_PROJECT, projID, ''], projectL)
-        self.widgetsProject[projID] = [btnProj, projectW]
+        self.btnProjects.append(TextButton(label, self, [Command.SHOW_PROJECT, projID, ''], projectL))
+        self.widgetsProject[projID] = [self.btnProjects[-1], projectW]
 
         # actions: scan, curate, ...
         actionW, actionL = widgetAndLayoutGrid(projectL)
@@ -91,12 +95,12 @@ class Sidebar(QWidget):
           projectW.setStyleSheet(self.comm.palette.get('secondaryDark', 'background-color'))
         else:
           projectW.setStyleSheet(self.comm.palette.get('secondaryLight','background-color'))
-        btnScan = TextButton('Scan', self, [Command.SCAN_PROJECT, projID], None, 'Scan', \
+        self.btnScan = TextButton('Scan', self, [Command.SCAN_PROJECT, projID], None, 'Scan', \
                              iconName='mdi.clipboard-search-outline')
-        actionL.addWidget(btnScan, 0,0)
-        btnCurate = TextButton('Special', self, [projID], None)
-        btnCurate.hide()
-        actionL.addWidget(btnCurate, 0,1)
+        actionL.addWidget(self.btnScan, 0,0)
+        # btnCurate = TextButton('Special', self, [projID], None)
+        # btnCurate.hide()
+        # actionL.addWidget(btnCurate, 0,1)
         self.widgetsAction[projID] = actionW
 
         # lists: view list of measurements, ... of this project
@@ -104,14 +108,16 @@ class Sidebar(QWidget):
         if self.openProjectId != projID:
           listW.hide()
         docTypes = db.dataHierarchy('', '')
+        self.btnDocTypes = []
         for idx, doctype in enumerate(docTypes):
           if doctype[0]!='x' and '/' not in doctype:
             icon = self.comm.backend.db.dataHierarchy(doctype,'icon')[0]
             icon = 'fa5s.asterisk' if icon=='' else icon
-            btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projID], None,db.dataHierarchy(doctype,'title')[0])
-            listL.addWidget(btn, 0, idx)
-        btn = IconButton('fa5.file', self, [Command.LIST_DOCTYPE,'-',projID], None, 'Unidentified')
-        listL.addWidget(btn, 0, len(docTypes)+1)
+            tooltip = db.dataHierarchy(doctype,'title')[0]
+            self.btnDocTypes.append(IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projID], None, tooltip))
+            listL.addWidget(self.btnDocTypes[-1], 0, idx)
+        self.btnUnknown = IconButton('fa5.file', self, [Command.LIST_DOCTYPE,'-',projID], None, 'Unidentified')
+        listL.addWidget(self.btnUnknown, 0, len(docTypes)+1)
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy

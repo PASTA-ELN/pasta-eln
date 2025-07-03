@@ -11,9 +11,9 @@ from PySide6.QtGui import QRegularExpressionValidator, QStandardItem, QStandardI
 from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView,# pylint: disable=no-name-in-module
                                QLineEdit, QMenu, QMessageBox, QPushButton, QTableView, QVBoxLayout, QWidget)
 from ..guiCommunicate import Communicate
-from ..guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
 from ..miscTools import callAddOn
 from .gallery import ImageGallery
+from .guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
 from .tableHeader import TableHeader
 
 
@@ -424,9 +424,9 @@ class Table(QWidget):
       self.filterText.append(QLineEdit(''))
       self.filterText[-1].setValidator(QRegularExpressionValidator(r'[a-zA-Z0-9_\.]+'))
       rowL.addWidget(self.filterText[-1])
-      btnInverse = IconButton('ph.selection-inverse-fill', self, [Command.SET_FILTER,    len(self.models), 'invert'], rowL, checkable=True)
+      btnInverse = IconButton('ph.selection-inverse-fill', self, [Command.SET_FILTER,    len(self.models), 'invert'], rowL, checkable=True)# pylint: disable=qt-local-widget
       self.filterInverse.append(btnInverse)
-      btnDelete  = IconButton('fa5s.minus-square',         self, [Command.DELETE_FILTER, len(self.models)],           rowL)
+      btnDelete  = IconButton('fa5s.minus-square',         self, [Command.DELETE_FILTER, len(self.models)],           rowL)# pylint: disable=qt-local-widget
       self.filterDelete.append(btnDelete)
 
       # data

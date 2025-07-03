@@ -12,14 +12,13 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdi
                                QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget)
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
 from ..guiCommunicate import Communicate
-from ..guiStyle import (IconButton, Image, Label, ScrollMessageBox, TextButton, showMessage, widgetAndLayout,
-                        widgetAndLayoutForm)
 from ..miscTools import callAddOn, flatten
 from ..sqlite import MAIN_ORDER
 from ..textTools.stringChanges import createDirName, markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
+from .guiStyle import IconButton, Image, Label, ScrollMessageBox, TextButton, widgetAndLayout, widgetAndLayoutForm
+from .messageDialog import showMessage
 from .textEditor import TextEditor
-
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
@@ -48,6 +47,8 @@ class Form(QDialog):
     self.skipKeys = ['image','metaVendor','metaUser','shasum','._projectID','._ids','.name','.elnIdentifier']
     self.allHidden = False
     self.doc = minimalDocInForm | self.doc
+    self.keyLabels: list[QLineEdit] = []
+    self.values:    list[QLineEdit] = []
 
     # GUI elements
     mainL = QVBoxLayout(self)
@@ -284,8 +285,8 @@ class Form(QDialog):
                  style='border-width:1')
       IconButton('fa5s.plus-circle', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Duplicate data set',
                  style='border-width:1')
-    saveBtn = TextButton('Save',             self, [Command.FORM_SAVE],     buttonLineL, 'Save changes')
-    saveBtn.setShortcut('Ctrl+Return')
+    self.saveBtn = TextButton('Save',             self, [Command.FORM_SAVE],     buttonLineL, 'Save changes')
+    self.saveBtn.setShortcut('Ctrl+Return')
     TextButton('Cancel',           self, [Command.FORM_CANCEL],   buttonLineL, 'Discard changes')
     if self.flagNewDoc:                                                                           #new dataset
       TextButton('Save && Next', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Save this and handle next')
@@ -582,13 +583,13 @@ class Form(QDialog):
     elif command[0] is Command.FORM_ADD_KV:
       self.keyValueLabel.show()
       self.keyValueListW.show()
-      keyLabel = QLineEdit('')
-      keyLabel.setPlaceholderText('key')
-      keyLabel.setToolTip('Key (leave empty to delete key-value pair)')
-      keyLabel.setValidator(QRegularExpressionValidator('[a-zA-Z0-9]\\S+'))
-      value = QLineEdit('')
-      value.setPlaceholderText('value')
-      self.keyValueListL.addRow(keyLabel, value)
+      self.keyLabels.append(QLineEdit(''))
+      self.keyLabels[-1].setPlaceholderText('key')
+      self.keyLabels[-1].setToolTip('Key (leave empty to delete key-value pair)')
+      self.keyLabels[-1].setValidator(QRegularExpressionValidator('[a-zA-Z0-9]\\S+'))
+      self.values.append(QLineEdit(''))
+      self.values[-1].setPlaceholderText('value')
+      self.keyValueListL.addRow(self.keyLabels[-1], self.values[-1])
     elif command[0] is Command.FORM_SHOW_DOC:
       doc = self.comm.backend.db.getDoc(self.doc['id'])
       if 'image' in doc:

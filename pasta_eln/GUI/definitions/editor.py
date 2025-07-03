@@ -7,8 +7,9 @@ import pandas as pd
 import qtawesome as qta
 from PySide6.QtWidgets import QDialog, QFileDialog, QTableWidget, QTableWidgetItem, QVBoxLayout# pylint: disable=no-name-in-module
 from ...guiCommunicate import Communicate
-from ...guiStyle import TextButton, showMessage, space, widgetAndLayout
 from ...miscTools import callAddOn
+from ..guiStyle import TextButton, space, widgetAndLayout
+from ..messageDialog import showMessage
 from .key_delegate import KeyDelegate
 from .link_online_delegate import LinkOnlineDelegate
 from .lookup_delegate import LookupDelegate
@@ -108,7 +109,7 @@ class Editor(QDialog):
           try:
             db.cursor.execute(f"UPDATE docTypes SET PURL='{purl}', title='{description}' WHERE docType = '{key}'")
           except Exception:
-            showMessage(self, 'ERROR', 'You cannot add a class/docType via this form.', 'Warning')
+            showMessage(self, 'Error', 'You cannot add a class/docType via this form.', 'Critical')
         else:
           db.cursor.execute('INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);', [key, description, purl])
       db.connection.commit()

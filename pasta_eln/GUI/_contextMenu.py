@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QPoint                                          # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMenu, QWidget                               # pylint: disable=no-name-in-module
-from ..guiStyle import Action
+from .guiStyle import Action
 
 
 def initContextMenu(widget:QWidget, pos:QPoint) -> None:

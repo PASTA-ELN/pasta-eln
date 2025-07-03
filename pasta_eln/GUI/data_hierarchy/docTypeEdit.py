@@ -7,8 +7,8 @@ from PySide6.QtGui import QRegularExpressionValidator                      # pyl
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
 from ...fixedStringsJson import allIcons
 from ...guiCommunicate import Communicate
-from ...guiStyle import TextButton, showMessage, widgetAndLayout, widgetAndLayoutForm
-
+from ..guiStyle import TextButton, widgetAndLayout, widgetAndLayoutForm
+from ..messageDialog import showMessage
 
 class DocTypeEditor(QDialog):
   """ Edit properties of a docType """
@@ -97,7 +97,7 @@ class DocTypeEditor(QDialog):
       else:                                                  # create new docType, with default schema entries
         docType = self.row1.text()
         if not docType or docType in self.comm.backend.db.dataHierarchy('',''):
-          showMessage(self, 'Error', 'DocType name is not valid or already exists', 'Warning')
+          showMessage(self, 'Error', 'DocType name is not valid or already exists', 'Critical')
           return
         self.comm.backend.db.cursor.execute('INSERT INTO docTypes VALUES (?, ?, ?, ?, ?, ?)',
                                             [docType, '', label, icon, shortcut, ''])

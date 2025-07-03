@@ -6,9 +6,9 @@ from typing import Any, Callable
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QProgressBar, QTextEdit, QVBoxLayout, QWidget# pylint: disable=no-name-in-module
 from ..fixedStringsJson import exampleDataString, setupText
 from ..guiCommunicate import Communicate
-from ..guiStyle import TextButton, widgetAndLayout
 from ..installationTools import configuration, createShortcut, exampleData
 from ..miscTools import restart
+from .guiStyle import TextButton, widgetAndLayout
 
 
 class ConfigurationSetup(QWidget):
