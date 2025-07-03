@@ -7,7 +7,11 @@ import sys
 import tempfile
 import traceback
 from datetime import datetime, timezone
+import matplotlib.pyplot as plt
+import matplotlib.axes as mpaxes
+import matplotlib.pyplot as plt
 from pathlib import Path
+from PIL import Image
 from typing import Any, Callable, Optional, Union
 from urllib import request
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
@@ -460,9 +464,6 @@ class Backend(CLI_Mixin):
     pyFile = f'extractor_{extension.lower()}.py'
     pyPath = self.addOnPath/pyFile
     if pyPath.is_file():
-      # import module and use to get data
-      os.environ['QT_API'] = 'pyside2'
-      import matplotlib.pyplot as plt                         # IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
       plt.clf()
       try:
         module  = importlib.import_module(pyFile[:-3])
@@ -505,7 +506,6 @@ class Backend(CLI_Mixin):
           'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
       plt.close('all')
     #combine into document
-    os.environ['QT_API'] = 'pyside6'
     doc['shasum']=shasum                                       #essential for logic, always save, unlike image
     return
 
@@ -523,11 +523,6 @@ class Backend(CLI_Mixin):
     Returns:
       str, str: short summary or long report and image (as svg or base64 string)
     """
-    from PIL import Image
-    os.environ['QT_API'] = 'pyside2'
-    import matplotlib.axes as mpaxes
-    import matplotlib.pyplot as plt
-
     report = outputString(outputStyle, 'h2', 'Report on extractor test')
     htmlStr= 'Please visit <a href="https://pasta-eln.github.io/pasta-eln/extractors.html#'
     success = True
@@ -641,7 +636,6 @@ class Backend(CLI_Mixin):
       report += outputString(outputStyle, 'info', f'Image size {str(size // 1024)}kB')
     if outputStyle=='print':
       logging.info('Identified metadata %s',content)
-    os.environ['QT_API'] = 'pyside6'
     return report, content.get('image','')
 
 

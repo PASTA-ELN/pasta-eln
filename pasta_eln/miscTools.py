@@ -337,6 +337,26 @@ class MplCanvas(FigureCanvas):
     super().__init__(fig)
 
 
+class DummyProgressBar():
+  """ Class representing a progressbar that does not do anything
+  - needed for pytest
+  """
+  def setValue(self, value:int) -> int:
+    """
+    Set value
+
+    Args:
+      value (int): value to be set
+    """
+    return value
+  def show(self) -> None:
+    """ show progress bar """
+    return
+  def hide(self) -> None:
+    """ hide progress bar """
+    return
+
+
 def restart() -> None:
   """
   Complete restart: cold restart
