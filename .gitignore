@@ -1,5 +1,6 @@
 .vscode/
 .venv/
+.venv2/
 .idea/
 .venvPasta/
 docs/build/
