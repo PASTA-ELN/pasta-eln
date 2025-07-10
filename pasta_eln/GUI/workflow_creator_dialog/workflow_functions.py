@@ -24,7 +24,7 @@ def generate_workflow(comm: Communicate, workflow_name: str, library_url: str, s
         else:
             step_string2 += f'wf.step{i}'
     cwd_string = ''.join(template[0:14]).format(**locals()) + step_string1 + "\n" + step_string2 + "\n" + "".join(template[14:])
-    comm.backend.addData(docType, {'name':sample_name, 'content':cwd_string}, [comm.projectID])
+    comm.backend.addData(docType, {'name':workflow_name, 'content':cwd_string}, [comm.projectID])
 
 
 def get_db_procedures(comm: Communicate) -> dict[str, str | Path]:

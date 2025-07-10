@@ -165,7 +165,7 @@ class Storage:
         # print(json.dumps(self.procedures))
 
     def add_pasta_database(self, backend):
-        df = backend.db.getView('viewDocType/procedure')
+        df = backend.db.getView('viewDocType/workflow/procedure')
         for row in df.itertuples(index=False):
             name = row.name
             id = row.id

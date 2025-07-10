@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QWidget, QSizePolicy, QScrollArea, QPushButton, QVBoxLayout, QMessageBox
+from PySide6.QtWidgets import QWidget, QSizePolicy, QScrollArea, QPushButton, QVBoxLayout, QMessageBox, QInputDialog
 
 from .central_text_widget import CentralTextWidget
 from .new_step_button import NewStepButton
@@ -55,12 +55,17 @@ class CentralListWidget(QWidget):
         self.setLayout(self.layout)
 
     def export_button_pressed(self):
-        workflow_name = "TODO"  # Should be chosen by the user somehow
         library_url = "https://raw.githubusercontent.com/SteffenBrinckmann/common-workflow-description_Procedures/main"
         sample_name = self.parent().sample_name
         procedures = self.step_list.get_procedures()
         parameters = self.step_list.get_parameters()
-        docType = "procedure/workflow_scheme"
+        docType = "workflow/workplan"
+        user_input_name, ok = QInputDialog.getText(self, "Name the Workplan", "Workplan name:")
+        if ok:
+            workflow_name = user_input_name
+        else:
+            return
+
         if not procedures:
             QMessageBox.warning(self.step_list,
                                 "Export Failed",
