@@ -1,13 +1,14 @@
 """ Table Header dialog: change which columns are shown and in which order """
+import logging
 from enum import Enum
 from typing import Any
-from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QLineEdit, QListWidget,  # pylint: disable=no-name-in-module
-                               QVBoxLayout)
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QListWidget, QVBoxLayout# pylint: disable=no-name-in-module
 from ..fixedStringsJson import tableHeaderHelp
 from ..guiCommunicate import Communicate
-from ..guiStyle import IconButton, showMessage, widgetAndLayout
 from ..miscTools import restart
 from ..sqlite import MAIN_ORDER
+from .guiStyle import IconButton, widgetAndLayout
+from .messageDialog import showMessage
 
 
 class TableHeader(QDialog):
@@ -41,6 +42,7 @@ class TableHeader(QDialog):
     self.choicesW.addItems(list(self.allSet.difference(self.selectedList)))
     leftL.addWidget(self.choicesW)
     self.inputLine = QLineEdit()
+    self.inputLine.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     leftL.addWidget(self.inputLine)
     _, centerL = widgetAndLayout('V', bodyL)
     IconButton('fa5s.angle-right',        self, [Command.ADD],      centerL, 'add to right')
@@ -83,7 +85,7 @@ class TableHeader(QDialog):
       self.selectedList += [self.inputLine.text()]
       self.allSet.add(self.inputLine.text())
     else:
-      print('**ERROR tableHeader menu unknown:',command)
+      logging.error('Menu unknown: %s',command)
     #change content
     if oldIndex>-1 and newIndex>-1:
       self.selectedList.insert(newIndex, self.selectedList.pop(oldIndex))
@@ -101,8 +103,8 @@ class TableHeader(QDialog):
     if btn.text().endswith('Cancel'):
       self.reject()
     elif btn.text().endswith('Save'):
-      self.selectedList = [f'.{i}' if i not in MAIN_ORDER else i for i in self.selectedList]
-      self.db.dataHierarchyChangeView(self.docType, self.selectedList)
+      newList = [i if i in MAIN_ORDER+['tags','qrCodes'] or '.' in i else f'.{i}' for i in self.selectedList]
+      self.db.dataHierarchyChangeView(self.docType, newList)
       restart()
     elif btn.text().endswith('Help'):
       showMessage(self, 'Help on individual entry', tableHeaderHelp)

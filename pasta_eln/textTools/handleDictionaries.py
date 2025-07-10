@@ -1,6 +1,7 @@
 """Change the format of dictionaries"""
 import difflib
 import json
+import logging
 import traceback
 import uuid
 from datetime import datetime
@@ -32,7 +33,7 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     data['type']=['-']
   if isinstance(data['type'], str):
     data['type'] = data['type'].split('/')
-  if 'id' not in data:  # if new (if not update): create new id
+  if 'id' not in data:                                                 # if new (if not update): create new id
     data['id'] = data['type'][0][0]+'-'+uuid.uuid4().hex
   if 'externalId' not in data:
     data['externalId'] = ''
@@ -51,7 +52,7 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     data['comment'] =''
   if 'tags' not in data:
     data['tags'] = []
-  data['tags'] = list(set(data['tags']))  #ensure only one is inside
+  data['tags'] = list(set(data['tags']))                                            #ensure only one is inside
   #other cleaning
   if ('links' in data and isinstance(data['links'], list)) and \
      (len(data['links'])==0 or (len(data['links'])==1 and data['links'][0]=='')):
@@ -98,7 +99,7 @@ def dict2ul(aDict:dict[str,Any], fmt:str='html') -> str:
         pass
     if isinstance(value, dict):
       valueString = dict2ul(value)
-    elif isinstance(value, tuple) and len(value)==4:  #tuple of value, unit, label, PURL
+    elif isinstance(value, tuple) and len(value)==4:                        #tuple of value, unit, label, PURL
       key = key if value[2] is None or value[2]=='' else value[2]
       valueString = f'{value[0]} {value[1]}'
       valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
@@ -126,7 +127,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
   markdown = ''
   for key in [i for i in SORTED_KEYS if i in doc]+[i for i in doc if i not in SORTED_KEYS]:
     value = doc[key]
-    if key == '' and isinstance(value,dict):     #handle only key==''
+    if key == '' and isinstance(value,dict):                                              #handle only key==''
       markdown += doc2markdown(value, ignoreKeys, dataHierarchyNode, widget)
       continue
     if key in ignoreKeys or not value:
@@ -136,17 +137,17 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
         tags = ['_curated_' if i=='_curated' else f'#{i}' for i in value]
         tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
         markdown += f'Tags: {" ".join(tags)} \n\n'
-      elif (isinstance(value,str) and '\n' in value) or key=='comment':                 # long values with /n or comments
+      elif (isinstance(value,str) and '\n' in value) or key=='comment':      # long values with /n or comments
         markdown += markdownEqualizer(value)+'\n\n'
       else:
         dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
         if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
-            not isinstance(dataHierarchyItems[0]['list'], list):                #choice among docType
+            not isinstance(dataHierarchyItems[0]['list'], list):                         #choice among docType
           table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
           names= list(table[table.id==value[0]]['name'])
-          if len(names)==1:    # default find one item that we link to
+          if len(names)==1:                                            # default find one item that we link to
             value = '\u260D '+names[0]
-          elif not names:      # likely empty link because the value was not yet defined: just print to show
+          elif not names:        # likely empty link because the value was not yet defined: just print to show
             value = value[0] if isinstance(value,tuple) else value
           else:
             raise ValueError(f'list target exists multiple times. Key: {key}')
@@ -163,7 +164,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
           markdown += f'{key.capitalize()}: {value}'
     except Exception:
       doc.pop('image','')
-      print(f'**ERROR** Could not convert to markdown value: {value}\n  doc: {doc}\n',traceback.format_exc())
+      logging.error('Could not convert to markdown value: %s\n  doc: %s\n%s',value, doc,traceback.format_exc())
   return markdown
 
 

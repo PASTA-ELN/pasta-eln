@@ -18,7 +18,7 @@ from pasta_eln.textTools.stringChanges import markdownEqualizer
 
 # The following two variables are mandatory
 description  = 'Create html report'  #short description that is shown in the menu
-reqParameter = {'key':'Human readable description of parameter'} #possibility for required parameters: like API-key, etc. {'API': 'text'}
+reqParameter = {} #possibility for required parameters: like API-key, etc. {'API': 'text'}
 
 HTML_HEADER = '<!DOCTYPE html>\n<html>\n<head>\n<style>'\
     '* {font-family: sans-serif;}'\

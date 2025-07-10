@@ -3,13 +3,12 @@ import random
 import string
 from typing import Callable, Optional
 import qtawesome as qta
-from PySide6.QtGui import QRegularExpressionValidator  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QLabel,  # pylint: disable=no-name-in-module
-                               QLineEdit, QVBoxLayout)
+from PySide6.QtGui import QRegularExpressionValidator                      # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
 from ...fixedStringsJson import allIcons
 from ...guiCommunicate import Communicate
-from ...guiStyle import TextButton, widgetAndLayout, widgetAndLayoutForm
-
+from ..guiStyle import TextButton, widgetAndLayout, widgetAndLayoutForm
+from ..messageDialog import showMessage
 
 class DocTypeEditor(QDialog):
   """ Edit properties of a docType """
@@ -37,9 +36,7 @@ class DocTypeEditor(QDialog):
     if docType:
       self.row1.setDisabled(True)
     else:
-      data = self.comm.backend.db.dataHierarchy('','')
-      regex = ''.join(f'(?!{i})' for i in data)
-      self.row1.setValidator(QRegularExpressionValidator(r'(^[a-wyz][\w/]{3,}$)'))
+      self.row1.setValidator(QRegularExpressionValidator(r'(^[a-wyz][\w\/]{3,}$)'))
     mainForm.addRow(QLabel('DocType '), self.row1)
 
     self.row2 = QLineEdit(initialData[2])
@@ -90,15 +87,18 @@ class DocTypeEditor(QDialog):
       self.reject()
     else:
       label    = self.row2.text()
-      if not label or label in [v1 for v0,v1 in self.db.dataHierarchy('','title')]:
+      if not label or label in [v1 for _,v1 in self.db.dataHierarchy('','title')]:
         label = 'Random_'+''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
       icon     = '' if self.docType.startswith('x') else self.comboIcon.currentText()
       shortcut = '' if self.docType.startswith('x') else self.row4.text()
-      if self.docType:
+      if self.docType:                                                               # update existing docType
         self.comm.backend.db.cursor.execute(f"UPDATE docTypes SET title='{label}', shortcut='{shortcut}', "\
                                             f"icon='{icon}' WHERE docType = '{self.docType}'")
-      else:
+      else:                                                  # create new docType, with default schema entries
         docType = self.row1.text()
+        if not docType or docType in self.comm.backend.db.dataHierarchy('',''):
+          showMessage(self, 'Error', 'DocType name is not valid or already exists', 'Critical')
+          return
         self.comm.backend.db.cursor.execute('INSERT INTO docTypes VALUES (?, ?, ?, ?, ?, ?)',
                                             [docType, '', label, icon, shortcut, ''])
         self.comm.backend.db.cursor.execute('INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -109,6 +109,8 @@ class DocTypeEditor(QDialog):
                                             [docType, '', '2', 'comment', '', '', ''])
         if self.callback is not None:
           self.callback(label)
+          #TODO: callback has to be separated: changeDocType in editor.py + flag for soft-restart comm signal
+          #    many places should use this signal
       self.comm.backend.db.connection.commit()
       self.accept()
     return

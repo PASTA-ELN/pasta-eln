@@ -2,11 +2,93 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.7...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.11...HEAD)
 
-**Implemented enhancements:**
+**Closed issues:**
 
-- Make "aiohttp" dependency optional [\#188](https://github.com/PASTA-ELN/pasta-eln/issues/188)
+- Feature request: Adding a list via "Add key-value" button [\#511](https://github.com/PASTA-ELN/pasta-eln/issues/511)
+- Recognizing folders on "project level" as new projects [\#508](https://github.com/PASTA-ELN/pasta-eln/issues/508)
+- Windows: default desktop icon does not work [\#497](https://github.com/PASTA-ELN/pasta-eln/issues/497)
+- Question: Formatting in comment box [\#489](https://github.com/PASTA-ELN/pasta-eln/issues/489)
+- Repair/install stuck at 75% [\#481](https://github.com/PASTA-ELN/pasta-eln/issues/481)
+
+## [v3.1.11](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.11) (2025-06-15)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.10...v3.1.11)
+
+## [v3.1.10](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.10) (2025-06-12)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.10b2...v3.1.10)
+
+## [v3.1.10b2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.10b2) (2025-06-12)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.10b1...v3.1.10b2)
+
+**Fixed bugs:**
+
+- Details: long comment does not render fully [\#485](https://github.com/PASTA-ELN/pasta-eln/issues/485)
+
+**Closed issues:**
+
+- Feature Request: Editing history/changelog per item [\#495](https://github.com/PASTA-ELN/pasta-eln/issues/495)
+- Example project item categories? [\#493](https://github.com/PASTA-ELN/pasta-eln/issues/493)
+- Why show auto button in form when no add-on present? [\#487](https://github.com/PASTA-ELN/pasta-eln/issues/487)
+- Error message after deleting the example project [\#474](https://github.com/PASTA-ELN/pasta-eln/issues/474)
+
+## [v3.1.10b1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.10b1) (2025-06-10)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.9...v3.1.10b1)
+
+**Closed issues:**
+
+- AttributeError in workflow [\#484](https://github.com/PASTA-ELN/pasta-eln/issues/484)
+- Typo in API-key info box [\#482](https://github.com/PASTA-ELN/pasta-eln/issues/482)
+- Feature Request: Filter list of items by key-value pair [\#478](https://github.com/PASTA-ELN/pasta-eln/issues/478)
+- Feature request: Compile data from different items [\#473](https://github.com/PASTA-ELN/pasta-eln/issues/473)
+- Feature request: Update notification/auto-update in pasta? [\#472](https://github.com/PASTA-ELN/pasta-eln/issues/472)
+- Imported projects are folders? [\#470](https://github.com/PASTA-ELN/pasta-eln/issues/470)
+- Update of extractors in the current project group [\#466](https://github.com/PASTA-ELN/pasta-eln/issues/466)
+- Alternative to cairo package? [\#465](https://github.com/PASTA-ELN/pasta-eln/issues/465)
+- List of folders [\#458](https://github.com/PASTA-ELN/pasta-eln/issues/458)
+- Warning message about folders when repeatedly deleting the same file [\#447](https://github.com/PASTA-ELN/pasta-eln/issues/447)
+- Selecting a folder when creating new items [\#423](https://github.com/PASTA-ELN/pasta-eln/issues/423)
+- Windows 10: initial window looks strange [\#420](https://github.com/PASTA-ELN/pasta-eln/issues/420)
+- Instrument details open automatically but it can't be closed [\#382](https://github.com/PASTA-ELN/pasta-eln/issues/382)
+- Project head: has scrollbar and width that do not make sense [\#374](https://github.com/PASTA-ELN/pasta-eln/issues/374)
+- Attachments part of the document type or the individual entry [\#372](https://github.com/PASTA-ELN/pasta-eln/issues/372)
+- Display bug in eln-Details [\#350](https://github.com/PASTA-ELN/pasta-eln/issues/350)
+- Ability to change from table row item to project and backward [\#332](https://github.com/PASTA-ELN/pasta-eln/issues/332)
+- Ability to lock property definitions [\#331](https://github.com/PASTA-ELN/pasta-eln/issues/331)
+- Add "Change columns" option to the Unidentified table view. [\#170](https://github.com/PASTA-ELN/pasta-eln/issues/170)
+- Sidebar change functionality \(depends on working project tree\) [\#13](https://github.com/PASTA-ELN/pasta-eln/issues/13)
+
+## [v3.1.9](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.9) (2025-05-27)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.8...v3.1.9)
+
+**Closed issues:**
+
+- Feature Request: Navigating via list [\#480](https://github.com/PASTA-ELN/pasta-eln/issues/480)
+- Different menu layout for Mac? [\#476](https://github.com/PASTA-ELN/pasta-eln/issues/476)
+- Feature Request: Using items as "folders" [\#475](https://github.com/PASTA-ELN/pasta-eln/issues/475)
+- Missing bat-file [\#471](https://github.com/PASTA-ELN/pasta-eln/issues/471)
+- How to filter by \*\*\*\*-rating? [\#468](https://github.com/PASTA-ELN/pasta-eln/issues/468)
+- error on python -m pasta\_eln.gui execution in terminal [\#467](https://github.com/PASTA-ELN/pasta-eln/issues/467)
+- Moving the filter dropdown menu to the left [\#442](https://github.com/PASTA-ELN/pasta-eln/issues/442)
+- Filtering for \*-rating not possible [\#435](https://github.com/PASTA-ELN/pasta-eln/issues/435)
+- Warning\(?\) when entering "\*" in the view filter [\#433](https://github.com/PASTA-ELN/pasta-eln/issues/433)
+- Using an excel file / csv to mass import items [\#431](https://github.com/PASTA-ELN/pasta-eln/issues/431)
+- "Gallery view" for all images in a project [\#429](https://github.com/PASTA-ELN/pasta-eln/issues/429)
+- Table: create two filters; remove the first [\#363](https://github.com/PASTA-ELN/pasta-eln/issues/363)
+- pyInstaller [\#349](https://github.com/PASTA-ELN/pasta-eln/issues/349)
+- Allow to move items to "no project" [\#192](https://github.com/PASTA-ELN/pasta-eln/issues/192)
+- Changing "Type" column title [\#154](https://github.com/PASTA-ELN/pasta-eln/issues/154)
+- Warning for the ipynb extractor [\#112](https://github.com/PASTA-ELN/pasta-eln/issues/112)
+- Improve tables [\#19](https://github.com/PASTA-ELN/pasta-eln/issues/19)
+
+## [v3.1.8](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.8) (2025-05-19)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.7...v3.1.8)
 
 **Fixed bugs:**
 
@@ -14,7 +96,6 @@
 
 **Closed issues:**
 
-- Update of extractors in the current project group [\#466](https://github.com/PASTA-ELN/pasta-eln/issues/466)
 - Making the messages from the test extraction copy-able [\#464](https://github.com/PASTA-ELN/pasta-eln/issues/464)
 - Making the folder paths copy-able in the configurations [\#462](https://github.com/PASTA-ELN/pasta-eln/issues/462)
 - Instruction for RSS feed on website [\#461](https://github.com/PASTA-ELN/pasta-eln/issues/461)
@@ -31,6 +112,7 @@
 - Drag/Drop of folders? [\#438](https://github.com/PASTA-ELN/pasta-eln/issues/438)
 - When moving addOn directory in project group editor, there should be three options [\#419](https://github.com/PASTA-ELN/pasta-eln/issues/419)
 - Deleting the only folder in a project [\#396](https://github.com/PASTA-ELN/pasta-eln/issues/396)
+- Make "aiohttp" dependency optional [\#188](https://github.com/PASTA-ELN/pasta-eln/issues/188)
 - Install requirements in scanNewExtractors [\#156](https://github.com/PASTA-ELN/pasta-eln/issues/156)
 
 ## [v3.1.7](https://github.com/PASTA-ELN/pasta-eln/tree/v3.1.7) (2025-05-12)
@@ -39,7 +121,6 @@
 
 **Closed issues:**
 
-- Empty creation windows for workflow subcategories [\#449](https://github.com/PASTA-ELN/pasta-eln/issues/449)
 - Procedures are not accessible anymore in the lists [\#448](https://github.com/PASTA-ELN/pasta-eln/issues/448)
 - Changing the order of projects in the list on the left [\#392](https://github.com/PASTA-ELN/pasta-eln/issues/392)
 
@@ -87,10 +168,6 @@
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.17...v3.1.1)
 
-**Implemented enhancements:**
-
-- Dataverse upload window [\#316](https://github.com/PASTA-ELN/pasta-eln/issues/316)
-
 **Fixed bugs:**
 
 - Data-verse: Repeatedly changing "metadata block" in metadata editor throws segmentation fault [\#330](https://github.com/PASTA-ELN/pasta-eln/issues/330)
@@ -104,6 +181,7 @@
 - Mandatoriness in the data schema editor [\#418](https://github.com/PASTA-ELN/pasta-eln/issues/418)
 - svg's do not appear in pasta as in VScode [\#391](https://github.com/PASTA-ELN/pasta-eln/issues/391)
 - The qr code line shows \[''\] after sample dimensions are added [\#387](https://github.com/PASTA-ELN/pasta-eln/issues/387)
+- Dataverse upload window [\#316](https://github.com/PASTA-ELN/pasta-eln/issues/316)
 
 ## [v3.0.17](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.17) (2025-03-29)
 
@@ -273,25 +351,6 @@
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.6.0...v3.0.0b1)
 
-**Implemented enhancements:**
-
-- Adapt dataverse module to use sqlite backend [\#353](https://github.com/PASTA-ELN/pasta-eln/issues/353)
-- Report of project or folder [\#333](https://github.com/PASTA-ELN/pasta-eln/issues/333)
-- Complete uninstallation [\#267](https://github.com/PASTA-ELN/pasta-eln/issues/267)
--  “More-change columns”  [\#237](https://github.com/PASTA-ELN/pasta-eln/issues/237)
-- SQLite based database [\#159](https://github.com/PASTA-ELN/pasta-eln/issues/159)
-- Creating items in the project view [\#151](https://github.com/PASTA-ELN/pasta-eln/issues/151)
-- Displaying IRIs and units [\#148](https://github.com/PASTA-ELN/pasta-eln/issues/148)
-- create function for searchChildNumber [\#21](https://github.com/PASTA-ELN/pasta-eln/issues/21)
-- Little side project: GUI for server actions [\#16](https://github.com/PASTA-ELN/pasta-eln/issues/16)
-- Little side project: configAuthors.py [\#15](https://github.com/PASTA-ELN/pasta-eln/issues/15)
-- Two concept questions that we might discuss in future [\#14](https://github.com/PASTA-ELN/pasta-eln/issues/14)
-- Improve / change project tree [\#12](https://github.com/PASTA-ELN/pasta-eln/issues/12)
-- Ability to push data to dataverse [\#10](https://github.com/PASTA-ELN/pasta-eln/issues/10)
-- refactor\(data\_hierarchy\): adapt datahierarchy tool to use sqlite backend   [\#373](https://github.com/PASTA-ELN/pasta-eln/pull/373) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- feat\(dataverse\): adapt data-verse module for new sqlite database  [\#368](https://github.com/PASTA-ELN/pasta-eln/pull/368) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- feat\(data\_hierarchy\): implement changes for data type row  [\#351](https://github.com/PASTA-ELN/pasta-eln/pull/351) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-
 **Fixed bugs:**
 
 - Data-verse parallel uploads throws segmentation fault and crashes PASTA App [\#365](https://github.com/PASTA-ELN/pasta-eln/issues/365)
@@ -323,27 +382,43 @@
 - test extractors does not work although the rerun extractor does [\#360](https://github.com/PASTA-ELN/pasta-eln/issues/360)
 - Form: ctrl-s -\> save [\#356](https://github.com/PASTA-ELN/pasta-eln/issues/356)
 - Show that the details are hidden in project view [\#355](https://github.com/PASTA-ELN/pasta-eln/issues/355)
+- Adapt dataverse module to use sqlite backend [\#353](https://github.com/PASTA-ELN/pasta-eln/issues/353)
 - PASTA APP crashes with segmentation fault [\#352](https://github.com/PASTA-ELN/pasta-eln/issues/352)
 - tags are incorrect in form: everywhere? [\#342](https://github.com/PASTA-ELN/pasta-eln/issues/342)
 - Improve GUI of form [\#339](https://github.com/PASTA-ELN/pasta-eln/issues/339)
+- Report of project or folder [\#333](https://github.com/PASTA-ELN/pasta-eln/issues/333)
 - Datahierarchy editor version 2.0 [\#329](https://github.com/PASTA-ELN/pasta-eln/issues/329)
 - PASTA SQLite [\#328](https://github.com/PASTA-ELN/pasta-eln/issues/328)
 - Extractors not working [\#311](https://github.com/PASTA-ELN/pasta-eln/issues/311)
 - Python 3.12/ 3.11 requirement is too strict, relax in setup. Cfg [\#310](https://github.com/PASTA-ELN/pasta-eln/issues/310)
+- Complete uninstallation [\#267](https://github.com/PASTA-ELN/pasta-eln/issues/267)
 - Speed up code [\#261](https://github.com/PASTA-ELN/pasta-eln/issues/261)
 - Possible update for pyside6 [\#247](https://github.com/PASTA-ELN/pasta-eln/issues/247)
+-  “More-change columns”  [\#237](https://github.com/PASTA-ELN/pasta-eln/issues/237)
 - Import of SampleDB.eln leads to segmentation fault [\#231](https://github.com/PASTA-ELN/pasta-eln/issues/231)
 - Links to samples which have a \_ in the docID, do not work as links [\#230](https://github.com/PASTA-ELN/pasta-eln/issues/230)
 - test how the main form looks with groups of questions and attachments [\#226](https://github.com/PASTA-ELN/pasta-eln/issues/226)
 - Project view: how to display 2000000 entries [\#216](https://github.com/PASTA-ELN/pasta-eln/issues/216)
 - Test elabFTW import, after next consortium meeting [\#209](https://github.com/PASTA-ELN/pasta-eln/issues/209)
+- SQLite based database [\#159](https://github.com/PASTA-ELN/pasta-eln/issues/159)
+- Creating items in the project view [\#151](https://github.com/PASTA-ELN/pasta-eln/issues/151)
+- Displaying IRIs and units [\#148](https://github.com/PASTA-ELN/pasta-eln/issues/148)
 - Rendering in projects [\#105](https://github.com/PASTA-ELN/pasta-eln/issues/105)
+- create function for searchChildNumber [\#21](https://github.com/PASTA-ELN/pasta-eln/issues/21)
+- Little side project: GUI for server actions [\#16](https://github.com/PASTA-ELN/pasta-eln/issues/16)
+- Little side project: configAuthors.py [\#15](https://github.com/PASTA-ELN/pasta-eln/issues/15)
+- Two concept questions that we might discuss in future [\#14](https://github.com/PASTA-ELN/pasta-eln/issues/14)
+- Improve / change project tree [\#12](https://github.com/PASTA-ELN/pasta-eln/issues/12)
+- Ability to push data to dataverse [\#10](https://github.com/PASTA-ELN/pasta-eln/issues/10)
 
 **Merged pull requests:**
 
+- refactor\(data\_hierarchy\): adapt datahierarchy tool to use sqlite backend   [\#373](https://github.com/PASTA-ELN/pasta-eln/pull/373) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - docs\(dataverse\): correct menu path for dataverse UI  [\#371](https://github.com/PASTA-ELN/pasta-eln/pull/371) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - docs\(dataverse\): extend docs to include the documentation of dataverse  [\#370](https://github.com/PASTA-ELN/pasta-eln/pull/370) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- feat\(dataverse\): adapt data-verse module for new sqlite database  [\#368](https://github.com/PASTA-ELN/pasta-eln/pull/368) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - fix tuple branch in details [\#362](https://github.com/PASTA-ELN/pasta-eln/pull/362) ([enmar-alkhafagi](https://github.com/enmar-alkhafagi))
+- feat\(data\_hierarchy\): implement changes for data type row  [\#351](https://github.com/PASTA-ELN/pasta-eln/pull/351) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - Version 3.0: Sqlite [\#347](https://github.com/PASTA-ELN/pasta-eln/pull/347) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - fixed bug 253 [\#346](https://github.com/PASTA-ELN/pasta-eln/pull/346) ([enmar-alkhafagi](https://github.com/enmar-alkhafagi))
 - fix bug in ContextMenu [\#344](https://github.com/PASTA-ELN/pasta-eln/pull/344) ([enmar-alkhafagi](https://github.com/enmar-alkhafagi))
@@ -379,21 +454,21 @@
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.3...v2.6.0b1)
 
-**Implemented enhancements:**
-
-- Auto-filling the "Project" field [\#153](https://github.com/PASTA-ELN/pasta-eln/issues/153)
-- Auto-filling the "link" fields [\#152](https://github.com/PASTA-ELN/pasta-eln/issues/152)
-- feat\(dataverse\): implement data upload history module [\#303](https://github.com/PASTA-ELN/pasta-eln/pull/303) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- refactor\(dataverse\): move initialize\_database to backend.py  [\#299](https://github.com/PASTA-ELN/pasta-eln/pull/299) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-
 **Fixed bugs:**
 
 - Add new projects throws errors [\#274](https://github.com/PASTA-ELN/pasta-eln/issues/274)
 - Removing information from metadata fields [\#268](https://github.com/PASTA-ELN/pasta-eln/issues/268)
 
+**Closed issues:**
+
+- Auto-filling the "Project" field [\#153](https://github.com/PASTA-ELN/pasta-eln/issues/153)
+- Auto-filling the "link" fields [\#152](https://github.com/PASTA-ELN/pasta-eln/issues/152)
+
 **Merged pull requests:**
 
+- feat\(dataverse\): implement data upload history module [\#303](https://github.com/PASTA-ELN/pasta-eln/pull/303) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - Temporarily block import to not cause errors [\#300](https://github.com/PASTA-ELN/pasta-eln/pull/300) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- refactor\(dataverse\): move initialize\_database to backend.py  [\#299](https://github.com/PASTA-ELN/pasta-eln/pull/299) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - Repair issue that occurs if author's organization... [\#298](https://github.com/PASTA-ELN/pasta-eln/pull/298) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - Changes in form do not change the filename on the disk [\#297](https://github.com/PASTA-ELN/pasta-eln/pull/297) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - Add cryptography to requirements [\#291](https://github.com/PASTA-ELN/pasta-eln/pull/291) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
@@ -406,14 +481,6 @@
 ## [v2.5.3b1](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.3b1) (2024-05-15)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.2...v2.5.3b1)
-
-**Implemented enhancements:**
-
-- feat\(dataverse\): extend metadata editor to show a save summary [\#287](https://github.com/PASTA-ELN/pasta-eln/pull/287) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- refactor\(dataverse\): restructure login configuration [\#283](https://github.com/PASTA-ELN/pasta-eln/pull/283) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- feat\(dataverse\): integrate actual ELN generation functionality [\#282](https://github.com/PASTA-ELN/pasta-eln/pull/282) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- perf\(dataverse\): implement changes to improve multiple uploads [\#280](https://github.com/PASTA-ELN/pasta-eln/pull/280) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- feat\(dataverse\): implement data upload feature [\#273](https://github.com/PASTA-ELN/pasta-eln/pull/273) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 
 **Fixed bugs:**
 
@@ -429,12 +496,17 @@
 **Merged pull requests:**
 
 - clean the pytests such that my releaseScript runs successfully [\#289](https://github.com/PASTA-ELN/pasta-eln/pull/289) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- feat\(dataverse\): extend metadata editor to show a save summary [\#287](https://github.com/PASTA-ELN/pasta-eln/pull/287) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - sign eln file [\#286](https://github.com/PASTA-ELN/pasta-eln/pull/286) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - Export: you have to specify what you want to export [\#285](https://github.com/PASTA-ELN/pasta-eln/pull/285) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- refactor\(dataverse\): restructure login configuration [\#283](https://github.com/PASTA-ELN/pasta-eln/pull/283) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- feat\(dataverse\): integrate actual ELN generation functionality [\#282](https://github.com/PASTA-ELN/pasta-eln/pull/282) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- perf\(dataverse\): implement changes to improve multiple uploads [\#280](https://github.com/PASTA-ELN/pasta-eln/pull/280) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - Sb eln export multiple projects [\#279](https://github.com/PASTA-ELN/pasta-eln/pull/279) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - Safeguard against fast form filling that does not create an autosave [\#277](https://github.com/PASTA-ELN/pasta-eln/pull/277) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - Sb 268 remove entries during editing [\#276](https://github.com/PASTA-ELN/pasta-eln/pull/276) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - Fix issue 153 [\#275](https://github.com/PASTA-ELN/pasta-eln/pull/275) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- feat\(dataverse\): implement data upload feature [\#273](https://github.com/PASTA-ELN/pasta-eln/pull/273) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - Skip things that have been done before and skip folders [\#272](https://github.com/PASTA-ELN/pasta-eln/pull/272) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - Speed up database:getHierarchy: factor \>30 [\#271](https://github.com/PASTA-ELN/pasta-eln/pull/271) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 
@@ -446,14 +518,14 @@
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.2b1...v2.5.2b2)
 
-**Implemented enhancements:**
-
-- Closing the "You will loose all new data..." warning pop-up [\#224](https://github.com/PASTA-ELN/pasta-eln/issues/224)
-
 **Fixed bugs:**
 
 - Changing item type to "Unidentified" [\#255](https://github.com/PASTA-ELN/pasta-eln/issues/255)
 - Using “enter” to add a tag opens the extended comment field [\#254](https://github.com/PASTA-ELN/pasta-eln/issues/254)
+
+**Closed issues:**
+
+- Closing the "You will loose all new data..." warning pop-up [\#224](https://github.com/PASTA-ELN/pasta-eln/issues/224)
 
 **Merged pull requests:**
 
@@ -527,37 +599,23 @@
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b7...v2.5.0b8)
 
-**Implemented enhancements:**
-
-- feat\(dataverse\): implement upload config dialog [\#234](https://github.com/PASTA-ELN/pasta-eln/pull/234) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-
 **Merged pull requests:**
 
 - Sb 222 remove twice [\#238](https://github.com/PASTA-ELN/pasta-eln/pull/238) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- feat\(dataverse\): implement upload config dialog [\#234](https://github.com/PASTA-ELN/pasta-eln/pull/234) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 
 ## [v2.5.0b7](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.0b7) (2024-03-21)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b6...v2.5.0b7)
 
-**Implemented enhancements:**
-
-- feat\(dataverse-integration\): implement metadata editor [\#211](https://github.com/PASTA-ELN/pasta-eln/pull/211) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-
 **Merged pull requests:**
 
 - Fix subissue 2 of \#222 [\#233](https://github.com/PASTA-ELN/pasta-eln/pull/233) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- feat\(dataverse-integration\): implement metadata editor [\#211](https://github.com/PASTA-ELN/pasta-eln/pull/211) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 
 ## [v2.5.0b6](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.0b6) (2024-03-19)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b5...v2.5.0b6)
-
-**Implemented enhancements:**
-
-- Typos [\#172](https://github.com/PASTA-ELN/pasta-eln/issues/172)
-- "Projects" button in left sidebar [\#150](https://github.com/PASTA-ELN/pasta-eln/issues/150)
-- Permanent project view [\#95](https://github.com/PASTA-ELN/pasta-eln/issues/95)
-- Improve main form [\#11](https://github.com/PASTA-ELN/pasta-eln/issues/11)
-- feat\(terminology-service\): implement standalone version [\#219](https://github.com/PASTA-ELN/pasta-eln/pull/219) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 
 **Fixed bugs:**
 
@@ -575,14 +633,19 @@
 - Unidentified is not dataHierarchy: makes code simpler if it is [\#194](https://github.com/PASTA-ELN/pasta-eln/issues/194)
 - Installation of CouchDB via pastaELN Wizard not possible [\#182](https://github.com/PASTA-ELN/pasta-eln/issues/182)
 - Adding a new type leads to PASTA app crash [\#176](https://github.com/PASTA-ELN/pasta-eln/issues/176)
+- Typos [\#172](https://github.com/PASTA-ELN/pasta-eln/issues/172)
+- "Projects" button in left sidebar [\#150](https://github.com/PASTA-ELN/pasta-eln/issues/150)
 - Importing items of other Data Types [\#143](https://github.com/PASTA-ELN/pasta-eln/issues/143)
 - Order of data hierarchy has to be followed in form [\#135](https://github.com/PASTA-ELN/pasta-eln/issues/135)
 - Export/import of items with the same name [\#126](https://github.com/PASTA-ELN/pasta-eln/issues/126)
+- Permanent project view [\#95](https://github.com/PASTA-ELN/pasta-eln/issues/95)
+- Improve main form [\#11](https://github.com/PASTA-ELN/pasta-eln/issues/11)
 
 **Merged pull requests:**
 
 - fix \#95, fully? [\#225](https://github.com/PASTA-ELN/pasta-eln/pull/225) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - fix \#221 and \#222, since related [\#223](https://github.com/PASTA-ELN/pasta-eln/pull/223) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- feat\(terminology-service\): implement standalone version [\#219](https://github.com/PASTA-ELN/pasta-eln/pull/219) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 
 ## [v2.5.0b5](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.0b5) (2024-03-14)
 
@@ -628,18 +691,6 @@
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.27...v2.5.0b1)
 
-**Implemented enhancements:**
-
-- Allow user to disable / enable autosave in the configuration [\#184](https://github.com/PASTA-ELN/pasta-eln/issues/184)
-- Renaming of the Ontology editor/Questionnaires [\#106](https://github.com/PASTA-ELN/pasta-eln/issues/106)
-- feat\(dataverse-integration\): implement dataverse configuration dialog [\#196](https://github.com/PASTA-ELN/pasta-eln/pull/196) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- feat\(dataverse-integration\): add base classes and templates [\#190](https://github.com/PASTA-ELN/pasta-eln/pull/190) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- ci\(pasta\): update issue templates [\#175](https://github.com/PASTA-ELN/pasta-eln/pull/175) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- Improve editor of documents [\#174](https://github.com/PASTA-ELN/pasta-eln/pull/174) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
-- refactor\(data-hierarchy\): modify textual information in UI [\#173](https://github.com/PASTA-ELN/pasta-eln/pull/173) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- feat\(dataverse-integration\): implement dataverse client library [\#165](https://github.com/PASTA-ELN/pasta-eln/pull/165) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- feat\(data\_hierarchy\): renaming and restructuring data hierarchy tool [\#130](https://github.com/PASTA-ELN/pasta-eln/pull/130) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-
 **Fixed bugs:**
 
 - "All items" table view opens after editing [\#168](https://github.com/PASTA-ELN/pasta-eln/issues/168)
@@ -647,12 +698,16 @@
 
 **Closed issues:**
 
+- Allow user to disable / enable autosave in the configuration [\#184](https://github.com/PASTA-ELN/pasta-eln/issues/184)
 - Displaying issues after "Rerun extractors" [\#167](https://github.com/PASTA-ELN/pasta-eln/issues/167)
+- Renaming of the Ontology editor/Questionnaires [\#106](https://github.com/PASTA-ELN/pasta-eln/issues/106)
 
 **Merged pull requests:**
 
 - New version of .eln and reading sampleDB and kadi4mat files [\#197](https://github.com/PASTA-ELN/pasta-eln/pull/197) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- feat\(dataverse-integration\): implement dataverse configuration dialog [\#196](https://github.com/PASTA-ELN/pasta-eln/pull/196) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - implemented feature wish \#150 [\#195](https://github.com/PASTA-ELN/pasta-eln/pull/195) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- feat\(dataverse-integration\): add base classes and templates [\#190](https://github.com/PASTA-ELN/pasta-eln/pull/190) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - Repair smaller bugs that I found  [\#189](https://github.com/PASTA-ELN/pasta-eln/pull/189) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - Issue 182: update documentation [\#187](https://github.com/PASTA-ELN/pasta-eln/pull/187) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - Implement improvements to the edit form [\#186](https://github.com/PASTA-ELN/pasta-eln/pull/186) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
@@ -662,7 +717,12 @@
 - code does not crash if shortcut and/or icon does not exist in a [\#179](https://github.com/PASTA-ELN/pasta-eln/pull/179) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - Display issues after rerun extractors [\#178](https://github.com/PASTA-ELN/pasta-eln/pull/178) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - Sb less user interaction [\#177](https://github.com/PASTA-ELN/pasta-eln/pull/177) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- ci\(pasta\): update issue templates [\#175](https://github.com/PASTA-ELN/pasta-eln/pull/175) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- Improve editor of documents [\#174](https://github.com/PASTA-ELN/pasta-eln/pull/174) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- refactor\(data-hierarchy\): modify textual information in UI [\#173](https://github.com/PASTA-ELN/pasta-eln/pull/173) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- feat\(dataverse-integration\): implement dataverse client library [\#165](https://github.com/PASTA-ELN/pasta-eln/pull/165) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - docs\(data\_hierarchy\): adapting help page to the latest version [\#131](https://github.com/PASTA-ELN/pasta-eln/pull/131) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- feat\(data\_hierarchy\): renaming and restructuring data hierarchy tool [\#130](https://github.com/PASTA-ELN/pasta-eln/pull/130) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 
 ## [v2.4.27](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.27) (2023-12-18)
 
@@ -697,10 +757,6 @@
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.24...v2.4.25)
 
-**Implemented enhancements:**
-
-- Progress bar to import and export [\#18](https://github.com/PASTA-ELN/pasta-eln/issues/18)
-
 **Fixed bugs:**
 
 - Import and edit the eLabFTW project [\#133](https://github.com/PASTA-ELN/pasta-eln/issues/133)
@@ -708,6 +764,7 @@
 **Closed issues:**
 
 - Deleting an item in a specific table opens a general table [\#134](https://github.com/PASTA-ELN/pasta-eln/issues/134)
+- Progress bar to import and export [\#18](https://github.com/PASTA-ELN/pasta-eln/issues/18)
 
 **Merged pull requests:**
 
@@ -784,10 +841,6 @@
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.18...v2.4.19)
 
-**Implemented enhancements:**
-
-- Improving user experience with "Visibility" options [\#62](https://github.com/PASTA-ELN/pasta-eln/issues/62)
-
 **Fixed bugs:**
 
 - Autosaving after adding the comment [\#87](https://github.com/PASTA-ELN/pasta-eln/issues/87)
@@ -799,6 +852,7 @@
 
 - Ontologie issues for Steffen [\#92](https://github.com/PASTA-ELN/pasta-eln/issues/92)
 - Heading styles in project view [\#84](https://github.com/PASTA-ELN/pasta-eln/issues/84)
+- Improving user experience with "Visibility" options [\#62](https://github.com/PASTA-ELN/pasta-eln/issues/62)
 - comment in project view [\#36](https://github.com/PASTA-ELN/pasta-eln/issues/36)
 
 **Merged pull requests:**
@@ -812,10 +866,6 @@
 ## [v2.4.17](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.17) (2023-10-25)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.16...v2.4.17)
-
-**Implemented enhancements:**
-
-- test\(ontology\): added automated tests for ontology component [\#100](https://github.com/PASTA-ELN/pasta-eln/pull/100) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 
 **Fixed bugs:**
 
@@ -834,6 +884,7 @@
 
 - - Unified comments in all views \#98 \#84 [\#104](https://github.com/PASTA-ELN/pasta-eln/pull/104) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - Implemented visibility issues mentioned in \#62 [\#103](https://github.com/PASTA-ELN/pasta-eln/pull/103) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- test\(ontology\): added automated tests for ontology component [\#100](https://github.com/PASTA-ELN/pasta-eln/pull/100) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - Sb start windows [\#97](https://github.com/PASTA-ELN/pasta-eln/pull/97) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - add codespell: configuration, workflow + get it to fix found typos [\#96](https://github.com/PASTA-ELN/pasta-eln/pull/96) ([yarikoptic](https://github.com/yarikoptic))
 - Honor labels from ontology in project view and change the default labels … [\#93](https://github.com/PASTA-ELN/pasta-eln/pull/93) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
@@ -846,16 +897,11 @@
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.14...v2.4.16)
 
-**Implemented enhancements:**
-
-- Auto-populating IRI field of ontology editor  [\#58](https://github.com/PASTA-ELN/pasta-eln/issues/58)
-- fix\(ontology\): deletion of structural level types & normal types [\#83](https://github.com/PASTA-ELN/pasta-eln/pull/83) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- feat\(ontology\): auto-populating IRI fields of ontology editor tool [\#75](https://github.com/PASTA-ELN/pasta-eln/pull/75) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-
 **Fixed bugs:**
 
 - Deleting Structure 0 data types in Questionnaires [\#68](https://github.com/PASTA-ELN/pasta-eln/issues/68)
 - Empty properties in Questionnaires [\#67](https://github.com/PASTA-ELN/pasta-eln/issues/67)
+- fix\(ontology\): deletion of structural level types & normal types [\#83](https://github.com/PASTA-ELN/pasta-eln/pull/83) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - fix\(ontology\): introduced check for properties with empty names [\#80](https://github.com/PASTA-ELN/pasta-eln/pull/80) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - fix\(ontology\): enabled auto stretch for the property table [\#77](https://github.com/PASTA-ELN/pasta-eln/pull/77) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - repaired \#36 \#20 [\#74](https://github.com/PASTA-ELN/pasta-eln/pull/74) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
@@ -866,6 +912,7 @@
 **Closed issues:**
 
 - Table view: Change columns [\#59](https://github.com/PASTA-ELN/pasta-eln/issues/59)
+- Auto-populating IRI field of ontology editor  [\#58](https://github.com/PASTA-ELN/pasta-eln/issues/58)
 - Deletion of an item in table view [\#57](https://github.com/PASTA-ELN/pasta-eln/issues/57)
 - Import of own .eln files [\#38](https://github.com/PASTA-ELN/pasta-eln/issues/38)
 - Importing the eLabFTW .eln files [\#37](https://github.com/PASTA-ELN/pasta-eln/issues/37)
@@ -874,6 +921,7 @@
 **Merged pull requests:**
 
 - Sb improve logging save view error [\#81](https://github.com/PASTA-ELN/pasta-eln/pull/81) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- feat\(ontology\): auto-populating IRI fields of ontology editor tool [\#75](https://github.com/PASTA-ELN/pasta-eln/pull/75) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - Merging the new changes, so I can use this Branch again [\#9](https://github.com/PASTA-ELN/pasta-eln/pull/9) ([RaphaelRoeske](https://github.com/RaphaelRoeske))
 
 ## [v2.4.14](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.14) (2023-10-03)
@@ -901,12 +949,6 @@
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.12...v2.4.13)
 
-**Implemented enhancements:**
-
-- Add help button functionality to ontology editor tool [\#47](https://github.com/PASTA-ELN/pasta-eln/issues/47)
-- Ontology editor GUI changes [\#30](https://github.com/PASTA-ELN/pasta-eln/issues/30)
-- docs\(ontology\): add help button functionality to ontology editor tool  [\#52](https://github.com/PASTA-ELN/pasta-eln/pull/52) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-
 **Fixed bugs:**
 
 - Auto-scale the whole UI elements when resizing the ontology editor window [\#48](https://github.com/PASTA-ELN/pasta-eln/issues/48)
@@ -917,8 +959,14 @@
 - fix\(ontology\): save fails in ontology editor [\#50](https://github.com/PASTA-ELN/pasta-eln/pull/50) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - Issue 34 debug [\#45](https://github.com/PASTA-ELN/pasta-eln/pull/45) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 
+**Closed issues:**
+
+- Add help button functionality to ontology editor tool [\#47](https://github.com/PASTA-ELN/pasta-eln/issues/47)
+- Ontology editor GUI changes [\#30](https://github.com/PASTA-ELN/pasta-eln/issues/30)
+
 **Merged pull requests:**
 
+- docs\(ontology\): add help button functionality to ontology editor tool  [\#52](https://github.com/PASTA-ELN/pasta-eln/pull/52) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - Addressed bugs reported in https://github.com/PASTA-ELN/pasta-eln/pul… [\#44](https://github.com/PASTA-ELN/pasta-eln/pull/44) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 
 ## [v2.4.12](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.12) (2023-09-18)
@@ -933,14 +981,6 @@
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.10...v2.4.11)
 
-**Implemented enhancements:**
-
-- feat\(ontology\): editor GUI changes and other modifications [\#46](https://github.com/PASTA-ELN/pasta-eln/pull/46) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- change button text-color; tab in textEdit for form [\#43](https://github.com/PASTA-ELN/pasta-eln/pull/43) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
-- Reformat gui.py to allow for easier reading [\#29](https://github.com/PASTA-ELN/pasta-eln/pull/29) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
-- ci\(ontology\): added pytest and coverage calculation as a workflow [\#27](https://github.com/PASTA-ELN/pasta-eln/pull/27) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-- feat\(ontology\): added tests for the ontology editor [\#23](https://github.com/PASTA-ELN/pasta-eln/pull/23) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
-
 **Fixed bugs:**
 
 - Changing the pasta application for the new version of ontology data [\#28](https://github.com/PASTA-ELN/pasta-eln/issues/28)
@@ -953,8 +993,13 @@
 
 **Merged pull requests:**
 
+- feat\(ontology\): editor GUI changes and other modifications [\#46](https://github.com/PASTA-ELN/pasta-eln/pull/46) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- change button text-color; tab in textEdit for form [\#43](https://github.com/PASTA-ELN/pasta-eln/pull/43) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Reformat gui.py to allow for easier reading [\#29](https://github.com/PASTA-ELN/pasta-eln/pull/29) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- ci\(ontology\): added pytest and coverage calculation as a workflow [\#27](https://github.com/PASTA-ELN/pasta-eln/pull/27) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - Fix installation bug [\#26](https://github.com/PASTA-ELN/pasta-eln/pull/26) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - ci\(ontology\): update the myPy workflow yml file [\#25](https://github.com/PASTA-ELN/pasta-eln/pull/25) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- feat\(ontology\): added tests for the ontology editor [\#23](https://github.com/PASTA-ELN/pasta-eln/pull/23) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - Content of form is autosaved in home folder. If computer is closed wi… [\#22](https://github.com/PASTA-ELN/pasta-eln/pull/22) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
 - feat\(ontology\): first draft version of ontology editor [\#8](https://github.com/PASTA-ELN/pasta-eln/pull/8) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 

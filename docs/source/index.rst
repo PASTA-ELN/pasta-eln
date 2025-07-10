@@ -84,3 +84,5 @@ PASTA-ELN provides a streamlined and locally installed electronic labnotebook (E
    exchange
    motivation
    develop
+   developCode
+   developInstall

@@ -3,11 +3,11 @@ import importlib
 import json
 from pathlib import Path
 from typing import Callable
-from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QFormLayout, QLabel,  # pylint: disable=no-name-in-module
-                               QLineEdit)
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
-from ..guiStyle import TextButton
+from .guiStyle import Label, TextButton, widgetAndLayout
+from .messageDialog import showMessage
 
 
 class ConfigurationAddOnParameter(QDialog):
@@ -24,30 +24,47 @@ class ConfigurationAddOnParameter(QDialog):
     super().__init__()
     self.comm = comm
     self.callbackFinished = callbackFinished
-    mainL = QFormLayout(self)
-    mainL.addRow(QLabel('Define parameters of add-ons, e.g. API keys'), QLabel(''))
+    mainL = QVBoxLayout(self)
+    Label('Define Add-On parameters','h2',mainL)
 
     #GUI elements
     self.allLineEdits = []
     if hasattr(comm.backend, 'configuration'):
       addOns = comm.backend.configuration['projectGroups'][comm.backend.configurationProjectGroup]['addOns']
-      for addOnType in addOns:
+      for addOnType in addOns:                                                        # loop over add-on types
         if addOnType != 'extractors' and addOns[addOnType]:
-          for name, _ in addOns[addOnType].items():
+          for name, _ in addOns[addOnType].items():                                        # loop over add-ons
             module      = importlib.import_module(name)
-            reqiredParam = module.reqParameter
-            for param, tooltip in reqiredParam.items():
-              label    = QLabel(f'{addOnType}/{name}.py: {param}')
-              label.setToolTip(tooltip)
-              lineEdit = QLineEdit()
-              lineEdit.setToolTip(tooltip)
-              mainL.addRow(label, lineEdit)
+            requiredParam = module.reqParameter
+            try:
+              helpText = module.helpText
+            except AttributeError:
+              helpText = ''
+            for param, tooltip in requiredParam.items():                                # loop over parameters
+              _, barL = widgetAndLayout('H', mainL, 'm', 's', 's', 's', 's')
+              Label(f'{addOnType}/{name}.py: {param}', 'h4', barL, tooltip=tooltip)
+              lineEdit = QLineEdit()                                         # pylint: disable=qt-local-widget
+              barL.addWidget(lineEdit)
+              if helpText:
+                TextButton('?', self, command=[helpText], layout=barL)
               self.allLineEdits.append((addOnType,name,param,lineEdit))
 
     #final button box
+    mainL.addStretch(1)
     buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
+
+
+  def execute(self, command:list[str]) -> None:
+    """
+    Execute a command
+
+    Args:
+      command (list[str]): command to execute
+    """
+    showMessage(self, 'Help', command[0], 'Information')
+    return
 
 
   def closeDialog(self, btn:TextButton) -> None:

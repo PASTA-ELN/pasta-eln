@@ -6,14 +6,18 @@ from zipfile import ZipFile
 from pasta_eln.backend import Backend
 from pasta_eln.inputOutput import exportELN
 
+
 class TestStringMethods(unittest.TestCase):
   """
   derived class for this test
   """
+
+
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.be = None
     self.dirName = ''
+
 
   def test_main(self):
     """
@@ -71,6 +75,7 @@ Data on disk:
   def tearDown(self):
     logging.info('End test')
     return
+
 
 if __name__ == '__main__':
   unittest.main()

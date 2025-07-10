@@ -20,6 +20,8 @@ from pasta_eln.textTools.stringChanges import outputString
 
 class Tools:
   """Commandline utility to admin local installation and convert from Pasta-ELN version 2"""
+
+
   def __init__(self) -> None:
     self.backend:Backend|None = None
     self.projectGroup = ''
@@ -295,7 +297,7 @@ class Tools:
     try:
       doc['id'] = doc.pop('_id')
       for key in ('name','user','type','gui','tags','client','branch','date'):
-        if key in doc:      #skip if key is already in correct format
+        if key in doc:                                               #skip if key is already in correct format
           continue
         if key in defaultValues and f'-{key}' not in doc:
           doc[key] = defaultValues[key]
@@ -446,7 +448,7 @@ class Tools:
     if self.backend is None:
       return
     dirName = self.backend.basePath
-    if dirName.as_posix() != '/home/steffen/FZJ/pasta_misc/testing': #TODO temporary safeguard
+    if dirName.as_posix() != '/home/steffen/FZJ/pasta_misc/testing':                 #TODO temporary safeguard
       print('DO NOT DELETE THIS')
       return
     self.backend.exit()
@@ -502,7 +504,7 @@ class Tools:
       self.__setBackend__(projectGroup)
     if self.backend is None:
       return
-    key= input('Which key to repair, e.g. "chemistry" will become .chemistry? ')
+    key = input('Which key to repair, e.g. "chemistry" will become .chemistry? ')
     self.backend.db.cursor.execute(f"SELECT id FROM properties where key == '{key}'")
     res = self.backend.db.cursor.fetchall()
     for idx, docID in enumerate(res):

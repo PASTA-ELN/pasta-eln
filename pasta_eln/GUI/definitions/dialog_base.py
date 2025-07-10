@@ -86,8 +86,8 @@ class Ui_TerminologyLookupDialogBase:
     self.gridLayout.addLayout(self.mainVerticalLayout, 0, 0, 1, 1)
 
     self.retranslateUi(TerminologyLookupDialogBase)
-    self.buttonBox.accepted.connect(TerminologyLookupDialogBase.accept) # type: ignore
-    self.buttonBox.rejected.connect(TerminologyLookupDialogBase.reject) # type: ignore
+    self.buttonBox.accepted.connect(TerminologyLookupDialogBase.accept)                         # type: ignore
+    self.buttonBox.rejected.connect(TerminologyLookupDialogBase.reject)                         # type: ignore
     QtCore.QMetaObject.connectSlotsByName(TerminologyLookupDialogBase)
 
   def retranslateUi(self, TerminologyLookupDialogBase):

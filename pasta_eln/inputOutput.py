@@ -12,7 +12,7 @@ from typing import Any
 from zipfile import ZIP_DEFLATED, ZipFile
 import requests
 from anytree import Node
-from PySide6.QtGui import QTextDocument  # TODO switch to html-markdown since also run as pytest
+from PySide6.QtGui import QTextDocument                # TODO switch to html-markdown since also run as pytest
 from pasta_eln import __version__, minisign
 from .backend import Backend
 from .fixedStringsJson import CONF_FILE_NAME
@@ -55,9 +55,11 @@ json2pasta:dict[str,Any] = {v:k for k,v in pasta2json.items() if v is not None}
 
 METADATA_FILE = 'ro-crate-metadata.json'
 
+
 ##########################################
 ###               IMPORT               ###
 ##########################################
+
 def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[str,Any]]:
   '''
   import .eln file from other ELN or from PASTA
@@ -71,15 +73,15 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
     str: success message, statistics
   '''
   elnName = ''
-  qtDocument = QTextDocument()   #used for html -> markdown conversion
+  qtDocument = QTextDocument()                                           #used for html -> markdown conversion
   statistics:dict[str,Any] = {}
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     files = elnFile.namelist()
     dirName=Path(files[0]).parts[0]
     statistics['num. files'] = len([i for i in files if Path(i).parent!=Path(dirName)])
     if f'{dirName}/ro-crate-metadata.json' not in files:
-      print('**ERROR: ro-crate does not exist in folder. EXIT')
-      return '**ERROR: ro-crate does not exist in folder. EXIT',{}
+      logging.error('ro-crate does not exist in folder. EXIT')
+      return 'ERROR: ro-crate does not exist in folder. EXIT',{}
     graph = json.loads(elnFile.read(f'{dirName}/ro-crate-metadata.json'))['@graph']
     listAllTypes = [i['@type'] for i in graph if isinstance(i['@type'],str)]
     statistics['types'] = {i:listAllTypes.count(i) for i in listAllTypes}
@@ -131,11 +133,11 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       for key, value in inputData.items():
         if key in ['@id','@type','hasPart','author','contentSize', 'sha256']:
           continue
-        if key in json2pasta:  #use known translation
+        if key in json2pasta:                                                           #use known translation
           doc[json2pasta[key]] = value
         elif key == 'encodingFormat':
           encodingFormat = inputData[key]
-        elif value:                  #keep name, only prevent causes for errors
+        elif value:                                                 #keep name, only prevent causes for errors
           doc[f'.{key}'] = value
       # change into Pasta's native format
       if isinstance(doc.get('comment',''), (dict,list)):
@@ -197,14 +199,14 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         int: number of documents added
       """
       addedDocs = 1
-      if not isinstance(part, dict): #leave these tests in since other .elns might do funky stuff
-        print('**ERROR in part',part)
+      if not isinstance(part, dict):              #leave these tests in since other .elns might do funky stuff
+        logging.error('in part %s', part)
         return 0
       # print('\nProcess: '+part['@id'])
       # find next node to process
       docS = [i for i in graph if '@id' in i and i['@id']==part['@id']]
       if len(docS)!=1 or backend.cwd is None:
-        print('**ERROR zero or multiple nodes with same id', docS,' or cwd is None in '+part['@id'])
+        logging.error('zero or multiple nodes with same id %s or cwd is None in %s', docS, part['@id'])
         return -1
       # pull all subentries (variableMeasured, comments, ...) into this dict: do not pull hasPart-entries in
       keys = [k for k,v in docS[0].items() if k!='hasPart' and (isinstance(v,dict) or (isinstance(v,list) and len(v)>0 and isinstance(v[0], dict)))]
@@ -219,17 +221,17 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
           docS[0][key] = [ [j for j in graph if j['@id']==i][0] for i in items]
         except Exception:
           docS[0][key] = 'not resolvable connection'
-          print(f'**ERROR** Could not replace {key} -entries using ids: {items}. Are all items once in the graph?')
+          logging.error('Could not replace %s -entries using ids: %s. Are all items once in the graph?', key, items)
       # convert to Pasta's style
       doc, elnID, children, dataType = json2pastaFunction(docS[0])
       if elnName == 'PASTA ELN' and elnID.startswith('http') and ':/' in elnID:
         fullPath = None
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
-      if fullPath is not None and f'{dirName}/{elnID}' in elnFile.namelist():  #Copy file onto hard disk
+      if fullPath is not None and f'{dirName}/{elnID}' in elnFile.namelist():        #Copy file onto hard disk
         target = open(fullPath, 'wb')
         source = elnFile.open(f'{dirName}/{elnID}')
-        with source, target:  #extract one file to its target directly
+        with source, target:                                          #extract one file to its target directly
           shutil.copyfileobj(source, target)
       # FOR ALL ELNs
       if elnName == 'PASTA ELN':
@@ -243,22 +245,25 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         backend.hierStack = []
       childrenStack[-1] += 1
       doc['childNum'] = childrenStack[-1]
+      qrCodes = [v[0] for k,v in doc.items() if 'qrCodes.' in k]
+      doc = {k:v for k,v in doc.items() if 'qrCodes.' not in k}
+      doc['qrCodes'] = qrCodes
       # print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
       try:
         docID = backend.addData(docType, doc)['id']
       except Exception:
-        print('============= ERROR OCCURRED ============')
-        print(json.dumps(doc,indent=2),'\n')
-        print(traceback.format_exc())
+        logging.error('============= OCCURRED ============')
+        logging.error(json.dumps(doc,indent=2))
+        logging.error(traceback.format_exc())
         docID = None
       if docID[0]=='x':
         backend.changeHierarchy(docID)
         childrenStack.append(0)
-        with open(backend.basePath/backend.cwd/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
+        with open(backend.basePath/backend.cwd/'.id_pastaELN.json','w', encoding='utf-8') as f:#local path, update in any case
           f.write(json.dumps(backend.db.getDoc(docID)))
         # children, aka recursive part
         for child in children:
-          if child['@id'].endswith('/metadata.json') or child['@id'].endswith('_metadata.json'):  #skip own metadata
+          if child['@id'].endswith('/metadata.json') or child['@id'].endswith('_metadata.json'):#skip own metadata
             continue
           addedDocs += processPart(child)
         backend.changeHierarchy(None)
@@ -282,6 +287,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
 ##########################################
 ###               EXPORT               ###
 ##########################################
+
 def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[str], verbose:bool=False) -> str:
   """
   export eln to file
@@ -378,7 +384,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         else:
           print(f"Info: could not get file {path}")
         docELN['@type'] = 'File'
-      elif '@type' not in docELN:  #samples will be here
+      elif '@type' not in docELN:                                                        #samples will be here
         docELN['@type'] = 'Dataset'
         docELN['@id'] = docELN['@id'] if docELN['@id'].endswith('/') else f"{docELN['@id']}/"
         # elnFile.mkdir(docELN['@id'][:-1]) #NOT REQUIRED for standard and does not work in python 3.10
@@ -411,13 +417,13 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     for projectID in projectIDs:
       docProject = backend.db.getDoc(projectID)
       dirNameProject = docProject['branch'][0]['path']
-      listHier, _ = backend.db.getHierarchy(projectID, allItems=False) #error not handled since should not occur during export
+      listHier, _ = backend.db.getHierarchy(projectID, allItems=False)#error not handled since should not occur during export
       processNode(listHier)
       masterParts.append(f'./{dirNameProject}/')
 
     # all items have to appear in hasPart of ./ -> masterParts are changed
     # https://github.com/TheELNConsortium/TheELNFileFormat/issues/98
-    somethingChanged = True  #starting condition
+    somethingChanged = True                                                                #starting condition
     nodesProcessed = set()
     while somethingChanged:
       somethingChanged = False
@@ -428,7 +434,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         possNodes = [i for i in graph if i['@id']==node]
         if len(possNodes)==1:
           idx = masterParts.index(node)
-          variables:list[str] = [] # [i['@id'] for i in possNodes[0].get('variableMeasured',[])] #variables go not into ./
+          variables:list[str] = []
+          # variables = [i['@id'] for i in possNodes[0].get('variableMeasured',[])] #variables go not into ./
           children            = [i['@id'] for i in possNodes[0].get('hasPart',[])]
           masterParts = masterParts[:idx+1] + variables + children + masterParts[idx+1:]
           if variables or children:
@@ -478,7 +485,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json', json.dumps(index, indent=2))
 
     #sign file
-    if 'signingKeyPair' not in backend.configuration:  #create a key-pair of secret and public key and save it locally
+    if 'signingKeyPair' not in backend.configuration or not backend.configuration['signingKeyPair']:
+      #create a key-pair of secret and public key and save it locally
       keyPairRaw = minisign.KeyPair.generate()
       keyPair    = {'id':str(uuid.uuid4()), 'secret':bytes(keyPairRaw.secret_key).decode(), 'public':bytes(keyPairRaw.public_key).decode()}
       backend.configuration['signingKeyPair'] = keyPair
@@ -531,12 +539,12 @@ def validateSignature(fileName:str) -> bool:
         if response.ok:
           pubKeyRemote = response.content.strip()
           if pubKeyRemote.decode() == str(bytes(publicKey))[2:-1]:
-            print('Success: remote and local key match')
+            logging.info('Success: remote and local key match')
           else:
-            print('**ERROR remote and local key differ')
+            logging.error('remote and local key differ')
             raise minisign.VerifyError
       print('Signature is acceptable:\n', json.dumps(json.loads(signature.trusted_comment), indent=2))
       return True
     except minisign.VerifyError:
-      print('**ERROR VERIFICATION ERROR')
+      logging.error('VERIFICATION')
     return False

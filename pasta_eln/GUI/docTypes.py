@@ -1,7 +1,7 @@
 """ widget that shows the table and the details of the items """
 from typing import Any
-from PySide6.QtCore import Slot  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QSplitter, QVBoxLayout, QWidget  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot                                            # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QSplitter, QVBoxLayout, QWidget              # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from .details import Details
 from .table import Table
@@ -16,13 +16,14 @@ class DocTypes(QWidget):
     # GUI elements
     table = Table(comm)
     self.details = Details(comm)
-    self.details.resizeEvent = self.resizeWidget # type: ignore
+    self.details.resizeEvent = self.resizeWidget                                                # type: ignore
     splitter = QSplitter()
     splitter.setHandleWidth(10)
     splitter.addWidget(table)
     splitter.addWidget(self.details)
     splitter.setContentsMargins(0,0,0,0)
     splitter.setSizes([1,1])
+    # TODO: allow to change that default: has to be present, but if numbers are changed does not change view
     mainL = QVBoxLayout()
     mainL.setSpacing(0)
     mainL.setContentsMargins(0, 0, 0, 0)
@@ -30,8 +31,8 @@ class DocTypes(QWidget):
     self.setLayout(mainL)
 
 
-  @Slot(str, str)                                           # type: ignore[arg-type]
-  def changeTable(self,  docType:str, projID:str) -> None:  # pylint: disable=unused-argument
+  @Slot(str, str)
+  def changeTable(self,  docType:str, projID:str) -> None:                   # pylint: disable=unused-argument
     """
     What happens when user clicks to change doc-type
     -> show table
@@ -44,7 +45,7 @@ class DocTypes(QWidget):
     return
 
 
-  @Slot(str)                                                # type: ignore[arg-type]
+  @Slot(str)
   def changeDetails(self, docID:str) -> None:
     """
     What happens when user clicks to change details

@@ -7,7 +7,7 @@
 #  Filename: reorder_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-from typing import Union
+from typing import Any, Union
 import qtawesome as qta
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize
 from PySide6.QtGui import QPainter
@@ -20,6 +20,10 @@ class ReorderColumnDelegate(QStyledItemDelegate):
   """
   Delegate for creating the icons for the re-order column in the data hierarchy editor tables
   """
+  def __init__(self, parent:Any = ...):
+    super().__init__(parent)
+    self.button = QPushButton()
+
   def paint(self,
             painter: QPainter,
             option: QStyleOptionViewItem,
@@ -34,13 +38,12 @@ class ReorderColumnDelegate(QStyledItemDelegate):
     indexName = index.model().index(index.row(), 0)
     if not indexName.data():
       return
-    button = QPushButton()
     opt = QStyleOptionButton()
-    opt.state = QStyle.StateFlag.State_Active | QStyle.StateFlag.State_Enabled  # type: ignore[attr-defined]
-    opt.rect = option.rect                                                      # type: ignore[attr-defined]
-    opt.icon = qta.icon('fa5s.arrow-up', scale_factor=1.0)                      # type: ignore[attr-defined]
-    opt.iconSize = QSize(15, 15)                                                # type: ignore[attr-defined]
-    QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, opt, painter, button)
+    opt.state = QStyle.StateFlag.State_Active | QStyle.StateFlag.State_Enabled    # type: ignore[attr-defined]
+    opt.rect = option.rect                                                        # type: ignore[attr-defined]
+    opt.icon = qta.icon('fa5s.arrow-up', scale_factor=1.0)                        # type: ignore[attr-defined]
+    opt.iconSize = QSize(15, 15)                                                  # type: ignore[attr-defined]
+    QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, opt, painter, self.button)
     return
 
 
@@ -55,7 +58,7 @@ class ReorderColumnDelegate(QStyledItemDelegate):
       option (QStyleOptionViewItem): Style option for the cell represented by index.
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
     """
-    return None  # type: ignore[return-value]
+    return None                                                                   # type: ignore[return-value]
 
 
   def editorEvent(self,

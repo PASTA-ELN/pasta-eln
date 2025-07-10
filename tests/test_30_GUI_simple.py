@@ -1,5 +1,6 @@
 from pasta_eln.gui import MainWindow
 
+
 def test_simple(qtbot):
   window = MainWindow('research')
   window.setMinimumSize(1024,800)

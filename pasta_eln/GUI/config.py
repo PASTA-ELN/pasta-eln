@@ -1,11 +1,13 @@
 """ Entire config dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-from PySide6.QtWidgets import QDialog, QTabWidget, QVBoxLayout  # pylint: disable=no-name-in-module
+import logging
+from PySide6.QtWidgets import QDialog, QTabWidget, QVBoxLayout             # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
+from .configAddOnParameter import ConfigurationAddOnParameter
 from .configAuthors import ConfigurationAuthors
 from .configGUI import ConfigurationGUI
 from .configProjectGroup import ProjectGroup
 from .configSetup import ConfigurationSetup
-from .repositories.configGUI import ConfigurationRepositories
+from .repositories.config import ConfigurationRepositories
 
 
 class Configuration(QDialog):
@@ -13,6 +15,7 @@ class Configuration(QDialog):
   def __init__(self, comm:Communicate, startTab:str=''):
     """
     Initialization
+    - if sidebar.py notices no database, it will call this dialog with 'setup' as only tab
 
     Args:
       backend (Pasta): backend, not communication
@@ -28,27 +31,39 @@ class Configuration(QDialog):
     tabW = QTabWidget(self)
     mainL.addWidget(tabW)
 
-    tabProjectGroup = ProjectGroup(self.comm, self.closeWidget)     # Project group. Restart app
-    tabW.addTab(tabProjectGroup, 'Project group')
+    # tab has to always exist
+    tabSetup = ConfigurationSetup(self.comm, self.closeWidget)                    # Setup / Troubleshoot Pasta
 
-    tabGUI = ConfigurationGUI(self.comm, self.closeWidget)          # Misc configuration: e.g. theming. Restart app
-    tabW.addTab(tabGUI, 'Appearance')
+    # optional tabs
+    try:
+      tabProjectGroup = ProjectGroup(self.comm, self.closeWidget)                 # Project group. Restart app
+      tabW.addTab(tabProjectGroup, 'Project group')
 
-    tabAuthors = ConfigurationAuthors(self.comm, self.closeWidget)  # Author(s)
-    tabW.addTab(tabAuthors, 'Author')
+      tabGUI = ConfigurationGUI(self.comm, self.closeWidget)   # Misc configuration: e.g. theming. Restart app
+      tabW.addTab(tabGUI, 'Appearance')
 
-    tabRepository = ConfigurationRepositories(self.comm, self.closeWidget)  # Repositories
-    tabW.addTab(tabRepository, 'Repository')
+      tabAuthors = ConfigurationAuthors(self.comm, self.closeWidget)                               # Author(s)
+      tabW.addTab(tabAuthors, 'Author')
 
-    tabSetup = ConfigurationSetup(self.comm, self.closeWidget)      # Setup / Troubleshoot Pasta
+      tabRepository = ConfigurationRepositories(self.comm, self.closeWidget)                    # Repositories
+      tabW.addTab(tabRepository, 'Repository')
+
+      tabAddOnParameter = ConfigurationAddOnParameter(self.comm, self.closeWidget)         # Add-on parameters
+      tabW.addTab(tabAddOnParameter, 'Add-on parameters')
+
+      # initialize when setup is called
+      if startTab=='setup':
+        tabW.setCurrentWidget(tabSetup)
+        tabW.setTabEnabled(0, False)
+        tabW.setTabEnabled(1, False)
+        tabW.setTabEnabled(2, False)
+        tabW.setTabEnabled(3, False)
+        tabW.setTabEnabled(4, False)
+    except Exception as e:
+      logging.error('Could not create configuration dialog: %s', e)
+
+    # always add setup tab
     tabW.addTab(tabSetup, 'Setup')
-
-    # initialize when setup is called
-    if startTab=='setup':
-      tabW.setCurrentWidget(tabSetup)
-      tabW.setTabEnabled(0, False)
-      tabW.setTabEnabled(1, False)
-      tabW.setTabEnabled(2, False)
 
 
   def closeWidget(self, restart:bool=True) -> None:
@@ -60,5 +75,5 @@ class Configuration(QDialog):
     """
     self.close()
     if restart:
-      self.comm.restart.emit()        #send signal
+      self.comm.restart.emit()                                                                    #send signal
     return

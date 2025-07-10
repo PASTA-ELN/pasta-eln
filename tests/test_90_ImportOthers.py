@@ -8,6 +8,7 @@ from pasta_eln.guiCommunicate import Communicate
 from pasta_eln.GUI.palette import Palette
 from pasta_eln.inputOutput import importELN
 
+
 def test_simple(qtbot):
   """
   main function

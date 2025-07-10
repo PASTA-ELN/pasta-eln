@@ -1,5 +1,5 @@
 """ Dialog that shows a message and the progress-bar """
-import re
+import re, logging
 from typing import Any, Callable
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import QDialogButtonBox, QProgressBar, QTextBrowser, QVBoxLayout, QWidget
@@ -52,7 +52,7 @@ class WaitDialog(QWidget):
     elif dType=='count' and re.match(r'^\d+$',data):
       self.count = int(data)
     else:
-      print(f"**ERROR unknown data {dType} {data}")
+      logging.error('Unknown data %s %s', dType, data)
     self.progressBar.setValue(self.count)
     if self.count > 99:
       self.buttonBox.show()
@@ -62,16 +62,16 @@ class WaitDialog(QWidget):
 
 class Worker(QThread):
   """A generic worker thread that runs a given function."""
-  progress = Signal(str, str)  # Signal to update the progress bar
+  progress = Signal(str, str)                                              # Signal to update the progress bar
 
   def __init__(self, taskFunction:Callable[[Callable[[str,str],None]],Any]):
     super().__init__()
-    self.taskFunction = taskFunction  # Function to execute
+    self.taskFunction = taskFunction                                                     # Function to execute
 
   def run(self) -> None:
     """Runs the assigned function, providing a callback for progress updates."""
     try:
-      self.taskFunction(self.progress.emit)  # Pass progress emitter as callback
+      self.taskFunction(self.progress.emit)                                # Pass progress emitter as callback
     except Exception:
       pass
     return

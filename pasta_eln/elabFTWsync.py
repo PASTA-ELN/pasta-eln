@@ -13,11 +13,13 @@ from .elabFTWapi import ElabFTWApi
 from .miscTools import flatten
 from .textTools.handleDictionaries import squashTupleIntoValue
 from .textTools.html2markdown import html2markdown
-from .textTools.markdown2html import markdown2html  # type: ignore[attr-defined]
+from .textTools.markdown2html import markdown2html                                # type: ignore[attr-defined]
+
 
 # - consider hiding metadata.json (requires hiding the upload (state=2) and ability to read (it is even hidden in the API-read))
 #   - hide an upload  api.upLoadUpdate('experiments', 66, 596, {'action':'update', 'state':'2'})
 #   - listing all uploads (incl. archived) is not possible in elab currently -> leave visible; change to invisible once in elab
+
 
 def cliCallback(api:ElabFTWApi , entry:str, idx:int) -> str:
   """ Default callback function for the syncMissingEntries function
@@ -30,8 +32,9 @@ def cliCallback(api:ElabFTWApi , entry:str, idx:int) -> str:
   Returns:
     str: mode of processing: g,gA,s,sA
   """
-  print(f'**ERROR**: default callback function should not be called. API:{api}, entry:{entry}, idx:{idx}')
+  logging.error('Default callback function should not be called. API:%s, entry:%s, idx:%s', api, entry, idx)
   return ''
+
 
 
 MERGE_LABELS = {
@@ -44,8 +47,10 @@ MERGE_LABELS = {
     }
 
 
+
 class Pasta2Elab:
   """ Allow syncing to elabFTW server"""
+
 
   def __init__(self, backend:Backend, projectGroup:str='', purge:bool=False):
     '''
@@ -77,7 +82,7 @@ class Pasta2Elab:
       data = self.api.readEntry('items', self.elabProjGroupID)[0]
       _ = [self.api.deleteEntry('experiments', i['entityid']) for i in data['related_experiments_links']]
       _ = [self.api.deleteEntry('items',       i['entityid']) for i in data['related_items_links']]
-    self.docID2elabID:dict[str,tuple[int,bool]] = {}  # x-15343154th54325243, (4, bool if experiment)
+    self.docID2elabID:dict[str,tuple[int,bool]] = {}      # e.g. x-15343154th54325243, (4, bool if experiment)
     self.readWriteAccess:dict[str,str] = {}
     self.verbose         = False
     return
@@ -103,12 +108,12 @@ class Pasta2Elab:
         progressCallback('count', str(int(idx/count*100)))
       return res
 
-    if hasattr(self,'api') and self.api.url:  #only when you are connected to web
+    if hasattr(self,'api') and self.api.url:                               #only when you are connected to web
       report = []
       if progressCallback is not None:
         progressCallback('text', '### Start syncing with elabFTW server\n#### Set up sync\nStart...')
-      self.syncDocTypes()  # sync categories ~1sec
-      self.createIdDict()  # TODO: get progressCallback as argument
+      self.syncDocTypes()                                                              # sync categories ~1sec
+      self.createIdDict()                                             # TODO: get progressCallback as argument
       if progressCallback is not None:
         progressCallback('append', 'Done\n#### Sync each document\nStart...')
       for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
@@ -119,7 +124,7 @@ class Pasta2Elab:
         progressCallback('append', 'Done\n#### Sync missing entries\nStart...')
       report += self.syncMissingEntries(mode, callback, progressCallback)
     else:
-      print('**ERROR Not connected to elab server!')
+      logging.error('Not connected to elab server!')
       return []
     if progressCallback is not None:
       reportSum = Counter([i[1] for i in report])
@@ -137,7 +142,7 @@ class Pasta2Elab:
     docTypesElab  = {i['title']:i['id'] for i in self.api.readEntry('items_types')}
     docTypesPasta = {i.capitalize() for i in self.backend.db.dataHierarchy('','') if not i.startswith('x')} | \
                     {'Default','Folder','Project','ProjectGroup'}
-    for docType in docTypesPasta.difference({'Measurement'}|docTypesElab.keys()):  # do not create measurements, use 'experiments'
+    for docType in docTypesPasta.difference({'Measurement'}|docTypesElab.keys()):# do not create measurements, use 'experiments'
       self.api.touchEntry('items_types', {'title': docType})
     #verify nothing extraneous
     docTypesElab  = {i['title']:i['id'] for i in self.api.readEntry('items_types')}
@@ -297,7 +302,7 @@ class Pasta2Elab:
       flagUpdateClient = False
       docMerged = copy.deepcopy(docClient)
     if mergeCase<=0:
-      print(f'**ERROR** No merge case set! {mode}')
+      logging.error('No merge case set! %s', mode)
       return node.id, -1
 
     docMerged['dateSync'] = datetime.now().isoformat()
@@ -368,7 +373,7 @@ class Pasta2Elab:
                'items':       {i['entityid'] for i in data['related_items_links']} }
     for count0, entryType in enumerate(['experiments','items']):
       if diff := inPasta[entryType].difference(inELAB[entryType]):
-        print(f'**ERROR** There is a difference in {entryType} between CLIENT and SERVER. Ids on server: {diff}.')
+        logging.error('There is a difference in %s between CLIENT and SERVER. Ids on server: %s.', entryType, diff)
       if diff := inELAB[entryType].difference(inPasta[entryType]):
         if self.verbose:
           print(f'**INFO** There is a difference in {entryType} between SERVER and CLIENT. Ids on server: {diff}.')
@@ -384,7 +389,7 @@ class Pasta2Elab:
               docOther = self.api.download(entryType, idx, listDoNotChange[0])
               docOther['dateSync'] = datetime.now().isoformat()
               squashTupleIntoValue(docOther)
-              docOther = flatten(docOther, keepPastaStruct=True)                       #type: ignore[assignment]
+              docOther = flatten(docOther, keepPastaStruct=True)                     #type: ignore[assignment]
               try:
                 branch = copy.deepcopy(docOther['branch'][0])
                 # create folder
@@ -395,7 +400,7 @@ class Pasta2Elab:
                       json.dump({'id':docOther['id']}, fOut)
                   else:
                     (self.backend.basePath/branch['path']).parent.mkdir(parents=True, exist_ok=True)
-                docOther['branch'] = branch | {'op':'c'} #TODO: one remains only
+                docOther['branch'] = branch | {'op':'c'}                               #TODO: one remains only
                 if 'tags' not in docOther:
                   docOther['tags'] = []
                 self.backend.db.saveDoc(docOther)
@@ -411,8 +416,8 @@ class Pasta2Elab:
                 for k in list(docOther.keys()):
                   if k.startswith('metaVendor.'):
                     docOther.pop(k,'')
-                print(f'**ERROR** Tried to add to client elab:{entryType} {idx}: {json.dumps(docOther,indent=2)}')
-                print(traceback.format_exc())
+                logging.error('Tried to add to client elab:%s %s: %s', entryType, idx, json.dumps(docOther,indent=2))
+                logging.error(traceback.format_exc())
                 report.append((docOther['id'], -1))
     return report
 
@@ -432,9 +437,9 @@ class Pasta2Elab:
     tags = [] if elab.get('tags','') is None else elab.get('tags','').split('|')
     doc = {'name': elab.get('title',''), 'tags':tags, 'comment':comment}
     metadata = {} if elab.get('metadata') is None else json.loads(elab['metadata'])
-    # doc['metaVendor'] = metadata.get('metaVendor',{})  # USERS IS NOT ALLOWED TO CHANGE THESE
+    # doc['metaVendor'] = metadata.get('metaVendor',{})                   # USERS IS NOT ALLOWED TO CHANGE THESE
     # doc['metaUser']   = metadata.get('metaUser',{})
-    doc |= metadata.get('__',{})                         # USERS CAN CHANGE THIS ON ELAB
+    doc |= metadata.get('__',{})                                               # USERS CAN CHANGE THIS ON ELAB
     return doc, elab.get('uploads',[])
 
 

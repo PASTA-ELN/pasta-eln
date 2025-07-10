@@ -1,14 +1,18 @@
 """ widget that shows the details of the items """
 import logging
+import re
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import Qt, Slot  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QScrollArea, QTextEdit  # pylint: disable=no-name-in-module
-from ..fixedStringsJson import SORTED_DB_KEYS, defaultDataHierarchyNode
+from PySide6.QtCore import Qt, Slot                                        # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QScrollArea, QTextEdit, QLayout, QLabel      # pylint: disable=no-name-in-module
+from ..fixedStringsJson import SORTED_DB_KEYS, defaultDataHierarchyNode, cssStyleHtmlEditors
 from ..guiCommunicate import Communicate
-from ..guiStyle import Image, Label, TextButton, addDocDetails, showMessage, widgetAndLayout
+from ..textTools.handleDictionaries import dict2ul
+from ..textTools.stringChanges import markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
+from .guiStyle import IconButton, Image, Label, TextButton, widgetAndLayout
+from .messageDialog import showMessage
 
 
 class Details(QScrollArea):
@@ -20,7 +24,7 @@ class Details(QScrollArea):
     comm.testExtractor.connect(self.testExtractor)
     self.doc:dict[str,Any]  = {}
     self.docID= ''
-    self.rescaleTexts:list[QTextEdit] = []
+    self.textEditors:list[QTextEdit] = []
 
     # GUI elements
     self.mainW, self.mainL = widgetAndLayout('V', None)
@@ -29,7 +33,7 @@ class Details(QScrollArea):
     self.setWidgetResizable(True)
     self.setWidget(self.mainW)
 
-    headerW, self.headerL = widgetAndLayout('H', self.mainL, top='s')
+    headerW, self.headerL = widgetAndLayout('H', self.mainL, spacing='m', top='s', right='s')
     headerW.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     headerW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
     self.specialW, self.specialL = widgetAndLayout('V', self.mainL, top='s')
@@ -54,7 +58,7 @@ class Details(QScrollArea):
     self.mainL.addStretch(1)
 
 
-  @Slot(str)                                # type: ignore[arg-type]
+  @Slot(str)
   def change(self, docID:str) -> None:
     """
     What happens when details should change
@@ -65,7 +69,9 @@ class Details(QScrollArea):
     logging.debug('details:changeDetails |%s|',docID)
     # Delete old widgets from layout
     for i in reversed(range(self.headerL.count())):
-      self.headerL.itemAt(i).widget().setParent(None)
+      aWidget = self.headerL.itemAt(i).widget()
+      if aWidget is not None:
+        aWidget.setParent(None)
     for i in reversed(range(self.metaDetailsL.count())):
       self.metaDetailsL.itemAt(i).widget().setParent(None)
     for i in reversed(range(self.metaVendorL.count())):
@@ -85,8 +91,8 @@ class Details(QScrollArea):
     self.btnVendor.setChecked(True)
     self.btnUser.setChecked(True)
     self.btnDatabase.setChecked(False)
-    self.rescaleTexts = []
-    if not docID:  #if given '' docID, return
+    self.textEditors = []
+    if not docID:                                                                   #if given '' docID, return
       return
     # Create new
     if docID!='redraw':
@@ -94,7 +100,7 @@ class Details(QScrollArea):
     if self.docID=='':
       return
     self.doc   = self.comm.backend.db.getDoc(self.docID, noError=True)
-    if 'name' not in self.doc:  #keep empty details and wait for user to click
+    if 'name' not in self.doc:                                  #keep empty details and wait for user to click
       self.comm.changeTable.emit('','')
       return
     if self.doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
@@ -103,6 +109,9 @@ class Details(QScrollArea):
       dataHierarchyNode = self.comm.backend.db.dataHierarchy(self.doc['type'][0], 'meta')
     label = self.doc['name'] if len(self.doc['name'])<80 else self.doc['name'][:77]+'...'
     Label(label,'h1', self.headerL)
+    self.headerL.addStretch(1)
+    IconButton('mdi.file-tree-outline', self, [Command.TO_PROJECT], self.headerL, tooltip='Change to project')
+    IconButton('fa5s.times-circle',     self, [Command.CLOSE],      self.headerL, tooltip='Close')
     if 'metaVendor' not in self.doc:
       self.btnVendor.hide()
     if 'metUser' not in self.doc:
@@ -114,27 +123,27 @@ class Details(QScrollArea):
         Image(self.doc['image'], self.specialL, anyDimension=size)
         self.specialW.show()
       elif key=='content':
-        text = QTextEdit()
+        text = QTextEdit()                                                   # pylint: disable=qt-local-widget
         text.setMarkdown(self.doc['content'])
         text.setFixedHeight(int(size/3*2))
         text.setReadOnly(True)
         self.specialL.addWidget(text)
         self.specialW.show()
-      elif key in ['name']:  #skip
+      elif key in ['name']:                                                                              #skip
         continue
       elif key in SORTED_DB_KEYS:
-        addDocDetails(self, self.metaDatabaseL, key, self.doc[key], dataHierarchyNode)
+        self.addDocDetails(self.metaDatabaseL, key, self.doc[key], dataHierarchyNode)
         self.btnDatabase.setChecked(False)
       elif key=='metaVendor':
         self.btnVendor.show()
-        addDocDetails(self, self.metaVendorL,   '',  self.doc[key], dataHierarchyNode)
+        self.addDocDetails(self.metaVendorL,   '',  self.doc[key], dataHierarchyNode)
         self.metaVendorW.show()
       elif key=='metaUser':
         self.btnUser.show()
-        addDocDetails(self, self.metaUserL,     '',  self.doc[key], dataHierarchyNode)
+        self.addDocDetails(self.metaUserL,     '',  self.doc[key], dataHierarchyNode)
         self.metaUserW.show()
       else:
-        addDocDetails(self, self.metaDetailsL,  key, self.doc[key], dataHierarchyNode)
+        self.addDocDetails(self.metaDetailsL,  key, self.doc[key], dataHierarchyNode)
         self.metaDetailsW.show()
     return
 
@@ -147,16 +156,20 @@ class Details(QScrollArea):
       command (list): area to show/hide
     """
     if command[0] is Command.SHOW:
-      if getattr(self, f'btn{command[1]}').isChecked(): #get button in question
+      if getattr(self, f'btn{command[1]}').isChecked():                                #get button in question
         getattr(self, f'meta{command[1]}W').show()
       else:
         getattr(self, f'meta{command[1]}W').hide()
+    elif command[0] is Command.CLOSE:
+      self.comm.changeTable.emit('','')
+    elif command[0] is Command.TO_PROJECT:
+      self.comm.changeProject.emit(self.doc['branch'][0]['stack'][0], self.doc['id'])
     elif isinstance(command[0], CommandMenu):
       if executeContextMenu(self, command):
         self.comm.changeTable.emit('','')
         self.comm.changeDetails.emit(self.doc['id'])
     else:
-      print('**ERROR details command unknown:',command)
+      logging.error('Details command unknown: %s',command)
     return
 
 
@@ -174,8 +187,8 @@ class Details(QScrollArea):
         path = Path(pathStr)
         if not path.as_posix().startswith('http'):
           path = self.comm.backend.basePath/path
-        report = self.comm.backend.testExtractor(path, outputStyle='html', style={'main':'/'.join(self.doc['type'])})
-        showMessage(self, 'Report of extractor test', report, style='QLabel {min-width: 800px}')
+        report, image = self.comm.backend.testExtractor(path, outputStyle='html', style={'main':'/'.join(self.doc['type'])})
+        showMessage(self, 'Report of extractor test', report, image=image, minWidth=800)
     else:
       showMessage(self, 'Warning', 'No item was selected via table-view, i.e. no details are shown.')
     return
@@ -185,16 +198,110 @@ class Details(QScrollArea):
     """ called if details is resized by splitter at the parent widget
     - resize all text-documents
     """
-    if not self.rescaleTexts:
+    if not self.textEditors:
       return
     self.metaDetailsW.setFixedWidth(width)
-    for text in self.rescaleTexts:
-      text.document().setTextWidth(width)
-      height:int = text.document().size().toTuple()[1] # type:ignore[index]
+    for text in self.textEditors:
+      text.document().setTextWidth(width-80)
+      height:int = text.document().size().toTuple()[1]                                    # type:ignore[index]
       text.setFixedHeight(height)
+    return
+
+
+
+  def addDocDetails(self, layout:QLayout, key:str, value:Any, dataHierarchyNode:list[dict[str,Any]]) -> str:
+    """ add document details to a widget's layout: take care of all the formatting
+
+    Args:
+      layout (QLayout): layout to which to add
+      key    (str): key/label to add
+      value  (Any): information
+      dataHierarchyNode (list): information on data-structure
+
+    Returns:
+      str: /n separated lines of text
+    """
+    if not key and isinstance(value,dict):
+      return '\n'.join([self.addDocDetails(layout, k, v, dataHierarchyNode) for k, v in value.items()])
+    link = False
+    if not value:
+      return ''
+    labelStr = ''
+    if key=='tags':
+      rating = ['\u2605'*int(i[1]) for i in value if re.match(r'^_\d$', i)]
+      tags = ['_curated_' if i=='_curated' else i for i in value]
+      tags = [i for i in tags if not re.match(r'^_\d$', i)]
+      labelStr = f'Rating: {rating[0]}' if rating else ''
+      labelStr = f'{labelStr}   Tags: '+' '.join(tags)
+      if layout is not None:
+        label = QLabel(labelStr)
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(label)
+    elif (isinstance(value,str) and '\n' in value) or key=='comment':        # long values with /s or comments
+      labelW, labelL = widgetAndLayout('H', layout, top='s', bottom='s')
+      labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignmentFlag.AlignTop)
+      text = QTextEdit()                                                     # pylint: disable=qt-local-widget
+      text.setMarkdown(markdownEqualizer(value))
+      bgColor = self.comm.palette.get('secondaryDark', 'background-color')
+      fgColor = self.comm.palette.get('secondaryText', 'color')
+      text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; {bgColor} {fgColor}}}")
+      text.document().setTextWidth(labelW.width())
+      if hasattr(self, 'rescaleTexts'):
+        self.textEditors.append(text)
+      height:int = text.document().size().toTuple()[1]                                    # type:ignore[index]
+      text.setFixedHeight(height)
+      text.setReadOnly(True)
+      labelL.addWidget(text, stretch=1)
+    else:
+      dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
+      docID = ''
+      if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
+          not isinstance(dataHierarchyItems[0]['list'], list):                           #choice among docType
+        table  = self.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
+        names= list(table[table.id==value[0]]['name'])
+        if len(names)==1:                                              # default find one item that we link to
+          docID = value[0]
+          value = '\u260D '+names[0]
+          link = True
+        elif not names:          # likely empty link because the value was not yet defined: just print to show
+          value = value[0] if isinstance(value,tuple) else value
+        else:
+          raise ValueError(f'list target exists multiple times. Key: {key}')
+      elif isinstance(value, list):
+        value = ', '.join([str(i) for i in value])
+      labelStr = f'<b>{key.capitalize()}</b>: {value}'
+      if isinstance(value, tuple) and len(value)==4:
+        key = key if value[2] is None or value[2]=='' else value[2]
+        valueString = f'{value[0]} {value[1]}'
+        valueString = valueString if value[3] is None or value[3]=='' else \
+                      f'{valueString}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
+        labelStr = f'{key.capitalize()}: {valueString}<br>'
+      if isinstance(value, dict):
+        value = {k:(v[0] if isinstance(v, (list,tuple)) else v) for k,v in value.items()}
+        labelStr = f'{cssStyleHtmlEditors}{key.capitalize()}: {dict2ul(value)}'
+      if layout is not None:
+        label = Label(labelStr, function=lambda x,y: self.clickLink(x,y) if link else None, docID=docID)
+        label.setOpenExternalLinks(True)
+        label.setWordWrap(True)
+        layout.addWidget(label)
+    return labelStr
+
+
+  def clickLink(self, label:str, docID:str) -> None:
+    """
+    Click link in details
+
+    Args:
+      label (str): label on link
+      docID (str): docID to which to link
+    """
+    logging.debug('used link on %s|%s',label,docID)
+    self.comm.changeDetails.emit(docID)
     return
 
 
 class Command(Enum):
   """ Commands used in this file """
   SHOW             = 1
+  CLOSE            = 2
+  TO_PROJECT       = 3

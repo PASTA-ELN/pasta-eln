@@ -1,15 +1,14 @@
 """ Main class of config tab on authors """
 import json
-import re
+import re, logging
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 import requests
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QLabel,  # pylint: disable=no-name-in-module
-                               QLineEdit, QVBoxLayout)
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
-from ..guiStyle import IconButton, TextButton, widgetAndLayout, widgetAndLayoutForm
+from .guiStyle import IconButton, TextButton, widgetAndLayout, widgetAndLayoutForm
 
 
 class ConfigurationAuthors(QDialog):
@@ -29,7 +28,7 @@ class ConfigurationAuthors(QDialog):
     self.comm = comm
     self.callbackFinished = callbackFinished
     mainL = QVBoxLayout(self)
-    self.setStyleSheet(f"QLineEdit {{ {self.comm.palette.get('secondaryText', 'color')} }}")
+    self.textFields:dict[str, QLineEdit] = {}
 
     #GUI elements
     if hasattr(self.comm.backend, 'configuration'):
@@ -43,7 +42,6 @@ class ConfigurationAuthors(QDialog):
       #headline of organizations
       orgaW, orgaL = widgetAndLayout('H', None, spacing='s', top='l')
       self.orgaCB = QComboBox()
-      self.orgaCB.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
       self.orgaCB.addItems([i['organization'] for i in self.author['organizations']])
       orgaL.addStretch(1)
       orgaL.addWidget(self.orgaCB, stretch=2)
@@ -63,7 +61,8 @@ class ConfigurationAuthors(QDialog):
     #initialize
     self.orgaCB_previousIndex = 0
     self.lockSelfAuthor = False
-    self.orgaCB.currentIndexChanged.connect(lambda: self.execute([Command.CHANGE])) #connect to slot only after all painting is done
+    self.orgaCB.currentIndexChanged.connect(lambda: self.execute([Command.CHANGE]))#connect to slot only after all painting is done
+    self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
 
 
   def addRowText(self, item:str, label:str) -> QLineEdit:
@@ -77,23 +76,23 @@ class ConfigurationAuthors(QDialog):
     Returns:
       QTextEdit: text-edit widget with content
     """
-    rightW = QLineEdit()
+    self.textFields[item]  = QLineEdit()
     if item in {'organization','rorid'}:
-      rightW.setText(self.author['organizations'][0][item] if self.author['organizations'] else '')
+      self.textFields[item].setText(self.author['organizations'][0][item] if self.author['organizations'] else '')
     else:
-      rightW.setText(self.author[item])
-    rightW.setAccessibleName(item)
+      self.textFields[item].setText(self.author[item])
+    self.textFields[item].setAccessibleName(item)
     if item in {'organization', 'rorid','orcid'}:
-      rightW.editingFinished.connect(self.changedID)
-    self.tabAuthorL.addRow(QLabel(label), rightW)
-    return rightW
+      self.textFields[item] .editingFinished.connect(self.changedID)
+    self.tabAuthorL.addRow(QLabel(label), self.textFields[item] )
+    return self.textFields[item]
 
 
   def changedID(self) -> None:
     """
     Autofill based on orcid and rorid
     """
-    sender = self.sender().accessibleName()                                                                  # type: ignore[attr-defined]
+    sender = self.sender().accessibleName()                                       # type: ignore[attr-defined]
     if sender == 'rorid':
       if re.match(r'^\w{9}$', self.userRorid.text().strip() ) is not None:
         reply = requests.get(f'https://api.ror.org/organizations/{self.userRorid.text().strip()}', timeout=10)
@@ -110,7 +109,7 @@ class ConfigurationAuthors(QDialog):
     elif sender == 'organization':
       self.orgaCB.setItemText(self.orgaCB.currentIndex(), self.userOrg.text())
     else:
-      print('**ERROR: did not understand sender:',sender)
+      logging.error('Did not understand sender: %s',sender)
     return
 
 

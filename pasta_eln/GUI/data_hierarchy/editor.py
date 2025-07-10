@@ -3,10 +3,11 @@ from enum import Enum
 from typing import Any
 import numpy as np
 import pandas as pd
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QInputDialog,  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QInputDialog,# pylint: disable=no-name-in-module
                                QMessageBox, QTabBar, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout)
 from ...guiCommunicate import Communicate
-from ...guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout
+from ..guiStyle import IconButton, Label, TextButton, widgetAndLayout
+from ..messageDialog import showMessage
 from .delete_column_delegate import DeleteColumnDelegate
 from .docTypeEdit import DocTypeEditor
 from .listFreeDelegate import ListFreeDelegate
@@ -35,7 +36,7 @@ class SchemeEditor(QDialog):
     self.db   = self.comm.backend.db
     self.docType = ''
     self.docLabel= ''
-    self.closeButtons:list[IconButton] = []  #close buttons of tabs
+    self.closeButtons:list[IconButton] = []                                             #close buttons of tabs
     self.setWindowTitle('Data scheme editor')
 
     # GUI elements
@@ -241,11 +242,11 @@ class SchemeEditor(QDialog):
     """ save text content of tables """
     df = pd.DataFrame()
     lastRow = 0
-    for tabID in range(self.tabW.count()-1):  # -1: ignore last tab +
+    for tabID in range(self.tabW.count()-1):                                           # -1: ignore last tab +
       group = self.tabW.tabBar().tabText(tabID)
       group = '' if group=='default' else group
-      widget:QTableWidget = self.tabW.widget(tabID) # type: ignore[assignment]
-      for row in range(widget.rowCount()-1):  # -1: ignore last row as it is meant for adding
+      widget:QTableWidget = self.tabW.widget(tabID)                                 # type: ignore[assignment]
+      for row in range(widget.rowCount()-1):                   # -1: ignore last row as it is meant for adding
         df.at[lastRow, 'docType'] = self.docType
         df.at[lastRow, 'class']   = group
         df.at[lastRow, 'idx']     = str(row)

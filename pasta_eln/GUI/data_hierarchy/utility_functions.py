@@ -30,7 +30,7 @@ def is_click_within_bounds(event: QEvent,
     e = QMouseEvent(event)
     click_x = e.x()
     click_y = e.y()
-    r = option.rect  # type: ignore[attr-defined]
+    r = option.rect                                                               # type: ignore[attr-defined]
     return (r.left() < click_x < r.left() + r.width()
             and r.top() < click_y < r.top() + r.height())
   return False

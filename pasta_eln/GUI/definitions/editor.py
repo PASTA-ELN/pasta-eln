@@ -5,10 +5,11 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 import qtawesome as qta
-from PySide6.QtWidgets import (QDialog, QFileDialog, QTableWidget,  # pylint: disable=no-name-in-module
-                               QTableWidgetItem, QVBoxLayout)
+from PySide6.QtWidgets import QDialog, QFileDialog, QTableWidget, QTableWidgetItem, QVBoxLayout# pylint: disable=no-name-in-module
 from ...guiCommunicate import Communicate
-from ...guiStyle import TextButton, showMessage, space, widgetAndLayout
+from ...miscTools import callAddOn
+from ..guiStyle import TextButton, space, widgetAndLayout
+from ..messageDialog import showMessage
 from .key_delegate import KeyDelegate
 from .link_online_delegate import LinkOnlineDelegate
 from .lookup_delegate import LookupDelegate
@@ -57,8 +58,12 @@ class Editor(QDialog):
     TextButton('Import', self, [Command.Import], buttonLineL, 'Import from Excel')
     TextButton('Export', self, [Command.Export], buttonLineL, 'Export to Excel')
     buttonLineL.addStretch(1)
-    saveBtn = TextButton('Save', self, [Command.Save], buttonLineL, 'Save changes')
-    saveBtn.setShortcut('Ctrl+Return')
+    projectGroup = self.comm.backend.configuration['projectGroups'][self.comm.backend.configurationProjectGroup]
+    if 'definition' in projectGroup.get('addOns',{}) and projectGroup['addOns']['definition']:
+      TextButton('Autofill PURL',  self, [Command.AddOn], buttonLineL, 'Autofill by using addon')
+      buttonLineL.addStretch(1)
+    self.saveBtn = TextButton('Save', self, [Command.Save], buttonLineL, 'Save changes')
+    self.saveBtn.setShortcut('Ctrl+Return')
     TextButton('Cancel', self, [Command.Cancel],   buttonLineL, 'Discard changes')
     ### Data
     db = self.comm.backend.db
@@ -83,10 +88,16 @@ class Editor(QDialog):
       if fileName != '':
         self.getDataframe().to_csv(fileName, index=False)
     elif command[0] is Command.Import:
-      fileName = '/home/steffen/test.csv' # QFileDialog.getOpenFileName(self, 'Read table from .csv file', str(Path.home()), '*.csv')[0]
+      fileName = QFileDialog.getOpenFileName(self, 'Read table from .csv file', str(Path.home()), '*.csv')[0]
       if fileName != '':
         self.data = pd.read_csv(fileName).fillna('')
         self.showDataframe()
+    elif command[0] is Command.AddOn:
+      try:
+        self.data = callAddOn('definition_autofill', self.comm.backend, self.data, self)
+        self.showDataframe()
+      except Exception:
+        pass
     elif command[0] is Command.Cancel:
       self.reject()
     elif command[0] is Command.Save:
@@ -98,7 +109,7 @@ class Editor(QDialog):
           try:
             db.cursor.execute(f"UPDATE docTypes SET PURL='{purl}', title='{description}' WHERE docType = '{key}'")
           except Exception:
-            showMessage(self, 'ERROR', 'You cannot add a class/docType via this form.', 'Warning')
+            showMessage(self, 'Error', 'You cannot add a class/docType via this form.', 'Critical')
         else:
           db.cursor.execute('INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);', [key, description, purl])
       db.connection.commit()
@@ -143,3 +154,4 @@ class Command(Enum):
   Cancel = 2
   Import = 3
   Export = 4
+  AddOn  = 5

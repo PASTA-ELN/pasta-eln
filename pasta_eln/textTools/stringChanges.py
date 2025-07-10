@@ -24,7 +24,7 @@ def outputString(fmt:str='print', level:str='info', message:str='') -> str:
     txtOutput+= ' ***' if '***' in prefixes[level] else ''
     txtOutput+= f'{Bcolors.ENDC}\n'
   else:
-    print('ERROR level not in prefixes ',level)
+    logging.error('Level not in prefixes %s',level)
   # depend on format
   if 'print' in fmt:
     print(txtOutput)
@@ -37,7 +37,7 @@ def outputString(fmt:str='print', level:str='info', message:str='') -> str:
     if level[0]=='h':
       return f'<{level}>{message}</{level}>'
     if level not in colors:
-      print(f'**ERROR: wrong level {level}')
+      logging.error('Wrong level %s', level)
       return ''
     return f'<font color="{colors[level]}">' + message.replace('\n', '<br>') + '</font><br>'
   return ''
@@ -53,8 +53,8 @@ def tracebackString(log:bool=False, docID:str='') -> str:
   Returns:
     str: | separated string of call functions
   """
-  tracebackList = [i.split('\n')[0] for i in traceback.format_stack()[2:-2] if 'pasta_eln' in i] #skip first and last and then filter only things with pasta_eln
-  reply = '|'.join([item.split('/')[-1].strip() for item in tracebackList])  #| separated list of stack excluding last
+  tracebackList = [i.split('\n')[0] for i in traceback.format_stack()[2:-2] if 'pasta_eln' in i]#skip first and last and then filter only things with pasta_eln
+  reply = '|'.join([item.split('/')[-1].strip() for item in tracebackList])#| separated list of stack excluding last
   reply = reply.replace('",','')
   if log:
     logging.info(' traceback %s %s', docID, reply)

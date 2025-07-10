@@ -7,9 +7,9 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any, Union
-from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
+from PySide6.QtCore import QCoreApplication, Slot                          # pylint: disable=no-name-in-module
+from PySide6.QtGui import QIcon, QPixmap, QShortcut                        # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox# pylint: disable=no-name-in-module
 from pasta_eln import __version__
 from pasta_eln.GUI.workflow_creator_dialog.workflow_creator_dialog import WorkflowCreatorDialog
 from .backend import Backend
@@ -25,9 +25,10 @@ from .GUI.repositories.uploadGUI import UploadGUI
 from .GUI.sidebar import Sidebar
 from .GUI.data_hierarchy.editor import SchemeEditor
 from .guiCommunicate import Communicate
-from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
+from .GUI.guiStyle import Action, ScrollMessageBox, widgetAndLayout
+from .GUI.messageDialog import showMessage
 from .inputOutput import exportELN, importELN
-from .miscTools import restart, updateAddOnList
+from .miscTools import restart, testNewPastaVersion, updateAddOnList
 
 os.environ['QT_API'] = 'pyside6'
 
@@ -35,6 +36,7 @@ os.environ['QT_API'] = 'pyside6'
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
   """ Graphical user interface includes all widgets """
+
 
   def __init__(self, projectGroup:str='') -> None:
     """ Init main window
@@ -45,7 +47,8 @@ class MainWindow(QMainWindow):
     # global setting
     super().__init__()
     self.setWindowTitle(f"PASTA-ELN {__version__}")
-    self.resize(self.screen().size()) #self.setWindowState(Qt.WindowMaximized) #TODO https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
+    self.resize(self.screen().size())                                 #self.setWindowState(Qt.WindowMaximized)
+    #TODO https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
     self.backend = Backend(defaultProjectGroup=projectGroup)
@@ -74,9 +77,8 @@ class MainWindow(QMainWindow):
       Action('Get',                          self, [Command.SYNC_GET],        syncMenu, shortcut='F4')
       # Action('Smart synce',                  self, [Command.SYNC_SMART],       syncMenu)
     Action('&Editor to change data type schema', self, [Command.SCHEMA],      systemMenu, shortcut='F8')
+    Action('&Definitions editor',          self, [Command.DEFINITIONS],     systemMenu)
     if 'develop' in self.comm.backend.configuration:
-      Action('&Definitions editor',          self, [Command.DEFINITIONS],     systemMenu)
-      Action('&Editor to change data type schema', self, [Command.SCHEMA],   systemMenu, shortcut='F8')
       Action('&Open Workflow Creator', self, [Command.WORKFLOW_CREATOR], systemMenu)
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
@@ -92,7 +94,6 @@ class MainWindow(QMainWindow):
     Action('About',                          self, [Command.ABOUT],           helpMenu)
     systemMenu.addSeparator()
     Action('&Configuration',                 self, [Command.CONFIG],          helpMenu, shortcut='Ctrl+0')
-    # Action('&Dataverse Configuration',       self, [Command.DATAVERSE_CONFIG],helpMenu, shortcut='F10')
 
     # shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda: self.execute([Command.RESTART]))
@@ -101,29 +102,32 @@ class MainWindow(QMainWindow):
 
     # GUI elements
     mainWidget, mainLayout = widgetAndLayout('H')
-    self.setCentralWidget(mainWidget)  # Set the central widget of the Window
-    body = Body(self.comm)  # body with information
-    self.sidebar = Sidebar(self.comm)  # sidebar with buttons
-    # sidebarScroll = QScrollArea()
-    # sidebarScroll.setWidget(self.sidebar)
-    # if hasattr(self.comm.backend, 'configuration'):
-    #   sidebarScroll.setFixedWidth(self.comm.backend.configuration['GUI']['sidebarWidth']+10)
-    # mainLayout.addWidget(sidebarScroll)
-    mainLayout.addWidget(self.sidebar)
-    mainLayout.addWidget(body)
-    self.initialize()
+    self.setCentralWidget(mainWidget)                                   # Set the central widget of the Window
+    try:
+      body = Body(self.comm)                                                           # body with information
+      self.sidebar = Sidebar(self.comm)                                                 # sidebar with buttons
+      mainLayout.addWidget(self.sidebar)
+      mainLayout.addWidget(body)
+      # tests that run at start-up
+      if self.backend.configuration['GUI']['checkForUpdates']=='Yes' and not testNewPastaVersion(False):
+        button = QMessageBox.question(self, 'Update?', 'There is a new version of PASTA-ELN available. Do you want to update?',
+                                      QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+        if button == QMessageBox.StandardButton.Yes:
+          testNewPastaVersion(update=True)
+      # initialize things that might change
+      self.initialize()
+    except Exception as e:
+      logging.error('Error in GUI initialization %s', e)
 
 
   @Slot()
   def initialize(self) -> None:
     """ Initialize: things that might change """
-    self.comm.backend.initialize(self.backend.configurationProjectGroup)  #restart backend
+    self.comm.backend.initialize(self.backend.configurationProjectGroup)                      #restart backend
     # Things that are inside the List menu
     self.viewMenu.clear()
     if hasattr(self.backend, 'db'):
       for docType, docLabel in self.comm.backend.db.dataHierarchy('', 'title'):
-        if docType[0] == 'x' and docType[1] != '0':
-          continue
         shortcut = self.comm.backend.db.dataHierarchy(docType,'shortcut')[0]
         shortcut = None if shortcut=='' else f"Ctrl+{shortcut}"
         Action(docLabel,            self, [Command.VIEW, docType],  self.viewMenu, shortcut=shortcut)
@@ -132,14 +136,14 @@ class MainWindow(QMainWindow):
       Action('&Unidentified',       self, [Command.VIEW, '-'],      self.viewMenu, shortcut='Ctrl+U')
     # Things that are related to project group
     self.changeProjectGroups.clear()
-    if hasattr(self.backend, 'configuration'):                            # not case in fresh install
+    if hasattr(self.backend, 'configuration'):                                     # not case in fresh install
       for name in self.backend.configuration['projectGroups'].keys():
         Action(name,                         self, [Command.CHANGE_PG, name], self.changeProjectGroups)
     self.comm.changeTable.emit('x0', '')
     return
 
 
-  @Slot(dict)                                         # type: ignore[arg-type]
+  @Slot(dict)
   def formDoc(self, doc: dict[str, Any]) -> None:
     """
     What happens when new/edit dialog is shown
@@ -161,7 +165,7 @@ class MainWindow(QMainWindow):
     # file menu
     if command[0] is Command.EXPORT:
       if self.comm.projectID == '':
-        showMessage(self, 'Error', 'You have to open a project to export', 'Warning')
+        showMessage(self, 'Error', 'You have to open a project to export', 'Critical')
         return
       fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '' and hasattr(self.backend, 'db'):
@@ -170,7 +174,7 @@ class MainWindow(QMainWindow):
         showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.IMPORT:
       if self.comm.projectID == '':
-        showMessage(self, 'Error', 'You have to open a project to import', 'Warning')
+        showMessage(self, 'Error', 'You have to open a project to import', 'Critical')
         return
       fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
@@ -180,7 +184,7 @@ class MainWindow(QMainWindow):
         self.comm.changeTable.emit('x0', '')
     elif command[0] is Command.REPOSITORY:
       if self.comm.projectID == '':
-        showMessage(self, 'Error', 'You have to open a project to upload', 'Warning')
+        showMessage(self, 'Error', 'You have to open a project to upload', 'Critical')
         return
       dialogR = UploadGUI(self.comm)
       dialogR.exec()
@@ -197,13 +201,13 @@ class MainWindow(QMainWindow):
       restart()
     elif command[0] is Command.SYNC_SEND:
       if 'ERROR' in self.backend.checkDB(minimal=True):
-        showMessage(self, 'ERROR', 'There are errors in your database: fix before upload')
+        showMessage(self, 'Error', 'There are errors in your database: fix before upload', 'Critical')
         return
       sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
-      if hasattr(sync, 'api') and sync.api.url:  #if hostname and api-key given
+      if hasattr(sync, 'api') and sync.api.url:                                 #if hostname and api-key given
         self.comm.progressWindow(lambda func1: sync.sync('sA', progressCallback=func1))
-      else:                     #if not given
-        showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
+      else:                                                                                      #if not given
+        showMessage(self, 'Error', 'Please give server address and API-key in Configuration', 'Critical')
         dialogC = Configuration(self.comm)
         dialogC.exec()
     elif command[0] is Command.SYNC_GET:
@@ -220,16 +224,10 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.DEFINITIONS:
       dialogD = DefinitionsEditor(self.comm)
       dialogD.show()
-    # elif command[0] is Command.DATAVERSE_CONFIG:
-    #   self.dataverseConfig = ConfigDialog()
-    #   self.dataverseConfig.show()
-    # elif command[0] is Command.DATAVERSE_MAIN:
-    #   self.dataverseMainDialog = MainDialog(self.comm.backend)
-    #   self.dataverseMainDialog.show()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
-      reportText = self.comm.backend.testExtractor(fileName, outputStyle='html')
-      showMessage(self, 'Report of extractor test', reportText)
+      reportText, image = self.comm.backend.testExtractor(fileName, outputStyle='html')
+      showMessage(self, 'Report of extractor test', reportText, image=image)
     elif command[0] is Command.TEST2:
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
@@ -246,18 +244,18 @@ class MainWindow(QMainWindow):
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
     elif command[0] is Command.VERIFY_DB:
       reportText = self.comm.backend.checkDB(outputStyle='html', minimal=True)
-      showMessage(self, 'Report of database verification', reportText, style='QLabel {min-width: 800px}')
+      showMessage(self, 'Report of database verification', reportText, minWidth=800)
     elif command[0] is Command.SHORTCUTS:
-      showMessage(self, 'Keyboard shortcuts', shortcuts)
+      showMessage(self, 'Keyboard shortcuts', shortcuts, 'Information')
     elif command[0] is Command.ABOUT:
-      showMessage(self, 'About', f'{AboutMessage}Environment: {sys.prefix}\n', '')
+      showMessage(self, 'About', f'{AboutMessage}Environment: {sys.prefix}\n','Information')
     elif command[0] is Command.RESTART:
       restart()
     elif command[0] is Command.WORKFLOW_CREATOR:
       workflow_dialog = WorkflowCreatorDialog(self.comm)
       workflow_dialog.exec()
     else:
-      print('**ERROR gui menu unknown:', command)
+      logging.error('Gui menu unknown: %s', command)
     return
 
 
@@ -286,7 +284,7 @@ def mainGUI(projectGroup:str='') -> tuple[Union[QCoreApplication, None], MainWin
   main_window = MainWindow(projectGroup=projectGroup)
   logging.getLogger().setLevel(getattr(logging, main_window.backend.configuration['GUI']['loggingLevel']))
   main_window.comm.palette.setTheme(application)
-  import qtawesome as qta  # qtawesome and matplot cannot coexist
+  import qtawesome as qta                                               # qtawesome and matplot cannot coexist
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
     print('qtawesome: could not load. Likely matplotlib is included and can not coexist.')

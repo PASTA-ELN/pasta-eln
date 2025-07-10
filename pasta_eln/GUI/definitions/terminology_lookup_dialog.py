@@ -22,7 +22,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
 
   def __init__(self,
                default_lookup_term: str | None = None,
-               accepted_callback: Callable[[list[str]], None] = None) -> None:  # type: ignore[assignment]
+               accepted_callback: Callable[[list[str]], None] = None) -> None:      # type: ignore[assignment]
     """
     Initializes the dialog
     Args:
@@ -45,6 +45,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     self.buttonBox.accepted.connect(lambda: self.accepted_callback(self.selected_iris))
     self.terminologySearchPushButton.clicked.connect(self.terminology_search_button_clicked)
     self.terminologyLineEdit.setText(default_lookup_term)
+    self.check_box = QCheckBox()
     self.terminology_search_button_clicked()
 
 
@@ -67,11 +68,11 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     """
     # Set up the layout for the entry with check box and label
     entry_layout = QHBoxLayout()
-    check_box = QCheckBox(checkbox_text)
-    check_box.setToolTip(checkbox_tooltip)
-    entry_layout.addWidget(check_box)
+    self.check_box = QCheckBox(checkbox_text)
+    self.check_box.setToolTip(checkbox_tooltip)
+    entry_layout.addWidget(self.check_box)
     entry_layout.addStretch(1)
-    entry_layout.addWidget(QLabel(pixmap=pixmap))  # type: ignore[call-overload]
+    entry_layout.addWidget(QLabel(pixmap=pixmap))
     # Create a widget for the entry with the created layout
     entry_widget = QWidget()
     entry_widget.setLayout(entry_layout)

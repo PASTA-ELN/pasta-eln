@@ -39,35 +39,40 @@ While PASTA-ELN is designed for reliability, errors may occur. Advanced users ca
 3. Identify and delete the document with lesser quality data. **Proceed carefully to avoid data loss**.
 4. Record the deleted and remaining document IDs for future reference.
 
-Uninstalling
-------------
+**Convert couchdb to sqlite version**
 
-Windows
-^^^^^^^
+Use "python -m pasta_eln.tools"
 
-* Uninstall both python
-* remove shortcut on Windows desktop
-* execute
+1. Convert to sqlite database: 'c'
+2. Update local file structure: 't'
+3. Repair dates in sqlite database: 'r'
+4. Verify current state: 'v'
+5. Use repair on . errors: 'rp1'
+6. File errors can be repaired by scanning
 
-.. code-block:: batch
-
-   del %UserProfile%\.pastaELN.json
-   rmdir /s /q %UserProfile%\Documents\PASTA_ELN_DATA
-   rmdir /s /q  %UserProfile%\AppData\Local\Programs\Python
+More information
+----------------
 
 
-Subscription to RSS feed announcing new versions
--------------------------------------------------
+.. raw:: html
+
+   <div class="text-highlight">
+
+Information on testing the installation :ref:`guides <developInstall>` for all operating systems.
+
+See support for :ref:`developers <developCode>` of new code and documentation.
+
+
+.. raw:: html
+
+   </div>
+
+Subscription to PASTA-ELN's RSS feed
+------------------------------------
 
 In your email client (e.g. Thunderbird) you can subscribe to News. Create a new entry with "PastaELN" as the
 title and "https://pypi.org/rss/project/pasta-eln/releases.xml" as the URL.
 
-
-Notes for Documentation Developers
------------------------------------
-
-When updating the documentation, ensure it is professional and concise. Use tools like GitHub Copilot to assist in refining the text.
-"Can you make the markdown text professional and concise?"
 
 .. raw:: html
 

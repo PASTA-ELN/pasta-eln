@@ -9,14 +9,15 @@ import qrcode
 import qtawesome as qta
 import requests
 from PIL.ImageQt import ImageQt
-from PySide6.QtGui import QPixmap, QRegularExpressionValidator, Qt  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog,  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QPixmap, QRegularExpressionValidator, Qt         # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog,# pylint: disable=no-name-in-module
                                QLabel, QLineEdit, QMessageBox, QTextEdit, QVBoxLayout)
 from ..elabFTWapi import ElabFTWApi
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
-from ..guiStyle import IconButton, Label, ScrollMessageBox, TextButton, showMessage, widgetAndLayoutGrid
-from ..miscTools import restart, updateAddOnList
+from ..miscTools import restart
+from .guiStyle import IconButton, Label, TextButton, widgetAndLayoutGrid
+from .messageDialog import showMessage
 
 
 class ProjectGroup(QDialog):
@@ -48,33 +49,31 @@ class ProjectGroup(QDialog):
     self.selectGroup = QComboBox()
     self.selectGroup.addItems(self.configuration['projectGroups'].keys())
     self.selectGroup.currentTextChanged.connect(self.changeProjectGroup)
-    self.selectGroup.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     self.formL.addWidget(self.selectGroup, 0, 0)
     self.groupTextField = QLineEdit()
     self.groupTextField.setValidator(QRegularExpressionValidator('\\w{3,}'))
     self.comboboxActive = True
 
-    newButton = IconButton('fa5s.plus',    self, [Command.NEW], tooltip='New project group')
-    self.formL.addWidget(newButton, 0, 2)
-    delButton = IconButton('fa5s.trash',   self, [Command.DEL], tooltip='Delete project group')
-    self.formL.addWidget(delButton, 0, 3)
+    self.newButton = IconButton('fa5s.plus',    self, [Command.NEW], tooltip='New project group')
+    self.formL.addWidget(self.newButton, 0, 2)
+    self.delButton = IconButton('fa5s.trash',   self, [Command.DEL], tooltip='Delete project group')
+    self.formL.addWidget(self.delButton, 0, 3)
 
     self.directoryLabel = QLabel('label')
     self.directoryLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
     self.formL.addWidget(self.directoryLabel, 1, 0, 1, 2)
-    row1Button = IconButton('fa5.edit',   self, [Command.CHANGE_DIR], tooltip='Edit data path')
-    self.formL.addWidget(row1Button, 1, 3)
+    self.row1Button = IconButton('fa5.edit',   self, [Command.CHANGE_DIR], tooltip='Edit data path')
+    self.formL.addWidget(self.row1Button, 1, 3)
 
     self.addOnLabel = QLabel('addon')
     self.addOnLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
     self.formL.addWidget(self.addOnLabel, 2, 0, 1, 2)
-    row2Button = IconButton('fa5.edit',   self, [Command.CHANGE_ADDON], tooltip='Edit add-on path')
-    self.formL.addWidget(row2Button, 2, 3)
+    self.row2Button = IconButton('fa5.edit',   self, [Command.CHANGE_ADDON], tooltip='Edit add-on path')
+    self.formL.addWidget(self.row2Button, 2, 3)
 
     self.formL.addWidget(QLabel('Server address:'), 3, 0)
     self.serverLabel = QLineEdit('server')
     self.serverLabel.setPlaceholderText('Enter server address')
-    self.serverLabel.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     self.formL.addWidget(self.serverLabel, 3, 1)
     self.row3Button = TextButton('Verify',   self, [Command.TEST_SERVER], tooltip='Check server')
     self.formL.addWidget(self.row3Button, 3, 3)
@@ -85,21 +84,20 @@ class ProjectGroup(QDialog):
     self.apiKeyLabel.setFixedHeight(48)
     # self.apiKeyLabel.setValidator(QRegularExpressionValidator(r"\d+-[0-9a-f]{85}"))
     self.formL.addWidget(self.apiKeyLabel, 4, 1)
-    row4Button1 = IconButton('fa5s.question-circle', self,      [Command.TEST_API_HELP], tooltip='Help on obtaining API key')
-    self.formL.addWidget(row4Button1, 4, 2)
+    self.row4Button1 = IconButton('fa5s.question-circle', self,      [Command.TEST_API_HELP], tooltip='Help on obtaining API key')
+    self.formL.addWidget(self.row4Button1, 4, 2)
     self.row4Button2 = TextButton('Verify',   self, [Command.TEST_APIKEY], tooltip='Check API-key')
     self.formL.addWidget(self.row4Button2, 4, 3)
 
     self.formL.addWidget(QLabel('Storage block:'), 5, 0)
     self.serverProjectGroupLabel = QComboBox()
-    self.serverProjectGroupLabel.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     self.formL.addWidget(self.serverProjectGroupLabel, 5, 1)
     self.row5Button2 = TextButton('Verify',   self, [Command.TEST_SERVERPG], tooltip='Check access to storage block')
     self.formL.addWidget(self.row5Button2, 5, 3)
 
     # RIGHT SIDE: button and image
-    qrButton = TextButton('Create QR code', self, [Command.CREATE_QRCODE])
-    self.formL.addWidget(qrButton, 0, 6)
+    self.qrButton = TextButton('Create QR code', self, [Command.CREATE_QRCODE])
+    self.formL.addWidget(self.qrButton, 0, 6)
     self.image = QLabel()
     self.formL.addWidget(self.image, 1, 6, 4, 1)
 
@@ -113,6 +111,7 @@ class ProjectGroup(QDialog):
     if hasattr(self.comm.backend, 'configurationProjectGroup'):
       self.selectGroup.setCurrentText(self.comm.backend.configurationProjectGroup)
       self.selectGroup.currentTextChanged.emit(self.comm.backend.configurationProjectGroup)
+    self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
 
 
   def closeDialog(self, btn:TextButton) -> None:
@@ -168,7 +167,7 @@ class ProjectGroup(QDialog):
     Args:
       command (list): list of commands
     """
-    if not self.comboboxActive:  #first button press after entering a new group name
+    if not self.comboboxActive:                            #first button press after entering a new group name
       newKey = self.groupTextField.text()
       self.selectGroup.addItem(newKey)
       self.selectGroup.setCurrentText(newKey)
@@ -209,16 +208,9 @@ class ProjectGroup(QDialog):
       if button == QMessageBox.StandardButton.Yes:
         source =Path(__file__).parent.parent/'AddOns'
         shutil.copytree(source, answer, dirs_exist_ok=True)
-        self.requireHardRestart = True  #because python-path has to change
+        self.requireHardRestart = True                                      #because python-path has to change
       config['addOnDir'] = answer
       config['addOns'] = {}
-      button = QMessageBox.question(self, 'Question', 'Do you want to update the AddOn list (recommended)?',
-                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-      if button == QMessageBox.StandardButton.Yes:
-        reportDict = updateAddOnList(self.comm.backend.configurationProjectGroup)
-        messageWindow = ScrollMessageBox('Extractor list updated', reportDict,
-                                       style='QScrollArea{min-width:600 px; min-height:400px}')
-        messageWindow.exec()
       self.addOnLabel.setText('Add on directory: ' + config['addOnDir'])
 
     elif command[0] is Command.TEST_SERVER:
@@ -241,8 +233,8 @@ class ProjectGroup(QDialog):
         self.changeButtonOnTest(False, self.row3Button, 'Wrong server address')
 
     elif command[0] is Command.TEST_API_HELP:
-      link = f'OR go to {config["remote"]["url"][:-7]}ucp.php?tab=4\n\n' if config['remote'].get('url','') else ''
-      showMessage(self, 'Help', f'### How to get an api key to access the server:\n\nGo to f{link}\n\n'
+      link = f'Go to: {config["remote"]["url"][:-7]}ucp.php?tab=4\n\n' if config['remote'].get('url','') else ''
+      showMessage(self, 'Help', f'### How to get an api key to access the server:\n\n{link}'
                   'On the elabFTW server:\n\nClick on the User Symbol in the top right\n\nGo to "Settings"\n\n'
                   'Open the tab "API keys"\n\nCreate a new API key:\n\n  a) Specify a name, like "pasta_eln"\n\n  b) '
                   'Change the permissions to "Read/Write"\n\n  c) Click on "Generate new API key"\n\nCopy+Paste that '
@@ -292,6 +284,11 @@ class ProjectGroup(QDialog):
       self.image.setPixmap(pixmap)
 
     elif command[0] is Command.NEW:
+      #TODO: the self.selectGroup does not disappear
+      # TODO: widget want you to create an addon folder, but it is not needed
+      # when new project group: api-key is highlighted
+      # new pg name has to be small letters, no spaces, no special characters
+      #
       self.formL.removeWidget(self.selectGroup)
       self.formL.addWidget(self.groupTextField, 0, 0)
       self.directoryLabel.setText('Data directory: ')

@@ -6,10 +6,11 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 import qtawesome as qta
-from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit, QVBoxLayout  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
 from ...fixedStringsJson import CONF_FILE_NAME
 from ...guiCommunicate import Communicate
-from ...guiStyle import Label, TextButton, showMessage, widgetAndLayout, widgetAndLayoutGrid
+from ..guiStyle import Label, TextButton, widgetAndLayout, widgetAndLayoutGrid
+from ..messageDialog import showMessage
 from .dataverse import DataverseClient
 from .zenodo import ZenodoClient
 
@@ -72,11 +73,11 @@ class ConfigurationRepositories(QDialog):
 
     #final button box
     _, buttonLineL = widgetAndLayout('H', mainL, 'm')
-    TextButton('Help',           self, [Command.HELP],   buttonLineL, 'Help for this dialog')
+    TextButton('Help',                self, [Command.HELP],   buttonLineL, 'Help for this dialog')
     buttonLineL.addStretch(1)
-    saveBtn = TextButton('Save', self, [Command.SAVE],   buttonLineL, 'Save changes')
-    saveBtn.setShortcut('Ctrl+Return')
-    TextButton('Cancel',         self, [Command.CANCEL], buttonLineL, 'Discard changes')
+    self.saveBtn = TextButton('Save', self, [Command.SAVE],   buttonLineL, 'Save changes')
+    self.saveBtn.setShortcut('Ctrl+Return')
+    TextButton('Cancel',              self, [Command.CANCEL], buttonLineL, 'Discard changes')
 
 
   def execute(self, command:list[Any]) -> None:

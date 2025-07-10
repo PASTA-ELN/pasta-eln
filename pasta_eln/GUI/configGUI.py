@@ -2,12 +2,11 @@
 import json
 from pathlib import Path
 from typing import Callable
-from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QFormLayout, QGroupBox,  # pylint: disable=no-name-in-module
-                               QVBoxLayout)
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QGroupBox, QVBoxLayout, QComboBox, QLabel# pylint: disable=no-name-in-module
 from ..fixedStringsJson import CONF_FILE_NAME, configurationGUI
 from ..guiCommunicate import Communicate
-from ..guiStyle import TextButton, addRowList
 from ..miscTools import restart
+from .guiStyle import TextButton
 
 
 class ConfigurationGUI(QDialog):
@@ -27,17 +26,17 @@ class ConfigurationGUI(QDialog):
     if hasattr(self.comm.backend, 'configuration'):
       onDisk = self.comm.backend.configuration['GUI']
       mainL  = QVBoxLayout(self)
-      for label, items  in configurationGUI.items():
+      for label, items  in configurationGUI.items():                                                 # section
         groupbox = QGroupBox(label.capitalize())
         mainL.addWidget(groupbox)
         sectionL = QFormLayout(groupbox)
         for k,v in items.items():
-          setattr(self, k, addRowList(sectionL, label=v[0], default=str(onDisk[k]), itemList=[str(i) for i in v[2]]))
-          getattr(self, k).setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
+          setattr(self, k, self.addRowList(sectionL, label=v[0], default=str(onDisk[k]), itemList=[str(i) for i in v[2]]))
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
+    self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
 
 
   def closeDialog(self, btn:TextButton) -> None:
@@ -58,3 +57,23 @@ class ConfigurationGUI(QDialog):
         fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
       restart()
     return
+
+
+  def addRowList(self, layout:QFormLayout, label:str, default:str, itemList:list[str]) -> QComboBox:
+    """
+    Add a row with a combo-box to the form
+
+    Args:
+      layout (QLayout): layout to add row to
+      label (str): label used in form
+      default (str): default value
+      itemList (list(str)): items to choose from
+
+    Returns:
+      QCombobox: filled combobox
+    """
+    widget = QComboBox()                                                     # pylint: disable=qt-local-widget
+    widget.addItems(itemList)
+    widget.setCurrentText(default)
+    layout.addRow(QLabel(label), widget)
+    return widget

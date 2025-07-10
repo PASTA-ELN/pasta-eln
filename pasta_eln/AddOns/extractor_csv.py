@@ -8,6 +8,7 @@ THIS IS THE BASIC EXTRACTOR TUTORIAL, WHICH TEACHES
   - please use this way of writing code and the extractors should work
 - how to create metadata conveniently using "Long name [Unit]" nomenclature
 - how to create images
+- code is recreated in this example, which is not ideal. But this is a tutorial and ok
 """
 from io import StringIO
 import matplotlib.pyplot as plt
@@ -18,7 +19,7 @@ import pandas as pd
 def use(filePath, style={'main':''}, saveFileName=None):
   """
   Args:
-    filePath (string): full path file name
+    filePath (Path): full path file name
     style    (dict): supplied to guide the display / extraction style = recipe
                      main is / separated hierarchical elements parent->child
                      can contain more elements
@@ -91,3 +92,36 @@ def use(filePath, style={'main':''}, saveFileName=None):
 
   # return everything
   return {'image':image, 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser}
+
+
+def data(filePath, style):
+  """
+  Args:
+    filePath (Path): full path file name
+    style    (dict): supplied to guide the display / extraction style
+
+  Returns:
+    df: pandas dataframe or any other data structure
+  """
+  # many parts are as before: above function could use this
+  delimiter = ','
+  lines = []
+  skipRows = 0
+  with open(filePath, encoding='unicode_escape') as fIn:
+    for  _ in range(10):
+      line = fIn.readline()[:-1]
+      if line.startswith('#'):
+        skipRows+=1
+        continue
+      lines.append(line)
+    # files with some form of header: try 3 criteria
+    if lines[0].count(';')>lines[0].count(' ') and lines[0].count(';')==lines[1].count(';') and \
+                                                   lines[0].count(';')==lines[2].count(';'): #Separate by ; not ' '
+      # producer = 'semicolon separated'
+      delimiter = ';'
+    if lines[0].count(',')>lines[0].count(' ') and lines[0].count(',')==lines[1].count(',') and \
+                                                   lines[0].count(',')==lines[2].count(','): #Separate by , not ' '
+      # producer = 'comma separated'
+      delimiter = ','
+  data = pd.read_csv(filePath, delimiter=delimiter, skiprows=skipRows-1)     # use pandas to get data
+  return data

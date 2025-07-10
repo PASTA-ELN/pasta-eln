@@ -1,5 +1,6 @@
 """ Communication class that sends signals between widgets, incl. backend"""
 from typing import Any, Callable
+from PySide6.QtCore import QObject, Signal                                 # pylint: disable=no-name-in-module
 from PySide6.QtCore import QObject, Signal  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
 from .GUI.workflow_creator_dialog.common_workflow_description import Storage
@@ -10,15 +11,17 @@ from .GUI.waitDialog import WaitDialog, Worker
 
 class Communicate(QObject):
   """ Communication class that sends signals between widgets, incl. backend"""
+
+
   def __init__(self, backend:Backend, palette:Any):
     super().__init__()
     self.backend               = backend
     self.palette               = palette
     self.projectID             = ''
-    self.storage: Optional[Storage] = None
-    self.progressBar:Optional[QProgressBar] = None
     self.waitDialog            = WaitDialog()
     self.worker:Worker|None    = None
+    self.storage               = None
+
 
   def progressWindow(self, taskFunction:Callable[[Callable[[str,str],None]],Any]) -> None:
     """ Show a progress window and execute function
@@ -32,7 +35,6 @@ class Communicate(QObject):
     return
 
 
-
   # Signals: specify emitter and receiver
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES
   changeSidebar      = Signal(str)       # redraw sidebar after hide/show of project in table, focus on this projectID
@@ -44,4 +46,4 @@ class Communicate(QObject):
   formDoc            = Signal(dict)      # send doc from details to new/edit dialog: dialogForm
   testExtractor      = Signal()          # execute extractorTest in widgetDetails
   stopSequentialEdit = Signal()          # in sequential edit, stop if there is a cancel
-  restart            = Signal()          # restart GUI
+  restart            = Signal()          # restart GUI  #TODO rename to softRestart to avoid confusion
