@@ -523,6 +523,7 @@ class Backend(CLI_Mixin):
     Returns:
       str, str: short summary or long report and image (as svg or base64 string)
     """
+    content = {}
     report = outputString(outputStyle, 'h2', 'Report on extractor test')
     htmlStr= 'Please visit <a href="https://pasta-eln.github.io/pasta-eln/extractors.html#'
     success = True

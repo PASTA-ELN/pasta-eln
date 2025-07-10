@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import platform
+import socket
 import subprocess
 import sys
 import tempfile
@@ -368,6 +369,20 @@ def restart() -> None:
   return                                                             #TODO replace python3 with sys.executable
 
 
+def isConnectedToInternet() -> bool:
+  """Check if the system is connected to the internet
+
+  Returns:
+    bool: True if connected, False otherwise
+  """
+  try:
+    socket.create_connection(("1.1.1.1", 53))
+    return True
+  except OSError:
+    pass
+  return False
+
+
 def testNewPastaVersion(update:bool=False) -> bool:
   """ Test if this version is up to date with the latest version on pypi
   - variable largestVersionOnPypi is the latest NON-BETA version on pypi
@@ -378,6 +393,8 @@ def testNewPastaVersion(update:bool=False) -> bool:
   Returns:
     bool: if up-to-date or if current version is a beta
   """
+  if not isConnectedToInternet():
+    return True
   if update:
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pasta-eln'])
     restart()

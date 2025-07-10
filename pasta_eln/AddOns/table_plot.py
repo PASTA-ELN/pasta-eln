@@ -180,7 +180,7 @@ class DataAnalyse(QDialog):
       for ci in np.unique(c):
         mask = c==ci
         if self.subtypeCB.currentText()=='histogram':
-          self.graph.axes.hist(x[mask], 20, label=ci, histtype='step')
+          self.graph.axes.hist(x[mask], 20, label=ci, alpha=0.5)
           self.graph.axes.set_ylabel('count')
         if self.subtypeCB.currentText()=='cumulative distribution':
           self.graph.axes.ecdf(x[mask], label=ci)
