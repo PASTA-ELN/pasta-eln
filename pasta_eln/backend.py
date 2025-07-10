@@ -7,13 +7,12 @@ import sys
 import tempfile
 import traceback
 from datetime import datetime, timezone
-import matplotlib.pyplot as plt
-import matplotlib.axes as mpaxes
-import matplotlib.pyplot as plt
 from pathlib import Path
-from PIL import Image
 from typing import Any, Callable, Optional, Union
 from urllib import request
+import matplotlib.axes as mpaxes
+import matplotlib.pyplot as plt
+from PIL import Image
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
 from .miscTools import generic_hash
 from .mixin_cli import CLI_Mixin

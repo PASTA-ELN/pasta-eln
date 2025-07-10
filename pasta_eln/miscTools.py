@@ -376,7 +376,7 @@ def isConnectedToInternet() -> bool:
     bool: True if connected, False otherwise
   """
   try:
-    socket.create_connection(("1.1.1.1", 53))
+    socket.getaddrinfo('google.com',80)
     return True
   except OSError:
     pass
