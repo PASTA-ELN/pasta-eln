@@ -1,14 +1,14 @@
 from pathlib import Path
 from typing import Tuple
 
-from .workflow_template import WORKPLAN_TEMPLATE
+from .workplan_template import WORKPLAN_TEMPLATE
 from ...guiCommunicate import Communicate
 
 
-def generate_workflow(comm: Communicate, workflow_name: str, library_url: str, sample_name: str, procedures: list[str],
+def generate_workplan(comm: Communicate, workplan_name: str, library_url: str, sample_name: str, procedures: list[str],
                       parameters: list[dict[str, str]], docType: str) -> None:
     """
-    Write the given parameters of a workflow in a file with the format of the common workflow description.
+    Write the given parameters of a workplan in a file with the format of the common workplan description.
     """
     # Read Template
     template = WORKPLAN_TEMPLATE
@@ -24,7 +24,7 @@ def generate_workflow(comm: Communicate, workflow_name: str, library_url: str, s
         else:
             step_string2 += f'wf.step{i}'
     cwd_string = ''.join(template[0:14]).format(**locals()) + step_string1 + "\n" + step_string2 + "\n" + "".join(template[14:])
-    comm.backend.addData(docType, {'name':workflow_name, 'content':cwd_string}, [comm.projectID])
+    comm.backend.addData(docType, {'name':workplan_name, 'content':cwd_string}, [comm.projectID])
 
 
 def get_db_procedures(comm: Communicate) -> dict[str, str | Path]:

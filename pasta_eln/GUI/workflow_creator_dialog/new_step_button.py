@@ -3,7 +3,7 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QToolButton, QSizePolicy, QMenu
 
 from .step_list import StepList
-from .workflow_functions import get_db_procedures
+from .workplan_functions import get_db_procedures
 from ...guiCommunicate import Communicate
 
 

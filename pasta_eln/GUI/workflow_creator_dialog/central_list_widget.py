@@ -7,13 +7,13 @@ from .central_text_widget import CentralTextWidget
 from .export_workplan_dialog import ExportWorkplanDialog
 from .new_step_button import NewStepButton
 from .step_list import StepList
-from .workflow_functions import generate_workflow
+from .workplan_functions import generate_workplan
 from ...guiCommunicate import Communicate
 
 
 class CentralListWidget(QWidget):
     """
-    The Widget on the left that displays the StepList and buttons to show/create the Workflow.
+    The Widget on the left that displays the StepList and buttons to show/create the Workplan.
     """
 
     def __init__(self, comm: Communicate, textfield: CentralTextWidget):
@@ -43,7 +43,7 @@ class CentralListWidget(QWidget):
         new_step_button.setFont(font)
 
         # export button
-        export_button = QPushButton("Save / Export Workflow")
+        export_button = QPushButton("Save / Export Workplan")
         export_button.clicked.connect(self.export_button_pressed)
         export_button.setFont(font)
 
@@ -67,14 +67,14 @@ class CentralListWidget(QWidget):
         else:
             return
         if user_input_name.endswith(".py"):
-            workflow_name = user_input_name
+            workplan_name = user_input_name
         else:
-            workflow_name = user_input_name+".py"
+            workplan_name = user_input_name+".py"
 
         if not procedures:
             QMessageBox.warning(self.step_list,
                                 "Export Failed",
-                                "Cannot Export Workflow without Procedures")
+                                "Cannot Export Workplan without Procedures")
         else:
-            generate_workflow(self.comm, workflow_name, library_url, sample_name, procedures, parameters, docType)
+            generate_workplan(self.comm, workplan_name, library_url, sample_name, procedures, parameters, docType)
             QMessageBox.information(self.step_list, "Export Successful", "Export Successful")

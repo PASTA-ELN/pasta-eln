@@ -5,15 +5,15 @@ from .common_workflow_description import Storage
 from ...guiCommunicate import Communicate
 
 
-class WorkflowCreatorDialog(QDialog):
+class WorkplanCreatorDialog(QDialog):
     """
-    The Top level Widget of the Workflow Creator Dialog containing only the CentralWidget.
+    The Top level Widget of the Workplan Creator Dialog containing only the CentralWidget.
     """
 
     def __init__(self, comm: Communicate):
         super().__init__()
 
-        self.setWindowTitle("Workflow Creator")  # + Sample name ?
+        self.setWindowTitle("Workplan Creator")
 
         # Configure Backend / Storage
         self.comm = comm

@@ -11,7 +11,7 @@ from PySide6.QtCore import QCoreApplication, Slot                          # pyl
 from PySide6.QtGui import QIcon, QPixmap, QShortcut                        # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox# pylint: disable=no-name-in-module
 from pasta_eln import __version__
-from pasta_eln.GUI.workflow_creator_dialog.workflow_creator_dialog import WorkflowCreatorDialog
+from pasta_eln.GUI.workflow_creator_dialog.workplan_creator_dialog import WorkplanCreatorDialog
 from .backend import Backend
 from .elabFTWsync import Pasta2Elab
 from .fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
@@ -252,7 +252,7 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.RESTART:
       restart()
     elif command[0] is Command.WORKFLOW_CREATOR:
-      workflow_dialog = WorkflowCreatorDialog(self.comm)
+      workflow_dialog = WorkplanCreatorDialog(self.comm)
       workflow_dialog.exec()
     else:
       logging.error('Gui menu unknown: %s', command)
