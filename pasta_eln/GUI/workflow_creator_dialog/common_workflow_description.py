@@ -178,7 +178,10 @@ class Storage:
             if path.is_file():
                 self.procedures[name] = path
             else:
-                self.procedures[name] = doc['content']
+                try:
+                    self.procedures[name] = doc['content']
+                except KeyError:
+                    self.procedures[name] = ""
 
     def list_parameters(self, name: str) -> dict[str, str]:
         """list all the parameters in this procedure

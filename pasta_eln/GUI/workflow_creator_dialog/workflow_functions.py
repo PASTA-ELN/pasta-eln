@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Tuple
 
+from .workflow_template import WORKPLAN_TEMPLATE
 from ...guiCommunicate import Communicate
 
 
@@ -10,8 +11,7 @@ def generate_workflow(comm: Communicate, workflow_name: str, library_url: str, s
     Write the given parameters of a workflow in a file with the format of the common workflow description.
     """
     # Read Template
-    with open("pasta_eln/GUI/workflow_creator_dialog/workflow_template.txt", 'r') as reader:
-        template = reader.readlines()
+    template = WORKPLAN_TEMPLATE
 
     # Generate Common Workflow Description
     step_string1 = "".join(
@@ -68,3 +68,24 @@ def get_sample_name_from_file(filename: str) -> str:
         line = lines[12]
         line = line.split('\'')[1]
         return line
+
+def get_db_samples(comm: Communicate):
+    samples = {}
+    df = comm.backend.db.getView('viewDocType/sample')
+    for row in df.itertuples(index=False):
+        name = row.name
+        id = row.id
+        doc = comm.backend.db.getDoc(id)
+        docPath = doc['branch'][0]['path']
+        if docPath:
+            path = comm.backend.basePath/docPath
+        else:
+            path = Path()
+        if path.is_file():
+            samples[name] = path
+        else:
+            try:
+                samples[name] = doc['content']
+            except KeyError:
+                samples[name] = ""
+    return samples

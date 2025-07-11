@@ -14,7 +14,6 @@ class CentralWidget(QWidget):
         super().__init__()
         self.comm = comm
         self.storage = self.comm.storage
-        self.sample_name = "TODO"  # TODO
 
         # Widget that displays text of procedures
         self.central_text_widget = CentralTextWidget()

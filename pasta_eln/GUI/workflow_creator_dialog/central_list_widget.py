@@ -1,8 +1,10 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QWidget, QSizePolicy, QScrollArea, QPushButton, QVBoxLayout, QMessageBox, QInputDialog
+from PySide6.QtWidgets import QWidget, QSizePolicy, QScrollArea, QPushButton, QVBoxLayout, QMessageBox, QInputDialog, \
+    QDialog
 
 from .central_text_widget import CentralTextWidget
+from .export_workplan_dialog import ExportWorkplanDialog
 from .new_step_button import NewStepButton
 from .step_list import StepList
 from .workflow_functions import generate_workflow
@@ -56,15 +58,18 @@ class CentralListWidget(QWidget):
 
     def export_button_pressed(self):
         library_url = "https://raw.githubusercontent.com/SteffenBrinckmann/common-workflow-description_Procedures/main"
-        sample_name = self.parent().sample_name
         procedures = self.step_list.get_procedures()
         parameters = self.step_list.get_parameters()
         docType = "workflow/workplan"
-        user_input_name, ok = QInputDialog.getText(self, "Name the Workplan", "Workplan name:")
-        if ok:
-            workflow_name = user_input_name
+        export_dialog = ExportWorkplanDialog(self.comm)
+        if export_dialog.exec() == QDialog.DialogCode.Accepted:
+            user_input_name, sample_name = export_dialog.get_values()
         else:
             return
+        if user_input_name.endswith(".py"):
+            workflow_name = user_input_name
+        else:
+            workflow_name = user_input_name+".py"
 
         if not procedures:
             QMessageBox.warning(self.step_list,
