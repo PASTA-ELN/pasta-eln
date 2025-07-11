@@ -23,7 +23,18 @@ ignore-patterns=dialog_base.py,
                 form_auto.py,
                 definition_autofill.py,
                 table_plot[a-zA-Z]*.py,
-                ^workflow_creator_dialog/
+                central_list_widget.py,
+                central_text_widget.py,
+                central_widget.py,
+                common_workflow_description.py,
+                export_workplan_dialog.py,
+                new_step_button.py,
+                param_widget.py,
+                step_list.py,
+                step_widget.py,
+                workplan_creator_dialog.py,
+                workplan_functions.py,
+                workplan_template.py
 
 
 # Python code to execute, usually for sys.path manipulation such as
