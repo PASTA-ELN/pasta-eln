@@ -138,8 +138,7 @@ class ProjectGroup(QDialog):
         showMessage(self, 'Error', 'Error: path to data directory is not set.')
         return
       if not config['addOnDir']:
-        showMessage(self, 'Error', 'Error: add-on directory not set.')
-        return
+        config['addOnDir'] = Path(__file__).parent.parent/'AddOns'  #set default
       # success
       choices = [i for i in self.serverPG if i[0]==self.serverProjectGroupLabel.currentText()]
       if choices and len(choices[0])==4:
@@ -284,8 +283,6 @@ class ProjectGroup(QDialog):
       self.image.setPixmap(pixmap)
 
     elif command[0] is Command.NEW:
-      #TODO: the self.selectGroup does not disappear
-      # TODO: widget want you to create an addon folder, but it is not needed
       # when new project group: api-key is highlighted
       # new pg name has to be small letters, no spaces, no special characters
       #

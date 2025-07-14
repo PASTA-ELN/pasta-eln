@@ -12,12 +12,12 @@ from typing import Any
 from zipfile import ZIP_DEFLATED, ZipFile
 import requests
 from anytree import Node
-from PySide6.QtGui import QTextDocument                # TODO switch to html-markdown since also run as pytest
 from pasta_eln import __version__, minisign
 from .backend import Backend
 from .fixedStringsJson import CONF_FILE_NAME
 from .miscTools import flatten
 from .textTools.stringChanges import camelCase
+from .textTools.html2markdown import  html2markdown
 
 # .eln file: common between all ELNs
 # - can be exported / imported generally; not a 1:1 backup (just zip it)
@@ -73,7 +73,6 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
     str: success message, statistics
   '''
   elnName = ''
-  qtDocument = QTextDocument()                                           #used for html -> markdown conversion
   statistics:dict[str,Any] = {}
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     files = elnFile.namelist()
@@ -148,11 +147,9 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         doc['comment'] += '\n\n'.join(['']+[f'{i["dateCreated"]}:\n{i["text"]}' for i in doc.pop('.comment')])
       if encodingFormat=='text/html':
         if 'comment' in doc:
-          qtDocument.setHtml(doc['comment'])
-          doc['comment'] = qtDocument.toMarkdown()
+          doc['comment'] = html2markdown(doc['comment'])
         if 'content' in doc:
-          qtDocument.setHtml(doc['content'])
-          doc['content'] = qtDocument.toMarkdown()
+          doc['content'] = html2markdown(doc['content'])
       if 'tags' in doc:
         doc['tags'] = [i.strip() for i in doc['tags'].split(',')]
       else:

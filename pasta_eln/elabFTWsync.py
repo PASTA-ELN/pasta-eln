@@ -113,7 +113,7 @@ class Pasta2Elab:
       if progressCallback is not None:
         progressCallback('text', '### Start syncing with elabFTW server\n#### Set up sync\nStart...')
       self.syncDocTypes()                                                              # sync categories ~1sec
-      self.createIdDict()                                             # TODO: get progressCallback as argument
+      self.createIdDict()
       if progressCallback is not None:
         progressCallback('append', 'Done\n#### Sync each document\nStart...')
       for projID in self.backend.db.getView('viewDocType/x0')['id'].values:

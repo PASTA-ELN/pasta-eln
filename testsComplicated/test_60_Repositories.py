@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """TEST the form """
-import logging, warnings, json
+import logging, warnings, json, tempfile
 from pathlib import Path
 from pasta_eln.backend import Backend
 from pasta_eln.GUI.repositories.repository import RepositoryClient
@@ -56,7 +56,10 @@ def test_simple(qtbot):
   client = ZenodoClient(conf['zenodo']['url'], conf['zenodo']['key'])
   assert client.checkServer()[0]
   assert client.checkAPIKey()
-  res = client.uploadRepository(metadataZenodo, '/home/steffen/workflows.md')  #TODO change
+  fOutName = tempfile.gettempdir()/'test_zenodo.txt'
+  with open(fOutName, 'w') as fOut:
+    fOut.write('This is a test file for Zenodo upload.')
+  res = client.uploadRepository(metadataZenodo, fOutName)
   print(f'Zenodo test {res[1]}')
   assert res[0]
 
@@ -123,7 +126,10 @@ def test_simple(qtbot):
   client = DataverseClient(conf['dataverse']['url'], conf['dataverse']['key'], conf['dataverse']['dataverse'])
   assert client.checkServer()[0]
   assert client.checkAPIKey()
-  res = client.uploadRepository(metadataDataverse, '/home/steffen/workflows.md')#TODO change
+  fOutName = tempfile.gettempdir()/'test_datavese.txt'
+  with open(fOutName, 'w') as fOut:
+    fOut.write('This is a test file for Dataverse upload.')
+  res = client.uploadRepository(metadataDataverse, fOutName)
   print(f'Dataverse test {res[1]}')
   assert res[0]
   # other tests
