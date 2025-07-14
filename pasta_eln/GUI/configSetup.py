@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox, QProgressBar, QTextEdit,
 from ..fixedStringsJson import exampleDataString, setupText
 from ..guiCommunicate import Communicate
 from ..installationTools import configuration, createShortcut, exampleData
-from ..miscTools import restart
+from ..miscTools import hardRestart
 from .guiStyle import TextButton, widgetAndLayout
 
 
@@ -108,7 +108,7 @@ class ConfigurationSetup(QWidget):
       self.button2.show()
       logging.info('Setup analyse end')
     elif command[0] is Command.FINISHED:        # What do do when setup is finished: success or unsuccessfully
-      restart()
+      hardRestart()
       # self.callbackFinished()
     return
 

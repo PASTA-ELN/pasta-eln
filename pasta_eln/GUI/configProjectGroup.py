@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog
 from ..elabFTWapi import ElabFTWApi
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
-from ..miscTools import restart
+from ..miscTools import hardRestart
 from .guiStyle import IconButton, Label, TextButton, widgetAndLayoutGrid
 from .messageDialog import showMessage
 
@@ -154,7 +154,7 @@ class ProjectGroup(QDialog):
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
       if self.requireHardRestart:
-        restart()
+        hardRestart()
       else:
         self.callbackFinished(True)
     return

@@ -233,6 +233,35 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   return {'addon directory':directory} | extractorsAll | otherAddOns
 
 
+def installPythonPackages(directory:str) -> None:
+  """Install a Python packages using pip depending on files in addon folder
+  Args:
+    directory (str): path to the add-on folder
+  """
+  allLibs = set()
+  for fileName in os.listdir(directory):
+    if fileName.endswith('.py'):
+      #start with file
+      with open(Path(directory)/fileName, encoding='utf-8') as fIn:
+        lines = [i.strip() for i in fIn.readlines() if 'import' in i]
+        libs =  [i.split('import')[1].strip().split(',') for i in lines if i.startswith('import')]
+        libs =  [i.strip() for j in libs for i in j]
+        libs += [i.split('from')[1].strip().split('import')[0].strip() for i in lines if i.startswith('from')]
+        libs = [i.split('.')[0] for i in libs]                                           #only look at package
+        libs = [i.split()[0] for i in libs]                                  #get rid of all things at the end
+        allLibs.update(libs)
+  allLibs = allLibs.difference(sys.stdlib_module_names)        # all libs that are not in the standard library
+  allLibs = allLibs.difference([i[:-3] for i in os.listdir(directory) if i.endswith('.py')])#remove all libs that are in the directory
+  allLibs = allLibs.difference(set(i.split('.')[0] for i in  sys.modules.keys()))# remove libs used by pasta, already in use
+  # clean
+  if 'sklearn' in allLibs:
+    allLibs.remove('sklearn')
+    allLibs.add('scikit-learn')  # sklearn is not a package, but scikit-learn is
+  for lib in allLibs:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", lib])
+  return
+
+
 def callAddOn(name:str, backend:Any, content:Any, widget:QWidget) -> Any:
   """ Call add-ons
   Args:
@@ -358,15 +387,15 @@ class DummyProgressBar():
     return
 
 
-def restart() -> None:
+def hardRestart() -> None:
   """
   Complete restart: cold restart
   """
   try:
     os.execv('pastaELN',[''])                                                               #installed version
   except Exception:
-    os.execv(sys.executable, ['python3','-m','pasta_eln.gui'])           #started for programming or debugging
-  return                                                             #TODO replace python3 with sys.executable
+    os.execv(sys.executable, [sys.executable,'-m','pasta_eln.gui'])      #started for programming or debugging
+  return
 
 
 def isConnectedToInternet() -> bool:
@@ -397,7 +426,7 @@ def testNewPastaVersion(update:bool=False) -> bool:
     return True
   if update:
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pasta-eln'])
-    restart()
+    hardRestart()
   url = 'https://pypi.org/pypi/pasta-eln/json'
   with request.urlopen(url) as response:
     data = json.loads(response.read())

@@ -26,7 +26,7 @@ from .guiCommunicate import Communicate
 from .GUI.guiStyle import Action, ScrollMessageBox, widgetAndLayout
 from .GUI.messageDialog import showMessage
 from .inputOutput import exportELN, importELN
-from .miscTools import restart, testNewPastaVersion, updateAddOnList
+from .miscTools import hardRestart, testNewPastaVersion, updateAddOnList, installPythonPackages
 
 os.environ['QT_API'] = 'pyside6'
 
@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
     palette      = Palette(self, theme)
     self.comm = Communicate(self.backend, palette)
     self.comm.formDoc.connect(self.formDoc)
-    self.comm.restart.connect(self.initialize)
+    self.comm.softRestart.connect(self.initialize)
 
     # Menubar
     menu = self.menuBar()
@@ -194,7 +194,7 @@ class MainWindow(QMainWindow):
       self.backend.configuration['defaultProjectGroup'] = command[1]
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.backend.configuration, indent=2))
-      restart()
+      hardRestart()
     elif command[0] is Command.SYNC_SEND:
       if 'ERROR' in self.backend.checkDB(minimal=True):
         showMessage(self, 'Error', 'There are errors in your database: fix before upload', 'Critical')
@@ -227,11 +227,13 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.TEST2:
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
+      configProjecGroup = self.backend.configuration['projectGroups'][self.backend.configurationProjectGroup]
+      installPythonPackages(configProjecGroup['addOnDir'])
       reportDict = updateAddOnList(self.backend.configurationProjectGroup)
       messageWindow = ScrollMessageBox('Extractor list updated', reportDict,
                                        style='QScrollArea{min-width:600 px; min-height:400px}')
       messageWindow.exec()
-      restart()
+      hardRestart()
     elif command[0] is Command.CONFIG:
       dialogC = Configuration(self.comm)
       dialogC.exec()
@@ -246,7 +248,7 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.ABOUT:
       showMessage(self, 'About', f'{AboutMessage}Environment: {sys.prefix}\n','Information')
     elif command[0] is Command.RESTART:
-      restart()
+      hardRestart()
     else:
       logging.error('Gui menu unknown: %s', command)
     return

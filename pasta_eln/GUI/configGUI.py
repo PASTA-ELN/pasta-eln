@@ -5,7 +5,7 @@ from typing import Callable
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QGroupBox, QVBoxLayout, QComboBox, QLabel# pylint: disable=no-name-in-module
 from ..fixedStringsJson import CONF_FILE_NAME, configurationGUI
 from ..guiCommunicate import Communicate
-from ..miscTools import restart
+from ..miscTools import hardRestart
 from .guiStyle import TextButton
 
 
@@ -55,7 +55,7 @@ class ConfigurationGUI(QDialog):
             self.comm.backend.configuration['GUI'][k] = getattr(self, k).currentText()
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
-      restart()
+      hardRestart()  #theme
     return
 
 

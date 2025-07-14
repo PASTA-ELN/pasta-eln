@@ -5,7 +5,6 @@ from typing import Any
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QListWidget, QVBoxLayout# pylint: disable=no-name-in-module
 from ..fixedStringsJson import tableHeaderHelp
 from ..guiCommunicate import Communicate
-from ..miscTools import restart
 from ..sqlite import MAIN_ORDER
 from .guiStyle import IconButton, widgetAndLayout
 from .messageDialog import showMessage
@@ -105,7 +104,7 @@ class TableHeader(QDialog):
     elif btn.text().endswith('Save'):
       newList = [i if i in MAIN_ORDER+['tags','qrCodes'] or '.' in i else f'.{i}' for i in self.selectedList]
       self.db.dataHierarchyChangeView(self.docType, newList)
-      restart()
+      self.comm.softRestart.emit()
     elif btn.text().endswith('Help'):
       showMessage(self, 'Help on individual entry', tableHeaderHelp)
     else:

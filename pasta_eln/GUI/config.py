@@ -75,5 +75,5 @@ class Configuration(QDialog):
     """
     self.close()
     if restart:
-      self.comm.restart.emit()                                                                    #send signal
+      self.comm.softRestart.emit()                                                                    #send signal
     return
