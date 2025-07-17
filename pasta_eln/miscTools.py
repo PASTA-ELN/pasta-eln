@@ -244,15 +244,15 @@ def installPythonPackages(directory:str) -> None:
       #start with file
       with open(Path(directory)/fileName, encoding='utf-8') as fIn:
         lines = [i.strip() for i in fIn.readlines() if 'import' in i]
-        libs =  [i.split('import')[1].strip().split(',') for i in lines if i.startswith('import')]
-        libs =  [i.strip() for j in libs for i in j]
+        libsList =  [i.split('import')[1].strip().split(',') for i in lines if i.startswith('import')]
+        libs =  [i.strip() for j in libsList for i in j]
         libs += [i.split('from')[1].strip().split('import')[0].strip() for i in lines if i.startswith('from')]
         libs = [i.split('.')[0] for i in libs]                                           #only look at package
         libs = [i.split()[0] for i in libs]                                  #get rid of all things at the end
         allLibs.update(libs)
   allLibs = allLibs.difference(sys.stdlib_module_names)        # all libs that are not in the standard library
   allLibs = allLibs.difference([i[:-3] for i in os.listdir(directory) if i.endswith('.py')])#remove all libs that are in the directory
-  allLibs = allLibs.difference(set(i.split('.')[0] for i in  sys.modules.keys()))# remove libs used by pasta, already in use
+  allLibs = allLibs.difference(set(i.split('.')[0] for i in sys.modules))# remove libs used by pasta, already in use
   for lib in allLibs:
     try:
       importlib.import_module(lib)  # check if the package is already installed

@@ -95,8 +95,8 @@ class Form(QDialog):
                                      'list':'', 'mandatory':'', 'unit':''})
     #TODO: TEMPORARY CHECK: REMOVE 2026
     allKeys = {'docType', 'class', 'idx', 'name', 'unit', 'mandatory', 'list'}
-    if any(True if allKeys.difference(i.keys()) else False for i in self.dataHierarchyNode):
-      mask = [True if allKeys.difference(i.keys()) else False for i in self.dataHierarchyNode]
+    if any(allKeys.difference(i.keys()) for i in self.dataHierarchyNode):
+      mask = [allKeys.difference(i.keys()) for i in self.dataHierarchyNode]
       print(mask)
       print(self.dataHierarchyNode)
       raise ValueError('dataHierarchyNode is not complete. Missing keys')

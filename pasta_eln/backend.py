@@ -367,7 +367,7 @@ class Backend(CLI_Mixin):
               if thisStack == ' '.join(item['key'].split(' ')[:-1]):            # remove last item from string
                 childNum += 1
             parentPath = Path(path).parent
-            newPath = parentPath/createDirName(doc, childNum, parentPath)#update,or create (if new doc, update ignored anyhow)
+            newPath = str(parentPath/createDirName(doc, childNum, parentPath))#update,or create (if new doc, update ignored anyhow)
             if (self.basePath/newPath).exists():                             # can be either file or directory
               logging.error('New path should not exist %s',newPath)
             else:

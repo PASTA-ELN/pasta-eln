@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import re
 import sys
 import webbrowser
 from enum import Enum
@@ -242,6 +243,11 @@ class MainWindow(QMainWindow):
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
     elif command[0] is Command.VERIFY_DB:
       reportText = self.comm.backend.checkDB(outputStyle='html', minimal=True)
+      regexStr = r'<font color="magenta">image does not exist m-[0-9a-f]+ image: comment:<\/font><br>'
+      myCount = len(re.findall(regexStr, reportText))
+      if myCount>5:
+        reportText = re.sub(regexStr, '', reportText, count=myCount-5)
+        reportText += '<font color="magenta">image does not exist ...:<\/font><br>'
       showMessage(self, 'Report of database verification', reportText, minWidth=800)
     elif command[0] is Command.SHORTCUTS:
       showMessage(self, 'Keyboard shortcuts', shortcuts, 'Information')

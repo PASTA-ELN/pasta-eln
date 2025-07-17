@@ -35,7 +35,7 @@ def outputString(fmt:str='print', level:str='info', message:str='') -> str:
   if 'text' in fmt:
     return txtOutput
   if fmt=='html':
-    colors = {'info':'black','error':'red','warning':'orangered','perfect':'green','ok':'blue','unsure':'darkmagenta'}
+    colors = {'info':'black','error':'red','warning':'orangered','perfect':'green','ok':'blue','unsure':'magenta'}
     if level[0]=='h':
       return f'<{level}>{message}</{level}>'
     if level not in colors:

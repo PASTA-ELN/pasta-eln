@@ -140,12 +140,12 @@ class ImageGallery(QWidget):
           fmt = imageType.replace(';', '')
           if imageW.loadFromData(byteArr, format=fmt):
             pixmap = QPixmap.fromImage(imageW).scaled(IMG_SIZE,IMG_SIZE,Qt.KeepAspectRatio,Qt.SmoothTransformation)# type: ignore[attr-defined]
-            label = ClickableFrame(docID)
-            label.setPixmap(pixmap)
-            label.setAlignment(Qt.AlignCenter)                                    # type: ignore[attr-defined]
-            label.clicked.connect(self.imageClicked)
-            label.doubleClicked.connect(self.image2Clicked)
-            self.gridL.addWidget(label, row, col)
+            button = ClickableFrame(docID)
+            button.setIcon(pixmap)
+            button.setAlignment(Qt.AlignCenter)                                    # type: ignore[attr-defined]
+            button.clicked.connect(self.imageClicked)
+            button.doubleClicked.connect(self.image2Clicked)
+            self.gridL.addWidget(button, row, col)
           else:
             logging.warning('Could not load image data for docID: %s with format %s', docID, fmt)
         except Exception as e:
