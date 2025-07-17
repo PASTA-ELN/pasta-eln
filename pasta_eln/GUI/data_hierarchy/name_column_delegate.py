@@ -1,6 +1,5 @@
 """ NameColumnDelegate module used for the table views """
-from typing import Any
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QObject
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate, QStyleOptionViewItem, QWidget
 
@@ -9,7 +8,7 @@ class NameColumnDelegate(QStyledItemDelegate):
   """
   Delegate for creating the line edit with lookup icon for the iri column in data hierarchy editor tables
   """
-  def __init__(self, parent:Any = ...):
+  def __init__(self, parent:QObject|None = None):
     super().__init__(parent)
     self.res = QLineEdit(parent)
     self.res.setValidator(QRegularExpressionValidator(r'[a-z][a-z0-9]+'))

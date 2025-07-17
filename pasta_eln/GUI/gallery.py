@@ -3,75 +3,28 @@ import logging
 from PySide6.QtCore import QByteArray, Qt, Signal
 from PySide6.QtGui import QImage, QMouseEvent, QPixmap, QStandardItemModel
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtWidgets import QGridLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QGridLayout, QPushButton, QScrollArea, QVBoxLayout, QWidget
 from ..guiCommunicate import Communicate
 
 IMG_SIZE = 300
 
-
-class ClickableImage(QLabel):
+class ClickableFrame(QPushButton):
   """
-  A QLabel subclass that emits signals when clicked or double-clicked
+  A QPushbutton subclass that emits signals when clicked or double-clicked
   """
   clicked = Signal(str)
   doubleClicked = Signal(str)
 
   def __init__(self, docID: str):
     """
-    Initializes the ClickableImage
+    Initialize
 
     Args:
       docID: The unique identifier for the image
     """
     super().__init__()
     self.docID = docID
-
-
-  def mousePressEvent(self, event:QMouseEvent) -> None:
-    """
-    Handles mouse press events. Emits 'clicked' signal on left-button press
-
-    Args:
-      event: The QMouseEvent
-    """
-    if event.button() == Qt.LeftButton:                                           # type: ignore[attr-defined]
-      self.clicked.emit(self.docID)
-    return
-
-
-  def mouseDoubleClickEvent(self, event:QMouseEvent) -> None:
-    """
-    Handles mouse double-click events. Emits 'doubleClicked' signal on left-button double-click
-
-    Args:
-      event: The QMouseEvent
-    """
-    if event.button() == Qt.LeftButton:                                           # type: ignore[attr-defined]
-      self.doubleClicked.emit(self.docID)
-    return
-
-
-
-
-class ClickableSvgButton(QPushButton):
-  """
-  A QPushButton subclass specifically for displaying SVG images that
-  emits a signal when double-clicked
-  #TODO merge with ClickableImage and Image (guiStyle)
-  """
-  clicked = Signal(str)
-  doubleClicked = Signal(str)
-
-  def __init__(self, docID:str):
-    """
-    Initializes the ClickableSvgButton
-
-    Args:
-      docID: The unique identifier for the SVG image
-    """
-    super().__init__()
-    self.docID = docID
-    self.setFixedSize(200, 200)
+    self.setFixedSize(IMG_SIZE, IMG_SIZE)
     self.setStyleSheet('border: none;')
 
 
@@ -97,8 +50,6 @@ class ClickableSvgButton(QPushButton):
     if event.button() == Qt.LeftButton:                                           # type: ignore[attr-defined]
       self.doubleClicked.emit(self.docID)
     return
-
-
 
 
 class ImageGallery(QWidget):
@@ -152,7 +103,7 @@ class ImageGallery(QWidget):
 
       if image.startswith('<?xml version="1.0"'):
         # Wrap QSvgWidget in a Clickable subclass of QPushButton
-        button = ClickableSvgButton(docID)
+        button = ClickableFrame(docID)
         button.setFixedSize(IMG_SIZE, IMG_SIZE)
         svgWidget = QSvgWidget()
         svgWidget.renderer().load(bytearray(image, encoding='utf-8'))
@@ -189,17 +140,14 @@ class ImageGallery(QWidget):
           fmt = imageType.replace(';', '')
           if imageW.loadFromData(byteArr, format=fmt):
             pixmap = QPixmap.fromImage(imageW).scaled(IMG_SIZE,IMG_SIZE,Qt.KeepAspectRatio,Qt.SmoothTransformation)# type: ignore[attr-defined]
-            label = ClickableImage(docID)
+            label = ClickableFrame(docID)
             label.setPixmap(pixmap)
             label.setAlignment(Qt.AlignCenter)                                    # type: ignore[attr-defined]
             label.clicked.connect(self.imageClicked)
             label.doubleClicked.connect(self.image2Clicked)
             self.gridL.addWidget(label, row, col)
           else:
-            #TODO next lines should be in details
             logging.warning('Could not load image data for docID: %s with format %s', docID, fmt)
-        except ValueError:
-          logging.warning('Malformed base64 image data URI for docID: %s', docID)
         except Exception as e:
           logging.warning('Error processing image for docID %s: %s', docID, e)
       else:

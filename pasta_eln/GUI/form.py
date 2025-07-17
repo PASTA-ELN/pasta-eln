@@ -71,8 +71,8 @@ class Form(QDialog):
         imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
       imageWSA.setWidget(imageW)
       splitter.addWidget(imageWSA)
-      self.setMinimumWidth(1200)
-      self.setMinimumHeight(1000)
+      self.setMinimumWidth(1100)
+      self.setMinimumHeight(600)
     else:
       self.setMinimumWidth(600)
 
@@ -91,8 +91,16 @@ class Form(QDialog):
       group = keyInDocNotHierarchy.split('.')[0]
       key = keyInDocNotHierarchy.split('.')[1]
       idx = len([1 for i in self.dataHierarchyNode if i['class']==group])
-      self.dataHierarchyNode.append({'docType': self.doc['type'][0], 'class':group, 'idx':idx, 'name':key, 'list':''})
-    #TODO: fill dataHierarchyNode to have all items: incl. mandatory
+      self.dataHierarchyNode.append({'docType': self.doc['type'][0], 'class':group, 'idx':idx, 'name':key,
+                                     'list':'', 'mandatory':'', 'unit':''})
+    #TODO: TEMPORARY CHECK: REMOVE 2026
+    allKeys = {'docType', 'class', 'idx', 'name', 'unit', 'mandatory', 'list'}
+    if any(True if allKeys.difference(i.keys()) else False for i in self.dataHierarchyNode):
+      mask = [True if allKeys.difference(i.keys()) else False for i in self.dataHierarchyNode]
+      print(mask)
+      print(self.dataHierarchyNode)
+      raise ValueError('dataHierarchyNode is not complete. Missing keys')
+    # END TEMPORARY CHECK
     groups = {i['class'] for i in self.dataHierarchyNode}.difference({'metaVendor','metaUser'})
     # create tabs or not: depending on the number of groups
     self.tabW = QTabWidget()                                                    # has count=0 if not connected
@@ -569,8 +577,7 @@ class Form(QDialog):
         for delKey in [i for i in self.doc.keys() if i in ['id'] or i.startswith('meta')]: # delete these keys
           del self.doc[delKey]
         if command[0] is Command.FORM_SAVE_NEXT:
-          self.comm.changeTable.emit('', '')
-        #TODO implement a correct refresh of table and project view: send signal and only refresh the view that is open
+          self.comm.changeTable.emit(self.doc['type'][0], '')
       else:
         self.accept()                                                                                   #close
         self.close()

@@ -1,4 +1,5 @@
 """ all styling of buttons and other general widgets, some defined colors... """
+import logging
 from typing import Any, Callable, Optional, Union
 import qtawesome as qta
 from PySide6.QtCore import QByteArray, Qt                                  # pylint: disable=no-name-in-module
@@ -124,25 +125,31 @@ class Image():
       anyDimension (int): maximum size in any direction
     """
     if data.startswith('data:image/'):                                                      # jpg or png image
-      byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21]==',' else data[23:], encoding='utf-8'))
-      imageW = QImage()
-      imageType = data[11:15].upper()
-      imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType)#type: ignore[arg-type]
-      pixmap = QPixmap.fromImage(imageW)
-      if height>0:
-        pixmap = pixmap.scaledToHeight(height)
-      if width>0:
-        pixmap = pixmap.scaledToWidth(width)
-      if anyDimension>0:
-        if pixmap.size().height()>pixmap.size().width():
-          pixmap = pixmap.scaledToHeight(anyDimension)
-        else:
-          pixmap = pixmap.scaledToWidth(anyDimension)
-      label = QLabel()
-      label.setPixmap(pixmap)
-      label.setAlignment(Qt.AlignCenter)                                                        # type: ignore
-      if layout is not None:
-        layout.addWidget(label, alignment=Qt.AlignHCenter)                                      # type: ignore
+      try:
+        byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21]==',' else data[23:], encoding='utf-8'))
+        imageW = QImage()
+        imageType = data[11:15].upper()
+        success = imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType)#type: ignore[arg-type]
+        if not success:
+          logging.warning('Could not load image data with format %s', imageType)
+          return
+        pixmap = QPixmap.fromImage(imageW)
+        if height>0:
+          pixmap = pixmap.scaledToHeight(height)
+        if width>0:
+          pixmap = pixmap.scaledToWidth(width)
+        if anyDimension>0:
+          if pixmap.size().height()>pixmap.size().width():
+            pixmap = pixmap.scaledToHeight(anyDimension)
+          else:
+            pixmap = pixmap.scaledToWidth(anyDimension)
+        label = QLabel()
+        label.setPixmap(pixmap)
+        label.setAlignment(Qt.AlignCenter)                                                        # type: ignore
+        if layout is not None:
+          layout.addWidget(label, alignment=Qt.AlignHCenter)                                      # type: ignore
+      except Exception as e:
+        logging.warning('Error processing base64-image %s', e)
     elif data.startswith('<?xml'):                                                                  #svg image
       imageSVG = QSvgWidget()
       policy = imageSVG.sizePolicy()
@@ -162,7 +169,7 @@ class Image():
       if layout is not None:
         layout.addWidget(imageSVG, alignment=Qt.AlignHCenter)                                   # type: ignore
     elif len(data)>2:
-      print(f'WidgetProjectLeaf:What is this image |{data[:50]}|')
+      logging.error('guiStyle.Image: %s', data[:50])
     return
 
 

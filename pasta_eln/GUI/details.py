@@ -66,6 +66,8 @@ class Details(QScrollArea):
     Args:
       docID (str): document-id; '' string=draw nothing; 'redraw' implies redraw
     """
+    if self.isHidden():
+      return
     logging.debug('details:changeDetails |%s|',docID)
     # Delete old widgets from layout
     for i in reversed(range(self.headerL.count())):
@@ -161,7 +163,7 @@ class Details(QScrollArea):
       else:
         getattr(self, f'meta{command[1]}W').hide()
     elif command[0] is Command.CLOSE:
-      self.comm.changeTable.emit('','')
+      self.hide()
     elif command[0] is Command.TO_PROJECT:
       self.comm.changeProject.emit(self.doc['branch'][0]['stack'][0], self.doc['id'])
     elif isinstance(command[0], CommandMenu):

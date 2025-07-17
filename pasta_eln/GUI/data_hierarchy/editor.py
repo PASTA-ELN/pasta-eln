@@ -38,6 +38,7 @@ class SchemeEditor(QDialog):
     self.docLabel= ''
     self.closeButtons:list[IconButton] = []                                             #close buttons of tabs
     self.setWindowTitle('Data scheme editor')
+    self.restartAfterClose = False
 
     # GUI elements
     self.setMinimumWidth(int(np.sum(COLUMN_WIDTH))+80)
@@ -160,8 +161,8 @@ class SchemeEditor(QDialog):
     dfDef['key'] = dfDef['class']+'.'+dfDef['name']
     dfDef = dfDef.drop(['name','class'], axis=1)[['key','description']]
     dfDef.rename(columns={'description':'long'}, inplace=True)
-    nonUnique = dict(dfDef.groupby(['key']).apply(lambda x: len(np.unique(x))))
-    if nonUniqueStr:= ', '.join(k for k,v in nonUnique.items() if v>2):
+    nonUnique = dict(dfDef.groupby(['key'])['long'].apply(lambda x: len(np.unique(x))))
+    if nonUniqueStr:= ', '.join(k for k,v in nonUnique.items() if v>1):
       button = QMessageBox.question(self, 'Non unique definitions',
                                   f'The definitions are non-unique for {nonUniqueStr}. Do you want to flatten?',
                                   QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
@@ -190,6 +191,8 @@ class SchemeEditor(QDialog):
       self.reject()
     elif btn.text().endswith('Save'):
       self.finishDocType()
+      if self.restartAfterClose:
+        self.comm.softRestart.emit()
       self.accept()
     return
 
@@ -202,7 +205,7 @@ class SchemeEditor(QDialog):
       command (list): list of commands
     """
     if command[0] is Command.NEW:
-      dialog = DocTypeEditor(self.comm, '', self.changeDocType)
+      dialog = DocTypeEditor(self.comm, '', self.createdNewDocType)
       dialog.exec()
       docLabel = str(self.docLabel)
       self.selectDocType.clear()
@@ -286,6 +289,20 @@ class SchemeEditor(QDialog):
                         [self.docType, textNew.strip(), '0', 'item', '', '', ''])
         self.db.connection.commit()
         self.changeDocType(self.docLabel)
+    return
+
+
+  def createdNewDocType(self,label:str) -> None:
+    """ Callback function to change docType after creating a new one
+
+    Args:
+      label (str): label of the new docType
+    """
+    self.selectDocType.clear()
+    _ = [self.selectDocType.addItem(text, data) for (data, text) in self.db.dataHierarchy('','title')]
+    self.selectDocType.setCurrentText(label)
+    self.restartAfterClose = True
+    self.changeDocType(label)
     return
 
 

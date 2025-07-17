@@ -133,6 +133,8 @@ class Project(QWidget):
       projID (str): document id of project; if empty, just refresh
       docID (str): document id of focus item, if not given focus at project
     """
+    if self.isHidden():
+      return
     logging.debug('project:changeProject |%s|%s|',projID,docID)
     #initialize
     for i in reversed(range(self.mainL.count())):                                                  #remove old

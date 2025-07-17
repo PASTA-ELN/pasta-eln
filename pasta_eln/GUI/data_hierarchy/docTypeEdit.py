@@ -109,7 +109,6 @@ class DocTypeEditor(QDialog):
                                             [docType, '', '2', 'comment', '', '', ''])
         if self.callback is not None:
           self.callback(label)
-          #TODO: callback has to be separated: changeDocType in editor.py + flag for soft-restart comm signal
       self.comm.backend.db.connection.commit()
       self.accept()
     return
