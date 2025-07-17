@@ -14,7 +14,7 @@ from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, 
 from ..guiCommunicate import Communicate
 from ..miscTools import callAddOn, flatten
 from ..sqlite import MAIN_ORDER
-from ..textTools.stringChanges import createDirName, markdownEqualizer
+from ..textTools.stringChanges import markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
 from .guiStyle import IconButton, Image, Label, ScrollMessageBox, TextButton, widgetAndLayout, widgetAndLayoutForm
 from .messageDialog import showMessage
@@ -71,7 +71,8 @@ class Form(QDialog):
         imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
       imageWSA.setWidget(imageW)
       splitter.addWidget(imageWSA)
-      self.setMinimumWidth(1000)
+      self.setMinimumWidth(1200)
+      self.setMinimumHeight(1000)
     else:
       self.setMinimumWidth(600)
 
@@ -128,7 +129,7 @@ class Form(QDialog):
           self.gradeChoices.setMaximumWidth(85)
           self.gradeChoices.setStyleSheet('padding: 3px;')
           self.gradeChoices.setIconSize(QSize(0,0))
-          self.gradeChoices.addItems(['','\u2605','\u2605'*2,'\u2605'*3,'\u2605'*4,'\u2605'*5])
+          self.gradeChoices.addItems(['none','\u2605','\u2605'*2,'\u2605'*3,'\u2605'*4,'\u2605'*5])
           gradeTag = [i for i in self.doc['tags'] if i.startswith('_')]
           gradeTagStr = '\u2605'*int(gradeTag[0][1]) if gradeTag else ''
           self.gradeChoices.setCurrentText(gradeTagStr)
@@ -375,8 +376,9 @@ class Form(QDialog):
                 if hasattr(self.comm.backend, 'configuration') else 300
         if 'image' in self.doc:
           Image(self.doc['image'], self.imageL, anyDimension=width)
-        visibilityIcon = all(all(branch['show']) for branch in self.doc['branch'])
-        self.visibilityText.setText('' if visibilityIcon else 'HIDDEN     \U0001F441')
+        if 'branch' in self.doc:
+          visibilityIcon = all(all(branch['show']) for branch in self.doc['branch'])
+          self.visibilityText.setText('' if visibilityIcon else 'HIDDEN     \U0001F441')
     elif command[0] is Command.BUTTON_BAR:
       if command[1]=='bold':
         getattr(self, f'textEdit_{command[2]}').insertPlainText('**TEXT**')
@@ -458,9 +460,11 @@ class Form(QDialog):
           fTemp.write(json.dumps(content))
 
       # loop through all the subitems
-      if self.gradeChoices.currentText():
-        self.doc['tags'] = [i for i in self.doc['tags'] if not i.startswith('_')]
-        self.doc['tags'].append(f'_{len(self.gradeChoices.currentText())}')
+      # rating
+      rating = self.gradeChoices.currentText()
+      self.doc['tags'] = [i for i in self.doc['tags'] if not i.startswith('_')] # filter out old ratings
+      if rating != 'none':
+        self.doc['tags'].append(f'_{len(rating)}')
       for idx, (key, guiType) in enumerate(self.allUserElements):
         elementName = f"key_{idx}"
         valueOld = self.doc.get(key, '')
@@ -475,16 +479,6 @@ class Form(QDialog):
           return
         if key=='name':
           self.doc['name'] = getattr(self, elementName).text().strip()
-          if self.doc['type'][0]=='x0':                    #prevent project-directory names that are identical
-            others = self.comm.backend.db.getView('viewDocType/x0All')
-            if 'id' in self.doc:
-              others = others[others['id']!=self.doc['id']]                      # filter data frame by own id
-            othersList = [createDirName(str(i),'x0', 0) for i in others['name']]                 #create names
-            while createDirName(self.doc['name'],'x0', 0) in othersList:
-              if re.search(r'_\d+$', self.doc['name']) is None:
-                self.doc['name'] += '_1'
-              else:
-                self.doc['name'] = '_'.join(self.doc['name'].split('_')[:-1])+'_'+str(int(self.doc['name'].split('_')[-1])+1)
         elif key in ('tags'):                                                          #tags are already saved
         #     'image', 'metaVendor', 'metaUser' or not hasattr(self, f'key_{key}') and not hasattr(self, f'textEdit_{key}')):
           continue

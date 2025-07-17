@@ -177,15 +177,7 @@ class Backend(CLI_Mixin):
         #  new: below the current project/step/task
         parentDirectory = self.cwd.parent if edit else self.cwd
         operation = 'u'
-        # prevent that projects have the same name: #TODO make this a separate function and merge others
-        dirNameBase = createDirName(doc['name'],doc['type'][0],childNum)
-        dirName = dirNameBase
-        if 'branch' not in doc or doc['branch'][0]['path'] != dirName:#only change if it is not the same name as before
-          idx = 0
-          while (parentDirectory/dirName).exists():
-            idx += 1
-            dirName = f'{dirNameBase}_{idx:02d}'
-        path = parentDirectory/dirName                   #update,or create (if new doc, update ignored anyhow)
+        path = parentDirectory/createDirName(doc, childNum, self.cwd)#update,or create (if new doc, update ignored anyhow)
       else:
         #measurement, sample, procedure
         shasum = ''
@@ -374,7 +366,8 @@ class Backend(CLI_Mixin):
                 continue
               if thisStack == ' '.join(item['key'].split(' ')[:-1]):            # remove last item from string
                 childNum += 1
-            newPath = '/'.join(path.split('/')[:-1])+'/'+createDirName(doc['name'],doc['type'][0],childNum)#update,or create (if new doc, update ignored anyhow)
+            parentPath = Path(path).parent
+            newPath = parentPath/createDirName(doc, childNum, parentPath)#update,or create (if new doc, update ignored anyhow)
             if (self.basePath/newPath).exists():                             # can be either file or directory
               logging.error('New path should not exist %s',newPath)
             else:

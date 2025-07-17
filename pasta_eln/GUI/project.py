@@ -80,7 +80,6 @@ class Project(QWidget):
     for doctype in self.comm.backend.db.dataHierarchy('', ''):
       if doctype[0]!='x':
         icon = self.comm.backend.db.dataHierarchy(doctype, 'icon')[0]
-        #TODO icon color incorrect in blue theme
         icon = 'fa5s.asterisk' if icon=='' else icon
         Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
@@ -104,7 +103,7 @@ class Project(QWidget):
     self.allDetails.resizeEvent = self.commentResize                                            # type: ignore
     bgColor = self.comm.palette.get('secondaryDark', 'background-color')
     fgColor = self.comm.palette.get('secondaryText', 'color')
-    #TODO: For none: no color is set, as it should; but then the Windows10 color is white not the default background
+    #TODO: Debug/solve on windows: For none: no color is set, as it should; but then the Windows10 color is white not the default background
     self.allDetails.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
     self.allDetails.setReadOnly(True)
     self.mainL.addWidget(self.allDetails)
@@ -223,7 +222,7 @@ class Project(QWidget):
       #collect information and then change
       oldPath = self.comm.backend.basePath/self.docProj['branch'][0]['path']
       if oldPath.is_dir():
-        newPath = self.comm.backend.basePath/createDirName(self.docProj['name'],'x0',0)
+        newPath = self.comm.backend.basePath/createDirName(self.docProj, 0, self.comm.backend.basePath)
         oldPath.rename(newPath)
       self.comm.changeSidebar.emit('redraw')
     elif command[0] is Command.DELETE:
@@ -341,11 +340,11 @@ class Project(QWidget):
     stackNew = [self.projID] + stackNew[::-1]                                      #add project id and reverse
     childNew = item.row()
     if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
+      parentDir = Path(db.getDoc(stackNew[-1])['branch'][0]['path'])
       if doc['type'][0][0]=='x':
-        dirNameNew= createDirName(doc['name'],doc['type'][0],childNew)# create path name: do not create directory on disk yet
+        dirNameNew= createDirName(doc, childNew, parentDir)# create path name: do not create directory on disk yet
       else:
         dirNameNew= Path(branchOld['path']).name                                                # use old name
-      parentDir = db.getDoc(stackNew[-1])['branch'][0]['path']
       pathNew = f'{parentDir}/{dirNameNew}'
     else:
       pathNew = branchOld['path']

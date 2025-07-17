@@ -99,7 +99,7 @@ class Table(QWidget):
     _, self.filterL = widgetAndLayoutGrid(mainL, top='s', bottom='s')
     # table
     self.table = QTableView(self)
-    self.table.setStyleSheet('QTableView::indicator {width: 24px; height: 24px;}')
+    self.table.setStyleSheet('QTableView::indicator {width: 16px; height: 16px;}')
     self.table.verticalHeader().hide()
     self.table.clicked.connect(self.cellClicked)
     self.table.doubleClicked.connect(self.cell2Clicked)

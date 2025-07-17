@@ -253,12 +253,13 @@ def installPythonPackages(directory:str) -> None:
   allLibs = allLibs.difference(sys.stdlib_module_names)        # all libs that are not in the standard library
   allLibs = allLibs.difference([i[:-3] for i in os.listdir(directory) if i.endswith('.py')])#remove all libs that are in the directory
   allLibs = allLibs.difference(set(i.split('.')[0] for i in  sys.modules.keys()))# remove libs used by pasta, already in use
-  # clean
-  if 'sklearn' in allLibs:
-    allLibs.remove('sklearn')
-    allLibs.add('scikit-learn')  # sklearn is not a package, but scikit-learn is
   for lib in allLibs:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", lib])
+    try:
+      importlib.import_module(lib)  # check if the package is already installed
+    except ImportError:
+      if lib == 'sklearn':
+        lib = 'scikit-learn'
+      subprocess.check_call([sys.executable, "-m", "pip", "install", lib])
   return
 
 

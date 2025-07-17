@@ -1,7 +1,9 @@
 """ Functions that modify strings into the appropriate format """
 import logging
+from pathlib import Path
 import re
 import traceback
+from typing import Any
 from ..miscTools import Bcolors
 
 
@@ -92,18 +94,26 @@ def camelCase(text:str) -> str:
   return re.sub(r'(_|-)+', ' ', text).title().replace(' ','').replace('*','')
 
 
-def createDirName(name:str, docType:str, thisChildNumber:int) -> str:
+def createDirName(doc:dict[str,Any], thisChildNumber:int, parentDir:Path) -> str:
   """ create directory-name by using camelCase and a prefix
 
   Args:
-      name (string): name with spaces etc
-      docType (string): document type used for prefix
+      doc (dict): document with all information
       thisChildNumber (int): number of myself
+      parentDir (Path): parent directory where the new directory should be created
 
   Returns:
     string: directory name with leading number
   """
-  if docType == 'x0':
-    return camelCase(name)
-  #steps, tasks
-  return f'{thisChildNumber:03d}_{camelCase(name)}'
+  name = camelCase(doc['name']) if doc['type'][0] == 'x0' else \
+         f'{thisChildNumber:03d}_{camelCase(doc['name'])}'
+  if 'branch' in doc and name in [i['path'].split('/')[-1] for i in doc['branch']]:    #only change if not the same name as before
+    logging.debug('createDirName: %s used', name)
+    return name
+  idx = 0
+  nameTest = name
+  while (parentDir/name).exists():
+    idx += 1
+    nameTest = f'{name}_{idx:02d}'
+  logging.debug('createDirName: %s created', nameTest)
+  return nameTest

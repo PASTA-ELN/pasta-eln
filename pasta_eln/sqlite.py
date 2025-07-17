@@ -580,8 +580,10 @@ class SqlLiteDB:
       self.cursor.execute(f"SELECT type, name FROM main WHERE id == '{docID}'")
       docType, name = self.cursor.fetchall()[0]
       if docType.startswith('x'):
-        name = createDirName(name,docType,child)
-      path = ((Path(pathOld).parent)/name).as_posix()
+        docTemp = {'name':name, 'type':[docType]}
+        parentDir = Path(pathOld).parent
+        name = createDirName(docTemp, child, parentDir)
+      path = (parentDir/name).as_posix()
     show  = self.createShowFromStack(stack, showOld[-1])
     cmd = f"UPDATE branches SET stack='{'/'.join(stack+[docID])}', child={child}, path='{path}', show='{show}' "\
           f"WHERE path = '{pathOld}' and stack = '{stackOld}'"
@@ -999,9 +1001,7 @@ class SqlLiteDB:
       elif repair(errorStr):
         for docID, name in res:
           self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
-            [docID, 0, f'{lostAndFoundProjId}/{docID}', 9999,
-            (lostAndFoundProjPath/createDirName(name, 'x0', 0)).as_posix() if docID.startswith('x-') else '*',
-            'TT'])
+            [docID, 0, f'{lostAndFoundProjId}/{docID}', 9999, '*', 'TT'])
         self.connection.commit()
 
     cmd = 'SELECT id, main.type, branches.stack, branches.path, branches.child, branches.show, main.name '\
@@ -1067,7 +1067,8 @@ class SqlLiteDB:
               if repair is None:
                 reply+= errorStr
               elif repair(errorStr):
-                pathNew = (lostAndFoundProjPath/createDirName(name, 'x0', 0)).as_posix() if docID.startswith('x-')\
+                tempDoc = {'name':name, 'type':['x0']}
+                pathNew = (lostAndFoundProjPath/createDirName(tempDoc, 0, lostAndFoundProjPath)).as_posix() if docID.startswith('x-')\
                           else '*'
                 stackNew = f'{lostAndFoundProjId}/{docID}'
                 self.cursor.execute(f"UPDATE branches SET path='{pathNew}', stack='{stackNew}' "\

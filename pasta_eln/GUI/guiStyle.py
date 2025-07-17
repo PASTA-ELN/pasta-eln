@@ -105,7 +105,7 @@ class Action(QAction):
     self.setText(label)
     self.triggered.connect(lambda : widget.execute(command))                      # type: ignore[attr-defined]
     if icon:
-      color = 'black' if widget is None else widget.comm.palette.secondaryText    # type: ignore[attr-defined]
+      color = 'black' if widget is None else widget.comm.palette.text
       self.setIcon(qta.icon(icon, color=color, scale_factor=1))
     if shortcut is not None:
       self.setShortcut(QKeySequence(shortcut))

@@ -78,7 +78,7 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
     #any path is good since the file is the same everywhere; data-changed by reference
     widget.comm.backend.useExtractors(filePath, widget.doc['shasum'], widget.doc) # type: ignore[attr-defined]
     if len(widget.doc['type'])>1 and len(widget.doc['image'])>1:                  # type: ignore[attr-defined]
-      widget.doc = widget.comm.backend.db.updateDoc({'image':widget.doc['image'], 'type':widget.doc['type']}, widget.doc['id'])# type: ignore[attr-defined]
+      widget.comm.backend.db.updateDoc({'image':widget.doc['image'], 'type':widget.doc['type']}, widget.doc['id'])# type: ignore[attr-defined]
     else:
       return False
   else:
