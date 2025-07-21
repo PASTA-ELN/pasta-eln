@@ -125,7 +125,6 @@ class MainWindow(QMainWindow):
   @Slot(dict)
   def onGetDocTypes(self, data: dict[str, dict[str, str]]) -> None:
     """Handle data received from backend worker"""
-    print(data)
     self.docTypesTitlesIcons = data
     self.paint()  # reinitialize to update menu items
 
