@@ -3,9 +3,9 @@
 import logging, warnings, json, tempfile
 from pathlib import Path
 from pasta_eln.backend import Backend
-from pasta_eln.GUI.repositories.repository import RepositoryClient
-from pasta_eln.GUI.repositories.dataverse import DataverseClient
-from pasta_eln.GUI.repositories.zenodo import ZenodoClient
+from pasta_eln.UI.repositories.repository import RepositoryClient
+from pasta_eln.UI.repositories.dataverse import DataverseClient
+from pasta_eln.UI.repositories.zenodo import ZenodoClient
 from .misc import verify, handleReport
 
 

@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QDialog, QComboBox, QLineEdit, QHBoxLayout, QTable
 import matplotlib
 import pandas as pd
 from pasta_eln.miscTools import callDataExtractor, isFloat, MplCanvas
-from pasta_eln.GUI.guiStyle import widgetAndLayout, space, Label
+from pasta_eln.UI.guiStyle import widgetAndLayout, space, Label
 
 # The following two variables are mandatory
 description  = 'Default data plot'  #short description that is shown in the menu

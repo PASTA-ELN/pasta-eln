@@ -1,8 +1,8 @@
 from PySide6.QtWidgets import QMainWindow
 from pasta_eln.backend import Backend
 from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.GUI.palette import Palette
-from pasta_eln.GUI.project import Project
+from pasta_eln.UI.palette import Palette
+from pasta_eln.UI.project import Project
 
 def test_simple(qtbot):
   class MainWindow(QMainWindow):

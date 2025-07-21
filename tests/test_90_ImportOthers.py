@@ -3,9 +3,9 @@ import logging, warnings, os, shutil, tempfile
 from pathlib import Path
 from urllib import request
 from pasta_eln.backend import Backend
-from pasta_eln.GUI.project import Project
+from pasta_eln.UI.project import Project
 from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.GUI.palette import Palette
+from pasta_eln.UI.palette import Palette
 from pasta_eln.inputOutput import importELN
 
 

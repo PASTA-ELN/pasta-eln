@@ -4,9 +4,9 @@ import logging, warnings, random
 from pathlib import Path
 from PySide6.QtCore import QModelIndex                                  # pylint: disable=no-name-in-module
 from pasta_eln.backend import Backend
-from pasta_eln.GUI.project import Project
+from pasta_eln.UI.project import Project
 from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.GUI.palette import Palette
+from pasta_eln.UI.palette import Palette
 
 def test_simple(qtbot):
   """

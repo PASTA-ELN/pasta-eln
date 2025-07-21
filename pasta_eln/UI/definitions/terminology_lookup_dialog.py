@@ -13,8 +13,8 @@ from typing import Callable
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QMessageBox, QWidget
-from pasta_eln.GUI.definitions.dialog_base import Ui_TerminologyLookupDialogBase  # type: ignore[attr-defined]
-from pasta_eln.GUI.definitions.terminology_lookup_service import TerminologyLookupService
+from pasta_eln.UI.definitions.dialog_base import Ui_TerminologyLookupDialogBase  # type: ignore[attr-defined]
+from pasta_eln.UI.definitions.terminology_lookup_service import TerminologyLookupService
 
 
 class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):

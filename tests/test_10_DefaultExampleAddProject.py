@@ -4,9 +4,9 @@ import logging, warnings, shutil
 from pathlib import Path
 from pasta_eln.backend import Backend
 from pasta_eln.installationTools import exampleData
-from pasta_eln.GUI.form import Form
+from pasta_eln.UI.form import Form
 from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.GUI.palette import Palette
+from pasta_eln.UI.palette import Palette
 
 def test_simple(qtbot):
   """

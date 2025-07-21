@@ -2,7 +2,8 @@
 from typing import Any, Callable
 from PySide6.QtCore import QObject, Signal, Slot                           # pylint: disable=no-name-in-module
 from .backend import Backend
-from .GUI.waitDialog import WaitDialog, Worker
+from .UI.waitDialog import WaitDialog, Worker
+from .UI.palette import Palette
 from .backendWorker.worker import BackendThread
 from .miscTools import getConfiguration
 
@@ -24,14 +25,13 @@ class Communicate(QObject):
   # send to backend
   commSendPGConfiguration = Signal(dict) # send project group configuration to backend
 
-  def __init__(self, backend:Backend, palette:Any):
+  def __init__(self, projectGroup:str=''):
     super().__init__()
-    self.backend               = backend
-    self.palette               = palette
+    self.palette:None|Palette  = None
     self.projectID             = ''
     self.waitDialog            = WaitDialog()
     self.worker:Worker|None    = None
-    self.configuration, self.configurationProjectGroup = getConfiguration('') #TODO change to real, and change the head of this function
+    self.configuration, self.configurationProjectGroup = getConfiguration(projectGroup)
 
     # Backend worker thread
     self.backendThread = BackendThread(self)

@@ -1,8 +1,8 @@
 from PySide6.QtWidgets import QMainWindow
 from pasta_eln.backend import Backend
 from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.GUI.palette import Palette
-from pasta_eln.GUI.form import Form
+from pasta_eln.UI.palette import Palette
+from pasta_eln.UI.form import Form
 
 
 def test_simple(qtbot):
