@@ -140,6 +140,18 @@ class MainWindow(QMainWindow):
     return
 
 
+  def closeEvent(self, event) -> None:
+    """
+    Handle window close event - cleanup of backend thread
+
+    Args:
+      event: close event
+    """
+    if self.comm and self.comm.backendThread:
+      self.comm.shutdownBackendThread()
+    event.accept()
+
+
   @Slot(dict)
   def formDoc(self, doc: dict[str, Any]) -> None:
     """
