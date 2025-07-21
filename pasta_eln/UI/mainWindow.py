@@ -26,6 +26,7 @@ from .messageDialog import showMessage
 # from ..inputOutput import exportELN, importELN
 from ..miscTools import hardRestart, testNewPastaVersion, updateAddOnList, installPythonPackages
 from ..guiCommunicate import Communicate
+from .config import Configuration
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
@@ -42,8 +43,14 @@ class MainWindow(QMainWindow):
     super().__init__()
     self.docTypesTitlesIcons:dict[str,dict[str,str]] = {}  # docType: {'title': title, 'icon': icon, 'shortcut': shortcut}
     self.comm = comm
-    self.comm.palette = Palette(self, self.comm.configuration['GUI']['theme'])
-    self.comm.backendThread.worker.beSendDocTypes.connect(self.onGetDocTypes)
+    if self.comm.configuration:
+      self.comm.palette = Palette(self, self.comm.configuration['GUI']['theme'])
+      self.comm.backendThread.worker.beSendDocTypes.connect(self.onGetDocTypes)
+    else:
+      configWindow = Configuration(self, 'setup')
+      configWindow.exec()
+      return
+
 
     self.comm.formDoc.connect(self.formDoc)
     self.comm.softRestart.connect(self.paint)
@@ -114,11 +121,14 @@ class MainWindow(QMainWindow):
     except Exception as e:
       logging.error('Error in GUI initialization %s', e)
 
+
   @Slot(dict)
   def onGetDocTypes(self, data: dict[str, dict[str, str]]) -> None:
     """Handle data received from backend worker"""
+    print(data)
     self.docTypesTitlesIcons = data
     self.paint()  # reinitialize to update menu items
+
 
   @Slot()
   def paint(self) -> None:

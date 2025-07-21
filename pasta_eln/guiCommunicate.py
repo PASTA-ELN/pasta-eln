@@ -6,7 +6,6 @@ from .UI.palette import Palette
 from .backendWorker.worker import BackendThread
 from .miscTools import getConfiguration
 
-
 class Communicate(QObject):
   """ Communication class that sends signals between widgets, incl. backend"""
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES
@@ -32,14 +31,16 @@ class Communicate(QObject):
     self.worker:Worker|None    = None
     self.configuration, self.configurationProjectGroup = getConfiguration(projectGroup)
 
-    # Backend worker thread
-    self.backendThread = BackendThread(self)
-    # connect backend worker to configuration signals: send GUI->backend
-    #   has to be here, because otherwise worker needs comm which has to be passed through thread, is uninitialized, ...)
-    self.commSendConfiguration.connect(self.backendThread.worker.initialize)
+    if self.configuration:
+      # Backend worker thread
+      self.backendThread = BackendThread(self)
+      # connect backend worker to configuration signals: send GUI->backend
+      #   has to be here, because otherwise worker needs comm which has to be passed through thread, is uninitialized, ...)
+      self.commSendConfiguration.connect(self.backendThread.worker.initialize)
 
-    self.backendThread.start()
-    self.commSendConfiguration.emit(self.configuration, self.configurationProjectGroup)
+      self.backendThread.start()
+      self.commSendConfiguration.emit(self.configuration, self.configurationProjectGroup)
+
 
   @Slot(dict)
   def onGetDocTypes(self, data: dict) -> None:

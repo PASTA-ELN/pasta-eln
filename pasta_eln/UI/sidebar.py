@@ -18,12 +18,8 @@ class Sidebar(QWidget):
     super().__init__()
     self.comm = comm
     comm.changeSidebar.connect(self.change)
-    if hasattr(self.comm.backend, 'configuration'):
-      self.sideBarWidth = self.comm.backend.configuration['GUI']['sidebarWidth']
-      self.setFixedWidth(self.sideBarWidth)
-    if not hasattr(comm.backend, 'db'):                                                        # if no backend
-      configWindow = Configuration(comm, 'setup')
-      configWindow.exec()
+    self.sideBarWidth = self.comm.configuration['GUI']['sidebarWidth']
+    self.setFixedWidth(self.sideBarWidth)
     self.openProjectId = ''
 
     # GUI elements

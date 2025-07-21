@@ -9,7 +9,7 @@ import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable, Optional
-from .backend import Backend
+from .backendWorker.backend import Backend
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
 from .textTools.stringChanges import outputString
 

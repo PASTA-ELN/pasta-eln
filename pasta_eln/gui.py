@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QApplication                                 # pyl
 from pasta_eln import __version__
 from .guiCommunicate import Communicate
 from .UI.mainWindow import MainWindow
+from .UI.config import Configuration
 
 def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
   """  Main method and entry point for commands
@@ -32,6 +33,8 @@ def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
     application = QApplication.instance()
   comm = Communicate(projectGroup=projectGroup)
   mainWindow = MainWindow(comm)
+  if not comm.configuration:
+    raise ValueError('Configuration not loaded.')
   logging.getLogger().setLevel(getattr(logging, comm.configuration['GUI']['loggingLevel']))
   mainWindow.comm.palette.setTheme(application)
   import qtawesome as qta                                               # qtawesome and matplot cannot coexist
@@ -50,10 +53,13 @@ def startMain(projectGroup:str='') -> None:
   Args:
     projectGroup (str): project group to load
   """
-  app, window = mainGUI(projectGroup=projectGroup)
-  window.show()
-  if app:
-    app.exec()
+  try:
+    app, window = mainGUI(projectGroup=projectGroup)
+    window.show()
+    if app:
+      app.exec()
+  except Exception as e:
+    logging.error(f'Error in mainGUI: {e}')
 
 
 # called by python3 -m pasta_eln.gui
