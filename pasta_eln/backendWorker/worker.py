@@ -3,6 +3,7 @@ CONNECT TO ALL SIGNALS IN COMMUNICATE
 """
 import logging
 from typing import Any, Optional
+import pandas as pd
 import sqlite3
 from pathlib import Path
 from PySide6.QtCore import QObject, QThread, Signal, Slot
@@ -14,6 +15,7 @@ class BackendWorker(QObject):
   """
   # Signals to send data back to GUI
   beSendDocTypes = Signal(dict)           # Send processed data back
+  beSendProjects = Signal(pd.DataFrame)
 
   def __init__(self):
     super().__init__()
@@ -30,6 +32,7 @@ class BackendWorker(QObject):
     for k,v in self.backend.db.dataHierarchy('','shortcut'):
       docTypesTitlesIcons[k]['shortcut'] = v
     self.beSendDocTypes.emit(docTypesTitlesIcons)
+    self.beSendProjects.emit(self.backend.db.getView('viewDocType/x0'))
 
 
   def exit(self) -> None:

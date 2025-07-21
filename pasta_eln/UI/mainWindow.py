@@ -41,11 +41,10 @@ class MainWindow(QMainWindow):
     """
     # global setting
     super().__init__()
-    self.docTypesTitlesIcons:dict[str,dict[str,str]] = {}  # docType: {'title': title, 'icon': icon, 'shortcut': shortcut}
     self.comm = comm
     if self.comm.configuration:
       self.comm.palette = Palette(self, self.comm.configuration['GUI']['theme'])
-      self.comm.backendThread.worker.beSendDocTypes.connect(self.onGetDocTypes)
+      self.comm.redrawMainWindow.connect(self.paint)
     else:
       configWindow = Configuration(self, 'setup')
       configWindow.exec()
@@ -109,24 +108,18 @@ class MainWindow(QMainWindow):
       #TODO body = Body(self.comm)                                                           # body with information
       self.sidebar = Sidebar(self.comm)                                                 # sidebar with buttons
       mainLayout.addWidget(self.sidebar)
-      mainLayout.addWidget(body)
-      # tests that run at start-up
-      if self.backend.configuration['GUI']['checkForUpdates']=='Yes' and not testNewPastaVersion(False):
-        button = QMessageBox.question(self, 'Update?', 'There is a new version of PASTA-ELN available. Do you want to update?',
-                                      QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-        if button == QMessageBox.StandardButton.Yes:
-          testNewPastaVersion(update=True)
+      # mainLayout.addWidget(body)
+      # # tests that run at start-up
+      # if self.backend.configuration['GUI']['checkForUpdates']=='Yes' and not testNewPastaVersion(False):
+      #   button = QMessageBox.question(self, 'Update?', 'There is a new version of PASTA-ELN available. Do you want to update?',
+      #                                 QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+      #   if button == QMessageBox.StandardButton.Yes:
+      #     testNewPastaVersion(update=True)
       # initialize things that might change
-      self.initialize()
+      self.paint()
     except Exception as e:
       logging.error('Error in GUI initialization %s', e)
 
-
-  @Slot(dict)
-  def onGetDocTypes(self, data: dict[str, dict[str, str]]) -> None:
-    """Handle data received from backend worker"""
-    self.docTypesTitlesIcons = data
-    self.paint()  # reinitialize to update menu items
 
 
   @Slot()
@@ -134,7 +127,7 @@ class MainWindow(QMainWindow):
     """ Process things that might change """
     # Things that are inside the List menu
     self.viewMenu.clear()
-    for key, value in self.docTypesTitlesIcons.items():
+    for key, value in self.comm.docTypesTitles.items():
       shortcut = None if value['shortcut']=='' else f"Ctrl+{value['shortcut']}"
       Action(value['title'],            self, [Command.VIEW, key],  self.viewMenu, shortcut=shortcut)
     self.viewMenu.addSeparator()

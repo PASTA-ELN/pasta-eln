@@ -1,5 +1,6 @@
 """ Communication class that sends signals between widgets, incl. backend"""
 from typing import Any, Callable
+import pandas as pd
 from PySide6.QtCore import QObject, Signal, Slot                           # pylint: disable=no-name-in-module
 from .UI.waitDialog import WaitDialog, Worker
 from .UI.palette import Palette
@@ -20,16 +21,19 @@ class Communicate(QObject):
   testExtractor      = Signal()          # execute extractorTest in widgetDetails
   stopSequentialEdit = Signal()          # in sequential edit, stop if there is a cancel
   softRestart        = Signal()          # restart GUI
+  redrawMainWindow   = Signal()          # redraw main window, e.g. after change of docType titles
   # send to backend
   commSendConfiguration = Signal(dict, str) # send configuration and project-group-name to backend
 
   def __init__(self, projectGroup:str=''):
     super().__init__()
-    self.palette:None|Palette  = None
-    self.projectID             = ''
     self.waitDialog            = WaitDialog()
     self.worker:Worker|None    = None
     self.configuration, self.configurationProjectGroup = getConfiguration(projectGroup)
+    self.palette:None|Palette  = None
+    self.projects: pd.DataFrame = pd.DataFrame()
+    self.docTypesTitles:dict[str,dict[str,str]] = {}  # docType: {'title': title, 'icon': icon, 'shortcut': shortcut}
+    self.projectID             = ''
 
     if self.configuration:
       # Backend worker thread
@@ -37,15 +41,27 @@ class Communicate(QObject):
       # connect backend worker to configuration signals: send GUI->backend
       #   has to be here, because otherwise worker needs comm which has to be passed through thread, is uninitialized, ...)
       self.commSendConfiguration.connect(self.backendThread.worker.initialize)
+      self.backendThread.worker.beSendProjects.connect(self.onGetProjects)
+      self.backendThread.worker.beSendDocTypes.connect(self.onGetDocTypes)
 
       self.backendThread.start()
       self.commSendConfiguration.emit(self.configuration, self.configurationProjectGroup)
 
 
+
   @Slot(dict)
-  def onGetDocTypes(self, data: dict) -> None:
+  def onGetDocTypes(self, data: dict[str, dict[str, str]]) -> None:
     """Handle data received from backend worker"""
-    print('Communicate.onGetDocTypes: received data from backend worker:', data)
+    self.docTypesTitles = data
+    self.redrawMainWindow.emit()
+
+
+  @Slot(pd.DataFrame)
+  def onGetProjects(self, data: pd.DataFrame) -> None:
+    """Handle data received from backend worker"""
+    print('get dataframe', data)
+    self.projects = data
+    self.changeSidebar.emit('redraw')  # redraw sidebar to show projects
 
 
   def shutdownBackendThread(self) -> None:
