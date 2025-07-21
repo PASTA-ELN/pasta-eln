@@ -1,30 +1,29 @@
 """ Graphical user interface houses all widgets """
 import json
 import logging
-import os
 import re
 import sys
 import webbrowser
 from enum import Enum
 from pathlib import Path
-from typing import Any, Union
-from PySide6.QtCore import QCoreApplication, Slot                          # pylint: disable=no-name-in-module
+from typing import Any
+from PySide6.QtCore import Slot                                            # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut                        # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox# pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QFileDialog, QMainWindow, QMessageBox        # pylint: disable=no-name-in-module
 from pasta_eln import __version__
-from ..elabFTWsync import Pasta2Elab
+# from ..elabFTWsync import Pasta2Elab
 from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
-from .body import Body
-from .config import Configuration
-from .data_hierarchy.editor import SchemeEditor
-from .definitions.editor import Editor as DefinitionsEditor
-from .form import Form
+# from .body import Body
+# from .config import Configuration
+# from .data_hierarchy.editor import SchemeEditor
+# from .definitions.editor import Editor as DefinitionsEditor
+# from .form import Form
 from .palette import Palette
-from .repositories.uploadGUI import UploadGUI
+# from .repositories.uploadGUI import UploadGUI
 from .sidebar import Sidebar
 from .guiStyle import Action, ScrollMessageBox, widgetAndLayout
 from .messageDialog import showMessage
-from ..inputOutput import exportELN, importELN
+# from ..inputOutput import exportELN, importELN
 from ..miscTools import hardRestart, testNewPastaVersion, updateAddOnList, installPythonPackages
 from ..guiCommunicate import Communicate
 
@@ -41,16 +40,20 @@ class MainWindow(QMainWindow):
     """
     # global setting
     super().__init__()
+    self.docTypesTitlesIcons:dict[str,dict[str,str]] = {}  # docType: {'title': title, 'icon': icon, 'shortcut': shortcut}
+    self.comm = comm
+    self.comm.palette = Palette(self, self.comm.configuration['GUI']['theme'])
+    self.comm.backendThread.worker.beSendDocTypes.connect(self.onGetDocTypes)
+
+    self.comm.formDoc.connect(self.formDoc)
+    self.comm.softRestart.connect(self.paint)
+
+    # GUI
     self.setWindowTitle(f"PASTA-ELN {__version__}")
     self.resize(self.screen().size())                                 #self.setWindowState(Qt.WindowMaximized)
     #TODO https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
-    self.comm = comm
-    theme = self.comm.configuration['GUI']['theme']
-    self.comm.palette = Palette(self, theme)
-    self.comm.formDoc.connect(self.formDoc)
-    self.comm.softRestart.connect(self.initialize)
 
     # Menubar
     menu = self.menuBar()
@@ -96,7 +99,7 @@ class MainWindow(QMainWindow):
     mainWidget, mainLayout = widgetAndLayout('H')
     self.setCentralWidget(mainWidget)                                   # Set the central widget of the Window
     try:
-      body = Body(self.comm)                                                           # body with information
+      #TODO body = Body(self.comm)                                                           # body with information
       self.sidebar = Sidebar(self.comm)                                                 # sidebar with buttons
       mainLayout.addWidget(self.sidebar)
       mainLayout.addWidget(body)
@@ -111,26 +114,27 @@ class MainWindow(QMainWindow):
     except Exception as e:
       logging.error('Error in GUI initialization %s', e)
 
+  @Slot(dict)
+  def onGetDocTypes(self, data: dict[str, dict[str, str]]) -> None:
+    """Handle data received from backend worker"""
+    self.docTypesTitlesIcons = data
+    self.paint()  # reinitialize to update menu items
 
   @Slot()
-  def initialize(self) -> None:
-    """ Initialize: things that might change """
-    self.comm.backend.initialize(self.backend.configurationProjectGroup)                      #restart backend
+  def paint(self) -> None:
+    """ Process things that might change """
     # Things that are inside the List menu
     self.viewMenu.clear()
-    if hasattr(self.backend, 'db'):
-      for docType, docLabel in self.comm.backend.db.dataHierarchy('', 'title'):
-        shortcut = self.comm.backend.db.dataHierarchy(docType,'shortcut')[0]
-        shortcut = None if shortcut=='' else f"Ctrl+{shortcut}"
-        Action(docLabel,            self, [Command.VIEW, docType],  self.viewMenu, shortcut=shortcut)
-      self.viewMenu.addSeparator()
-      Action('&Tags',               self, [Command.VIEW, '_tags_'], self.viewMenu, shortcut='Ctrl+T')
-      Action('&Unidentified',       self, [Command.VIEW, '-'],      self.viewMenu, shortcut='Ctrl+U')
+    for key, value in self.docTypesTitlesIcons.items():
+      shortcut = None if value['shortcut']=='' else f"Ctrl+{value['shortcut']}"
+      Action(value['title'],            self, [Command.VIEW, key],  self.viewMenu, shortcut=shortcut)
+    self.viewMenu.addSeparator()
+    Action('&Tags',               self, [Command.VIEW, '_tags_'], self.viewMenu, shortcut='Ctrl+T')
+    Action('&Unidentified',       self, [Command.VIEW, '-'],      self.viewMenu, shortcut='Ctrl+U')
     # Things that are related to project group
     self.changeProjectGroups.clear()
-    if hasattr(self.backend, 'configuration'):                                     # not case in fresh install
-      for name in self.backend.configuration['projectGroups'].keys():
-        Action(name,                         self, [Command.CHANGE_PG, name], self.changeProjectGroups)
+    for name in self.comm.configuration['projectGroups'].keys():
+      Action(name,                         self, [Command.CHANGE_PG, name], self.changeProjectGroups)
     self.comm.changeTable.emit('x0', '')
     return
 

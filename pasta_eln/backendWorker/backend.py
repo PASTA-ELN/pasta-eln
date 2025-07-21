@@ -13,21 +13,20 @@ from urllib import request
 import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
 from PIL import Image
-from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
-from .miscTools import generic_hash, getConfiguration
-from .mixin_cli import CLI_Mixin
+# from .miscTools import generic_hash, getConfiguration
+# from .mixin_cli import CLI_Mixin
 from .sqlite import SqlLiteDB
-from .textTools.handleDictionaries import diffDicts, fillDocBeforeCreate
-from .textTools.stringChanges import camelCase, createDirName, outputString
+# from .textTools.handleDictionaries import diffDicts, fillDocBeforeCreate
+# from .textTools.stringChanges import camelCase, createDirName, outputString
 
 
-class Backend(CLI_Mixin):
+class Backend():#TODO CLI_Mixin):
   """
   PYTHON BACKEND
   """
 
 
-  def __init__(self, defaultProjectGroup:str=''):
+  def __init__(self, configuration:dict[str,Any]={}, projectGroupName:str='') -> None:
     """
     open server and define database
 
@@ -38,24 +37,25 @@ class Backend(CLI_Mixin):
     self.configuration: dict[str, Any] = {}
     self.hierStack:list[str] = []
     self.cwd:Optional[Path]  = Path('.')
-    self.initialize(defaultProjectGroup)
+    self.initialize(configuration, projectGroupName)
 
 
-  def initialize(self, defaultProjectGroup:str='') -> None:
+  def initialize(self, configuration:dict[str,Any]={}, projectGroupName:str='') -> None:
     """
     initialize or reinitialize server and define database
 
     Args:
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
     """
-    self.configuration, self.configurationProjectGroup = getConfiguration(defaultProjectGroup)
-    projectGroup = self.configuration['projectGroups'][self.configurationProjectGroup]
+    self.configuration = configuration
+    self.configurationProjectGroup = projectGroupName
+    confProjectGroup = self.configuration['projectGroups'][self.configurationProjectGroup]
     # directories
     #    self.basePath (root of directory tree) is root of all projects
     #    self.cwd changes during program but is similarly the full path from root
-    self.basePath   = Path(projectGroup['local']['path'])
-    self.cwd        = Path(projectGroup['local']['path'])
-    self.addOnPath  = Path(projectGroup['addOnDir'])
+    self.basePath   = Path(confProjectGroup['local']['path'])
+    self.cwd        = Path(confProjectGroup['local']['path'])
+    self.addOnPath  = Path(confProjectGroup['addOnDir'])
     sys.path.append(str(self.addOnPath))                                                                                                              #allow add-ons
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']

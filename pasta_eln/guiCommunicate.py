@@ -1,7 +1,6 @@
 """ Communication class that sends signals between widgets, incl. backend"""
 from typing import Any, Callable
 from PySide6.QtCore import QObject, Signal, Slot                           # pylint: disable=no-name-in-module
-from .backend import Backend
 from .UI.waitDialog import WaitDialog, Worker
 from .UI.palette import Palette
 from .backendWorker.worker import BackendThread
@@ -23,7 +22,7 @@ class Communicate(QObject):
   stopSequentialEdit = Signal()          # in sequential edit, stop if there is a cancel
   softRestart        = Signal()          # restart GUI
   # send to backend
-  commSendPGConfiguration = Signal(dict) # send project group configuration to backend
+  commSendConfiguration = Signal(dict, str) # send configuration and project-group-name to backend
 
   def __init__(self, projectGroup:str=''):
     super().__init__()
@@ -35,22 +34,17 @@ class Communicate(QObject):
 
     # Backend worker thread
     self.backendThread = BackendThread(self)
-
     # connect backend worker to configuration signals: send GUI->backend
     #   has to be here, because otherwise worker needs comm which has to be passed through thread, is uninitialized, ...)
-    self.commSendPGConfiguration.connect(self.backendThread.worker.initialize)
-
-    # Connect backend worker signals to get data here: send backend->GUI #TODO move to gui.py et al.
-    self.backendThread.worker.beSendDocTypes.connect(self.onGetDocTypes)
+    self.commSendConfiguration.connect(self.backendThread.worker.initialize)
 
     self.backendThread.start()
-    self.commSendPGConfiguration.emit(self.configuration['projectGroups'][self.configurationProjectGroup])
+    self.commSendConfiguration.emit(self.configuration, self.configurationProjectGroup)
 
-
-  @Slot(list)
-  def onGetDocTypes(self, data: list) -> None:
+  @Slot(dict)
+  def onGetDocTypes(self, data: dict) -> None:
     """Handle data received from backend worker"""
-    print(f"Received data from backend: {data}")
+    print('Communicate.onGetDocTypes: received data from backend worker:', data)
 
 
   def shutdownBackendThread(self) -> None:

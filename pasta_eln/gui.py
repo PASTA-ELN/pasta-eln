@@ -1,21 +1,14 @@
 """ Graphical user interface houses all widgets """
-import json
 import logging
-import os
-import re
-import sys
-import webbrowser
-from enum import Enum
 from pathlib import Path
-from typing import Any, Union
-from PySide6.QtCore import QCoreApplication, Slot                          # pylint: disable=no-name-in-module
-from PySide6.QtGui import QIcon, QPixmap, QShortcut                        # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox# pylint: disable=no-name-in-module
+from PySide6.QtCore import QCoreApplication                                # pylint: disable=no-name-in-module
+from PySide6.QtGui import QIcon                                            # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QApplication                                 # pylint: disable=no-name-in-module
 from pasta_eln import __version__
 from .guiCommunicate import Communicate
 from .UI.mainWindow import MainWindow
 
-def mainGUI(projectGroup:str='') -> tuple[Union[QCoreApplication, None], MainWindow]:
+def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
   """  Main method and entry point for commands
 
   Args:

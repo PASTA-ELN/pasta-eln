@@ -3,30 +3,33 @@ CONNECT TO ALL SIGNALS IN COMMUNICATE
 """
 import logging
 from typing import Any, Optional
+import sqlite3
 from pathlib import Path
 from PySide6.QtCore import QObject, QThread, Signal, Slot
-
+from .backend import Backend
 
 class BackendWorker(QObject):
   """
   Backend worker that runs in a separate thread to handle all backend operations
   """
   # Signals to send data back to GUI
-  beSendDocTypes = Signal(list)           # Send processed data back
+  beSendDocTypes = Signal(dict)           # Send processed data back
 
   def __init__(self):
     super().__init__()
-    self.configuration: Optional[dict] = None
-    print('BackendWorker initialized')
+    self.backend: Optional[Backend] = None
 
-  @Slot(dict)
-  def initialize(self, configuration:dict) -> None:
+
+  @Slot(dict,str)
+  def initialize(self, configuration:dict, projectGroupName:str) -> None:
     """ Initialize the backend worker with the given configuration """
-    self.configuration = configuration
-    print(f'BackendWorker initialized with configuration: {self.configuration}')
-
-    # Example: Send processed data back
-    self.beSendDocTypes.emit(list(configuration.keys()))
+    self.backend = Backend(configuration, projectGroupName)
+    docTypesTitlesIcons = {k:{'title':v} for k,v in self.backend.db.dataHierarchy('','title')}
+    for k,v in self.backend.db.dataHierarchy('','icon'):
+      docTypesTitlesIcons[k]['icon'] = v
+    for k,v in self.backend.db.dataHierarchy('','shortcut'):
+      docTypesTitlesIcons[k]['shortcut'] = v
+    self.beSendDocTypes.emit(docTypesTitlesIcons)
 
 
   def exit(self) -> None:

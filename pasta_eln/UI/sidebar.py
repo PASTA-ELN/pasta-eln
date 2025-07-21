@@ -7,7 +7,7 @@ from PySide6.QtCore import Slot                                            # pyl
 from PySide6.QtGui import QResizeEvent                                     # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QVBoxLayout, QWidget# pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
-from .config import Configuration
+# from .config import Configuration
 from .guiStyle import IconButton, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
 from .messageDialog import showMessage
 

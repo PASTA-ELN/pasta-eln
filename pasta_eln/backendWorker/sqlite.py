@@ -14,9 +14,9 @@ from typing import Any, Callable, Optional, Union
 import pandas as pd
 from anytree import Node
 from PIL import Image
-from .fixedStringsJson import SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema
-from .miscTools import hierarchy
-from .textTools.stringChanges import camelCase, createDirName, outputString, tracebackString
+from ..fixedStringsJson import SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema
+from ..miscTools import hierarchy
+from ..textTools.stringChanges import camelCase, createDirName, outputString, tracebackString
 
 MAIN_ORDER     =['id'  ,'name','user','type','dateCreated','dateModified','gui',      'client','shasum','image','content','comment','externalId','dateSync']
 MAIN_TYPE      =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',   'TEXT',     'TEXT']
