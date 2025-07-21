@@ -14,7 +14,7 @@ import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
 from PIL import Image
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
-from .miscTools import generic_hash
+from .miscTools import generic_hash, getConfiguration
 from .mixin_cli import CLI_Mixin
 from .sqlite import SqlLiteDB
 from .textTools.handleDictionaries import diffDicts, fillDocBeforeCreate
@@ -35,7 +35,6 @@ class Backend(CLI_Mixin):
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
     """
     #initialize basic values
-    self.configFileName = Path.home() / CONF_FILE_NAME
     self.configuration: dict[str, Any] = {}
     self.hierStack:list[str] = []
     self.cwd:Optional[Path]  = Path('.')
@@ -49,22 +48,8 @@ class Backend(CLI_Mixin):
     Args:
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
     """
-    self.configuration = defaultConfiguration
-    if self.configFileName.is_file():
-      with open(self.configFileName, encoding='utf-8') as confFile:
-        self.configuration |= json.load(confFile)
-    for _, items in configurationGUI.items():
-      for k,v in items.items():
-        if k not in self.configuration['GUI']:
-          self.configuration['GUI'][k] = v[1]
-    if self.configuration['version'] != 3:
-      print('**Info: configuration file does not exist or version is != 3')
-      return
-    defaultProjectGroup = defaultProjectGroup or self.configuration['defaultProjectGroup']
-    if defaultProjectGroup not in self.configuration['projectGroups']:
-      raise ValueError('BadConfigurationFileError')
-    self.configurationProjectGroup = defaultProjectGroup
-    projectGroup = self.configuration['projectGroups'][defaultProjectGroup]
+    self.configuration, self.configurationProjectGroup = getConfiguration(defaultProjectGroup)
+    projectGroup = self.configuration['projectGroups'][self.configurationProjectGroup]
     # directories
     #    self.basePath (root of directory tree) is root of all projects
     #    self.cwd changes during program but is similarly the full path from root

@@ -20,7 +20,7 @@ import pandas as pd
 from packaging.version import parse as parse_version
 from PySide6.QtWidgets import QWidget                                      # pylint: disable=no-name-in-module
 import pasta_eln
-from .fixedStringsJson import CONF_FILE_NAME
+from .fixedStringsJson import CONF_FILE_NAME, defaultConfiguration, configurationGUI
 
 
 
@@ -364,7 +364,7 @@ class MplCanvas(FigureCanvas):
       dpi (int): dots per inch
     """
     fig = Figure(figsize=(width, height), dpi=dpi)
-    self.axes = fig.add_subplot(111)
+    axes = fig.add_subplot(111)
     super().__init__(fig)
 
 
@@ -386,6 +386,30 @@ class DummyProgressBar():
   def hide(self) -> None:
     """ hide progress bar """
     return
+
+def getConfiguration(defaultProjectGroup:str='') -> tuple[dict[str, Any],str]:
+  """ Get configuration from home directory
+  Args:
+    defaultProjectGroup (str): project group to use, if not given, use default
+  Returns:
+    tuple: configuration dict and default project group
+  """
+  configuration = defaultConfiguration
+  configFileName = Path.home() / CONF_FILE_NAME
+  if configFileName.is_file():
+    with open(configFileName, encoding='utf-8') as confFile:
+      configuration |= json.load(confFile)
+  for _, items in configurationGUI.items():
+    for k,v in items.items():
+      if k not in configuration['GUI']:
+        configuration['GUI'][k] = v[1]
+  if configuration['version'] != 3:
+    print('**Info: configuration file does not exist or version is != 3')
+    return {},''
+  defaultProjectGroup = defaultProjectGroup or configuration['defaultProjectGroup']
+  if defaultProjectGroup not in configuration['projectGroups']:
+    raise ValueError(f'BadConfigurationFileError: {defaultProjectGroup} not in projectGroups')
+  return configuration, defaultProjectGroup
 
 
 def hardRestart() -> None:
