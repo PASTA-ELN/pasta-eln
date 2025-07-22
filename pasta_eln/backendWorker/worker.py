@@ -15,10 +15,12 @@ class BackendWorker(QObject):
   Backend worker that runs in a separate thread to handle all backend operations
   """
   # Signals to send data back to GUI
-  beSendDocTypes = Signal(dict)           # Send processed data back
-  beSendProjects = Signal(pd.DataFrame)
-  beSendTable    = Signal(pd.DataFrame)   # all tables
-  beSendHierarchy= Signal(Node, dict)
+  beSendDocTypes          = Signal(dict)           # Send processed data back
+  beSendDataHierarchyNode = Signal(str,list)       # Send data hierarchy nodes
+  beSendProjects          = Signal(pd.DataFrame)
+  beSendTable             = Signal(pd.DataFrame)   # all tables
+  beSendHierarchy         = Signal(Node, dict)
+  beSendDoc               = Signal(dict, str)
 
   def __init__(self):
     super().__init__()
@@ -36,6 +38,9 @@ class BackendWorker(QObject):
       docTypesTitlesIcons[k]['shortcut'] = v
     self.beSendDocTypes.emit(docTypesTitlesIcons)
     self.beSendProjects.emit(self.backend.db.getView('viewDocType/x0'))
+    for docType in docTypesTitlesIcons:
+      self.beSendDataHierarchyNode.emit(docType, self.backend.db.dataHierarchy(docType, 'meta'))
+
 
   @Slot(str, str, bool)
   def returnTable(self, docType:str, projID:str, showAll:bool) -> None:
@@ -52,6 +57,10 @@ class BackendWorker(QObject):
       hierarchy = Node('__ERROR_in_getHierarchy__')
     projDoc = self.backend.db.getDoc(projID)
     self.beSendHierarchy.emit(hierarchy, projDoc)
+
+  @Slot(str, str)
+  def returnDoc(self, docID:str, task:str) -> None:
+    self.beSendDoc.emit(self.backend.db.getDoc(docID), task)
 
   def exit(self) -> None:
     """ Exit the worker thread """
