@@ -16,8 +16,8 @@ from PIL import Image
 from .miscTools import generic_hash
 from .mixin_cli import CLI_Mixin
 from .sqlite import SqlLiteDB
-from .handleDictionaries import diffDicts, fillDocBeforeCreate
-from .stringChanges import camelCase, createDirName, outputString
+from ..textTools.handleDictionaries import diffDicts, fillDocBeforeCreate
+from ..textTools.stringChanges import camelCase, createDirName, outputString
 
 
 class Backend(CLI_Mixin):

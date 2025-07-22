@@ -56,16 +56,15 @@ class Communicate(QObject):
     # Data storage for all widgets
     self.docTypesTitles:dict[str,dict[str,str]] = {}# docType: {'title':title,'icon':icon,'shortcut':shortcut}
     self.docType                                = 'x0'
-    self.dataHierarchyNodes                     = {}
-    self.projects: pd.DataFrame                 = pd.DataFrame()     # for sidebar
+    self.dataHierarchyNodes:dict[str,list[Any]] = {}
+    self.projects:pd.DataFrame                  = pd.DataFrame()     # for sidebar
     self.projectID                              = ''
-    self.projectDoc                             = {}
+    self.projectDoc:dict[str,Any]               = {}
     self.table                                  = pd.DataFrame()     # table data: measurements, projects, ...
-    self.leafs                                  = {}# docID: {'size':..,'markdown':..,'content':..,'image':..}
+    self.leafs:dict[str,Any]                    = {}# docID: {'size':..,'markdown':..,'content':..,'image':..}
     self.leafWidth                              = -1
-    self.leafMarkdown                           = {}
     self.showAll                                = True
-    self.palette                                = Palette()                           #reset to real one later
+    self.palette                                = Palette(None, 'none')               #reset to real one later
 
     # connect to GUI widget signals: group A
     self.changeTable.connect(self.toChangeTable)
@@ -120,7 +119,7 @@ class Communicate(QObject):
     self.docTypesChanged.emit()
 
   @Slot(str, list)
-  def onGetDataHierarchyNode(self, docType:str, data:list):
+  def onGetDataHierarchyNode(self, docType:str, data:list[Any]) -> None:
     self.dataHierarchyNodes[docType] = data
 
   @Slot(pd.DataFrame)
@@ -154,9 +153,8 @@ class Communicate(QObject):
   @Slot(str, str)
   def onGetDoc(self, doc:dict[str,Any], task:str ) -> None:
     if doc['id'] not in self.leafs:
-      self.leafs[doc['id']] = {}
+      self.leafs[doc['id']] = {'size':QSize(400, 30), 'markdown':'', 'content':'', 'image':'', 'hidden':False}
     guiStyle = self.configuration['GUI']
-    print(doc['id'], task)
     if task=='size':
       # ... after deleting project, its items cannot be found and it would give many false negatives
       if doc['type'][0] not in self.docTypesTitles:
@@ -194,7 +192,7 @@ class Communicate(QObject):
     if self.backendThread is not None:
       self.backendThread.quit()
       self.backendThread.wait()
-      self.backendThread = None
+      del self.backendThread
 
 
   def progressWindow(self, taskFunction:Callable[[Callable[[str,str],None]],Any]) -> None:
