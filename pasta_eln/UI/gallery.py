@@ -4,7 +4,7 @@ from PySide6.QtCore import QByteArray, Qt, Signal
 from PySide6.QtGui import QImage, QMouseEvent, QPixmap, QStandardItemModel
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import QGridLayout, QPushButton, QScrollArea, QVBoxLayout, QWidget
-from ..guiCommunicate import Communicate
+from .guiCommunicate import Communicate
 
 IMG_SIZE = 300
 

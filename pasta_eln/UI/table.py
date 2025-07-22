@@ -10,11 +10,11 @@ from PySide6.QtCore import QModelIndex, QSortFilterProxyModel, Qt, Slot    # pyl
 from PySide6.QtGui import QRegularExpressionValidator, QStandardItem, QStandardItemModel# pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView,# pylint: disable=no-name-in-module
                                QLineEdit, QMenu, QMessageBox, QPushButton, QTableView, QVBoxLayout, QWidget)
-from ..guiCommunicate import Communicate
+from .guiCommunicate import Communicate
 from ..miscTools import callAddOn
 from .gallery import ImageGallery
 from .guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
-from .tableHeader import TableHeader
+#from .tableHeader import TableHeader
 
 
 #Scan button to more button
@@ -29,7 +29,7 @@ class Table(QWidget):
     """
     super().__init__()
     self.comm = comm
-    comm.changeTable.connect(self.change)
+    comm.tableChanged.connect(self.paint)
     comm.stopSequentialEdit.connect(self.stopSequentialEditFunction)
     self.stopSequentialEdit = False
     self.data         :pd.DataFrame = pd.DataFrame()
@@ -38,12 +38,10 @@ class Table(QWidget):
     self.filterText   :list[QLineEdit]   = []
     self.filterInverse:list[QPushButton] = []
     self.filterDelete :list[QPushButton] = []
-    self.docType = ''
-    self.projID = ''
     self.filterHeader:list[str] = []
-    self.showAll= self.comm.backend.configuration['GUI']['showHidden']=='Yes'
     self.lastClickedRow = -1
     self.flagGallery = False
+    self.comm.showAll= self.comm.configuration['GUI']['showHidden']=='Yes'
 
     ### GUI elements
     mainL = QVBoxLayout()
@@ -87,7 +85,7 @@ class Table(QWidget):
     self.moreMenu = QMenu(self)
     Action('Export to csv',            self, [Command.EXPORT],   self.moreMenu)
     self.moreMenu.addSeparator()
-    projectGroup = self.comm.backend.configuration['projectGroups'][self.comm.backend.configurationProjectGroup]
+    projectGroup = self.comm.configuration['projectGroups'][self.comm.configurationProjectGroup]
     if projectAddOns := projectGroup.get('addOns',{}).get('table',''):
       for label, description in projectAddOns.items():
         Action(description, self, [Command.ADD_ON, label], self.moreMenu)
@@ -109,7 +107,7 @@ class Table(QWidget):
     header.setStyleSheet('QHeaderView::section {padding: 0px 5px; margin: 0px;}')
     header.setSectionsMovable(True)
     header.setSortIndicatorShown(True)
-    header.setMaximumSectionSize(self.comm.backend.configuration['GUI']['maxTableColumnWidth'])
+    header.setMaximumSectionSize(self.comm.configuration['GUI']['maxTableColumnWidth'])
     header.setStretchLastSection(True)
     mainL.addWidget(self.table)
     self.gallery = ImageGallery(self.comm)
@@ -120,7 +118,7 @@ class Table(QWidget):
 
 
   @Slot(str, str)
-  def change(self, docType:str, projID:str) -> None:
+  def paint(self) -> None:
     """
     What happens when the table changes its raw information
 
@@ -130,8 +128,6 @@ class Table(QWidget):
     """
     if self.isHidden():
       return
-    if docType!=self.docType or projID!=self.projID:
-      logging.debug('table:changeTable |%s|%s|',docType, projID)
     self.models = []
     self.filterSelect = []
     self.filterText   = []
@@ -144,30 +140,26 @@ class Table(QWidget):
       if item_1 is not None:
         item_1.widget().setParent(None)
     allDocTypes:list[str] = []
-    if (docType!=self.docType or projID!=self.projID) and '/' not in docType:
+    if '/' not in self.comm.docType:
       # get list of all subDocTypes
-      allDocTypes = self.comm.backend.db.dataHierarchy('', '')
-      allDocTypes = [i for i in allDocTypes if i.startswith(docType)]
+      allDocTypes = [i for i in self.comm.docTypesTitles if i.startswith(self.comm.docType)]
       if len(allDocTypes)==1:
         self.subDocTypeL.hide()
         self.subDocType.hide()
-      elif len(allDocTypes)>1 and docType:
+      elif len(allDocTypes)>1:
         self.subDocTypeL.show()
         self.subDocType.show()
         alreadyInside = {self.subDocType.itemText(i) for i in range(self.subDocType.count())}
         if alreadyInside != set(allDocTypes):
           self.subDocType.clear()
           self.subDocType.addItems(allDocTypes)
-    if docType!='':
-      self.docType = docType
-      self.projID  = projID
-    if 'measurement' in self.docType:
+    if 'measurement' in self.comm.docType:
       self.toggleGallery.setVisible(True)
     else:
       self.toggleGallery.setVisible(False)
       self.flagGallery = False
     # start tables: collect data
-    if self.docType=='_tags_':
+    if self.comm.docType=='_tags_':
       self.addBtn.hide()
       if self.showAll:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
@@ -178,39 +170,35 @@ class Table(QWidget):
       self.actionChangeColums.setVisible(False)
     else:
       self.addBtn.show()
-      if self.docType.startswith('x0'):
+      if self.comm.docType.startswith('x0'):
         self.selectionBtn.hide()
         self.toggleHidden.setVisible(False)
       else:
         self.selectionBtn.show()
         self.toggleHidden.setVisible(True)
-      path = (f'viewDocType/{self.docType}All' if self.showAll else f'viewDocType/{self.docType}')
-      if self.projID=='':
-        self.data = self.comm.backend.db.getView(path)
-      else:
-        self.data = self.comm.backend.db.getView(path, startKey=self.projID)
-      self.showState.setText('(show all rows)' if self.showAll else '(hide hidden rows)')
+      self.showState.setText('(show all rows)' if self.comm.showAll else '(hide hidden rows)')
       docLabel = 'Unidentified'
-      if self.docType=='-':
+      if self.comm.docType=='-':
         self.actionChangeColums.setVisible(False)
       else:
         self.actionChangeColums.setVisible(True)
-        docLabel = self.comm.backend.db.dataHierarchy(self.docType,'title')[0]
-      if self.projID:
+        docLabel = self.comm.docTypesTitles[self.comm.docType]['title']
+      if self.comm.projectID:
         self.headline.setText(docLabel)
         self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
       else:
-        self.comm.changeSidebar.emit('')                                         #close the project in sidebar
+        if self.comm.docType == 'x0':
+          self.comm.changeSidebar.emit('')                                       #close the project in sidebar
         self.headline.setText(f'All {docLabel.lower()}')
         self.showHidden.setText(f'Show/hide all hidden {docLabel.lower()}')
-      self.filterHeader = list(self.data.columns)[:-1]
+      self.filterHeader = list(self.comm.table.columns)[:-1]
     self.headerW.show()
-    nRows, nCols = self.data.shape
+    nRows, nCols = self.comm.table.shape
     model = QStandardItemModel(nRows, nCols-1)
     model.setHorizontalHeaderLabels(self.filterHeader)
     for i, j in itertools.product(range(nRows), range(nCols-1)):
-      value = self.data.iloc[i,j]
-      if self.docType=='_tags_':                                                                   # tags list
+      value = self.comm.table.iloc[i,j]
+      if self.comm.docType=='_tags_':                                                              # tags list
         if j==0:
           if value=='_curated':                                                                       #curated
             item = QStandardItem('_curated_')
@@ -240,11 +228,11 @@ class Table(QWidget):
           text = value
         item = QStandardItem(text)
       if j == 0:
-        doc = self.comm.backend.db.getDoc(self.data['id'][i])
-        if [b for b in doc['branch'] if False in b['show']]:
-          item.setText(f'{item.text()}  \U0001F441')
-        item.setAccessibleText(doc['id'])
-        if self.docType != 'x0':
+        # doc = self.comm.backend.db.getDoc(self.data['id'][i]) #TODO
+        # if [b for b in doc['branch'] if False in b['show']]:
+        #   item.setText(f'{item.text()}  \U0001F441')
+        item.setAccessibleText(self.comm.table['id'][i])
+        if self.comm.docType != 'x0':
           item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
           item.setCheckState(Qt.CheckState.Unchecked)
       else:

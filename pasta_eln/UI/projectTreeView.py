@@ -10,7 +10,7 @@ from typing import Any
 from PySide6.QtCore import Qt                                              # pylint: disable=no-name-in-module
 from PySide6.QtGui import QDropEvent, QEventPoint, QStandardItem, QStandardItemModel# pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget# pylint: disable=no-name-in-module
-from ..guiCommunicate import Communicate
+from .guiCommunicate import Communicate
 from ..miscTools import callAddOn
 from .guiStyle import Action
 from .messageDialog import showMessage

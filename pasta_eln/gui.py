@@ -1,13 +1,13 @@
-""" Graphical user interface houses all widgets """
+""" Main methods that start the gui """
 import logging
 from pathlib import Path
 from PySide6.QtCore import QCoreApplication                                # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon                                            # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QApplication                                 # pylint: disable=no-name-in-module
 from pasta_eln import __version__
-from .guiCommunicate import Communicate
+from .UI.guiCommunicate import Communicate
 from .UI.mainWindow import MainWindow
-from .UI.config import Configuration
+
 
 def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
   """  Main method and entry point for commands
@@ -21,7 +21,7 @@ def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
   # logging has to be started first
   log_path = Path.home() / 'pastaELN.log'
   #  old versions of basicConfig do not know "encoding='utf-8'"
-  logging.basicConfig(filename=log_path, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
+  logging.basicConfig(filename=log_path, level=logging.INFO, format='%(asctime)s|%(levelname)s|%(filename)s:%(lineno)d:%(message)s',
                       datefmt='%m-%d %H:%M:%S')
   for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib','pudb']:
     logging.getLogger(package).setLevel(logging.WARNING)

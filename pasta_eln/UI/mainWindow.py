@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import sys
+import traceback
 import webbrowser
 from enum import Enum
 from pathlib import Path
@@ -13,7 +14,7 @@ from PySide6.QtWidgets import QFileDialog, QMainWindow, QMessageBox        # pyl
 from pasta_eln import __version__
 # from ..elabFTWsync import Pasta2Elab
 from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
-# from .body import Body
+from .body import Body
 # from .config import Configuration
 # from .data_hierarchy.editor import SchemeEditor
 # from .definitions.editor import Editor as DefinitionsEditor
@@ -25,7 +26,7 @@ from .guiStyle import Action, ScrollMessageBox, widgetAndLayout
 from .messageDialog import showMessage
 # from ..inputOutput import exportELN, importELN
 from ..miscTools import hardRestart, testNewPastaVersion, updateAddOnList, installPythonPackages
-from ..guiCommunicate import Communicate
+from .guiCommunicate import Communicate
 from .config import Configuration
 
 # Subclass QMainWindow to customize your application's main window
@@ -44,7 +45,7 @@ class MainWindow(QMainWindow):
     self.comm = comm
     if self.comm.configuration:
       self.comm.palette = Palette(self, self.comm.configuration['GUI']['theme'])
-      self.comm.redrawMainWindow.connect(self.paint)
+      self.comm.docTypesChanged.connect(self.paint)
     else:
       configWindow = Configuration(self, 'setup')
       configWindow.exec()
@@ -105,10 +106,10 @@ class MainWindow(QMainWindow):
     mainWidget, mainLayout = widgetAndLayout('H')
     self.setCentralWidget(mainWidget)                                   # Set the central widget of the Window
     try:
-      #TODO body = Body(self.comm)                                                           # body with information
+      body = Body(self.comm)                                                           # body with information
       self.sidebar = Sidebar(self.comm)                                                 # sidebar with buttons
       mainLayout.addWidget(self.sidebar)
-      # mainLayout.addWidget(body)
+      mainLayout.addWidget(body)
       # # tests that run at start-up
       # if self.backend.configuration['GUI']['checkForUpdates']=='Yes' and not testNewPastaVersion(False):
       #   button = QMessageBox.question(self, 'Update?', 'There is a new version of PASTA-ELN available. Do you want to update?',
@@ -118,6 +119,7 @@ class MainWindow(QMainWindow):
       # initialize things that might change
       self.paint()
     except Exception as e:
+      traceback.print_exc()
       logging.error('Error in GUI initialization %s', e)
 
 

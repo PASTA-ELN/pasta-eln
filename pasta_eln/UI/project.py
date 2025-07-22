@@ -8,7 +8,7 @@ from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot      # pyl
 from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel       # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayout, QWidget# pylint: disable=no-name-in-module
 from ..fixedStringsJson import DO_NOT_RENDER
-from ..guiCommunicate import Communicate
+from .guiCommunicate import Communicate
 from ..miscTools import callAddOn
 from ..textTools.handleDictionaries import doc2markdown
 from ..textTools.stringChanges import createDirName
@@ -32,7 +32,7 @@ class Project(QWidget):
     self.actionFoldAll                       = QAction()
     self.projID = ''
     self.docProj:dict[str,Any]= {}
-    self.showAll= self.comm.backend.configuration['GUI']['showHidden']=='Yes'
+    self.showAll= self.comm.configuration['GUI']['showHidden']=='Yes'
     self.showDetailsAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
     self.btnEditProject:Optional[TextButton]  = None
@@ -45,8 +45,8 @@ class Project(QWidget):
     """
     Initialize / Create header of page
     """
-    self.docProj = self.comm.backend.db.getDoc(self.projID)
-    dataHierarchyNode = self.comm.backend.db.dataHierarchy('x0', 'meta')
+    self.docProj = self.comm.db.getDoc(self.projID)
+    dataHierarchyNode = self.comm.db.dataHierarchy('x0', 'meta')
     # remove if still there
     for i in reversed(range(self.mainL.count())):                                                  #remove old
       self.mainL.itemAt(i).widget().setParent(None)
@@ -77,14 +77,14 @@ class Project(QWidget):
     self.btnMore = TextButton('More',           self, [], buttonL)
     moreMenu = QMenu(self)
     Action('Scan',                      self, [Command.SCAN], moreMenu)
-    for doctype in self.comm.backend.db.dataHierarchy('', ''):
+    for doctype in self.comm.db.dataHierarchy('', ''):
       if doctype[0]!='x':
-        icon = self.comm.backend.db.dataHierarchy(doctype, 'icon')[0]
+        icon = self.comm.db.dataHierarchy(doctype, 'icon')[0]
         icon = 'fa5s.asterisk' if icon=='' else icon
         Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
     moreMenu.addSeparator()
-    projectGroup = self.comm.backend.configuration['projectGroups'][self.comm.backend.configurationProjectGroup]
+    projectGroup = self.comm.configuration['projectGroups'][self.comm.configurationProjectGroup]
     if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
       for label, description in projectAddOns.items():
         Action(description, self, [Command.ADD_ON, label], moreMenu)

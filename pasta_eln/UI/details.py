@@ -7,10 +7,10 @@ from typing import Any
 from PySide6.QtCore import Qt, Slot                                        # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QScrollArea, QTextEdit, QLayout, QLabel      # pylint: disable=no-name-in-module
 from ..fixedStringsJson import SORTED_DB_KEYS, defaultDataHierarchyNode, cssStyleHtmlEditors
-from ..guiCommunicate import Communicate
 from ..textTools.handleDictionaries import dict2ul
 from ..textTools.stringChanges import markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
+from .guiCommunicate import Communicate
 from .guiStyle import IconButton, Image, Label, TextButton, widgetAndLayout
 from .messageDialog import showMessage
 

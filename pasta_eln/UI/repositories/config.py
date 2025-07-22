@@ -8,7 +8,7 @@ from typing import Any, Callable
 import qtawesome as qta
 from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
 from ...fixedStringsJson import CONF_FILE_NAME
-from ...guiCommunicate import Communicate
+from ..guiCommunicate import Communicate
 from ..guiStyle import Label, TextButton, widgetAndLayout, widgetAndLayoutGrid
 from ..messageDialog import showMessage
 from .dataverse import DataverseClient

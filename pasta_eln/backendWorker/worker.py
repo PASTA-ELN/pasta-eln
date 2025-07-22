@@ -16,6 +16,7 @@ class BackendWorker(QObject):
   # Signals to send data back to GUI
   beSendDocTypes = Signal(dict)           # Send processed data back
   beSendProjects = Signal(pd.DataFrame)
+  beSendTable    = Signal(pd.DataFrame)   # all tables
 
   def __init__(self):
     super().__init__()
@@ -34,6 +35,12 @@ class BackendWorker(QObject):
     self.beSendDocTypes.emit(docTypesTitlesIcons)
     self.beSendProjects.emit(self.backend.db.getView('viewDocType/x0'))
 
+  @Slot(str, str, bool)
+  def returnTable(self, docType:str, projID:str, showAll:bool) -> None:
+    """ Return a view from the database """
+    path = f'viewDocType/{docType}All' if showAll else f'viewDocType/{docType}'
+    data = self.backend.db.getView(path, startKey=projID)
+    self.beSendTable.emit(data)
 
   def exit(self) -> None:
     """ Exit the worker thread """

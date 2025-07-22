@@ -14,8 +14,8 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog
                                QLabel, QLineEdit, QMessageBox, QTextEdit, QVBoxLayout)
 from ..elabFTWapi import ElabFTWApi
 from ..fixedStringsJson import CONF_FILE_NAME
-from ..guiCommunicate import Communicate
 from ..miscTools import hardRestart
+from .guiCommunicate import Communicate
 from .guiStyle import IconButton, Label, TextButton, widgetAndLayoutGrid
 from .messageDialog import showMessage
 

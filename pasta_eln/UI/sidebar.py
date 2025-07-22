@@ -6,8 +6,7 @@ from anytree import Node
 from PySide6.QtCore import Slot                                            # pylint: disable=no-name-in-module
 from PySide6.QtGui import QResizeEvent                                     # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QVBoxLayout, QWidget# pylint: disable=no-name-in-module
-from ..guiCommunicate import Communicate
-# from .config import Configuration
+from .guiCommunicate import Communicate
 from .guiStyle import IconButton, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
 from .messageDialog import showMessage
 
@@ -17,7 +16,7 @@ class Sidebar(QWidget):
   def __init__(self, comm:Communicate):
     super().__init__()
     self.comm = comm
-    comm.changeSidebar.connect(self.change)
+    comm.changeSidebar.connect(self.paint)
     self.sideBarWidth = self.comm.configuration['GUI']['sidebarWidth']
     self.setFixedWidth(self.sideBarWidth)
     self.openProjectId = ''
@@ -38,11 +37,11 @@ class Sidebar(QWidget):
     self.btnScan:TextButton|None         = None
     self.btnDocTypes:list[IconButton]    = []                         # list of buttons to show docType tables
     self.btnUnknown:IconButton|None      = None
-    self.change()
+    self.paint()
 
 
   @Slot(str)
-  def change(self, projectChoice:str='') -> None:
+  def paint(self, projectChoice:str='') -> None:
     """
     Redraw sidebar: e.g. after change of project visibility in table
 
@@ -192,7 +191,7 @@ class Sidebar(QWidget):
     Args:
       event (QResizeEvent): event
     """
-    self.change('redraw')
+    self.paint('redraw')
     return super().resizeEvent(event)
 
 

@@ -7,7 +7,7 @@ from PySide6.QtGui import QColor, QPainter, QPen, QPixmap, QStaticText, QTextDoc
 from PySide6.QtSvg import QSvgRenderer                                     # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem    # pylint: disable=no-name-in-module
 from ..fixedStringsJson import DO_NOT_RENDER, defaultDataHierarchyNode
-from ..guiCommunicate import Communicate
+from .guiCommunicate import Communicate
 from ..textTools.handleDictionaries import doc2markdown
 from ..textTools.stringChanges import markdownEqualizer
 

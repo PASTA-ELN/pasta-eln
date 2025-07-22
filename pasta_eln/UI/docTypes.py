@@ -2,10 +2,9 @@
 from typing import Any
 from PySide6.QtCore import Slot                                            # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QSplitter, QVBoxLayout, QWidget              # pylint: disable=no-name-in-module
-from ..guiCommunicate import Communicate
 from .details import Details
+from .guiCommunicate import Communicate
 from .table import Table
-
 
 class DocTypes(QWidget):
   """ widget that shows the table and the details of the items """

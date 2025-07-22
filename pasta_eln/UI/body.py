@@ -1,10 +1,9 @@
 """ Central widget: everything that is not sidebar: switches between project-view and table-details """
 from PySide6.QtCore import Slot                                            # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QVBoxLayout, QWidget                         # pylint: disable=no-name-in-module
-from ..guiCommunicate import Communicate
+from .guiCommunicate import Communicate
 from .docTypes import DocTypes
 from .project import Project
-
 
 class Body(QWidget):
   """ Central widget: everything that is not sidebar: switches between project-view and table-details """
@@ -13,6 +12,7 @@ class Body(QWidget):
     self.comm = comm
     comm.changeTable.connect(self.changeTable)
     comm.changeProject.connect(self.changeProject)
+
     self.docTypes = DocTypes(comm)
     self.project  = Project(comm)
     self.project.hide()
