@@ -55,6 +55,7 @@ class Communicate(QObject):
     self.projectDoc                             = {}
     self.table                                  = pd.DataFrame()     # table data: measurements, projects, ...
     self.leafSizes                              = {}
+    self.leafMarkdown                           = {}
     self.showAll                                = True
     self.palette:None|Palette                   = None
 

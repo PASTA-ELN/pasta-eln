@@ -48,14 +48,13 @@ class Project(QWidget):
     logging.debug('ProjectView elements at 2: %i',self.mainL.count())
     if not self.comm.projectDoc:
       return
-    print('paint projHeader', self.comm.projectDoc)
     # TOP LINE includes name on left, buttons on right
     _, topLineL       = widgetAndLayout('H',self.mainL,'m')
     hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
                        if [b for b in self.comm.projectDoc['branch'] if False in b['show']] else \
                        ('', 'Mark project as hidden')
     topLineL.addWidget(Label(self.comm.projectDoc['name']+hidden, 'h2'))
-    showStatus = '(Show all items)' if self.showAll else '(Hide hidden items)'
+    showStatus = '(Show all items)' if self.comm.showAll else '(Hide hidden items)'
     topLineL.addWidget(QLabel(showStatus))
     topLineL.addStretch(1)
     # buttons in top line
@@ -66,7 +65,7 @@ class Project(QWidget):
     self.btnVisibility = TextButton(  'Visibility',    self, [],                  buttonL)
     visibilityMenu = QMenu(self)
     self.actHideDetail = Action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
-    menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
+    menuTextItems = 'Hide hidden items' if self.comm.showAll else 'Show hidden items'
     minimizeItems = 'Show all item details' if self.showDetailsAll else 'Hide all item details'
     Action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
     Action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
@@ -75,11 +74,10 @@ class Project(QWidget):
     self.btnMore = TextButton('More',           self, [], buttonL)
     moreMenu = QMenu(self)
     Action('Scan',                      self, [Command.SCAN], moreMenu)
-    for doctype in self.comm.db.dataHierarchy('', ''):
-      if doctype[0]!='x':
-        icon = self.comm.db.dataHierarchy(doctype, 'icon')[0]
-        icon = 'fa5s.asterisk' if icon=='' else icon
-        Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
+    for docType, value in self.comm.docTypesTitles.items():
+      if docType[0]!='x':
+        icon = 'fa5s.asterisk' if value['icon']=='' else value['icon']
+        Action(f'table of {docType}',   self, [Command.SHOW_TABLE, docType], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
     moreMenu.addSeparator()
     projectGroup = self.comm.configuration['projectGroups'][self.comm.configurationProjectGroup]
@@ -94,8 +92,8 @@ class Project(QWidget):
     # self.infoW = QScrollArea()
     # self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     # self.infoW.setWidgetResizable(True)
-    self.allDetails.setMarkdown(doc2markdown(self.projectDoc, DO_NOT_RENDER, [], self)) #dataHierarchyNodes
-    if not self.projectDoc['gui'][0]:
+    self.allDetails.setMarkdown(doc2markdown(self.comm.projectDoc, DO_NOT_RENDER, [], self)) #TODO dataHierarchyNodes
+    if not self.comm.projectDoc['gui'][0]:
       self.allDetails.hide()
       self.actHideDetail.setText('Show project details')
     self.allDetails.resizeEvent = self.commentResize                                            # type: ignore
@@ -280,7 +278,7 @@ class Project(QWidget):
       else:
         self.actionFoldAll.setText('Hide all item details')
     elif command[0] is Command.HIDE_SHOW_ITEMS:
-      self.showAll = not self.showAll
+      self.comm.showAll = not self.comm.showAll
       self.change('','')
     elif command[0] is Command.ADD_CHILD:
       self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['branch'][0]['path']

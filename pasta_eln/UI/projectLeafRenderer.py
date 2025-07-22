@@ -70,13 +70,14 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       painter.drawStaticText(x0+docTypeOffset, y0+y, QStaticText(docTypeText))
       return
     # details = body
-    doc     = self.comm.backend.db.getDoc(docID)
+    doc     = {'name':'test','type':['-'], 'branch':[{'show':[True]}]}#TODO self.comm.backend.db.getDoc(docID)
     if not doc:
       return
-    if doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
-      dataHierarchyNode = defaultDataHierarchyNode
-    else:
-      dataHierarchyNode = self.comm.backend.db.dataHierarchy(doc['type'][0], 'meta')
+    dataHierarchyNode = []  #TODO
+    # if doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''): #TODO use other type in hierarchy
+    #   dataHierarchyNode = defaultDataHierarchyNode
+    # else:
+    #   dataHierarchyNode = self.comm.backend.db.dataHierarchy(doc['type'][0], 'meta')
     if len(doc)<2:
       logging.error('LeafRenderer: Cannot read docID %s',docID)
       return
