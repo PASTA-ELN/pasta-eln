@@ -36,7 +36,8 @@ def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
   if not comm.configuration:
     raise ValueError('Configuration not loaded.')
   logging.getLogger().setLevel(getattr(logging, comm.configuration['GUI']['loggingLevel']))
-  mainWindow.comm.palette.setTheme(application)
+  if mainWindow.comm.palette is not None and application is not None:
+    mainWindow.comm.palette.setTheme(application)                                    # type: ignore [arg-type]
   import qtawesome as qta                                               # qtawesome and matplot cannot coexist
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')

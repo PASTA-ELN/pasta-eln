@@ -262,7 +262,7 @@ class MainWindow(QMainWindow):
       myCount = len(re.findall(regexStr, reportText))
       if myCount>5:
         reportText = re.sub(regexStr, '', reportText, count=myCount-5)
-        reportText += '<font color="magenta">image does not exist ...:<\/font><br>'
+        reportText += r'<font color="magenta">image does not exist ...:<\/font><br>'
       showMessage(self, 'Report of database verification', reportText, minWidth=800)
     elif command[0] is Command.SHORTCUTS:
       showMessage(self, 'Keyboard shortcuts', shortcuts, 'Information')

@@ -13,18 +13,17 @@ from urllib import request
 import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
 from PIL import Image
-# from .miscTools import generic_hash, getConfiguration
-# from .mixin_cli import CLI_Mixin
+from .miscTools import generic_hash
+from .mixin_cli import CLI_Mixin
 from .sqlite import SqlLiteDB
-# from .textTools.handleDictionaries import diffDicts, fillDocBeforeCreate
-# from .textTools.stringChanges import camelCase, createDirName, outputString
+from .handleDictionaries import diffDicts, fillDocBeforeCreate
+from .stringChanges import camelCase, createDirName, outputString
 
 
-class Backend():#TODO CLI_Mixin):
+class Backend(CLI_Mixin):
   """
   PYTHON BACKEND
   """
-
 
   def __init__(self, configuration:dict[str,Any]={}, projectGroupName:str='') -> None:
     """

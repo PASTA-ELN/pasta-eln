@@ -22,13 +22,14 @@ class BackendWorker(QObject):
   beSendHierarchy         = Signal(Node, dict)
   beSendDoc               = Signal(dict, str)
 
-  def __init__(self):
+  def __init__(self) -> None:
+    """ Initialize the backend worker """
     super().__init__()
     self.backend: Optional[Backend] = None
 
 
   @Slot(dict,str)
-  def initialize(self, configuration:dict, projectGroupName:str) -> None:
+  def initialize(self, configuration:dict[str,Any], projectGroupName:str) -> None:
     """ Initialize the backend worker with the given configuration """
     self.backend = Backend(configuration, projectGroupName)
     docTypesTitlesIcons = {k:{'title':v} for k,v in self.backend.db.dataHierarchy('','title')}
@@ -45,34 +46,38 @@ class BackendWorker(QObject):
   @Slot(str, str, bool)
   def returnTable(self, docType:str, projID:str, showAll:bool) -> None:
     """ Return a view from the database """
-    path = f'viewDocType/{docType}All' if showAll else f'viewDocType/{docType}'
-    data = self.backend.db.getView(path, startKey=projID)
-    self.beSendTable.emit(data)
+    if self.backend is not None:
+      path = f'viewDocType/{docType}All' if showAll else f'viewDocType/{docType}'
+      data = self.backend.db.getView(path, startKey=projID)
+      self.beSendTable.emit(data)
 
   @Slot(str)
   def returnHierarchy(self, projID:str, showAll:bool) -> None:
     """ Return a hierarchy"""
-    hierarchy, error = self.backend.db.getHierarchy(projID, allItems=showAll)
-    if error:
-      hierarchy = Node('__ERROR_in_getHierarchy__')
-    projDoc = self.backend.db.getDoc(projID)
-    self.beSendHierarchy.emit(hierarchy, projDoc)
+    if self.backend is not None:
+      hierarchy, error = self.backend.db.getHierarchy(projID, allItems=showAll)
+      if error:
+        hierarchy = Node('__ERROR_in_getHierarchy__')
+      projDoc = self.backend.db.getDoc(projID)
+      self.beSendHierarchy.emit(hierarchy, projDoc)
 
   @Slot(str, str)
   def returnDoc(self, docID:str, task:str) -> None:
-    self.beSendDoc.emit(self.backend.db.getDoc(docID), task)
+    if self.backend is not None:
+      self.beSendDoc.emit(self.backend.db.getDoc(docID), task)
 
   def exit(self) -> None:
     """ Exit the worker thread """
-    self.deleteLater()
+    if self.backend is not None:
+      self.deleteLater()
 
 
 class BackendThread(QThread):
   """
   Thread that manages the backend worker
   """
-  def __init__(self, parent=None):
-    """ Initialize the backend thread with a parent QObject
+  def __init__(self, parent:QObject|None=None) -> None:
+    """Initialize the backend thread with a parent QObject
     Args:
       parent (QObject): Parent QObject for the thread
     """

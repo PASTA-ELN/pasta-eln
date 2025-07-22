@@ -128,11 +128,15 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     #     self.comm.changeProject.emit('','')
     #   return QSize()
 
+
   @Slot(str)
-  def dataChanged(self, docID):
+  def dataChanged(self, docID:str) -> None:
+    """ Update the size of the leaf: emit signal
+    Args:
+      docID (str): document ID
+    """
     if docID == self.docID:
       self.sizeHintChanged.emit(self.index)
-
 
 
   def drawTextDocument(self, painter:QPainter, textDoc:QTextDocument, yMax:int) -> None:

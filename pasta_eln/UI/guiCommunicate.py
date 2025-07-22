@@ -65,7 +65,7 @@ class Communicate(QObject):
     self.leafWidth                              = -1
     self.leafMarkdown                           = {}
     self.showAll                                = True
-    self.palette:None|Palette                   = None
+    self.palette                                = Palette()                           #reset to real one later
 
     # connect to GUI widget signals: group A
     self.changeTable.connect(self.toChangeTable)
