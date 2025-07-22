@@ -47,7 +47,7 @@ class Communicate(QObject):
     # Data storage for all widgets
     self.palette:None|Palette  = None
     self.projects: pd.DataFrame = pd.DataFrame()
-    self.docTypesTitles:dict[str,dict[str,str]] = {}  # docType: {'title': title, 'icon': icon, 'shortcut': shortcut}
+    self.docTypesTitles:dict[str,dict[str,str]] = {}# docType: {'title':title,'icon':icon,'shortcut':shortcut}
     self.table                  = pd.DataFrame()  # table data: measurements, projects
     self.projectID              = ''
     self.docType                = 'x0'
@@ -60,10 +60,12 @@ class Communicate(QObject):
       # Backend worker thread
       self.backendThread = BackendThread(self)
       # connect backend worker to configuration signals: send GUI->backend
-      #   has to be here, because otherwise worker needs comm which has to be passed through thread, is uninitialized, ...)
+      #   has to be here, else worker needs comm which has to be passed through thread, is uninitialized, ...)
+      # connect backend worker SLOTS to GUI signals: group B
       self.commSendConfiguration.connect(self.backendThread.worker.initialize)
       self.commSendTableRequest.connect(self.backendThread.worker.returnTable)
 
+      # connect GUI SLOTS to backend worker signals: group C
       self.backendThread.worker.beSendProjects.connect(self.onGetProjects)
       self.backendThread.worker.beSendDocTypes.connect(self.onGetDocTypes)
       self.backendThread.worker.beSendTable.connect(self.onGetTable)
@@ -73,9 +75,7 @@ class Communicate(QObject):
 
 
   def toChangeTable(self, docType:str, projID:str) -> None:
-    """
-    ask backend worker to supply new table data based on docType and projectID
-
+    """ Ask backend worker to supply new table data based on docType and projectID
     Args:
       docType (str): document type
       projID (str): project ID for filtering
@@ -85,20 +85,28 @@ class Communicate(QObject):
 
   @Slot(dict)
   def onGetDocTypes(self, data: dict[str, dict[str, str]]) -> None:
-    """Handle data received from backend worker"""
+    """ Handle data received from backend worker
+    Args:
+      data (dict): dictionary with docType: {'title':title,'icon':icon,'shortcut':shortcut}
+    """
     self.docTypesTitles = data
     self.docTypesChanged.emit()
 
-
   @Slot(pd.DataFrame)
   def onGetProjects(self, data: pd.DataFrame) -> None:
-    """Handle data received from backend worker"""
+    """ Handle data received from backend worker
+    Args:
+      data (pd.DataFrame): DataFrame with projects
+    """
     self.projects = data
-    self.changeSidebar.emit('redraw')  # redraw sidebar to show projects
+    self.changeSidebar.emit('redraw')
 
   @Slot(pd.DataFrame)
   def onGetTable(self, data: pd.DataFrame) -> None:
-    """Handle data received from backend worker"""
+    """ Handle data received from backend worker
+    Args:
+      data (pd.DataFrame): DataFrame with table data
+    """
     self.table = data
     self.tableChanged.emit()
 

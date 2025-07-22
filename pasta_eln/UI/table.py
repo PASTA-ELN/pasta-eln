@@ -228,9 +228,8 @@ class Table(QWidget):
           text = value
         item = QStandardItem(text)
       if j == 0:
-        # doc = self.comm.backend.db.getDoc(self.data['id'][i]) #TODO
-        # if [b for b in doc['branch'] if False in b['show']]:
-        #   item.setText(f'{item.text()}  \U0001F441')
+        if 'F' in self.comm.table['show'][i]:
+          item.setText(f'{item.text()}  \U0001F441')
         item.setAccessibleText(self.comm.table['id'][i])
         if self.comm.docType != 'x0':
           item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)

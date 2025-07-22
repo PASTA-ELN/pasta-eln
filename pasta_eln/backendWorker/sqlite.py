@@ -729,7 +729,7 @@ class SqlLiteDB:
       viewColumns = self.dataHierarchy(docType, 'view')
       viewColumns = viewColumns+['id'] if viewColumns and viewColumns != [''] else ['name','tags','comment','id']
       textSelect = ', '.join([f'main.{i}' for i in viewColumns if i in MAIN_ORDER or i[1:] in MAIN_ORDER])
-      cmd = f"SELECT {textSelect} FROM main INNER JOIN branches USING(id) WHERE main.type LIKE '{docType}%'"
+      cmd = f"SELECT {textSelect}, branches.show FROM main INNER JOIN branches USING(id) WHERE main.type LIKE '{docType}%'"
       if not allFlag:
         cmd += r" and NOT branches.show LIKE '%F%'"
       if startKey:
@@ -775,7 +775,7 @@ class SqlLiteDB:
         #dfParams.columns.name = None                               # Flatten the columns; seems not necessary
         df = df.join(dfParams)
       # final sorting of columns
-      columnOrder = [i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]
+      columnOrder = [i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]+['show']
       df = df.reset_index().reindex(columnOrder, axis=1)
       df = df.rename(columns={i:i[1:] for i in columnOrder if i.startswith('.') })
       df = df.astype('str').fillna('')
