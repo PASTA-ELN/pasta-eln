@@ -18,11 +18,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     super().__init__()
     self.comm          = comm
     self.debugMode     = logging.root.level<logging.INFO
-    self.widthImage    = self.comm.backend.configuration['GUI']['imageWidthProject']
-    self.widthContent  = self.comm.backend.configuration['GUI']['widthContent']
-    self.docTypeOffset = self.comm.backend.configuration['GUI']['docTypeOffset']
-    self.frameSize     = self.comm.backend.configuration['GUI']['frameSize']
-    self.maxHeight     = self.comm.backend.configuration['GUI']['maxProjectLeafHeight']
+    self.widthImage    = self.comm.configuration['GUI']['imageWidthProject']
+    self.widthContent  = self.comm.configuration['GUI']['widthContent']
+    self.docTypeOffset = self.comm.configuration['GUI']['docTypeOffset']
+    self.frameSize     = self.comm.configuration['GUI']['frameSize']
+    self.maxHeight     = self.comm.configuration['GUI']['maxProjectLeafHeight']
     self.lineSep       = 20
     self.penDefault    = QPen(QColor(self.comm.palette.text))
     self.penHighlight  = QPen(QColor(self.comm.palette.primary))
@@ -60,7 +60,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     y = self.lineSep/2
     docTypeText= '/'.join(data['docType'])
     if data['docType'][0][0]=='x':
-      docTypeText = self.comm.backend.db.dataHierarchy('x1', 'title')[0].lower()[:-1]
+      docTypeText = self.comm.docTypesTitles['x1']['title'].lower()[:-1]
     maxCharacter = int(docTypeOffset/7.5)
     nameText = name if len(name)<maxCharacter else f'...{name[-maxCharacter+3:]}'
     if not data['gui'][0]:                                                               #Only draw first line
@@ -128,33 +128,39 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if not index.data(Qt.ItemDataRole.UserRole+1)['gui'][0]:              # only show the headline, no details
       return QSize(400, self.lineSep*2)
     docID   = hierStack.split('/')[-1]
-    doc = self.comm.backend.db.getDoc(docID, noError=True)# No error plotted if doc not found: ..
-    # ... after deleting project, its items cannot be found and it would give many false negatives
-    if len(doc)<2:
-      if len(self.comm.backend.db.getDoc(hierStack.split('/')[0], noError=True))>2:#only refresh if project still exists
-        self.comm.changeProject.emit('','')
-      return QSize()
-    widthContent = min(self.widthContent,  \
-                       int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )# type: ignore[attr-defined]
-    if doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
-      dataHierarchyNode = defaultDataHierarchyNode
-    else:
-      dataHierarchyNode = self.comm.backend.db.dataHierarchy(doc['type'][0], 'meta')
-    textDoc = QTextDocument()
-    textDoc.setMarkdown(doc2markdown(doc, DO_NOT_RENDER, dataHierarchyNode, self))
-    textDoc.setTextWidth(widthContent)
-    heightDetails = int(textDoc.size().toTuple()[1])+self.frameSize+20                          # type: ignore
-    heightRightSide = -1
-    if 'content' in doc:
-      textDoc.setMarkdown(doc['content'])
-      heightRightSide = int(textDoc.size().toTuple()[1])                                        # type: ignore
-    elif 'image' in doc and doc['image']:
-      if doc['image'].startswith('data:image/'):
-        pixmap = self.imageFromDoc(doc)
-        heightRightSide = pixmap.height()+2*self.frameSize
-      else:
-        heightRightSide = int(self.widthImage*3/4+2*self.frameSize)
-    return QSize(400, min(max(heightDetails,heightRightSide), self.maxHeight))
+    if docID not in self.comm.leafSizes:
+      #TODO
+      pass
+    return self.comm.leafSizes.get(docID, QSize(400,self.maxHeight))
+
+    #TODO move to comm
+    # doc = self.comm.backend.db.getDoc(docID, noError=True)# No error plotted if doc not found: ..
+    # # ... after deleting project, its items cannot be found and it would give many false negatives
+    # if len(doc)<2:
+    #   if len(self.comm.backend.db.getDoc(hierStack.split('/')[0], noError=True))>2:#only refresh if project still exists
+    #     self.comm.changeProject.emit('','')
+    #   return QSize()
+    # widthContent = min(self.widthContent,  \
+    #                    int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )# type: ignore[attr-defined]
+    # if doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
+    #   dataHierarchyNode = defaultDataHierarchyNode
+    # else:
+    #   dataHierarchyNode = self.comm.backend.db.dataHierarchy(doc['type'][0], 'meta')
+    # textDoc = QTextDocument()
+    # textDoc.setMarkdown(doc2markdown(doc, DO_NOT_RENDER, dataHierarchyNode, self))
+    # textDoc.setTextWidth(widthContent)
+    # heightDetails = int(textDoc.size().toTuple()[1])+self.frameSize+20                          # type: ignore
+    # heightRightSide = -1
+    # if 'content' in doc:
+    #   textDoc.setMarkdown(doc['content'])
+    #   heightRightSide = int(textDoc.size().toTuple()[1])                                        # type: ignore
+    # elif 'image' in doc and doc['image']:
+    #   if doc['image'].startswith('data:image/'):
+    #     pixmap = self.imageFromDoc(doc)
+    #     heightRightSide = pixmap.height()+2*self.frameSize
+    #   else:
+    #     heightRightSide = int(self.widthImage*3/4+2*self.frameSize)
+    # return QSize(400, min(max(heightDetails,heightRightSide), self.maxHeight))
 
 
   def drawTextDocument(self, painter:QPainter, textDoc:QTextDocument, yMax:int) -> None:

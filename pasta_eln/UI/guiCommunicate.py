@@ -1,5 +1,6 @@
 """ Communication class that sends signals between widgets and the backend worker"""
 from typing import Any, Callable
+from anytree import Node
 import pandas as pd
 from PySide6.QtCore import QObject, Signal, Slot                           # pylint: disable=no-name-in-module
 from .waitDialog import WaitDialog, Worker
@@ -27,9 +28,11 @@ class Communicate(QObject):
   # group B: send request to backend
   commSendConfiguration = Signal(dict, str) # send configuration and project-group-name to backend
   commSendTableRequest  = Signal(str, str, bool)  # send docType, projectID, showAll to backend to get table data
+  commSendHierarchyRequest = Signal(str, bool) # send project ID to backend
   # group D: signals that are emitted from this comm that data changed
   docTypesChanged    = Signal()          # redraw main window, e.g. after change of docType titles
   tableChanged       = Signal()          # redraw table, e.g. after change of table data
+  hierarchyChanged   = Signal()          # redraw project view
 
   # unclear
   formDoc            = Signal(dict)      # send doc from details to new/edit dialog: dialogForm
@@ -45,16 +48,19 @@ class Communicate(QObject):
     self.configuration, self.configurationProjectGroup = getConfiguration(projectGroup)
 
     # Data storage for all widgets
-    self.palette:None|Palette  = None
-    self.projects: pd.DataFrame = pd.DataFrame()
     self.docTypesTitles:dict[str,dict[str,str]] = {}# docType: {'title':title,'icon':icon,'shortcut':shortcut}
-    self.table                  = pd.DataFrame()  # table data: measurements, projects
-    self.projectID              = ''
-    self.docType                = 'x0'
-    self.showAll                = True
+    self.docType                                = 'x0'
+    self.projects: pd.DataFrame                 = pd.DataFrame()     # for sidebar
+    self.projectID                              = ''
+    self.projectDoc                             = {}
+    self.table                                  = pd.DataFrame()     # table data: measurements, projects, ...
+    self.leafSizes                              = {}
+    self.showAll                                = True
+    self.palette:None|Palette                   = None
 
     # connect to GUI widget signals: group A
     self.changeTable.connect(self.toChangeTable)
+    self.changeProject.connect(self.toChangeHierarchy)
 
     if self.configuration:
       # Backend worker thread
@@ -64,23 +70,32 @@ class Communicate(QObject):
       # connect backend worker SLOTS to GUI signals: group B
       self.commSendConfiguration.connect(self.backendThread.worker.initialize)
       self.commSendTableRequest.connect(self.backendThread.worker.returnTable)
+      self.commSendHierarchyRequest.connect(self.backendThread.worker.returnHierarchy)
 
       # connect GUI SLOTS to backend worker signals: group C
       self.backendThread.worker.beSendProjects.connect(self.onGetProjects)
       self.backendThread.worker.beSendDocTypes.connect(self.onGetDocTypes)
       self.backendThread.worker.beSendTable.connect(self.onGetTable)
+      self.backendThread.worker.beSendHierarchy.connect(self.onGetHierarchy)
       # start thread now that everything is linked up
       self.backendThread.start()
       self.commSendConfiguration.emit(self.configuration, self.configurationProjectGroup)
 
 
   def toChangeTable(self, docType:str, projID:str) -> None:
-    """ Ask backend worker to supply new table data based on docType and projectID
+    """ Ask backend worker to supply table data based on docType and projectID
     Args:
       docType (str): document type
       projID (str): project ID for filtering
     """
     self.commSendTableRequest.emit(docType, projID, self.showAll)
+
+  def toChangeHierarchy(self, projID:str, _:str) -> None:
+    """ Ask backened worker to supply hierarchy for projID
+    Args:
+      projID (str): project ID
+    """
+    self.commSendHierarchyRequest.emit(projID, self.showAll)
 
 
   @Slot(dict)
@@ -110,6 +125,15 @@ class Communicate(QObject):
     self.table = data
     self.tableChanged.emit()
 
+  @Slot(Node)
+  def onGetHierarchy(self, data:Node, projDoc:dict[str,Any]) -> None:
+    """ Handle data received from backend worker
+    Args:
+      data (Node): any node hierarchy
+    """
+    self.hierarchy = data
+    self.projectDoc= projDoc
+    self.hierarchyChanged.emit()
 
 
   def shutdownBackendThread(self) -> None:
@@ -131,6 +155,3 @@ class Communicate(QObject):
     self.worker = Worker(taskFunction)
     self.worker.progress.connect(self.waitDialog.updateProgressBar)
     self.worker.start()
-    return
-
-

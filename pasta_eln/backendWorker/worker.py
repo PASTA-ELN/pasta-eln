@@ -5,6 +5,7 @@ import logging
 from typing import Any, Optional
 import pandas as pd
 import sqlite3
+from anytree import Node
 from pathlib import Path
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from .backend import Backend
@@ -17,6 +18,7 @@ class BackendWorker(QObject):
   beSendDocTypes = Signal(dict)           # Send processed data back
   beSendProjects = Signal(pd.DataFrame)
   beSendTable    = Signal(pd.DataFrame)   # all tables
+  beSendHierarchy= Signal(Node, dict)
 
   def __init__(self):
     super().__init__()
@@ -41,6 +43,15 @@ class BackendWorker(QObject):
     path = f'viewDocType/{docType}All' if showAll else f'viewDocType/{docType}'
     data = self.backend.db.getView(path, startKey=projID)
     self.beSendTable.emit(data)
+
+  @Slot(str)
+  def returnHierarchy(self, projID:str, showAll:bool) -> None:
+    """ Return a hierarchy"""
+    hierarchy, error = self.backend.db.getHierarchy(projID, allItems=showAll)
+    if error:
+      hierarchy = Node('__ERROR_in_getHierarchy__')
+    projDoc = self.backend.db.getDoc(projID)
+    self.beSendHierarchy.emit(hierarchy, projDoc)
 
   def exit(self) -> None:
     """ Exit the worker thread """

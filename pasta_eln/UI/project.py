@@ -22,7 +22,7 @@ class Project(QWidget):
   def __init__(self, comm:Communicate):
     super().__init__()
     self.comm = comm
-    comm.changeProject.connect(self.change)
+    self.comm.hierarchyChanged.connect(self.paint)
     self.mainL = QVBoxLayout()
     self.setLayout(self.mainL)
     self.tree:Optional[TreeView]             = None
@@ -30,9 +30,6 @@ class Project(QWidget):
     self.allDetails                          = QTextEdit()
     self.actHideDetail                       = QAction()
     self.actionFoldAll                       = QAction()
-    self.projID = ''
-    self.docProj:dict[str,Any]= {}
-    self.showAll= self.comm.configuration['GUI']['showHidden']=='Yes'
     self.showDetailsAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
     self.btnEditProject:Optional[TextButton]  = None
@@ -45,18 +42,19 @@ class Project(QWidget):
     """
     Initialize / Create header of page
     """
-    self.docProj = self.comm.db.getDoc(self.projID)
-    dataHierarchyNode = self.comm.db.dataHierarchy('x0', 'meta')
     # remove if still there
     for i in reversed(range(self.mainL.count())):                                                  #remove old
       self.mainL.itemAt(i).widget().setParent(None)
     logging.debug('ProjectView elements at 2: %i',self.mainL.count())
+    if not self.comm.projectDoc:
+      return
+    print('paint projHeader', self.comm.projectDoc)
     # TOP LINE includes name on left, buttons on right
     _, topLineL       = widgetAndLayout('H',self.mainL,'m')
     hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
-                       if [b for b in self.docProj['branch'] if False in b['show']] else \
+                       if [b for b in self.comm.projectDoc['branch'] if False in b['show']] else \
                        ('', 'Mark project as hidden')
-    topLineL.addWidget(Label(self.docProj['name']+hidden, 'h2'))
+    topLineL.addWidget(Label(self.comm.projectDoc['name']+hidden, 'h2'))
     showStatus = '(Show all items)' if self.showAll else '(Hide hidden items)'
     topLineL.addWidget(QLabel(showStatus))
     topLineL.addStretch(1)
@@ -96,8 +94,8 @@ class Project(QWidget):
     # self.infoW = QScrollArea()
     # self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     # self.infoW.setWidgetResizable(True)
-    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, dataHierarchyNode, self))
-    if not self.docProj['gui'][0]:
+    self.allDetails.setMarkdown(doc2markdown(self.projectDoc, DO_NOT_RENDER, [], self)) #dataHierarchyNodes
+    if not self.projectDoc['gui'][0]:
       self.allDetails.hide()
       self.actHideDetail.setText('Show project details')
     self.allDetails.resizeEvent = self.commentResize                                            # type: ignore
@@ -125,24 +123,16 @@ class Project(QWidget):
 
 
   @Slot(str, str)
-  def change(self, projID:str, docID:str) -> None:
+  def paint(self) -> None:
     """
     What happens when user clicks to change project that is shown
-
-    Args:
-      projID (str): document id of project; if empty, just refresh
-      docID (str): document id of focus item, if not given focus at project
     """
     if self.isHidden():
       return
-    logging.debug('project:changeProject |%s|%s|',projID,docID)
     #initialize
     for i in reversed(range(self.mainL.count())):                                                  #remove old
       self.mainL.itemAt(i).widget().setParent(None)
     logging.debug('ProjectView elements at 1: %i',self.mainL.count())
-    if projID!='':
-      self.projID         = projID
-      self.comm.projectID = projID
     selectedIndex = None
     self.model = QStandardItemModel()
     self.tree = TreeView(self, self.comm, self.model)
@@ -151,10 +141,10 @@ class Project(QWidget):
     self.model.itemChanged.connect(self.modelChanged)
     rootItem = self.model.invisibleRootItem()
     #Populate model body of change project: start recursion
-    nodeHier, error = self.comm.backend.db.getHierarchy(self.projID, allItems=self.showAll)
-    if error:
+    if self.comm.hierarchy.name == '__ERROR_in_getHierarchy__':
       showMessage(self, 'Error', 'There is an error in the project hierarchy: a parent of a node is incorrect.', 'Critical')
-    for node in PreOrderIter(nodeHier, maxlevel=2):
+      return
+    for node in PreOrderIter(self.comm.hierarchy, maxlevel=2):
       if node.is_root:                                                                        # Project header
         self.projHeader()
       else:
@@ -168,12 +158,12 @@ class Project(QWidget):
       self.tree.setCurrentIndex(selectedIndex)
     self.mainL.addWidget(self.tree)
     logging.debug('ProjectView elements at 4: %i',self.mainL.count())
-    if len(nodeHier.children)>0 and self.btnAddSubfolder is not None:
+    if len(self.comm.hierarchy.children)>0 and self.btnAddSubfolder is not None:
       self.btnAddSubfolder.setVisible(False)
     self.tree.expanded.connect(lambda index: self.actionExpandCollapse(index, True))
     self.tree.collapsed.connect(lambda index: self.actionExpandCollapse(index, False))
-    if docID:
-      self.tree.scrollToDoc(docID)
+    # if docID:  #TODO separate signal
+    #   self.tree.scrollToDoc(docID)
     return
 
 
