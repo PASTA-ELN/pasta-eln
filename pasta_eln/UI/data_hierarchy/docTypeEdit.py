@@ -6,7 +6,7 @@ import qtawesome as qta
 from PySide6.QtGui import QRegularExpressionValidator                      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
 from ...fixedStringsJson import allIcons
-from ...guiCommunicate import Communicate
+from ..guiCommunicate import Communicate
 from ..guiStyle import TextButton, widgetAndLayout, widgetAndLayoutForm
 from ..messageDialog import showMessage
 

@@ -7,8 +7,8 @@ from typing import Any
 import pandas as pd
 import qtawesome as qta
 from PySide6.QtWidgets import QDialog, QFileDialog, QTableWidget, QTableWidgetItem, QVBoxLayout# pylint: disable=no-name-in-module
-from ...guiCommunicate import Communicate
 from ...miscTools import callAddOn
+from ..guiCommunicate import Communicate
 from ..guiStyle import TextButton, space, widgetAndLayout
 from ..messageDialog import showMessage
 from .key_delegate import KeyDelegate

@@ -12,12 +12,12 @@ from PIL.ImageQt import ImageQt
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator, Qt         # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog,# pylint: disable=no-name-in-module
                                QLabel, QLineEdit, QMessageBox, QTextEdit, QVBoxLayout)
-from ..elabFTWapi import ElabFTWApi
-from ..fixedStringsJson import CONF_FILE_NAME
-from ..miscTools import hardRestart
-from .guiCommunicate import Communicate
-from .guiStyle import IconButton, Label, TextButton, widgetAndLayoutGrid
-from .messageDialog import showMessage
+from ...elabFTWapi import ElabFTWApi
+from ...fixedStringsJson import CONF_FILE_NAME
+from ...miscTools import hardRestart
+from ..guiCommunicate import Communicate
+from ..guiStyle import IconButton, Label, TextButton, widgetAndLayoutGrid
+from ..messageDialog import showMessage
 
 
 class ProjectGroup(QDialog):

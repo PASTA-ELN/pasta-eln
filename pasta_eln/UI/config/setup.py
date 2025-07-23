@@ -4,11 +4,11 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QProgressBar, QTextEdit, QVBoxLayout, QWidget# pylint: disable=no-name-in-module
-from ..fixedStringsJson import exampleDataString, setupText
-from ..installationTools import configuration, createShortcut, exampleData
-from ..miscTools import hardRestart
-from .guiCommunicate import Communicate
-from .guiStyle import TextButton, widgetAndLayout
+from ...fixedStringsJson import exampleDataString, setupText
+from ...installationTools import configuration, createShortcut, exampleData
+from ...miscTools import hardRestart
+from ..guiCommunicate import Communicate
+from ..guiStyle import TextButton, widgetAndLayout
 
 
 class ConfigurationSetup(QWidget):

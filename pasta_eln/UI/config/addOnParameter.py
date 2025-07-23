@@ -4,10 +4,10 @@ import json
 from pathlib import Path
 from typing import Callable
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
-from ..fixedStringsJson import CONF_FILE_NAME
-from .guiCommunicate import Communicate
-from .guiStyle import Label, TextButton, widgetAndLayout
-from .messageDialog import showMessage
+from ...fixedStringsJson import CONF_FILE_NAME
+from ..guiCommunicate import Communicate
+from ..guiStyle import Label, TextButton, widgetAndLayout
+from ..messageDialog import showMessage
 
 
 class ConfigurationAddOnParameter(QDialog):

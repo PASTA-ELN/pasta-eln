@@ -13,11 +13,11 @@ from zipfile import ZIP_DEFLATED, ZipFile
 import requests
 from anytree import Node
 from pasta_eln import __version__, minisign
+from ..fixedStringsJson import CONF_FILE_NAME
+from ..miscTools import flatten
+from ..textTools.stringChanges import camelCase
+from ..textTools.html2markdown import  html2markdown
 from .backend import Backend
-from .fixedStringsJson import CONF_FILE_NAME
-from .miscTools import flatten
-from .textTools.stringChanges import camelCase
-from .textTools.html2markdown import  html2markdown
 
 # .eln file: common between all ELNs
 # - can be exported / imported generally; not a 1:1 backup (just zip it)

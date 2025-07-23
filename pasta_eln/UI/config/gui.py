@@ -3,10 +3,10 @@ import json
 from pathlib import Path
 from typing import Callable
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QGroupBox, QVBoxLayout, QComboBox, QLabel# pylint: disable=no-name-in-module
-from ..fixedStringsJson import CONF_FILE_NAME, configurationGUI
-from ..miscTools import hardRestart
-from .guiCommunicate import Communicate
-from .guiStyle import TextButton
+from ...fixedStringsJson import CONF_FILE_NAME, configurationGUI
+from ...miscTools import hardRestart
+from ..guiCommunicate import Communicate
+from ..guiStyle import TextButton
 
 
 class ConfigurationGUI(QDialog):

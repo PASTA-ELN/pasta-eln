@@ -11,8 +11,6 @@ from ...fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
 from ..guiStyle import Label, TextButton, widgetAndLayout, widgetAndLayoutGrid
 from ..messageDialog import showMessage
-from .dataverse import DataverseClient
-from .zenodo import ZenodoClient
 
 
 class ConfigurationRepositories(QDialog):

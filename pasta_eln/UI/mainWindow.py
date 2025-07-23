@@ -11,21 +11,19 @@ from PySide6.QtCore import Slot                                            # pyl
 from PySide6.QtGui import QIcon, QPixmap, QShortcut                        # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QFileDialog, QMainWindow                     # pylint: disable=no-name-in-module
 from pasta_eln import __version__
-# from ..elabFTWsync import Pasta2Elab
 from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
+from ..miscTools import hardRestart, updateAddOnList, installPythonPackages
 from .body import Body
-# from .data_hierarchy.editor import SchemeEditor
-# from .definitions.editor import Editor as DefinitionsEditor
-# from .form import Form
+from .config.main import Configuration
+from .data_hierarchy.editor import SchemeEditor
+from .definitions.editor import Editor as DefinitionsEditor
+from .form import Form
 from .palette import Palette
-# from .repositories.uploadGUI import UploadGUI
+from .repositories.uploadGUI import UploadGUI
 from .sidebar import Sidebar
 from .guiStyle import Action, ScrollMessageBox, widgetAndLayout
 from .messageDialog import showMessage
-# from ..inputOutput import exportELN, importELN
-from ..miscTools import hardRestart, updateAddOnList, installPythonPackages
 from .guiCommunicate import Communicate
-from .config import Configuration
 
 class MainWindow(QMainWindow):
   """ Graphical user interface includes all widgets """

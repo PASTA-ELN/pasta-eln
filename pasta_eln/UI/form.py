@@ -10,12 +10,12 @@ from PySide6.QtCore import QSize, Qt, QTimer                               # pyl
 from PySide6.QtGui import QRegularExpressionValidator                      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox,# pylint: disable=no-name-in-module
                                QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget)
+from ..backendWorker.sqlite import MAIN_ORDER
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
-from ..guiCommunicate import Communicate
 from ..miscTools import callAddOn, flatten
-from ..sqlite import MAIN_ORDER
 from ..textTools.stringChanges import markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
+from .guiCommunicate import Communicate
 from .guiStyle import IconButton, Image, Label, ScrollMessageBox, TextButton, widgetAndLayout, widgetAndLayoutForm
 from .messageDialog import showMessage
 from .textEditor import TextEditor
