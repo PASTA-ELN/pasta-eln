@@ -17,7 +17,13 @@ class Sidebar(QWidget):
     super().__init__()
     self.comm = comm
     self.comm.changeSidebar.connect(self.paint)
+
+    # while not hasattr(self.comm.backendThread, 'worker') or self.comm.backendThread.worker is None:
+    #   time.sleep(0.01)  # Wait 10ms until worker is available
+
+
     self.comm.backendThread.worker.beSendProjects.connect(self.onGetData)
+    print(hasattr(self.comm.backendThread, 'worker'), self.comm.backendThread.worker is None )
     self.openProjectId = ''
     self.projects = pd.DataFrame()
     self.sideBarWidth = self.comm.configuration['GUI']['sidebarWidth']

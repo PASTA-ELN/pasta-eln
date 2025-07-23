@@ -13,11 +13,11 @@ from urllib import request
 import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
 from PIL import Image
-from .miscTools import generic_hash
-from .mixin_cli import CLI_Mixin
-from .sqlite import SqlLiteDB
 from ..textTools.handleDictionaries import diffDicts, fillDocBeforeCreate
 from ..textTools.stringChanges import camelCase, createDirName, outputString
+from .hashTools import generic_hash
+from .mixin_cli import CLI_Mixin
+from .sqlite import SqlLiteDB
 
 
 class Backend(CLI_Mixin):

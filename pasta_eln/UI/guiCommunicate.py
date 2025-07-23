@@ -1,11 +1,14 @@
 """ Communication class that sends signals between widgets and the backend worker"""
 import logging
+import time
 from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot                           # pylint: disable=no-name-in-module
 from .waitDialog import WaitDialog, Worker
 from .palette import Palette
 from ..backendWorker.worker import BackendThread
 from ..miscTools import getConfiguration
+
+waitTimeBeforeStarting = 0.1  #ensure that all gui elements are up that need the initial data set
 
 class Communicate(QObject):
   """ Communication class that sends signals between widgets and the backend worker"""
@@ -73,7 +76,9 @@ class Communicate(QObject):
 
       # start thread now that everything is linked up
       self.backendThread.start()
+      time.sleep(waitTimeBeforeStarting)
       self.commSendConfiguration.emit(self.configuration, self.configurationProjectGroup)
+
 
   @Slot(dict)
   def onGetDocTypes(self, data: dict[str, dict[str, str]]) -> None:

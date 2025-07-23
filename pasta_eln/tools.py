@@ -12,11 +12,11 @@ from sqlite3 import IntegrityError
 from typing import Any, Callable, Union
 import requests
 from requests.structures import CaseInsensitiveDict
-from pasta_eln.backend import Backend
-from pasta_eln.elabFTWsync import Pasta2Elab
+from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
 from pasta_eln.fixedStringsJson import CONF_FILE_NAME, defaultDocTypes, defaultSchema
 from pasta_eln.textTools.stringChanges import outputString
-
+from pasta_eln.miscTools import getConfiguration
 
 class Tools:
   """Commandline utility to admin local installation and convert from Pasta-ELN version 2"""
@@ -25,6 +25,7 @@ class Tools:
   def __init__(self) -> None:
     self.backend:Backend|None = None
     self.projectGroup = ''
+    self.configuration, self.configurationProjectGroup = getConfiguration(self.projectGroup)
 
 
   def __choice__(self, command:str) -> str:
@@ -99,20 +100,19 @@ class Tools:
     Args:
       projectGroup (str): "name" of project group
     """
-    with open(Path.home()/CONF_FILE_NAME, encoding='utf-8') as fIn:
-      config = json.load(fIn)
-      print('Project groups:','  '.join(f'{idx+1}-{i}' for idx,i in enumerate(config['projectGroups'].keys())))
+    projectGroupKeys = list(self.configuration['projectGroups'].keys())
+    print('Project groups:','  '.join(f'{idx+1}-{i}' for idx,i in enumerate(projectGroupKeys)))
     while not self.projectGroup:
       projectGroup = projectGroup or input('  Enter project group [number or name or entire text]: ').strip()
       if re.match(r'^\d+-\w+$', projectGroup):
         self.projectGroup = projectGroup.split('-')[1]
       elif re.match(r'^\d+$', projectGroup):
-        self.projectGroup = list(config['projectGroups'].keys())[int(projectGroup)-1]
-      elif projectGroup in config['projectGroups'].keys():
+        self.projectGroup = projectGroupKeys[int(projectGroup)-1]
+      elif projectGroup in projectGroupKeys:
         self.projectGroup = projectGroup
       else:
         projectGroup = ''
-    self.backend = Backend(self.projectGroup)
+    self.backend = Backend(self.configuration, projectGroup)
     return
 
 
