@@ -21,6 +21,7 @@ class BackendWorker(QObject):
   beSendTable             = Signal(pd.DataFrame)   # all tables
   beSendHierarchy         = Signal(Node, dict)
   beSendDoc               = Signal(dict)
+  beSendExtractorReport   = Signal(str, str)       # report, and image
 
   def __init__(self) -> None:
     """ Initialize the backend worker """
@@ -65,6 +66,12 @@ class BackendWorker(QObject):
   def returnDoc(self, docID:str) -> None:
     if self.backend is not None:
       self.beSendDoc.emit(self.backend.db.getDoc(docID))
+
+  @Slot(str, str)
+  def returnExtractorTest(self, fileName, outputStyle) -> None:
+    if Backend is not None:
+      report, image = self.backend.testExtractor(fileName, outputStyle=outputStyle)
+      self.beSendExtractorReport.emit(report, image)
 
   def exit(self) -> None:
     """ Exit the worker thread """

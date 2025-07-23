@@ -3,7 +3,6 @@ import json
 import logging
 import re
 import sys
-import traceback
 import webbrowser
 from enum import Enum
 from pathlib import Path
@@ -15,7 +14,6 @@ from pasta_eln import __version__
 # from ..elabFTWsync import Pasta2Elab
 from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
 from .body import Body
-# from .config import Configuration
 # from .data_hierarchy.editor import SchemeEditor
 # from .definitions.editor import Editor as DefinitionsEditor
 # from .form import Form
@@ -25,18 +23,15 @@ from .sidebar import Sidebar
 from .guiStyle import Action, ScrollMessageBox, widgetAndLayout
 from .messageDialog import showMessage
 # from ..inputOutput import exportELN, importELN
-from ..miscTools import hardRestart, testNewPastaVersion, updateAddOnList, installPythonPackages
+from ..miscTools import hardRestart, updateAddOnList, installPythonPackages
 from .guiCommunicate import Communicate
 from .config import Configuration
 
-# Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
   """ Graphical user interface includes all widgets """
 
-
   def __init__(self, comm:Communicate) -> None:
     """ Init main window
-
     Args:
       projectGroup (str): project group to load
     """
@@ -50,10 +45,9 @@ class MainWindow(QMainWindow):
       configWindow = Configuration(self, 'setup')
       configWindow.exec()
       return
-
-
     self.comm.formDoc.connect(self.formDoc)
     self.comm.softRestart.connect(self.paint)
+    self.comm.backendThread.worker.beSendExtractorReport.connect(self.showReport)
 
     # GUI
     self.setWindowTitle(f"PASTA-ELN {__version__}")
@@ -61,8 +55,6 @@ class MainWindow(QMainWindow):
     #TODO https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
-
-    # Menubar
     menu = self.menuBar()
     projectMenu = menu.addMenu('&Project')
     Action('&Export project to .eln',        self, [Command.EXPORT],         projectMenu)
@@ -226,8 +218,8 @@ class MainWindow(QMainWindow):
       dialogD.show()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
-      reportText, image = self.comm.backend.testExtractor(fileName, outputStyle='html')
-      showMessage(self, 'Report of extractor test', reportText, image=image)
+      if fileName is not None:
+        self.comm.uiRequestExtractorTest.emit(fileName, 'html')
     elif command[0] is Command.TEST2:
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
@@ -261,6 +253,10 @@ class MainWindow(QMainWindow):
     else:
       logging.error('Gui menu unknown: %s', command)
     return
+
+  @Slot(str, str)
+  def showReport(self, reportText, image) -> None:
+    showMessage(self, 'Report', reportText, image=image)
 
 
 class Command(Enum):

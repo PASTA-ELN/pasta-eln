@@ -13,36 +13,33 @@ from ..miscTools import getConfiguration
 class Communicate(QObject):
   """ Communication class that sends signals between widgets and the backend worker"""
   # General concept of the signals
-  #   - signals are defined either
-  #     - here (signals / data send within the GUI or send data from GUI to backend worker)
-  #     - in backendWorker/worker.py (signals = data send from backend worker to GUI)
-
-  #   any widget S (e.g. sidebar) requests a change widget T (e.g. table): emits signal [group A: name starts with 'change']
-  #   comm receives signal and sends signal to backend worker [group B]
-  #   backend receives signal, processes it, and sends data back to comm [group C in backendWorker]
-  #   comm receives data and emits signal that that data was changed [group D: name ends with 'Changed']
-  #   widget T reads the data from comm
+  # - signals are defined either
+  #   - here (signals / data send within the GUI or send data from GUI to backend worker)
+  #   - in backendWorker/worker.py (signals = data send from backend worker to GUI)
+  # - try to connect straight to those signals
+  #   - only data that is common to two or more widgets is saved here here
 
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES
-  # signals request a change:
+  # signals request a change within the UI elements:
   changeSidebar      = Signal(str)       # redraw sidebar after hide/show of project in table, focus on this projectID
   changeTable        = Signal(str, str)  # send doctype,projectID from sidebar to main-table
                                          #      can also be used for hiding the details on right side if nothing to show
   changeDetails      = Signal(str)       # send docID from main-table to details
                                          #      docID (str): document-id; ''=draw nothing; 'redraw' implies redraw
   changeProject      = Signal(str, str)  # send docID,projectID from sidebar or main-table to projects
+  stopSequentialEdit = Signal()          # in sequential edit, stop if there is a cancel
   # send data or data-request to backend
-  commSendConfiguration = Signal(dict, str) # send configuration and project-group-name to backend
-  uiRequestTable        = Signal(str, str, bool)  # send docType, projectID, showAll to backend to get table data
-  uiRequestHierarchy    = Signal(str, bool) # send project ID to backend
-  uiRequestDoc          = Signal(str)
-  # group D: signals that are emitted from this comm that data changed
+  commSendConfiguration = Signal(dict, str)     # send configuration and project-group-name to backend
+  uiRequestTable        = Signal(str, str, bool)# send docType, projectID, showAll to backend to get table
+  uiRequestHierarchy    = Signal(str, bool)     # send project ID to backend
+  uiRequestDoc          = Signal(str)           # request doc
+  uiRequestExtractorTest= Signal(str, str)      # request to execute an extractor test
+  # signals that are emitted from this comm that data changed
   docTypesChanged    = Signal()          # redraw main window, e.g. after change of docType titles
 
   # unclear
   formDoc            = Signal(dict)      # send doc from details to new/edit dialog: dialogForm
   testExtractor      = Signal()          # execute extractorTest in widgetDetails
-  stopSequentialEdit = Signal()          # in sequential edit, stop if there is a cancel
   softRestart        = Signal()          # restart GUI
 
   def __init__(self, projectGroup:str=''):
@@ -67,6 +64,7 @@ class Communicate(QObject):
       self.uiRequestTable.connect(self.backendThread.worker.returnTable)
       self.uiRequestHierarchy.connect(self.backendThread.worker.returnHierarchy)
       self.uiRequestDoc.connect(self.backendThread.worker.returnDoc)
+      self.uiRequestExtractorTest.connect(self.backendThread.worker.returnExtractorTest)
 
       # connect GUI SLOTS to backend worker signals: group C
       self.backendThread.worker.beSendDataHierarchyNode.connect(self.onGetDataHierarchyNode)
