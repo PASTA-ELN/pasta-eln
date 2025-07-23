@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtCore import Slot                                            # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut                        # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QFileDialog, QMainWindow, QMessageBox        # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QFileDialog, QMainWindow                     # pylint: disable=no-name-in-module
 from pasta_eln import __version__
 # from ..elabFTWsync import Pasta2Elab
 from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
@@ -105,23 +105,11 @@ class MainWindow(QMainWindow):
     # GUI elements
     mainWidget, mainLayout = widgetAndLayout('H')
     self.setCentralWidget(mainWidget)                                   # Set the central widget of the Window
-    try:
-      body = Body(self.comm)                                                           # body with information
-      self.sidebar = Sidebar(self.comm)                                                 # sidebar with buttons
-      mainLayout.addWidget(self.sidebar)
-      mainLayout.addWidget(body)
-      # # tests that run at start-up
-      # if self.backend.configuration['GUI']['checkForUpdates']=='Yes' and not testNewPastaVersion(False):
-      #   button = QMessageBox.question(self, 'Update?', 'There is a new version of PASTA-ELN available. Do you want to update?',
-      #                                 QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-      #   if button == QMessageBox.StandardButton.Yes:
-      #     testNewPastaVersion(update=True)
-      # initialize things that might change
-      self.paint()
-    except Exception as e:
-      traceback.print_exc()
-      logging.error(f'Error in GUI initialization {e}', exec_info=True)
-
+    body = Body(self.comm)                                                           # body with information
+    self.sidebar = Sidebar(self.comm)                                                 # sidebar with buttons
+    mainLayout.addWidget(self.sidebar)
+    mainLayout.addWidget(body)
+    self.paint()
 
 
   @Slot()

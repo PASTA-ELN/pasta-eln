@@ -15,20 +15,20 @@ class ProjectLeafRenderer(QStyledItemDelegate):
   """ ONE Renderer for all leafs of project tree using QPaint """
   def __init__(self, comm:Communicate) -> None:
     super().__init__()
-    self.comm          = comm
+    self.comm               = comm
     self.comm.backendThread.worker.beSendDoc.connect(self.onGetDoc)
-    self.debugMode     = logging.root.level<logging.INFO
-    self.widthImage    = self.comm.configuration['GUI']['imageWidthProject']
-    self.widthContent  = self.comm.configuration['GUI']['widthContent']
-    self.docTypeOffset = self.comm.configuration['GUI']['docTypeOffset']
-    self.frameSize     = self.comm.configuration['GUI']['frameSize']
-    self.maxHeight     = self.comm.configuration['GUI']['maxProjectLeafHeight']
-    self.lineSep       = 20
-    self.penDefault    = QPen(QColor(self.comm.palette.text))
-    self.penHighlight  = QPen(QColor(self.comm.palette.primary))
+    self.debugMode          = logging.root.level<logging.INFO
+    self.widthImage         = self.comm.configuration['GUI']['imageWidthProject']
+    self.widthContent       = self.comm.configuration['GUI']['widthContent']
+    self.docTypeOffset      = self.comm.configuration['GUI']['docTypeOffset']
+    self.frameSize          = self.comm.configuration['GUI']['frameSize']
+    self.maxHeight          = self.comm.configuration['GUI']['maxProjectLeafHeight']
+    self.lineSep            = 20
+    self.penDefault         = QPen(QColor(self.comm.palette.text))
+    self.penHighlight       = QPen(QColor(self.comm.palette.primary))
     self.penHighlight.setWidth(2)
-    self.leafWidth     = -1
-    self.data          = {}
+    self.leafWidth          = -1
+    self.data:dict[str,Any] = {}
 
 
   def paint(self, painter:QPainter, option:QStyleOptionViewItem, index:QModelIndex) -> None:    # type: ignore

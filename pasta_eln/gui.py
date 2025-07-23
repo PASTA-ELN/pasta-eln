@@ -4,10 +4,11 @@ import traceback
 from pathlib import Path
 from PySide6.QtCore import QCoreApplication                                # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon                                            # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QApplication                                 # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QApplication, QMessageBox                    # pylint: disable=no-name-in-module
 from pasta_eln import __version__
 from .UI.guiCommunicate import Communicate
 from .UI.mainWindow import MainWindow
+from .miscTools import testNewPastaVersion
 
 
 def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
@@ -44,7 +45,12 @@ def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
     print('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
   # end test coexistence
-  logging.info('End PASTA GUI')
+  # Test for new version
+  if comm.configuration['GUI']['checkForUpdates']=='Yes' and not testNewPastaVersion(False):
+    button = QMessageBox.question(mainWindow, 'Update?', 'There is a new PASTA-ELN version available. Do you want to update?',
+                                  QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+    if button == QMessageBox.StandardButton.Yes:
+      testNewPastaVersion(update=True)
   return application, mainWindow
 
 
