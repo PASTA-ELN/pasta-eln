@@ -29,8 +29,8 @@ class Table(QWidget):
     """
     super().__init__()
     self.comm = comm
-    comm.tableChanged.connect(self.paint)
-    comm.stopSequentialEdit.connect(self.stopSequentialEditFunction)
+    self.comm.backendThread.worker.beSendTable.connect(self.onGetData)
+    self.comm.stopSequentialEdit.connect(self.stopSequentialEditFunction)
     self.stopSequentialEdit = False
     self.data         :pd.DataFrame = pd.DataFrame()
     self.models       :list[QStandardItemModel | QSortFilterProxyModel] = []
@@ -41,7 +41,8 @@ class Table(QWidget):
     self.filterHeader:list[str] = []
     self.lastClickedRow = -1
     self.flagGallery = False
-    self.comm.showAll= self.comm.configuration['GUI']['showHidden']=='Yes'
+    self.docType = 'x0'
+    self.showAll= self.comm.configuration['GUI']['showHidden']=='Yes'
 
     ### GUI elements
     mainL = QVBoxLayout()
@@ -115,16 +116,25 @@ class Table(QWidget):
     mainL.addWidget(self.gallery)
     self.setLayout(mainL)
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
+    self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
 
 
-  @Slot(str, str)
+  @Slot(pd.DataFrame)
+  def onGetData(self, data:pd.DataFrame) -> None:
+    """
+    Callback function to handle the received data
+
+    Args:
+      data (pd.DataFrame): DataFrame containing table
+    """
+    self.data = data
+    self.paint()
+
+
+  @Slot()
   def paint(self) -> None:
     """
     What happens when the table changes its raw information
-
-    Args:
-      docType (str): document type; leave empty for redraw
-      projID (str): id of project
     """
     if self.isHidden():
       return
@@ -140,9 +150,9 @@ class Table(QWidget):
       if item_1 is not None:
         item_1.widget().setParent(None)
     allDocTypes:list[str] = []
-    if '/' not in self.comm.docType:
+    if '/' not in self.docType:
       # get list of all subDocTypes
-      allDocTypes = [i for i in self.comm.docTypesTitles if i.startswith(self.comm.docType)]
+      allDocTypes = [i for i in self.comm.docTypesTitles if i.startswith(self.docType)]
       if len(allDocTypes)==1:
         self.subDocTypeL.hide()
         self.subDocType.hide()
@@ -153,13 +163,13 @@ class Table(QWidget):
         if alreadyInside != set(allDocTypes):
           self.subDocType.clear()
           self.subDocType.addItems(allDocTypes)
-    if 'measurement' in self.comm.docType:
+    if 'measurement' in self.docType:
       self.toggleGallery.setVisible(True)
     else:
       self.toggleGallery.setVisible(False)
       self.flagGallery = False
     # start tables: collect data
-    if self.comm.docType=='_tags_':
+    if self.docType=='_tags_':
       self.addBtn.hide()
       if self.showAll:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
@@ -170,35 +180,35 @@ class Table(QWidget):
       self.actionChangeColums.setVisible(False)
     else:
       self.addBtn.show()
-      if self.comm.docType.startswith('x0'):
+      if self.docType.startswith('x0'):
         self.selectionBtn.hide()
         self.toggleHidden.setVisible(False)
       else:
         self.selectionBtn.show()
         self.toggleHidden.setVisible(True)
-      self.showState.setText('(show all rows)' if self.comm.showAll else '(hide hidden rows)')
+      self.showState.setText('(show all rows)' if self.showAll else '(hide hidden rows)')
       docLabel = 'Unidentified'
-      if self.comm.docType=='-':
+      if self.docType=='-':
         self.actionChangeColums.setVisible(False)
       else:
         self.actionChangeColums.setVisible(True)
-        docLabel = self.comm.docTypesTitles[self.comm.docType]['title']
+        docLabel = self.comm.docTypesTitles[self.docType]['title']
       if self.comm.projectID:
         self.headline.setText(docLabel)
         self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
       else:
-        if self.comm.docType == 'x0':
+        if self.docType == 'x0':
           self.comm.changeSidebar.emit('')                                       #close the project in sidebar
         self.headline.setText(f'All {docLabel.lower()}')
         self.showHidden.setText(f'Show/hide all hidden {docLabel.lower()}')
-      self.filterHeader = list(self.comm.table.columns)[:-1]
+      self.filterHeader = list(self.data.columns)[:-1]
     self.headerW.show()
-    nRows, nCols = self.comm.table.shape
+    nRows, nCols = self.data.shape
     model = QStandardItemModel(nRows, nCols-1)
     model.setHorizontalHeaderLabels(self.filterHeader)
     for i, j in itertools.product(range(nRows), range(nCols-1)):
-      value = self.comm.table.iloc[i,j]
-      if self.comm.docType=='_tags_':                                                              # tags list
+      value = self.data.iloc[i,j]
+      if self.docType=='_tags_':                                                              # tags list
         if j==0:
           if value=='_curated':                                                                       #curated
             item = QStandardItem('_curated_')
@@ -228,10 +238,10 @@ class Table(QWidget):
           text = value
         item = QStandardItem(text)
       if j == 0:
-        if 'F' in self.comm.table['show'][i]:
+        if 'F' in self.data['show'][i]:
           item.setText(f'{item.text()}  \U0001F441')
-        item.setAccessibleText(self.comm.table['id'][i])
-        if self.comm.docType != 'x0':
+        item.setAccessibleText(self.data['id'][i])
+        if self.docType != 'x0':
           item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
           item.setCheckState(Qt.CheckState.Unchecked)
       else:

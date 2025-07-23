@@ -3,6 +3,7 @@ import logging
 from enum import Enum
 from typing import Any
 from anytree import Node
+import pandas as pd
 from PySide6.QtCore import Slot                                            # pylint: disable=no-name-in-module
 from PySide6.QtGui import QResizeEvent                                     # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QVBoxLayout, QWidget# pylint: disable=no-name-in-module
@@ -10,19 +11,20 @@ from .guiCommunicate import Communicate
 from .guiStyle import IconButton, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
 from .messageDialog import showMessage
 
-
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """
   def __init__(self, comm:Communicate):
     super().__init__()
     self.comm = comm
-    comm.changeSidebar.connect(self.paint)
-    self.sideBarWidth = self.comm.configuration['GUI']['sidebarWidth']
-    self.setFixedWidth(self.sideBarWidth)
+    self.comm.changeSidebar.connect(self.paint)
+    self.comm.backendThread.worker.beSendProjects.connect(self.onGetData)
     self.openProjectId = ''
+    self.projects = pd.DataFrame()
+    self.sideBarWidth = self.comm.configuration['GUI']['sidebarWidth']
 
     # GUI elements
     mainL = QVBoxLayout()
+    self.setFixedWidth(self.sideBarWidth)
     mainL.setContentsMargins(space['s'],space['s'],space['0'],space['s'])
     mainL.setSpacing(15)
     if self.comm.configuration['GUI']['showProjectBtn']=='Yes':
@@ -38,6 +40,18 @@ class Sidebar(QWidget):
     self.btnDocTypes:list[IconButton]    = []                         # list of buttons to show docType tables
     self.btnUnknown:IconButton|None      = None
     self.paint()
+
+
+  @Slot(pd.DataFrame)
+  def onGetData(self, projects:pd.DataFrame) -> None:
+    """
+    Callback function to handle the received projects data
+
+    Args:
+      projects (pd.DataFrame): DataFrame containing project information
+    """
+    self.projects = projects
+    self.paint('redraw')
 
 
   @Slot(str)
@@ -57,15 +71,15 @@ class Sidebar(QWidget):
     self.widgetsList = {}
     self.widgetsProject = {}                                #title bar and widget that contains all of project
     # fill sidebar
-    if self.comm.projects.empty:
+    if self.projects.empty:
       return
-    if 'status' in self.comm.projects.columns and len(self.comm.projects)>5:
-      temp = self.comm.projects[self.comm.projects['status']=='active']
+    if 'status' in self.projects.columns and len(self.projects)>5:
+      temp = self.projects[self.projects['status']=='active']
       if len(temp)>2:
-        self.comm.projects = temp
-    self.comm.projects = self.comm.projects.sort_values('name', axis=0).reset_index(drop=True)
+        self.projects = temp
+    self.projects = self.projects.sort_values('name', axis=0).reset_index(drop=True)
     maxProjects = int((self.height()-120)/50)-1
-    for index, project in self.comm.projects.iterrows():
+    for index, project in self.projects.iterrows():
       if index>maxProjects:
         break
       projID = project['id']

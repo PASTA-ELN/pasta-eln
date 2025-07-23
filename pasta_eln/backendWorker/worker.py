@@ -20,7 +20,7 @@ class BackendWorker(QObject):
   beSendProjects          = Signal(pd.DataFrame)
   beSendTable             = Signal(pd.DataFrame)   # all tables
   beSendHierarchy         = Signal(Node, dict)
-  beSendDoc               = Signal(dict, str)
+  beSendDoc               = Signal(dict)
 
   def __init__(self) -> None:
     """ Initialize the backend worker """
@@ -62,9 +62,9 @@ class BackendWorker(QObject):
       self.beSendHierarchy.emit(hierarchy, projDoc)
 
   @Slot(str, str)
-  def returnDoc(self, docID:str, task:str) -> None:
+  def returnDoc(self, docID:str) -> None:
     if self.backend is not None:
-      self.beSendDoc.emit(self.backend.db.getDoc(docID), task)
+      self.beSendDoc.emit(self.backend.db.getDoc(docID))
 
   def exit(self) -> None:
     """ Exit the worker thread """

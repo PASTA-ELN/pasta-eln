@@ -1,5 +1,6 @@
 """ Main methods that start the gui """
 import logging
+import traceback
 from pathlib import Path
 from PySide6.QtCore import QCoreApplication                                # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon                                            # pylint: disable=no-name-in-module
@@ -60,7 +61,8 @@ def startMain(projectGroup:str='') -> None:
     if app:
       app.exec()
   except Exception as e:
-    logging.error(f'Error in mainGUI: {e}')
+    traceback.print_exc()
+    logging.error(f'Error in mainGUI: {e}', exc_info=True)
 
 
 # called by python3 -m pasta_eln.gui

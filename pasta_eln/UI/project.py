@@ -3,6 +3,7 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
+import pandas as pd
 from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel       # pylint: disable=no-name-in-module
@@ -22,7 +23,12 @@ class Project(QWidget):
   def __init__(self, comm:Communicate):
     super().__init__()
     self.comm = comm
-    self.comm.hierarchyChanged.connect(self.paint)
+    self.comm.changeProject.connect(self.change)
+    self.comm.backendThread.worker.beSendHierarchy.connect(self.onGetData)
+    self.hierarchy = Node('__none__')
+    self.docProj:dict[str,Any] = {}
+    self.showAll= self.comm.configuration['GUI']['showHidden']=='Yes'
+
     self.mainL = QVBoxLayout()
     self.setLayout(self.mainL)
     self.tree:Optional[TreeView]             = None
@@ -38,6 +44,29 @@ class Project(QWidget):
     self.lineSep = 20
 
 
+  @Slot(Node, dict)
+  def onGetData(self, hierarchy:Node, doc:pd.DataFrame) -> None:
+    """
+    Callback function to handle the received data
+
+    Args:
+      data (pd.DataFrame): DataFrame containing table
+    """
+    self.docProj = doc
+    self.hierarchy = hierarchy
+    self.paint()
+
+
+  @Slot(str, str)
+  def change(self, projID:str, docID:str) -> None:
+    """ Change project to projID and docID
+    Args:
+      projID (str): project ID
+      docID (str): document ID
+    """
+    self.comm.uiRequestHierarchy.emit(projID, self.showAll)
+
+
   def projHeader(self) -> None:
     """
     Initialize / Create header of page
@@ -46,15 +75,15 @@ class Project(QWidget):
     for i in reversed(range(self.mainL.count())):                                                  #remove old
       self.mainL.itemAt(i).widget().setParent(None)
     logging.debug('ProjectView elements at 2: %i',self.mainL.count())
-    if not self.comm.projectDoc:
+    if not self.docProj:
       return
     # TOP LINE includes name on left, buttons on right
     _, topLineL       = widgetAndLayout('H',self.mainL,'m')
     hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
-                       if [b for b in self.comm.projectDoc['branch'] if False in b['show']] else \
+                       if [b for b in self.docProj['branch'] if False in b['show']] else \
                        ('', 'Mark project as hidden')
-    topLineL.addWidget(Label(self.comm.projectDoc['name']+hidden, 'h2'))
-    showStatus = '(Show all items)' if self.comm.showAll else '(Hide hidden items)'
+    topLineL.addWidget(Label(self.docProj['name']+hidden, 'h2'))
+    showStatus = '(Show all items)' if self.showAll else '(Hide hidden items)'
     topLineL.addWidget(QLabel(showStatus))
     topLineL.addStretch(1)
     # buttons in top line
@@ -65,7 +94,7 @@ class Project(QWidget):
     self.btnVisibility = TextButton(  'Visibility',    self, [],                  buttonL)
     visibilityMenu = QMenu(self)
     self.actHideDetail = Action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
-    menuTextItems = 'Hide hidden items' if self.comm.showAll else 'Show hidden items'
+    menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
     minimizeItems = 'Show all item details' if self.showDetailsAll else 'Hide all item details'
     Action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
     Action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
@@ -92,8 +121,8 @@ class Project(QWidget):
     # self.infoW = QScrollArea()
     # self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     # self.infoW.setWidgetResizable(True)
-    self.allDetails.setMarkdown(doc2markdown(self.comm.projectDoc, DO_NOT_RENDER, [], self)) #TODO dataHierarchyNodes
-    if not self.comm.projectDoc['gui'][0]:
+    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, [], self)) #TODO dataHierarchyNodes
+    if not self.docProj['gui'][0]:
       self.allDetails.hide()
       self.actHideDetail.setText('Show project details')
     self.allDetails.resizeEvent = self.commentResize                                            # type: ignore
@@ -139,10 +168,10 @@ class Project(QWidget):
     self.model.itemChanged.connect(self.modelChanged)
     rootItem = self.model.invisibleRootItem()
     #Populate model body of change project: start recursion
-    if self.comm.hierarchy.name == '__ERROR_in_getHierarchy__':
+    if self.hierarchy.name == '__ERROR_in_getHierarchy__':
       showMessage(self, 'Error', 'There is an error in the project hierarchy: a parent of a node is incorrect.', 'Critical')
       return
-    for node in PreOrderIter(self.comm.hierarchy, maxlevel=2):
+    for node in PreOrderIter(self.hierarchy, maxlevel=2):
       if node.is_root:                                                                        # Project header
         self.projHeader()
       else:
@@ -156,7 +185,7 @@ class Project(QWidget):
       self.tree.setCurrentIndex(selectedIndex)
     self.mainL.addWidget(self.tree)
     logging.debug('ProjectView elements at 4: %i',self.mainL.count())
-    if len(self.comm.hierarchy.children)>0 and self.btnAddSubfolder is not None:
+    if len(self.hierarchy.children)>0 and self.btnAddSubfolder is not None:
       self.btnAddSubfolder.setVisible(False)
     self.tree.expanded.connect(lambda index: self.actionExpandCollapse(index, True))
     self.tree.collapsed.connect(lambda index: self.actionExpandCollapse(index, False))
@@ -278,7 +307,7 @@ class Project(QWidget):
       else:
         self.actionFoldAll.setText('Hide all item details')
     elif command[0] is Command.HIDE_SHOW_ITEMS:
-      self.comm.showAll = not self.comm.showAll
+      self.showAll = not self.showAll
       self.change('','')
     elif command[0] is Command.ADD_CHILD:
       self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['branch'][0]['path']

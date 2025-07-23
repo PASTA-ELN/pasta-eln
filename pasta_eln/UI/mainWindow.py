@@ -120,7 +120,7 @@ class MainWindow(QMainWindow):
       self.paint()
     except Exception as e:
       traceback.print_exc()
-      logging.error('Error in GUI initialization %s', e)
+      logging.error(f'Error in GUI initialization {e}', exec_info=True)
 
 
 
