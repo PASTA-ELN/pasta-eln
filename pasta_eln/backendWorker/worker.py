@@ -1,12 +1,9 @@
 """ Backend worker thread for separating GUI and backend operations
-CONNECT TO ALL SIGNALS IN COMMUNICATE
+CONNECT TO ALL THESE SIGNALS IN COMMUNICATE and UI
 """
-import logging
 from typing import Any, Optional
 import pandas as pd
-import sqlite3
 from anytree import Node
-from pathlib import Path
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from .backend import Backend
 

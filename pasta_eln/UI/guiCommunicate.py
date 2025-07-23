@@ -1,10 +1,7 @@
 """ Communication class that sends signals between widgets and the backend worker"""
-import base64
-from typing import Any, Callable
-from anytree import Node
-import pandas as pd
-from PySide6.QtCore import QObject, Signal, Slot, QSize                    # pylint: disable=no-name-in-module
-from PySide6.QtGui import QTextDocument, QPixmap                                    # pylint: disable=no-name-in-module
+import logging
+from typing import Any
+from PySide6.QtCore import QObject, Signal, Slot                           # pylint: disable=no-name-in-module
 from .waitDialog import WaitDialog, Worker
 from .palette import Palette
 from ..backendWorker.worker import BackendThread
@@ -69,6 +66,11 @@ class Communicate(QObject):
       # connect GUI SLOTS to backend worker signals: group C
       self.backendThread.worker.beSendDataHierarchyNode.connect(self.onGetDataHierarchyNode)
       self.backendThread.worker.beSendDocTypes.connect(self.onGetDocTypes)
+
+      # connect waiting dialog
+      self.uiRequestExtractorTest.connect(lambda: self.progressWindow('extractorTest'))
+      self.backendThread.worker.beSendExtractorReport.connect(self.waitDialog.hide)
+
       # start thread now that everything is linked up
       self.backendThread.start()
       self.commSendConfiguration.emit(self.configuration, self.configurationProjectGroup)
@@ -97,12 +99,16 @@ class Communicate(QObject):
       del self.backendThread
 
 
-  def progressWindow(self, taskFunction:Callable[[Callable[[str,str],None]],Any]) -> None:
+  def progressWindow(self, task:Any) -> None:
     """ Show a progress window and execute function
     Args:
       taskFunction (func): function to execute
     """
+    if isinstance(task, str) and task=='extractorTest':
+      self.waitDialog.text.setMarkdown('Testing extractor:')
+      self.waitDialog.text.setFixedHeight(30)
+      self.waitDialog.setFixedHeight(100)
+      self.waitDialog.progressBar.setRange(0, 0)  # Indeterminate
+    else:
+      logging.error(f'Unknown task {task}')
     self.waitDialog.show()
-    self.worker = Worker(taskFunction)
-    self.worker.progress.connect(self.waitDialog.updateProgressBar)
-    self.worker.start()
