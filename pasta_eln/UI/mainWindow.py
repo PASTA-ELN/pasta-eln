@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
       return
     self.comm.formDoc.connect(self.formDoc)
     self.comm.softRestart.connect(self.paint)
-    self.comm.backendThread.worker.beSendExtractorReport.connect(self.showReport)
+    self.comm.backendThread.worker.beSendTaskReport.connect(self.showReport)
 
     # GUI
     self.setWindowTitle(f"PASTA-ELN {__version__}")
@@ -192,7 +192,7 @@ class MainWindow(QMainWindow):
       if 'ERROR' in self.backend.checkDB(minimal=True):
         showMessage(self, 'Error', 'There are errors in your database: fix before upload', 'Critical')
         return
-      sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
+      sync = Pasta2Elab(self.backend, self.projectGroup)
       if hasattr(sync, 'api') and sync.api.url:                                 #if hostname and api-key given
         self.comm.progressWindow(lambda func1: sync.sync('sA', progressCallback=func1))
       else:                                                                                      #if not given
@@ -200,7 +200,7 @@ class MainWindow(QMainWindow):
         dialogC = Configuration(self.comm)
         dialogC.exec()
     elif command[0] is Command.SYNC_GET:
-      sync = Pasta2Elab(self.backend, self.backend.configurationProjectGroup)
+      sync = Pasta2Elab(self.backend, self.comm.projectGroup)
       self.comm.progressWindow(lambda func1: sync.sync('gA', progressCallback=func1))
       self.comm.changeSidebar.emit('redraw')
       self.comm.changeTable.emit('x0', '')
@@ -216,13 +216,13 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       if fileName is not None:
-        self.comm.uiRequestExtractorTest.emit(fileName, 'html')
+        self.comm.uiRequestTask.emit('extractorTest', fileName, 'html')
     elif command[0] is Command.TEST2:
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
-      configProjecGroup = self.backend.configuration['projectGroups'][self.backend.configurationProjectGroup]
+      configProjecGroup = self.backend.configuration['projectGroups'][self.comm.projectGroup]
       installPythonPackages(configProjecGroup['addOnDir'])
-      reportDict = updateAddOnList(self.backend.configurationProjectGroup)
+      reportDict = updateAddOnList(self.comm.projectGroup)
       messageWindow = ScrollMessageBox('Extractor list updated', reportDict,
                                        style='QScrollArea{min-width:600 px; min-height:400px}')
       messageWindow.exec()

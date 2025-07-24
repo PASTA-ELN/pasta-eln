@@ -108,9 +108,9 @@ class ProjectGroup(QDialog):
     mainL.addWidget(buttonBox)
 
     #initialize
-    if hasattr(self.comm.backend, 'configurationProjectGroup'):
-      self.selectGroup.setCurrentText(self.comm.backend.configurationProjectGroup)
-      self.selectGroup.currentTextChanged.emit(self.comm.backend.configurationProjectGroup)
+    if hasattr(self.comm, 'projectGroup'):
+      self.selectGroup.setCurrentText(self.comm.projectGroup)
+      self.selectGroup.currentTextChanged.emit(self.comm.projectGroup)
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
 
 

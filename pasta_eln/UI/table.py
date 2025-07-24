@@ -87,7 +87,7 @@ class Table(QWidget):
     self.moreMenu = QMenu(self)
     Action('Export to csv',            self, [Command.EXPORT],   self.moreMenu)
     self.moreMenu.addSeparator()
-    projectGroup = self.comm.configuration['projectGroups'][self.comm.configurationProjectGroup]
+    projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if projectAddOns := projectGroup.get('addOns',{}).get('table',''):
       for label, description in projectAddOns.items():
         Action(description, self, [Command.ADD_ON, label], self.moreMenu)

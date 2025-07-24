@@ -20,8 +20,9 @@ class Details(QScrollArea):
   def __init__(self, comm:Communicate):
     super().__init__()
     self.comm = comm
-    comm.changeDetails.connect(self.change)
-    comm.testExtractor.connect(self.testExtractor)
+    self.comm.changeDetails.connect(self.change)
+    self.comm.backendThread.worker.beSendDoc.connect(self.onGetData)
+    self.comm.testExtractor.connect(self.testExtractor)
     self.doc:dict[str,Any]  = {}
     self.docID= ''
     self.textEditors:list[QTextEdit] = []
@@ -59,7 +60,19 @@ class Details(QScrollArea):
 
 
   @Slot(str)
-  def change(self, docID:str) -> None:
+  def change(self, docID) -> None:
+    self.docID = docID
+    self.comm.uiRequestDoc.emit(self.docID)
+
+  @Slot(dict)
+  def onGetData(self, doc) -> None:
+    if self.docID == doc['id']:
+      self.doc = doc
+      self.paint()
+
+
+  @Slot()
+  def paint(self) -> None:
     """
     What happens when details should change
 
@@ -68,7 +81,6 @@ class Details(QScrollArea):
     """
     if self.isHidden():
       return
-    logging.debug('details:changeDetails |%s|',docID)
     # Delete old widgets from layout
     for i in reversed(range(self.headerL.count())):
       aWidget = self.headerL.itemAt(i).widget()
@@ -94,21 +106,17 @@ class Details(QScrollArea):
     self.btnUser.setChecked(True)
     self.btnDatabase.setChecked(False)
     self.textEditors = []
-    if not docID:                                                                   #if given '' docID, return
-      return
     # Create new
-    if docID!='redraw':
-      self.docID = docID
-    if self.docID=='':
+    if not self.docID or not self.doc:
       return
-    self.doc   = self.comm.backend.db.getDoc(self.docID, noError=True)
-    if 'name' not in self.doc:                                  #keep empty details and wait for user to click
-      self.comm.changeTable.emit('','')
-      return
-    if self.doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
+    # Not sure if required #TODO
+    # if 'name' not in self.doc:                                  #keep empty details and wait for user to click
+    #   self.comm.changeTable.emit('','')
+    #   return
+    if self.doc['type'][0] not in self.comm.docTypesTitles:
       dataHierarchyNode = defaultDataHierarchyNode
     else:
-      dataHierarchyNode = self.comm.backend.db.dataHierarchy(self.doc['type'][0], 'meta')
+      dataHierarchyNode = self.comm.dataHierarchyNodes[self.doc['type'][0]]
     label = self.doc['name'] if len(self.doc['name'])<80 else self.doc['name'][:77]+'...'
     Label(label,'h1', self.headerL)
     self.headerL.addStretch(1)
@@ -118,8 +126,7 @@ class Details(QScrollArea):
       self.btnVendor.hide()
     if 'metUser' not in self.doc:
       self.btnUser.hide()
-    size = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
-                      if hasattr(self.comm.backend, 'configuration') else 300
+    size = self.comm.configuration['GUI']['imageSizeDetails'] if hasattr(self.comm, 'configuration') else 300
     for key in self.doc:
       if key=='image':
         Image(self.doc['image'], self.specialL, anyDimension=size)
@@ -188,9 +195,8 @@ class Details(QScrollArea):
       else:
         path = Path(pathStr)
         if not path.as_posix().startswith('http'):
-          path = self.comm.backend.basePath/path
-        report, image = self.comm.backend.testExtractor(path, outputStyle='html', style={'main':'/'.join(self.doc['type'])})
-        showMessage(self, 'Report of extractor test', report, image=image, minWidth=800)
+          path = Path(self.comm.configuration['projectGroups'][self.comm.projectGroup]['local']['path'])/path
+        self.comm.uiRequestTask.emit('extractorTest', str(path), 'html')
     else:
       showMessage(self, 'Warning', 'No item was selected via table-view, i.e. no details are shown.')
     return
@@ -258,7 +264,8 @@ class Details(QScrollArea):
       dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
       docID = ''
       if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
-          not isinstance(dataHierarchyItems[0]['list'], list):                           #choice among docType
+          ',' not in dataHierarchyItems[0]['list'] and ' ' not  in dataHierarchyItems[0]['list']:                           #choice among docType
+        #TODO what to do
         table  = self.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
         names= list(table[table.id==value[0]]['name'])
         if len(names)==1:                                              # default find one item that we link to

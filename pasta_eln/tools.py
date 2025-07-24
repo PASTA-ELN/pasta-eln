@@ -25,7 +25,7 @@ class Tools:
   def __init__(self) -> None:
     self.backend:Backend|None = None
     self.projectGroup = ''
-    self.configuration, self.configurationProjectGroup = getConfiguration(self.projectGroup)
+    self.configuration, self.projectGroup = getConfiguration(self.projectGroup)
 
 
   def __choice__(self, command:str) -> str:
@@ -112,7 +112,7 @@ class Tools:
         self.projectGroup = projectGroup
       else:
         projectGroup = ''
-    self.backend = Backend(self.configuration, projectGroup)
+    self.backend = Backend(self.configuration, self.projectGroup)
     return
 
 

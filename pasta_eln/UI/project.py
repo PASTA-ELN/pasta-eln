@@ -109,7 +109,7 @@ class Project(QWidget):
         Action(f'table of {docType}',   self, [Command.SHOW_TABLE, docType], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
     moreMenu.addSeparator()
-    projectGroup = self.comm.configuration['projectGroups'][self.comm.configurationProjectGroup]
+    projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
       for label, description in projectAddOns.items():
         Action(description, self, [Command.ADD_ON, label], moreMenu)

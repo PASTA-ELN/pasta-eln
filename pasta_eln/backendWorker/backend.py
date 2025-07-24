@@ -47,8 +47,8 @@ class Backend(CLI_Mixin):
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
     """
     self.configuration = configuration
-    self.configurationProjectGroup = projectGroupName
-    confProjectGroup = self.configuration['projectGroups'][self.configurationProjectGroup]
+    self.projectGroup = projectGroupName
+    confProjectGroup = self.configuration['projectGroups'][self.projectGroup]
     # directories
     #    self.basePath (root of directory tree) is root of all projects
     #    self.cwd changes during program but is similarly the full path from root

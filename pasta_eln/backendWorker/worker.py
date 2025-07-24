@@ -1,6 +1,7 @@
 """ Backend worker thread for separating GUI and backend operations
 CONNECT TO ALL THESE SIGNALS IN COMMUNICATE and UI
 """
+import logging
 from typing import Any, Optional
 import pandas as pd
 import time
@@ -21,7 +22,7 @@ class BackendWorker(QObject):
   beSendTable             = Signal(pd.DataFrame)   # all tables
   beSendHierarchy         = Signal(Node, dict)
   beSendDoc               = Signal(dict)
-  beSendExtractorReport   = Signal(str, str)       # report, and image
+  beSendTaskReport        = Signal(str, str)       # report, and image
 
   def __init__(self) -> None:
     """ Initialize the backend worker """
@@ -70,10 +71,16 @@ class BackendWorker(QObject):
       self.beSendDoc.emit(self.backend.db.getDoc(docID))
 
   @Slot(str, str)
-  def returnExtractorTest(self, fileName, outputStyle) -> None:
+  def returnTaskReport(self, task, subtask, subsubtask) -> None:
+    """
+    - extractorTest: subtask = fileName, subsubtask = output-style
+    """
     if Backend is not None:
-      report, image = self.backend.testExtractor(fileName, outputStyle=outputStyle)
-      self.beSendExtractorReport.emit(report, image)
+      if task == 'extractorTest':
+        report, image = self.backend.testExtractor(subtask, outputStyle=subsubtask)
+        self.beSendTaskReport.emit(report, image)
+      else:
+        logging.error('Got task, which I do not understand')
 
   def exit(self) -> None:
     """ Exit the worker thread """

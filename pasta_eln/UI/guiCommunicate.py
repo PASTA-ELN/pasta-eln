@@ -31,7 +31,7 @@ class Communicate(QObject):
   tableRequestTable     = Signal(str, str, bool)# table: send docType, projectID, showAll to backend to get table
   uiRequestHierarchy    = Signal(str, bool)     # send project ID to backend
   uiRequestDoc          = Signal(str)           # request doc
-  uiRequestExtractorTest= Signal(str, str)      # request to execute an extractor test
+  uiRequestTask         = Signal(str, str, str) # request to execute a task
   # signals that are emitted from this comm that data changed
   docTypesChanged    = Signal()          # redraw main window, e.g. after change of docType titles
 
@@ -44,7 +44,7 @@ class Communicate(QObject):
     super().__init__()
     self.waitDialog            = WaitDialog()
     self.worker:Worker|None    = None
-    self.configuration, self.configurationProjectGroup = getConfiguration(projectGroup)
+    self.configuration, self.projectGroup = getConfiguration(projectGroup)
 
     # Data storage for all widgets
     self.docTypesTitles:dict[str,dict[str,str]] = {}# docType: {'title':title,'icon':icon,'shortcut':shortcut}
@@ -62,26 +62,20 @@ class Communicate(QObject):
       self.tableRequestTable.connect(self.backendThread.worker.returnTable)
       self.uiRequestHierarchy.connect(self.backendThread.worker.returnHierarchy)
       self.uiRequestDoc.connect(self.backendThread.worker.returnDoc)
-      self.uiRequestExtractorTest.connect(self.backendThread.worker.returnExtractorTest)
+      self.uiRequestTask.connect(self.backendThread.worker.returnTaskReport)
 
       # connect GUI SLOTS to backend worker signals: group C
       self.backendThread.worker.beSendDataHierarchyNode.connect(self.onGetDataHierarchyNode)
       self.backendThread.worker.beSendDocTypes.connect(self.onGetDocTypes)
 
       # connect waiting dialog
-      self.uiRequestExtractorTest.connect(lambda: self.progressWindow('extractorTest'))
-      self.backendThread.worker.beSendExtractorReport.connect(self.waitDialog.hide)
+      self.uiRequestTask.connect(self.progressWindow)
+      self.backendThread.worker.beSendTaskReport.connect(self.waitDialog.hide)
 
       # start thread now that everything is linked up
       self.backendThread.start()
-      self.commSendConfiguration.emit(self.configuration, self.configurationProjectGroup)
+      self.commSendConfiguration.emit(self.configuration, self.projectGroup)
 
-    self.changeSidebar.connect(self.test)
-
-
-  @Slot()
-  def test(self):
-    print('send')
 
   @Slot(dict)
   def onGetDocTypes(self, data: dict[str, dict[str, str]]) -> None:
@@ -107,7 +101,7 @@ class Communicate(QObject):
       del self.backendThread
 
 
-  def progressWindow(self, task:Any) -> None:
+  def progressWindow(self, task:Any, subTask:Any, subsubTask:Any) -> None:
     """ Show a progress window and execute function
     Args:
       taskFunction (func): function to execute

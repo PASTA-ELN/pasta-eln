@@ -29,8 +29,8 @@ class ConfigurationAddOnParameter(QDialog):
 
     #GUI elements
     self.allLineEdits = []
-    if hasattr(comm.backend, 'configuration'):
-      addOns = comm.backend.configuration['projectGroups'][comm.backend.configurationProjectGroup]['addOns']
+    if hasattr(comm, 'configuration'):
+      addOns = comm.configuration['projectGroups'][comm.projectGroup]['addOns']
       for addOnType in addOns:                                                        # loop over add-on types
         if addOnType != 'extractors' and addOns[addOnType]:
           for name, _ in addOns[addOnType].items():                                        # loop over add-ons
