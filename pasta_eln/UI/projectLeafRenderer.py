@@ -135,6 +135,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
   @Slot(str)
   def onGetDoc(self, doc:dict[str,Any]) -> None:
     guiStyle = self.comm.configuration['GUI']
+    if not doc:
+      return
     # ... after deleting project, its items cannot be found and it would give many false negatives
     if doc['type'][0] not in self.comm.docTypesTitles:
       dataHierarchyNode = defaultDataHierarchyNode

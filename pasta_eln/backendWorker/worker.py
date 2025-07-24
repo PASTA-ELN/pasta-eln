@@ -49,7 +49,7 @@ class BackendWorker(QObject):
   @Slot(str, str, bool)
   def returnTable(self, docType:str, projID:str, showAll:bool) -> None:
     """ Return a view from the database """
-    if self.backend is not None:
+    if docType and self.backend is not None:
       path = f'viewDocType/{docType}All' if showAll else f'viewDocType/{docType}'
       data = self.backend.db.getView(path, startKey=projID)
       self.beSendTable.emit(data)

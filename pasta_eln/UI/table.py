@@ -122,7 +122,11 @@ class Table(QWidget):
 
   @Slot(str, str)
   def changeTable(self, docType:str, projID:str) -> None:
-    self.comm.tableRequestTable.emit(docType, projID, self.showAll)
+    if docType:
+      self.docType = docType
+    if projID:
+      self.comm.projectID  = projID
+    self.comm.tableRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
 
 
   @Slot(pd.DataFrame)
@@ -516,16 +520,14 @@ class Table(QWidget):
         item.setCheckState(target_state)
     else:                                             # No need to toggle only the clicked row, just record it
       self.lastClickedRow = row
-
+    # Change view
     if docID[0] == 'x':                                                      # only show items for non-folders
-      doc = self.comm.backend.db.getDoc(docID)
-      if doc['type'][0] == 'x0':
+      if self.docType == 'x0':
         self.comm.changeProject.emit(docID, '')
         self.comm.changeSidebar.emit(docID)
       else:
-        projID = doc['branch'][0]['stack'][0]
-        self.comm.changeProject.emit(projID, docID)
-        self.comm.changeSidebar.emit(projID)
+        self.comm.changeProject.emit(self.comm.projectID, docID)
+        self.comm.changeSidebar.emit(self.comm.projectID)
     else:
       self.comm.changeDetails.emit(docID)
     return
@@ -544,8 +546,7 @@ class Table(QWidget):
       self.comm.changeProject.emit(docID, '')
       self.comm.changeSidebar.emit(docID)
     else:
-      doc = self.comm.backend.db.getDoc(docID)
-      self.comm.formDoc.emit(doc)
+      self.comm.formDoc.emit({'id': docID})
       self.comm.changeTable.emit('','')
       self.comm.changeDetails.emit('redraw')
     return

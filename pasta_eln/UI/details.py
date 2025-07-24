@@ -66,7 +66,7 @@ class Details(QScrollArea):
 
   @Slot(dict)
   def onGetData(self, doc) -> None:
-    if self.docID == doc['id']:
+    if 'id' in doc and doc['id'] == self.docID:
       self.doc = doc
       self.paint()
 

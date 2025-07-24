@@ -100,6 +100,7 @@ class MainWindow(QMainWindow):
     mainLayout.addWidget(self.sidebar)
     mainLayout.addWidget(body)
     self.paint()
+    self.comm.changeTable.emit('x0', '')  # show project table, without details
 
 
   @Slot()

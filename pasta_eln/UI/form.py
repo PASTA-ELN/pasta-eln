@@ -32,7 +32,7 @@ class Form(QDialog):
     """
     super().__init__()
     self.comm = comm
-    self.db   = self.comm.backend.db
+    return
     self.doc  = copy.deepcopy(doc)
     if '_attachments' in self.doc:
       del self.doc['_attachments']
@@ -444,7 +444,7 @@ class Form(QDialog):
       except Exception:
         pass
     elif command[0] is Command.FORM_CANCEL:
-      if self.comm.configuration['GUI']['autosave'] == 'Yes':
+      if self.comm. configuration['GUI']['autosave'] == 'Yes':
         ret = QMessageBox.critical(self, 'Warning', 'You will lose the entered information. Do you want to '+
           'save everything to a temporary location?',
           QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
