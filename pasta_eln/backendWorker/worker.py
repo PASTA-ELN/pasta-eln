@@ -22,7 +22,7 @@ class BackendWorker(QObject):
   beSendTable             = Signal(pd.DataFrame)   # all tables
   beSendHierarchy         = Signal(Node, dict)
   beSendDoc               = Signal(dict)
-  beSendTaskReport        = Signal(str, str)       # report, and image
+  beSendTaskReport        = Signal(str, str, str)       # task, report, and image
 
   def __init__(self) -> None:
     """ Initialize the backend worker """
@@ -75,10 +75,15 @@ class BackendWorker(QObject):
     """
     - extractorTest: subtask = fileName, subsubtask = output-style
     """
+    time.sleep(3)   #TODO remove
     if Backend is not None:
       if task == 'extractorTest':
         report, image = self.backend.testExtractor(subtask, outputStyle=subsubtask)
-        self.beSendTaskReport.emit(report, image)
+        self.beSendTaskReport.emit(task, report, image)
+      elif task == 'scan':
+        for _ in range(2):                                                         #scan twice: convert, extract
+          self.backend.scanProject(None, subtask)
+        self.beSendTaskReport.emit(task, 'Scanning finished successfully', '')
       else:
         logging.error('Got task, which I do not understand')
 

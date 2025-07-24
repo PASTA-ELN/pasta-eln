@@ -195,7 +195,7 @@ class Details(QScrollArea):
       else:
         path = Path(pathStr)
         if not path.as_posix().startswith('http'):
-          path = Path(self.comm.configuration['projectGroups'][self.comm.projectGroup]['local']['path'])/path
+          path = self.comm.basePath/path
         self.comm.uiRequestTask.emit('extractorTest', str(path), 'html')
     else:
       showMessage(self, 'Warning', 'No item was selected via table-view, i.e. no details are shown.')

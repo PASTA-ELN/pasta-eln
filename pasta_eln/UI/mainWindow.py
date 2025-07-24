@@ -251,9 +251,12 @@ class MainWindow(QMainWindow):
       logging.error('Gui menu unknown: %s', command)
     return
 
-  @Slot(str, str)
-  def showReport(self, reportText, image) -> None:
+  @Slot(str, str, str)
+  def showReport(self, task, reportText, image) -> None:
     showMessage(self, 'Report', reportText, image=image)
+    if task == 'scan':
+      self.comm.changeProject.emit(self.comm.projectID, '')
+
 
 
 class Command(Enum):

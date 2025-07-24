@@ -1,5 +1,6 @@
 """ Communication class that sends signals between widgets and the backend worker"""
 import logging
+from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot                           # pylint: disable=no-name-in-module
 from .waitDialog import WaitDialog, Worker
@@ -45,6 +46,7 @@ class Communicate(QObject):
     self.waitDialog            = WaitDialog()
     self.worker:Worker|None    = None
     self.configuration, self.projectGroup = getConfiguration(projectGroup)
+    self.basePath = Path(self.configuration['projectGroups'][self.projectGroup]['local']['path'])
 
     # Data storage for all widgets
     self.docTypesTitles:dict[str,dict[str,str]] = {}# docType: {'title':title,'icon':icon,'shortcut':shortcut}
@@ -106,8 +108,10 @@ class Communicate(QObject):
     Args:
       taskFunction (func): function to execute
     """
-    if isinstance(task, str) and task=='extractorTest':
-      self.waitDialog.text.setMarkdown('Testing extractor:')
+    if isinstance(task, str) and task in ('extractorTest','scan'):
+      labels = {'extractorTest':'Testing extractor:',
+                'scan':'Scanning disk for new data:'}
+      self.waitDialog.text.setMarkdown(labels[task])
       self.waitDialog.text.setFixedHeight(30)
       self.waitDialog.setFixedHeight(100)
       self.waitDialog.progressBar.setRange(0, 0)  # Indeterminate
