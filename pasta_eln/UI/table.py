@@ -30,6 +30,7 @@ class Table(QWidget):
     super().__init__()
     self.comm = comm
     self.comm.backendThread.worker.beSendTable.connect(self.onGetData)
+    self.comm.changeTable.connect(self.changeTable)
     self.comm.stopSequentialEdit.connect(self.stopSequentialEditFunction)
     self.stopSequentialEdit = False
     self.data         :pd.DataFrame = pd.DataFrame()
@@ -116,7 +117,12 @@ class Table(QWidget):
     mainL.addWidget(self.gallery)
     self.setLayout(mainL)
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
-    self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
+    self.comm.tableRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
+
+
+  @Slot(str, str)
+  def changeTable(self, docType:str, projID:str) -> None:
+    self.comm.tableRequestTable.emit(docType, projID, self.showAll)
 
 
   @Slot(pd.DataFrame)
@@ -197,8 +203,6 @@ class Table(QWidget):
         self.headline.setText(docLabel)
         self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
       else:
-        if self.docType == 'x0':
-          self.comm.changeSidebar.emit('')                                       #close the project in sidebar
         self.headline.setText(f'All {docLabel.lower()}')
         self.showHidden.setText(f'Show/hide all hidden {docLabel.lower()}')
       self.filterHeader = list(self.data.columns)[:-1]

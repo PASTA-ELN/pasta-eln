@@ -3,9 +3,12 @@ CONNECT TO ALL THESE SIGNALS IN COMMUNICATE and UI
 """
 from typing import Any, Optional
 import pandas as pd
+import time
 from anytree import Node
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from .backend import Backend
+
+waitTimeBeforeSendingFirstMessage = 0.1 #ensure all UI elements are up
 
 class BackendWorker(QObject):
   """
@@ -35,6 +38,7 @@ class BackendWorker(QObject):
       docTypesTitlesIcons[k]['icon'] = v
     for k,v in self.backend.db.dataHierarchy('','shortcut'):
       docTypesTitlesIcons[k]['shortcut'] = v
+    time.sleep(waitTimeBeforeSendingFirstMessage)
     self.beSendDocTypes.emit(docTypesTitlesIcons)
     self.beSendProjects.emit(self.backend.db.getView('viewDocType/x0'))
     for docType in docTypesTitlesIcons:
@@ -48,6 +52,7 @@ class BackendWorker(QObject):
       path = f'viewDocType/{docType}All' if showAll else f'viewDocType/{docType}'
       data = self.backend.db.getView(path, startKey=projID)
       self.beSendTable.emit(data)
+
 
   @Slot(str)
   def returnHierarchy(self, projID:str, showAll:bool) -> None:

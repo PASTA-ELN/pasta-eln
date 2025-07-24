@@ -17,13 +17,7 @@ class Sidebar(QWidget):
     super().__init__()
     self.comm = comm
     self.comm.changeSidebar.connect(self.paint)
-
-    # while not hasattr(self.comm.backendThread, 'worker') or self.comm.backendThread.worker is None:
-    #   time.sleep(0.01)  # Wait 10ms until worker is available
-
-
     self.comm.backendThread.worker.beSendProjects.connect(self.onGetData)
-    print(hasattr(self.comm.backendThread, 'worker'), self.comm.backendThread.worker is None )
     self.openProjectId = ''
     self.projects = pd.DataFrame()
     self.sideBarWidth = self.comm.configuration['GUI']['sidebarWidth']
@@ -174,8 +168,6 @@ class Sidebar(QWidget):
         self.comm.backend.scanProject(None, self.openProjectId)
       self.comm.changeProject.emit(self.openProjectId,'')
       showMessage(self, 'Information','Scanning finished')
-    elif command[0] is Command.SHOW_FOLDER:
-      self.comm.changeProject.emit(command[1], command[2])
     else:
       logging.error('Sidebar menu unknown: %s',command)
     return
@@ -220,5 +212,4 @@ class Command(Enum):
   LIST_DOCTYPE = 1
   SHOW_PROJECT = 2
   SCAN_PROJECT = 3
-  SHOW_FOLDER  = 4
-  LIST_PROJECTS= 5
+  LIST_PROJECTS= 4

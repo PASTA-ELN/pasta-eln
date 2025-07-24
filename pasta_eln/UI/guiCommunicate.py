@@ -1,6 +1,5 @@
 """ Communication class that sends signals between widgets and the backend worker"""
 import logging
-import time
 from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot                           # pylint: disable=no-name-in-module
 from .waitDialog import WaitDialog, Worker
@@ -8,7 +7,6 @@ from .palette import Palette
 from ..backendWorker.worker import BackendThread
 from ..miscTools import getConfiguration
 
-waitTimeBeforeStarting = 0.1  #ensure that all gui elements are up that need the initial data set
 
 class Communicate(QObject):
   """ Communication class that sends signals between widgets and the backend worker"""
@@ -22,15 +20,15 @@ class Communicate(QObject):
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES
   # signals request a change within the UI elements:
   changeSidebar      = Signal(str)       # redraw sidebar after hide/show of project in table, focus on this projectID
-  changeTable        = Signal(str, str)  # send doctype,projectID from sidebar to main-table
-                                         #      can also be used for hiding the details on right side if nothing to show
+  changeTable        = Signal(str, str)    # send doctype,projectID from sidebar to main-table
+                                           #      can also be used for hiding the details on right side if nothing to show
   changeDetails      = Signal(str)       # send docID from main-table to details
                                          #      docID (str): document-id; ''=draw nothing; 'redraw' implies redraw
   changeProject      = Signal(str, str)  # send docID,projectID from sidebar or main-table to projects
   stopSequentialEdit = Signal()          # in sequential edit, stop if there is a cancel
   # send data or data-request to backend
   commSendConfiguration = Signal(dict, str)     # send configuration and project-group-name to backend
-  uiRequestTable        = Signal(str, str, bool)# send docType, projectID, showAll to backend to get table
+  tableRequestTable     = Signal(str, str, bool)# table: send docType, projectID, showAll to backend to get table
   uiRequestHierarchy    = Signal(str, bool)     # send project ID to backend
   uiRequestDoc          = Signal(str)           # request doc
   uiRequestExtractorTest= Signal(str, str)      # request to execute an extractor test
@@ -61,7 +59,7 @@ class Communicate(QObject):
       #   has to be here, else worker needs comm which has to be passed through thread, is uninitialized, ...)
       # connect backend worker SLOTS to GUI signals: group B
       self.commSendConfiguration.connect(self.backendThread.worker.initialize)
-      self.uiRequestTable.connect(self.backendThread.worker.returnTable)
+      self.tableRequestTable.connect(self.backendThread.worker.returnTable)
       self.uiRequestHierarchy.connect(self.backendThread.worker.returnHierarchy)
       self.uiRequestDoc.connect(self.backendThread.worker.returnDoc)
       self.uiRequestExtractorTest.connect(self.backendThread.worker.returnExtractorTest)
@@ -76,9 +74,14 @@ class Communicate(QObject):
 
       # start thread now that everything is linked up
       self.backendThread.start()
-      time.sleep(waitTimeBeforeStarting)
       self.commSendConfiguration.emit(self.configuration, self.configurationProjectGroup)
 
+    self.changeSidebar.connect(self.test)
+
+
+  @Slot()
+  def test(self):
+    print('send')
 
   @Slot(dict)
   def onGetDocTypes(self, data: dict[str, dict[str, str]]) -> None:

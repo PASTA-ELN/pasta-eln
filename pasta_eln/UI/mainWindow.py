@@ -117,7 +117,6 @@ class MainWindow(QMainWindow):
     self.changeProjectGroups.clear()
     for name in self.comm.configuration['projectGroups'].keys():
       Action(name,                         self, [Command.CHANGE_PG, name], self.changeProjectGroups)
-    self.comm.changeTable.emit('x0', '')
     return
 
 
