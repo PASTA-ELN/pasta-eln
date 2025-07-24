@@ -31,8 +31,8 @@ class ConfigurationAuthors(QDialog):
     self.textFields:dict[str, QLineEdit] = {}
 
     #GUI elements
-    if hasattr(self.comm.backend, 'configuration'):
-      self.author = self.comm.backend.configuration['authors'][0]
+    if hasattr(self.comm, 'configuration'):
+      self.author = self.comm.configuration['authors'][0]
       _, self.tabAuthorL = widgetAndLayoutForm(mainL, 's')
       self.userOrcid = self.addRowText('orcid','ORCID')
       self.userTitle = self.addRowText('title','Title')
@@ -132,9 +132,9 @@ class ConfigurationAuthors(QDialog):
       if j>-1:
         self.author['organizations'][j]['organization'] = self.userOrg.text().strip()
         self.author['organizations'][j]['rorid']        = self.userRorid.text().strip()
-      self.comm.backend.configuration['authors'][0] = self.author
+      self.comm.configuration['authors'][0] = self.author
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
+        fConf.write(json.dumps(self.comm.configuration,indent=2))
     self.callbackFinished(False)
     return
 

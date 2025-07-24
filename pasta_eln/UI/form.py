@@ -62,8 +62,7 @@ class Form(QDialog):
       imageWSA = QScrollArea()
       imageWSA.setWidgetResizable(True)
       imageW, self.imageL = widgetAndLayout('V', splitter)
-      width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
-                if hasattr(self.comm.backend, 'configuration') else 300
+      width= self.comm.configuration['GUI']['imageSizeDetails'] if hasattr(self.comm,'configuration') else 300
       Image(self.doc['image'], self.imageL, anyDimension=width)
       if 'id' in self.doc:
         self.docID= doc['id']                                                       #required for hide to work
@@ -161,7 +160,7 @@ class Form(QDialog):
           labelW, labelL = widgetAndLayout('V', spacing='s')
           labelL.addWidget(QLabel(key.capitalize()))
           TextButton('More', self, [Command.FOCUS_AREA, key], labelL, checkable=True)
-          projectGroup = self.comm.backend.configuration['projectGroups'][self.comm.backend.configurationProjectGroup]
+          projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
           if 'form' in projectGroup.get('addOns',{}) and projectGroup['addOns']['form']:
             TextButton('Auto', self, [Command.AUTO_COMMENT],    labelL, checkable=True)
           rightSideW, rightSideL = widgetAndLayout('V')
@@ -336,7 +335,7 @@ class Form(QDialog):
 
   def autosave(self) -> None:
     """ Autosave comment to file """
-    if self.comm.backend.configuration['GUI']['autosave'] == 'No':
+    if self.comm.configuration['GUI']['autosave'] == 'No':
       return
     subContent = {'name':getattr(self, f"key_{self.allUserElements.index(('name','LineEdit'))}").text().strip(),
                   'tags':self.doc['tags']}
@@ -380,8 +379,7 @@ class Form(QDialog):
     if isinstance(command[0], CommandMenu):
       if executeContextMenu(self, command):
         self.imageL.itemAt(0).widget().setParent(None)
-        width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
-                if hasattr(self.comm.backend, 'configuration') else 300
+        width=self.comm.configuration['GUI']['imageSizeDetails'] if hasattr(self.comm,'configuration') else 300
         if 'image' in self.doc:
           Image(self.doc['image'], self.imageL, anyDimension=width)
         if 'branch' in self.doc:
@@ -446,7 +444,7 @@ class Form(QDialog):
       except Exception:
         pass
     elif command[0] is Command.FORM_CANCEL:
-      if self.comm.backend.configuration['GUI']['autosave'] == 'Yes':
+      if self.comm.configuration['GUI']['autosave'] == 'Yes':
         ret = QMessageBox.critical(self, 'Warning', 'You will lose the entered information. Do you want to '+
           'save everything to a temporary location?',
           QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,

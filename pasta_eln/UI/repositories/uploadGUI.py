@@ -37,7 +37,7 @@ class UploadGUI(QDialog):
     if not self.comm.projectID:
       return
     docProject = self.comm.backend.db.getDoc(self.comm.projectID)
-    repositories = self.comm.backend.configuration['repositories']
+    repositories = self.comm.configuration['repositories']
     leftSideW, leftSide = widgetAndLayoutGrid(center, spacing='m', right='l')
     leftSideW.setStyleSheet('border-right: 2px solid black;')
     leftSide.setAlignment(Qt.AlignTop)                                            # type: ignore[attr-defined]
@@ -107,12 +107,12 @@ class UploadGUI(QDialog):
                   'keywords': [i.strip() for i in self.leKeywords.text().split(',')],
                   'category': self.leCategory.text(),
                   'additional': json.loads(self.leAdditional.text()),
-                  'author': self.comm.backend.configuration['authors'][0]}
-      repositories = self.comm.backend.configuration['repositories']
+                  'author': self.comm.configuration['authors'][0]}
+      repositories = self.comm.configuration['repositories']
       repositories['category'] = self.leCategory.text()
       repositories['additional'] = json.loads(self.leAdditional.text())
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
+        fConf.write(json.dumps(self.comm.configuration,indent=2))
       # convert to repository specific and upload to repository
       if command[1]:                                                                                   #Zenodo
         clientZ = ZenodoClient(repositories['zenodo']['url'], repositories['zenodo']['key'])

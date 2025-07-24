@@ -34,7 +34,7 @@ class ProjectGroup(QDialog):
     self.comm    = comm
     self.projectGroupTested = False
     self.callbackFinished = callbackFinished
-    self.configuration = self.comm.backend.configuration
+    self.configuration = self.comm.configuration
     self.emptyConfig:dict[str,Any] = {'local':{'path':''}, 'remote':{}, 'addOnDir':''}
     self.elabApi: ElabFTWApi|None = None
     self.serverPG: set[tuple[str,Any,Any,Any]] = set()

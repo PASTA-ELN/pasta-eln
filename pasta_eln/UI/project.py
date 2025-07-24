@@ -27,6 +27,7 @@ class Project(QWidget):
     self.comm.backendThread.worker.beSendHierarchy.connect(self.onGetData)
     self.hierarchy = Node('__none__')
     self.docProj:dict[str,Any] = {}
+    self.projID = ''
     self.showAll= self.comm.configuration['GUI']['showHidden']=='Yes'
 
     self.mainL = QVBoxLayout()
@@ -64,6 +65,7 @@ class Project(QWidget):
       projID (str): project ID
       docID (str): document ID
     """
+    self.projID = projID
     self.comm.uiRequestHierarchy.emit(projID, self.showAll)
 
 
@@ -224,7 +226,7 @@ class Project(QWidget):
     gui  = [index.data(Qt.ItemDataRole.UserRole+1)['gui'][0]]+[flag]
     docID = index.data(Qt.ItemDataRole.UserRole+1)['hierStack'].split('/')[-1]
     self.model.itemFromIndex(index).setData({ **index.data(Qt.ItemDataRole.UserRole+1), **{'gui':gui}})
-    self.comm.backend.db.setGUI(docID, gui)
+    self.comm.uiRequestTask.emit('setGUI', docID, gui)
     return
 
 
@@ -239,41 +241,26 @@ class Project(QWidget):
       self.comm.formDoc.emit(self.docProj)
       self.change(self.projID,'')
       #collect information and then change
-      oldPath = self.comm.backend.basePath/self.docProj['branch'][0]['path']
+      oldPath = self.comm.basePath/self.docProj['branch'][0]['path']
       if oldPath.is_dir():
-        newPath = self.comm.backend.basePath/createDirName(self.docProj, 0, self.comm.backend.basePath)
+        newPath = self.comm.basePath/createDirName(self.docProj, 0, self.comm.basePath)
         oldPath.rename(newPath)
       self.comm.changeSidebar.emit('redraw')
     elif command[0] is Command.DELETE:
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?', \
-                      QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
-                      QMessageBox.StandardButton.No)
+                                 QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                 QMessageBox.StandardButton.No)
       if ret==QMessageBox.StandardButton.Yes:
-        #delete database and rename folder
-        doc = self.comm.backend.db.remove(self.projID)
-        if 'branch' in doc and len(doc['branch'])>0 and 'path' in doc['branch'][0]:
-          oldPath = self.comm.backend.basePath/doc['branch'][0]['path']
-          newPath = self.comm.backend.basePath/('trash_'+doc['branch'][0]['path'])
-          nextIteration = 1
-          while newPath.is_dir():
-            newPath = self.comm.backend.basePath/(f"trash_{doc['branch'][0]['path']}_{nextIteration}")
-            nextIteration += 1
-          oldPath.rename(newPath)
-        # go through children, remove from DB
-        children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=self.projID)
-        for docID in {line['id'] for line in children if line['id']!=self.projID}:
-          self.comm.backend.db.remove(docID)
+        self.comm.uiRequestTask.emit('deleteProject', self.projID, [])
         #update sidebar, show projects
         self.comm.changeSidebar.emit('redraw')
         self.comm.changeTable.emit('x0','')
     elif command[0] is Command.SCAN:
-      for _ in range(2):                                                         #scan twice: convert, extract
-        self.comm.backend.scanProject(None, self.projID)
+      self.comm.uiRequestTask.emit('scan', self.projID, [''])
       self.comm.changeProject.emit(self.projID,'')
-      showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_PROJ_DETAILS:
       self.docProj['gui'][0] = not self.docProj['gui'][0]
-      self.comm.backend.db.setGUI(self.projID, self.docProj['gui'])
+      self.comm.uiRequestTask.emit('setGUI', self.projID, self.docProj['gui'])
       if self.allDetails is not None and self.allDetails.isHidden():
         self.allDetails.show()
         self.actHideDetail.setText('Hide project details')
@@ -298,7 +285,7 @@ class Project(QWidget):
           gui      = subItem.data()['gui']
           gui[0]   = self.showDetailsAll
           subItem.setData({ **subItem.data(), **{'gui':gui}})
-          self.comm.backend.db.setGUI(docID, gui)
+          self.comm.uiRequestTask.emit('setGUI', docID, gui)
           recursiveRowIteration(subIndex)
       recursiveRowIteration(self.tree.model().index(-1,0))
       self.showDetailsAll = not self.showDetailsAll
@@ -310,7 +297,7 @@ class Project(QWidget):
       self.showAll = not self.showAll
       self.change('','')
     elif command[0] is Command.ADD_CHILD:
-      self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['branch'][0]['path']
+      self.comm.backend.cwd = self.comm.basePath/self.docProj['branch'][0]['path']
       self.comm.backend.addData('x1', {'name':'new item'}, [self.projID])
       self.change('','')                                                                      #refresh project
     elif command[0] is Command.SHOW_TABLE:

@@ -77,14 +77,14 @@ class ConfigurationAddOnParameter(QDialog):
     if btn.text().endswith('Cancel'):
       self.reject()
     else:
-      apiKeys = self.comm.backend.configuration.get('addOnParameter',{})
+      apiKeys = self.comm.configuration.get('addOnParameter',{})
       for _, name, param, lineEdit in self.allLineEdits:
         if name not in apiKeys:
           apiKeys[name] = {}
         apiKeys[name][param] = lineEdit.text()
-      self.comm.backend.configuration['addOnParameter'] = apiKeys
+      self.comm.configuration['addOnParameter'] = apiKeys
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
+        fConf.write(json.dumps(self.comm.configuration,indent=2))
       self.accept()
     self.callbackFinished(False)
     return

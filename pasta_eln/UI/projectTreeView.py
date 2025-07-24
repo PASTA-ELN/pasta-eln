@@ -61,7 +61,7 @@ class TreeView(QTreeView):
       Action('Open file with another application', self, [Command.OPEN_EXTERNAL],    context)
     Action('Open folder in file browser',          self, [Command.OPEN_FILEBROWSER], context)
     if folder:
-      projectGroup = self.comm.backend.configuration['projectGroups'][self.comm.backend.configurationProjectGroup]
+      projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
       if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
         context.addSeparator()
         for label, description in projectAddOns.items():

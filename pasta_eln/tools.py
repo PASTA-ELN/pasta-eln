@@ -195,9 +195,6 @@ class Tools:
     """
     if not self.projectGroup:
       self.__setBackend__(projectGroup)
-    if self.backend is None:
-      return
-    self.backend = Backend(projectGroup)
     if not docID:
       docID = input('Enter docID: ').strip()
     if output:

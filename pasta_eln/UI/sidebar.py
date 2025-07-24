@@ -164,7 +164,7 @@ class Sidebar(QWidget):
             projWidget.setStyleSheet(self.comm.palette.get('secondaryDark','background-color'))
       self.comm.changeProject.emit(projID, item)
     elif command[0] is Command.SCAN_PROJECT:
-      self.comm.uiRequestTask.emit('scan', self.openProjectId, '')
+      self.comm.uiRequestTask.emit('scan', self.openProjectId, [''])
     else:
       logging.error('Sidebar menu unknown: %s',command)
     return

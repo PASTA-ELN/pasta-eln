@@ -23,8 +23,8 @@ class ConfigurationGUI(QDialog):
     self.comm = comm
     self.callbackFinished = callbackFinished
     #GUI elements
-    if hasattr(self.comm.backend, 'configuration'):
-      onDisk = self.comm.backend.configuration['GUI']
+    if hasattr(self.comm, 'configuration'):
+      onDisk = self.comm.configuration['GUI']
       mainL  = QVBoxLayout(self)
       for label, items  in configurationGUI.items():                                                 # section
         groupbox = QGroupBox(label.capitalize())
@@ -50,11 +50,11 @@ class ConfigurationGUI(QDialog):
       for items in configurationGUI.values():
         for k in items.keys():
           try:
-            self.comm.backend.configuration['GUI'][k] = int(getattr(self, k).currentText())
+            self.comm.configuration['GUI'][k] = int(getattr(self, k).currentText())
           except Exception:
-            self.comm.backend.configuration['GUI'][k] = getattr(self, k).currentText()
+            self.comm.configuration['GUI'][k] = getattr(self, k).currentText()
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
+        fConf.write(json.dumps(self.comm.configuration,indent=2))
       hardRestart()  #theme
     return
 

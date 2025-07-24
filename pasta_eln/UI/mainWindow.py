@@ -7,7 +7,7 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import Slot                                            # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot, QEvent                                    # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut                        # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QFileDialog, QMainWindow                     # pylint: disable=no-name-in-module
 from pasta_eln import __version__
@@ -18,12 +18,12 @@ from .config.main import Configuration
 from .data_hierarchy.editor import SchemeEditor
 from .definitions.editor import Editor as DefinitionsEditor
 from .form import Form
+from .guiCommunicate import Communicate
+from .guiStyle import Action, ScrollMessageBox, widgetAndLayout
+from .messageDialog import showMessage
 from .palette import Palette
 from .repositories.uploadGUI import UploadGUI
 from .sidebar import Sidebar
-from .guiStyle import Action, ScrollMessageBox, widgetAndLayout
-from .messageDialog import showMessage
-from .guiCommunicate import Communicate
 
 class MainWindow(QMainWindow):
   """ Graphical user interface includes all widgets """
@@ -40,7 +40,7 @@ class MainWindow(QMainWindow):
       self.comm.palette = Palette(self, self.comm.configuration['GUI']['theme'])
       self.comm.docTypesChanged.connect(self.paint)
     else:
-      configWindow = Configuration(self, 'setup')
+      configWindow = Configuration(self.comm, 'setup')
       configWindow.exec()
       return
     self.comm.formDoc.connect(self.formDoc)
@@ -95,8 +95,8 @@ class MainWindow(QMainWindow):
     # GUI elements
     mainWidget, mainLayout = widgetAndLayout('H')
     self.setCentralWidget(mainWidget)                                   # Set the central widget of the Window
-    body = Body(self.comm)                                                           # body with information
-    self.sidebar = Sidebar(self.comm)                                                 # sidebar with buttons
+    body = Body(self.comm)                                                             # body with information
+    self.sidebar = Sidebar(self.comm)                                                   # sidebar with buttons
     mainLayout.addWidget(self.sidebar)
     mainLayout.addWidget(body)
     self.paint()
@@ -120,7 +120,7 @@ class MainWindow(QMainWindow):
     return
 
 
-  def closeEvent(self, event) -> None:
+  def closeEvent(self, event:QEvent) -> None:
     """
     Handle window close event - cleanup of backend thread
 
@@ -157,20 +157,17 @@ class MainWindow(QMainWindow):
         showMessage(self, 'Error', 'You have to open a project to export', 'Critical')
         return
       fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
-      if fileName != '' and hasattr(self.backend, 'db'):
-        docTypes = [i for i in self.comm.backend.db.dataHierarchy('','') if i[0]!='x']
-        status = exportELN(self.comm.backend, [self.comm.projectID], fileName, docTypes)
-        showMessage(self, 'Finished', status, 'Information')
+      if fileName != '':
+        docTypes = [i for i in self.comm.docTypesTitles if i[0]!='x']
+        self.comm.uiRequestTask.emit('exportELN', fileName, [self.comm.projectID, docTypes])
     elif command[0] is Command.IMPORT:
       if self.comm.projectID == '':
         showMessage(self, 'Error', 'You have to open a project to import', 'Critical')
         return
       fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
-        status, statistics  = importELN(self.comm.backend, fileName, self.comm.projectID)
-        showMessage(self, 'Finished', f'{status}\n{statistics}', 'Information')
-        self.comm.changeSidebar.emit('redraw')
-        self.comm.changeTable.emit('x0', '')
+        self.comm.uiRequestTask.emit('importELN', fileName, self.comm.projectID)
+        self.comm.changeProject.emit(self.comm.projectID, '')
     elif command[0] is Command.REPOSITORY:
       if self.comm.projectID == '':
         showMessage(self, 'Error', 'You have to open a project to upload', 'Critical')
@@ -184,29 +181,16 @@ class MainWindow(QMainWindow):
       self.comm.changeTable.emit(command[1], '')
     # system menu
     elif command[0] is Command.CHANGE_PG:
-      self.backend.configuration['defaultProjectGroup'] = command[1]
+      self.comm.configuration['defaultProjectGroup'] = command[1]
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.backend.configuration, indent=2))
+        fConf.write(json.dumps(self.comm.configuration, indent=2))
       hardRestart()
     elif command[0] is Command.SYNC_SEND:
-      if 'ERROR' in self.backend.checkDB(minimal=True):
-        showMessage(self, 'Error', 'There are errors in your database: fix before upload', 'Critical')
-        return
-      sync = Pasta2Elab(self.backend, self.projectGroup)
-      if hasattr(sync, 'api') and sync.api.url:                                 #if hostname and api-key given
-        self.comm.progressWindow(lambda func1: sync.sync('sA', progressCallback=func1))
-      else:                                                                                      #if not given
-        showMessage(self, 'Error', 'Please give server address and API-key in Configuration', 'Critical')
-        dialogC = Configuration(self.comm)
-        dialogC.exec()
+      self.comm.uiRequestTask.emit('SyncSend',  self.comm.projectGroup, '')
     elif command[0] is Command.SYNC_GET:
-      sync = Pasta2Elab(self.backend, self.comm.projectGroup)
-      self.comm.progressWindow(lambda func1: sync.sync('gA', progressCallback=func1))
-      self.comm.changeSidebar.emit('redraw')
-      self.comm.changeTable.emit('x0', '')
+      self.comm.uiRequestTask.emit('SyncGet',   self.comm.projectGroup, '')
     elif command[0] is Command.SYNC_SMART:
-      sync = Pasta2Elab(self.backend)
-      sync.sync('')
+      self.comm.uiRequestTask.emit('SyncSmart', self.comm.projectGroup, '')
     elif command[0] is Command.SCHEMA:
       dialogS = SchemeEditor(self.comm)
       dialogS.exec()
@@ -220,7 +204,7 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.TEST2:
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
-      configProjecGroup = self.backend.configuration['projectGroups'][self.comm.projectGroup]
+      configProjecGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
       installPythonPackages(configProjecGroup['addOnDir'])
       reportDict = updateAddOnList(self.comm.projectGroup)
       messageWindow = ScrollMessageBox('Extractor list updated', reportDict,
@@ -234,13 +218,7 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.WEBSITE:
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
     elif command[0] is Command.VERIFY_DB:
-      reportText = self.comm.backend.checkDB(outputStyle='html', minimal=True)
-      regexStr = r'<font color="magenta">image does not exist m-[0-9a-f]+ image: comment:<\/font><br>'
-      myCount = len(re.findall(regexStr, reportText))
-      if myCount>5:
-        reportText = re.sub(regexStr, '', reportText, count=myCount-5)
-        reportText += r'<font color="magenta">image does not exist ...:<\/font><br>'
-      showMessage(self, 'Report of database verification', reportText, minWidth=800)
+      self.comm.uiRequestTask.emit('check', '', 'html')
     elif command[0] is Command.SHORTCUTS:
       showMessage(self, 'Keyboard shortcuts', shortcuts, 'Information')
     elif command[0] is Command.ABOUT:
@@ -251,12 +229,26 @@ class MainWindow(QMainWindow):
       logging.error('Gui menu unknown: %s', command)
     return
 
+
   @Slot(str, str, str)
-  def showReport(self, task, reportText, image) -> None:
-    showMessage(self, 'Report', reportText, image=image)
+  def showReport(self, task:str, reportText:str, image:str) -> None:
+    """ Show a report from backend worker
+    Args:
+      task (str): task name
+      reportText (str): text of the report
+      image (str): base64 encoded image, svg image
+    """
     if task == 'scan':
       self.comm.changeProject.emit(self.comm.projectID, '')
-
+    elif task == 'check':
+      regexStr = r'<font color="magenta">image does not exist m-[0-9a-f]+ image: comment:<\/font><br>'
+      myCount = len(re.findall(regexStr, reportText))
+      if myCount>5:
+        reportText = re.sub(regexStr, '', reportText, count=myCount-5)
+        reportText += r'<font color="magenta">image does not exist ...:<\/font><br>'
+    else:
+      logging.error('Unknown task in showReport', task)
+    showMessage(self, 'Report', reportText, image=image)
 
 
 class Command(Enum):

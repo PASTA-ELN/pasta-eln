@@ -136,8 +136,10 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   logging.info('Start example data creation')
   if callbackPercent is not None:
     callbackPercent(0)
+  with open(Path.home()/CONF_FILE_NAME, encoding='utf-8') as fConf:
+    conf = json.load(fConf)
   if force:
-    backend = Backend(projectGroup)
+    backend = Backend(conf, projectGroup)
     dirName = backend.basePath
     backend.exit()
     try:
@@ -149,7 +151,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
       logging.error('recreate example data: remove folder impossible possible %s', traceback.format_exc())
   if callbackPercent is not None:
     callbackPercent(1)
-  backend = Backend(projectGroup)
+  backend = Backend(conf, projectGroup)
   if callbackPercent is not None:
     callbackPercent(2)
   ### CREATE PROJECTS AND SHOW

@@ -26,7 +26,6 @@ class ConfigurationRepositories(QDialog):
     super().__init__()
     self.comm    = comm
     self.callbackFinished = callbackFinished
-    self.configuration = self.comm.backend.configuration
     self.checkedZenodo = False
     self.checkedDataverse = True
     self.setStyleSheet(f"QLineEdit {{ {self.comm.palette.get('secondaryText', 'color')} }}")
@@ -137,17 +136,17 @@ class ConfigurationRepositories(QDialog):
       self.reject()
       self.callbackFinished(False)
     elif command[0] is Command.SAVE:
-      if 'repositories' not in self.configuration:
-        self.configuration['repositories'] = {}
+      if 'repositories' not in self.comm.configuration:
+        self.comm.configuration['repositories'] = {}
       if self.checkedZenodo:
-        self.configuration['repositories']['zenodo'] = {'url':self.urlZenodo.text(),
+        self.comm.configuration['repositories']['zenodo'] = {'url':self.urlZenodo.text(),
                                                         'key':self.apiZenodo.text()}
       if self.checkedDataverse:
-        self.configuration['repositories']['dataverse'] = {'url':self.urlDatavese.text(),
+        self.comm.configuration['repositories']['dataverse'] = {'url':self.urlDatavese.text(),
                                                           'key':self.apiDataverse.text(),
                                                           'dataverse':self.dvDataverse.currentData()}
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.configuration,indent=2))
+        fConf.write(json.dumps(self.comm.configuration,indent=2))
       self.accept()
     elif command[0] is Command.HELP:
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/repositories.html')

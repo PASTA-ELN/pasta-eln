@@ -70,22 +70,64 @@ class BackendWorker(QObject):
     if self.backend is not None:
       self.beSendDoc.emit(self.backend.db.getDoc(docID))
 
-  @Slot(str, str)
-  def returnTaskReport(self, task, subtask, subsubtask) -> None:
+  @Slot(str, str, list)
+  def returnTaskReport(self, task:str, subtask:str, subsubtask:list[Any]) -> None:
     """
     - extractorTest: subtask = fileName, subsubtask = output-style
     """
     time.sleep(3)   #TODO remove
-    if Backend is not None:
+    if self.backend is not None:
       if task == 'extractorTest':
-        report, image = self.backend.testExtractor(subtask, outputStyle=subsubtask)
+        report, image = self.backend.testExtractor(subtask, outputStyle=subsubtask[0])
         self.beSendTaskReport.emit(task, report, image)
       elif task == 'scan':
         for _ in range(2):                                                         #scan twice: convert, extract
           self.backend.scanProject(None, subtask)
         self.beSendTaskReport.emit(task, 'Scanning finished successfully', '')
+
+      #SEND
+      # if 'ERROR' in self.backend.checkDB(minimal=True):
+      #   showMessage(self, 'Error', 'There are errors in your database: fix before upload', 'Critical')
+      #   return
+      # sync = Pasta2Elab(self.backend, self.projectGroup)
+      # if hasattr(sync, 'api') and sync.api.url:                                 #if hostname and api-key given
+      #   self.comm.progressWindow(lambda func1: sync.sync('sA', progressCallback=func1))
+      # else:                                                                                      #if not given
+      #   showMessage(self, 'Error', 'Please give server address and API-key in Configuration', 'Critical')
+      #   dialogC = Configuration(self.comm)
+      #   dialogC.exec()
+
+      #GET
+      # sync = Pasta2Elab(self.backend, self.comm.projectGroup)
+      # self.comm.progressWindow(lambda func1: sync.sync('gA', progressCallback=func1))
+      # self.comm.changeSidebar.emit('redraw')
+      # self.comm.changeTable.emit('x0', '')
+
+      #SMART
+      # sync = Pasta2Elab(self.backend)
+      # sync.sync('')
+
+      # self.comm.backend.db.setGUI(self.projID, )
+
+
+      #DELETE PROJECT
+      # #delete database and rename folder
+      # doc = self.comm.backend.db.remove(self.projID)
+      # if 'branch' in doc and len(doc['branch'])>0 and 'path' in doc['branch'][0]:
+      #   oldPath = self.comm.basePath/doc['branch'][0]['path']
+      #   newPath = self.comm.basePath/('trash_'+doc['branch'][0]['path'])
+      #   nextIteration = 1
+      #   while newPath.is_dir():
+      #     newPath = self.comm.basePath/(f"trash_{doc['branch'][0]['path']}_{nextIteration}")
+      #     nextIteration += 1
+      #   oldPath.rename(newPath)
+      # # go through children, remove from DB
+      # children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=self.projID)
+      # for docID in {line['id'] for line in children if line['id']!=self.projID}:
+      #   self.comm.backend.db.remove(docID)
+
       else:
-        logging.error('Got task, which I do not understand')
+        logging.error('Got task, which I do not understand', task, subtask, subsubtask)
 
   def exit(self) -> None:
     """ Exit the worker thread """
