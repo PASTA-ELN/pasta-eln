@@ -3,14 +3,6 @@
 THIS IS A VERY ADVANCED ADDON TUTORIAL
 This tutorial teaches
 - the basic structure of project-view-addons (header, function for each node, body, footer)
-- this addon runs as part of the frontend worker (show a GUI element)
-  -  to get the data one has to use the signal system to communicate to the backend worker
-- the data collection works as part of this system
-  - define a variable to store the data
-  - define a function to fill the data
-  - say that this function should be used whenever new data arrives
-  - request new data
-  - do a while loop until all data is here: wait
 """
 import base64
 import re
@@ -20,7 +12,7 @@ from pathlib import Path
 from anytree import PreOrderIter, Node
 from PIL import Image
 from PySide6.QtGui import QTextDocument  # This is used for html-markdown conversion: works fine here
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 from PySide6.QtCore import Slot
 import pasta_eln
 from pasta_eln.Resources import Icons as icons
@@ -57,27 +49,9 @@ def main(comm, hierStack, widget, parameter={}):
             return False
     else:
         res = parameter['fileNames']
-    # Collect the hierarchy first, once you have it, ....
-    hierarchy = None
-    @Slot(Node, dict)
-    def getHierarchy(tempHierarchy, _):
-        nonlocal hierarchy
-        hierarchy = tempHierarchy
-    comm.backendThread.worker.beSendHierarchy.connect(getHierarchy)
-    comm.uiRequestHierarchy.emit(hierStack.split('/')[0], False)
-    while hierarchy is None:
-        time.sleep(0.1)
-    # Collect all the documents that belong to this hierarchy
-    docs = {}
-    @Slot(dict)
-    def getDoc(doc):
-        docs[doc['id']] = doc
-    comm.backendThread.worker.beSendDoc.connect(getDoc)
-    for node in PreOrderIter(hierarchy):
-        docs[node.id] = {}
-        comm.uiRequestDoc.emit(node.id)
-    while any(len(i)==0 for i in docs.values()):
-        time.sleep(0.1)
+    # Collect the hierarchy first, once you have it, collect all the docs
+    hierarchy = comm.getHierarchy(hierStack.split('/')[0])
+    docs = comm.getDocs([i.id for i in PreOrderIter(hierarchy)]) # Collect all the documents that belong to this hierarchy
     # All data is known in this function, process the data
     qtDocument = QTextDocument()   #used for markdown -> html conversion
 
@@ -134,4 +108,7 @@ def main(comm, hierStack, widget, parameter={}):
     # save everything to the html file
     with open(res[0], 'w', encoding='utf-8') as f:
         f.write(f'{HTML_HEADER}{out}{HTML_FOOTER}')
+    print(f'Wrote a html file with {len(HTML_HEADER)+len(out)+len(HTML_FOOTER)} bytes')
+    QMessageBox.information(widget, 'Information', f'Wrote a html file with {len(HTML_HEADER)+len(out)+len(HTML_FOOTER)} bytes',
+                            QMessageBox.StandardButton.Ok)
     return True
