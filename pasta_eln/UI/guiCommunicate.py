@@ -1,13 +1,13 @@
 """ Communication class that sends signals between widgets and the backend worker"""
 import logging
-from anytree import Node
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QObject, Signal, Slot, QEventLoop                    # pylint: disable=no-name-in-module
+from PySide6.QtCore import QObject, Signal, Slot                           # pylint: disable=no-name-in-module
 from .waitDialog import WaitDialog, Worker
 from .palette import Palette
 from ..backendWorker.worker import BackendThread
 from ..miscTools import getConfiguration
+
 
 class Communicate(QObject):
   """ Communication class that sends signals between widgets and the backend worker"""
@@ -91,39 +91,6 @@ class Communicate(QObject):
   @Slot(str, list)
   def onGetDataHierarchyNode(self, docType:str, data:list[Any]) -> None:
     self.dataHierarchyNodes[docType] = data
-
-
-  def getHierarchy(self, docID:str, allItems:bool=True):
-    hierarchy = None
-    loop = QEventLoop()
-    @Slot(Node, dict)
-    def getHierarchy(tempHierarchy, _):
-        nonlocal hierarchy
-        hierarchy = tempHierarchy
-        self.backendThread.worker.beSendHierarchy.disconnect(getHierarchy)
-        loop.quit()
-    self.backendThread.worker.beSendHierarchy.connect(getHierarchy)
-    self.uiRequestHierarchy.emit(docID, allItems)
-    loop.exec()  # Wait here until loop.quit() is called
-    return hierarchy
-
-
-  def getDocs(self, docIDs:list[str]) -> dict[str, dict[str, Any]]:
-    """ Convenientcy method for getting multiple or one doc without using signals """
-    results = {}
-    loop = QEventLoop()
-    @Slot(dict)
-    def getOneDoc(doc):
-      results[doc['id']] = doc
-      # If all results are filled, quit the loop
-      if len(results)==len(docIDs):
-        self.backendThread.worker.beSendDoc.disconnect(getOneDoc)
-        loop.quit()
-    self.backendThread.worker.beSendDoc.connect(getOneDoc)
-    for docID in docIDs:
-      self.uiRequestDoc.emit(docID)
-    loop.exec()
-    return results
 
 
   def shutdownBackendThread(self) -> None:
