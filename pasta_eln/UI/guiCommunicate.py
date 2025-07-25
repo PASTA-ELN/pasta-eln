@@ -29,7 +29,7 @@ class Communicate(QObject):
   stopSequentialEdit = Signal()          # in sequential edit, stop if there is a cancel
   # send data or data-request to backend
   commSendConfiguration = Signal(dict, str)     # send configuration and project-group-name to backend
-  tableRequestTable     = Signal(str, str, bool)# table: send docType, projectID, showAll to backend to get table
+  uiRequestTable        = Signal(str, str, bool)# table: send docType, projectID, showAll to backend to get table
   uiRequestHierarchy    = Signal(str, bool)     # send project ID to backend
   uiRequestDoc          = Signal(str)           # request doc
   uiRequestTask         = Signal(str, str, str) # request to execute a task
@@ -61,7 +61,7 @@ class Communicate(QObject):
       #   has to be here, else worker needs comm which has to be passed through thread, is uninitialized, ...)
       # connect backend worker SLOTS to GUI signals: group B
       self.commSendConfiguration.connect(self.backendThread.worker.initialize)
-      self.tableRequestTable.connect(self.backendThread.worker.returnTable)
+      self.uiRequestTable.connect(self.backendThread.worker.returnTable)
       self.uiRequestHierarchy.connect(self.backendThread.worker.returnHierarchy)
       self.uiRequestDoc.connect(self.backendThread.worker.returnDoc)
       self.uiRequestTask.connect(self.backendThread.worker.returnTaskReport)

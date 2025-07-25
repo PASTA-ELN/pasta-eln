@@ -303,7 +303,7 @@ class Project(QWidget):
     elif command[0] is Command.SHOW_TABLE:
       self.comm.changeTable.emit(command[1], self.projID)
     elif command[0] is Command.ADD_ON:
-      callAddOn(command[1], self.comm.backend, self.projID, self)
+      callAddOn(command[1], self.comm, self.projID, self)
     else:
       logging.error('Project menu unknown: %s',command)
     return

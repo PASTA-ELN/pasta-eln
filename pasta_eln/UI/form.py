@@ -4,9 +4,10 @@ import json
 import logging
 import re
 from enum import Enum
+import pandas as pd
 from pathlib import Path
 from typing import Any, Union
-from PySide6.QtCore import QSize, Qt, QTimer                               # pylint: disable=no-name-in-module
+from PySide6.QtCore import QSize, Qt, QTimer, Slot                               # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator                      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox,# pylint: disable=no-name-in-module
                                QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget)
@@ -32,8 +33,45 @@ class Form(QDialog):
     """
     super().__init__()
     self.comm = comm
-    return
-    self.doc  = copy.deepcopy(doc)
+    self.comm.backendThread.worker.beSendDoc.connect(self.onGetData)
+    self.comm.backendThread.worker.beSendTable.connect(self.onGetTags)
+    self.doc:dict[str,Any] = copy.deepcopy(doc)
+    self.tagsAllList: list[str] = []
+    print('Form doc:', self.doc)
+    self.comm.uiRequestDoc.emit(doc['id'])
+    self.comm.uiRequestTable.emit('_tags_','', True)
+
+
+  @Slot(dict)
+  def onGetData(self, doc:dict[str,Any]) -> None:
+    """
+    Get data from the backend
+
+    Args:
+      doc (dict):  document to change / create
+    """
+    self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
+    self.doc = doc
+    self.paint()
+
+
+  @Slot(pd.DataFrame, str)
+  def onGetTags(self, data:pd.DataFrame, docType:str) -> None:
+    """
+    Get tags from the backend
+
+    Args:
+      data (pd.DataFrame):  DataFrame containing tags
+    """
+    print('form tags', docType)
+    self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTags)
+    self.tagsAllList = data['tag'].unique()
+    self.updateTagsBar()
+
+  def paint(self) -> None:
+    """ Paint the form with all the elements """
+    if not self.doc:
+      return
     if '_attachments' in self.doc:
       del self.doc['_attachments']
     self.flagNewDoc = True
@@ -65,7 +103,6 @@ class Form(QDialog):
       width= self.comm.configuration['GUI']['imageSizeDetails'] if hasattr(self.comm,'configuration') else 300
       Image(self.doc['image'], self.imageL, anyDimension=width)
       if 'id' in self.doc:
-        self.docID= doc['id']                                                       #required for hide to work
         imageW.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
       imageWSA.setWidget(imageW)
@@ -78,8 +115,8 @@ class Form(QDialog):
     # create data hierarchy node: data structure
     if self.doc['type']==['x2']:
       self.doc['type'] = ['x1']
-    if self.doc['type'][0] in self.db.dataHierarchy('', ''):
-      rawData = self.db.dataHierarchy(self.doc['type'][0], 'meta')
+    if self.doc['type'][0] in self.comm.docTypesTitles:
+      rawData = self.comm.dataHierarchyNodes[self.doc['type'][0]]
       self.dataHierarchyNode = copy.deepcopy([dict(i) for i in rawData])
     else:
       self.dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
@@ -221,7 +258,7 @@ class Form(QDialog):
             else:                                                                        #choice among docType
               listDocType = dataHierarchyItem[0]['list']
               getattr(self, elementName).addItem('- no link -', userData='')
-              for _, line in self.db.getView(f'viewDocType/{listDocType}').iterrows():
+              for _, line in []: #TODO self.db.getView(f'viewDocType/{listDocType}').iterrows():
                 getattr(self, elementName).addItem(line['name'], userData=line['id'])
                 if line['id'] == value:
                   getattr(self, elementName).setCurrentIndex(getattr(self, elementName).count()-1)
@@ -258,7 +295,7 @@ class Form(QDialog):
         if allowProjectChange:
           self.projectComboBox = QComboBox()
           self.projectComboBox.addItem(label, userData='')
-          for _, line in self.db.getView('viewDocType/x0').iterrows():
+          for _, line in []: #TODO self.db.getView('viewDocType/x0').iterrows():
             # add all projects but the one that is present
             if 'branch' not in self.doc or \
                 all( len(branch['stack']) <= 0 or line['id'] != branch['stack'][0] for branch in self.doc['branch']):
@@ -272,9 +309,9 @@ class Form(QDialog):
         if allowDocTypeChange:                                                      #if not-new and non-folder
           self.docTypeComboBox = QComboBox()
           self.docTypeComboBox.addItem(label, userData='')
-          for key, value in self.db.dataHierarchy('', 'title'):
+          for key, value in self.comm.docTypesTitles.items():
             if key[0]!='x':
-              self.docTypeComboBox.addItem(value, userData=key)
+              self.docTypeComboBox.addItem(value['title'], userData=key)
           self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
           formL.addRow(QLabel('Data type'), self.docTypeComboBox)
     if [i for i in self.doc if i.startswith('_')]:
@@ -651,8 +688,7 @@ class Form(QDialog):
         Label(tag, 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
     self.tagsBarSubL.addWidget(QWidget(), stretch=2)
     #update choices in combobox
-    tagsAllList = self.comm.backend.db.getView('viewIdentify/viewTagsAll')['tag'].unique()
-    tagsSet = {i for i in tagsAllList if i[0]!='_'}
+    tagsSet = {i for i in self.tagsAllList if i[0]!='_'}
     newChoicesList = ['']+list(tagsSet.difference([i for i in self.doc['tags'] if i[0]!='_']))
     self.otherChoices.clear()
     self.otherChoices.addItems(newChoicesList)

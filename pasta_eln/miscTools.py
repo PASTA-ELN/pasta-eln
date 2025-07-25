@@ -167,7 +167,7 @@ def installPythonPackages(directory:str) -> None:
   return
 
 
-def callAddOn(name:str, backend:Any, content:Any, widget:QWidget) -> Any:
+def callAddOn(name:str, comm:Any, content:Any, widget:QWidget) -> Any:
   """ Call add-ons
   Args:
     name (str): name of the add-on
@@ -179,13 +179,13 @@ def callAddOn(name:str, backend:Any, content:Any, widget:QWidget) -> Any:
     Any: result of the add-on
   """
   module      = importlib.import_module(name)
-  parameter   = backend.configuration.get('addOnParameter', {})
+  parameter   = comm.configuration.get('addOnParameter', {})
   try:
     subParameter = parameter[name]
   except KeyError:
     print('**Info: No parameter for this add-on')
     subParameter = {}
-  return module.main(backend, content, widget, subParameter)
+  return module.main(comm, content, widget, subParameter)
 
 
 def callDataExtractor(filePath:Path, backend:Any) -> Any:

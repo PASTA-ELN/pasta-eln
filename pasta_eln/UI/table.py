@@ -117,7 +117,7 @@ class Table(QWidget):
     mainL.addWidget(self.gallery)
     self.setLayout(mainL)
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
-    self.comm.tableRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
+    self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
 
 
   @Slot(str, str)
@@ -126,19 +126,22 @@ class Table(QWidget):
       self.docType = docType
     if projID:
       self.comm.projectID  = projID
-    self.comm.tableRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
+    print('request table for', self.docType, self.comm.projectID, self.showAll)
+    self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
 
 
-  @Slot(pd.DataFrame)
-  def onGetData(self, data:pd.DataFrame) -> None:
+  @Slot(pd.DataFrame, str)
+  def onGetData(self, data:pd.DataFrame, docType:str) -> None:
     """
     Callback function to handle the received data
 
     Args:
       data (pd.DataFrame): DataFrame containing table
     """
-    self.data = data
-    self.paint()
+    print('got table data', docType)
+    if docType == self.docType:
+      self.data = data
+      self.paint()
 
 
   @Slot()
@@ -178,13 +181,9 @@ class Table(QWidget):
     else:
       self.toggleGallery.setVisible(False)
       self.flagGallery = False
-    # start tables: collect data
+    # start tables: use data
     if self.docType=='_tags_':
       self.addBtn.hide()
-      if self.showAll:
-        self.data = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
-      else:
-        self.data = self.comm.backend.db.getView('viewIdentify/viewTags')
       self.filterHeader = ['tag','name','type']
       self.headline.setText('TAGS')
       self.actionChangeColums.setVisible(False)
@@ -209,12 +208,12 @@ class Table(QWidget):
       else:
         self.headline.setText(f'All {docLabel.lower()}')
         self.showHidden.setText(f'Show/hide all hidden {docLabel.lower()}')
-      self.filterHeader = list(self.data.columns)[:-1]
+      self.filterHeader = list(self.data.columns)[:-2]
     self.headerW.show()
     nRows, nCols = self.data.shape
-    model = QStandardItemModel(nRows, nCols-1)
+    model = QStandardItemModel(nRows, nCols-2)
     model.setHorizontalHeaderLabels(self.filterHeader)
-    for i, j in itertools.product(range(nRows), range(nCols-1)):
+    for i, j in itertools.product(range(nRows), range(nCols-2)):
       value = self.data.iloc[i,j]
       if self.docType=='_tags_':                                                              # tags list
         if j==0:
@@ -245,7 +244,7 @@ class Table(QWidget):
         else:
           text = value
         item = QStandardItem(text)
-      if j == 0:
+      if (j==0 and self.docType!='_tags_') or (self.docType=='_tags_' and j==1):
         if 'F' in self.data['show'][i]:
           item.setText(f'{item.text()}  \U0001F441')
         item.setAccessibleText(self.data['id'][i])

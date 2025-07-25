@@ -4,9 +4,9 @@ import logging
 import warnings
 import unittest
 from pathlib import Path
-from pasta_eln.backend import Backend
+from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.textTools.stringChanges import outputString
-from pasta_eln.miscTools import DummyProgressBar
+from pasta_eln.miscTools import DummyProgressBar, getConfiguration
 from pasta_eln.installationTools import exampleData
 
 class TestStringMethods(unittest.TestCase):
@@ -36,14 +36,15 @@ class TestStringMethods(unittest.TestCase):
       logging.getLogger(package).setLevel(logging.WARNING)
     logging.info('Start 01 test')
 
+    configuration, _ = getConfiguration('research')
     exampleData(True, None, 'research', '')
-    self.be = Backend('research')
+    self.be = Backend(configuration, 'research')
     output = self.be.output('x0')
     self.assertEqual(output.split('\n')[0][:129],
                       'name                   | tags      | status | objective                                | comment                             | id')
     self.assertEqual(output.split('\n')[2][:126],
                       'PASTAs Example Project | Important | active | Test if everything is working as inte... | Can be used as reference or deleted |')
-    projID = output.split('|')[-1].strip()
+    projID = output.split('|')[-2].strip()
     self.be.changeHierarchy(projID)
 
     output = self.be.outputHierarchy(False, False)

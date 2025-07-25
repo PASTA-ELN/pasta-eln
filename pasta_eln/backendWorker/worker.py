@@ -19,7 +19,7 @@ class BackendWorker(QObject):
   beSendDocTypes          = Signal(dict)           # Send processed data back
   beSendDataHierarchyNode = Signal(str,list)       # Send data hierarchy nodes
   beSendProjects          = Signal(pd.DataFrame)
-  beSendTable             = Signal(pd.DataFrame)   # all tables
+  beSendTable             = Signal(pd.DataFrame, str)   # all tables
   beSendHierarchy         = Signal(Node, dict)
   beSendDoc               = Signal(dict)
   beSendTaskReport        = Signal(str, str, str)       # task, report, and image
@@ -50,9 +50,14 @@ class BackendWorker(QObject):
   def returnTable(self, docType:str, projID:str, showAll:bool) -> None:
     """ Return a view from the database """
     if docType and self.backend is not None:
-      path = f'viewDocType/{docType}All' if showAll else f'viewDocType/{docType}'
+      if docType=='_tags_':
+        path = 'viewIdentify/viewTags'
+      else:
+        path = f'viewDocType/{docType}'
+      path += 'All' if showAll else ''
+      print('returnTable', docType, projID, showAll, path)
       data = self.backend.db.getView(path, startKey=projID)
-      self.beSendTable.emit(data)
+      self.beSendTable.emit(data, docType)
 
 
   @Slot(str)

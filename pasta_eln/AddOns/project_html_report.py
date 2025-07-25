@@ -3,15 +3,25 @@
 THIS IS A VERY ADVANCED ADDON TUTORIAL
 This tutorial teaches
 - the basic structure of project-view-addons (header, function for each node, body, footer)
+- this addon runs as part of the frontend worker (show a GUI element)
+  -  to get the data one has to use the signal system to communicate to the backend worker
+- the data collection works as part of this system
+  - define a variable to store the data
+  - define a function to fill the data
+  - say that this function should be used whenever new data arrives
+  - request new data
+  - do a while loop until all data is here: wait
 """
 import base64
 import re
+import time
 from io import BytesIO
 from pathlib import Path
-from anytree import PreOrderIter
+from anytree import PreOrderIter, Node
 from PIL import Image
 from PySide6.QtGui import QTextDocument  # This is used for html-markdown conversion: works fine here
 from PySide6.QtWidgets import QFileDialog
+from PySide6.QtCore import Slot
 import pasta_eln
 from pasta_eln.Resources import Icons as icons
 from pasta_eln.textTools.stringChanges import markdownEqualizer
@@ -29,10 +39,10 @@ HTML_HEADER = '<!DOCTYPE html>\n<html>\n<head>\n<style>'\
     '</style>\n</head>\n<body>\n'
 HTML_FOOTER = '</body>\n</html>\n'
 
-def main(backend, hierStack, widget, parameter={}):
+def main(comm, hierStack, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        backend (pasta backend): allow to extract data
+        comm (pasta communicate): communicate layer
         hierStack (list): node in hierarchy to start the creation
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters
@@ -40,15 +50,35 @@ def main(backend, hierStack, widget, parameter={}):
     Returns:
         bool: success
     """
-    # Initialize variables
+    # get filename to wirte into
     if 'fileNames' not in parameter:
         res = QFileDialog.getSaveFileName(widget,'Use this file for output', str(Path.home()))
         if res is None:
             return False
     else:
         res = parameter['fileNames']
-    for i in hierStack.split('/'):
-        backend.changeHierarchy(i)
+    # Collect the hierarchy first, once you have it, ....
+    hierarchy = None
+    @Slot(Node, dict)
+    def getHierarchy(tempHierarchy, _):
+        nonlocal hierarchy
+        hierarchy = tempHierarchy
+    comm.backendThread.worker.beSendHierarchy.connect(getHierarchy)
+    comm.uiRequestHierarchy.emit(hierStack.split('/')[0], False)
+    while hierarchy is None:
+        time.sleep(0.1)
+    # Collect all the documents that belong to this hierarchy
+    docs = {}
+    @Slot(dict)
+    def getDoc(doc):
+        docs[doc['id']] = doc
+    comm.backendThread.worker.beSendDoc.connect(getDoc)
+    for node in PreOrderIter(hierarchy):
+        docs[node.id] = {}
+        comm.uiRequestDoc.emit(node.id)
+    while any(len(i)==0 for i in docs.values()):
+        time.sleep(0.1)
+    # All data is known in this function, process the data
     qtDocument = QTextDocument()   #used for markdown -> html conversion
 
     # function to handle each data entry
@@ -66,7 +96,7 @@ def main(backend, hierStack, widget, parameter={}):
         hidden = not all(node.gui)        # is this node hidden?
         if hidden:
             return ''
-        doc = backend.db.getDoc(node.id)  # GET ALL INFORMATION OF THIS NODE
+        doc = docs[node.id]  # GET ALL INFORMATION OF THIS NODE
         output = '<div class="node">\n'
         # headline of each node: either as html headline or normal text, incl. the objective
         if node.depth<4 and node.docType[0][0]=='x':
@@ -91,8 +121,7 @@ def main(backend, hierStack, widget, parameter={}):
         return f'{output}</td></tr></table></div>\n\n'
 
     # main function that calls the render function
-    proj, _ = backend.db.getHierarchy(hierStack) #with _ you ignore the error that is also communicated, not important here
-    out = ''.join(node2html(node) for node in PreOrderIter(proj))
+    out = ''.join(node2html(node) for node in PreOrderIter(hierarchy))
 
     # add footer line with pasta-eln icon (read and converted to base64 to be inline included in html)
     iconImg = Image.open(f'{icons.__path__[0]}/favicon64.ico')
