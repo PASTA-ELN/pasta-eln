@@ -8,11 +8,12 @@ from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel       # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayout, QWidget# pylint: disable=no-name-in-module
+from ..backendWorker.worker import Task
 from ..fixedStringsJson import DO_NOT_RENDER
-from .guiCommunicate import Communicate
 from ..miscTools import callAddOn
 from ..textTools.handleDictionaries import doc2markdown
 from ..textTools.stringChanges import createDirName
+from .guiCommunicate import Communicate
 from .guiStyle import Action, Label, TextButton, widgetAndLayout
 from .messageDialog import showMessage
 from .projectTreeView import TreeView
@@ -226,7 +227,7 @@ class Project(QWidget):
     gui  = [index.data(Qt.ItemDataRole.UserRole+1)['gui'][0]]+[flag]
     docID = index.data(Qt.ItemDataRole.UserRole+1)['hierStack'].split('/')[-1]
     self.model.itemFromIndex(index).setData({ **index.data(Qt.ItemDataRole.UserRole+1), **{'gui':gui}})
-    self.comm.uiRequestTask.emit('setGUI', docID, gui)
+    self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
     return
 
 
@@ -251,16 +252,16 @@ class Project(QWidget):
                                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                  QMessageBox.StandardButton.No)
       if ret==QMessageBox.StandardButton.Yes:
-        self.comm.uiRequestTask.emit('deleteProject', self.projID, [])
+        self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':self.projID})
         #update sidebar, show projects
         self.comm.changeSidebar.emit('redraw')
         self.comm.changeTable.emit('x0','')
     elif command[0] is Command.SCAN:
-      self.comm.uiRequestTask.emit('scan', self.projID, [''])
+      self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.projID})
       self.comm.changeProject.emit(self.projID,'')
     elif command[0] is Command.SHOW_PROJ_DETAILS:
       self.docProj['gui'][0] = not self.docProj['gui'][0]
-      self.comm.uiRequestTask.emit('setGUI', self.projID, self.docProj['gui'])
+      self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':self.projID, 'gui':self.docProj['gui']})
       if self.allDetails is not None and self.allDetails.isHidden():
         self.allDetails.show()
         self.actHideDetail.setText('Hide project details')
@@ -285,7 +286,7 @@ class Project(QWidget):
           gui      = subItem.data()['gui']
           gui[0]   = self.showDetailsAll
           subItem.setData({ **subItem.data(), **{'gui':gui}})
-          self.comm.uiRequestTask.emit('setGUI', docID, gui)
+          self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
           recursiveRowIteration(subIndex)
       recursiveRowIteration(self.tree.model().index(-1,0))
       self.showDetailsAll = not self.showDetailsAll
@@ -317,8 +318,8 @@ class Project(QWidget):
       item (QStandardItem): item changed, new location
     """
     verbose = False                                                                   # Convenient for testing
+    return #TODO
     #gather old information
-    db       = self.comm.backend.db
     ## print hierarchy of this project for debugging
     # self.comm.backend.changeHierarchy(self.projID)
     # print(self.comm.backend.outputHierarchy(False, True))

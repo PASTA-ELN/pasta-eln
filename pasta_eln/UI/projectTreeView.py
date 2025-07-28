@@ -10,8 +10,9 @@ from typing import Any
 from PySide6.QtCore import Qt                                              # pylint: disable=no-name-in-module
 from PySide6.QtGui import QDropEvent, QEventPoint, QStandardItem, QStandardItemModel# pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget# pylint: disable=no-name-in-module
-from .guiCommunicate import Communicate
+from ..backendWorker.worker import Task
 from ..miscTools import callAddOn
+from .guiCommunicate import Communicate
 from .guiStyle import Action
 from .messageDialog import showMessage
 from .projectLeafRenderer import ProjectLeafRenderer
@@ -82,57 +83,30 @@ class TreeView(QTreeView):
     if command[0] is Command.ADD_CHILD:
       docType= 'x1'
       docID = hierStack[-1]
-      self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['branch'][0]['path'])
-      docID = self.comm.backend.addData(docType, {'name':'new item'}, hierStack)['id']
-      # append item to the GUI
-      item  = self.model().itemFromIndex(self.currentIndex())                     # type: ignore[attr-defined]
-      child = QStandardItem('/'.join(hierStack+[docID]))
-      child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)# type: ignore
-      item.appendRow(child)
+      self.comm.uiRequestTask.emit('addChild', docID, [docType, {'name':'new item'}, hierStack])
       self.comm.changeProject.emit('','')                                                    # refresh project
-      #appendRow is not 100% correct:
-      # - better: insertRow before the first non-folder, depending on the child number
-      #   -> get highest non 9999 childNumber
-      # turns out, one can easily move it to correct position with drag&drop
-      # -  not sure this will be important
     elif command[0] is Command.ADD_SIBLING:
       hierStack= hierStack[:-1]
       docType= 'x1'
       docID  = hierStack[-1]
-      self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['branch'][0]['path'])
-      docID = self.comm.backend.addData(docType, {'name':'new item'}, hierStack)['id']
-      # append item to the GUI
-      item  = self.model().itemFromIndex(self.currentIndex())                     # type: ignore[attr-defined]
-      parent = item.parent() if item.parent() is not None else self.model().invisibleRootItem()# type: ignore[attr-defined]
-      child = QStandardItem('/'.join(hierStack+[docID]))
-      child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)# type: ignore
-      parent.appendRow(child)
+      self.comm.uiRequestTask.emit('addDoc', docID, [docType, {'name':'new item'}, hierStack])
+      # TODO
+      # self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['branch'][0]['path'])
+      # docID = self.comm.backend.addData(docType, {'name':'new item'}, hierStack)['id']
+      # # append item to the GUI
+      # item  = self.model().itemFromIndex(self.currentIndex())                     # type: ignore[attr-defined]
+      # parent = item.parent() if item.parent() is not None else self.model().invisibleRootItem()# type: ignore[attr-defined]
+      # child = QStandardItem('/'.join(hierStack+[docID]))
+      # child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)# type: ignore
+      # parent.appendRow(child)
       self.comm.changeProject.emit('','')                                                    # refresh project
-      #++ TODO appendRow is not 100% correct: see above
     elif command[0] is Command.DELETE:
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data?',\
                                  QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
       if ret==QMessageBox.StandardButton.Yes:
         docID = hierStack[-1]
-        doc = self.comm.backend.db.remove(docID)
-        for branch in doc['branch']:
-          if branch['path'] is not None:
-            oldPath = Path(self.comm.backend.basePath)/branch['path']
-            if oldPath.exists():
-              newFileName = f'trash_{oldPath.name}'
-              if (oldPath.parent/newFileName).exists():                          #ensure target does not exist
-                endText = ' will be deleted after closing this window. Now, you can still save it to some other place on disk'
-                showMessage(self, 'Warning', f'Warning! \nThe file/folder {oldPath.parent/newFileName} {endText}')
-                if (oldPath.parent/newFileName).is_file():
-                  (oldPath.parent/newFileName).unlink()
-                elif (oldPath.parent/newFileName).is_dir():
-                  shutil.rmtree(oldPath.parent/newFileName)
-              oldPath.rename( oldPath.parent/newFileName)
-        # go through children
-        children = self.comm.backend.db.getView('viewHierarchy/viewHierarchyAll', startKey='/'.join(doc['branch'][0]['stack']+[docID,'']))
-        for line in children:
-          self.comm.backend.db.remove(line['id'], stack='/'.join(doc['branch'][0]['stack']+[docID,'']))
-        # remove leaf from GUI
+        self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':docID})
+        # TODO remove leaf from GUI
         item  = self.model().itemFromIndex(self.currentIndex())                   # type: ignore[attr-defined]
         parent = item.parent()
         if parent is None:                                                                          #top level
@@ -158,10 +132,10 @@ class TreeView(QTreeView):
             iterate(self.model().itemFromIndex(childIndex))                       # type: ignore[attr-defined]
       iterate(self.model().invisibleRootItem())                                   # type: ignore[attr-defined]
       # only one change once the DB
-      self.comm.backend.db.setGUI(docID, gui)
+      self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
     elif command[0] is Command.HIDE:
       logging.debug('hide document %s',hierStack[-1])
-      self.comm.backend.db.hideShow(hierStack[-1])
+      self.comm.uiRequestTask.emit('hideShow', hierStack[-1], [])
       #TODO: current implementation: you hide one; all others are hidden as well
       # Talk to GW what is the default expectation; system allows for individual hiding
       #
@@ -172,19 +146,21 @@ class TreeView(QTreeView):
       docID = hierStack[-2] \
         if command[0] is Command.OPEN_FILEBROWSER and hierStack[-1][0]!='x' \
         else hierStack[-1]
-      doc   = self.comm.backend.db.getDoc(docID)
-      if doc['branch'][0]['path'] is None:
-        showMessage(self, 'Error', 'Cannot open file that is only in the database','Critical')
-      else:
-        path  = Path(self.comm.backend.basePath)/doc['branch'][0]['path']
-        if platform.system() == 'Darwin':                                                              # macOS
-          subprocess.call(('open', path))
-        elif platform.system() == 'Windows':                                                         # Windows
-          os.startfile(path)                                                      # type: ignore[attr-defined]
-        else:                                                                                 # linux variants
-          subprocess.call(('xdg-open', path))
+      self.comm.uiRequestTask.emit('openExternal', docID, [])
+      # TODO
+      # doc   = self.comm.backend.db.getDoc(docID)
+      # if doc['branch'][0]['path'] is None:
+      #   showMessage(self, 'Error', 'Cannot open file that is only in the database','Critical')
+      # else:
+      #   path  = Path(self.comm.backend.basePath)/doc['branch'][0]['path']
+      #   if platform.system() == 'Darwin':                                                              # macOS
+      #     subprocess.call(('open', path))
+      #   elif platform.system() == 'Windows':                                                         # Windows
+      #     os.startfile(path)                                                      # type: ignore[attr-defined]
+      #   else:                                                                                 # linux variants
+      #     subprocess.call(('xdg-open', path))
     elif command[0] is Command.ADD_ON:
-      callAddOn(command[1], self.comm.backend, item.data()['hierStack'], self)
+      callAddOn(command[1], self.comm, item.data()['hierStack'], self)
     else:
       logging.error('Unknown context menu %s', command)
     return
@@ -227,12 +203,12 @@ class TreeView(QTreeView):
     """
     item = self.model().itemFromIndex(self.currentIndex())                        # type: ignore[attr-defined]
     docID = item.data()['hierStack'].split('/')[-1]
-    doc   = self.comm.backend.db.getDoc(docID)
-    self.comm.formDoc.emit(doc)
-    docNew = self.comm.backend.db.getDoc(docID)
-    item.setText(docNew['name'])
-    item.setData(item.data() | {'docType':docNew['type'], 'gui':docNew['gui']})
-    item.emitDataChanged()                           #force redraw (resizing and repainting) of this item only
+    self.comm.formDoc.emit({'id':docID})
+    # TODO
+    # docNew = self.comm.backend.db.getDoc(docID)
+    # item.setText(docNew['name'])
+    # item.setData(item.data() | {'docType':docNew['type'], 'gui':docNew['gui']})
+    # item.emitDataChanged()                           #force redraw (resizing and repainting) of this item only
     return
 
 
@@ -271,22 +247,24 @@ class TreeView(QTreeView):
       if not (folders+[str(i) for i in files]):
         showMessage(self, 'Error', 'The files seem empty.')
         return
-      commonBase   = os.path.commonpath(folders+[str(i) for i in files])
       docID = item.data()['hierStack'].split('/')[-1]
-      doc = self.comm.backend.db.getDoc(docID)
-      targetFolder = Path(self.comm.backend.cwd/doc['branch'][0]['path'])
-      # create folders and copy files
-      for folder in folders:
-        (targetFolder/(Path(folder).relative_to(commonBase))).mkdir(parents=True, exist_ok=True)
-      for fileStr in files:
-        file = Path(fileStr)
-        if file.is_file():
-          shutil.copy(file, targetFolder/(file.relative_to(commonBase)))
-      # scan
-      for _ in range(2):                                                         #scan twice: convert, extract
-        self.comm.backend.scanProject(None, docID, targetFolder.relative_to(self.comm.backend.basePath))
-      self.comm.changeProject.emit(item.data()['hierStack'].split('/')[0],'')
-      showMessage(self, 'Information','Drag & drop is finished')
+      self.comm.uiRequestTask.emit('drop', docID, [files, folders])
+      # TODO
+      # commonBase   = os.path.commonpath(folders+[str(i) for i in files])
+      # doc = self.comm.backend.db.getDoc(docID)
+      # targetFolder = Path(self.comm.backend.cwd/doc['branch'][0]['path'])
+      # # create folders and copy files
+      # for folder in folders:
+      #   (targetFolder/(Path(folder).relative_to(commonBase))).mkdir(parents=True, exist_ok=True)
+      # for fileStr in files:
+      #   file = Path(fileStr)
+      #   if file.is_file():
+      #     shutil.copy(file, targetFolder/(file.relative_to(commonBase)))
+      # # scan
+      # for _ in range(2):                                                         #scan twice: convert, extract
+      #   self.comm.backend.scanProject(None, docID, targetFolder.relative_to(self.comm.backend.basePath))
+      # self.comm.changeProject.emit(item.data()['hierStack'].split('/')[0],'')
+      # showMessage(self, 'Information','Drag & drop is finished')
       event.ignore()
     elif 'application/x-qstandarditemmodeldatalist' in event.mimeData().formats():
       super().dropEvent(event)

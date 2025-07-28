@@ -7,6 +7,7 @@ import pandas as pd
 from PySide6.QtCore import Slot                                            # pylint: disable=no-name-in-module
 from PySide6.QtGui import QResizeEvent                                     # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QVBoxLayout, QWidget# pylint: disable=no-name-in-module
+from ..backendWorker.worker import Task
 from .guiCommunicate import Communicate
 from .guiStyle import IconButton, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
 from .messageDialog import showMessage
@@ -18,7 +19,6 @@ class Sidebar(QWidget):
     self.comm = comm
     self.comm.changeSidebar.connect(self.paint)
     self.comm.backendThread.worker.beSendProjects.connect(self.onGetData)
-    self.openProjectId = ''
     self.projects = pd.DataFrame()
     self.sideBarWidth = self.comm.configuration['GUI']['sidebarWidth']
 
@@ -66,7 +66,7 @@ class Sidebar(QWidget):
     for i in reversed(range(self.projectsListL.count())):
       self.projectsListL.itemAt(i).widget().setParent(None)
     if projectChoice != 'redraw':
-      self.openProjectId = projectChoice
+      self.comm.projectID = projectChoice
     self.widgetsAction = {}
     self.widgetsList = {}
     self.widgetsProject = {}                                #title bar and widget that contains all of project
@@ -97,7 +97,7 @@ class Sidebar(QWidget):
 
       # actions: scan, curate, ..
       actionW, actionL = widgetAndLayoutGrid(projectL)
-      if self.openProjectId != projID:                                      #depending which project is open
+      if self.comm.projectID != projID:                                      #depending which project is open
         actionW.hide()
         projectW.setStyleSheet(self.comm.palette.get('secondaryDark', 'background-color'))
       else:
@@ -112,7 +112,7 @@ class Sidebar(QWidget):
 
       # lists: view list of measurements, ... of this project
       listW, listL = widgetAndLayoutGrid(projectL,  spacing='s')
-      if self.openProjectId != projID:
+      if self.comm.projectID != projID:
         listW.hide()
       self.btnDocTypes = []
       for idx, (doctype, value) in enumerate(self.comm.docTypesTitles.items()):
@@ -146,7 +146,7 @@ class Sidebar(QWidget):
       projID = command[1]
       item   = command[2]
       if item=='':                                                   #clicked on project-button, not tree view
-        self.openProjectId = projID
+        self.comm.projectID = projID
         for docID, widget in self.widgetsAction.items():
           if docID == projID:
             widget.show()
@@ -164,7 +164,8 @@ class Sidebar(QWidget):
             projWidget.setStyleSheet(self.comm.palette.get('secondaryDark','background-color'))
       self.comm.changeProject.emit(projID, item)
     elif command[0] is Command.SCAN_PROJECT:
-      self.comm.uiRequestTask.emit('scan', self.openProjectId, [''])
+      self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.comm.projectID})
+      #TODO SCAN causes project header to move/disappear
     else:
       logging.error('Sidebar menu unknown: %s',command)
     return

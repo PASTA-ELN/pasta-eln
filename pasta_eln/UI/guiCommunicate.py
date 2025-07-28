@@ -5,7 +5,7 @@ from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot                           # pylint: disable=no-name-in-module
 from .waitDialog import WaitDialog, Worker
 from .palette import Palette
-from ..backendWorker.worker import BackendThread
+from ..backendWorker.worker import BackendThread, Task
 from ..miscTools import getConfiguration
 
 
@@ -32,7 +32,7 @@ class Communicate(QObject):
   uiRequestTable        = Signal(str, str, bool)# table: send docType, projectID, showAll to backend to get table
   uiRequestHierarchy    = Signal(str, bool)     # send project ID to backend
   uiRequestDoc          = Signal(str)           # request doc
-  uiRequestTask         = Signal(str, str, str) # request to execute a task
+  uiRequestTask         = Signal(Task, dict) # request to execute a task
   # signals that are emitted from this comm that data changed
   docTypesChanged    = Signal()          # redraw main window, e.g. after change of docType titles
 
@@ -101,16 +101,27 @@ class Communicate(QObject):
       self.backendThread.quit()
       self.backendThread.wait()
       del self.backendThread
+    self.waitDialog.close()
 
 
-  def progressWindow(self, task:Any, subTask:Any, subsubTask:Any) -> None:
+  def progressWindow(self, task:Task, _:dict[str,Any]) -> None:
     """ Show a progress window and execute function
     Args:
       taskFunction (func): function to execute
     """
-    if isinstance(task, str) and task in ('extractorTest','scan'):
-      labels = {'extractorTest':'Testing extractor:',
-                'scan':'Scanning disk for new data:'}
+    if task in (Task.SET_GUI, ):
+      return
+    labels = {Task.EXTRACTOR_TEST:'Testing extractor:',
+              Task.EXTRACTOR_RERUN:'Rerun extractors:',
+              Task.EXPORT_ELN    :'Exporting to .eln',
+              Task.IMPORT_ELN    :'Importing an .eln file',
+              Task.SEND_ELAB     :'Sending data to elabFTW server',
+              Task.GET_ELAB      :'Getting data from elabFTW server',
+              Task.SMART_ELAB    :'Syncing with elabFTW server',
+              Task.CHECK_DB      :'Checking database integrity',
+              Task.SCAN          :'Scanning disk for new data:',
+              Task.DELETE_DOC    :'Delete document'}
+    if task in labels:
       self.waitDialog.text.setMarkdown(labels[task])
       self.waitDialog.text.setFixedHeight(30)
       self.waitDialog.setFixedHeight(100)

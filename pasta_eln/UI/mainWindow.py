@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QFileDialog, QMainWindow                     # pyl
 from pasta_eln import __version__
 from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
 from ..miscTools import hardRestart, updateAddOnList, installPythonPackages
+from ..backendWorker.worker import Task
 from .body import Body
 from .config.main import Configuration
 from .data_hierarchy.editor import SchemeEditor
@@ -78,7 +79,7 @@ class MainWindow(QMainWindow):
     Action('Update &Add-on list',            self, [Command.UPDATE],          systemMenu)
     if 'develop' in self.comm.configuration:
       systemMenu.addSeparator()
-      Action('&Verify database',             self, [Command.VERIFY_DB],       systemMenu, shortcut='Ctrl+?')
+      Action('&Verify database',             self, [Command.CHECK_DB],       systemMenu, shortcut='Ctrl+?')
 
     helpMenu = menu.addMenu('&Help')
     Action('&Website',                       self, [Command.WEBSITE],         helpMenu)
@@ -90,7 +91,7 @@ class MainWindow(QMainWindow):
     # shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda: self.execute([Command.RESTART]))
     if 'develop' not in self.comm.configuration:
-      QShortcut('Ctrl+?', self, lambda: self.execute([Command.VERIFY_DB]))
+      QShortcut('Ctrl+?', self, lambda: self.execute([Command.CHECK_DB]))
 
     # GUI elements
     mainWidget, mainLayout = widgetAndLayout('H')
@@ -160,14 +161,14 @@ class MainWindow(QMainWindow):
       fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
         docTypes = [i for i in self.comm.docTypesTitles if i[0]!='x']
-        self.comm.uiRequestTask.emit('exportELN', fileName, [self.comm.projectID, docTypes])
+        self.comm.uiRequestTask.emit(Task.EXPORT_ELN, {'fileName':fileName, 'projID':self.comm.projectID, 'docTypes':docTypes})
     elif command[0] is Command.IMPORT:
       if self.comm.projectID == '':
         showMessage(self, 'Error', 'You have to open a project to import', 'Critical')
         return
       fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
-        self.comm.uiRequestTask.emit('importELN', fileName, self.comm.projectID)
+        self.comm.uiRequestTask.emit(Task.IMPORT_ELN, {'fileName':fileName, 'projID':self.comm.projectID})
         self.comm.changeProject.emit(self.comm.projectID, '')
     elif command[0] is Command.REPOSITORY:
       if self.comm.projectID == '':
@@ -187,11 +188,11 @@ class MainWindow(QMainWindow):
         fConf.write(json.dumps(self.comm.configuration, indent=2))
       hardRestart()
     elif command[0] is Command.SYNC_SEND:
-      self.comm.uiRequestTask.emit('SyncSend',  self.comm.projectGroup, '')
+      self.comm.uiRequestTask.emit(Task.SEND_ELAB,  {'projGroup':self.comm.projectGroup})
     elif command[0] is Command.SYNC_GET:
-      self.comm.uiRequestTask.emit('SyncGet',   self.comm.projectGroup, '')
+      self.comm.uiRequestTask.emit(Task.GET_ELAB,   {'projGroup':self.comm.projectGroup})
     elif command[0] is Command.SYNC_SMART:
-      self.comm.uiRequestTask.emit('SyncSmart', self.comm.projectGroup, '')
+      self.comm.uiRequestTask.emit(Task.SMART_ELAB, {'projGroup':self.comm.projectGroup})
     elif command[0] is Command.SCHEMA:
       dialogS = SchemeEditor(self.comm)
       dialogS.exec()
@@ -201,7 +202,7 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       if fileName is not None:
-        self.comm.uiRequestTask.emit('extractorTest', fileName, 'html')
+        self.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST, {'fileName':fileName, 'style':'html', 'recipe':'', 'saveFig':''})
     elif command[0] is Command.TEST2:
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
@@ -218,8 +219,8 @@ class MainWindow(QMainWindow):
     # remainder
     elif command[0] is Command.WEBSITE:
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
-    elif command[0] is Command.VERIFY_DB:
-      self.comm.uiRequestTask.emit('check', '', 'html')
+    elif command[0] is Command.CHECK_DB:
+      self.comm.uiRequestTask.emit(Task.CHECK_DB, {'style':'html'})
     elif command[0] is Command.SHORTCUTS:
       showMessage(self, 'Keyboard shortcuts', shortcuts, 'Information')
     elif command[0] is Command.ABOUT:
@@ -231,46 +232,47 @@ class MainWindow(QMainWindow):
     return
 
 
-  @Slot(str, str, str)
-  def showReport(self, task:str, reportText:str, image:str) -> None:
+  @Slot(Task, str, str)
+  def showReport(self, task:Task, reportText:str, image:str) -> None:
     """ Show a report from backend worker
     Args:
-      task (str): task name
+      task (Task): task name
       reportText (str): text of the report
       image (str): base64 encoded image, svg image
     """
-    if task == 'scan':
+    if task is Task.SCAN:
       self.comm.changeProject.emit(self.comm.projectID, '')
-    elif task == 'check':
+    elif task is Task.CHECK_DB:
       regexStr = r'<font color="magenta">image does not exist m-[0-9a-f]+ image: comment:<\/font><br>'
       myCount = len(re.findall(regexStr, reportText))
       if myCount>5:
         reportText = re.sub(regexStr, '', reportText, count=myCount-5)
         reportText += r'<font color="magenta">image does not exist ...:<\/font><br>'
-    else:
-      logging.error('Unknown task in showReport', task)
+    elif task not in (Task.EXTRACTOR_TEST, Task.EXTRACTOR_RERUN, Task.DELETE_DOC, Task.EXPORT_ELN, Task.IMPORT_ELN, Task.SEND_ELAB,
+                      Task.GET_ELAB, Task.SMART_ELAB): #e.g. extractor tests work out of the box
+      logging.error('Unknown task in showReport: %s', task)
     showMessage(self, 'Report', reportText, image=image)
 
 
 class Command(Enum):
   """ Commands used in this file """
-  EXPORT    = 1
-  IMPORT    = 2
-  EXIT      = 3
-  VIEW      = 4
-  CHANGE_PG = 6
-  SYNC_SEND = 7
-  SYNC_GET  = 8
-  SYNC_SMART= 9
-  SCHEMA    = 10
-  TEST1     = 11
-  TEST2     = 12
-  UPDATE    = 13
-  CONFIG    = 14
-  WEBSITE   = 15
-  VERIFY_DB = 16
-  SHORTCUTS = 17
-  RESTART   = 18
-  ABOUT     = 19
+  EXPORT     = 1
+  IMPORT     = 2
+  EXIT       = 3
+  VIEW       = 4
+  CHANGE_PG  = 6
+  SYNC_SEND  = 7
+  SYNC_GET   = 8
+  SYNC_SMART = 9
+  SCHEMA     = 10
+  TEST1      = 11
+  TEST2      = 12
+  UPDATE     = 13
+  CONFIG     = 14
+  WEBSITE    = 15
+  CHECK_DB   = 16
+  SHORTCUTS  = 17
+  RESTART    = 18
+  ABOUT      = 19
   DEFINITIONS= 20
   REPOSITORY = 21

@@ -534,7 +534,7 @@ class Form(QDialog):
             if key == 'content' and 'branch' in self.doc:
               for branch in self.doc['branch']:
                 if branch['path'] is not None and branch['path'].endswith('.md'):
-                  with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
+                  with open(self.comm.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
                     fOut.write(self.doc['content'])
                   logging.debug('Wrote new content to %s',branch['path'])
                 elif branch['path'] is not None:
@@ -573,16 +573,16 @@ class Form(QDialog):
               if doc['branch'][0]['path'] is None:
                 newPath    = ''
               else:
-                oldPath    = self.comm.backend.basePath/doc['branch'][0]['path']
+                oldPath    = self.comm.basePath/doc['branch'][0]['path']
                 newPath = f'{parentPath}/{oldPath.name}'
-                oldPath.rename(self.comm.backend.basePath/newPath)
+                oldPath.rename(self.comm.basePath/newPath)
               self.db.updateBranch( doc['id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
         elif 'branch' in self.doc:                                               # sequential or single update
           if self.doc['branch'][0]['stack']!=self.projectComboBox.currentData():      #only if project changed
             if self.doc['branch'][0]['path'] is None:
               newPath    = ''
             else:
-              oldPath = self.comm.backend.basePath/self.doc['branch'][0]['path']
+              oldPath = self.comm.basePath/self.doc['branch'][0]['path']
               newPath = f'{parentPath}/{oldPath.name}'
             self.db.updateBranch( self.doc['id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
             self.doc['branch'][0] = {'stack':[self.projectComboBox.currentData()], 'path':newPath or None, 'child':9999, 'show':[True,True]}

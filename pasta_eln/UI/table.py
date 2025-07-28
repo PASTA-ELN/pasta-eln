@@ -10,8 +10,9 @@ from PySide6.QtCore import QModelIndex, QSortFilterProxyModel, Qt, Slot    # pyl
 from PySide6.QtGui import QRegularExpressionValidator, QStandardItem, QStandardItemModel# pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView,# pylint: disable=no-name-in-module
                                QLineEdit, QMenu, QMessageBox, QPushButton, QTableView, QVBoxLayout, QWidget)
-from .guiCommunicate import Communicate
+from ..backendWorker.worker import Task
 from ..miscTools import callAddOn
+from .guiCommunicate import Communicate
 from .gallery import ImageGallery
 from .guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
 #from .tableHeader import TableHeader
@@ -325,15 +326,8 @@ class Table(QWidget):
             ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete the data?',
                 QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
           if ret==QMessageBox.StandardButton.Yes:
-            doc = self.comm.backend.db.getDoc(docID)
-            for branch in doc['branch']:
-              if branch['path'] is not None:
-                oldPath = self.comm.backend.basePath/branch['path']
-                if oldPath.exists():
-                  newPath = oldPath.parent / f'trash_{oldPath.name}'
-                  oldPath.rename(newPath)
-            self.comm.backend.db.remove(docID)
-      self.comm.changeTable.emit(self.docType, self.projID)
+            self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':docID})
+      self.comm.changeTable.emit(self.docType, self.comm.projectID)
     elif command[0] is Command.CHANGE_COLUMNS:
       dialog = TableHeader(self.comm, self.docType)
       dialog.exec()
@@ -363,7 +357,7 @@ class Table(QWidget):
         item, docID = self.itemFromRow(row)
         if useAll or  item.checkState() == Qt.CheckState.Checked:
           path = self.comm.backend.db.getDoc(docID)['branch'][0]['path']
-          dataRow = [docID, '' if path is None else str(self.comm.backend.basePath/path)]
+          dataRow = [docID, '' if path is None else str(self.comm.basePath/path)]
           for col in range(self.models[-1].columnCount()):
             value = self.models[-1].index(row, col).data(Qt.ItemDataRole.DisplayRole)
             dataRow.append(value)
@@ -389,32 +383,12 @@ class Table(QWidget):
       self.showAll = not self.showAll
       self.change('','')                                                                        # redraw table
     elif command[0] is Command.RERUN_EXTRACTORS:
-      redraw = False
+      docIDs = []
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
-          doc = self.comm.backend.db.getDoc(docID)
-          if doc['branch'][0]['path'] is None:
-            continue
-          redraw = True
-          oldDocType = doc['type']
-          doc['type'] = ['']
-          if doc['branch'][0]['path'].startswith('http'):
-            path = Path(doc['branch'][0]['path'])
-          else:
-            path = self.comm.backend.basePath/doc['branch'][0]['path']
-          self.comm.backend.useExtractors(path, doc.get('shasum',''), doc)
-          if doc['type'][0] == oldDocType[0]:
-            del doc['branch']                                                                    #don't update
-            self.comm.backend.db.updateDoc(doc, docID)
-          else:
-            self.comm.backend.db.remove( docID )
-            del doc['id']
-            doc['name'] = doc['branch'][0]['path']
-            self.comm.backend.addData('/'.join(doc['type']), doc, doc['branch'][0]['stack'])
-      if redraw:
-        self.change('','')                                                                      # redraw table
-        self.comm.changeDetails.emit('redraw')
+          docIDs.append(docID)
+      self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs':docIDs})
     elif command[0] is Command.TOGGLE_GALLERY:
       self.flagGallery = not self.flagGallery
       self.change('','')                                                                # redraw table/gallery

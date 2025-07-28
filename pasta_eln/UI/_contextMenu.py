@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QPoint                                          # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMenu, QWidget                               # pylint: disable=no-name-in-module
+from ..backendWorker.worker import Task
 from .guiStyle import Action
 
 
@@ -51,7 +52,7 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
   """
   filePath = Path(widget.doc['branch'][0]['path'])                                # type: ignore[attr-defined]
   if command[0] is CommandMenu.OPEN_FILEBROWSER or command[0] is CommandMenu.OPEN_EXTERNAL:
-    filePath = widget.comm.backend.basePath/filePath                              # type: ignore[attr-defined]
+    filePath = widget.comm.basePath/filePath                              # type: ignore[attr-defined]
     filePath = filePath if command[0] is CommandMenu.OPEN_EXTERNAL else filePath.parent
     if platform.system() == 'Darwin':                                                                  # macOS
       subprocess.call(('open', filePath))
@@ -65,14 +66,14 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
       imageType = image[11:14] if image[14]==';' else image[11:15]
     else:
       imageType = 'svg'
-    saveFilePath = widget.comm.backend.basePath/filePath.parent/f'{filePath.stem}_PastaExport.{imageType.lower()}'# type: ignore[attr-defined]
-    path = widget.doc['-branch'][0]['path']                                       # type: ignore[attr-defined]
+    saveFilePath = widget.comm.basePath/filePath.parent/f'{filePath.stem}_PastaExport.{imageType.lower()}'# type: ignore[attr-defined]
+    path = widget.doc['branch'][0]['path']                                       # type: ignore[attr-defined]
     if not path.startswith('http'):
-      path = (widget.comm.backend.basePath/path).as_posix()                       # type: ignore[attr-defined]
-    widget.comm.backend.testExtractor(path, recipe='/'.join(widget.doc['-type']), saveFig=str(saveFilePath))# type: ignore[attr-defined]
+      path = (widget.comm.basePath/path).as_posix()                       # type: ignore[attr-defined]
+    widget.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST, {'fileName':path, 'recipe':'/'.join(widget.doc['type']), 'saveFig':str(saveFilePath), 'style':''})
   elif command[0] is CommandMenu.HIDE:
-    widget.comm.backend.db.hideShow(widget.docID)                                 # type: ignore[attr-defined]
-    widget.doc = widget.comm.backend.db.getDoc(widget.docID)                      # type: ignore[attr-defined]
+    widget.comm.uiRequestTask.emit('hideShow', widget.docID, [])                 # type: ignore[attr-defined]
+    #TODO doc = widget.comm.backend.db.getDoc(widget.docID)                      # type: ignore[attr-defined]
   elif command[0] is CommandMenu.CHANGE_EXTRACTOR:
     widget.doc['type'] = command[1].split('/')                                    # type: ignore[attr-defined]
     #any path is good since the file is the same everywhere; data-changed by reference

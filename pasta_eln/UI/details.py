@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtCore import Qt, Slot                                        # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QScrollArea, QTextEdit, QLayout, QLabel      # pylint: disable=no-name-in-module
+from ..backendWorker.worker import Task
 from ..fixedStringsJson import SORTED_DB_KEYS, defaultDataHierarchyNode, cssStyleHtmlEditors
 from ..textTools.handleDictionaries import dict2ul
 from ..textTools.stringChanges import markdownEqualizer
@@ -196,7 +197,7 @@ class Details(QScrollArea):
         path = Path(pathStr)
         if not path.as_posix().startswith('http'):
           path = self.comm.basePath/path
-        self.comm.uiRequestTask.emit('extractorTest', str(path), 'html')
+        self.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST, {'fileName':str(path), 'style':'html', 'recipe':'', 'saveFig':''})
     else:
       showMessage(self, 'Warning', 'No item was selected via table-view, i.e. no details are shown.')
     return
