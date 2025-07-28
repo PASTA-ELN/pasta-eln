@@ -29,10 +29,13 @@ class Communicate(QObject):
   stopSequentialEdit = Signal()          # in sequential edit, stop if there is a cancel
   # send data or data-request to backend
   commSendConfiguration = Signal(dict, str)     # send configuration and project-group-name to backend
+  uiRequestDataHierarchy= Signal(str)           # get all entries in the data hierarchy for this docType
   uiRequestTable        = Signal(str, str, bool)# table: send docType, projectID, showAll to backend to get table
   uiRequestHierarchy    = Signal(str, bool)     # send project ID to backend
   uiRequestDoc          = Signal(str)           # request doc
-  uiRequestTask         = Signal(Task, dict) # request to execute a task
+  uiRequestTask         = Signal(Task, dict)    # request to execute a task
+  uiSendSQL             = Signal(list)          # request to execute SQL commands directly
+  uiRequestSQL          = Signal(str,str)       # request to execute SQL and send dataframe back
   # signals that are emitted from this comm that data changed
   docTypesChanged    = Signal()          # redraw main window, e.g. after change of docType titles
 
@@ -65,6 +68,8 @@ class Communicate(QObject):
       self.uiRequestHierarchy.connect(self.backendThread.worker.returnHierarchy)
       self.uiRequestDoc.connect(self.backendThread.worker.returnDoc)
       self.uiRequestTask.connect(self.backendThread.worker.returnTaskReport)
+      self.uiSendSQL.connect(self.backendThread.worker.executeSQL)
+      self.uiRequestSQL.connect(self.backendThread.worker.returnSQL)
 
       # connect GUI SLOTS to backend worker signals: group C
       self.backendThread.worker.beSendDataHierarchyNode.connect(self.onGetDataHierarchyNode)

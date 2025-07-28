@@ -3,6 +3,7 @@ import random
 import string
 from typing import Callable, Optional
 import qtawesome as qta
+from PySide6.QtCore import Slot
 from PySide6.QtGui import QRegularExpressionValidator                      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
 from ...fixedStringsJson import allIcons
@@ -23,25 +24,42 @@ class DocTypeEditor(QDialog):
     """
     super().__init__()
     self.comm = comm
-    self.db   = self.comm.backend.db
     self.docType = docType
     self.callback = callback
     mainL = QVBoxLayout(self)
-    _, mainForm = widgetAndLayoutForm(mainL)
+    _, self.mainForm = widgetAndLayoutForm(mainL)
     self.setWindowTitle('Edit docType properties')
+    mainL.addStretch(1)
+    buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
+    buttonBox.clicked.connect(self.closeDialog)
+    mainL.addWidget(buttonBox)
+    # initialize communication if needed
+    if self.docType in self.comm.docTypesTitles:
+      self.comm.backendThread.worker.beSendDataHierarchyAll.connect(self.onGetData)
+      self.comm.uiRequestDataHierarchy.emit(self.docType)
+      self.initialData = None
+    else:
+      self.initialData = ['']*6
+      self.paint()
 
-    initialData = self.comm.backend.db.dataHierarchy(docType,'*') if docType else ['']*6
-    self.row1 = QLineEdit(initialData[0])
+
+  @Slot(list)
+  def onGetData(self, items) -> None:
+    self.initialData = items
+    self.paint()
+
+  def paint(self) -> None:
+    self.row1 = QLineEdit(self.initialData[0])
     self.row1.setToolTip('Name of document type: lower case letters only. Must be unique')
-    if docType:
+    if self.docType:
       self.row1.setDisabled(True)
     else:
       self.row1.setValidator(QRegularExpressionValidator(r'(^[a-wyz][\w\/]{3,}$)'))
-    mainForm.addRow(QLabel('DocType '), self.row1)
+    self.mainForm.addRow(QLabel('DocType '), self.row1)
 
-    self.row2 = QLineEdit(initialData[2])
+    self.row2 = QLineEdit(self.initialData[2])
     self.row2.setToolTip('Label that the user reads: it is suggested to start with upper case and end with s as in "Samples"')
-    mainForm.addRow(QLabel('Label '), self.row2)
+    self.mainForm.addRow(QLabel('Label '), self.row2)
 
     row3W, row3L = widgetAndLayout('H', None, 's')
     # Label('type:', 'h2', row3L)
@@ -53,27 +71,21 @@ class DocTypeEditor(QDialog):
     self.comboIcon.addItem('')
     for icon in allIcons:
       self.comboIcon.addItem(qta.icon(icon, scale_factor=1.5), icon)
-    self.comboIcon.setCurrentText(initialData[3])
+    self.comboIcon.setCurrentText(self.initialData[3])
     row3L.addWidget(self.comboIcon)
-    if docType.startswith('x'):
+    if self.docType.startswith('x'):
       self.comboIcon.setDisabled(True)
-    mainForm.addRow(QLabel('Icon '), row3W)
+    self.mainForm.addRow(QLabel('Icon '), row3W)
 
-    self.row4 = QLineEdit(initialData[4])
+    self.row4 = QLineEdit(self.initialData[4])
     self.row4.setToolTip('One letter shortcut used with Ctrl-. Must be unique.')
-    if docType.startswith('x'):
+    if self.docType.startswith('x'):
       self.row4.setDisabled(True)
     else:
       data = [i[1] for i in self.comm.backend.db.dataHierarchy('','shortcut') if not i[0].startswith('x')]
       dataSet = set(string.ascii_lowercase).difference(data)
       self.row4.setValidator(QRegularExpressionValidator(f'^[{"".join(dataSet)}]$'))
-    mainForm.addRow(QLabel('Shortcut '), self.row4)
-
-    #final button box
-    mainL.addStretch(1)
-    buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
-    buttonBox.clicked.connect(self.closeDialog)
-    mainL.addWidget(buttonBox)
+    self.mainForm.addRow(QLabel('Shortcut '), self.row4)
 
 
   def closeDialog(self, btn:TextButton) -> None:

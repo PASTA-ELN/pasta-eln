@@ -21,7 +21,7 @@ class LinkOnlineDelegate(QStyledItemDelegate):
   """
   Delegate for creating the icons for the re-order column in the data hierarchy editor tables
   """
-  def __init__(self, parent:Any = ...):
+  def __init__(self, parent:QWidget|None = None):
     super().__init__(parent)
     self.button = QPushButton()
 

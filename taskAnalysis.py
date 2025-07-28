@@ -1,6 +1,6 @@
 import subprocess, json
 
-done = ['EXTRACTOR_TEST', 'SCAN', 'DELETE_DOCXX', 'CHECK_DB','SET_GUI','EXPORT_ELN','IMPORT_ELN',
+done = ['EXTRACTOR_TEST', 'EXTRACTOR_RERUN', 'SCAN', 'DELETE_DOC', 'CHECK_DB','SET_GUI','EXPORT_ELN','IMPORT_ELN',
         'SEND_ELAB', 'GET_ELAB', 'SMART_ELAB']
 target = {}
 toUpdate = []
@@ -22,7 +22,7 @@ for line in result1.stdout.split('\n'):
 
 result2 = subprocess.run(['grep', r"\.backend\.", '-r', 'pasta_eln/UI/'], capture_output=True, text=True)
 for line in  result2.stdout.split('\n'):
-    if 'remove' in line:
+    if 'remove' in line or True:
         print(line)
 
 

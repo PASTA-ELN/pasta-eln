@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Any
 import numpy as np
 import pandas as pd
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QInputDialog,# pylint: disable=no-name-in-module
                                QMessageBox, QTabBar, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout)
 from ..guiCommunicate import Communicate
@@ -33,9 +34,12 @@ class SchemeEditor(QDialog):
     """
     super().__init__()
     self.comm = comm
-    self.db   = self.comm.backend.db
+    self.comm.backendThread.worker.beSendSQL.connect(self.onGetData)
     self.docType = ''
     self.docLabel= ''
+    self.cmd     = ''
+    self.df      = pd.DataFrame()
+    self.docTypesLabels = [(k,v['title']) for k,v in self.comm.docTypesTitles.items()]
     self.closeButtons:list[IconButton] = []                                             #close buttons of tabs
     self.setWindowTitle('Data scheme editor')
     self.restartAfterClose = False
@@ -74,9 +78,16 @@ class SchemeEditor(QDialog):
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
     #initialize
-    _ = [self.selectDocType.addItem(text, data) for (data, text) in self.db.dataHierarchy('','title')]
+    _ = [self.selectDocType.addItem(v,k) for k,v in self.docTypesLabels]
     self.selectDocType.setCurrentIndex(0)
     return
+
+
+  @Slot(pd.DataFrame)
+  def onGetData(self, cmd, data):
+    if cmd==self.cmd:
+      self.df = data
+      self.paint()
 
 
   def changeDocType(self, label:str) -> None:
@@ -91,13 +102,15 @@ class SchemeEditor(QDialog):
     if self.docType:
       self.finishDocType()
     self.docLabel= label
-    self.docType = [data for (data, text) in self.db.dataHierarchy('','title') if text==label][0]
-    cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
+    self.docType = [k for k,v in self.docTypesLabels if v==label][0]
+    self.cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
           'docTypeSchema.unit, docTypeSchema.mandatory, docTypeSchema.list, definitions.long '\
           'FROM docTypeSchema LEFT JOIN definitions ON definitions.key = (docTypeSchema.class || "." || docTypeSchema.name) '\
           f'WHERE docTypeSchema.docType=="{self.docType}"'
-    df = pd.read_sql_query(cmd, self.db.connection).fillna('')
-    df.rename(columns={'long':'description'}, inplace=True)
+    self.comm.uiRequestSQL.emit('df', self.cmd)
+
+  def paint(self):
+    df = self.df.rename(columns={'long':'description'})
     df['item list'] = df['list'].apply(lambda x: '' if ',' in x else x)
     df['free list'] = df['list'].apply(lambda x: x  if ',' in x else '')
     df = df.drop('list', axis=1)
@@ -123,7 +136,7 @@ class SchemeEditor(QDialog):
       table.setItemDelegateForColumn(0, self.nameColumnDelegates[-1])
       self.mandatoryColumnDelegates.append(MandatoryColumnDelegate())
       table.setItemDelegateForColumn(3, self.mandatoryColumnDelegates[-1])
-      self.listItemDelegates.append(ListItemDelegate(self.db.dataHierarchy('','title')))
+      self.listItemDelegates.append(ListItemDelegate(self.docTypesLabels))
       table.setItemDelegateForColumn(4, self.listItemDelegates[-1])
       self.listFreeDelegates.append(ListFreeDelegate())
       table.setItemDelegateForColumn(5, self.listFreeDelegates[-1])
@@ -171,12 +184,11 @@ class SchemeEditor(QDialog):
     dfDef = dfDef.groupby(['key']).first()
     listDef = list(dfDef.itertuples(name=None))
     # save to sqlite
-    cmd = 'INSERT INTO definitions (key, long, PURL) VALUES (?, ?, "") ON CONFLICT(key) DO '\
-          'UPDATE SET long = excluded.long;'
-    self.db.cursor.executemany(cmd, listDef)
-    self.db.cursor.execute(f"DELETE FROM docTypeSchema WHERE docType == '{self.docType}'")
-    self.db.connection.commit()
-    dfSchema.to_sql('docTypeSchema', self.db.connection, if_exists='append', index=False, dtype='str')
+    self.comm.uiSendSQL.emit([
+      {'type':'many', 'cmd':'INSERT INTO definitions (key, long, PURL) VALUES (?, ?, "") ON CONFLICT(key) DO '
+                            'UPDATE SET long = excluded.long;', 'list':listDef},
+      {'type':'one',  'cmd':f"DELETE FROM docTypeSchema WHERE docType == '{self.docType}'"},
+      {'type':'df',   'table':'docTypeSchema', 'df':dfSchema}])
     return
 
 
@@ -209,34 +221,34 @@ class SchemeEditor(QDialog):
       dialog.exec()
       docLabel = str(self.docLabel)
       self.selectDocType.clear()
-      _ = [self.selectDocType.addItem(text, data) for (data, text) in self.db.dataHierarchy('','title')]
+      _ = [self.selectDocType.addItem(v, k) for k,v in self.docTypesLabels]
       self.selectDocType.setCurrentText(docLabel)
     elif command[0] is Command.EDIT:
       dialog = DocTypeEditor(self.comm, self.selectDocType.currentData())
       dialog.exec()
       docIdx = self.selectDocType.currentIndex()
       self.selectDocType.clear()
-      _ = [self.selectDocType.addItem(text, data) for (data, text) in self.db.dataHierarchy('','title')]
+      _ = [self.selectDocType.addItem(v, k) for k,v in self.docTypesLabels]
       self.selectDocType.setCurrentIndex(docIdx)
     elif command[0] is Command.DEL:
       button = QMessageBox.question(self, 'Question', 'Do you really want to remove the doc-type?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.No:
         return
-      self.db.cursor.execute(f"DELETE FROM docTypes WHERE docType == '{self.selectDocType.currentData()}'")
-      self.db.cursor.execute(f"DELETE FROM docTypeSchema WHERE docType == '{self.selectDocType.currentData()}'")
-      self.db.connection.commit()
+      self.comm.uiSendSQL.emit([
+        {'type':'one', 'cmd':f"DELETE FROM docTypes WHERE docType == '{self.selectDocType.currentData()}'"},
+        {'type':'one', 'cmd':f"DELETE FROM docTypeSchema WHERE docType == '{self.selectDocType.currentData()}'"}
+      ])
       self.selectDocType.clear()
-      _ = [self.selectDocType.addItem(text, data) for (data, text) in self.db.dataHierarchy('','title')]
+      _ = [self.selectDocType.addItem(v, k) for k,v in self.docTypesLabels]
     elif command[0] is Command.DEL_GROUP:
       docLabel = str(self.docLabel)
       button = QMessageBox.question(self, 'Question', 'Do you really want to remove this group?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
         group = self.tabW.tabBar().tabText(command[1])
-        self.db.cursor.execute(f"DELETE FROM docTypeSchema WHERE docType == '{self.docType}' "\
-                                            f"AND class == '{group}'")
-        self.db.connection.commit()
+        self.comm.uiSendSQL.emit([{'type':'one','cmd':
+          f"DELETE FROM docTypeSchema WHERE docType == '{self.docType}' AND class == '{group}'"}])
         self.changeDocType(docLabel)
     return
 
@@ -285,9 +297,9 @@ class SchemeEditor(QDialog):
     if idx == self.tabW.count()-1:
       textNew, ok = QInputDialog.getText(self, 'Create group', 'Enter new group name:', text='')
       if ok and textNew.strip():
-        self.db.cursor.execute(f"INSERT INTO docTypeSchema VALUES ({', '.join(['?']*7)})",
-                        [self.docType, textNew.strip(), '0', 'item', '', '', ''])
-        self.db.connection.commit()
+        self.comm.uiSendSQL.emit([{'type':'one',
+                                   'cmd':f"INSERT INTO docTypeSchema VALUES ({', '.join(['?']*7)})",
+                                   'list':[self.docType, textNew.strip(), '0', 'item', '', '', '']}])
         self.changeDocType(self.docLabel)
     return
 
@@ -299,7 +311,7 @@ class SchemeEditor(QDialog):
       label (str): label of the new docType
     """
     self.selectDocType.clear()
-    _ = [self.selectDocType.addItem(text, data) for (data, text) in self.db.dataHierarchy('','title')]
+    _ = [self.selectDocType.addItem(v, k) for k,v in self.docTypesLabels]
     self.selectDocType.setCurrentText(label)
     self.restartAfterClose = True
     self.changeDocType(label)

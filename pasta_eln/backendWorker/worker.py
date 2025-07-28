@@ -38,11 +38,13 @@ class BackendWorker(QObject):
   # Signals to send data back to GUI
   beSendDocTypes          = Signal(dict)           # Send processed data back
   beSendDataHierarchyNode = Signal(str,list)       # Send data hierarchy nodes
+  beSendDataHierarchyAll  = Signal(list)           # Send all entries for this docType
   beSendProjects          = Signal(pd.DataFrame)
   beSendTable             = Signal(pd.DataFrame, str)   # all tables
   beSendHierarchy         = Signal(Node, dict)
   beSendDoc               = Signal(dict)
   beSendTaskReport        = Signal(Task, str, str)       # task, report, and image
+  beSendSQL               = Signal(str, pd.DataFrame)
 
   def __init__(self) -> None:
     """ Initialize the backend worker """
@@ -64,6 +66,10 @@ class BackendWorker(QObject):
     self.beSendProjects.emit(self.backend.db.getView('viewDocType/x0'))
     for docType in docTypesTitlesIcons:
       self.beSendDataHierarchyNode.emit(docType, self.backend.db.dataHierarchy(docType, 'meta'))
+
+  @Slot(str)
+  def returnDataHierarchyRow(self, docType:str) -> None:
+    self.beSendDataHierarchyAll.emit(self.backend.db.dataHierarchy(docType, '*'))
 
 
   @Slot(str, str, bool)
@@ -179,6 +185,27 @@ class BackendWorker(QObject):
         self.backend.db.setGUI(data['docID'], data['gui'])
       else:
         logging.error('Got task, which I do not understand %s %s', task, data.keys())
+
+
+  @Slot(list)
+  def executeSQL(self, tasks) -> None:
+    for task in tasks:
+      if task['type']=='one':
+        self.backend.db.cursor.execute(task['cmd'], task.get('list',()))
+      elif task['type']=='many':
+        self.backend.db.cursor.executemany(task['cmd'], task['list'])
+      elif task['type']=='df':
+        task['df'].to_sql(task['table'], self.db.connection, if_exists='append', index=False, dtype='str')
+      else:
+        print("**ERROR unknown task command", task)
+      self.backend.db.connection.commit()
+
+
+  @Slot(str,str)
+  def returnSQL(self, task, cmd):
+    if task=='df':
+      self.beSendSQL.emit(cmd, pd.read_sql_query(cmd, self.backend.db.connection).fillna(''))
+
 
   def exit(self) -> None:
     """ Exit the worker thread """
