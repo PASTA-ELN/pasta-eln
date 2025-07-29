@@ -1,9 +1,6 @@
 """ Custom tree view on data model """
 import logging
 import os
-import platform
-import shutil
-import subprocess
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -81,25 +78,10 @@ class TreeView(QTreeView):
     item = self.model().itemFromIndex(self.currentIndex())                        # type: ignore[attr-defined]
     hierStack = item.data()['hierStack'].split('/')
     if command[0] is Command.ADD_CHILD:
-      docType= 'x1'
-      docID = hierStack[-1]
-      self.comm.uiRequestTask.emit('addChild', docID, [docType, {'name':'new item'}, hierStack])
-      self.comm.changeProject.emit('','')                                                    # refresh project
+      self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':hierStack, 'docType':'x1', 'doc':{'name':'new item'}})
     elif command[0] is Command.ADD_SIBLING:
       hierStack= hierStack[:-1]
-      docType= 'x1'
-      docID  = hierStack[-1]
-      self.comm.uiRequestTask.emit('addDoc', docID, [docType, {'name':'new item'}, hierStack])
-      # TODO
-      # self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['branch'][0]['path'])
-      # docID = self.comm.backend.addData(docType, {'name':'new item'}, hierStack)['id']
-      # # append item to the GUI
-      # item  = self.model().itemFromIndex(self.currentIndex())                     # type: ignore[attr-defined]
-      # parent = item.parent() if item.parent() is not None else self.model().invisibleRootItem()# type: ignore[attr-defined]
-      # child = QStandardItem('/'.join(hierStack+[docID]))
-      # child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)# type: ignore
-      # parent.appendRow(child)
-      self.comm.changeProject.emit('','')                                                    # refresh project
+      self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':hierStack, 'docType':'x1', 'doc':{'name':'new item'}})
     elif command[0] is Command.DELETE:
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data?',\
                                  QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
@@ -135,30 +117,17 @@ class TreeView(QTreeView):
       self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
     elif command[0] is Command.HIDE:
       logging.debug('hide document %s',hierStack[-1])
-      self.comm.uiRequestTask.emit('hideShow', hierStack[-1], [])
+      self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':hierStack[-1]})
       #TODO: current implementation: you hide one; all others are hidden as well
       # Talk to GW what is the default expectation; system allows for individual hiding
       #
-      # self.comm.changeProject.emit('','') #refresh project
       # after hide, do not hide immediately but wait on next refresh
     elif command[0] is Command.OPEN_EXTERNAL or command[0] is Command.OPEN_FILEBROWSER:
       # depending if non-folder / folder; address different item in hierstack
       docID = hierStack[-2] \
         if command[0] is Command.OPEN_FILEBROWSER and hierStack[-1][0]!='x' \
         else hierStack[-1]
-      self.comm.uiRequestTask.emit('openExternal', docID, [])
-      # TODO
-      # doc   = self.comm.backend.db.getDoc(docID)
-      # if doc['branch'][0]['path'] is None:
-      #   showMessage(self, 'Error', 'Cannot open file that is only in the database','Critical')
-      # else:
-      #   path  = Path(self.comm.backend.basePath)/doc['branch'][0]['path']
-      #   if platform.system() == 'Darwin':                                                              # macOS
-      #     subprocess.call(('open', path))
-      #   elif platform.system() == 'Windows':                                                         # Windows
-      #     os.startfile(path)                                                      # type: ignore[attr-defined]
-      #   else:                                                                                 # linux variants
-      #     subprocess.call(('xdg-open', path))
+      self.comm.uiRequestTask.emit(Task.OPEN_EXTERNAL, {'docID':docID})
     elif command[0] is Command.ADD_ON:
       callAddOn(command[1], self.comm, item.data()['hierStack'], self)
     else:
@@ -204,11 +173,6 @@ class TreeView(QTreeView):
     item = self.model().itemFromIndex(self.currentIndex())                        # type: ignore[attr-defined]
     docID = item.data()['hierStack'].split('/')[-1]
     self.comm.formDoc.emit({'id':docID})
-    # TODO
-    # docNew = self.comm.backend.db.getDoc(docID)
-    # item.setText(docNew['name'])
-    # item.setData(item.data() | {'docType':docNew['type'], 'gui':docNew['gui']})
-    # item.emitDataChanged()                           #force redraw (resizing and repainting) of this item only
     return
 
 
@@ -248,23 +212,7 @@ class TreeView(QTreeView):
         showMessage(self, 'Error', 'The files seem empty.')
         return
       docID = item.data()['hierStack'].split('/')[-1]
-      self.comm.uiRequestTask.emit('drop', docID, [files, folders])
-      # TODO
-      # commonBase   = os.path.commonpath(folders+[str(i) for i in files])
-      # doc = self.comm.backend.db.getDoc(docID)
-      # targetFolder = Path(self.comm.backend.cwd/doc['branch'][0]['path'])
-      # # create folders and copy files
-      # for folder in folders:
-      #   (targetFolder/(Path(folder).relative_to(commonBase))).mkdir(parents=True, exist_ok=True)
-      # for fileStr in files:
-      #   file = Path(fileStr)
-      #   if file.is_file():
-      #     shutil.copy(file, targetFolder/(file.relative_to(commonBase)))
-      # # scan
-      # for _ in range(2):                                                         #scan twice: convert, extract
-      #   self.comm.backend.scanProject(None, docID, targetFolder.relative_to(self.comm.backend.basePath))
-      # self.comm.changeProject.emit(item.data()['hierStack'].split('/')[0],'')
-      # showMessage(self, 'Information','Drag & drop is finished')
+      self.comm.uiRequestTask.emit(Task.DROP, {'docID':docID, 'files':files, 'folders':folders})
       event.ignore()
     elif 'application/x-qstandarditemmodeldatalist' in event.mimeData().formats():
       super().dropEvent(event)

@@ -72,7 +72,7 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
       path = (widget.comm.basePath/path).as_posix()                       # type: ignore[attr-defined]
     widget.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST, {'fileName':path, 'recipe':'/'.join(widget.doc['type']), 'saveFig':str(saveFilePath), 'style':''})
   elif command[0] is CommandMenu.HIDE:
-    widget.comm.uiRequestTask.emit('hideShow', widget.docID, [])                 # type: ignore[attr-defined]
+    widget.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':widget.docID})       # type: ignore[attr-defined]
     #TODO doc = widget.comm.backend.db.getDoc(widget.docID)                      # type: ignore[attr-defined]
   elif command[0] is CommandMenu.CHANGE_EXTRACTOR:
     widget.doc['type'] = command[1].split('/')                                    # type: ignore[attr-defined]

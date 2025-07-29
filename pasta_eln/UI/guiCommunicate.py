@@ -112,7 +112,7 @@ class Communicate(QObject):
     Args:
       taskFunction (func): function to execute
     """
-    if task in (Task.SET_GUI, ):
+    if task in (Task.SET_GUI, Task.HIDE_SHOW, Task.ADD_DOC, Task.OPEN_EXTERNAL):
       return
     labels = {Task.EXTRACTOR_TEST:'Testing extractor:',
               Task.EXTRACTOR_RERUN:'Rerun extractors:',

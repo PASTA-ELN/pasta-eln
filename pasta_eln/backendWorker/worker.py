@@ -4,6 +4,10 @@ CONNECT TO ALL THESE SIGNALS IN COMMUNICATE and UI
 from enum import Enum
 import json
 import logging
+import platform
+import os
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Any, Optional
 import pandas as pd
@@ -13,6 +17,7 @@ from PySide6.QtCore import QObject, QThread, Signal, Slot
 from .backend import Backend
 from .inputOutput import exportELN, importELN
 from .elabFTWsync import Pasta2Elab
+from ..UI.messageDialog import showMessage
 
 waitTimeBeforeSendingFirstMessage = 0.1 #ensure all UI elements are up
 
@@ -29,6 +34,10 @@ class Task(Enum):
   IMPORT_ELN     = 9
   CHECK_DB       = 10
   EXTRACTOR_RERUN= 11
+  ADD_DOC        = 12
+  OPEN_EXTERNAL  = 13
+  DROP           = 14
+  HIDE_SHOW      = 15
 
 
 class BackendWorker(QObject):
@@ -119,6 +128,25 @@ class BackendWorker(QObject):
         for _ in range(2):                                                         #scan twice: convert, extract
           self.backend.scanProject(None, data['docID'])
         self.beSendTaskReport.emit(task, 'Scanning finished successfully', '')
+      elif task is Task.ADD_DOC      and set(data.keys())=={'hierStack','docType','doc'}:
+        parentID  = data['hierStack'][-1]
+        self.backend.cwd = Path(self.backend.db.getDoc(parentID)['branch'][0]['path'])
+        self.backend.addData(data['docType'], data['doc'], data['hierStack'])
+      elif task is Task.DROP         and set(data.keys())=={'docID','files','folders'}:
+        commonBase   = os.path.commonpath(data['folders']+[str(i) for i in data['files']])
+        doc = self.backend.db.getDoc(data['docID'])
+        targetFolder = Path(self.backend.cwd/doc['branch'][0]['path'])
+        # create folders and copy files
+        for folder in data['folders']:
+          (targetFolder/(Path(folder).relative_to(commonBase))).mkdir(parents=True, exist_ok=True)
+        for fileStr in data['files']:
+          file = Path(fileStr)
+          if file.is_file():
+            shutil.copy(file, targetFolder/(file.relative_to(commonBase)))
+        # scan
+        for _ in range(2):                                                         #scan twice: convert, extract
+          self.backend.scanProject(None, docID, targetFolder.relative_to(self.backend.basePath))
+        self.beSendTaskReport.emit(task, 'Drag-drop operation finished successfully', '')
       elif task is Task.DELETE_DOC   and  set(data.keys())=={'docID'}:
         # delete doc: possibly a folder or a project or a measurement
         # delete database and rename folder
@@ -177,12 +205,22 @@ class BackendWorker(QObject):
               doc['name'] = doc['branch'][0]['path']
               self.backend.addData('/'.join(doc['type']), doc, doc['branch'][0]['stack'])
         self.beSendTaskReport.emit(task, 'Extractors re-ran successfully', '')
-
-      # self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['branch'][0]['path'])
-      # docID = self.comm.backend.addData(docType, {'name':'new item'}, hierStack)['id']
-
+      elif task is Task.OPEN_EXTERNAL and set(data.keys())=={'docID'}:
+        doc   = self.backend.db.getDoc(data['docID'])
+        if doc['branch'][0]['path'] is None:
+          showMessage(self, 'Error', 'Cannot open file that is only in the database','Critical')
+        else:
+          path  = Path(self.backend.basePath)/doc['branch'][0]['path']
+          if platform.system() == 'Darwin':                                                              # macOS
+            subprocess.call(('open', path))
+          elif platform.system() == 'Windows':                                                         # Windows
+            os.startfile(path)                                                      # type: ignore[attr-defined]
+          else:                                                                                 # linux variants
+            subprocess.call(('xdg-open', path))
       elif task is Task.SET_GUI    and set(data.keys())=={'docID','gui'}:
         self.backend.db.setGUI(data['docID'], data['gui'])
+      elif task is Task.HIDE_SHOW    and set(data.keys())=={'docID'}:
+        self.backend.db.hideShow(data['docID'])
       else:
         logging.error('Got task, which I do not understand %s %s', task, data.keys())
 

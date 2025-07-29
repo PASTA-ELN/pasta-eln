@@ -269,14 +269,8 @@ class Project(QWidget):
         self.allDetails.hide()
         self.actHideDetail.setText('Show project details')
     elif command[0] is Command.HIDE:
-      self.comm.backend.db.hideShow(self.projID)
-      self.docProj = self.comm.backend.db.getDoc(self.projID)
-      if [b for b in self.docProj['branch'] if False in b['show']]:         # hidden->go back to project table
-        self.comm.changeSidebar.emit('')
-        self.comm.changeTable.emit('x0','')                                         # go back to project table
-      else:
-        self.change('', '')
-        self.comm.changeSidebar.emit('')
+      self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':self.projID})
+      self.comm.changeSidebar.emit('')
     elif command[0] is Command.SHOW_DETAILS and self.tree is not None:
       def recursiveRowIteration(index:QModelIndex) -> None:
         for subRow in range(self.tree.model().rowCount(index)):                     # type: ignore[union-attr]
