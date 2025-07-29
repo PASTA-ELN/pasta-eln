@@ -215,9 +215,12 @@ class BackendWorker(QObject):
         else:
           msg += 'Error while writing project information to database'
         self.beSendTaskReport.emit(task, msg, '')
-      elif task is Task.EXTRACTOR_RERUN and set(data.keys())=={'docIDs'}:
+      elif task is Task.EXTRACTOR_RERUN and set(data.keys())=={'docIDs','recipe'}:
         for docID in data['docIDs']:
           doc = self.backend.db.getDoc(docID)
+          if data['recipe']:
+            doc['type'] = data['recipe'].split('/')
+          #any path is good since the file is the same everywhere; data-changed by reference
           if doc['branch'][0]['path'] is not None:
             oldDocType = doc['type']
             doc['type'] = ['']

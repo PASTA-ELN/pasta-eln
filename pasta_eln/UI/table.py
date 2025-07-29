@@ -388,7 +388,7 @@ class Table(QWidget):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           docIDs.append(docID)
-      self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs':docIDs})
+      self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs':docIDs,'recipe':''})
     elif command[0] is Command.TOGGLE_GALLERY:
       self.flagGallery = not self.flagGallery
       self.change('','')                                                                # redraw table/gallery

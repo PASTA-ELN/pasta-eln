@@ -73,15 +73,8 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
     widget.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST, {'fileName':path, 'recipe':'/'.join(widget.doc['type']), 'saveFig':str(saveFilePath), 'style':''})
   elif command[0] is CommandMenu.HIDE:
     widget.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':widget.docID})       # type: ignore[attr-defined]
-    #TODO doc = widget.comm.backend.db.getDoc(widget.docID)                      # type: ignore[attr-defined]
   elif command[0] is CommandMenu.CHANGE_EXTRACTOR:
-    widget.doc['type'] = command[1].split('/')                                    # type: ignore[attr-defined]
-    #any path is good since the file is the same everywhere; data-changed by reference
-    widget.comm.backend.useExtractors(filePath, widget.doc['shasum'], widget.doc) # type: ignore[attr-defined]
-    if len(widget.doc['type'])>1 and len(widget.doc['image'])>1:                  # type: ignore[attr-defined]
-      widget.comm.backend.db.updateDoc({'image':widget.doc['image'], 'type':widget.doc['type']}, widget.doc['id'])# type: ignore[attr-defined]
-    else:
-      return False
+    widget.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs':[widget.doc['id']],'recipe':command[1]})
   else:
     logging.error('Command not found in _contextMenu %s', command)
   return True
