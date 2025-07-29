@@ -8,16 +8,20 @@ import platform
 import os
 import shutil
 import subprocess
+import tempfile
+import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 import pandas as pd
-import time
 from anytree import Node
 from PySide6.QtCore import QObject, QThread, Signal, Slot
+from ..UI.messageDialog import showMessage
 from .backend import Backend
+from .dataverse import DataverseClient
 from .inputOutput import exportELN, importELN
 from .elabFTWsync import Pasta2Elab
-from ..UI.messageDialog import showMessage
+from .zenodo import ZenodoClient
 
 waitTimeBeforeSendingFirstMessage = 0.1 #ensure all UI elements are up
 
@@ -38,6 +42,7 @@ class Task(Enum):
   OPEN_EXTERNAL  = 13
   DROP           = 14
   HIDE_SHOW      = 15
+  SEND_REPOSITORY= 16
 
 
 class BackendWorker(QObject):
@@ -185,6 +190,31 @@ class BackendWorker(QObject):
             self.beSendTaskReport.emit(task, 'Success: Syncronized data with elabFTW server'+str(statistics), '')
           else:                                                                                      #if not given
             self.beSendTaskReport.emit(task, 'ERROR: Please specify a server address and API-key in the Configuration', '')
+      elif task is Task.SEND_REPOSITORY:
+        tempELN = str(Path(tempfile.gettempdir())/'export.eln')
+        res0 = exportELN(self.backend, [data['projID']], tempELN, data['docTypes'])
+        print('Export eln',res0)
+        repositories = data['repositories']
+        if data['uploadZenodo']:                                                                                   #Zenodo
+          clientZ = ZenodoClient(repositories['zenodo']['url'], repositories['zenodo']['key'])
+          metadataZ = clientZ.prepareMetadata(data['metadata'])
+          res = clientZ.uploadRepository(metadataZ, tempELN)
+        else:                                                                                         #Dataverse
+          clientD = DataverseClient(repositories['dataverse']['url'], repositories['dataverse']['key'],
+                                  repositories['dataverse']['dataverse'])
+          metadataD = clientD.prepareMetadata(data['metadata'])
+          res = clientD.uploadRepository(metadataD, tempELN)
+        msg = 'Successful upload to repository\n'
+        # update project with upload details
+        if res[0]:
+          docProject = self.backend.db.getDoc(data['projID'])
+          docProject['.repository_upload'] = f'{datetime.now().strftime("%Y-%m-%d")} {res[1]}'
+          docProject['branch'] = docProject['branch'][0] | {'op':'u'}
+          self.backend.db.updateDoc(docProject, data['projID'])
+          msg += 'Saved information to project'
+        else:
+          msg += 'Error while writing project information to database'
+        self.beSendTaskReport.emit(task, msg, '')
       elif task is Task.EXTRACTOR_RERUN and set(data.keys())=={'docIDs'}:
         for docID in data['docIDs']:
           doc = self.backend.db.getDoc(docID)

@@ -292,9 +292,7 @@ class Project(QWidget):
       self.showAll = not self.showAll
       self.change('','')
     elif command[0] is Command.ADD_CHILD:
-      self.comm.backend.cwd = self.comm.basePath/self.docProj['branch'][0]['path']
-      self.comm.backend.addData('x1', {'name':'new item'}, [self.projID])
-      self.change('','')                                                                      #refresh project
+      self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':[self.projID], 'docType':'x1', 'doc':{'name':'new item'}})
     elif command[0] is Command.SHOW_TABLE:
       self.comm.changeTable.emit(command[1], self.projID)
     elif command[0] is Command.ADD_ON:
@@ -313,11 +311,6 @@ class Project(QWidget):
     """
     verbose = False                                                                   # Convenient for testing
     return #TODO
-    #gather old information
-    ## print hierarchy of this project for debugging
-    # self.comm.backend.changeHierarchy(self.projID)
-    # print(self.comm.backend.outputHierarchy(False, True))
-    # self.comm.backend.changeHierarchy(None)
     if not item.data():
       return
     stackOld = item.data()['hierStack'].split('/')[:-1]

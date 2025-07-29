@@ -368,7 +368,7 @@ class Table(QWidget):
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
-          self.comm.backend.db.hideShow(docID)
+          self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':docID})
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')
       self.change('','')                                                                        # redraw table
