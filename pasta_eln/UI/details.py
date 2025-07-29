@@ -3,6 +3,7 @@ import logging
 import re
 from enum import Enum
 from pathlib import Path
+import pandas as pd
 from typing import Any
 from PySide6.QtCore import Qt, Slot                                        # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QScrollArea, QTextEdit, QLayout, QLabel      # pylint: disable=no-name-in-module
@@ -23,9 +24,11 @@ class Details(QScrollArea):
     self.comm = comm
     self.comm.changeDetails.connect(self.change)
     self.comm.backendThread.worker.beSendDoc.connect(self.onGetData)
+    self.comm.backendThread.worker.beSendTable.connect(self.onGetTable)
     self.comm.testExtractor.connect(self.testExtractor)
     self.doc:dict[str,Any]  = {}
     self.docID= ''
+    self.idsTypesNames = pd.DataFrame(columns=['id','type','name'])
     self.textEditors:list[QTextEdit] = []
 
     # GUI elements
@@ -65,11 +68,25 @@ class Details(QScrollArea):
     self.docID = docID
     self.comm.uiRequestDoc.emit(self.docID)
 
+
   @Slot(dict)
   def onGetData(self, doc) -> None:
     if 'id' in doc and doc['id'] == self.docID:
       self.doc = doc
       self.paint()
+
+
+  @Slot(pd.DataFrame, str)
+  def onGetTable(self, data:pd.DataFrame, docType:str) -> None:
+    """
+    Callback function to handle the received data
+
+    Args:
+      data (pd.DataFrame): DataFrame containing table
+    """
+    data = data[['id','name']]
+    data['type']= docType
+    self.idsTypesNames = pd.concat([self.idsTypesNames, data], ignore_index=True)
 
 
   @Slot()
@@ -266,17 +283,18 @@ class Details(QScrollArea):
       docID = ''
       if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
           ',' not in dataHierarchyItems[0]['list'] and ' ' not  in dataHierarchyItems[0]['list']:                           #choice among docType
-        #TODO what to do
-        table  = self.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
-        names= list(table[table.id==value[0]]['name'])
-        if len(names)==1:                                              # default find one item that we link to
-          docID = value[0]
-          value = '\u260D '+names[0]
-          link = True
-        elif not names:          # likely empty link because the value was not yet defined: just print to show
-          value = value[0] if isinstance(value,tuple) else value
+        if dataHierarchyItems[0]['list'] not in self.idsTypesNames['docType'].values:
+          self.comm.uiRequestTable.emit(dataHierarchyItems[0]['list'])
         else:
-          raise ValueError(f'list target exists multiple times. Key: {key}')
+          names= list(self.idsTypesNames[self.idsTypesNames.id==value[0]]['name'])
+          if len(names)==1:                                              # default find one item that we link to
+            docID = value[0]
+            value = '\u260D '+names[0]
+            link = True
+          elif not names:          # likely empty link because the value was not yet defined: just print to show
+            value = value[0] if isinstance(value,tuple) else value
+          else:
+            raise ValueError(f'list target exists multiple times. Key: {key}')
       elif isinstance(value, list):
         value = ', '.join([str(i) for i in value])
       labelStr = f'<b>{key.capitalize()}</b>: {value}'

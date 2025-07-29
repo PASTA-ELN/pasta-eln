@@ -2,10 +2,12 @@
 import logging
 from enum import Enum
 from typing import Any
+import pandas as pd
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QListWidget, QVBoxLayout# pylint: disable=no-name-in-module
+from ..backendWorker.sqlite import MAIN_ORDER
 from ..fixedStringsJson import tableHeaderHelp
-from ..guiCommunicate import Communicate
-from ..sqlite import MAIN_ORDER
+from .guiCommunicate import Communicate
 from .guiStyle import IconButton, widgetAndLayout
 from .messageDialog import showMessage
 
@@ -22,14 +24,13 @@ class TableHeader(QDialog):
     """
     super().__init__()
     self.comm = comm
+    self.comm.backendThread.worker.beSendSQL.connect(self.onGetData)
     self.docType = docType
-    self.db = self.comm.backend.db
-    self.selectedList = self.db.dataHierarchy(docType,'view')
+    self.selectedList = []
+    self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':f'SELECT view FROM docTypes WHERE docType=="{docType}"'}])
     self.allSet = set(MAIN_ORDER)
     #clean it
     self.allSet       = {i[1:] if i[0]=='.' else i for i in self.allSet}
-    self.selectedList = [i[1:] if i[0]=='.' else i for i in self.selectedList]
-    self.allSet       = self.allSet.union(self.selectedList)
 
     # GUI elements
     self.setWindowTitle('Select table headers')
@@ -38,7 +39,6 @@ class TableHeader(QDialog):
     _, bodyL = widgetAndLayout('H', mainL)
     _, leftL = widgetAndLayout('V', bodyL, spacing='m')
     self.choicesW = QListWidget()
-    self.choicesW.addItems(list(self.allSet.difference(self.selectedList)))
     leftL.addWidget(self.choicesW)
     self.inputLine = QLineEdit()
     self.inputLine.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
@@ -50,13 +50,28 @@ class TableHeader(QDialog):
     IconButton('fa5s.angle-down',         self, [Command.MOVE_UP],  centerL, 'move down')
     IconButton('fa5s.angle-double-right', self, [Command.USE_TEXT], centerL, 'use text field')
     self.selectW = QListWidget()
-    self.selectW.addItems(self.selectedList)
     bodyL.addWidget(self.selectW)
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Help)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
 
+
+
+  @Slot(str, pd.DataFrame)
+  def onGetData(self, cmd, data) -> None:
+    if cmd == f'SELECT view FROM docTypes WHERE docType=="{self.docType}"':
+      self.selectedList = data.values[0][0].split(',')
+      self.selectedList = [i[1:] if i[0]=='.' else i for i in self.selectedList]
+      self.allSet       = self.allSet.union(self.selectedList)
+      self.paint()
+
+
+  def paint(self) -> None:
+    self.choicesW.clear()
+    self.selectW.clear()
+    self.choicesW.addItems(list(self.allSet.difference(self.selectedList)))
+    self.selectW.addItems(self.selectedList)
 
   def execute(self, command:list[Any]) -> None:
     """

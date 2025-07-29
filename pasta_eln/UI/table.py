@@ -15,7 +15,7 @@ from ..miscTools import callAddOn
 from .guiCommunicate import Communicate
 from .gallery import ImageGallery
 from .guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
-#from .tableHeader import TableHeader
+from .tableHeader import TableHeader
 
 
 #Scan button to more button
