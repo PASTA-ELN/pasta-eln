@@ -1,6 +1,6 @@
 """ Displays a scrollable grid of images (PNG, JPG, SVG) """
 import logging
-from PySide6.QtCore import QByteArray, Qt, Signal
+from PySide6.QtCore import QByteArray, Qt, Signal, Slot
 from PySide6.QtGui import QImage, QMouseEvent, QPixmap, QStandardItemModel
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import QGridLayout, QPushButton, QScrollArea, QVBoxLayout, QWidget
@@ -66,6 +66,8 @@ class ImageGallery(QWidget):
     """
     super().__init__()
     self.comm = comm
+    self.comm.backendThread.worker.beSendDoc.connect(self.onGetData)
+    self.data = {}
     layout = QVBoxLayout(self)
     scrollArea = QScrollArea(self)
     scrollArea.setWidgetResizable(True)
@@ -76,6 +78,31 @@ class ImageGallery(QWidget):
 
   def updateGrid(self, model:QStandardItemModel) -> None:
     """
+    Args:
+      model: The data model containing information about the images to display
+             The first column of each row is expected to have an 'accessibleText'
+    """
+    self.data = {}
+    self.model = model
+    row, col = 0, 0
+    for idx in range(self.model.rowCount()):
+      docID = model.itemFromIndex(model.index(idx,0)).accessibleText()
+      self.data[docID] = (row, col)
+      col += 1
+      if col >= 4:                                                                        # Assuming 4 columns
+        col = 0
+        row += 1
+    # Clear existing widgets from the grid
+    while self.gridL.count():
+      child = self.gridL.takeAt(0)
+      if child.widget():
+        child.widget().deleteLater()
+    return
+
+
+  @Slot(dict)
+  def onGetData(self, doc) -> None:
+    """
     Populates or updates the image grid based on the provided model
 
     Clears the existing grid and then iterates through the model to fetch
@@ -85,25 +112,17 @@ class ImageGallery(QWidget):
       model: The data model containing information about the images to display
              The first column of each row is expected to have an 'accessibleText'
     """
-    # Clear existing widgets from the grid
-    while self.gridL.count():
-      child = self.gridL.takeAt(0)
-      if child.widget():
-        child.widget().deleteLater()
-
-    row, col = 0, 0
-    for idx in range(model.rowCount()):
-      docID = model.itemFromIndex(model.index(idx,0)).accessibleText()
-      image_data = self.comm.backend.db.getDoc(docID)
-      if not image_data or 'image' not in image_data:
+    if 'id' in doc and doc['id'] in self.data:
+      if not doc or 'image' not in doc:
         # Handle cases where image data might be missing or malformed
-        logging.warning('Image data not found or malformed for docID: %s', docID)
-        continue
-      image = image_data['image']
+        logging.warning('Image data not found or malformed for docID: %s', doc['id'])
+        return
+      image = doc['image']
+      row, col = self.data[doc['id']]
 
       if image.startswith('<?xml version="1.0"'):
         # Wrap QSvgWidget in a Clickable subclass of QPushButton
-        button = ClickableFrame(docID)
+        button = ClickableFrame(doc['id'])
         button.setFixedSize(IMG_SIZE, IMG_SIZE)
         svgWidget = QSvgWidget()
         svgWidget.renderer().load(bytearray(image, encoding='utf-8'))
@@ -124,7 +143,7 @@ class ImageGallery(QWidget):
         layout = QVBoxLayout(button)
         layout.addWidget(svgWidget)
         layout.setAlignment(Qt.AlignCenter)                                       # type: ignore[attr-defined]
-        button.clicked.connect(lambda checked=False, docID=docID: self.imageClicked(docID))
+        button.clicked.connect(lambda checked=False, docID=doc['id']: self.imageClicked(docID))
         button.doubleClicked.connect(self.image2Clicked)
         self.gridL.addWidget(button, row, col)
       elif 'base64,' in image:                                               # Basic check for base64 data URI
@@ -140,23 +159,18 @@ class ImageGallery(QWidget):
           fmt = imageType.replace(';', '')
           if imageW.loadFromData(byteArr, format=fmt):
             pixmap = QPixmap.fromImage(imageW).scaled(IMG_SIZE,IMG_SIZE,Qt.KeepAspectRatio,Qt.SmoothTransformation)# type: ignore[attr-defined]
-            button = ClickableFrame(docID)
+            button = ClickableFrame(doc['id'])
             button.setIcon(pixmap)
             button.setAlignment(Qt.AlignCenter)                                    # type: ignore[attr-defined]
             button.clicked.connect(self.imageClicked)
             button.doubleClicked.connect(self.image2Clicked)
             self.gridL.addWidget(button, row, col)
           else:
-            logging.warning('Could not load image data for docID: %s with format %s', docID, fmt)
+            logging.warning('Could not load image data for docID: %s with format %s', doc['id'], fmt)
         except Exception as e:
-          logging.warning('Error processing image for docID %s: %s', docID, e)
+          logging.warning('Error processing image for docID %s: %s', doc['id'], e)
       else:
-        logging.warning('Image for docID is not in expected base64 format. %s', docID)
-      # end of loop
-      col += 1
-      if col >= 4:                                                                        # Assuming 4 columns
-        col = 0
-        row += 1
+        logging.warning('Image for docID is not in expected base64 format. %s', doc['id'])
     return
 
 
@@ -178,6 +192,5 @@ class ImageGallery(QWidget):
     Args:
       docID: The unique identifier of the double-clicked image/document
     """
-    doc = self.comm.backend.db.getDoc(docID)
-    self.comm.formDoc.emit(doc)
+    self.comm.formDoc.emit({'id':docID})
     return

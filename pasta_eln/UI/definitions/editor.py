@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 import qtawesome as qta
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QDialog, QFileDialog, QTableWidget, QTableWidgetItem, QVBoxLayout# pylint: disable=no-name-in-module
 from ...miscTools import callAddOn
 from ..guiCommunicate import Communicate
@@ -30,7 +31,10 @@ class Editor(QDialog):
     """
     super().__init__()
     self.comm = comm
+    self.comm.backendThread.worker.beSendSQL.connect(self.onGetData)
     self.data:pd.DataFrame = pd.DataFrame()
+    self.df0:pd.DataFrame = pd.DataFrame()
+    self.df1:pd.DataFrame = pd.DataFrame()
     self.setMinimumWidth(1000)
     self.setMinimumHeight(1000)
     self.setWindowTitle('Edit definitions')
@@ -67,14 +71,21 @@ class Editor(QDialog):
     self.saveBtn.setShortcut('Ctrl+Return')
     TextButton('Cancel', self, [Command.Cancel],   buttonLineL, 'Discard changes')
     ### Data
-    db = self.comm.backend.db
-    df0 = pd.read_sql_query('SELECT docType, PURL, title FROM docTypes', db.connection).fillna('')
-    df0['defType'] = 'class'
-    df0 = df0.rename({'docType':'key', 'title':'long'}, axis=1)
-    df1 = pd.read_sql_query('SELECT * FROM definitions', db.connection).fillna('')
-    df1['defType'] = 'attribute'
-    self.data = pd.concat([df0,df1])[['key','long','PURL','defType']]
-    self.showDataframe()
+    self.comm.uiSendSQL.emit([{'type':'get_df','cmd':'SELECT docType, PURL, title FROM docTypes'},
+                              {'type':'get_df','cmd':'SELECT * FROM definitions'}])
+    self.paint()
+
+
+  @Slot(str, pd.DataFrame)
+  def onGetData(self, cmd, data) -> None:
+    if cmd == 'SELECT docType, PURL, title FROM docTypes':
+      data['defType'] = 'class'
+      self.df0 = data.rename({'docType':'key', 'title':'long'}, axis=1)
+    if cmd == 'SELECT * FROM definitions':
+      data['defType'] = 'attribute'
+      self.df1 = data
+    self.data = pd.concat([self.df0,self.df1])[['key','long','PURL','defType']]
+    self.paint()
 
 
   def execute(self, command:list[Any]) -> None:
@@ -92,35 +103,33 @@ class Editor(QDialog):
       fileName = QFileDialog.getOpenFileName(self, 'Read table from .csv file', str(Path.home()), '*.csv')[0]
       if fileName != '':
         self.data = pd.read_csv(fileName).fillna('')
-        self.showDataframe()
+        self.paint()
     elif command[0] is Command.AddOn:
       try:
-        self.data = callAddOn('definition_autofill', self.comm.backend, self.data, self)
-        self.showDataframe()
+        self.data = callAddOn('definition_autofill', self.comm, self.data, self)
+        self.paint()
       except Exception:
         pass
     elif command[0] is Command.Cancel:
       self.reject()
     elif command[0] is Command.Save:
-      df = self.getDataframe()
-      db = self.comm.backend.db
-      for _, row in df.iterrows():
+      tasks = []
+      for _, row in self.getDataframe().iterrows():
         key, description, purl, dType = row.values
         if dType == 'class':
-          try:
-            db.cursor.execute(f"UPDATE docTypes SET PURL='{purl}', title='{description}' WHERE docType = '{key}'")
-          except Exception:
-            showMessage(self, 'Error', 'You cannot add a class/docType via this form.', 'Critical')
+          tasks.append({'type':'one',
+                   'cmd':f"UPDATE docTypes SET PURL='{purl}', title='{description}' WHERE docType = '{key}'"})
         else:
-          db.cursor.execute('INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);', [key, description, purl])
-      db.connection.commit()
+          tasks.append({'type':'one', 'cmd':'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);',
+                        'list':[key, description, purl]})
+      self.comm.uiSendSQL.emit(tasks)
       self.accept()
     else:
       logging.error('Command unknown: %s',command)
     return
 
 
-  def showDataframe(self) -> None:
+  def paint(self) -> None:
     """ Show data frame in the GUI """
     self.table.setRowCount(len(self.data))
     nRows, nCols = self.data.shape
