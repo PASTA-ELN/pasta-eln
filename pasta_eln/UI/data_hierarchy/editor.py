@@ -83,7 +83,7 @@ class SchemeEditor(QDialog):
     return
 
 
-  @Slot(pd.DataFrame)
+  @Slot(str, pd.DataFrame)
   def onGetData(self, cmd, data):
     if cmd==self.cmd:
       self.df = data
@@ -107,7 +107,7 @@ class SchemeEditor(QDialog):
           'docTypeSchema.unit, docTypeSchema.mandatory, docTypeSchema.list, definitions.long '\
           'FROM docTypeSchema LEFT JOIN definitions ON definitions.key = (docTypeSchema.class || "." || docTypeSchema.name) '\
           f'WHERE docTypeSchema.docType=="{self.docType}"'
-    self.comm.uiRequestSQL.emit('df', self.cmd)
+    self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':self.cmd}])
 
   def paint(self):
     df = self.df.rename(columns={'long':'description'})

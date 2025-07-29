@@ -35,7 +35,6 @@ class Communicate(QObject):
   uiRequestDoc          = Signal(str)           # request doc
   uiRequestTask         = Signal(Task, dict)    # request to execute a task
   uiSendSQL             = Signal(list)          # request to execute SQL commands directly
-  uiRequestSQL          = Signal(str,str)       # request to execute SQL and send dataframe back
   # signals that are emitted from this comm that data changed
   docTypesChanged    = Signal()          # redraw main window, e.g. after change of docType titles
 
@@ -69,7 +68,6 @@ class Communicate(QObject):
       self.uiRequestDoc.connect(self.backendThread.worker.returnDoc)
       self.uiRequestTask.connect(self.backendThread.worker.returnTaskReport)
       self.uiSendSQL.connect(self.backendThread.worker.executeSQL)
-      self.uiRequestSQL.connect(self.backendThread.worker.returnSQL)
 
       # connect GUI SLOTS to backend worker signals: group C
       self.backendThread.worker.beSendDataHierarchyNode.connect(self.onGetDataHierarchyNode)

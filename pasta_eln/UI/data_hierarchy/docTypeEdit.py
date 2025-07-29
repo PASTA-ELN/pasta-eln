@@ -2,6 +2,7 @@
 import random
 import string
 from typing import Callable, Optional
+import pandas as pd
 import qtawesome as qta
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QRegularExpressionValidator                      # pylint: disable=no-name-in-module
@@ -24,7 +25,9 @@ class DocTypeEditor(QDialog):
     """
     super().__init__()
     self.comm = comm
+    self.comm.backendThread.worker.beSendSQL.connect(self.onGetData)
     self.docType = docType
+    self.shortcuts:list[list[str,str]] = []
     self.callback = callback
     mainL = QVBoxLayout(self)
     _, self.mainForm = widgetAndLayoutForm(mainL)
@@ -34,19 +37,25 @@ class DocTypeEditor(QDialog):
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
     # initialize communication if needed
+    self.comm.uiSendSQL.emit([{'type':'get_df',
+                               'cmd':'SELECT docType, shortcut from docTypes'}])
     if self.docType in self.comm.docTypesTitles:
-      self.comm.backendThread.worker.beSendDataHierarchyAll.connect(self.onGetData)
-      self.comm.uiRequestDataHierarchy.emit(self.docType)
+      self.comm.uiSendSQL.emit([{'type':'get_df',
+                                 'cmd':f'SELECT * from docTypes WHERE docType=="{self.docType}"'}])
       self.initialData = None
     else:
       self.initialData = ['']*6
       self.paint()
 
 
-  @Slot(list)
-  def onGetData(self, items) -> None:
-    self.initialData = items
-    self.paint()
+  @Slot(str, pd.DataFrame)
+  def onGetData(self, cmd, data) -> None:
+    if cmd == 'SELECT * from docTypes WHERE docType=="instrument"':
+      self.initialData = data.values.tolist()[0]
+      self.paint()
+    if cmd == 'SELECT docType, shortcut from docTypes':
+      self.shortcuts = [j for i,j in data.values.tolist() if len(j)==1 and i!=self.docType]
+
 
   def paint(self) -> None:
     self.row1 = QLineEdit(self.initialData[0])
@@ -82,8 +91,7 @@ class DocTypeEditor(QDialog):
     if self.docType.startswith('x'):
       self.row4.setDisabled(True)
     else:
-      data = [i[1] for i in self.comm.backend.db.dataHierarchy('','shortcut') if not i[0].startswith('x')]
-      dataSet = set(string.ascii_lowercase).difference(data)
+      dataSet = set(string.ascii_lowercase).difference(self.shortcuts)
       self.row4.setValidator(QRegularExpressionValidator(f'^[{"".join(dataSet)}]$'))
     self.mainForm.addRow(QLabel('Shortcut '), self.row4)
 
@@ -99,28 +107,28 @@ class DocTypeEditor(QDialog):
       self.reject()
     else:
       label    = self.row2.text()
-      if not label or label in [v1 for _,v1 in self.db.dataHierarchy('','title')]:
+      if not label or label in [v['title'] for _,v in self.comm.docTypesTitles.items()]:
         label = 'Random_'+''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
       icon     = '' if self.docType.startswith('x') else self.comboIcon.currentText()
       shortcut = '' if self.docType.startswith('x') else self.row4.text()
       if self.docType:                                                               # update existing docType
-        self.comm.backend.db.cursor.execute(f"UPDATE docTypes SET title='{label}', shortcut='{shortcut}', "\
-                                            f"icon='{icon}' WHERE docType = '{self.docType}'")
+        cmd = f"UPDATE docTypes SET title='{label}', shortcut='{shortcut}', icon='{icon}' WHERE docType = "\
+              f"'{self.docType}'"
+        self.comm.uiSendSQL.emit([{'type':'one',  'cmd':cmd}])
       else:                                                  # create new docType, with default schema entries
         docType = self.row1.text()
-        if not docType or docType in self.comm.backend.db.dataHierarchy('',''):
+        if not docType or docType in self.comm.docTypesTitles:
           showMessage(self, 'Error', 'DocType name is not valid or already exists', 'Critical')
           return
-        self.comm.backend.db.cursor.execute('INSERT INTO docTypes VALUES (?, ?, ?, ?, ?, ?)',
-                                            [docType, '', label, icon, shortcut, ''])
-        self.comm.backend.db.cursor.execute('INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
-                                            [docType, '', '0', 'name', '', '', ''])
-        self.comm.backend.db.cursor.execute('INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
-                                            [docType, '', '1', 'tags', '', '', ''])
-        self.comm.backend.db.cursor.execute('INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
-                                            [docType, '', '2', 'comment', '', '', ''])
+        self.comm.uiSendSQL.emit([{'type':'one', 'cmd':'INSERT INTO docTypes VALUES (?, ?, ?, ?, ?, ?)',
+                                   'list':[docType, '', label, icon, shortcut, '']},
+                                  {'type':'one', 'cmd':'INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
+                                   'list':[docType, '', '0', 'name', '', '', '']},
+                                  {'type':'one', 'cmd':'INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
+                                   'list':[docType, '', '1', 'tags', '', '', '']},
+                                  {'type':'one', 'cmd':'INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
+                                   'list':[docType, '', '2', 'comment', '', '', '']}])
         if self.callback is not None:
           self.callback(label)
-      self.comm.backend.db.connection.commit()
       self.accept()
     return

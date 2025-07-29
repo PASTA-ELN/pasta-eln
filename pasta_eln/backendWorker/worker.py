@@ -195,16 +195,13 @@ class BackendWorker(QObject):
       elif task['type']=='many':
         self.backend.db.cursor.executemany(task['cmd'], task['list'])
       elif task['type']=='df':
-        task['df'].to_sql(task['table'], self.db.connection, if_exists='append', index=False, dtype='str')
+        task['df'].to_sql(task['table'], self.backend.db.connection, if_exists='append', index=False, dtype='str')
+      elif task['type']=='get_df':
+        df = pd.read_sql_query(task['cmd'], self.backend.db.connection).fillna('')
+        self.beSendSQL.emit(task['cmd'], df)
       else:
         print("**ERROR unknown task command", task)
       self.backend.db.connection.commit()
-
-
-  @Slot(str,str)
-  def returnSQL(self, task, cmd):
-    if task=='df':
-      self.beSendSQL.emit(cmd, pd.read_sql_query(cmd, self.backend.db.connection).fillna(''))
 
 
   def exit(self) -> None:
