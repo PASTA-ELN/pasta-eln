@@ -3,8 +3,8 @@ import logging
 import re
 from enum import Enum
 from pathlib import Path
-import pandas as pd
 from typing import Any
+import pandas as pd
 from PySide6.QtCore import Qt, Slot                                        # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QScrollArea, QTextEdit, QLayout, QLabel      # pylint: disable=no-name-in-module
 from ..backendWorker.worker import Task
@@ -65,12 +65,20 @@ class Details(QScrollArea):
 
   @Slot(str)
   def change(self, docID:str) -> None:
+    """ What happens when user clicks to change to a different document
+    Args:
+      docID (str): document-id
+    """
     self.docID = docID
     self.comm.uiRequestDoc.emit(self.docID)
 
 
   @Slot(dict)
   def onGetData(self, doc:dict[str,Any]) -> None:
+    """ Function to handle the received data
+    Args:
+      doc (dict): dictionary containing the document data
+    """
     if 'id' in doc and doc['id'] == self.docID:
       self.doc = doc
       self.paint()
@@ -83,6 +91,7 @@ class Details(QScrollArea):
 
     Args:
       data (pd.DataFrame): DataFrame containing table
+      docType (str): document type
     """
     data = data[['id','name']]
     data['type']= docType
@@ -91,12 +100,7 @@ class Details(QScrollArea):
 
   @Slot()
   def paint(self) -> None:
-    """
-    What happens when details should change
-
-    Args:
-      docID (str): document-id; '' string=draw nothing; 'redraw' implies redraw
-    """
+    """ What happens when details should change """
     if self.isHidden():
       return
     # Delete old widgets from layout

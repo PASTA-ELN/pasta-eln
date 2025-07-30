@@ -1,17 +1,12 @@
 """ Upload for Zenodo and Dataverse """
 import json
-import tempfile
-from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any
 import qtawesome as qta
 from PySide6.QtCore import Qt, Slot                                              # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QCheckBox, QDialog, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
-from ...backendWorker.inputOutput import exportELN
 from ...backendWorker.worker import Task
-from ...backendWorker.dataverse import DataverseClient
-from ...backendWorker.zenodo import ZenodoClient
 from ...fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
 from ..guiStyle import Label, TextButton, widgetAndLayout, widgetAndLayoutGrid
@@ -36,6 +31,14 @@ class UploadGUI(QDialog):
 
     # GUI elements
     self.mainL = QVBoxLayout(self)
+    self.leTitle                       = QLineEdit()
+    self.leDescription                 = QLineEdit()
+    self.leKeywords                    = QLineEdit()
+    self.leCategory                    = QLineEdit()
+    self.leAdditional                  = QLineEdit()
+    self.allDocTypes:list[list[str]]   = []
+    self.allCheckboxes:list[QCheckBox] = []
+
     if not self.comm.projectID:
       showMessage(self, 'Error', 'You have to have an open project to upload', 'Critical')
       return
@@ -48,7 +51,7 @@ class UploadGUI(QDialog):
     Callback function to handle the received data
 
     Args:
-      data (pd.DataFrame): DataFrame containing table
+      doc (dict): project document
     """
     if self.comm.projectID and doc['id']==self.comm.projectID:
       self.docProject = doc
@@ -56,6 +59,7 @@ class UploadGUI(QDialog):
 
 
   def paint(self) -> None:
+    """ Paint the dialog with the current data """
     if not self.docProject:
       return
     Label('Upload to a repository', 'h1', self.mainL)

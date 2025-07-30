@@ -123,6 +123,11 @@ class Table(QWidget):
 
   @Slot(str, str)
   def changeTable(self, docType:str, projID:str) -> None:
+    """ What happens when user clicks to change doc-type
+    Args:
+      docType (str): document type
+      projID (str): project id
+    """
     if docType:
       self.docType = docType
     if projID:
@@ -138,6 +143,7 @@ class Table(QWidget):
 
     Args:
       data (pd.DataFrame): DataFrame containing table
+      docType (str): document type
     """
     print('got table data', docType)
     if docType == self.docType:

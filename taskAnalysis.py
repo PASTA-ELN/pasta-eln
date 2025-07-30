@@ -1,5 +1,7 @@
 import subprocess, json
 
+def rightAlign():
+    with
 target = {}
 toUpdate = []
 result1 = subprocess.run(['grep', '-r','uiRequestTask', 'pasta_eln'], capture_output=True, text=True)

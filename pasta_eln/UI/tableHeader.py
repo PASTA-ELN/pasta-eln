@@ -61,6 +61,11 @@ class TableHeader(QDialog):
 
   @Slot(str, pd.DataFrame)
   def onGetData(self, cmd:str, data:pd.DataFrame) -> None:
+    """ Callback function to handle the received data
+    Args:
+      cmd (str): command that was sent
+      data (pd.DataFrame): DataFrame containing table
+    """
     if cmd == f'SELECT view FROM docTypes WHERE docType=="{self.docType}"':
       self.selectedList = data.values[0][0].split(',')
       self.selectedList = [i[1:] if i[0]=='.' else i for i in self.selectedList]
@@ -69,6 +74,7 @@ class TableHeader(QDialog):
 
 
   def paint(self) -> None:
+    """ Paint the dialog with the current data """
     self.choicesW.clear()
     self.selectW.clear()
     self.choicesW.addItems(list(self.allSet.difference(self.selectedList)))

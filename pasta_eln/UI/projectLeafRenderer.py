@@ -134,6 +134,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
 
   @Slot(str)
   def onGetDoc(self, doc:dict[str,Any]) -> None:
+    """ Slot to handle the document received from backend
+    Args:
+      doc (dict): document
+    """
     guiStyle = self.comm.configuration['GUI']
     if not doc or doc['id'] not in self.data:
       return

@@ -69,6 +69,7 @@ class ImageGallery(QWidget):
     self.comm = comm
     self.comm.backendThread.worker.beSendDoc.connect(self.onGetData)
     self.data:dict[str,tuple[int,int]] = {}
+    self.model:QStandardItemModel | None = None
     layout = QVBoxLayout(self)
     scrollArea = QScrollArea(self)
     scrollArea.setWidgetResizable(True)
@@ -110,8 +111,7 @@ class ImageGallery(QWidget):
     and display images. It handles both SVG and raster image formats (like PNG, JPG)
 
     Args:
-      model: The data model containing information about the images to display
-             The first column of each row is expected to have an 'accessibleText'
+      doc (dict[str, Any]): A dictionary containing the document data.
     """
     if 'id' in doc and doc['id'] in self.data:
       if not doc or 'image' not in doc:

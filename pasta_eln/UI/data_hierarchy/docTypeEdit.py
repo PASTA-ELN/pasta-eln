@@ -50,6 +50,11 @@ class DocTypeEditor(QDialog):
 
   @Slot(str, pd.DataFrame)
   def onGetData(self, cmd:str, data:pd.DataFrame) -> None:
+    """ Handle data received from backend worker
+    Args:
+      cmd (str): command that was sent to backend
+      data (pd.DataFrame): DataFrame containing the data
+    """
     if cmd == 'SELECT * from docTypes WHERE docType=="instrument"':
       self.initialData = data.values.tolist()[0]
       self.paint()
@@ -58,6 +63,7 @@ class DocTypeEditor(QDialog):
 
 
   def paint(self) -> None:
+    """ Paint the dialog with the initial data """
     if self.initialData is None:
       return
     self.row1 = QLineEdit(self.initialData[0])

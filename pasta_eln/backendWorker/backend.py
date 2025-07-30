@@ -44,7 +44,8 @@ class Backend(CLI_Mixin):
     initialize or reinitialize server and define database
 
     Args:
-        defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
+        configuration (dict): configuration dictionary with database and other settings
+        projectGroupName (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
     """
     self.configuration = configuration
     self.projectGroup = projectGroupName

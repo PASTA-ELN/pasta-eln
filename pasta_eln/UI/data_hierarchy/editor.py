@@ -85,6 +85,11 @@ class SchemeEditor(QDialog):
 
   @Slot(str, pd.DataFrame)
   def onGetData(self, cmd:str, data:pd.DataFrame) -> None:
+    """ Handle data received from backend worker
+    Args:
+      cmd (str): command that was sent
+      data (pd.DataFrame): DataFrame containing the data
+    """
     if cmd==self.cmd:
       self.df = data
       self.paint()
@@ -110,6 +115,7 @@ class SchemeEditor(QDialog):
     self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':self.cmd}])
 
   def paint(self) -> None:
+    """ Paint the dialog with the data """
     df = self.df.rename(columns={'long':'description'})
     df['item list'] = df['list'].apply(lambda x: '' if ',' in x else x)
     df['free list'] = df['list'].apply(lambda x: x  if ',' in x else '')

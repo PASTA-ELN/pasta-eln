@@ -4,9 +4,9 @@ import json
 import logging
 import re
 from enum import Enum
-import pandas as pd
 from pathlib import Path
 from typing import Any, Union
+import pandas as pd
 from PySide6.QtCore import QSize, Qt, QTimer, Slot                               # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator                      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox,# pylint: disable=no-name-in-module
@@ -53,6 +53,21 @@ class Form(QDialog):
     self.keyValueListL  = QLayout()
     self.keyValueLabel  = QLabel()
     self.projectComboBox= QComboBox()
+    self.flagNewDoc                           = True
+    self.skipKeys  = ['image','metaVendor','metaUser','shasum','._projectID','._ids','.name','.elnIdentifier']
+    self.allHidden                            = False
+    self.keyLabels: list[QLineEdit]           = []
+    self.values:    list[QLineEdit]           = []
+    self.imageL                               = QLayout()
+    self.dataHierarchyNode:dict[str,Any]      = {}
+    self.tabW                                 = QTabWidget()                    # has count=0 if not connected
+    self.formsL:list[QLayout]                 = []
+    self.allUserElements:list[tuple[str,str]] = []
+    self.docTypeComboBox                      = QComboBox()
+    self.visibilityText                       = QLabel()
+    self.btnAddKWPairs                        = QWidget()
+    self.saveBtn                              = QWidget()
+    self.checkThreadTimer                     = QTimer(self)
     self.comm.uiRequestTable.emit('_tags_','', True)
 
 
@@ -85,6 +100,7 @@ class Form(QDialog):
 
     Args:
       data (pd.DataFrame):  DataFrame containing tags
+      docType (str): document type
     """
     print('form tags', docType)
     self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTags)
@@ -105,11 +121,8 @@ class Form(QDialog):
       self.doc['name'] = ''
     else:
       self.setWindowTitle('Edit information')
-    self.skipKeys = ['image','metaVendor','metaUser','shasum','._projectID','._ids','.name','.elnIdentifier']
     self.allHidden = False
     self.doc = minimalDocInForm | self.doc
-    self.keyLabels: list[QLineEdit] = []
-    self.values:    list[QLineEdit] = []
 
     # GUI elements
     mainL = QVBoxLayout(self)
@@ -162,15 +175,12 @@ class Form(QDialog):
     # END TEMPORARY CHECK
     groups = {i['class'] for i in self.dataHierarchyNode}.difference({'metaVendor','metaUser'})
     # create tabs or not: depending on the number of groups
-    self.tabW = QTabWidget()                                                    # has count=0 if not connected
     if len(groups)>1:
       self.tabW.setParent(self)
       self.tabW.tabBarClicked.connect(self.changeTabs)
       splitter.addWidget(self.tabW)
 
     # create forms by looping
-    self.formsL = []
-    self.allUserElements:list[tuple[str,str]] = []
     for group in groups:
       if len(groups)==1:
         _, formL = widgetAndLayoutForm(splitter, 's')
@@ -279,8 +289,8 @@ class Form(QDialog):
               getattr(self, elementName).addItems(dataHierarchyItem[0]['list'].split(','))
               getattr(self, elementName).setCurrentText(value)
             else:                                                                        #choice among docType
-              listDocType = dataHierarchyItem[0]['list']
               getattr(self, elementName).addItem('- no link -', userData='')
+              # listDocType = dataHierarchyItem[0]['list']
               # for _, line in []: #TODO self.db.getView(f'viewDocType/{listDocType}').iterrows():
               #   getattr(self, elementName).addItem(line['name'], userData=line['id'])
               #   if line['id'] == value:
@@ -330,7 +340,6 @@ class Form(QDialog):
           del self.doc['_projectID']
         # docType change
         if allowDocTypeChange:                                                      #if not-new and non-folder
-          self.docTypeComboBox = QComboBox()
           self.docTypeComboBox.addItem(label, userData='')
           for key1, value1 in self.comm.docTypesTitles.items():
             if key1[0]!='x':
@@ -387,7 +396,6 @@ class Form(QDialog):
           del content[self.doc.get('id', '')]
       with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
         fTemp.write(json.dumps(content))
-    self.checkThreadTimer = QTimer(self)
     self.checkThreadTimer.setInterval(1*60*1000)                                                       # 1 min
     self.checkThreadTimer.timeout.connect(self.autosave)
     self.checkThreadTimer.start()

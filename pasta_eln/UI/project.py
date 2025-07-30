@@ -1,7 +1,6 @@
 """ Widget that shows the content of project in a electronic labnotebook """
 import logging
 from enum import Enum
-from pathlib import Path
 from typing import Any, Optional
 import pandas as pd
 from anytree import Node, PreOrderIter
@@ -52,7 +51,8 @@ class Project(QWidget):
     Callback function to handle the received data
 
     Args:
-      data (pd.DataFrame): DataFrame containing table
+      hierarchy (Node): hierarchy of the project
+      doc (pd.DataFrame): DataFrame containing table
     """
     self.docProj = doc
     self.hierarchy = hierarchy
@@ -309,8 +309,8 @@ class Project(QWidget):
     Args:
       item (QStandardItem): item changed, new location
     """
-    verbose = False                                                                   # Convenient for testing
     return #TODO
+    # verbose = False                                                                   # Convenient for testing
     # if not item.data():
     #   return
     # stackOld = item.data()['hierStack'].split('/')[:-1]

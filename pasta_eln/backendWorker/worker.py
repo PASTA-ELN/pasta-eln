@@ -27,24 +27,24 @@ waitTimeBeforeSendingFirstMessage = 0.1 #ensure all UI elements are up
 
 class Task(Enum):
   """ Tasks that can be used in BackendWorker """
-  SCAN           = 1
-  EXTRACTOR_TEST = 2
-  SEND_ELAB      = 3
-  GET_ELAB       = 4
-  SMART_ELAB     = 5
-  SET_GUI        = 6
-  DELETE_DOC     = 7
-  EXPORT_ELN     = 8
-  IMPORT_ELN     = 9
-  CHECK_DB       = 10
-  EXTRACTOR_RERUN= 11
-  ADD_DOC        = 12
-  OPEN_EXTERNAL  = 13
-  DROP           = 14
-  HIDE_SHOW      = 15
+  ADD_DOC        = 1
+  EDIT_DOC       = 2
+  DROP           = 3
+  HIDE_SHOW      = 4
+  SET_GUI        = 5
+  DELETE_DOC     = 6
+  SCAN           = 7
+  SEND_TBL_COLUMN= 8
+  EXTRACTOR_TEST = 9
+  EXTRACTOR_RERUN= 10
+  SEND_ELAB      = 11
+  GET_ELAB       = 12
+  SMART_ELAB     = 13
+  EXPORT_ELN     = 14
+  IMPORT_ELN     = 15
   SEND_REPOSITORY= 16
-  SEND_TBL_COLUMN= 17
-  EDIT_DOC       = 18
+  CHECK_DB       = 17
+  OPEN_EXTERNAL  = 18
 
 
 class BackendWorker(QObject):
@@ -70,7 +70,11 @@ class BackendWorker(QObject):
 
   @Slot(dict,str)
   def initialize(self, configuration:dict[str,Any], projectGroupName:str) -> None:
-    """ Initialize the backend worker with the given configuration """
+    """ Initialize the backend worker with the given configuration
+    Args:
+      configuration (dict): Configuration dictionary with database and other settings
+      projectGroupName (str): Name of the project group to initialize
+    """
     self.backend = Backend(configuration, projectGroupName)
     docTypesTitlesIcons = {k:{'title':v} for k,v in self.backend.db.dataHierarchy('','title')}
     for k,v in self.backend.db.dataHierarchy('','icon'):
@@ -85,13 +89,21 @@ class BackendWorker(QObject):
 
   @Slot(str)
   def returnDataHierarchyRow(self, docType:str) -> None:
+    """ Return a data hierarchy row for the given docType
+    Args:
+      docType (str): Document type to return data hierarchy for
+    """
     if self.backend is not None:
       self.beSendDataHierarchyAll.emit(self.backend.db.dataHierarchy(docType, '*'))
 
 
   @Slot(str, str, bool)
   def returnTable(self, docType:str, projID:str, showAll:bool) -> None:
-    """ Return a view from the database """
+    """ Return a view from the database
+    Args:
+      docType (str): Document type to return
+      projID (str): Project ID to get the view for
+      showAll (bool): Whether to return all items or only the non-hidden ones"""
     if docType and self.backend is not None:
       if docType=='_tags_':
         path = 'viewIdentify/viewTags'
@@ -105,7 +117,11 @@ class BackendWorker(QObject):
 
   @Slot(str)
   def returnHierarchy(self, projID:str, showAll:bool) -> None:
-    """ Return a hierarchy"""
+    """ Return a hierarchy
+    Args:
+      projID (str): Project ID to get the hierarchy for
+      showAll (bool): Whether to return all items or only the non-hidden ones
+    """
     if self.backend is not None:
       hierarchy, error = self.backend.db.getHierarchy(projID, allItems=showAll)
       if error:
@@ -113,15 +129,23 @@ class BackendWorker(QObject):
       projDoc = self.backend.db.getDoc(projID)
       self.beSendHierarchy.emit(hierarchy, projDoc)
 
+
   @Slot(str, str)
   def returnDoc(self, docID:str) -> None:
+    """ Return a document from the database
+    Args:
+      docID (str): ID of the document to return
+      """
     if self.backend is not None:
       self.beSendDoc.emit(self.backend.db.getDoc(docID))
 
+
   @Slot(Task, dict)
   def returnTaskReport(self, task:Task, data:dict[str,Any]) -> None:
-    """
-    - extractorTest: subtask = fileName, subsubtask = output-style
+    """ Handle a rather complicated task request from the GUI and possibly return a report
+    Args:
+      task (Task): Task to perform
+      data (dict): Data required for the task
     """
     time.sleep(3)   #TODO remove
     if self.backend is not None:
@@ -141,9 +165,9 @@ class BackendWorker(QObject):
         self.backend.cwd = Path(self.backend.db.getDoc(parentID)['branch'][0]['path'])
         self.backend.addData(data['docType'], data['doc'], data['hierStack'])
       elif task is Task.EDIT_DOC      and set(data.keys())=={'doc'}:
-          doc = self.backend.db.getDoc(data['doc']['id'])
-          doc.update(data['doc'])
-          self.backend.editData(doc)
+        doc = self.backend.db.getDoc(data['doc']['id'])
+        doc.update(data['doc'])
+        self.backend.editData(doc)
       elif task is Task.DROP         and set(data.keys())=={'docID','files','folders'}:
         commonBase   = os.path.commonpath(data['folders']+[str(i) for i in data['files']])
         doc = self.backend.db.getDoc(data['docID'])
@@ -269,6 +293,13 @@ class BackendWorker(QObject):
 
   @Slot(list)
   def executeSQL(self, tasks:list[dict[str,Any]]) -> None:
+    """ Execute SQL commands in the backend database: fast change
+    Args:
+      tasks (list): List of tasks to execute, each task is a dict with keys:
+                    - type: 'one', 'many', 'df', or 'get_df'
+                    - cmd: SQL command to execute
+                    - list: List of parameters for the command (optional)
+    """
     if self.backend is None:
       return
     for task in tasks:

@@ -91,8 +91,14 @@ class Communicate(QObject):
     self.docTypesTitles = data
     self.docTypesChanged.emit()
 
+
   @Slot(str, list)
   def onGetDataHierarchyNode(self, docType:str, data:list[Any]) -> None:
+    """ Handle data received from backend worker
+    Args:
+      docType (str): document type
+      data (list): list of nodes in the hierarchy for this docType
+    """
     self.dataHierarchyNodes[docType] = data
 
 
@@ -110,7 +116,7 @@ class Communicate(QObject):
   def progressWindow(self, task:Task, _:dict[str,Any]) -> None:
     """ Show a progress window and execute function
     Args:
-      taskFunction (func): function to execute
+      task (Task): task to execute
     """
     if task in (Task.SET_GUI, Task.HIDE_SHOW, Task.ADD_DOC, Task.OPEN_EXTERNAL):
       return
@@ -130,5 +136,5 @@ class Communicate(QObject):
       self.waitDialog.setFixedHeight(100)
       self.waitDialog.progressBar.setRange(0, 0)  # Indeterminate
     else:
-      logging.error(f'Unknown task {task}')
+      logging.error('Unknown task %s', task)
     self.waitDialog.show()

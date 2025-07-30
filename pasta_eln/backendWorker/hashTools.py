@@ -1,3 +1,4 @@
+""" All hash tools for pasta-eln backend worker """
 import logging
 import os
 import traceback
@@ -96,5 +97,3 @@ def blob_hash(stream:BufferedReader, size:int) -> str:
   if nRead != size:
     raise ValueError(f'{stream.name}: expected {size} bytes, found {nRead} bytes')
   return hasher.hexdigest()
-
-

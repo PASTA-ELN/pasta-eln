@@ -11,7 +11,6 @@ from PySide6.QtWidgets import QDialog, QFileDialog, QTableWidget, QTableWidgetIt
 from ...miscTools import callAddOn
 from ..guiCommunicate import Communicate
 from ..guiStyle import TextButton, space, widgetAndLayout
-from ..messageDialog import showMessage
 from .key_delegate import KeyDelegate
 from .link_online_delegate import LinkOnlineDelegate
 from .lookup_delegate import LookupDelegate
@@ -78,6 +77,11 @@ class Editor(QDialog):
 
   @Slot(str, pd.DataFrame)
   def onGetData(self, cmd:str, data:pd.DataFrame) -> None:
+    """ Handle data received from backend worker
+    Args:
+      cmd (str): command that was sent
+      data (pd.DataFrame): DataFrame containing the data
+    """
     if cmd == 'SELECT docType, PURL, title FROM docTypes':
       data['defType'] = 'class'
       self.df0 = data.rename({'docType':'key', 'title':'long'}, axis=1)

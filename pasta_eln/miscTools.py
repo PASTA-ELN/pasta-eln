@@ -171,7 +171,7 @@ def callAddOn(name:str, comm:Any, content:Any, widget:QWidget) -> Any:
   """ Call add-ons
   Args:
     name (str): name of the add-on
-    backend (str): backend to be used
+    comm (Any): communication object
     content (Any): content to be consumed by addon, e.g. projectID, document
     widget: widget to be used
 
@@ -268,7 +268,7 @@ class MplCanvas(FigureCanvas):
       dpi (int): dots per inch
     """
     fig = Figure(figsize=(width, height), dpi=dpi)
-    axes = fig.add_subplot(111)
+    fig.add_subplot(111)
     super().__init__(fig)
 
 

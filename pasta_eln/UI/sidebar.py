@@ -10,7 +10,6 @@ from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QVBoxLayout, QWidget# pyl
 from ..backendWorker.worker import Task
 from .guiCommunicate import Communicate
 from .guiStyle import IconButton, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
-from .messageDialog import showMessage
 
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """

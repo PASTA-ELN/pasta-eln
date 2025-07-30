@@ -8,7 +8,7 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information
 import webbrowser
-from typing import Any, Union
+from typing import Union
 import qtawesome as qta
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize
 from PySide6.QtGui import QPainter
