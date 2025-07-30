@@ -77,7 +77,7 @@ class Editor(QDialog):
 
 
   @Slot(str, pd.DataFrame)
-  def onGetData(self, cmd, data) -> None:
+  def onGetData(self, cmd:str, data:pd.DataFrame) -> None:
     if cmd == 'SELECT docType, PURL, title FROM docTypes':
       data['defType'] = 'class'
       self.df0 = data.rename({'docType':'key', 'title':'long'}, axis=1)
@@ -113,7 +113,7 @@ class Editor(QDialog):
     elif command[0] is Command.Cancel:
       self.reject()
     elif command[0] is Command.Save:
-      tasks = []
+      tasks:list[dict[str,Any]] = []
       for _, row in self.getDataframe().iterrows():
         key, description, purl, dType = row.values
         if dType == 'class':

@@ -10,7 +10,8 @@ from typing import Any, Union
 from PySide6.QtCore import QSize, Qt, QTimer, Slot                               # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator                      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox,# pylint: disable=no-name-in-module
-                               QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget)
+                               QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget,
+                               QLayout)
 from ..backendWorker.sqlite import MAIN_ORDER
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
@@ -39,10 +40,19 @@ class Form(QDialog):
     self.doc:dict[str,Any] = copy.deepcopy(doc)
     self.tagsAllList: list[str] = []
     self.allDocIDs = self.doc['_ids'] if '_ids' in self.doc else self.doc['id']
-    self.allDocIDsRecieved = []
+    self.allDocIDsRecieved:list[str] = []
     print('Form doc:', self.doc)
     for docID in self.allDocIDs:
       self.comm.uiRequestDoc.emit(docID)
+    #self GUI elements
+    self.tagsBarMainW   = QWidget()
+    self.gradeChoices   = QComboBox()
+    self.tagsBarSubL    = QLayout()
+    self.otherChoices   = QComboBox()
+    self.keyValueListW  = QWidget()
+    self.keyValueListL  = QLayout()
+    self.keyValueLabel  = QLabel()
+    self.projectComboBox= QComboBox()
     self.comm.uiRequestTable.emit('_tags_','', True)
 
 
@@ -61,7 +71,6 @@ class Form(QDialog):
                            'metaUser', 'rev', 'name', 'dateCreated', 'dateModified', 'image', 'links', 'gui'})
       self.doc = {i:'' for i in intersection}
       self.doc['tags'] = []
-      self.doc['type'] = [self.docType]
     else:
       self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
       self.doc = doc
@@ -272,10 +281,10 @@ class Form(QDialog):
             else:                                                                        #choice among docType
               listDocType = dataHierarchyItem[0]['list']
               getattr(self, elementName).addItem('- no link -', userData='')
-              for _, line in []: #TODO self.db.getView(f'viewDocType/{listDocType}').iterrows():
-                getattr(self, elementName).addItem(line['name'], userData=line['id'])
-                if line['id'] == value:
-                  getattr(self, elementName).setCurrentIndex(getattr(self, elementName).count()-1)
+              # for _, line in []: #TODO self.db.getView(f'viewDocType/{listDocType}').iterrows():
+              #   getattr(self, elementName).addItem(line['name'], userData=line['id'])
+              #   if line['id'] == value:
+              #     getattr(self, elementName).setCurrentIndex(getattr(self, elementName).count()-1)
             self.allUserElements.append((key,'ComboBox'))
           else:                                                                                     #text area
             setattr(self, elementName, QLineEdit(value))
@@ -309,13 +318,13 @@ class Form(QDialog):
         if allowProjectChange:
           self.projectComboBox = QComboBox()
           self.projectComboBox.addItem(label, userData='')
-          for _, line in []: #TODO self.db.getView('viewDocType/x0').iterrows():
-            # add all projects but the one that is present
-            if 'branch' not in self.doc or \
-                all( len(branch['stack']) <= 0 or line['id'] != branch['stack'][0] for branch in self.doc['branch']):
-              self.projectComboBox.addItem(line['name'], userData=line['id'])
-              if self.doc.get('_projectID','') == line['id']:
-                self.projectComboBox.setCurrentIndex(self.projectComboBox.count()-1)
+          # for _, line in []: #TODO self.db.getView('viewDocType/x0').iterrows():
+          #   # add all projects but the one that is present
+          #   if 'branch' not in self.doc or \
+          #       all( len(branch['stack']) <= 0 or line['id'] != branch['stack'][0] for branch in self.doc['branch']):
+          #     self.projectComboBox.addItem(line['name'], userData=line['id'])
+          #     if self.doc.get('_projectID','') == line['id']:
+          #       self.projectComboBox.setCurrentIndex(self.projectComboBox.count()-1)
           formL.addRow(QLabel('Project'), self.projectComboBox)
         if '_projectID' in self.doc:
           del self.doc['_projectID']
@@ -323,9 +332,9 @@ class Form(QDialog):
         if allowDocTypeChange:                                                      #if not-new and non-folder
           self.docTypeComboBox = QComboBox()
           self.docTypeComboBox.addItem(label, userData='')
-          for key, value in self.comm.docTypesTitles.items():
-            if key[0]!='x':
-              self.docTypeComboBox.addItem(value['title'], userData=key)
+          for key1, value1 in self.comm.docTypesTitles.items():
+            if key1[0]!='x':
+              self.docTypeComboBox.addItem(value1['title'], userData=key1)
           self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
           formL.addRow(QLabel('Data type'), self.docTypeComboBox)
     if [i for i in self.doc if i.startswith('_')]:
@@ -489,7 +498,7 @@ class Form(QDialog):
     elif command[0] is Command.AUTO_COMMENT:
       try:
         text  = f'\n{"-"*20}\n'
-        text += callAddOn('form_auto', self.comm.backend, self.doc, self)
+        text += callAddOn('form_auto', self.comm, self.doc, self)
         text += f'\n{"-"*20}\n'
         self.textEdit_comment.insertPlainText(text)                               # type: ignore[attr-defined]
       except Exception:
@@ -572,36 +581,38 @@ class Form(QDialog):
         else:
           logging.error('Unknown value type %s %s',key, valueOld)
       # new key-value pairs
-      keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]# type: ignore[attr-defined]
+      keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]# type: ignore[union-attr]
       keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
       keyValueDict = {k:v for k,v in keyValueDict.items() if k}
       self.doc = keyValueDict | self.doc
       # ---- if project changed: only branch save; remaining data still needs saving
       newProjID = self.doc['branch'][0]['stack'] if 'branch' in self.doc else []
       if hasattr(self, 'projectComboBox') and self.projectComboBox.currentData() != '':
-        parentPath = self.db.getDoc(self.projectComboBox.currentData())['branch'][0]['path']
-        if '_ids' in self.doc:                                                                  # group update
-          for docID in self.doc['_ids']:
-            doc = self.db.getDoc(docID)
-            if doc['branch'][0]['stack']!=self.projectComboBox.currentData():         #only if project changed
-              if doc['branch'][0]['path'] is None:
-                newPath    = ''
-              else:
-                oldPath    = self.comm.basePath/doc['branch'][0]['path']
-                newPath = f'{parentPath}/{oldPath.name}'
-                oldPath.rename(self.comm.basePath/newPath)
-              self.db.updateBranch( doc['id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
-        elif 'branch' in self.doc:                                               # sequential or single update
-          if self.doc['branch'][0]['stack']!=self.projectComboBox.currentData():      #only if project changed
-            if self.doc['branch'][0]['path'] is None:
-              newPath    = ''
-            else:
-              oldPath = self.comm.basePath/self.doc['branch'][0]['path']
-              newPath = f'{parentPath}/{oldPath.name}'
-            self.db.updateBranch( self.doc['id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
-            self.doc['branch'][0] = {'stack':[self.projectComboBox.currentData()], 'path':newPath or None, 'child':9999, 'show':[True,True]}
-        else:
-          newProjID = [self.projectComboBox.currentData()]
+        #TODO
+        pass
+        # parentPath = self.db.getDoc(self.projectComboBox.currentData())['branch'][0]['path']
+        # if '_ids' in self.doc:                                                                  # group update
+        #   for docID in self.doc['_ids']:
+        #     doc = self.db.getDoc(docID)
+        #     if doc['branch'][0]['stack']!=self.projectComboBox.currentData():         #only if project changed
+        #       if doc['branch'][0]['path'] is None:
+        #         newPath    = ''
+        #       else:
+        #         oldPath    = self.comm.basePath/doc['branch'][0]['path']
+        #         newPath = f'{parentPath}/{oldPath.name}'
+        #         oldPath.rename(self.comm.basePath/newPath)
+        #       self.db.updateBranch( doc['id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
+        # elif 'branch' in self.doc:                                               # sequential or single update
+        #   if self.doc['branch'][0]['stack']!=self.projectComboBox.currentData():      #only if project changed
+        #     if self.doc['branch'][0]['path'] is None:
+        #       newPath    = ''
+        #     else:
+        #       oldPath = self.comm.basePath/self.doc['branch'][0]['path']
+        #       newPath = f'{parentPath}/{oldPath.name}'
+        #     self.db.updateBranch( self.doc['id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
+        #     self.doc['branch'][0] = {'stack':[self.projectComboBox.currentData()], 'path':newPath or None, 'child':9999, 'show':[True,True]}
+        # else:
+        #   newProjID = [self.projectComboBox.currentData()]
       # ---- if docType changed: save; no further save to db required ----
       if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
         self.doc['type'] = [self.docTypeComboBox.currentData()]
@@ -611,10 +622,7 @@ class Form(QDialog):
         if 'name' in self.doc:
           del self.doc['name']
         self.doc = {k:v for k,v in self.doc.items() if v}                             # filter out empty items
-        for docID in self.doc.pop('_ids'):
-          doc = self.db.getDoc(docID)
-          doc.update( self.doc )
-          self.comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':doc})
+        self.comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':self.doc})
       elif 'id' in self.doc:                                                          # default update on item
         self.comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':self.doc})
       else:                                                                               # create new dataset
@@ -640,7 +648,7 @@ class Form(QDialog):
       self.keyLabels[-1].setValidator(QRegularExpressionValidator('[a-zA-Z0-9]\\S+'))
       self.values.append(QLineEdit(''))
       self.values[-1].setPlaceholderText('value')
-      self.keyValueListL.addRow(self.keyLabels[-1], self.values[-1])
+      self.keyValueListL.addRow(self.keyLabels[-1], self.values[-1])              # type: ignore[attr-defined]
     elif command[0] is Command.FORM_SHOW_DOC:
       doc = copy.deepcopy(self.doc)
       if 'image' in doc:
@@ -697,11 +705,11 @@ class Form(QDialog):
     """
     #update tags
     for i in reversed(range(self.tagsBarSubL.count())):
-      self.tagsBarSubL.itemAt(i).widget().setParent(None)
+      self.tagsBarSubL.itemAt(i).widget().setParent(None)                           # type: ignore[union-attr]
     for tag in (self.doc['tags'] if 'tags' in self.doc else []):
       if not re.match(r'^_\d$', tag):
         Label(tag, 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
-    self.tagsBarSubL.addWidget(QWidget(), stretch=2)
+    self.tagsBarSubL.addWidget(QWidget(), stretch=2)                                   #type: ignore[call-arg]
     #update choices in combobox
     tagsSet = {i for i in self.tagsAllList if i[0]!='_'}
     newChoicesList = ['']+list(tagsSet.difference([i for i in self.doc['tags'] if i[0]!='_']))

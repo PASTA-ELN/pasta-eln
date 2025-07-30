@@ -59,7 +59,7 @@ class Table(QWidget):
     self.subDocTypeL.hide()
     self.subDocType=QComboBox(self)
     self.subDocType.setMinimumWidth(200)
-    self.subDocType.currentTextChanged.connect(lambda dt: self.change(dt, self.projID))
+    self.subDocType.currentTextChanged.connect(lambda dt: self.changeTable(dt, self.comm.projectID))
     self.subDocType.hide()
     headerL.addWidget(self.subDocType)
     headerL.addStretch(1)
@@ -279,8 +279,8 @@ class Table(QWidget):
       command (list): list of commands
     """
     if command[0] is Command.ADD_ITEM:
-      self.comm.formDoc.emit({'type':[self.docType], '_projectID':self.projID})
-      self.comm.changeTable.emit(self.docType, self.projID)
+      self.comm.formDoc.emit({'type':[self.docType], '_projectID':self.comm.projectID})
+      self.comm.changeTable.emit(self.docType, self.comm.projectID)
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')
     elif command[0] is Command.GROUP_EDIT:
@@ -298,7 +298,7 @@ class Table(QWidget):
           self.comm.formDoc.emit({'id':docID})
         if self.stopSequentialEdit:
           break
-      self.comm.changeTable.emit(self.docType, self.projID)
+      self.comm.changeTable.emit(self.docType, self.comm.projectID)
     elif command[0] is Command.DELETE:
       ret = None
       for row in range(self.models[-1].rowCount()):
@@ -352,7 +352,7 @@ class Table(QWidget):
           self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':docID})
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')
-      self.change('','')                                                                        # redraw table
+      self.paint()
     elif command[0] is Command.TOGGLE_SELECTION:
       for row in range(self.models[-1].rowCount()):
         item,_ = self.itemFromRow(row)
@@ -362,7 +362,7 @@ class Table(QWidget):
           item.setCheckState(Qt.CheckState.Checked)
     elif command[0] is Command.SHOW_ALL:
       self.showAll = not self.showAll
-      self.change('','')                                                                        # redraw table
+      self.paint()
     elif command[0] is Command.RERUN_EXTRACTORS:
       docIDs = []
       for row in range(self.models[-1].rowCount()):
@@ -372,7 +372,7 @@ class Table(QWidget):
       self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs':docIDs,'recipe':''})
     elif command[0] is Command.TOGGLE_GALLERY:
       self.flagGallery = not self.flagGallery
-      self.change('','')                                                                # redraw table/gallery
+      self.paint()
     elif command[0] is Command.ADD_FILTER:
       # gui
       _, rowL = widgetAndLayout('H', self.filterL, 'm', 'xl', '0', 'xl')

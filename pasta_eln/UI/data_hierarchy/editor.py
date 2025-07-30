@@ -84,7 +84,7 @@ class SchemeEditor(QDialog):
 
 
   @Slot(str, pd.DataFrame)
-  def onGetData(self, cmd, data):
+  def onGetData(self, cmd:str, data:pd.DataFrame) -> None:
     if cmd==self.cmd:
       self.df = data
       self.paint()
@@ -109,7 +109,7 @@ class SchemeEditor(QDialog):
           f'WHERE docTypeSchema.docType=="{self.docType}"'
     self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':self.cmd}])
 
-  def paint(self):
+  def paint(self) -> None:
     df = self.df.rename(columns={'long':'description'})
     df['item list'] = df['list'].apply(lambda x: '' if ',' in x else x)
     df['free list'] = df['list'].apply(lambda x: x  if ',' in x else '')

@@ -67,14 +67,15 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
     else:
       imageType = 'svg'
     saveFilePath = widget.comm.basePath/filePath.parent/f'{filePath.stem}_PastaExport.{imageType.lower()}'# type: ignore[attr-defined]
-    path = widget.doc['branch'][0]['path']                                       # type: ignore[attr-defined]
+    path = widget.doc['branch'][0]['path']                                        # type: ignore[attr-defined]
     if not path.startswith('http'):
-      path = (widget.comm.basePath/path).as_posix()                       # type: ignore[attr-defined]
-    widget.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST, {'fileName':path, 'recipe':'/'.join(widget.doc['type']), 'saveFig':str(saveFilePath), 'style':''})
+      path = (widget.comm.basePath/path).as_posix()                               # type: ignore[attr-defined]
+    widget.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST,{'fileName':path,'recipe':'/'.join(widget.doc['type']),# type: ignore[attr-defined]
+                                                        'saveFig':str(saveFilePath), 'style':''})
   elif command[0] is CommandMenu.HIDE:
-    widget.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':widget.docID})       # type: ignore[attr-defined]
+    widget.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':widget.docID})        # type: ignore[attr-defined]
   elif command[0] is CommandMenu.CHANGE_EXTRACTOR:
-    widget.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs':[widget.doc['id']],'recipe':command[1]})
+    widget.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs':[widget.doc['id']],'recipe':command[1]})# type: ignore[attr-defined]
   else:
     logging.error('Command not found in _contextMenu %s', command)
   return True

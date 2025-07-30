@@ -27,7 +27,7 @@ class TableHeader(QDialog):
     self.comm = comm
     self.comm.backendThread.worker.beSendSQL.connect(self.onGetData)
     self.docType = docType
-    self.selectedList = []
+    self.selectedList:list[str] = []
     self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':f'SELECT view FROM docTypes WHERE docType=="{docType}"'}])
     self.allSet = set(MAIN_ORDER)
     #clean it
@@ -60,7 +60,7 @@ class TableHeader(QDialog):
 
 
   @Slot(str, pd.DataFrame)
-  def onGetData(self, cmd, data) -> None:
+  def onGetData(self, cmd:str, data:pd.DataFrame) -> None:
     if cmd == f'SELECT view FROM docTypes WHERE docType=="{self.docType}"':
       self.selectedList = data.values[0][0].split(',')
       self.selectedList = [i[1:] if i[0]=='.' else i for i in self.selectedList]
@@ -119,7 +119,7 @@ class TableHeader(QDialog):
       self.reject()
     elif btn.text().endswith('Save'):
       newList = [i if i in MAIN_ORDER+['tags','qrCodes'] or '.' in i else f'.{i}' for i in self.selectedList]
-      self.comm.uiRequestTask(Task.SEND_TBL_COLUMN, {'docType':self.docType, 'newList':newList})
+      self.comm.uiRequestTask.emit(Task.SEND_TBL_COLUMN, {'docType':self.docType, 'newList':newList})
     elif btn.text().endswith('Help'):
       showMessage(self, 'Help on individual entry', tableHeaderHelp)
     else:

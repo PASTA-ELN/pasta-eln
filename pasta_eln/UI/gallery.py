@@ -1,5 +1,6 @@
 """ Displays a scrollable grid of images (PNG, JPG, SVG) """
 import logging
+from typing import Any
 from PySide6.QtCore import QByteArray, Qt, Signal, Slot
 from PySide6.QtGui import QImage, QMouseEvent, QPixmap, QStandardItemModel
 from PySide6.QtSvgWidgets import QSvgWidget
@@ -67,7 +68,7 @@ class ImageGallery(QWidget):
     super().__init__()
     self.comm = comm
     self.comm.backendThread.worker.beSendDoc.connect(self.onGetData)
-    self.data = {}
+    self.data:dict[str,tuple[int,int]] = {}
     layout = QVBoxLayout(self)
     scrollArea = QScrollArea(self)
     scrollArea.setWidgetResizable(True)
@@ -101,7 +102,7 @@ class ImageGallery(QWidget):
 
 
   @Slot(dict)
-  def onGetData(self, doc) -> None:
+  def onGetData(self, doc:dict[str,Any]) -> None:
     """
     Populates or updates the image grid based on the provided model
 

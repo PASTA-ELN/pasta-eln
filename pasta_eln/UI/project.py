@@ -311,91 +311,91 @@ class Project(QWidget):
     """
     verbose = False                                                                   # Convenient for testing
     return #TODO
-    if not item.data():
-      return
-    stackOld = item.data()['hierStack'].split('/')[:-1]
-    docID    = item.data()['hierStack'].split('/')[-1]
-    doc      = db.getDoc(docID)
-    if 'branch' not in doc or not stackOld:                  #skip everything if project or not contain branch
-      return
-    branchOldList= [i for i in doc['branch'] if i['stack']==stackOld]
-    if len(branchOldList)!=1:
-      self.change('','')
-      return
-    branchOld = branchOldList[0]
-    childOld = branchOld['child']
-    #gather new information
-    stackNew = []                                                                             #create reversed
-    currentItem = item
-    while currentItem.parent() is not None:
-      currentItem = currentItem.parent()
-      docIDj = currentItem.data()['hierStack'].split('/')[-1]
-      stackNew.append(docIDj)
-    stackNew = [self.projID] + stackNew[::-1]                                      #add project id and reverse
-    childNew = item.row()
-    if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
-      parentDir = Path(db.getDoc(stackNew[-1])['branch'][0]['path'])
-      if doc['type'][0][0]=='x':
-        dirNameNew= createDirName(doc, childNew, parentDir)# create path name: do not create directory on disk yet
-      else:
-        dirNameNew= Path(branchOld['path']).name                                                # use old name
-      pathNew = f'{parentDir}/{dirNameNew}'
-    else:
-      pathNew = branchOld['path']
-    siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackNew))      #sorted by docID
-    siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(stackNew)+1]
-    childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
-    siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]    #sorted by childNum 1st and docID 2nd
-    logging.debug('Change project: docID %s | old stack %s child %i | new stack %s child %i path %s'\
-                  , docID, str(stackOld), childOld, str(stackNew), childNew, pathNew)
-    if stackOld==stackNew and childOld==childNew:                                #nothing changed, just redraw
-      return
-    # --- CHANGE ----
-    # change new siblings
-    if verbose:
-      print('\n=============================================\nStep 1: before new siblings')
-      print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
-    for idx, line in reversed(list(enumerate(siblingsNew))):
-      shift = 1 if idx>=childNew else 0      #shift those before the insertion point by 0 and those after by 1
-      if line['id']==docID or line['value'][0]==idx+shift:    #ignore this id & those that are correct already
-        continue
-      if verbose:
-        print(f'  {line["id"]}: move: {idx} {shift}')
-      db.updateBranch(docID=line['id'], branch=line['value'][4], child=idx+shift)
-    if verbose:
-      siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackNew))    #sorted by docID
-      siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(stackNew)+1]
-      childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
-      siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]  #sorted by childNum 1st and docID 2nd
-      print('Step 2: after new siblings')
-      print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
-    # change item in question
-    if verbose:
-      print(f'  manual move {childOld} -> {childNew}: {docID}')
-    db.updateBranch(docID=docID, branch=-99, stack=stackNew, path=pathNew, child=childNew, stackOld=stackOld+[docID])
-    item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID])})
-    # change old siblings
-    siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackOld))      #sorted by docID
-    siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(stackOld)+1]
-    childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
-    siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]    #sorted by childNum 1st and docID 2nd
-    if verbose:
-      print('Step 3: before old siblings')
-      print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
-    for idx, line in enumerate(siblingsOld):
-      if line['value'][0]==idx:                      #ignore id in question and those that are correct already
-        continue
-      if verbose:
-        print(f'  {line["id"]}: move: {idx} {shift}')
-      db.updateBranch(  docID=line['id'], branch=line['value'][4], child=idx)
-    if verbose:
-      siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackOld))    #sorted by docID
-      siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(stackOld)+1]
-      childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
-      siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]  #sorted by childNum 1st and docID 2nd
-      print('Step 4: end of function')
-      print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
-    return
+    # if not item.data():
+    #   return
+    # stackOld = item.data()['hierStack'].split('/')[:-1]
+    # docID    = item.data()['hierStack'].split('/')[-1]
+    # doc      = db.getDoc(docID)
+    # if 'branch' not in doc or not stackOld:                  #skip everything if project or not contain branch
+    #   return
+    # branchOldList= [i for i in doc['branch'] if i['stack']==stackOld]
+    # if len(branchOldList)!=1:
+    #   self.change('','')
+    #   return
+    # branchOld = branchOldList[0]
+    # childOld = branchOld['child']
+    # #gather new information
+    # stackNew = []                                                                             #create reversed
+    # currentItem = item
+    # while currentItem.parent() is not None:
+    #   currentItem = currentItem.parent()
+    #   docIDj = currentItem.data()['hierStack'].split('/')[-1]
+    #   stackNew.append(docIDj)
+    # stackNew = [self.projID] + stackNew[::-1]                                      #add project id and reverse
+    # childNew = item.row()
+    # if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
+    #   parentDir = Path(db.getDoc(stackNew[-1])['branch'][0]['path'])
+    #   if doc['type'][0][0]=='x':
+    #     dirNameNew= createDirName(doc, childNew, parentDir)# create path name: do not create directory on disk yet
+    #   else:
+    #     dirNameNew= Path(branchOld['path']).name                                                # use old name
+    #   pathNew = f'{parentDir}/{dirNameNew}'
+    # else:
+    #   pathNew = branchOld['path']
+    # siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackNew))      #sorted by docID
+    # siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(stackNew)+1]
+    # childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
+    # siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]    #sorted by childNum 1st and docID 2nd
+    # logging.debug('Change project: docID %s | old stack %s child %i | new stack %s child %i path %s'\
+    #               , docID, str(stackOld), childOld, str(stackNew), childNew, pathNew)
+    # if stackOld==stackNew and childOld==childNew:                                #nothing changed, just redraw
+    #   return
+    # # --- CHANGE ----
+    # # change new siblings
+    # if verbose:
+    #   print('\n=============================================\nStep 1: before new siblings')
+    #   print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
+    # for idx, line in reversed(list(enumerate(siblingsNew))):
+    #   shift = 1 if idx>=childNew else 0      #shift those before the insertion point by 0 and those after by 1
+    #   if line['id']==docID or line['value'][0]==idx+shift:    #ignore this id & those that are correct already
+    #     continue
+    #   if verbose:
+    #     print(f'  {line["id"]}: move: {idx} {shift}')
+    #   db.updateBranch(docID=line['id'], branch=line['value'][4], child=idx+shift)
+    # if verbose:
+    #   siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackNew))    #sorted by docID
+    #   siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(stackNew)+1]
+    #   childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
+    #   siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]  #sorted by childNum 1st and docID 2nd
+    #   print('Step 2: after new siblings')
+    #   print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
+    # # change item in question
+    # if verbose:
+    #   print(f'  manual move {childOld} -> {childNew}: {docID}')
+    # db.updateBranch(docID=docID, branch=-99, stack=stackNew, path=pathNew, child=childNew, stackOld=stackOld+[docID])
+    # item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID])})
+    # # change old siblings
+    # siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackOld))      #sorted by docID
+    # siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(stackOld)+1]
+    # childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
+    # siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]    #sorted by childNum 1st and docID 2nd
+    # if verbose:
+    #   print('Step 3: before old siblings')
+    #   print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
+    # for idx, line in enumerate(siblingsOld):
+    #   if line['value'][0]==idx:                      #ignore id in question and those that are correct already
+    #     continue
+    #   if verbose:
+    #     print(f'  {line["id"]}: move: {idx} {shift}')
+    #   db.updateBranch(  docID=line['id'], branch=line['value'][4], child=idx)
+    # if verbose:
+    #   siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(stackOld))    #sorted by docID
+    #   siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(stackOld)+1]
+    #   childNums   = [f"{i['value'][0]}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
+    #   siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]  #sorted by childNum 1st and docID 2nd
+    #   print('Step 4: end of function')
+    #   print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
+    # return
 
 
   def iterateTree(self, nodeHier:Node) -> QStandardItem:

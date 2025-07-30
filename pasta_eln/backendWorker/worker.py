@@ -16,7 +16,7 @@ from typing import Any, Optional
 import pandas as pd
 from anytree import Node
 from PySide6.QtCore import QObject, QThread, Signal, Slot
-from ..UI.messageDialog import showMessage
+from PySide6.QtWidgets import QMessageBox
 from .backend import Backend
 from .dataverse import DataverseClient
 from .inputOutput import exportELN, importELN
@@ -85,7 +85,8 @@ class BackendWorker(QObject):
 
   @Slot(str)
   def returnDataHierarchyRow(self, docType:str) -> None:
-    self.beSendDataHierarchyAll.emit(self.backend.db.dataHierarchy(docType, '*'))
+    if self.backend is not None:
+      self.beSendDataHierarchyAll.emit(self.backend.db.dataHierarchy(docType, '*'))
 
 
   @Slot(str, str, bool)
@@ -139,6 +140,10 @@ class BackendWorker(QObject):
         parentID  = data['hierStack'][-1]
         self.backend.cwd = Path(self.backend.db.getDoc(parentID)['branch'][0]['path'])
         self.backend.addData(data['docType'], data['doc'], data['hierStack'])
+      elif task is Task.EDIT_DOC      and set(data.keys())=={'doc'}:
+          doc = self.backend.db.getDoc(data['doc']['id'])
+          doc.update(data['doc'])
+          self.backend.editData(doc)
       elif task is Task.DROP         and set(data.keys())=={'docID','files','folders'}:
         commonBase   = os.path.commonpath(data['folders']+[str(i) for i in data['files']])
         doc = self.backend.db.getDoc(data['docID'])
@@ -152,7 +157,7 @@ class BackendWorker(QObject):
             shutil.copy(file, targetFolder/(file.relative_to(commonBase)))
         # scan
         for _ in range(2):                                                         #scan twice: convert, extract
-          self.backend.scanProject(None, docID, targetFolder.relative_to(self.backend.basePath))
+          self.backend.scanProject(None, data['docID'], targetFolder.relative_to(self.backend.basePath))
         self.beSendTaskReport.emit(task, 'Drag-drop operation finished successfully', '')
       elif task is Task.DELETE_DOC   and  set(data.keys())=={'docID'}:
         # delete doc: possibly a folder or a project or a measurement
@@ -184,12 +189,12 @@ class BackendWorker(QObject):
           sync = Pasta2Elab(self.backend, data['projGroup'])
           if hasattr(sync, 'api') and sync.api.url:                                 #if hostname and api-key given
             if task is Task.SEND_ELAB:
-              statistics = sync.sync('sA')
+              stats = sync.sync('sA')
             elif task is Task.GET_ELAB:
-              statistics = sync.sync('gA')
+              stats = sync.sync('gA')
             else:
-              statistics = sync.sync('')
-            self.beSendTaskReport.emit(task, 'Success: Syncronized data with elabFTW server'+str(statistics), '')
+              stats = sync.sync('')
+            self.beSendTaskReport.emit(task, 'Success: Syncronized data with elabFTW server'+str(stats), '')
           else:                                                                                      #if not given
             self.beSendTaskReport.emit(task, 'ERROR: Please specify a server address and API-key in the Configuration', '')
       elif task is Task.SEND_TBL_COLUMN and set(data.keys())=={'docType','newList'}:
@@ -245,7 +250,7 @@ class BackendWorker(QObject):
       elif task is Task.OPEN_EXTERNAL and set(data.keys())=={'docID'}:
         doc   = self.backend.db.getDoc(data['docID'])
         if doc['branch'][0]['path'] is None:
-          showMessage(self, 'Error', 'Cannot open file that is only in the database','Critical')
+          QMessageBox.critical(None, 'ERROR', 'Cannot open file that is only in the database')
         else:
           path  = Path(self.backend.basePath)/doc['branch'][0]['path']
           if platform.system() == 'Darwin':                                                              # macOS
@@ -263,7 +268,9 @@ class BackendWorker(QObject):
 
 
   @Slot(list)
-  def executeSQL(self, tasks) -> None:
+  def executeSQL(self, tasks:list[dict[str,Any]]) -> None:
+    if self.backend is None:
+      return
     for task in tasks:
       if task['type']=='one':
         self.backend.db.cursor.execute(task['cmd'], task.get('list',()))

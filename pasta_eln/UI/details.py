@@ -64,13 +64,13 @@ class Details(QScrollArea):
 
 
   @Slot(str)
-  def change(self, docID) -> None:
+  def change(self, docID:str) -> None:
     self.docID = docID
     self.comm.uiRequestDoc.emit(self.docID)
 
 
   @Slot(dict)
-  def onGetData(self, doc) -> None:
+  def onGetData(self, doc:dict[str,Any]) -> None:
     if 'id' in doc and doc['id'] == self.docID:
       self.doc = doc
       self.paint()

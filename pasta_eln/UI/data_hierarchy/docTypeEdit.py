@@ -27,7 +27,7 @@ class DocTypeEditor(QDialog):
     self.comm = comm
     self.comm.backendThread.worker.beSendSQL.connect(self.onGetData)
     self.docType = docType
-    self.shortcuts:list[list[str,str]] = []
+    self.shortcuts:list[list[str]] = []
     self.callback = callback
     mainL = QVBoxLayout(self)
     _, self.mainForm = widgetAndLayoutForm(mainL)
@@ -49,7 +49,7 @@ class DocTypeEditor(QDialog):
 
 
   @Slot(str, pd.DataFrame)
-  def onGetData(self, cmd, data) -> None:
+  def onGetData(self, cmd:str, data:pd.DataFrame) -> None:
     if cmd == 'SELECT * from docTypes WHERE docType=="instrument"':
       self.initialData = data.values.tolist()[0]
       self.paint()
@@ -58,6 +58,8 @@ class DocTypeEditor(QDialog):
 
 
   def paint(self) -> None:
+    if self.initialData is None:
+      return
     self.row1 = QLineEdit(self.initialData[0])
     self.row1.setToolTip('Name of document type: lower case letters only. Must be unique')
     if self.docType:

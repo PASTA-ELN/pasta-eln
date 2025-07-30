@@ -31,7 +31,7 @@ class UploadGUI(QDialog):
     super().__init__()
     self.comm    = comm
     self.comm.backendThread.worker.beSendDoc.connect(self.onGetData)
-    self.docProject = {}
+    self.docProject:dict[str,Any] = {}
     self.setWindowTitle('Upload project to repository')
 
     # GUI elements
@@ -43,7 +43,7 @@ class UploadGUI(QDialog):
 
 
   @Slot(dict)
-  def onGetData(self, doc:dict) -> None:
+  def onGetData(self, doc:dict[str,Any]) -> None:
     """
     Callback function to handle the received data
 
@@ -55,7 +55,7 @@ class UploadGUI(QDialog):
       self.paint()
 
 
-  def paint(self):
+  def paint(self) -> None:
     if not self.docProject:
       return
     Label('Upload to a repository', 'h1', self.mainL)
@@ -132,7 +132,7 @@ class UploadGUI(QDialog):
       repositories['additional'] = json.loads(self.leAdditional.text())
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.configuration,indent=2))
-      self.comm.uiRequestTask(Task.SEND_REPOSITORY, {'projID': self.comm.projectID, 'docTypes': docTypes,
+      self.comm.uiRequestTask.emit(Task.SEND_REPOSITORY, {'projID': self.comm.projectID, 'docTypes': docTypes,
                 'uploadZenodo':command[1], 'repositories': repositories, 'metadata': metadata})
       self.accept()
     else:
