@@ -6,6 +6,7 @@ import pandas as pd
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QListWidget, QVBoxLayout# pylint: disable=no-name-in-module
 from ..backendWorker.sqlite import MAIN_ORDER
+from ..backendWorker.worker import Task
 from ..fixedStringsJson import tableHeaderHelp
 from .guiCommunicate import Communicate
 from .guiStyle import IconButton, widgetAndLayout
@@ -118,8 +119,7 @@ class TableHeader(QDialog):
       self.reject()
     elif btn.text().endswith('Save'):
       newList = [i if i in MAIN_ORDER+['tags','qrCodes'] or '.' in i else f'.{i}' for i in self.selectedList]
-      self.db.dataHierarchyChangeView(self.docType, newList)
-      self.comm.softRestart.emit()
+      self.comm.uiRequestTask(Task.SEND_TBL_COLUMN, {'docType':self.docType, 'newList':newList})
     elif btn.text().endswith('Help'):
       showMessage(self, 'Help on individual entry', tableHeaderHelp)
     else:

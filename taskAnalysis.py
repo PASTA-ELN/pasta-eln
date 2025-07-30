@@ -24,4 +24,4 @@ for line in  result2.stdout.split('\n'):
         print(line)
 
 # print('Files to update:\n  '+'\n  '.join(toUpdate))
-# print('Files done:\n'+json.dumps(target, indent=2))
+print('Files done:\n'+json.dumps(target, indent=2))

@@ -43,6 +43,8 @@ class Task(Enum):
   DROP           = 14
   HIDE_SHOW      = 15
   SEND_REPOSITORY= 16
+  SEND_TBL_COLUMN= 17
+  EDIT_DOC       = 18
 
 
 class BackendWorker(QObject):
@@ -190,7 +192,9 @@ class BackendWorker(QObject):
             self.beSendTaskReport.emit(task, 'Success: Syncronized data with elabFTW server'+str(statistics), '')
           else:                                                                                      #if not given
             self.beSendTaskReport.emit(task, 'ERROR: Please specify a server address and API-key in the Configuration', '')
-      elif task is Task.SEND_REPOSITORY:
+      elif task is Task.SEND_TBL_COLUMN and set(data.keys())=={'docType','newList'}:
+        self.backend.db.dataHierarchyChangeView(data['docType'], data['newList'])
+      elif task is Task.SEND_REPOSITORY and set(data.keys())=={'projID','docTypes','repositories','metadata'}:
         tempELN = str(Path(tempfile.gettempdir())/'export.eln')
         res0 = exportELN(self.backend, [data['projID']], tempELN, data['docTypes'])
         print('Export eln',res0)

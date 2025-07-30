@@ -284,36 +284,18 @@ class Table(QWidget):
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')
     elif command[0] is Command.GROUP_EDIT:
-      intersection = None
       docIDs = []
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           docIDs.append(docID)
-          thisKeys = set(self.comm.backend.db.getDoc(docID))
-          if intersection is None:
-            intersection = thisKeys
-          else:
-            intersection = intersection.intersection(thisKeys)
-      #remove keys that should not be group edited and build dict
-      if intersection is not None:
-        intersection = intersection.difference({'branch', 'user', 'client', 'metaVendor', 'shasum', \
-            'id', 'metaUser', 'rev', 'name', 'dateCreated', 'dateModified', 'image', 'links', 'gui'})
-        intersectionDict:dict[str,Any] = {i:'' for i in intersection}  | \
-                                         {k:v  for k,v in self.comm.backend.db.getDoc(docID).items()
-                                          if isinstance(v,dict) and k not in ('metaUser','metaVendor')}
-        intersectionDict['tags'] = []
-        intersectionDict['type'] = [self.docType]
-        intersectionDict['_ids'] = docIDs
-        self.comm.formDoc.emit(intersectionDict)
-        self.comm.changeDetails.emit('redraw')
-        self.comm.changeTable.emit(self.docType, self.projID)
+        self.comm.formDoc.emit({'type':self.docType, '_ids':docIDs})
     elif command[0] is Command.SEQUENTIAL_EDIT:
       self.stopSequentialEdit = False
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
-          self.comm.formDoc.emit(self.comm.backend.db.getDoc(docID))
+          self.comm.formDoc.emit({'id':docID})
         if self.stopSequentialEdit:
           break
       self.comm.changeTable.emit(self.docType, self.projID)
@@ -356,14 +338,13 @@ class Table(QWidget):
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)
         if useAll or  item.checkState() == Qt.CheckState.Checked:
-          path = self.comm.backend.db.getDoc(docID)['branch'][0]['path']
-          dataRow = [docID, '' if path is None else str(self.comm.basePath/path)]
+          dataRow = [docID]
           for col in range(self.models[-1].columnCount()):
             value = self.models[-1].index(row, col).data(Qt.ItemDataRole.DisplayRole)
             dataRow.append(value)
           data.append(dataRow)
-      df = pd.DataFrame(data, columns=['docID','path']+self.filterHeader)
-      callAddOn(command[1], self.comm.backend, df, self)
+      df = pd.DataFrame(data, columns=['docID']+self.filterHeader)
+      callAddOn(command[1], self.comm, df, self)
     elif command[0] is Command.TOGGLE_HIDE:
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)

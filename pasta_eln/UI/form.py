@@ -12,6 +12,7 @@ from PySide6.QtGui import QRegularExpressionValidator                      # pyl
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox,# pylint: disable=no-name-in-module
                                QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget)
 from ..backendWorker.sqlite import MAIN_ORDER
+from ..backendWorker.worker import Task
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
 from ..miscTools import callAddOn, flatten
 from ..textTools.stringChanges import markdownEqualizer
@@ -37,8 +38,11 @@ class Form(QDialog):
     self.comm.backendThread.worker.beSendTable.connect(self.onGetTags)
     self.doc:dict[str,Any] = copy.deepcopy(doc)
     self.tagsAllList: list[str] = []
+    self.allDocIDs = self.doc['_ids'] if '_ids' in self.doc else self.doc['id']
+    self.allDocIDsRecieved = []
     print('Form doc:', self.doc)
-    self.comm.uiRequestDoc.emit(doc['id'])
+    for docID in self.allDocIDs:
+      self.comm.uiRequestDoc.emit(docID)
     self.comm.uiRequestTable.emit('_tags_','', True)
 
 
@@ -50,9 +54,19 @@ class Form(QDialog):
     Args:
       doc (dict):  document to change / create
     """
-    self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
-    self.doc = doc
-    self.paint()
+    if doc['id'] in self.allDocIDs:
+      intersection = set(self.doc).intersection(set(doc))
+      #remove keys that should not be group edited and build dict
+      intersection = intersection.difference({'branch', 'user', 'client', 'metaVendor', 'shasum', 'id',
+                           'metaUser', 'rev', 'name', 'dateCreated', 'dateModified', 'image', 'links', 'gui'})
+      self.doc = {i:'' for i in intersection}
+      self.doc['tags'] = []
+      self.doc['type'] = [self.docType]
+    else:
+      self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
+      self.doc = doc
+      self.paint()
+
 
 
   @Slot(pd.DataFrame, str)
@@ -600,11 +614,12 @@ class Form(QDialog):
         for docID in self.doc.pop('_ids'):
           doc = self.db.getDoc(docID)
           doc.update( self.doc )
-          self.comm.backend.editData(doc)
+          self.comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':doc})
       elif 'id' in self.doc:                                                          # default update on item
-        self.comm.backend.editData(self.doc)
+        self.comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':self.doc})
       else:                                                                               # create new dataset
-        self.comm.backend.addData(self.doc['type'][0], copy.deepcopy(self.doc), newProjID)
+        self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':newProjID, 'docType':self.doc['type'][0],
+                                                    'doc':self.doc})
       self.doc = docBackup
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
@@ -627,7 +642,7 @@ class Form(QDialog):
       self.values[-1].setPlaceholderText('value')
       self.keyValueListL.addRow(self.keyLabels[-1], self.values[-1])
     elif command[0] is Command.FORM_SHOW_DOC:
-      doc = self.comm.backend.db.getDoc(self.doc['id'])
+      doc = copy.deepcopy(self.doc)
       if 'image' in doc:
         del doc['image']
       messageWindow = ScrollMessageBox('Details', doc, style='QScrollArea{min-width:600 px; min-height:400px}')
