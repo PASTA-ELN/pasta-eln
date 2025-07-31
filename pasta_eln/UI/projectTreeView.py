@@ -212,7 +212,7 @@ class TreeView(QTreeView):
         showMessage(self, 'Error', 'The files seem empty.')
         return
       docID = item.data()['hierStack'].split('/')[-1]
-      self.comm.uiRequestTask.emit(Task.DROP, {'docID':docID, 'files':files, 'folders':folders})
+      self.comm.uiRequestTask.emit(Task.DROP_EXTERNAL, {'docID':docID, 'files':files, 'folders':folders})
       event.ignore()
     elif 'application/x-qstandarditemmodeldatalist' in event.mimeData().formats():
       super().dropEvent(event)

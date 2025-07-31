@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Optional, Union
 import pandas as pd
-from anytree import Node
+from anytree import Node, RenderTree
 from PIL import Image
 from ..fixedStringsJson import SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema
 from ..miscTools import hierarchy
@@ -895,8 +895,11 @@ class SqlLiteDB:
     # sort children
     for parentNode in id2Node.values():
       children = parentNode.children
-      childNums= [f'{i.childNum}{i.id}{idx}' for idx,i in enumerate(children)]
+      childNums= [f'{i.childNum:05d}{i.id}{idx}' for idx,i in enumerate(children)]
       parentNode.children = [x for _, x in sorted(zip(childNums, children))]
+    # for debugging / checking
+    # for pre, _, node in RenderTree(dataTree, maxlevel=2):
+    #   print(f'{pre}{node.childNum:03d} {node.name} {node.id}')
     return dataTree, error
 
 
@@ -1136,8 +1139,10 @@ class SqlLiteDB:
         if SVG_RE.match(image) is None:
           reply+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
       elif image in ('', None):
-        comment = comment.replace('\n','..')
-        reply+=outputString(outputStyle,'unsure',f"image does not exist {docID} image:{image} comment:{comment}")
+        pass
+        # No more warnings if images are not present: happens often in propriatary binary files,... users see it
+        # comment = comment.replace('\n','..')
+        # reply+=outputString(outputStyle,'unsure',f"image does not exist {docID} image:{image} comment:{comment}")
       else:
         reply+= outputString(outputStyle,'error',f"dch14: image not valid {docID} {image}")
 

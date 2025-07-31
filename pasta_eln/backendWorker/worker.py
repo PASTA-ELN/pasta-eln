@@ -17,6 +17,7 @@ import pandas as pd
 from anytree import Node
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QMessageBox
+from ..textTools.stringChanges import createDirName
 from .backend import Backend
 from .dataverse import DataverseClient
 from .inputOutput import exportELN, importELN
@@ -27,24 +28,34 @@ waitTimeBeforeSendingFirstMessage = 0.1 #ensure all UI elements are up
 
 class Task(Enum):
   """ Tasks that can be used in BackendWorker """
-  ADD_DOC        = 1
-  EDIT_DOC       = 2
-  DROP           = 3
-  HIDE_SHOW      = 4
-  SET_GUI        = 5
-  DELETE_DOC     = 6
-  SCAN           = 7
-  SEND_TBL_COLUMN= 8
-  EXTRACTOR_TEST = 9
-  EXTRACTOR_RERUN= 10
-  SEND_ELAB      = 11
-  GET_ELAB       = 12
-  SMART_ELAB     = 13
-  EXPORT_ELN     = 14
-  IMPORT_ELN     = 15
-  SEND_REPOSITORY= 16
-  CHECK_DB       = 17
-  OPEN_EXTERNAL  = 18
+  ADD_DOC        = (1 , '')
+  EDIT_DOC       = (2 , '')
+  MOVE_LEAVES    = (3 , '')
+  DROP_EXTERNAL  = (4 , 'Including drag&drop files and folders:')
+  HIDE_SHOW      = (5 , '')
+  SET_GUI        = (6 , '')
+  DELETE_DOC     = (7 , 'Delete document:')
+  SCAN           = (8 , 'Scanning disk for new data:')
+  SEND_TBL_COLUMN= (9 , '')
+  EXTRACTOR_TEST = (10, 'Testing extractor:')
+  EXTRACTOR_RERUN= (11, 'Rerun extractors:')
+  SEND_ELAB      = (12, 'Sending data to elabFTW server:')
+  GET_ELAB       = (13, 'Getting data from elabFTW server:')
+  SMART_ELAB     = (14, 'Syncing with elabFTW server:')
+  EXPORT_ELN     = (15, 'Exporting to .eln:')
+  IMPORT_ELN     = (16, 'Importing an .eln file:')
+  SEND_REPOSITORY= (17, 'Sending data to repository:')
+  CHECK_DB       = (18, 'Checking database integrity:')
+  OPEN_EXTERNAL  = (19, '')
+
+  def __init__(self, num:int, msgWaitDialog:str='') -> None:
+    """ Initialize the task with a number and an optional message for the wait dialog
+    Args:
+      num (int): Task number
+      msgWaitDialog (str): Message to show in the wait dialog
+    """
+    self._value_ = num
+    self.msgWaitDialog = msgWaitDialog
 
 
 class BackendWorker(QObject):
@@ -147,28 +158,99 @@ class BackendWorker(QObject):
       task (Task): Task to perform
       data (dict): Data required for the task
     """
-    time.sleep(3)   #TODO remove
     if self.backend is not None:
       if task is Task.EXTRACTOR_TEST and set(data.keys())=={'fileName','style','recipe','saveFig'}:
         report, image = self.backend.testExtractor(data['fileName'], style={'main':data['recipe']},
                                                    outputStyle=data['style'], saveFig=data['saveFig'])
         self.beSendTaskReport.emit(task, report, image)
+
       elif task is Task.CHECK_DB and set(data.keys())=={'style'}:
         report = self.backend.checkDB(outputStyle=data['style'])
         self.beSendTaskReport.emit(task, report, '')
+
       elif task is Task.SCAN         and set(data.keys())=={'docID'}:
-        for _ in range(2):                                                         #scan twice: convert, extract
+        for _ in range(2):                                                       #scan twice: convert, extract
           self.backend.scanProject(None, data['docID'])
         self.beSendTaskReport.emit(task, 'Scanning finished successfully', '')
+
       elif task is Task.ADD_DOC      and set(data.keys())=={'hierStack','docType','doc'}:
         parentID  = data['hierStack'][-1]
         self.backend.cwd = Path(self.backend.db.getDoc(parentID)['branch'][0]['path'])
         self.backend.addData(data['docType'], data['doc'], data['hierStack'])
+
       elif task is Task.EDIT_DOC      and set(data.keys())=={'doc'}:
         doc = self.backend.db.getDoc(data['doc']['id'])
         doc.update(data['doc'])
         self.backend.editData(doc)
-      elif task is Task.DROP         and set(data.keys())=={'docID','files','folders'}:
+
+      elif task is Task.MOVE_LEAVES and set(data.keys())=={'docID','stackOld','stackNew','childOld','childNew'}:
+        verbose = True                                                               # Convenient for testing
+        doc      = self.backend.db.getDoc(data['docID'])
+        branchOldList= [i for i in doc['branch'] if i['stack']==data['stackOld']]
+        if len(branchOldList)!=1:
+          logging.error('Cannot move leaves: %s has no branch with stack %s', doc['id'], data['stackOld'])
+          return
+        branchOld = branchOldList[0]
+        if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
+          parentDir = Path(self.backend.db.getDoc(data['stackNew'][-1])['branch'][0]['path'])
+          if doc['type'][0][0]=='x':
+            dirNameNew= createDirName(doc, data['childNew'], parentDir)# create path name: do not create directory on disk yet
+          else:
+            dirNameNew= Path(branchOld['path']).name                                            # use old name
+          pathNew = f'{parentDir}/{dirNameNew}'
+        else:
+          pathNew = branchOld['path']
+        siblingsNew = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackNew']))#sorted by docID
+        siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(data['stackNew'])+1]
+        childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
+        siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]#sorted by childNum 1st and docID 2nd
+        # --- CHANGE ----
+        # change new siblings
+        if verbose:
+          print('\n=============================================\nStep 1: before new siblings')
+          print('\n'.join([f'{i['value'][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
+        for idx, line in reversed(list(enumerate(siblingsNew))):
+          shift = 1 if idx>=data['childNew'] else 0#shift those before the insertion point by 0 and those after by 1
+          if line['id']==data['docID'] or line['value'][0]==idx+shift:#ignore this id & those that are correct already
+            continue
+          if verbose:
+            print(f'  {line["id"]}: move: {idx} {shift}')
+          self.backend.db.updateBranch(docID=line['id'], branch=line['value'][4], child=idx+shift)
+        if verbose:
+          siblingsNew = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackNew']))#sorted by docID
+          siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(data['stackNew'])+1]
+          childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
+          siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]#sorted by childNum 1st and docID 2nd
+          print('Step 2: after new siblings')
+          print('\n'.join([f'{i['value'][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
+        # change item in question
+        if verbose:
+          print(f'  manual move {data["childOld"]} -> {data["childNew"]}: {data['docID']}')
+        self.backend.db.updateBranch(docID=data['docID'], branch=-99, stack=data['stackNew'], path=pathNew,
+                                     child=data['childNew'], stackOld=data['stackOld']+[data['docID']])
+        # change old siblings
+        siblingsOld = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackOld']))#sorted by docID
+        siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(data['stackOld'])+1]
+        childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
+        siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]#sorted by childNum 1st and docID 2nd
+        if verbose:
+          print('Step 3: before old siblings')
+          print('\n'.join([f'{i['value'][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
+        for idx, line in enumerate(siblingsOld):
+          if line['value'][0]==idx:                  #ignore id in question and those that are correct already
+            continue
+          if verbose:
+            print(f'  {line["id"]}: move: {idx} {shift}')
+          self.backend.db.updateBranch(  docID=line['id'], branch=line['value'][4], child=idx)
+        if verbose:
+          siblingsOld = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackOld']))#sorted by docID
+          siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(data['stackOld'])+1]
+          childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
+          siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]#sorted by childNum 1st and docID 2nd
+          print('Step 4: end of function')
+          print('\n'.join([f'{i['value'][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
+
+      elif task is Task.DROP_EXTERNAL and set(data.keys())=={'docID','files','folders'}:
         commonBase   = os.path.commonpath(data['folders']+[str(i) for i in data['files']])
         doc = self.backend.db.getDoc(data['docID'])
         targetFolder = Path(self.backend.cwd/doc['branch'][0]['path'])
@@ -180,9 +262,10 @@ class BackendWorker(QObject):
           if file.is_file():
             shutil.copy(file, targetFolder/(file.relative_to(commonBase)))
         # scan
-        for _ in range(2):                                                         #scan twice: convert, extract
+        for _ in range(2):                                                       #scan twice: convert, extract
           self.backend.scanProject(None, data['docID'], targetFolder.relative_to(self.backend.basePath))
         self.beSendTaskReport.emit(task, 'Drag-drop operation finished successfully', '')
+
       elif task is Task.DELETE_DOC   and  set(data.keys())=={'docID'}:
         # delete doc: possibly a folder or a project or a measurement
         # delete database and rename folder
@@ -200,18 +283,21 @@ class BackendWorker(QObject):
         for docID in {line['id'] for line in children if line['id']!=data['docID']}:
           self.backend.db.remove(docID)
         self.beSendTaskReport.emit(task, 'Deleting finished successfully', '')
+
       elif task is Task.EXPORT_ELN and set(data.keys())=={'fileName','projID','docTypes'}:
         report = exportELN(self.backend, [data['projID']], data['fileName'], data['docTypes'])
         self.beSendTaskReport.emit(task, report, '')
+
       elif task is Task.IMPORT_ELN and set(data.keys())=={'fileName','projID'}:
         report, statistics = importELN(self.backend, data['fileName'], data['projID'])
         self.beSendTaskReport.emit(task, f'{report}\n{json.dumps(statistics,indent=2)}', '')
+
       elif task in (Task.SEND_ELAB, Task.GET_ELAB, Task.SMART_ELAB) and set(data.keys())=={'projGroup'}:
         if 'ERROR' in self.backend.checkDB(minimal=True):
           self.beSendTaskReport.emit(task, 'ERRORs are present in your database. Fix them before uploading', '')
         else:
           sync = Pasta2Elab(self.backend, data['projGroup'])
-          if hasattr(sync, 'api') and sync.api.url:                                 #if hostname and api-key given
+          if hasattr(sync, 'api') and sync.api.url:                             #if hostname and api-key given
             if task is Task.SEND_ELAB:
               stats = sync.sync('sA')
             elif task is Task.GET_ELAB:
@@ -219,20 +305,22 @@ class BackendWorker(QObject):
             else:
               stats = sync.sync('')
             self.beSendTaskReport.emit(task, 'Success: Syncronized data with elabFTW server'+str(stats), '')
-          else:                                                                                      #if not given
+          else:                                                                                  #if not given
             self.beSendTaskReport.emit(task, 'ERROR: Please specify a server address and API-key in the Configuration', '')
+
       elif task is Task.SEND_TBL_COLUMN and set(data.keys())=={'docType','newList'}:
         self.backend.db.dataHierarchyChangeView(data['docType'], data['newList'])
+
       elif task is Task.SEND_REPOSITORY and set(data.keys())=={'projID','docTypes','repositories','metadata'}:
         tempELN = str(Path(tempfile.gettempdir())/'export.eln')
         res0 = exportELN(self.backend, [data['projID']], tempELN, data['docTypes'])
         print('Export eln',res0)
         repositories = data['repositories']
-        if data['uploadZenodo']:                                                                                   #Zenodo
+        if data['uploadZenodo']:                                                                       #Zenodo
           clientZ = ZenodoClient(repositories['zenodo']['url'], repositories['zenodo']['key'])
           metadataZ = clientZ.prepareMetadata(data['metadata'])
           res = clientZ.uploadRepository(metadataZ, tempELN)
-        else:                                                                                         #Dataverse
+        else:                                                                                       #Dataverse
           clientD = DataverseClient(repositories['dataverse']['url'], repositories['dataverse']['key'],
                                   repositories['dataverse']['dataverse'])
           metadataD = clientD.prepareMetadata(data['metadata'])
@@ -248,6 +336,7 @@ class BackendWorker(QObject):
         else:
           msg += 'Error while writing project information to database'
         self.beSendTaskReport.emit(task, msg, '')
+
       elif task is Task.EXTRACTOR_RERUN and set(data.keys())=={'docIDs','recipe'}:
         for docID in data['docIDs']:
           doc = self.backend.db.getDoc(docID)
@@ -263,7 +352,7 @@ class BackendWorker(QObject):
               path = self.backend.basePath/doc['branch'][0]['path']
             self.backend.useExtractors(path, doc.get('shasum',''), doc)
             if doc['type'][0] == oldDocType[0]:
-              del doc['branch']                                                                    #don't update
+              del doc['branch']                                                                  #don't update
               self.backend.db.updateDoc(doc, docID)
             else:
               self.backend.db.remove( docID )
@@ -271,22 +360,26 @@ class BackendWorker(QObject):
               doc['name'] = doc['branch'][0]['path']
               self.backend.addData('/'.join(doc['type']), doc, doc['branch'][0]['stack'])
         self.beSendTaskReport.emit(task, 'Extractors re-ran successfully', '')
+
       elif task is Task.OPEN_EXTERNAL and set(data.keys())=={'docID'}:
         doc   = self.backend.db.getDoc(data['docID'])
         if doc['branch'][0]['path'] is None:
           QMessageBox.critical(None, 'ERROR', 'Cannot open file that is only in the database')
         else:
           path  = Path(self.backend.basePath)/doc['branch'][0]['path']
-          if platform.system() == 'Darwin':                                                              # macOS
+          if platform.system() == 'Darwin':                                                            # macOS
             subprocess.call(('open', path))
-          elif platform.system() == 'Windows':                                                         # Windows
-            os.startfile(path)                                                      # type: ignore[attr-defined]
-          else:                                                                                 # linux variants
+          elif platform.system() == 'Windows':                                                       # Windows
+            os.startfile(path)                                                    # type: ignore[attr-defined]
+          else:                                                                               # linux variants
             subprocess.call(('xdg-open', path))
+
       elif task is Task.SET_GUI    and set(data.keys())=={'docID','gui'}:
         self.backend.db.setGUI(data['docID'], data['gui'])
+
       elif task is Task.HIDE_SHOW    and set(data.keys())=={'docID'}:
         self.backend.db.hideShow(data['docID'])
+
       else:
         logging.error('Got task, which I do not understand %s %s', task, data.keys())
 
@@ -303,6 +396,7 @@ class BackendWorker(QObject):
     if self.backend is None:
       return
     for task in tasks:
+      logging.debug('Executing SQL task %s', task)
       if task['type']=='one':
         self.backend.db.cursor.execute(task['cmd'], task.get('list',()))
       elif task['type']=='many':

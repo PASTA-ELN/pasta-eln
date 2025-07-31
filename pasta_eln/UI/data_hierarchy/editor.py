@@ -245,8 +245,8 @@ class SchemeEditor(QDialog):
         {'type':'one', 'cmd':f"DELETE FROM docTypes WHERE docType == '{self.selectDocType.currentData()}'"},
         {'type':'one', 'cmd':f"DELETE FROM docTypeSchema WHERE docType == '{self.selectDocType.currentData()}'"}
       ])
+      self.comm.commSendConfiguration.emit(self.comm.configuration, self.comm.projectGroup)#reset docTypes, etc.
       self.selectDocType.clear()
-      _ = [self.selectDocType.addItem(v, k) for k,v in self.docTypesLabels]
     elif command[0] is Command.DEL_GROUP:
       docLabel = str(self.docLabel)
       button = QMessageBox.question(self, 'Question', 'Do you really want to remove this group?',

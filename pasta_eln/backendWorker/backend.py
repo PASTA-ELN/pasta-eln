@@ -10,6 +10,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Optional, Union
 from urllib import request
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
 from PIL import Image
