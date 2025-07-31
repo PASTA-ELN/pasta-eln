@@ -215,7 +215,8 @@ class Table(QWidget):
       else:
         self.headline.setText(f'All {docLabel.lower()}')
         self.showHidden.setText(f'Show/hide all hidden {docLabel.lower()}')
-      self.filterHeader = list(self.data.columns)[:-2]
+      columnNames = [i.replace('metaUser.','u.') for i in self.data.columns]
+      self.filterHeader = list(columnNames)[:-2]
     self.headerW.show()
     nRows, nCols = self.data.shape
     model = QStandardItemModel(nRows, nCols-2)
@@ -352,10 +353,14 @@ class Table(QWidget):
       df = pd.DataFrame(data, columns=['docID']+self.filterHeader)
       callAddOn(command[1], self.comm, df, self)
     elif command[0] is Command.TOGGLE_HIDE:
+      changeFlag = False
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':docID})
+          changeFlag = True
+      if changeFlag:
+        self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')
       self.paint()

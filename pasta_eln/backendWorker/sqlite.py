@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Optional, Union
 import pandas as pd
-from anytree import Node, RenderTree
+from anytree import Node
 from PIL import Image
 from ..fixedStringsJson import SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema
 from ..miscTools import hierarchy
@@ -898,6 +898,7 @@ class SqlLiteDB:
       childNums= [f'{i.childNum:05d}{i.id}{idx}' for idx,i in enumerate(children)]
       parentNode.children = [x for _, x in sorted(zip(childNums, children))]
     # for debugging / checking
+    # from anytree import RenderTree
     # for pre, _, node in RenderTree(dataTree, maxlevel=2):
     #   print(f'{pre}{node.childNum:03d} {node.name} {node.id}')
     return dataTree, error
@@ -1123,7 +1124,7 @@ class SqlLiteDB:
       reply+= outputString(outputStyle,'warning',f"dch09: qrCode not in samples {res}")
     self.cursor.execute("SELECT id, shasum, image, comment FROM main WHERE  type LIKE 'measurement%'")
     for row in self.cursor.fetchall():
-      docID, shasum, image, comment = row
+      docID, shasum, image, _ = row
       if shasum is None:
         reply+= outputString(outputStyle,'warning',f"dch10: shasum not in measurement {docID}")
       if image.startswith('data:image'):                                                      #for jpg and png

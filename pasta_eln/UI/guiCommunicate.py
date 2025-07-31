@@ -1,5 +1,4 @@
 """ Communication class that sends signals between widgets and the backend worker"""
-import logging
 from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot                           # pylint: disable=no-name-in-module

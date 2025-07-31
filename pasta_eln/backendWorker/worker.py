@@ -54,7 +54,6 @@ class Task(Enum):
       num (int): Task number
       msgWaitDialog (str): Message to show in the wait dialog
     """
-    self._value_ = num
     self.msgWaitDialog = msgWaitDialog
 
 

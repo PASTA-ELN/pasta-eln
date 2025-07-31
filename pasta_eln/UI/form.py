@@ -11,7 +11,7 @@ from PySide6.QtCore import QSize, Qt, QTimer, Slot                              
 from PySide6.QtGui import QRegularExpressionValidator                      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox,# pylint: disable=no-name-in-module
                                QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget,
-                               QLayout)
+                               QLayout, QFormLayout)
 from ..backendWorker.sqlite import MAIN_ORDER
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
@@ -39,27 +39,26 @@ class Form(QDialog):
     self.comm.backendThread.worker.beSendTable.connect(self.onGetTags)
     self.doc:dict[str,Any] = copy.deepcopy(doc)
     self.tagsAllList: list[str] = []
-    self.allDocIDs = self.doc['_ids'] if '_ids' in self.doc else self.doc['id']
-    self.allDocIDsRecieved:list[str] = []
+    self.allDocIDs = self.doc['_ids'] if '_ids' in self.doc else [self.doc['id']]
     print('Form doc:', self.doc)
     for docID in self.allDocIDs:
       self.comm.uiRequestDoc.emit(docID)
     #self GUI elements
-    self.tagsBarMainW   = QWidget()
-    self.gradeChoices   = QComboBox()
-    self.tagsBarSubL    = QLayout()
-    self.otherChoices   = QComboBox()
-    self.keyValueListW  = QWidget()
-    self.keyValueListL  = QLayout()
-    self.keyValueLabel  = QLabel()
-    self.projectComboBox= QComboBox()
+    self.tagsBarMainW                         = QWidget()
+    self.gradeChoices                         = QComboBox()
+    self.tagsBarSubL:QLayout|None             = None
+    self.otherChoices                         = QComboBox()
+    self.keyValueListW                        = QWidget()
+    self.keyValueListL:QFormLayout|None       = None
+    self.keyValueLabel                        = QLabel()
+    self.projectComboBox                      = QComboBox()
     self.flagNewDoc                           = True
     self.skipKeys  = ['image','metaVendor','metaUser','shasum','._projectID','._ids','.name','.elnIdentifier']
     self.allHidden                            = False
     self.keyLabels: list[QLineEdit]           = []
     self.values:    list[QLineEdit]           = []
-    self.imageL                               = QLayout()
-    self.dataHierarchyNode:dict[str,Any]      = {}
+    self.imageL:QLayout|None                  = None
+    self.dataHierarchyNode:list[dict[str,str]]= [{}]
     self.tabW                                 = QTabWidget()                    # has count=0 if not connected
     self.formsL:list[QLayout]                 = []
     self.allUserElements:list[tuple[str,str]] = []
@@ -79,16 +78,24 @@ class Form(QDialog):
     Args:
       doc (dict):  document to change / create
     """
+    if not doc:
+      return
     if doc['id'] in self.allDocIDs:
-      intersection = set(self.doc).intersection(set(doc))
-      #remove keys that should not be group edited and build dict
-      intersection = intersection.difference({'branch', 'user', 'client', 'metaVendor', 'shasum', 'id',
+      self.allDocIDs.remove(doc['id'])
+      if 'id' in self.doc and len(self.doc)==1: # initialize self.doc with a real doc: not just id
+        self.doc = doc
+      else:
+        print(doc.keys(), doc['id'])
+        print(self.allDocIDs)
+        intersection = set(self.doc).intersection(set(doc))
+        #remove keys that should not be group edited and build dict
+        intersection = intersection.difference({'branch', 'user', 'client', 'metaVendor', 'shasum', 'id',
                            'metaUser', 'rev', 'name', 'dateCreated', 'dateModified', 'image', 'links', 'gui'})
-      self.doc = {i:'' for i in intersection}
-      self.doc['tags'] = []
-    else:
+        self.doc = {i:'' for i in intersection}
+        self.doc['tags'] = []
+        print(self.doc,'heere')
+    if len(self.allDocIDs)==0:
       self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
-      self.doc = doc
       self.paint()
 
 
@@ -149,8 +156,6 @@ class Form(QDialog):
       self.setMinimumWidth(600)
 
     # create data hierarchy node: data structure
-    if self.doc['type']==['x2']:
-      self.doc['type'] = ['x1']
     if self.doc['type'][0] in self.comm.docTypesTitles:
       rawData = self.comm.dataHierarchyNodes[self.doc['type'][0]]
       self.dataHierarchyNode = copy.deepcopy([dict(i) for i in rawData])
@@ -163,7 +168,7 @@ class Form(QDialog):
       group = keyInDocNotHierarchy.split('.')[0]
       key = keyInDocNotHierarchy.split('.')[1]
       idx = len([1 for i in self.dataHierarchyNode if i['class']==group])
-      self.dataHierarchyNode.append({'docType': self.doc['type'][0], 'class':group, 'idx':idx, 'name':key,
+      self.dataHierarchyNode.append({'docType': self.doc['type'][0], 'class':group, 'idx':str(idx), 'name':key,
                                      'list':'', 'mandatory':'', 'unit':''})
     #TODO: TEMPORARY CHECK: REMOVE 2026
     allKeys = {'docType', 'class', 'idx', 'name', 'unit', 'mandatory', 'list'}
@@ -445,8 +450,9 @@ class Form(QDialog):
       command (list): list of commands
     """
     if isinstance(command[0], CommandMenu):
-      if executeContextMenu(self, command):
-        self.imageL.itemAt(0).widget().setParent(None)
+      if executeContextMenu(self, command) and self.imageL is not None:
+        item = self.imageL.itemAt(0)                             # two line construction to prevent union-attr #TODO
+        if item is not None: item.widget().setParent(None)
         width=self.comm.configuration['GUI']['imageSizeDetails'] if hasattr(self.comm,'configuration') else 300
         if 'image' in self.doc:
           Image(self.doc['image'], self.imageL, anyDimension=width)
@@ -471,37 +477,47 @@ class Form(QDialog):
         getattr(self, f'textShow_{command[1]}').hide()
         getattr(self, f'buttonBarW_{command[1]}').hide()
         for i in range(self.formsL[idx].count()):
-          widget = self.formsL[idx].itemAt(i).widget()
+          item = self.formsL[idx].itemAt(i)
+          widget = None if item is None else item.widget()
           if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
             widget.show()
           else:
             unknownWidget.append(i)
         self.tagsBarMainW.show()
         if command[1]=='content' and len(unknownWidget)==5:#show / hide label and right-side of non-content and non-comment
-          self.formsL[idx].itemAt(unknownWidget[0]).widget().show()
-          self.formsL[idx].itemAt(unknownWidget[1]).widget().show()
+          item = self.formsL[idx].itemAt(unknownWidget[0])
+          if item is not None: item.widget().show()
+          item = self.formsL[idx].itemAt(unknownWidget[1])
+          if item is not None: item.widget().show()
         if command[1]=='comment' and len(unknownWidget)==5:
-          self.formsL[idx].itemAt(unknownWidget[2]).widget().show()
-          self.formsL[idx].itemAt(unknownWidget[3]).widget().show()
-        if self.keyValueListL.count() == 0:
+          item = self.formsL[idx].itemAt(unknownWidget[2])
+          if item is not None: item.widget().show()
+          item = self.formsL[idx].itemAt(unknownWidget[3])
+          if item is not None:  item.widget().show()
+        if self.keyValueListL is not None and self.keyValueListL.count() == 0:
           self.keyValueLabel.hide()
           self.keyValueListW.hide()
       else:                                   #show buttons to allow for easy markdown edit; hide general form
         getattr(self, f'textShow_{command[1]}').show()
         getattr(self, f'buttonBarW_{command[1]}').show()
         for i in range(self.formsL[idx].count()):
-          widget = self.formsL[idx].itemAt(i).widget()
+          item = self.formsL[idx].itemAt(i)
+          widget = None if item is None else item.widget()
           if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
             widget.hide()
           else:
             unknownWidget.append(i)
         self.tagsBarMainW.hide()
         if command[1]=='content' and len(unknownWidget)==5:
-          self.formsL[idx].itemAt(unknownWidget[0]).widget().hide()
-          self.formsL[idx].itemAt(unknownWidget[1]).widget().hide()
+          item = self.formsL[idx].itemAt(unknownWidget[0])
+          if item is not None: item.widget().hide()
+          item = self.formsL[idx].itemAt(unknownWidget[1])
+          if item is not None: item.widget().hide()
         if command[1]=='comment' and len(unknownWidget)==5:
-          self.formsL[idx].itemAt(unknownWidget[2]).widget().hide()
-          self.formsL[idx].itemAt(unknownWidget[3]).widget().hide()
+          item = self.formsL[idx].itemAt(unknownWidget[2])
+          if item is not None: item.widget().hide()
+          item = self.formsL[idx].itemAt(unknownWidget[3])
+          if item is not None: item.widget().hide()
       self.allHidden = not self.allHidden
     elif command[0] is Command.AUTO_COMMENT:
       try:
@@ -647,7 +663,7 @@ class Form(QDialog):
       else:
         self.accept()                                                                                   #close
         self.close()
-    elif command[0] is Command.FORM_ADD_KV:
+    elif command[0] is Command.FORM_ADD_KV and self.keyValueListL is not None:
       self.keyValueLabel.show()
       self.keyValueListW.show()
       self.keyLabels.append(QLineEdit(''))
@@ -656,7 +672,7 @@ class Form(QDialog):
       self.keyLabels[-1].setValidator(QRegularExpressionValidator('[a-zA-Z0-9]\\S+'))
       self.values.append(QLineEdit(''))
       self.values[-1].setPlaceholderText('value')
-      self.keyValueListL.addRow(self.keyLabels[-1], self.values[-1])              # type: ignore[attr-defined]
+      self.keyValueListL.addRow(self.keyLabels[-1], self.values[-1])
     elif command[0] is Command.FORM_SHOW_DOC:
       doc = copy.deepcopy(self.doc)
       if 'image' in doc:
@@ -711,6 +727,8 @@ class Form(QDialog):
     """
     After creation, tag removal, tag addition: update the information on screen
     """
+    if self.tagsBarSubL is None:
+      return
     #update tags
     for i in reversed(range(self.tagsBarSubL.count())):
       self.tagsBarSubL.itemAt(i).widget().setParent(None)                           # type: ignore[union-attr]

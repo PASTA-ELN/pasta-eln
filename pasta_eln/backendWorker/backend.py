@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any, Callable, Optional, Union
 from urllib import request
 import matplotlib
-matplotlib.use('Agg')
 import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -20,6 +19,7 @@ from ..textTools.stringChanges import camelCase, createDirName, outputString
 from .hashTools import generic_hash
 from .mixin_cli import CLI_Mixin
 from .sqlite import SqlLiteDB
+matplotlib.use('Agg')
 
 
 class Backend(CLI_Mixin):
