@@ -241,6 +241,27 @@ def rightAlignComments() -> None:
   return
 
 
+def findTasks():
+  """ Find all tasks in the pasta_eln codebase that are emitted by the UI.
+  This is used to find discrepancies in keys.
+  - information also in guiCommunicate
+  """
+  target = {}
+  result1 = subprocess.run(['grep', '-r','uiRequestTask', 'pasta_eln'], capture_output=True, text=True)
+  for line in result1.stdout.split('\n'):
+    if len(line)<10:
+      continue
+    fileName, code = line.split(':', maxsplit=1)
+    if 'uiRequestTask.emit(Task.' in code:  # this is how it should be
+      task = code.split('emit(Task.')[1].split(',', maxsplit=1)[0]
+      data = code.split('emit(Task.')[1].split(',', maxsplit=1)[1][:-1]
+      if task not in target:
+        target[task] = []
+      target[task].append(f'{fileName.strip()}: {data.strip()}')
+  print(json.dumps(target, indent=2))
+
+
+
 def runSourceVerification() -> None:
   """ Verify code with a number of tools:
   Order: first those that change code automatically, then those that require manual inspection

@@ -28,25 +28,25 @@ waitTimeBeforeSendingFirstMessage = 0.1 #ensure all UI elements are up
 
 class Task(Enum):
   """ Tasks that can be used in BackendWorker """
-  ADD_DOC        = (1 , '')
-  EDIT_DOC       = (2 , '')
-  MOVE_LEAVES    = (3 , '')
-  DROP_EXTERNAL  = (4 , 'Including drag&drop files and folders:')
-  HIDE_SHOW      = (5 , '')
-  SET_GUI        = (6 , '')
-  DELETE_DOC     = (7 , 'Delete document:')
-  SCAN           = (8 , 'Scanning disk for new data:')
-  SEND_TBL_COLUMN= (9 , '')
-  EXTRACTOR_TEST = (10, 'Testing extractor:')
-  EXTRACTOR_RERUN= (11, 'Rerun extractors:')
-  SEND_ELAB      = (12, 'Sending data to elabFTW server:')
-  GET_ELAB       = (13, 'Getting data from elabFTW server:')
-  SMART_ELAB     = (14, 'Syncing with elabFTW server:')
-  EXPORT_ELN     = (15, 'Exporting to .eln:')
-  IMPORT_ELN     = (16, 'Importing an .eln file:')
-  SEND_REPOSITORY= (17, 'Sending data to repository:')
-  CHECK_DB       = (18, 'Checking database integrity:')
-  OPEN_EXTERNAL  = (19, '')
+  ADD_DOC        = (1 , '')                                        #keys: hierStack, docType, doc
+  EDIT_DOC       = (2 , '')                                        #keys: doc
+  MOVE_LEAVES    = (3 , '')                                        #keys: docID, stackOld, stackNew, childOld, childNew
+  DROP_EXTERNAL  = (4 , 'Including drag&drop files and folders:')  #keys: docID, files, folders
+  HIDE_SHOW      = (5 , '')                                        #keys: docID
+  SET_GUI        = (6 , '')                                        #keys: docID, gui
+  DELETE_DOC     = (7 , 'Delete document:')                        #keys: docID
+  SCAN           = (8 , 'Scanning disk for new data:')             #keys: docID
+  SEND_TBL_COLUMN= (9 , '')                                        #keys: docType, newList
+  EXTRACTOR_TEST = (10, 'Testing extractor:')                      #keys: fileName, style, recipe, saveFig
+  EXTRACTOR_RERUN= (11, 'Rerun extractors:')                       #keys: docIDs, recipe
+  SEND_ELAB      = (12, 'Sending data to elabFTW server:')         #keys: projGroup
+  GET_ELAB       = (13, 'Getting data from elabFTW server:')       #keys: projGroup
+  SMART_ELAB     = (14, 'Syncing with elabFTW server:')            #keys: projGroup
+  EXPORT_ELN     = (15, 'Exporting to .eln:')                      #keys: fileName, projID, docTypes
+  IMPORT_ELN     = (16, 'Importing an .eln file:')                 #keys: fileName, projID
+  SEND_REPOSITORY= (17, 'Sending data to repository:')             #keys: projID, docTypes
+  CHECK_DB       = (18, 'Checking database integrity:')            #keys: style
+  OPEN_EXTERNAL  = (19, '')                                        #keys: docID
 
   def __init__(self, num:int, msgWaitDialog:str='') -> None:
     """ Initialize the task with a number and an optional message for the wait dialog
