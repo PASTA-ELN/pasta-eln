@@ -320,6 +320,7 @@ class Table(QWidget):
     elif command[0] is Command.CHANGE_COLUMNS:
       dialog = TableHeader(self.comm, self.docType)
       dialog.exec()
+      self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
     elif command[0] is Command.EXPORT:
       fileName = QFileDialog.getSaveFileName(self,'Export to ..',str(Path.home()),'*.csv')[0]
       if not fileName.endswith('.csv'):
@@ -381,6 +382,7 @@ class Table(QWidget):
         if item.checkState() == Qt.CheckState.Checked:
           docIDs.append(docID)
       self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs':docIDs,'recipe':''})
+      self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
     elif command[0] is Command.TOGGLE_GALLERY:
       self.flagGallery = not self.flagGallery
       self.paint()

@@ -5,7 +5,6 @@ import warnings
 import unittest
 from pathlib import Path
 from pasta_eln.backendWorker.backend import Backend
-from pasta_eln.textTools.stringChanges import outputString
 from pasta_eln.miscTools import DummyProgressBar, getConfiguration
 from pasta_eln.installationTools import exampleData
 
@@ -22,8 +21,6 @@ class TestStringMethods(unittest.TestCase):
     """
     main function
     """
-    outputFormat = ''  #change to 'print' for human usage, '' for less output
-    dummyProgressBar = DummyProgressBar()
     # initialization: create database, destroy on filesystem and database and then create new one
     warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
     warnings.filterwarnings('ignore', message='invalid escape sequence')

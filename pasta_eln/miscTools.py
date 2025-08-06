@@ -267,9 +267,9 @@ class MplCanvas(FigureCanvas):
       height (float): height in inch
       dpi (int): dots per inch
     """
-    fig = Figure(figsize=(width, height), dpi=dpi)
-    fig.add_subplot(111)
-    super().__init__(fig)
+    self.figure = Figure(figsize=(width, height), dpi=dpi)
+    self.axes   = self.figure.add_subplot(111)
+    super().__init__(self.figure)
 
 
 class DummyProgressBar():

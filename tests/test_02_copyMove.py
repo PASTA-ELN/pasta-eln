@@ -4,10 +4,8 @@ import os, shutil, logging, random
 import warnings
 import unittest
 from pathlib import Path
-from pasta_eln.backend import Backend
-from pasta_eln.textTools.stringChanges import outputString
-from pasta_eln.miscTools import DummyProgressBar
-from pasta_eln.installationTools import exampleData
+from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.miscTools import getConfiguration
 
 class TestStringMethods(unittest.TestCase):
   """
@@ -33,8 +31,9 @@ class TestStringMethods(unittest.TestCase):
     for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
       logging.getLogger(package).setLevel(logging.WARNING)
     logging.info('Start 02 test')
-    self.be = Backend('research')
-    projID = self.be.output('x0').split('|')[-1].strip()
+    configuration, _ = getConfiguration('research')
+    self.be = Backend(configuration, 'research')
+    projID = self.be.output('x0').split('|')[-2].strip()
     self.be.changeHierarchy(projID)
 
     choices = random.choices(range(100), k=250)

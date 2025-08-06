@@ -125,7 +125,7 @@ class BackendWorker(QObject):
       self.beSendTable.emit(data, docType)
 
 
-  @Slot(str)
+  @Slot(str, bool)
   def returnHierarchy(self, projID:str, showAll:bool) -> None:
     """ Return a hierarchy
     Args:

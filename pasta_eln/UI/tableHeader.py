@@ -126,6 +126,7 @@ class TableHeader(QDialog):
     elif btn.text().endswith('Save'):
       newList = [i if i in MAIN_ORDER+['tags','qrCodes'] or '.' in i else f'.{i}' for i in self.selectedList]
       self.comm.uiRequestTask.emit(Task.SEND_TBL_COLUMN, {'docType':self.docType, 'newList':newList})
+      self.accept()
     elif btn.text().endswith('Help'):
       showMessage(self, 'Help on individual entry', tableHeaderHelp)
     else:

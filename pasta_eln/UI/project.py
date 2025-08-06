@@ -1,5 +1,6 @@
 """ Widget that shows the content of project in a electronic labnotebook """
 import logging
+import os
 from enum import Enum
 from typing import Any, Optional
 import pandas as pd
@@ -157,7 +158,7 @@ class Project(QWidget):
     """
     What happens when user clicks to change project that is shown
     """
-    if self.isHidden():
+    if self.isHidden() and "PYTEST_CURRENT_TEST" not in os.environ:
       return
     #initialize
     for i in reversed(range(self.mainL.count())):                                                  #remove old
