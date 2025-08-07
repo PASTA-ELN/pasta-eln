@@ -5,7 +5,7 @@ import warnings
 import unittest
 from pathlib import Path
 from pasta_eln.backendWorker.backend import Backend
-from pasta_eln.miscTools import DummyProgressBar, getConfiguration
+from pasta_eln.miscTools import getConfiguration
 from pasta_eln.installationTools import exampleData
 
 class TestStringMethods(unittest.TestCase):

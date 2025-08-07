@@ -68,9 +68,9 @@ def test_simple(qtbot):
     print('  ',sourceItem.data(),'->\n  ', targetParent.data(),'   child', targetChildRow)
     targetParent.setChild(targetChildRow, sourceItem)
     verify(comm, projID, epoch)
-    print(f'{"*"*40}\nEND TEST 03\n{"*"*40}')
 
   # close everything
+  print(f'{"*"*40}\nEND TEST 03\n{"*"*40}')
   comm.shutdownBackendThread()
   return
 
@@ -95,4 +95,6 @@ def verify(comm, projID, epoch): # Output hierarchy and verify DB
   loop.exec()
   comm.uiRequestTask.emit(Task.CHECK_DB, {'style':'text'})
   loop.exec()
+  comm.backendThread.worker.beSendHierarchy.disconnect(hierarchyCallback)
+  comm.backendThread.worker.beSendTaskReport.disconnect(checkDBCallback)
   return
