@@ -24,8 +24,11 @@
       "request": "launch",
       "module": "pytest",
       "args": [
+        "-s",
         "tests/test_10_DefaultExampleAddProject.py",
-        "tests/test_11_Export.py"
+        "tests/test_11_Export.py",
+        "tests/test_12_Report.py",
+        "tests/test_13_ImportCSV.py"
       ],
       "console": "integratedTerminal"
     }

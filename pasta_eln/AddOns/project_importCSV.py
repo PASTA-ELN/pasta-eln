@@ -6,9 +6,8 @@ This tutorial teaches
 """
 from pathlib import Path
 import pandas as pd
-from PySide6.QtWidgets import QFileDialog
-from pasta_eln.guiStyle import showMessage
-from pasta_eln.sqlite import MAIN_ORDER
+from PySide6.QtWidgets import QFileDialog, QMessageBox
+from pasta_eln.backendWorker.sqlite import MAIN_ORDER
 
 # The following two variables are mandatory
 description  = 'Import csv-data'  #short description that is shown in the menu
@@ -43,20 +42,20 @@ def main(backend, hierStack, widget, parameter={}):
     # verify the columns are correct
     colNames = list(df.columns)
     if 'type' not in colNames or 'name' not in colNames:
-        showMessage(widget, 'Error', 'You have to have columns named "type" and "name"', 'Critical')
+        QMessageBox.critical(widget, 'Error', 'You have to have columns named "type" and "name"', 'Critical')
         return False
     if len(df['type'].unique()) > 1:
-        showMessage(widget, 'Error', 'All items in the type column have to be the same', 'Critical')
+        QMessageBox.critical(widget, 'Error', 'All items in the type column have to be the same', 'Critical')
         return False
     docType = df['type'].unique()[0]
     if docType not in backend.db.dataHierarchy('',''):
-        showMessage(widget, 'Error', 'The type does not exist in PASTA database', 'Critical')
+        QMessageBox.critical(widget, 'Error', 'The type does not exist in PASTA database', 'Critical')
         return False
     # columns that are in the Pasta-ELN
     colPasta = [f'{i["class"]}.{i["name"]}' for i in backend.db.dataHierarchy(docType,'meta')]
     colPasta = [i[1:] if i[1:] in MAIN_ORDER+['tags','qrCodes'] else i for i in colPasta] + ['type']
     if set(colNames).difference(colPasta):
-        showMessage(widget, 'Error', f'All columns must exist in the data schema. Offending: {set(colNames).difference(colPasta)}', 'Critical')
+        QMessageBox.critical(widget, 'Error', f'All columns must exist in the data schema. Offending: {set(colNames).difference(colPasta)}', 'Critical')
         return False
 
     # Move into that folder

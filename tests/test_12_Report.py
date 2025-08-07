@@ -2,8 +2,10 @@
 """TEST using the FULL set of python-requirements: create the default example that all installations create and verify it thoroughly """
 import logging, warnings, unittest, tempfile, os
 from pathlib import Path
-from pasta_eln.backend import Backend
+from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.AddOns.project_html_report import main
+from pasta_eln.miscTools import getConfiguration
+
 
 class TestStringMethods(unittest.TestCase):
   """
@@ -31,8 +33,9 @@ class TestStringMethods(unittest.TestCase):
     logging.info('Start test')
 
     # create .eln
-    self.be = Backend('research')
-    projID = self.be.output('x0').split('|')[-1].strip()
+    configuration, _ = getConfiguration('research')
+    self.be = Backend(configuration, 'research')
+    projID = self.be.output('x0').split('|')[-2].strip()
     tempDir = tempfile.gettempdir()
     fileName = f'{tempDir}/temp.html'
     print(f'Filename {fileName}')

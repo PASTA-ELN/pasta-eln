@@ -3,8 +3,9 @@
 import logging, warnings, unittest, tempfile, os
 from pathlib import Path
 from zipfile import ZipFile
-from pasta_eln.backend import Backend
-from pasta_eln.inputOutput import exportELN
+from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.backendWorker.inputOutput import exportELN
+from pasta_eln.miscTools import getConfiguration
 
 
 class TestStringMethods(unittest.TestCase):
@@ -35,9 +36,10 @@ class TestStringMethods(unittest.TestCase):
       logging.getLogger(package).setLevel(logging.WARNING)
     logging.info('Start test')
 
-    # create .eln
-    self.be = Backend('research')
-    projID = self.be.output('x0').split('|')[-1].strip()
+    # create .
+    configuration, _ = getConfiguration('research')
+    self.be = Backend(configuration, 'research')
+    projID = self.be.output('x0').split('|')[-2].strip()
     tempDir = tempfile.gettempdir()
     fileName = f'{tempDir}/PASTA.eln'
     allDocTypes = self.be.db.dataHierarchy('','')+['-']
