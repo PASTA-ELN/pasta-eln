@@ -1,4 +1,5 @@
 """ Communication class that sends signals between widgets and the backend worker"""
+import os
 from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot                           # pylint: disable=no-name-in-module
@@ -118,7 +119,7 @@ class Communicate(QObject):
       task (Task): task to execute
     """
 
-    if task.msgWaitDialog == '':
+    if task.msgWaitDialog == '' or "PYTEST_CURRENT_TEST" in os.environ:
       return
     self.waitDialog.text.setMarkdown(task.msgWaitDialog)
     self.waitDialog.text.setFixedHeight(30)

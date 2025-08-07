@@ -579,9 +579,9 @@ class SqlLiteDB:
     elif path=='':
       self.cursor.execute(f"SELECT type, name FROM main WHERE id == '{docID}'")
       docType, name = self.cursor.fetchall()[0]
+      parentDir = Path(pathOld).parent
       if docType.startswith('x'):
         docTemp = {'name':name, 'type':[docType]}
-        parentDir = Path(pathOld).parent
         name = createDirName(docTemp, child, parentDir)
       path = (parentDir/name).as_posix()
     show  = self.createShowFromStack(stack, showOld[-1])

@@ -67,18 +67,24 @@ def test_simple(qtbot):
     targetChildRow   = validChoices[choices.pop(0)%len(validChoices)]
     print('  ',sourceItem.data(),'->\n  ', targetParent.data(),'   child', targetChildRow)
     targetParent.setChild(targetChildRow, sourceItem)
-    verify(comm, projID)
+    verify(comm, projID, epoch)
     print(f'{"*"*40}\nEND TEST 03\n{"*"*40}')
+
+  # close everything
+  comm.shutdownBackendThread()
   return
 
-def verify(comm, projID): # Output hierarchy and verify DB
+
+def verify(comm, projID, epoch): # Output hierarchy and verify DB
   # to communicate with backend
   loop = QEventLoop()
   def hierarchyCallback(hierarchy):
+    print(f'{"*"*40}\nHierarchy after drag-drop {epoch}\n{"*"*40}')
     print(''.join('  '*node.depth + node.name + ' | ' + '/'.join(node.docType) + (f' | {node.id}') +'\n'
                    for node in PreOrderIter(hierarchy)))
     loop.quit()
   def checkDBCallback(_, output):
+    print(f'{"*"*40}\nCheckDB after drag-drop {epoch}\n{"*"*40}')
     print(output)
     output = '\n'.join(output.split('\n')[8:])
     assert '**ERROR' not in output, 'Error in checkDB'
