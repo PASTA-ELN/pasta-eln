@@ -173,14 +173,20 @@ class BackendWorker(QObject):
         self.beSendTaskReport.emit(task, 'Scanning finished successfully', '')
 
       elif task is Task.ADD_DOC      and set(data.keys())=={'hierStack','docType','doc'}:
-        parentID  = data['hierStack'][-1]
-        self.backend.cwd = Path(self.backend.db.getDoc(parentID)['branch'][0]['path'])
+        if data['hierStack']:
+          parentID  = data['hierStack'][-1]
+          self.backend.cwd = Path(self.backend.db.getDoc(parentID)['branch'][0]['path'])
+        else:                                                                                        # project
+          self.backend.cwd = Path(self.backend.basePath)
+        print(data)
         self.backend.addData(data['docType'], data['doc'], data['hierStack'])
+        self.beSendDoc.emit(data['doc'])  # send updated doc back to GUI
 
       elif task is Task.EDIT_DOC      and set(data.keys())=={'doc'}:
         doc = self.backend.db.getDoc(data['doc']['id'])
         doc.update(data['doc'])
         self.backend.editData(doc)
+        self.beSendDoc.emit(self.backend.db.getDoc(data['doc']['id']))  # send updated doc back to GUI
 
       elif task is Task.MOVE_LEAVES and set(data.keys())=={'docID','stackOld','stackNew','childOld','childNew'}:
         verbose = True                                                               # Convenient for testing
@@ -239,7 +245,7 @@ class BackendWorker(QObject):
           if line['value'][0]==idx:                  #ignore id in question and those that are correct already
             continue
           if verbose:
-            print(f'  {line["id"]}: move: {idx} {shift}')
+            print(f'  {line["id"]}: move: {idx}')
           self.backend.db.updateBranch(  docID=line['id'], branch=line['value'][4], child=idx)
         if verbose:
           siblingsOld = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackOld']))#sorted by docID

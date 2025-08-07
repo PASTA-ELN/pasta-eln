@@ -39,8 +39,9 @@ class Form(QDialog):
     self.comm.backendThread.worker.beSendTable.connect(self.onGetTags)
     self.doc:dict[str,Any] = copy.deepcopy(doc)
     self.tagsAllList: list[str] = []
-    self.allDocIDs = self.doc['_ids'] if '_ids' in self.doc else [self.doc['id']]
-    print('Form doc:', self.doc)
+    self.allDocIDs = self.doc['_ids'] if '_ids' in self.doc else [self.doc['id']] if 'id' in self.doc else []
+    if not self.allDocIDs:
+      self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData) # do not wait for data if not needed
     for docID in self.allDocIDs:
       self.comm.uiRequestDoc.emit(docID)
     #self GUI elements
@@ -68,6 +69,7 @@ class Form(QDialog):
     self.saveBtn                              = QWidget()
     self.checkThreadTimer                     = QTimer(self)
     self.comm.uiRequestTable.emit('_tags_','', True)
+    self.paint()
 
 
   @Slot(dict)
@@ -109,15 +111,12 @@ class Form(QDialog):
       data (pd.DataFrame):  DataFrame containing tags
       docType (str): document type
     """
-    print('form tags', docType)
     self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTags)
     self.tagsAllList = data['tag'].unique()
     self.updateTagsBar()
 
   def paint(self) -> None:
     """ Paint the form with all the elements """
-    if not self.doc:
-      return
     if '_attachments' in self.doc:
       del self.doc['_attachments']
     self.flagNewDoc = True
@@ -174,8 +173,6 @@ class Form(QDialog):
     allKeys = {'docType', 'class', 'idx', 'name', 'unit', 'mandatory', 'list'}
     if any(allKeys.difference(i.keys()) for i in self.dataHierarchyNode):
       mask = [allKeys.difference(i.keys()) for i in self.dataHierarchyNode]
-      print(mask)
-      print(self.dataHierarchyNode)
       raise ValueError('dataHierarchyNode is not complete. Missing keys')
     # END TEMPORARY CHECK
     groups = {i['class'] for i in self.dataHierarchyNode}.difference({'metaVendor','metaUser'})
@@ -221,7 +218,7 @@ class Form(QDialog):
           self.otherChoices = QComboBox()                             #part/combobox that allow user to select
           self.otherChoices.setToolTip('Choose a tag or type a new one')
           self.otherChoices.setEditable(True)
-          self.otherChoices.setMaximumWidth(100)
+          self.otherChoices.setMinimumWidth(80)
           self.otherChoices.setValidator(QRegularExpressionValidator('[a-zA-Z]\\w+'))
           self.otherChoices.setIconSize(QSize(0,0))
           self.otherChoices.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
@@ -564,7 +561,7 @@ class Form(QDialog):
           group, subItem = '', key
         if [i['mandatory'] for i in self.dataHierarchyNode if i['class']==group and i['name']==subItem] == ['T'] and \
           getattr(self, elementName).text().strip()=='':
-          print(group,key,subItem)
+          print(f'**ERROR group:{group}| key:{key}| subItem:{subItem}: mandatory field is empty')
           showMessage(self, 'Error', f'The created item must have a valid {subItem}')
           return
         if key=='name':
@@ -638,7 +635,7 @@ class Form(QDialog):
         # else:
         #   newProjID = [self.projectComboBox.currentData()]
       # ---- if docType changed: save; no further save to db required ----
-      if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
+      if self.docTypeComboBox.currentData() != '' and self.docTypeComboBox.currentData() is not None:
         self.doc['type'] = [self.docTypeComboBox.currentData()]
       self.doc = flatten(self.doc, True)                                            # type: ignore[assignment]
       docBackup = copy.deepcopy(self.doc)                                           # for duplicate, save&next
