@@ -47,7 +47,7 @@ class Project(QWidget):
 
 
   @Slot(Node, dict)
-  def onGetData(self, hierarchy:Node, doc:pd.DataFrame) -> None:
+  def onGetData(self, hierarchy:Node, doc:dict[str,Any]) -> None:
     """
     Callback function to handle the received data
 
@@ -55,7 +55,8 @@ class Project(QWidget):
       hierarchy (Node): hierarchy of the project
       doc (pd.DataFrame): DataFrame containing table
     """
-    self.docProj = doc
+    if doc:
+      self.docProj = doc
     self.hierarchy = hierarchy
     self.paint()
 

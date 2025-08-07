@@ -287,8 +287,8 @@ class Details(QScrollArea):
       docID = ''
       if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
           ',' not in dataHierarchyItems[0]['list'] and ' ' not  in dataHierarchyItems[0]['list']:                           #choice among docType
-        if dataHierarchyItems[0]['list'] not in self.idsTypesNames['docType'].values:
-          self.comm.uiRequestTable.emit(dataHierarchyItems[0]['list'])
+        if dataHierarchyItems[0]['list'] not in self.idsTypesNames['type'].values:
+          self.comm.uiRequestTable.emit(dataHierarchyItems[0]['list'], '', True)
         else:
           names= list(self.idsTypesNames[self.idsTypesNames.id==value[0]]['name'])
           if len(names)==1:                                              # default find one item that we link to

@@ -389,7 +389,7 @@ def flatten(d:dict[Any,Any], keepPastaStruct:bool=False) -> dict[object, Any]:
 
   def _flatten(_d:Union[Mapping[Any, Any], list[Any]], depth:int, parent:object=None) -> bool:
     """ Recursive function """
-    key_value_iterable = (enumerate(_d) if isinstance(_d, enumerate_types) else _d.items())
+    key_value_iterable = enumerate(_d) if isinstance(_d, enumerate_types) else _d.items()
     has_item = False
     for key, value in key_value_iterable:
       has_item = True
@@ -406,11 +406,11 @@ def flatten(d:dict[Any,Any], keepPastaStruct:bool=False) -> dict[object, Any]:
     return has_item
 
   # start recursive calling
-  backup = {'type':d.pop('type',''), 'branch':d.pop('branch',''), 'tags':d.pop('tags',''),
-            'gui':d.pop('gui',''), 'qrCodes':d.pop('qrCodes',''), '_ids':d.pop('_ids','')} \
+  backup = {'type':d.pop('type',None), 'branch':d.pop('branch',None),   'tags':d.pop('tags',None),
+            'gui':d.pop('gui',None),   'qrCodes':d.pop('qrCodes',None), '_ids':d.pop('_ids',None)} \
            if keepPastaStruct else {}
   _flatten(d, depth=1)
-  return flat_dict | {k:v for k,v in backup.items() if v}
+  return flat_dict | {k:v for k,v in backup.items() if v is not None}
 
 
 def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
