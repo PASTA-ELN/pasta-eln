@@ -55,11 +55,11 @@ class DocTypeEditor(QDialog):
       cmd (str): command that was sent to backend
       data (pd.DataFrame): DataFrame containing the data
     """
-    if cmd == 'SELECT * from docTypes WHERE docType=="instrument"':
-      self.initialData = data.values.tolist()[0]
-      self.paint()
     if cmd == 'SELECT docType, shortcut from docTypes':
       self.shortcuts = [j for i,j in data.values.tolist() if len(j)==1 and i!=self.docType]
+    elif cmd == 'SELECT * from docTypes WHERE docType=="instrument"':
+      self.initialData = data.values.tolist()[0]
+      self.paint()
 
 
   def paint(self) -> None:

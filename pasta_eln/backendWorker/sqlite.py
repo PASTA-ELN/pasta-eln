@@ -1139,8 +1139,7 @@ class SqlLiteDB:
         SVG_RE = re.compile(SVG_R, re.DOTALL)
         if SVG_RE.match(image) is None:
           reply+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
-      elif image in ('', None):
-        pass
+      # elif image in ('', None):
         # No more warnings if images are not present: happens often in propriatary binary files,... users see it
         # comment = comment.replace('\n','..')
         # reply+=outputString(outputStyle,'unsure',f"image does not exist {docID} image:{image} comment:{comment}")

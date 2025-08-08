@@ -82,12 +82,12 @@ class Editor(QDialog):
       cmd (str): command that was sent
       data (pd.DataFrame): DataFrame containing the data
     """
-    if cmd == 'SELECT docType, PURL, title FROM docTypes':
-      data['defType'] = 'class'
-      self.df0 = data.rename({'docType':'key', 'title':'long'}, axis=1)
     if cmd == 'SELECT * FROM definitions':
       data['defType'] = 'attribute'
       self.df1 = data
+    elif cmd == 'SELECT docType, PURL, title FROM docTypes':
+      data['defType'] = 'class'
+      self.df0 = data.rename({'docType':'key', 'title':'long'}, axis=1)
     self.data = pd.concat([self.df0,self.df1])[['key','long','PURL','defType']]
     self.paint()
 

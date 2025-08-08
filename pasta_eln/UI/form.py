@@ -39,7 +39,7 @@ class Form(QDialog):
     self.comm.backendThread.worker.beSendTable.connect(self.onGetTags)
     self.doc:dict[str,Any] = copy.deepcopy(doc)
     self.tagsAllList: list[str] = []
-    self.allDocIDs = self.doc['_ids'] if '_ids' in self.doc else [self.doc['id']] if 'id' in self.doc else []
+    self.allDocIDs = self.doc.get('_ids', [self.doc['id']] if 'id' in self.doc else [])
     if not self.allDocIDs:
       self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData) # do not wait for data if not needed
     for docID in self.allDocIDs:
@@ -121,9 +121,7 @@ class Form(QDialog):
       return
     if '_attachments' in self.doc:
       del self.doc['_attachments']
-    self.flagNewDoc = True
-    if 'id' in self.doc or '_ids' in self.doc:
-      self.flagNewDoc = False
+    self.flagNewDoc = 'id' in self.doc or '_ids' in self.doc
     if self.flagNewDoc:
       self.setWindowTitle('Create new entry')
       self.doc['name'] = ''
@@ -174,7 +172,7 @@ class Form(QDialog):
     #TODO: TEMPORARY CHECK: REMOVE 2026
     allKeys = {'docType', 'class', 'idx', 'name', 'unit', 'mandatory', 'list'}
     if any(allKeys.difference(i.keys()) for i in self.dataHierarchyNode):
-      mask = [allKeys.difference(i.keys()) for i in self.dataHierarchyNode]
+      #mask = [allKeys.difference(i.keys()) for i in self.dataHierarchyNode]
       raise ValueError('dataHierarchyNode is not complete. Missing keys')
     # END TEMPORARY CHECK
     groups = {i['class'] for i in self.dataHierarchyNode}.difference({'metaVendor','metaUser'})

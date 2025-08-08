@@ -3,7 +3,6 @@ import logging
 import os
 from enum import Enum
 from typing import Any, Optional
-import pandas as pd
 from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel       # pylint: disable=no-name-in-module
@@ -159,7 +158,7 @@ class Project(QWidget):
     """
     What happens when user clicks to change project that is shown
     """
-    if self.isHidden() and "PYTEST_CURRENT_TEST" not in os.environ:
+    if self.isHidden() and 'PYTEST_CURRENT_TEST' not in os.environ:
       return
     #initialize
     for i in reversed(range(self.mainL.count())):                                                  #remove old

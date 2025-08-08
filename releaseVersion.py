@@ -247,7 +247,7 @@ def findTasks():
   - information also in guiCommunicate
   """
   target = {}
-  result1 = subprocess.run(['grep', '-r','uiRequestTask', 'pasta_eln'], capture_output=True, text=True)
+  result1 = subprocess.run(['grep', '-r','uiRequestTask', 'pasta_eln'], capture_output=True, text=True, check=False)
   for line in result1.stdout.split('\n'):
     if len(line)<10:
       continue

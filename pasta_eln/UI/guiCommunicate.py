@@ -119,7 +119,7 @@ class Communicate(QObject):
       task (Task): task to execute
     """
 
-    if task.msgWaitDialog == '' or "PYTEST_CURRENT_TEST" in os.environ:
+    if task.msgWaitDialog == '' or 'PYTEST_CURRENT_TEST' in os.environ:
       return
     self.waitDialog.text.setMarkdown(task.msgWaitDialog)
     self.waitDialog.text.setFixedHeight(30)

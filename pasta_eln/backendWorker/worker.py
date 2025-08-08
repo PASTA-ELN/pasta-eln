@@ -412,7 +412,7 @@ class BackendWorker(QObject):
         df = pd.read_sql_query(task['cmd'], self.backend.db.connection).fillna('')
         self.beSendSQL.emit(task['cmd'], df)
       else:
-        print("**ERROR unknown task command", task)
+        print('**ERROR unknown task command', task)
       self.backend.db.connection.commit()
 
 
