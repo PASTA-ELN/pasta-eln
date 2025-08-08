@@ -1,11 +1,12 @@
 """ Main class of config tab on authors """
 import json
-import re, logging
+import logging
+import re
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 import requests
-from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout
 from ...fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, TextButton, widgetAndLayout, widgetAndLayoutForm

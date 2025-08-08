@@ -9,7 +9,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information
 from typing import Union
 import qtawesome as qta
-from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize, QObject
+from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QObject, QPersistentModelIndex, QSize
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (QApplication, QPushButton, QStyle, QStyledItemDelegate, QStyleOption, QStyleOptionButton,
                                QStyleOptionViewItem, QWidget)

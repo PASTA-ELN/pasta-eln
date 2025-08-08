@@ -9,9 +9,9 @@ from typing import Any, Union
 import pandas as pd
 from PySide6.QtCore import QSize, Qt, QTimer, Slot                         # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator                      # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox,# pylint: disable=no-name-in-module
-                               QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget,
-                               QLayout, QFormLayout)
+from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout,# pylint: disable=no-name-in-module
+                               QLabel, QLayout, QLineEdit, QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTabWidget,
+                               QTextEdit, QVBoxLayout, QWidget)
 from ..backendWorker.sqlite import MAIN_ORDER
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
@@ -22,6 +22,7 @@ from .guiCommunicate import Communicate
 from .guiStyle import IconButton, Image, Label, ScrollMessageBox, TextButton, widgetAndLayout, widgetAndLayoutForm
 from .messageDialog import showMessage
 from .textEditor import TextEditor
+
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""

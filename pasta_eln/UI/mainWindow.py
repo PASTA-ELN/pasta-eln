@@ -7,13 +7,13 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import Slot, QEvent                                    # pylint: disable=no-name-in-module
+from PySide6.QtCore import QEvent, Slot                                    # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut                        # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QFileDialog, QMainWindow                     # pylint: disable=no-name-in-module
 from pasta_eln import __version__
-from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
-from ..miscTools import hardRestart, updateAddOnList, installPythonPackages
 from ..backendWorker.worker import Task
+from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
+from ..miscTools import hardRestart, installPythonPackages, updateAddOnList
 from .body import Body
 from .config.main import Configuration
 from .data_hierarchy.editor import SchemeEditor
@@ -25,6 +25,7 @@ from .messageDialog import showMessage
 from .palette import Palette
 from .repositories.uploadGUI import UploadGUI
 from .sidebar import Sidebar
+
 
 class MainWindow(QMainWindow):
   """ Graphical user interface includes all widgets """

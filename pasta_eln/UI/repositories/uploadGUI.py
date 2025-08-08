@@ -4,8 +4,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 import qtawesome as qta
-from PySide6.QtCore import Qt, Slot                                        # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QCheckBox, QDialog, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtWidgets import QCheckBox, QDialog, QLabel, QLineEdit, QVBoxLayout
 from ...backendWorker.worker import Task
 from ...fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate

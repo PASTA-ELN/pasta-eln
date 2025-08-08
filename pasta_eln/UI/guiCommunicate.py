@@ -3,10 +3,10 @@ import os
 from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot                           # pylint: disable=no-name-in-module
-from .waitDialog import WaitDialog, Worker
-from .palette import Palette
 from ..backendWorker.worker import BackendThread, Task
 from ..miscTools import getConfiguration
+from .palette import Palette
+from .waitDialog import WaitDialog, Worker
 
 
 class Communicate(QObject):

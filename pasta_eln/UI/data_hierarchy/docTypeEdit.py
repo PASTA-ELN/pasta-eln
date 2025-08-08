@@ -5,12 +5,13 @@ from typing import Callable, Optional
 import pandas as pd
 import qtawesome as qta
 from PySide6.QtCore import Slot
-from PySide6.QtGui import QRegularExpressionValidator                      # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
+from PySide6.QtGui import QRegularExpressionValidator
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout
 from ...fixedStringsJson import allIcons
 from ..guiCommunicate import Communicate
 from ..guiStyle import TextButton, widgetAndLayout, widgetAndLayoutForm
 from ..messageDialog import showMessage
+
 
 class DocTypeEditor(QDialog):
   """ Edit properties of a docType """

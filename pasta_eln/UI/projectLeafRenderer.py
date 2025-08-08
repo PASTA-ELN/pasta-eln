@@ -6,10 +6,10 @@ from PySide6.QtCore import QMargins, QModelIndex, QPoint, QRectF, QSize, Qt, Slo
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap, QStaticText, QTextDocument# pylint: disable=no-name-in-module
 from PySide6.QtSvg import QSvgRenderer                                     # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem    # pylint: disable=no-name-in-module
-from .guiCommunicate import Communicate
 from ..fixedStringsJson import DO_NOT_RENDER, defaultDataHierarchyNode
 from ..textTools.handleDictionaries import doc2markdown
 from ..textTools.stringChanges import markdownEqualizer
+from .guiCommunicate import Communicate
 
 class ProjectLeafRenderer(QStyledItemDelegate):
   """ ONE Renderer for all leafs of project tree using QPaint """

@@ -1,5 +1,6 @@
 """ Dialog that shows a message and the progress-bar """
-import re, logging
+import logging
+import re
 from typing import Any, Callable
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import QDialogButtonBox, QProgressBar, QTextBrowser, QVBoxLayout, QWidget

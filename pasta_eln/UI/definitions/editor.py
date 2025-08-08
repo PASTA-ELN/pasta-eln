@@ -1,13 +1,13 @@
 """ widget that shows the table of the items """
-from enum import Enum
 import itertools
 import logging
+from enum import Enum
 from pathlib import Path
 from typing import Any
 import pandas as pd
 import qtawesome as qta
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QDialog, QFileDialog, QTableWidget, QTableWidgetItem, QVBoxLayout# pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QFileDialog, QTableWidget, QTableWidgetItem, QVBoxLayout
 from ...miscTools import callAddOn
 from ..guiCommunicate import Communicate
 from ..guiStyle import TextButton, space, widgetAndLayout

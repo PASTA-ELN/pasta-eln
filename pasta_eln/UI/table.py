@@ -12,8 +12,8 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView
                                QLineEdit, QMenu, QMessageBox, QPushButton, QTableView, QVBoxLayout, QWidget)
 from ..backendWorker.worker import Task
 from ..miscTools import callAddOn
-from .guiCommunicate import Communicate
 from .gallery import ImageGallery
+from .guiCommunicate import Communicate
 from .guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
 from .tableHeader import TableHeader
 

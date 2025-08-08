@@ -1,8 +1,8 @@
 """ Dialog that shows a message and possibly an image """
 import qtawesome as qta
 from PySide6.QtCore import Qt                                              # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QWidget, QLabel, QApplication, QDialog, QVBoxLayout
-from .guiStyle import TextButton, Label, Image, widgetAndLayout    # pylint: disable=relative-beyond-top-level
+from PySide6.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QWidget
+from .guiStyle import Image, Label, TextButton, widgetAndLayout    # pylint: disable=relative-beyond-top-level
 
 ICON_SIZE = 40                                                             # size of the icon at top of dialog
 
