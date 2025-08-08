@@ -2,7 +2,20 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.11...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b1...HEAD)
+
+**Closed issues:**
+
+- De-selection of rating not possible [\#517](https://github.com/PASTA-ELN/pasta-eln/issues/517)
+- Label moves when Selecting entry in table [\#514](https://github.com/PASTA-ELN/pasta-eln/issues/514)
+- Group edit [\#504](https://github.com/PASTA-ELN/pasta-eln/issues/504)
+- Automated update of packages [\#463](https://github.com/PASTA-ELN/pasta-eln/issues/463)
+- Remove \#TODO in code [\#398](https://github.com/PASTA-ELN/pasta-eln/issues/398)
+- Use pyside6 binding in matplotlib [\#340](https://github.com/PASTA-ELN/pasta-eln/issues/340)
+
+## [v3.2.0b1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b1) (2025-07-03)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.11...v3.2.0b1)
 
 **Closed issues:**
 
