@@ -1,21 +1,20 @@
-from PySide6.QtWidgets import QMainWindow
-from pasta_eln.backend import Backend
-from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.UI.palette import Palette
+from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.UI.form import Form
 
 
 def test_simple(qtbot):
-  app = QMainWindow()
-  backend = Backend('research')
-  palette = Palette(app,'none')
-  comm = Communicate(backend,palette)
-  df = backend.db.getView('viewDocType/measurement')
+
+  comm = Communicate('research')
+  while comm.backendThread.worker.backend is None:
+    qtbot.wait(100)
+
+  df = comm.backendThread.worker.backend.db.getView('viewDocType/measurement')
   docID = df[df['name']=='simple.png']['id'].values[0]
-  doc = backend.db.getDoc(docID)
-  dialog = Form(comm, doc)
+  dialog = Form(comm, {'docID':docID})
   dialog.setMinimumSize(1024,800)
   dialog.show()
   qtbot.addWidget(dialog)
   path = qtbot.screenshot(dialog)
   print(path)
+
+  comm.shutdownBackendThread()

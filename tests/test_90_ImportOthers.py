@@ -2,14 +2,12 @@
 import logging, warnings, os, shutil, tempfile
 from pathlib import Path
 from urllib import request
-from pasta_eln.backend import Backend
-from pasta_eln.UI.project import Project
-from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.UI.palette import Palette
-from pasta_eln.inputOutput import importELN
+from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.backendWorker.inputOutput import importELN
+from pasta_eln.miscTools import getConfiguration
 
 
-def test_simple(qtbot):
+def test_simple():
   """
   main function
   """
@@ -26,11 +24,8 @@ def test_simple(qtbot):
   logging.info('Start 03 test')
 
   # start app and load project
-  backend = Backend('research')
-  palette = Palette(None, 'light_blue')
-  comm = Communicate(backend, palette)
-  window = Project(comm)
-  qtbot.addWidget(window)
+  configuration, _ = getConfiguration('research')
+  backend = Backend(configuration, 'research')
 
   # remove old and recreate empty
   dirName = backend.basePath
@@ -40,7 +35,7 @@ def test_simple(qtbot):
     os.makedirs(dirName)
   except Exception:
     pass
-  backend = Backend('research')
+  backend = Backend(configuration, 'research')
   tempDir = tempfile.gettempdir()
 
   allELNs = {'Pasta.eln'          :'PASTA/PASTA.eln',

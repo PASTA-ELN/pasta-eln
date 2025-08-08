@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 """TEST the form """
-import shutil, os, platform
 import logging, warnings
 from pathlib import Path
-from pasta_eln.backend import Backend
-from pasta_eln.elabFTWsync import Pasta2Elab
+from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
+from pasta_eln.miscTools import getConfiguration
 from .misc import verify, handleReport
 
 
@@ -24,7 +24,8 @@ def test_simple(qtbot):
     logging.getLogger(package).setLevel(logging.WARNING)
 
   # start app and load project
-  backend = Backend('research')
+  configuration, _ = getConfiguration('research')
+  backend = Backend(configuration, 'research')
   sync = Pasta2Elab(backend, 'research', purge=False)
   if not sync.api.url:
     return

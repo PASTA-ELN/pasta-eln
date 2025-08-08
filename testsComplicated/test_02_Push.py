@@ -2,9 +2,9 @@
 """TEST set up elabFTW server and test repetition of sync """
 import logging, warnings, unittest
 from pathlib import Path
-from PySide6.QtWidgets import QApplication
-from pasta_eln.backend import Backend
-from pasta_eln.elabFTWsync import Pasta2Elab
+from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
+from pasta_eln.miscTools import getConfiguration
 from .misc import verify, handleReport
 
 
@@ -33,11 +33,8 @@ class TestStringMethods(unittest.TestCase):
       logging.getLogger(package).setLevel(logging.WARNING)
 
     # setup and sync to server
-    try:
-      _ = QApplication()
-    except RuntimeError:
-      pass
-    self.be = Backend('research')
+    configuration, _ = getConfiguration('research')
+    self.be = Backend(configuration, 'research')
     sync = Pasta2Elab(self.be, 'research', True)
     sync.verbose = False
     report = sync.sync('sA')
@@ -51,7 +48,6 @@ class TestStringMethods(unittest.TestCase):
     # verify
     verify(self.be)
     return
-
 
   def tearDown(self):
     logging.info('End test')

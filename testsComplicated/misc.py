@@ -1,4 +1,4 @@
-from pasta_eln.elabFTWsync import MERGE_LABELS
+from pasta_eln.backendWorker.elabFTWsync import MERGE_LABELS
 
 def verify(backend): # Verify DB
   output = backend.checkDB(outputStyle='text')

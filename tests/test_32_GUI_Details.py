@@ -1,26 +1,25 @@
 from PySide6.QtWidgets import QMainWindow
-from pasta_eln.backend import Backend
-from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.UI.palette import Palette
+from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.UI.details import Details
 
 def test_simple(qtbot):
-  class MainWindow(QMainWindow):
-    def __init__(self):
-      super().__init__()
-      self.backend = Backend('research')
-      palette = Palette(self,'none')
-      self.comm = Communicate(self.backend, palette)
-      widget = Details(self.comm)
-      self.setCentralWidget(widget)
-      self.docIDs = [i.split('|')[-1].strip() for i in self.backend.output('measurement').split('\n')[-3:]]
 
-  window = MainWindow()
-  window.setMinimumSize(600,800)
+  comm = Communicate('research')
+  while comm.backendThread.worker.backend is None:
+    qtbot.wait(100)
+  window = Details(comm)
+  window.setMinimumSize(1024,800)
   window.show()
+
+  docIDs = [i.split('|')[-1].strip() for i in comm.backendThread.worker.backend.output('measurement').split('\n')[-3:]]
+
   qtbot.addWidget(window)
+  while comm.backendThread.worker.backend is None:
+    qtbot.wait(100)
 
   for i in range(3):
-    window.comm.changeDetails.emit(window.docIDs[i])
+    window.comm.changeDetails.emit(docIDs[i])
     path = qtbot.screenshot(window)
     print(path)
+
+  comm.shutdownBackendThread()

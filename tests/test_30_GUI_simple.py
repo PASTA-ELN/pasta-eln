@@ -1,11 +1,15 @@
-from pasta_eln.gui import MainWindow
-
+from pasta_eln.UI.mainWindow import MainWindow
+from pasta_eln.UI.guiCommunicate import Communicate
 
 def test_simple(qtbot):
-  window = MainWindow('research')
+
+  comm = Communicate('research')
+  window = MainWindow(comm)
   window.setMinimumSize(1024,800)
   window.show()
   qtbot.addWidget(window)
+  while comm.backendThread.worker.backend is None:
+    qtbot.wait(100)
 
   # projID1 = window.comm.backend.output('x0').split('|')[-1].strip()
   # print(projID1)

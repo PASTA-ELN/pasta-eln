@@ -12,6 +12,13 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "Start tools",
+      "type": "debugpy",
+      "module": "pasta_eln.tools",
+      "request": "launch",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Start research",
       "type": "debugpy",
       "program":"/home/steffen/FZJ/PASTA/pasta-eln/pastaResearch.py",

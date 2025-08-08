@@ -7,7 +7,7 @@ from pasta_eln.tools import Tools
 from .misc import verify, handleReport
 
 
-def test_simple(qtbot):
+def test_simple():
   """
   main function
   """

@@ -117,6 +117,8 @@ class Form(QDialog):
 
   def paint(self) -> None:
     """ Paint the form with all the elements """
+    if 'type' not in self.doc:
+      return
     if '_attachments' in self.doc:
       del self.doc['_attachments']
     self.flagNewDoc = True
