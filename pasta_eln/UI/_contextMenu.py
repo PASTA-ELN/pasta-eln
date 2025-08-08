@@ -6,8 +6,8 @@ import subprocess
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QPoint                                          # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QMenu, QWidget                               # pylint: disable=no-name-in-module
+from PySide6.QtCore import QPoint
+from PySide6.QtWidgets import QMenu, QWidget
 from ..backendWorker.worker import Task
 from .guiStyle import Action
 

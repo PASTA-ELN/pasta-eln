@@ -2,10 +2,10 @@
 import base64
 import logging
 from typing import Any
-from PySide6.QtCore import QMargins, QModelIndex, QPoint, QRectF, QSize, Qt, Slot# pylint: disable=no-name-in-module
-from PySide6.QtGui import QColor, QPainter, QPen, QPixmap, QStaticText, QTextDocument# pylint: disable=no-name-in-module
-from PySide6.QtSvg import QSvgRenderer                                     # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem    # pylint: disable=no-name-in-module
+from PySide6.QtCore import QMargins, QModelIndex, QPoint, QRectF, QSize, Qt, Slot
+from PySide6.QtGui import QColor, QPainter, QPen, QPixmap, QStaticText, QTextDocument
+from PySide6.QtSvg import QSvgRenderer
+from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem
 from ..fixedStringsJson import DO_NOT_RENDER, defaultDataHierarchyNode
 from ..textTools.handleDictionaries import doc2markdown
 from ..textTools.stringChanges import markdownEqualizer

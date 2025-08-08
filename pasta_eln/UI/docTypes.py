@@ -1,7 +1,7 @@
 """ widget that shows the table and the details of the items """
 from typing import Any
-from PySide6.QtCore import Slot                                            # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QSplitter, QVBoxLayout, QWidget              # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QSplitter, QVBoxLayout, QWidget
 from .details import Details
 from .guiCommunicate import Communicate
 from .table import Table

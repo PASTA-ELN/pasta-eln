@@ -4,9 +4,9 @@ from enum import Enum
 from typing import Any
 from anytree import Node
 import pandas as pd
-from PySide6.QtCore import Slot                                            # pylint: disable=no-name-in-module
-from PySide6.QtGui import QResizeEvent                                     # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QVBoxLayout, QWidget# pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot
+from PySide6.QtGui import QResizeEvent
+from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QVBoxLayout, QWidget
 from ..backendWorker.worker import Task
 from .guiCommunicate import Communicate
 from .guiStyle import IconButton, TextButton, space, widgetAndLayout, widgetAndLayoutGrid

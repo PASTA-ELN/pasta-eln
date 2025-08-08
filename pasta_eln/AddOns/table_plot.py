@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 from PySide6.QtCore import QSize
-from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLineEdit, QVBoxLayout# pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLineEdit, QVBoxLayout
 # from scipy import stats
 # from sklearn.metrics import r2_score
 from pasta_eln.miscTools import MplCanvas, dfConvertColumns, isFloat

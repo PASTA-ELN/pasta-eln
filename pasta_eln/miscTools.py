@@ -16,7 +16,7 @@ import pandas as pd
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from packaging.version import parse as parse_version
-from PySide6.QtWidgets import QWidget                                      # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget
 import pasta_eln
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
 

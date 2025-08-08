@@ -2,7 +2,7 @@
 import os
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QObject, Signal, Slot                           # pylint: disable=no-name-in-module
+from PySide6.QtCore import QObject, Signal, Slot
 from ..backendWorker.worker import BackendThread, Task
 from ..miscTools import getConfiguration
 from .palette import Palette

@@ -6,10 +6,10 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 import pandas as pd
-from PySide6.QtCore import QModelIndex, QSortFilterProxyModel, Qt, Slot    # pylint: disable=no-name-in-module
-from PySide6.QtGui import QRegularExpressionValidator, QStandardItem, QStandardItemModel# pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView,# pylint: disable=no-name-in-module
-                               QLineEdit, QMenu, QMessageBox, QPushButton, QTableView, QVBoxLayout, QWidget)
+from PySide6.QtCore import QModelIndex, QSortFilterProxyModel, Qt, Slot
+from PySide6.QtGui import QRegularExpressionValidator, QStandardItem, QStandardItemModel
+from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView, QLineEdit, QMenu, QMessageBox,
+                               QPushButton, QTableView, QVBoxLayout, QWidget)
 from ..backendWorker.worker import Task
 from ..miscTools import callAddOn
 from .gallery import ImageGallery

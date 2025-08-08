@@ -7,9 +7,9 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QEvent, Slot                                    # pylint: disable=no-name-in-module
-from PySide6.QtGui import QIcon, QPixmap, QShortcut                        # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QFileDialog, QMainWindow                     # pylint: disable=no-name-in-module
+from PySide6.QtCore import QEvent, Slot
+from PySide6.QtGui import QIcon, QPixmap, QShortcut
+from PySide6.QtWidgets import QFileDialog, QMainWindow
 from pasta_eln import __version__
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts

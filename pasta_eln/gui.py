@@ -2,9 +2,9 @@
 import logging
 import traceback
 from pathlib import Path
-from PySide6.QtCore import QCoreApplication                                # pylint: disable=no-name-in-module
-from PySide6.QtGui import QIcon                                            # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QApplication, QMessageBox                    # pylint: disable=no-name-in-module
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QApplication, QMessageBox
 from pasta_eln import __version__
 from .miscTools import testNewPastaVersion
 from .UI.guiCommunicate import Communicate

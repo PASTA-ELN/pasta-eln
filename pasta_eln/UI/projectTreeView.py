@@ -4,9 +4,9 @@ import os
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import Qt                                              # pylint: disable=no-name-in-module
-from PySide6.QtGui import QDropEvent, QEventPoint, QStandardItem, QStandardItemModel# pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget# pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QDropEvent, QEventPoint, QStandardItem, QStandardItemModel
+from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget
 from ..backendWorker.worker import Task
 from ..miscTools import callAddOn
 from .guiCommunicate import Communicate

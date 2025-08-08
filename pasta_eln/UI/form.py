@@ -7,11 +7,11 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Union
 import pandas as pd
-from PySide6.QtCore import QSize, Qt, QTimer, Slot                         # pylint: disable=no-name-in-module
-from PySide6.QtGui import QRegularExpressionValidator                      # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout,# pylint: disable=no-name-in-module
-                               QLabel, QLayout, QLineEdit, QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTabWidget,
-                               QTextEdit, QVBoxLayout, QWidget)
+from PySide6.QtCore import QSize, Qt, QTimer, Slot
+from PySide6.QtGui import QRegularExpressionValidator
+from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLayout, QLineEdit,
+                               QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit,
+                               QVBoxLayout, QWidget)
 from ..backendWorker.sqlite import MAIN_ORDER
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm

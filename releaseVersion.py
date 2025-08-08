@@ -272,11 +272,11 @@ def runSourceVerification() -> None:
   - sourcery
   """
   tools = {'pre-commit': 'pre-commit run --all-files',
-           #'isort'     : 'isort --ca pasta_eln/',
+           'isort'     : 'isort --ca pasta_eln/',
            'pylint'    : 'pylint pasta_eln/',
            'mypy'      : 'mypy --no-warn-unused-ignores pasta_eln/',
            'sourcery'  : 'sourcery review pasta_eln/',
-           #'isort2'    : 'isort releaseVersion.py',
+           'isort2'    : 'isort releaseVersion.py',
            'pylint2'   : 'pylint releaseVersion.py',
            'mypy2'     : 'mypy --no-warn-unused-ignores releaseVersion.py',
            'sourcery2' : 'sourcery review releaseVersion.py',
