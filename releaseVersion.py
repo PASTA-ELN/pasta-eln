@@ -224,8 +224,8 @@ def rightAlignComments() -> None:
   for root, _, files in os.walk('pasta_eln'):
     for file in files:
       if file.endswith('.py') and \
-          file not in ['markdown2html.py','html2markdown.py','html2mdConfig.py','html2mdUtils.py','guiCommunicate.py'] and\
-          'Resources/' not in root and '/AddOns' not in root:
+          file not in ['markdown2html.py','html2markdown.py','html2mdConfig.py','html2mdUtils.py',
+                       'guiCommunicate.py','worker.py'] and 'Resources/' not in root and '/AddOns' not in root:
         file_path = os.path.join(root, file)
         with open(file_path, encoding='utf-8') as f:
           content = f.read()
@@ -241,12 +241,12 @@ def rightAlignComments() -> None:
   return
 
 
-def findTasks():
+def findTasks() -> None:
   """ Find all tasks in the pasta_eln codebase that are emitted by the UI.
   This is used to find discrepancies in keys.
   - information also in guiCommunicate
   """
-  target = {}
+  target:dict[str,list[str]] = {}
   result1 = subprocess.run(['grep', '-r','uiRequestTask', 'pasta_eln'], capture_output=True, text=True, check=False)
   for line in result1.stdout.split('\n'):
     if len(line)<10:

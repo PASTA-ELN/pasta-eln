@@ -13,7 +13,7 @@ from .elabFTWapi import ElabFTWApi
 from ..miscTools import flatten
 from ..textTools.handleDictionaries import squashTupleIntoValue
 from ..textTools.html2markdown import html2markdown
-from ..textTools.markdown2html import markdown2html                                # type: ignore[attr-defined]
+from ..textTools.markdown2html import markdown2html                               # type: ignore[attr-defined]
 
 
 # - consider hiding metadata.json (requires hiding the upload (state=2) and ability to read (it is even hidden in the API-read))

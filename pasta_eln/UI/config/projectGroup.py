@@ -138,7 +138,7 @@ class ProjectGroup(QDialog):
         showMessage(self, 'Error', 'Error: path to data directory is not set.')
         return
       if not config['addOnDir']:
-        config['addOnDir'] = Path(__file__).parent.parent/'AddOns'  #set default
+        config['addOnDir'] = Path(__file__).parent.parent/'AddOns'                                #set default
       # success
       choices = [i for i in self.serverPG if i[0]==self.serverProjectGroupLabel.currentText()]
       if choices and len(choices[0])==4:

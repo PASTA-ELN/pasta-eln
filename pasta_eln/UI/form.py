@@ -7,7 +7,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Union
 import pandas as pd
-from PySide6.QtCore import QSize, Qt, QTimer, Slot                               # pylint: disable=no-name-in-module
+from PySide6.QtCore import QSize, Qt, QTimer, Slot                         # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator                      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox,# pylint: disable=no-name-in-module
                                QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget,
@@ -84,7 +84,7 @@ class Form(QDialog):
       return
     if doc['id'] in self.allDocIDs:
       self.allDocIDs.remove(doc['id'])
-      if 'id' in self.doc and len(self.doc)==1: # initialize self.doc with a real doc: not just id
+      if 'id' in self.doc and len(self.doc)==1:             # initialize self.doc with a real doc: not just id
         self.doc = doc
       else:
         print(doc.keys(), doc['id'])
@@ -448,7 +448,7 @@ class Form(QDialog):
     """
     if isinstance(command[0], CommandMenu):
       if executeContextMenu(self, command) and self.imageL is not None:
-        item = self.imageL.itemAt(0)                             # two line construction to prevent union-attr #TODO
+        item = self.imageL.itemAt(0)                       # two line construction to prevent union-attr #TODO
         if item is not None: item.widget().setParent(None)
         width=self.comm.configuration['GUI']['imageSizeDetails'] if hasattr(self.comm,'configuration') else 300
         if 'image' in self.doc:
@@ -549,7 +549,7 @@ class Form(QDialog):
       # loop through all the subitems
       # rating
       rating = self.gradeChoices.currentText()
-      self.doc['tags'] = [i for i in self.doc['tags'] if not i.startswith('_')] # filter out old ratings
+      self.doc['tags'] = [i for i in self.doc['tags'] if not i.startswith('_')]       # filter out old ratings
       if rating != 'none':
         self.doc['tags'].append(f'_{len(rating)}')
       for idx, (key, guiType) in enumerate(self.allUserElements):

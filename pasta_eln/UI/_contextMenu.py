@@ -52,7 +52,7 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
   """
   filePath = Path(widget.doc['branch'][0]['path'])                                # type: ignore[attr-defined]
   if command[0] is CommandMenu.OPEN_FILEBROWSER or command[0] is CommandMenu.OPEN_EXTERNAL:
-    filePath = widget.comm.basePath/filePath                              # type: ignore[attr-defined]
+    filePath = widget.comm.basePath/filePath                                      # type: ignore[attr-defined]
     filePath = filePath if command[0] is CommandMenu.OPEN_EXTERNAL else filePath.parent
     if platform.system() == 'Darwin':                                                                  # macOS
       subprocess.call(('open', filePath))

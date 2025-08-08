@@ -101,7 +101,7 @@ class MainWindow(QMainWindow):
     mainLayout.addWidget(self.sidebar)
     mainLayout.addWidget(body)
     self.paint()
-    self.comm.changeTable.emit('x0', '')  # show project table, without details
+    self.comm.changeTable.emit('x0', '')                                 # show project table, without details
 
 
   @Slot()
@@ -249,7 +249,7 @@ class MainWindow(QMainWindow):
         reportText = re.sub(regexStr, '', reportText, count=myCount-5)
         reportText += r'<font color="magenta">image does not exist ...:<\/font><br>'
     elif task not in (Task.EXTRACTOR_TEST, Task.EXTRACTOR_RERUN, Task.DELETE_DOC, Task.EXPORT_ELN, Task.IMPORT_ELN, Task.SEND_ELAB,
-                      Task.GET_ELAB, Task.SMART_ELAB): #e.g. extractor tests work out of the box
+                      Task.GET_ELAB, Task.SMART_ELAB):               #e.g. extractor tests work out of the box
       logging.error('Unknown task in showReport: %s', task)
     showMessage(self, 'Report', reportText, image=image)
 

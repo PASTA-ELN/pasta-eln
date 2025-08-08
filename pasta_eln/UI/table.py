@@ -223,7 +223,7 @@ class Table(QWidget):
     model.setHorizontalHeaderLabels(self.filterHeader)
     for i, j in itertools.product(range(nRows), range(nCols-2)):
       value = self.data.iloc[i,j]
-      if self.docType=='_tags_':                                                              # tags list
+      if self.docType=='_tags_':                                                                   # tags list
         if j==0:
           if value=='_curated':                                                                       #curated
             item = QStandardItem('_curated_')

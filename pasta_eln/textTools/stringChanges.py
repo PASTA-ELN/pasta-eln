@@ -107,7 +107,7 @@ def createDirName(doc:dict[str,Any], thisChildNumber:int, parentDir:Path) -> str
   """
   name = camelCase(doc['name']) if doc['type'][0] == 'x0' else \
          f'{thisChildNumber:03d}_{camelCase(doc['name'])}'
-  if 'branch' in doc and name in [i['path'].split('/')[-1] for i in doc['branch']]:    #only change if not the same name as before
+  if 'branch' in doc and name in [i['path'].split('/')[-1] for i in doc['branch']]:#only change if not the same name as before
     logging.debug('createDirName: %s used', name)
     return name
   idx = 0

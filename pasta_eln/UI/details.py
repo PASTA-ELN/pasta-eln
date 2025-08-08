@@ -286,16 +286,16 @@ class Details(QScrollArea):
       dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
       docID = ''
       if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
-          ',' not in dataHierarchyItems[0]['list'] and ' ' not  in dataHierarchyItems[0]['list']:                           #choice among docType
+          ',' not in dataHierarchyItems[0]['list'] and ' ' not  in dataHierarchyItems[0]['list']:#choice among docType
         if dataHierarchyItems[0]['list'] not in self.idsTypesNames['type'].values:
           self.comm.uiRequestTable.emit(dataHierarchyItems[0]['list'], '', True)
         else:
           names= list(self.idsTypesNames[self.idsTypesNames.id==value[0]]['name'])
-          if len(names)==1:                                              # default find one item that we link to
+          if len(names)==1:                                            # default find one item that we link to
             docID = value[0]
             value = '\u260D '+names[0]
             link = True
-          elif not names:          # likely empty link because the value was not yet defined: just print to show
+          elif not names:        # likely empty link because the value was not yet defined: just print to show
             value = value[0] if isinstance(value,tuple) else value
           else:
             raise ValueError(f'list target exists multiple times. Key: {key}')

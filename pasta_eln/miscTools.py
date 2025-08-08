@@ -159,7 +159,7 @@ def installPythonPackages(directory:str) -> None:
   allLibs = allLibs.difference({i.split('.')[0] for i in sys.modules})# remove libs used by pasta, already in use
   for lib in allLibs:
     try:
-      importlib.import_module(lib)  # check if the package is already installed
+      importlib.import_module(lib)                                 # check if the package is already installed
     except ImportError:
       if lib == 'sklearn':
         lib = 'scikit-learn'

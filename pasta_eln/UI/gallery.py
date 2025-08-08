@@ -162,7 +162,7 @@ class ImageGallery(QWidget):
             pixmap = QPixmap.fromImage(imageW).scaled(IMG_SIZE,IMG_SIZE,Qt.KeepAspectRatio,Qt.SmoothTransformation)# type: ignore[attr-defined]
             button = ClickableFrame(doc['id'])
             button.setIcon(pixmap)
-            button.setAlignment(Qt.AlignCenter)                                    # type: ignore[attr-defined]
+            button.setAlignment(Qt.AlignCenter)                                   # type: ignore[attr-defined]
             button.clicked.connect(self.imageClicked)
             button.doubleClicked.connect(self.image2Clicked)
             self.gridL.addWidget(button, row, col)

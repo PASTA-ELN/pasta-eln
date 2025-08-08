@@ -145,9 +145,9 @@ class Image():
             pixmap = pixmap.scaledToWidth(anyDimension)
         label = QLabel()
         label.setPixmap(pixmap)
-        label.setAlignment(Qt.AlignCenter)                                                        # type: ignore
+        label.setAlignment(Qt.AlignCenter)                                                      # type: ignore
         if layout is not None:
-          layout.addWidget(label, alignment=Qt.AlignHCenter)                                      # type: ignore
+          layout.addWidget(label, alignment=Qt.AlignHCenter)                                    # type: ignore
       except Exception as e:
         logging.warning('Error processing base64-image %s', e)
     elif data.startswith('<?xml'):                                                                  #svg image

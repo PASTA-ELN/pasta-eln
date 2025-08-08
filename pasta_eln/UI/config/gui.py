@@ -55,7 +55,7 @@ class ConfigurationGUI(QDialog):
             self.comm.configuration['GUI'][k] = getattr(self, k).currentText()
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.configuration,indent=2))
-      hardRestart()  #theme
+      hardRestart()                                                                                     #theme
     return
 
 

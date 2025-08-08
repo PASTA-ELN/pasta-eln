@@ -125,7 +125,7 @@ class Project(QWidget):
     # self.infoW = QScrollArea()
     # self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     # self.infoW.setWidgetResizable(True)
-    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, [], self)) #TODO dataHierarchyNodes
+    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, [], self))  #TODO dataHierarchyNodes
     if not self.docProj['gui'][0]:
       self.allDetails.hide()
       self.actHideDetail.setText('Show project details')
