@@ -81,11 +81,11 @@ class ZenodoClient(RepositoryClient):
     # Define the API URLs and headers based on the repository kind
     with open(file_path, 'rb') as f:
       files = {'file': f}
-    file_upload_url = f"{server_url}/{persistentID}/files"
-    publish_url = f"{server_url}/{persistentID}/actions/publish"
+      file_upload_url = f"{server_url}/{persistentID}/files"
+      publish_url = f"{server_url}/{persistentID}/actions/publish"
 
-    # Step 2: Upload a file
-    resp = requests.post(file_upload_url, files=files, headers=self.headers2, timeout=10)
+      # Step 2: Upload a file
+      resp = requests.post(file_upload_url, files=files, headers=self.headers2, timeout=10)
     if resp.status_code != 201:
       logging.error('Uploading file: %s', resp.json())
       return False, 'Error uploading the file'

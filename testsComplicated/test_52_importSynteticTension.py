@@ -1,15 +1,15 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create 3 projects; simplified form of testTutorialComplex """
-import os, shutil, json, uuid
+import os, shutil
 import warnings
 import unittest
-import pandas as pd
-import numpy as np
 import re
 from pathlib import Path
-from pasta_eln.backend import Backend
+from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.miscTools import DummyProgressBar
 from pasta_eln.textTools.stringChanges import outputString
+from pasta_eln.miscTools import getConfiguration
+
 
 class TestStringMethods(unittest.TestCase):
   """
@@ -34,14 +34,15 @@ class TestStringMethods(unittest.TestCase):
     warnings.filterwarnings('ignore', category=ImportWarning)
 
     projectGroup = 'research'
+    configuration, _ = getConfiguration(projectGroup)
     path = 'Data_SynteticALMTensile'
-    self.be = Backend(projectGroup)
+    self.be = Backend(configuration, projectGroup)
 
     self.dirName = self.be.basePath
     self.be.exit()
     shutil.rmtree(self.dirName)
     os.makedirs(self.dirName)
-    self.be = Backend(projectGroup)
+    self.be = Backend(configuration, projectGroup)
     print()
 
     # adopt measurements view

@@ -2,11 +2,12 @@
 """TEST the form """
 import logging, warnings, json, tempfile
 from pathlib import Path
-from pasta_eln.backend import Backend
-from pasta_eln.UI.repositories.repository import RepositoryClient
-from pasta_eln.UI.repositories.dataverse import DataverseClient
-from pasta_eln.UI.repositories.zenodo import ZenodoClient
+from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.backendWorker.repository import RepositoryClient
+from pasta_eln.backendWorker.dataverse import DataverseClient
+from pasta_eln.backendWorker.zenodo import ZenodoClient
 from .misc import verify, handleReport
+from pasta_eln.miscTools import getConfiguration
 
 
 def test_simple(qtbot):
@@ -24,8 +25,7 @@ def test_simple(qtbot):
   for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
 
-  # setup
-  backend = Backend('research')
+  # NO BACKEND, since this is only a test of the repository client
   if not (Path.home()/'.pastaELN_testing.json').exists():
     print('**ERROR**: No testing configuration file found.')
     return
@@ -56,7 +56,7 @@ def test_simple(qtbot):
   client = ZenodoClient(conf['zenodo']['url'], conf['zenodo']['key'])
   assert client.checkServer()[0]
   assert client.checkAPIKey()
-  fOutName = tempfile.gettempdir()/'test_zenodo.txt'
+  fOutName = Path(tempfile.gettempdir())/'test_zenodo.txt'
   with open(fOutName, 'w') as fOut:
     fOut.write('This is a test file for Zenodo upload.')
   res = client.uploadRepository(metadataZenodo, fOutName)
@@ -126,7 +126,7 @@ def test_simple(qtbot):
   client = DataverseClient(conf['dataverse']['url'], conf['dataverse']['key'], conf['dataverse']['dataverse'])
   assert client.checkServer()[0]
   assert client.checkAPIKey()
-  fOutName = tempfile.gettempdir()/'test_datavese.txt'
+  fOutName = Path(tempfile.gettempdir())/'test_datavese.txt'
   with open(fOutName, 'w') as fOut:
     fOut.write('This is a test file for Dataverse upload.')
   res = client.uploadRepository(metadataDataverse, fOutName)

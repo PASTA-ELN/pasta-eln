@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create 3 projects; simplified form of testTutorialComplex """
-import os, shutil, json
+import os, shutil
 import warnings
 import unittest
 import re
 from pathlib import Path
-from pasta_eln.backend import Backend
-from pasta_eln.miscTools import DummyProgressBar
+from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.textTools.stringChanges import outputString
+from pasta_eln.miscTools import getConfiguration
+
 
 class TestStringMethods(unittest.TestCase):
   """
@@ -23,7 +24,6 @@ class TestStringMethods(unittest.TestCase):
     """
     main function
     """
-    dummyProgressBar = DummyProgressBar()
     outputFormat = 'print'  #change to 'print' for human usage, '' for less output
     # initialization: create database, destroy on filesystem and database and then create new one
     warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
@@ -32,8 +32,9 @@ class TestStringMethods(unittest.TestCase):
     warnings.filterwarnings('ignore', category=ImportWarning)
 
     projectGroup = 'research'
+    configuration, _ = getConfiguration(projectGroup)
     path = 'Data_SynteticNiAl_Indentation'
-    self.be = Backend(projectGroup)
+    self.be = Backend(configuration, projectGroup)
 
     self.dirName = self.be.basePath
     addOnePath = self.be.addOnPath
@@ -41,7 +42,7 @@ class TestStringMethods(unittest.TestCase):
     shutil.rmtree(self.dirName)
     os.makedirs(self.dirName)
     shutil.copy(Path(__file__).parent/path/'extractor_hdf5.py', addOnePath/'extractor_hdf5.py')
-    self.be = Backend(projectGroup)
+    self.be = Backend(configuration, projectGroup)
     print()
 
     # adopt measurements view
