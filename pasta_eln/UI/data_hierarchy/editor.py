@@ -4,8 +4,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QInputDialog, QMessageBox, QTabBar,
-                               QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout)
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QInputDialog, QMessageBox, QTabBar, QTableWidget,
+                               QTableWidgetItem, QTabWidget, QVBoxLayout)
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, TextButton, widgetAndLayout
 from ..messageDialog import showMessage

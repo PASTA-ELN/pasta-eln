@@ -6,7 +6,7 @@ import logging
 import mimetypes
 from pathlib import Path
 from typing import Any, TypedDict
-import requests                    # only requirement; could be replaced with urllib to eliminate requirements
+import requests  # only requirement; could be replaced with urllib to eliminate requirements
 
 
 class ElabFTWApi:

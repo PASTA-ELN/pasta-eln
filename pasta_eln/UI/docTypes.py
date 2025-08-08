@@ -6,6 +6,7 @@ from .details import Details
 from .guiCommunicate import Communicate
 from .table import Table
 
+
 class DocTypes(QWidget):
   """ widget that shows the table and the details of the items """
   def __init__(self, comm:Communicate):

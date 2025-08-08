@@ -11,7 +11,7 @@ from anytree import Node, PreOrderIter
 from ..miscTools import flatten
 from ..textTools.handleDictionaries import squashTupleIntoValue
 from ..textTools.html2markdown import html2markdown
-from ..textTools.markdown2html import markdown2html                               # type: ignore[attr-defined]
+from ..textTools.markdown2html import markdown2html  # type: ignore[attr-defined]
 from .backend import Backend
 from .elabFTWapi import ElabFTWApi
 

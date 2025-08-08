@@ -3,7 +3,7 @@ import json
 import platform
 from pathlib import Path
 from PySide6.QtWidgets import QApplication, QMainWindow
-from qt_material import apply_stylesheet, get_theme               # of https://github.com/UN-GCPDS/qt-material
+from qt_material import apply_stylesheet, get_theme  # of https://github.com/UN-GCPDS/qt-material
 from ..fixedStringsJson import CONF_FILE_NAME, DEFAULT_COLORS_PALETTE
 
 

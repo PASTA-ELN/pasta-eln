@@ -11,6 +11,7 @@ from ..textTools.handleDictionaries import doc2markdown
 from ..textTools.stringChanges import markdownEqualizer
 from .guiCommunicate import Communicate
 
+
 class ProjectLeafRenderer(QStyledItemDelegate):
   """ ONE Renderer for all leafs of project tree using QPaint """
   def __init__(self, comm:Communicate) -> None:

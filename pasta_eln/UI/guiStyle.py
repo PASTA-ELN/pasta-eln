@@ -5,8 +5,8 @@ import qtawesome as qta
 from PySide6.QtCore import QByteArray, Qt
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtWidgets import (QBoxLayout, QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu,
-                               QMessageBox, QPushButton, QScrollArea, QSizePolicy, QSplitter, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QBoxLayout, QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox,
+                               QPushButton, QScrollArea, QSizePolicy, QSplitter, QVBoxLayout, QWidget)
 from ..textTools.handleDictionaries import dict2ul
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                   # spaces: padding and margin

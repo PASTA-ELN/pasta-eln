@@ -10,8 +10,8 @@ import qtawesome as qta
 import requests
 from PIL.ImageQt import ImageQt
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator, Qt
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QLabel, QLineEdit,
-                               QMessageBox, QTextEdit, QVBoxLayout)
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QLabel, QLineEdit, QMessageBox,
+                               QTextEdit, QVBoxLayout)
 from ...backendWorker.elabFTWapi import ElabFTWApi
 from ...fixedStringsJson import CONF_FILE_NAME
 from ...miscTools import hardRestart
