@@ -38,7 +38,8 @@ class TestStringMethods(unittest.TestCase):
     # create .eln
     configuration, _ = getConfiguration('research')
     self.be = Backend(configuration, 'research')
-    projID = self.be.output('x0').split('|')[-2].strip()
+    df = self.be.db.getView('viewDocType/x0')
+    projID = df[df['name']=='PASTAs Example Project']['id'].values[0]
     self.be.changeHierarchy(projID)
 
     folderID = [i for i in self.be.outputHierarchy(True, True).split('\n') if 'This is an example task' in i][0]

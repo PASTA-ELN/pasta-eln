@@ -39,10 +39,10 @@ HTML_HEADER = '<!DOCTYPE html>\n<html>\n<head>\n<style>'\
     '</style>\n</head>\n<body>\n'
 HTML_FOOTER = '</body>\n</html>\n'
 
-def main(comm, hierStack, widget, parameter={}):
+def main(backend, hierStack, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        comm (pasta communicate): communicate layer
+        backend (backend): backend
         hierStack (list): node in hierarchy to start the creation
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters
@@ -57,28 +57,7 @@ def main(comm, hierStack, widget, parameter={}):
             return False
     else:
         res = parameter['fileNames']
-    # Collect the hierarchy first, once you have it, ....
-    hierarchy = None
-    @Slot(Node, dict)
-    def getHierarchy(tempHierarchy, _):
-        nonlocal hierarchy
-        hierarchy = tempHierarchy
-    comm.backendThread.worker.beSendHierarchy.connect(getHierarchy)
-    comm.uiRequestHierarchy.emit(hierStack.split('/')[0], False)
-    while hierarchy is None:
-        time.sleep(0.1)
-    # Collect all the documents that belong to this hierarchy
-    docs = {}
-    @Slot(dict)
-    def getDoc(doc):
-        docs[doc['id']] = doc
-    comm.backendThread.worker.beSendDoc.connect(getDoc)
-    for node in PreOrderIter(hierarchy):
-        docs[node.id] = {}
-        comm.uiRequestDoc.emit(node.id)
-    while any(len(i)==0 for i in docs.values()):
-        time.sleep(0.1)
-    # All data is known in this function, process the data
+    hierarchy, _ = backend.db.getHierarchy(hierStack.split('/')[0])
     qtDocument = QTextDocument()   #used for markdown -> html conversion
 
     # function to handle each data entry
@@ -96,7 +75,7 @@ def main(comm, hierStack, widget, parameter={}):
         hidden = not all(node.gui)        # is this node hidden?
         if hidden:
             return ''
-        doc = docs[node.id]  # GET ALL INFORMATION OF THIS NODE
+        doc = backend.db.getDoc(node.id)  # GET ALL INFORMATION OF THIS NODE
         output = '<div class="node">\n'
         # headline of each node: either as html headline or normal text, incl. the objective
         if node.depth<4 and node.docType[0][0]=='x':
