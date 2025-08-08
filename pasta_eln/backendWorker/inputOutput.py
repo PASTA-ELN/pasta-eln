@@ -15,8 +15,8 @@ from anytree import Node
 from pasta_eln import __version__, minisign
 from ..fixedStringsJson import CONF_FILE_NAME
 from ..miscTools import flatten
+from ..textTools.html2markdown import html2markdown
 from ..textTools.stringChanges import camelCase
-from ..textTools.html2markdown import  html2markdown
 from .backend import Backend
 
 # .eln file: common between all ELNs

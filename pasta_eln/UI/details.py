@@ -6,9 +6,9 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 from PySide6.QtCore import Qt, Slot                                        # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QScrollArea, QTextEdit, QLayout, QLabel      # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QLayout, QScrollArea, QTextEdit      # pylint: disable=no-name-in-module
 from ..backendWorker.worker import Task
-from ..fixedStringsJson import SORTED_DB_KEYS, defaultDataHierarchyNode, cssStyleHtmlEditors
+from ..fixedStringsJson import SORTED_DB_KEYS, cssStyleHtmlEditors, defaultDataHierarchyNode
 from ..textTools.handleDictionaries import dict2ul
 from ..textTools.stringChanges import markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu

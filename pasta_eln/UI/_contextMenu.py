@@ -1,5 +1,6 @@
 """ Common functions in a number of widgets """
-import os, logging
+import logging
+import os
 import platform
 import subprocess
 from enum import Enum

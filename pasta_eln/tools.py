@@ -15,8 +15,9 @@ from requests.structures import CaseInsensitiveDict
 from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
 from pasta_eln.fixedStringsJson import defaultDocTypes, defaultSchema
-from pasta_eln.textTools.stringChanges import outputString
 from pasta_eln.miscTools import getConfiguration
+from pasta_eln.textTools.stringChanges import outputString
+
 
 class Tools:
   """Commandline utility to admin local installation and convert from Pasta-ELN version 2"""

@@ -1,7 +1,6 @@
 """ Long strings and dictionaries/JSON that would obfuscate code """
 from typing import Any
 
-
 defaultDocTypes: list[list[str]] = [
   #docType,               PURL,                                              title,          icon,                   shortcut, view
   ['x0',                  'http://purl.obolibrary.org/obo/NCIT_C47885',      'Projects',     '',                     'space', 'name,tags,.status,.objective,comment'],

@@ -1,6 +1,6 @@
 """ Interactions with Zenodo repository """
-from datetime import datetime
 import logging
+from datetime import datetime
 from typing import Any
 import requests
 from .repository import RepositoryClient

@@ -6,6 +6,7 @@ from io import BufferedReader
 from pathlib import Path
 from urllib import request
 
+
 def generic_hash(path:Path, forceFile:bool=False) -> str:
   """
   Hash an object based on its mode

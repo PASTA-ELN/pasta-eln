@@ -6,9 +6,9 @@ from PySide6.QtCore import QCoreApplication                                # pyl
 from PySide6.QtGui import QIcon                                            # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QApplication, QMessageBox                    # pylint: disable=no-name-in-module
 from pasta_eln import __version__
+from .miscTools import testNewPastaVersion
 from .UI.guiCommunicate import Communicate
 from .UI.mainWindow import MainWindow
-from .miscTools import testNewPastaVersion
 
 
 def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:

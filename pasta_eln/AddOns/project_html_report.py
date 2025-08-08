@@ -14,14 +14,13 @@ This tutorial teaches
 """
 import base64
 import re
-import time
 from io import BytesIO
 from pathlib import Path
-from anytree import PreOrderIter, Node
+from anytree import Node, PreOrderIter
 from PIL import Image
+from PySide6.QtCore import Slot
 from PySide6.QtGui import QTextDocument  # This is used for html-markdown conversion: works fine here
 from PySide6.QtWidgets import QFileDialog
-from PySide6.QtCore import Slot
 import pasta_eln
 from pasta_eln.Resources import Icons as icons
 from pasta_eln.textTools.stringChanges import markdownEqualizer

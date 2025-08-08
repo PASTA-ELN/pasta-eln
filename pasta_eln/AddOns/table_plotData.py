@@ -4,13 +4,13 @@ THIS IS A VERY ADVANCED ADDON TUTORIAL
 This tutorial teaches
 - how to plot the data from files
 """
-from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtWidgets import QDialog, QComboBox, QLineEdit, QHBoxLayout, QTableWidget, QTableWidgetItem
 import matplotlib
 import pandas as pd
-from pasta_eln.miscTools import callDataExtractor, isFloat, MplCanvas
-from pasta_eln.UI.guiStyle import widgetAndLayout, space, Label
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLineEdit, QTableWidget, QTableWidgetItem
+from pasta_eln.miscTools import MplCanvas, callDataExtractor, isFloat
+from pasta_eln.UI.guiStyle import Label, space, widgetAndLayout
 
 # The following two variables are mandatory
 description  = 'Default data plot'  #short description that is shown in the menu

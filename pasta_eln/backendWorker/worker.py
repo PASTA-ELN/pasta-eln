@@ -1,16 +1,16 @@
 """ Backend worker thread for separating GUI and backend operations
 CONNECT TO ALL THESE SIGNALS IN COMMUNICATE and UI
 """
-from enum import Enum
 import json
 import logging
-import platform
 import os
+import platform
 import shutil
 import subprocess
 import tempfile
 import time
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 import pandas as pd
@@ -20,8 +20,8 @@ from PySide6.QtWidgets import QMessageBox
 from ..textTools.stringChanges import createDirName
 from .backend import Backend
 from .dataverse import DataverseClient
-from .inputOutput import exportELN, importELN
 from .elabFTWsync import Pasta2Elab
+from .inputOutput import exportELN, importELN
 from .zenodo import ZenodoClient
 
 waitTimeBeforeSendingFirstMessage = 0.1 #ensure all UI elements are up

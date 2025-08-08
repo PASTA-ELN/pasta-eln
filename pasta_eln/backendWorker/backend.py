@@ -19,6 +19,7 @@ from ..textTools.stringChanges import camelCase, createDirName, outputString
 from .hashTools import generic_hash
 from .mixin_cli import CLI_Mixin
 from .sqlite import SqlLiteDB
+
 matplotlib.use('Agg')
 
 

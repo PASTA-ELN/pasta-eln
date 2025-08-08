@@ -1,8 +1,8 @@
 """ Functions that modify strings into the appropriate format """
 import logging
-from pathlib import Path
 import re
 import traceback
+from pathlib import Path
 from typing import Any
 from ..miscTools import Bcolors
 
