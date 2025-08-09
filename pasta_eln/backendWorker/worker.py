@@ -228,7 +228,7 @@ class BackendWorker(QObject):
         childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
         siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]#sorted by childNum 1st and docID 2nd
         print('Step 2: after new siblings')
-        print('\n'.join([f'{i['value'][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
+        print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
       # change item in question
       if verbose:
         print(f'  manual move {data["childOld"]} -> {data["childNew"]}: {data['docID']}')
@@ -241,7 +241,7 @@ class BackendWorker(QObject):
       siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]#sorted by childNum 1st and docID 2nd
       if verbose:
         print('Step 3: before old siblings')
-        print('\n'.join([f'{i['value'][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
+        print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
       for idx, line in enumerate(siblingsOld):
         if line['value'][0]==idx:                  #ignore id in question and those that are correct already
           continue
@@ -254,7 +254,7 @@ class BackendWorker(QObject):
         childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
         siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]#sorted by childNum 1st and docID 2nd
         print('Step 4: end of function')
-        print('\n'.join([f'{i['value'][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
+        print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
 
     elif task is Task.DROP_EXTERNAL and set(data.keys())=={'docID','files','folders'}:
       commonBase   = os.path.commonpath(data['folders']+[str(i) for i in data['files']])
