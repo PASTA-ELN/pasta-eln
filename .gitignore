@@ -15,3 +15,4 @@ pasta*.py
 .coverage
 profile.out
 venvPASTA/
+artifacts/
