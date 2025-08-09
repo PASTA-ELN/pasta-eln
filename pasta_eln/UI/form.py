@@ -198,7 +198,7 @@ class Form(QDialog):
 
         # case list
         if key == '.name' and '_ids' not in self.doc:
-          setattr(self, elementName, QLineEdit(self.doc['name']))
+          setattr(self, elementName, QLineEdit(self.doc.get('name','')))
           getattr(self, elementName).setValidator(QRegularExpressionValidator('[\\w\\ .-]+'))
           formL.addRow('Name', getattr(self, elementName))
           self.allUserElements.append(('name','LineEdit'))
