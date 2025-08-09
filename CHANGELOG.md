@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+## [v3.2.0b2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b2) (2025-08-08)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b1...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b1...v3.2.0b2)
 
 **Closed issues:**
 
