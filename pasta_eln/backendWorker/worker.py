@@ -231,7 +231,7 @@ class BackendWorker(QObject):
         print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
       # change item in question
       if verbose:
-        print(f'  manual move {data["childOld"]} -> {data["childNew"]}: {data['docID']}')
+        print(f'  manual move {data["childOld"]} -> {data["childNew"]}: {data["docID"]}')
       self.backend.db.updateBranch(docID=data['docID'], branch=-99, stack=data['stackNew'], path=pathNew,
                                    child=data['childNew'], stackOld=data['stackOld']+[data['docID']])
       # change old siblings
