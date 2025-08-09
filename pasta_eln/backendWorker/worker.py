@@ -214,7 +214,7 @@ class BackendWorker(QObject):
       # change new siblings
       if verbose:
         print('\n=============================================\nStep 1: before new siblings')
-        print('\n'.join([f'{i['value'][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
+        print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
       for idx, line in reversed(list(enumerate(siblingsNew))):
         shift = 1 if idx>=data['childNew'] else 0#shift those before the insertion point by 0 and those after by 1
         if line['id']==data['docID'] or line['value'][0]==idx+shift:#ignore this id & those that are correct already
@@ -310,7 +310,7 @@ class BackendWorker(QObject):
             stats = sync.sync('gA')
           else:
             stats = sync.sync('')
-          self.beSendTaskReport.emit(task, 'Success: Syncronized data with elabFTW server'+str(stats), '')
+          self.beSendTaskReport.emit(task, 'Success: Synchronized data with elabFTW server'+str(stats), '')
         else:                                                                                  #if not given
           self.beSendTaskReport.emit(task, 'ERROR: Please specify a server address and API-key in the Configuration', '')
 

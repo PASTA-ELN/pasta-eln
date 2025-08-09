@@ -49,7 +49,7 @@ def main(backend, hierStack, widget, parameter={}):
     Returns:
         bool: success
     """
-    # get filename to wirte into
+    # get filename to write into
     if 'fileNames' not in parameter:
         res = QFileDialog.getSaveFileName(widget,'Use this file for output', str(Path.home()))
         if res is None:
