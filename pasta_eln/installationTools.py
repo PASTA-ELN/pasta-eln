@@ -408,7 +408,7 @@ def main() -> None:
   print('Add "example" argument to create example data.')
   if len(sys.argv)>1 and 'example' in sys.argv:
     print('---- Create Example data ----')
-    print('create example data  :', exampleData())
+    print('create example data  :', exampleData('research'))
   print('Add "shortcut" argument to create a desktop shortcut.')
   if len(sys.argv)>1 and 'shortcut' in sys.argv:
     print('---- Create Shortcut ----')
