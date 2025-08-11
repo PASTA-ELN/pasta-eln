@@ -142,7 +142,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     guiStyle = self.comm.configuration['GUI']
     if not doc or doc['id'] not in self.data:
       return
-    print('Renderer: onGetDoc', doc['id'], doc.get('type',[]), doc.get('hierStack',''))
+    logging.debug('Renderer: onGetDoc %s %s %s', doc['id'], doc.get('type',[]), doc.get('hierStack',''))
     # ... after deleting project, its items cannot be found and it would give many false negatives
     if doc['type'][0] not in self.comm.docTypesTitles:
       dataHierarchyNode = defaultDataHierarchyNode

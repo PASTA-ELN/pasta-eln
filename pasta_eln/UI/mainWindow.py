@@ -1,14 +1,17 @@
 """ Graphical user interface houses all widgets """
 import json
 import logging
+import os
+import platform
 import re
+import subprocess
 import sys
 import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QEvent, Slot
-from PySide6.QtGui import QIcon, QPixmap, QShortcut
+from PySide6.QtCore import QEvent, Slot, QUrl
+from PySide6.QtGui import QIcon, QPixmap, QShortcut, QDesktopServices
 from PySide6.QtWidgets import QFileDialog, QMainWindow
 from pasta_eln import __version__
 from ..backendWorker.worker import Task
@@ -233,14 +236,18 @@ class MainWindow(QMainWindow):
     return
 
 
-  @Slot(Task, str, str)
-  def showReport(self, task:Task, reportText:str, image:str) -> None:
+  @Slot(Task, str, str, str)
+  def showReport(self, task:Task, reportText:str, image:str, path:str) -> None:
     """ Show a report from backend worker
     Args:
       task (Task): task name
       reportText (str): text of the report
       image (str): base64 encoded image, svg image
+      path (str): path to the file/folder that should be opened
     """
+    if task is Task.OPEN_EXTERNAL and path:
+      QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+      return
     if task is Task.SCAN:
       self.comm.changeProject.emit(self.comm.projectID, '')
     elif task is Task.CHECK_DB:

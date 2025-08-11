@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QLa
 from ..backendWorker.sqlite import MAIN_ORDER
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
-from ..miscTools import callAddOn, flatten
+from ..miscTools import callAddOn
 from ..textTools.stringChanges import markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
 from .guiCommunicate import Communicate
@@ -121,7 +121,7 @@ class Form(QDialog):
       return
     if '_attachments' in self.doc:
       del self.doc['_attachments']
-    self.flagNewDoc = 'id' in self.doc or '_ids' in self.doc
+    self.flagNewDoc = 'id' not in self.doc or '_ids' in self.doc
     if self.flagNewDoc:
       self.setWindowTitle('Create new entry')
       self.doc['name'] = ''
@@ -637,7 +637,7 @@ class Form(QDialog):
       # ---- if docType changed: save; no further save to db required ----
       if self.docTypeComboBox.currentData() != '' and self.docTypeComboBox.currentData() is not None:
         self.doc['type'] = [self.docTypeComboBox.currentData()]
-      self.doc = flatten(self.doc, True)                                            # type: ignore[assignment]
+
       docBackup = copy.deepcopy(self.doc)                                           # for duplicate, save&next
       if '_ids' in self.doc:                                                                    # group update
         if 'name' in self.doc:

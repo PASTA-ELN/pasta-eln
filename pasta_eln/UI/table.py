@@ -132,7 +132,9 @@ class Table(QWidget):
       self.docType = docType
     if projID:
       self.comm.projectID  = projID
-    print('request table for', self.docType, self.comm.projectID, self.showAll)
+    if self.docType == 'x0':
+      self.comm.projectID = ''
+    logging.debug('request table for %s, %s %s', self.docType, self.comm.projectID, self.showAll)
     self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
 
 
@@ -145,7 +147,7 @@ class Table(QWidget):
       data (pd.DataFrame): DataFrame containing table
       docType (str): document type
     """
-    print('got table data', docType)
+    logging.debug('got table data %s', docType)
     if docType == self.docType:
       self.data = data
       self.paint()

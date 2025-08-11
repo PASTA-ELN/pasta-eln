@@ -41,6 +41,10 @@ class Details(QScrollArea):
     headerW, self.headerL = widgetAndLayout('H', self.mainL, spacing='m', top='s', right='s')
     headerW.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     headerW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
+    self.labelW = Label('','h1', self.headerL)
+    self.headerL.addStretch(1)
+    IconButton('mdi.file-tree-outline', self, [Command.TO_PROJECT], self.headerL, tooltip='Change to project')
+    IconButton('fa5s.times-circle',     self, [Command.CLOSE],      self.headerL, tooltip='Close')
     self.specialW, self.specialL = widgetAndLayout('V', self.mainL, top='s')
     self.specialW.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     self.specialW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
@@ -104,10 +108,6 @@ class Details(QScrollArea):
     if self.isHidden():
       return
     # Delete old widgets from layout
-    for i in reversed(range(self.headerL.count())):
-      aWidget = self.headerL.itemAt(i).widget()
-      if aWidget is not None:
-        aWidget.setParent(None)
     for i in reversed(range(self.metaDetailsL.count())):
       self.metaDetailsL.itemAt(i).widget().setParent(None)
     for i in reversed(range(self.metaVendorL.count())):
@@ -139,11 +139,7 @@ class Details(QScrollArea):
       dataHierarchyNode = defaultDataHierarchyNode
     else:
       dataHierarchyNode = self.comm.dataHierarchyNodes[self.doc['type'][0]]
-    label = self.doc['name'] if len(self.doc['name'])<80 else self.doc['name'][:77]+'...'
-    Label(label,'h1', self.headerL)
-    self.headerL.addStretch(1)
-    IconButton('mdi.file-tree-outline', self, [Command.TO_PROJECT], self.headerL, tooltip='Change to project')
-    IconButton('fa5s.times-circle',     self, [Command.CLOSE],      self.headerL, tooltip='Close')
+    self.labelW.setText(self.doc['name'] if len(self.doc['name'])<80 else self.doc['name'][:77]+'...')
     if 'metaVendor' not in self.doc:
       self.btnVendor.hide()
     if 'metUser' not in self.doc:
