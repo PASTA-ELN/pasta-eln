@@ -130,11 +130,8 @@ class Details(QScrollArea):
     self.textEditors = []
     # Create new
     if not self.docID or not self.doc:
+      self.hide()
       return
-    # Not sure if required #TODO
-    # if 'name' not in self.doc:                                  #keep empty details and wait for user to click
-    #   self.comm.changeTable.emit('','')
-    #   return
     if self.doc['type'][0] not in self.comm.docTypesTitles:
       dataHierarchyNode = defaultDataHierarchyNode
     else:

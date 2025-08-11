@@ -88,7 +88,6 @@ class TreeView(QTreeView):
       if ret==QMessageBox.StandardButton.Yes:
         docID = hierStack[-1]
         self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':docID})
-        # TODO remove leaf from GUI
         item  = self.model().itemFromIndex(self.currentIndex())                   # type: ignore[attr-defined]
         parent = item.parent()
         if parent is None:                                                                          #top level
@@ -161,6 +160,8 @@ class TreeView(QTreeView):
       return None
     item = iterate(self.model().invisibleRootItem())                              # type: ignore[attr-defined]
     if item is not None:
+      # TODO scroll does not work even if item is not none and visible
+      # there is some fast scrolling to some locatino, but then the view scrolls back
       self.scrollTo(item.index(), QAbstractItemView.EnsureVisible)                # type: ignore[attr-defined]
     return
 
