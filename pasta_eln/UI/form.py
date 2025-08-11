@@ -205,7 +205,7 @@ class Form(QDialog):
         elif key == '.tags':
           self.tagsBarMainW, tagsBarMainL = widgetAndLayout('H', spacing='s')
           self.gradeChoices = QComboBox()                                     #part/combobox that shows grades
-          self.gradeChoices.setMaximumWidth(85)
+          self.gradeChoices.setMaximumWidth(95)
           self.gradeChoices.setStyleSheet('padding: 3px;')
           self.gradeChoices.setIconSize(QSize(0,0))
           self.gradeChoices.addItems(['none','\u2605','\u2605'*2,'\u2605'*3,'\u2605'*4,'\u2605'*5])

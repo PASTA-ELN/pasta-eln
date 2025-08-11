@@ -1,10 +1,7 @@
 """ Graphical user interface houses all widgets """
 import json
 import logging
-import os
-import platform
 import re
-import subprocess
 import sys
 import webbrowser
 from enum import Enum
@@ -12,7 +9,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QEvent, Slot, QUrl
 from PySide6.QtGui import QIcon, QPixmap, QShortcut, QDesktopServices
-from PySide6.QtWidgets import QFileDialog, QMainWindow
+from PySide6.QtWidgets import QFileDialog, QMainWindow, QLabel
 from pasta_eln import __version__
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
@@ -47,6 +44,7 @@ class MainWindow(QMainWindow):
     else:
       configWindow = Configuration(self.comm, 'setup')
       configWindow.exec()
+      self.setCentralWidget(QLabel('ERROR: No configuration present!'))
       return
     self.comm.formDoc.connect(self.formDoc)
     self.comm.softRestart.connect(self.paint)
@@ -133,7 +131,7 @@ class MainWindow(QMainWindow):
     Args:
       event: close event
     """
-    if self.comm and self.comm.backendThread:
+    if self.comm and hasattr(self.comm, 'backendThread') and self.comm.backendThread:
       self.comm.shutdownBackendThread()
     event.accept()
 

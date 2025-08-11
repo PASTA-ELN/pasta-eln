@@ -398,9 +398,9 @@ def flatten(d:dict[Any,Any], keepPastaStruct:bool=False) -> dict[object, Any]:
         has_child = _flatten(value, depth=depth + 1, parent=flat_key)
         if has_child or not isinstance(value, ()):# ignore key in this level because it already has child key or its value is empty
           continue
+      if flat_key in flat_dict and parent is not None:
+        continue  # skip if key already exists and if data comes from database after merging with changed data
       # add an item to the result
-      if flat_key in flat_dict:
-        raise ValueError(f"duplicated key '{flat_key}'")
       flat_dict[flat_key] = value
     return has_item
 
