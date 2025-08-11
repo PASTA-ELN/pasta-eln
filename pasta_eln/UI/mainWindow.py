@@ -7,9 +7,9 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QEvent, Slot, QUrl
-from PySide6.QtGui import QIcon, QPixmap, QShortcut, QDesktopServices
-from PySide6.QtWidgets import QFileDialog, QMainWindow, QLabel
+from PySide6.QtCore import QEvent, QUrl, Slot
+from PySide6.QtGui import QDesktopServices, QIcon, QPixmap, QShortcut
+from PySide6.QtWidgets import QFileDialog, QLabel, QMainWindow
 from pasta_eln import __version__
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts

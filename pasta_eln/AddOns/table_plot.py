@@ -1,16 +1,17 @@
 """ Analyser add-on with much functionality: shows how complex add-ons can be. But do not have to."""
 import itertools
+import matplotlib
 import matplotlib.pyplot
 import numpy as np
 import pandas as pd
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
-import matplotlib
 from PySide6.QtCore import QSize
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QDialogButtonBox, QLineEdit, QComboBox # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QLineEdit,  # pylint: disable=no-name-in-module
+                               QVBoxLayout)
 from scipy import stats
 from sklearn.metrics import r2_score
-from pasta_eln.miscTools import dfConvertColumns, isFloat, MplCanvas
-from pasta_eln.UI.guiStyle import widgetAndLayout, space, Label
+from pasta_eln.miscTools import MplCanvas, dfConvertColumns, isFloat
+from pasta_eln.UI.guiStyle import Label, space, widgetAndLayout
 
 # The following two variables are mandatory
 description  = 'Default metadata plot'  #short description that is shown in the menu

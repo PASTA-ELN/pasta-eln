@@ -9,7 +9,6 @@ from pasta_eln import __version__
 from .miscTools import testNewPastaVersion
 from .UI.guiCommunicate import Communicate
 from .UI.mainWindow import MainWindow
-from .UI.config.main import Configuration
 
 
 def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:

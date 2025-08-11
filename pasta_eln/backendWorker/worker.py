@@ -15,8 +15,8 @@ import pandas as pd
 from anytree import Node
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QMessageBox
-from ..textTools.stringChanges import createDirName
 from ..miscTools import flatten
+from ..textTools.stringChanges import createDirName
 from .backend import Backend
 from .dataverse import DataverseClient
 from .elabFTWsync import Pasta2Elab
@@ -290,7 +290,7 @@ class BackendWorker(QObject):
         self.backend.db.remove(docID)
       # finish it
       if doc['type'][0]=='x0':
-          self.beSendProjects.emit(self.backend.db.getView('viewDocType/x0'))
+        self.beSendProjects.emit(self.backend.db.getView('viewDocType/x0'))
 
     elif task is Task.EXPORT_ELN and set(data.keys())=={'fileName','projID','docTypes'}:
       report = exportELN(self.backend, [data['projID']], data['fileName'], data['docTypes'])
