@@ -127,10 +127,6 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       self.data[docID] = {'size':QSize(400, 30), 'markdown':'', 'hidden':False, 'index':index}
       self.comm.uiRequestDoc.emit(docID)
     return self.data[docID].get('size', QSize(400,self.maxHeight))
-    # if len(doc)<2: #TODO
-    #   if len(self...getDoc(hierStack.split('/')[0], noError=True))>2:#only refresh if project still exists
-    #     self.comm.changeProject.emit('','')
-    #   return QSize()
 
 
   @Slot(str)
@@ -142,7 +138,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     guiStyle = self.comm.configuration['GUI']
     if not doc or doc['id'] not in self.data:
       return
-    print('Renderer: onGetDoc', doc['id'], doc.get('type',[]), doc.get('hierStack',''))
+    logging.debug('Renderer: onGetDoc %s %s %s', doc['id'], doc.get('type',[]), doc.get('hierStack',''))
     # ... after deleting project, its items cannot be found and it would give many false negatives
     if doc['type'][0] not in self.comm.docTypesTitles:
       dataHierarchyNode = defaultDataHierarchyNode

@@ -35,9 +35,7 @@ def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
     application = QApplication.instance()
   comm = Communicate(projectGroup=projectGroup)
   mainWindow = MainWindow(comm)
-  if not comm.configuration:
-    raise ValueError('Configuration not loaded.')
-  logging.getLogger().setLevel(getattr(logging, comm.configuration['GUI']['loggingLevel']))
+  logging.getLogger().setLevel(getattr(logging, comm.configuration.get('GUI',{'loggingLevel':'DEBUG'})['loggingLevel']))
   if mainWindow.comm.palette is not None and application is not None:
     mainWindow.comm.palette.setTheme(application)                                    # type: ignore [arg-type]
   import qtawesome as qta  # qtawesome and matplot cannot coexist
@@ -46,7 +44,7 @@ def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
     print('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
   # end test coexistence
   # Test for new version
-  if comm.configuration['GUI']['checkForUpdates']=='Yes' and not testNewPastaVersion(False):
+  if comm.configuration.get('GUI', {'checkForUpdates':'No'})['checkForUpdates']=='Yes' and not testNewPastaVersion(False):
     button = QMessageBox.question(mainWindow, 'Update?', 'There is a new PASTA-ELN version available. Do you want to update?',
                                   QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
     if button == QMessageBox.StandardButton.Yes:

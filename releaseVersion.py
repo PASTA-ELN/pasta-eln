@@ -289,6 +289,42 @@ def runSourceVerification() -> None:
   return
 
 
+def getArtifacts() -> None:
+  """ Get artifacts from action """
+  if not os.path.exists('artifacts'):
+    os.makedirs('artifacts')
+  owner='PASTA-ELN'
+  repo='pasta-eln'
+  workflowFile='installLinux.yml'
+  url = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/{workflowFile}/runs?per_page=1"
+  response = requests.get(url, timeout=30)
+  response.raise_for_status()
+  data = response.json()
+  runID = data['workflow_runs'][0]['id'] if data['workflow_runs'] else None
+
+  url = f"https://api.github.com/repos/{owner}/{repo}/actions/runs/{runID}/artifacts"
+  response = requests.get(url, timeout=30)
+  response.raise_for_status()
+  data = response.json()
+  artifactUrl = str(data['artifacts'][0]['archive_download_url']) if data['artifacts'] else None
+  if artifactUrl is None:
+    print('No artifacts found.')
+    return
+  print('Download:',artifactUrl,'into artifacts/...')
+
+  with open(Path.home()/'.ssh'/'github.token', encoding='utf-8') as fIn:
+    token = fIn.read().strip()
+  headers = {'Authorization': f"token {token}"}
+  response = requests.get(artifactUrl, headers=headers, stream=True, timeout=60)
+  response.raise_for_status()
+  with open('artifacts/artifact.zip', 'wb') as f:
+    for chunk in response.iter_content(chunk_size=8192):
+      if chunk:
+        f.write(chunk)
+  os.system('cd artifacts && unzip -o artifact.zip && rm artifact.zip')
+  return
+
+
 if __name__=='__main__':
   #run tests and create default files
   runTests()
@@ -307,6 +343,7 @@ if __name__=='__main__':
 """)
     if input('Continue: only "y" continues. ') == 'y':
       newVersion(versionLevel)
+      getArtifacts()
       print("""You should do here after:
 - 'git checkout sb_staging'
 - 'git merge main'

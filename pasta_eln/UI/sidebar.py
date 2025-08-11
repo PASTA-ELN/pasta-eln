@@ -165,7 +165,6 @@ class Sidebar(QWidget):
       self.comm.changeProject.emit(projID, item)
     elif command[0] is Command.SCAN_PROJECT:
       self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.comm.projectID})
-      #TODO SCAN causes project header to move/disappear
     else:
       logging.error('Sidebar menu unknown: %s',command)
     return

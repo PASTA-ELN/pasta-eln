@@ -28,6 +28,7 @@ class Project(QWidget):
     self.hierarchy = Node('__none__')
     self.docProj:dict[str,Any] = {}
     self.projID = ''
+    self.docIDHighlight = ''
     self.showAll= self.comm.configuration['GUI']['showHidden']=='Yes'
 
     self.mainL = QVBoxLayout()
@@ -67,6 +68,7 @@ class Project(QWidget):
       projID (str): project ID
       docID (str): document ID
     """
+    self.docIDHighlight = docID
     self.projID = projID
     self.comm.uiRequestHierarchy.emit(projID, self.showAll)
 
@@ -125,7 +127,8 @@ class Project(QWidget):
     # self.infoW = QScrollArea()
     # self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     # self.infoW.setWidgetResizable(True)
-    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, [], self))  #TODO dataHierarchyNodes
+    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, self.comm.dataHierarchyNodes['x0'],
+                                             self))
     if not self.docProj['gui'][0]:
       self.allDetails.hide()
       self.actHideDetail.setText('Show project details')
@@ -193,8 +196,9 @@ class Project(QWidget):
       self.btnAddSubfolder.setVisible(False)
     self.tree.expanded.connect(lambda index: self.actionExpandCollapse(index, True))
     self.tree.collapsed.connect(lambda index: self.actionExpandCollapse(index, False))
-    # if docID:  #TODO separate signal
-    #   self.tree.scrollToDoc(docID)
+    if self.docIDHighlight:
+      self.tree.scrollToDoc(self.docIDHighlight)
+      self.docIDHighlight = ''                                                         # reset after scrolling
     return
 
 
@@ -255,7 +259,6 @@ class Project(QWidget):
       if ret==QMessageBox.StandardButton.Yes:
         self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':self.projID})
         #update sidebar, show projects
-        self.comm.changeSidebar.emit('redraw')
         self.comm.changeTable.emit('x0','')
     elif command[0] is Command.SCAN:
       self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.projID})

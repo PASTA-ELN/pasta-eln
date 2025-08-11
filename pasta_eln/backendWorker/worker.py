@@ -4,9 +4,7 @@ CONNECT TO ALL THESE SIGNALS IN COMMUNICATE and UI
 import json
 import logging
 import os
-import platform
 import shutil
-import subprocess
 import tempfile
 import time
 from datetime import datetime
@@ -17,6 +15,7 @@ import pandas as pd
 from anytree import Node
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QMessageBox
+from ..miscTools import flatten
 from ..textTools.stringChanges import createDirName
 from .backend import Backend
 from .dataverse import DataverseClient
@@ -34,7 +33,7 @@ class Task(Enum):
   DROP_EXTERNAL  = (4 , 'Including drag&drop files and folders:')  #keys: docID, files, folders
   HIDE_SHOW      = (5 , '')                                        #keys: docID
   SET_GUI        = (6 , '')                                        #keys: docID, gui
-  DELETE_DOC     = (7 , 'Delete document:')                        #keys: docID
+  DELETE_DOC     = (7 , '')                                        #keys: docID
   SCAN           = (8 , 'Scanning disk for new data:')             #keys: docID
   SEND_TBL_COLUMN= (9 , '')                                        #keys: docType, newList
   EXTRACTOR_TEST = (10, 'Testing extractor:')                      #keys: fileName, style, recipe, saveFig
@@ -69,7 +68,7 @@ class BackendWorker(QObject):
   beSendTable             = Signal(pd.DataFrame, str)   # all tables
   beSendHierarchy         = Signal(Node, dict)
   beSendDoc               = Signal(dict)
-  beSendTaskReport        = Signal(Task, str, str)       # task, report, and image
+  beSendTaskReport        = Signal(Task, str, str, str)       # task, report, image, path
   beSendSQL               = Signal(str, pd.DataFrame)
 
   def __init__(self) -> None:
@@ -120,7 +119,7 @@ class BackendWorker(QObject):
       else:
         path = f'viewDocType/{docType}'
       path += 'All' if showAll else ''
-      print('returnTable', docType, projID, showAll, path)
+      logging.debug('returnTable %s %s %s %s', docType, projID, showAll, path)
       data = self.backend.db.getView(path, startKey=projID)
       self.beSendTable.emit(data, docType)
 
@@ -162,16 +161,16 @@ class BackendWorker(QObject):
     if task is Task.EXTRACTOR_TEST and set(data.keys())=={'fileName','style','recipe','saveFig'}:
       report, image = self.backend.testExtractor(data['fileName'], style={'main':data['recipe']},
                                                  outputStyle=data['style'], saveFig=data['saveFig'])
-      self.beSendTaskReport.emit(task, report, image)
+      self.beSendTaskReport.emit(task, report, image, '')
 
     elif task is Task.CHECK_DB and set(data.keys())=={'style'}:
       report = self.backend.checkDB(outputStyle=data['style'])
-      self.beSendTaskReport.emit(task, report, '')
+      self.beSendTaskReport.emit(task, report, '', '')
 
     elif task is Task.SCAN         and set(data.keys())=={'docID'}:
       for _ in range(2):                                                       #scan twice: convert, extract
         self.backend.scanProject(None, data['docID'])
-      self.beSendTaskReport.emit(task, 'Scanning finished successfully', '')
+      self.beSendTaskReport.emit(task, 'Scanning finished successfully', '', '')
 
     elif task is Task.ADD_DOC      and set(data.keys())=={'hierStack','docType','doc'}:
       if data['hierStack']:
@@ -186,6 +185,7 @@ class BackendWorker(QObject):
     elif task is Task.EDIT_DOC      and set(data.keys())=={'doc'}:
       doc = self.backend.db.getDoc(data['doc']['id'])
       doc.update(data['doc'])
+      doc = flatten(doc, True)                                            # type: ignore[assignment]
       self.backend.editData(doc)
       self.beSendDoc.emit(self.backend.db.getDoc(data['doc']['id']))  # send updated doc back to GUI
 
@@ -270,7 +270,7 @@ class BackendWorker(QObject):
       # scan
       for _ in range(2):                                                       #scan twice: convert, extract
         self.backend.scanProject(None, data['docID'], targetFolder.relative_to(self.backend.basePath))
-      self.beSendTaskReport.emit(task, 'Drag-drop operation finished successfully', '')
+      self.beSendTaskReport.emit(task, 'Drag-drop operation finished successfully', '', '')
 
     elif task is Task.DELETE_DOC   and  set(data.keys())=={'docID'}:
       # delete doc: possibly a folder or a project or a measurement
@@ -288,19 +288,21 @@ class BackendWorker(QObject):
       children = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey=data['docID'])
       for docID in {line['id'] for line in children if line['id']!=data['docID']}:
         self.backend.db.remove(docID)
-      self.beSendTaskReport.emit(task, 'Deleting finished successfully', '')
+      # finish it
+      if doc['type'][0]=='x0':
+        self.beSendProjects.emit(self.backend.db.getView('viewDocType/x0'))
 
     elif task is Task.EXPORT_ELN and set(data.keys())=={'fileName','projID','docTypes'}:
       report = exportELN(self.backend, [data['projID']], data['fileName'], data['docTypes'])
-      self.beSendTaskReport.emit(task, report, '')
+      self.beSendTaskReport.emit(task, report, '', '')
 
     elif task is Task.IMPORT_ELN and set(data.keys())=={'fileName','projID'}:
       report, statistics = importELN(self.backend, data['fileName'], data['projID'])
-      self.beSendTaskReport.emit(task, f'{report}\n{json.dumps(statistics,indent=2)}', '')
+      self.beSendTaskReport.emit(task, f'{report}\n{json.dumps(statistics,indent=2)}', '', '')
 
     elif task in (Task.SEND_ELAB, Task.GET_ELAB, Task.SMART_ELAB) and set(data.keys())=={'projGroup'}:
       if 'ERROR' in self.backend.checkDB(minimal=True):
-        self.beSendTaskReport.emit(task, 'ERRORs are present in your database. Fix them before uploading', '')
+        self.beSendTaskReport.emit(task, 'ERRORs are present in your database. Fix them before uploading', '', '')
       else:
         sync = Pasta2Elab(self.backend, data['projGroup'])
         if hasattr(sync, 'api') and sync.api.url:                             #if hostname and api-key given
@@ -310,9 +312,9 @@ class BackendWorker(QObject):
             stats = sync.sync('gA')
           else:
             stats = sync.sync('')
-          self.beSendTaskReport.emit(task, 'Success: Synchronized data with elabFTW server'+str(stats), '')
+          self.beSendTaskReport.emit(task, 'Success: Synchronized data with elabFTW server'+str(stats), '', '')
         else:                                                                                  #if not given
-          self.beSendTaskReport.emit(task, 'ERROR: Please specify a server address and API-key in the Configuration', '')
+          self.beSendTaskReport.emit(task, 'ERROR: Please specify a server address and API-key in the Configuration', '', '')
 
     elif task is Task.SEND_TBL_COLUMN and set(data.keys())=={'docType','newList'}:
       self.backend.db.dataHierarchyChangeView(data['docType'], data['newList'])
@@ -341,7 +343,7 @@ class BackendWorker(QObject):
         msg += 'Saved information to project'
       else:
         msg += 'Error while writing project information to database'
-      self.beSendTaskReport.emit(task, msg, '')
+      self.beSendTaskReport.emit(task, msg, '', '')
 
     elif task is Task.EXTRACTOR_RERUN and set(data.keys())=={'docIDs','recipe'}:
       for docID in data['docIDs']:
@@ -365,7 +367,7 @@ class BackendWorker(QObject):
             del doc['id']
             doc['name'] = doc['branch'][0]['path']
             self.backend.addData('/'.join(doc['type']), doc, doc['branch'][0]['stack'])
-      self.beSendTaskReport.emit(task, 'Extractors re-ran successfully', '')
+      self.beSendTaskReport.emit(task, 'Extractors re-ran successfully', '', '')
 
     elif task is Task.OPEN_EXTERNAL and set(data.keys())=={'docID'}:
       doc   = self.backend.db.getDoc(data['docID'])
@@ -373,12 +375,7 @@ class BackendWorker(QObject):
         QMessageBox.critical(None, 'ERROR', 'Cannot open file that is only in the database')
       else:
         path  = Path(self.backend.basePath)/doc['branch'][0]['path']
-        if platform.system() == 'Darwin':                                                            # macOS
-          subprocess.call(('open', path))
-        elif platform.system() == 'Windows':                                                       # Windows
-          os.startfile(path)                                                    # type: ignore[attr-defined]
-        else:                                                                               # linux variants
-          subprocess.call(('xdg-open', path))
+        self.beSendTaskReport.emit(task, '', '', str(path))
 
     elif task is Task.SET_GUI    and set(data.keys())=={'docID','gui'}:
       self.backend.db.setGUI(data['docID'], data['gui'])
