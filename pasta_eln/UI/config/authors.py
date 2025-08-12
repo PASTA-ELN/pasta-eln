@@ -110,7 +110,7 @@ class ConfigurationAuthors(QDialog):
     elif sender == 'organization':
       self.orgaCB.setItemText(self.orgaCB.currentIndex(), self.userOrg.text())
     else:
-      logging.error('Did not understand sender: %s',sender)
+      logging.error('Did not understand sender: %s',sender, exc_info=True)
     return
 
 

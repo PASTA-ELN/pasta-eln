@@ -124,7 +124,7 @@ class SqlLiteDB:
     self.cursor.execute(f"SELECT * FROM {name}")
     columnNames = list(map(lambda x: x[0], self.cursor.description))
     if columnNames != columns:
-      logging.error('Difference in sqlite table: %s', name)
+      logging.error('Difference in sqlite table: %s', name, exc_info=True)
       logging.error(columnNames)
       logging.error(columns)
       raise ValueError(f'SQLite table difference: {name}')
@@ -342,7 +342,8 @@ class SqlLiteDB:
           try:
             self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), ''])
           except Exception:
-            logging.error('SQL command %s did not succeed %s', cmd, [doc['id'], parentKeys+key, str(value), ''])
+            logging.error('SQL command %s did not succeed %s', cmd, [doc['id'], parentKeys+key, str(value), ''],
+                          exc_info=True)
       self.connection.commit()
       return
     # properties
@@ -496,7 +497,7 @@ class SqlLiteDB:
           cmd = 'INSERT INTO properties VALUES (?, ?, ?, ?);'
           self.cursor.execute(cmd ,[docID, key, value[0], value[1]])
       else:
-        logging.error('Property is not a dict, ERROR %s %s %s',key, value, type(value))
+        logging.error('Property is not a dict, ERROR %s %s %s',key, value, type(value), exc_info=True)
     if set(dataOld.keys()).difference(dataNew.keys()):
       cmd = f"DELETE FROM properties WHERE id == '{docID}' and key == ?"
       properties = [(i,) for i in set(dataOld.keys()).difference(dataNew.keys())]
@@ -877,7 +878,7 @@ class SqlLiteDB:
           parentNode = id2Node[parent]
         else:
           parentNode, error = (dataTree, True)
-          logging.error('There is an error in the hierarchy tree structure with parent %s missing', parent)
+          logging.error('Error in the hierarchy tree with parent %s missing', parent, exc_info=True)
         subNode = Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum)
         id2Node[_id] = subNode
     # add non-folders into tree

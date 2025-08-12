@@ -26,7 +26,7 @@ def outputString(fmt:str='print', level:str='info', message:str='') -> str:
     txtOutput+= ' ***' if '***' in prefixes[level] else ''
     txtOutput+= f'{Bcolors.ENDC}\n'
   else:
-    logging.error('Level not in prefixes %s',level)
+    logging.error('Level not in prefixes %s',level, exc_info=True)
   # depend on format
   if 'print' in fmt:
     print(txtOutput)
@@ -39,7 +39,7 @@ def outputString(fmt:str='print', level:str='info', message:str='') -> str:
     if level[0]=='h':
       return f'<{level}>{message}</{level}>'
     if level not in colors:
-      logging.error('Wrong level %s', level)
+      logging.error('Wrong level %s', level, exc_info=True)
       return ''
     return f'<font color="{colors[level]}">' + message.replace('\n', '<br>') + '</font><br>'
   return ''

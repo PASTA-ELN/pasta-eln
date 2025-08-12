@@ -130,7 +130,7 @@ class TreeView(QTreeView):
     elif command[0] is Command.ADD_ON:
       callAddOn(command[1], self.comm, item.data()['hierStack'], self)
     else:
-      logging.error('Unknown context menu %s', command)
+      logging.error('Unknown context menu %s', command, exc_info=True)
     return
 
 
@@ -218,7 +218,7 @@ class TreeView(QTreeView):
     elif 'application/x-qstandarditemmodeldatalist' in event.mimeData().formats():
       super().dropEvent(event)
     else:
-      logging.error('Drop unknown data: %s', event.mimeData().formats())
+      logging.error('Drop unknown data: %s', event.mimeData().formats(), exc_info=True)
     return
 
 

@@ -53,7 +53,7 @@ class WaitDialog(QWidget):
     elif dType=='count' and re.match(r'^\d+$',data):
       self.count = int(data)
     else:
-      logging.error('Unknown data %s %s', dType, data)
+      logging.error('Unknown data %s %s', dType, data, exc_info=True)
     self.progressBar.setValue(self.count)
     if self.count > 99:
       self.buttonBox.show()

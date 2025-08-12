@@ -230,7 +230,7 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.RESTART:
       hardRestart()
     else:
-      logging.error('Gui menu unknown: %s', command)
+      logging.error('Gui menu unknown: %s', command, exc_info=True)
     return
 
 
@@ -256,7 +256,7 @@ class MainWindow(QMainWindow):
         reportText += r'<font color="magenta">image does not exist ...:<\/font><br>'
     elif task not in (Task.EXTRACTOR_TEST, Task.EXTRACTOR_RERUN, Task.DELETE_DOC, Task.EXPORT_ELN, Task.IMPORT_ELN, Task.SEND_ELAB,
                       Task.GET_ELAB, Task.SMART_ELAB):               #e.g. extractor tests work out of the box
-      logging.error('Unknown task in showReport: %s', task)
+      logging.error('Unknown task in showReport: %s', task, exc_info=True)
     showMessage(self, 'Report', reportText, image=image)
 
 

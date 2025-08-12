@@ -169,7 +169,7 @@ class Image():
       if layout is not None:
         layout.addWidget(imageSVG, alignment=Qt.AlignHCenter)                                   # type: ignore
     elif len(data)>2:
-      logging.error('guiStyle.Image: %s', data[:50])
+      logging.error('guiStyle.Image: %s', data[:50], exc_info=True)
     return
 
 

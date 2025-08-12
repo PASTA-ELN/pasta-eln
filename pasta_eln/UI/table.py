@@ -435,7 +435,7 @@ class Table(QWidget):
     elif command[0] is Command.SET_FILTER:
       self.filterTextChanged('', command[1])
     else:
-      logging.error('Menu unknown: %s',command)
+      logging.error('Menu unknown: %s',command, exc_info=True)
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
     return
 

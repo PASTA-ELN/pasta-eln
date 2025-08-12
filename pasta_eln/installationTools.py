@@ -148,7 +148,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
       if platform.system()=='Windows':
         logging.info('recreate example data: remove folder went as expected')
     except Exception:
-      logging.error('recreate example data: remove folder impossible possible %s', traceback.format_exc())
+      logging.error('recreate example data: remove folder impossible possible', exc_info=True)
   if callbackPercent is not None:
     callbackPercent(1)
   backend = Backend(conf, projectGroup)

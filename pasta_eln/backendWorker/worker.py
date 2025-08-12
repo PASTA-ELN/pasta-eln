@@ -194,7 +194,7 @@ class BackendWorker(QObject):
       doc      = self.backend.db.getDoc(data['docID'])
       branchOldList= [i for i in doc['branch'] if i['stack']==data['stackOld']]
       if len(branchOldList)!=1:
-        logging.error('Cannot move leaves: %s has no branch with stack %s', doc['id'], data['stackOld'])
+        logging.error('Cannot move leaves: %s has no branch with stack %s', doc['id'], data['stackOld'], exc_info=True)
         return
       branchOld = branchOldList[0]
       if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
@@ -384,7 +384,7 @@ class BackendWorker(QObject):
       self.backend.db.hideShow(data['docID'])
 
     else:
-      logging.error('Got task, which I do not understand %s %s', task, data.keys())
+      logging.error('Got task, which I do not understand %s %s', task, data.keys(), exc_info=True)
 
 
   @Slot(list)

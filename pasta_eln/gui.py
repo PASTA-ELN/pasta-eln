@@ -66,7 +66,7 @@ def startMain(projectGroup:str='') -> None:
       app.exec()
   except Exception as e:
     traceback.print_exc()
-    logging.error('Error in mainGUI: %s', e, exc_info=True)#TODO add exc_info or traceback.format_exec() to all logging.error calls
+    logging.error('Error in mainGUI: %s', e, exc_info=True)
 
 
 # called by python3 -m pasta_eln.gui

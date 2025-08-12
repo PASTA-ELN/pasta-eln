@@ -106,7 +106,7 @@ class TableHeader(QDialog):
       self.selectedList += [self.inputLine.text()]
       self.allSet.add(self.inputLine.text())
     else:
-      logging.error('Menu unknown: %s',command)
+      logging.error('Menu unknown: %s',command, exc_info=True)
     #change content
     if oldIndex>-1 and newIndex>-1:
       self.selectedList.insert(newIndex, self.selectedList.pop(oldIndex))

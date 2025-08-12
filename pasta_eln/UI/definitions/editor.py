@@ -129,7 +129,7 @@ class Editor(QDialog):
       self.comm.uiSendSQL.emit(tasks)
       self.accept()
     else:
-      logging.error('Command unknown: %s',command)
+      logging.error('Command unknown: %s',command, exc_info=True)
     return
 
 

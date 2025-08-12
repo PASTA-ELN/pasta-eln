@@ -349,7 +349,7 @@ class Form(QDialog):
           self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
           formL.addRow(QLabel('Data type'), self.docTypeComboBox)
     if [i for i in self.doc if i.startswith('_')]:
-      logging.error('There should not be "_" in a doc: %s', str(self.doc))
+      logging.error('There should not be "_" in a doc: %s', str(self.doc), exc_info=True)
     # final button box
     _, buttonLineL = widgetAndLayout('H', mainL, 'm')
     if 'branch' in self.doc:
@@ -600,7 +600,7 @@ class Form(QDialog):
         #   self.doc[key]=''
         #   print('Is this really needed?')
         else:
-          logging.error('Unknown value type %s %s',key, valueOld)
+          logging.error('Unknown value type %s %s',key, valueOld, exc_info=True)
       # new key-value pairs
       keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]# type: ignore[union-attr]
       keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
@@ -677,7 +677,7 @@ class Form(QDialog):
       messageWindow = ScrollMessageBox('Details', doc, style='QScrollArea{min-width:600 px; min-height:400px}')
       messageWindow.exec()
     else:
-      logging.error('Unknown Command %s', command)
+      logging.error('Unknown Command %s', command, exc_info=True)
     return
 
 

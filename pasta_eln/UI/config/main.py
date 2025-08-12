@@ -60,7 +60,7 @@ class Configuration(QDialog):
         tabW.setTabEnabled(3, False)
         tabW.setTabEnabled(4, False)
     except Exception as e:
-      logging.error('Could not create configuration dialog: %s', e)
+      logging.error('Could not create configuration dialog: %s', e, exc_info=True)
 
     # always add setup tab
     tabW.addTab(tabSetup, 'Setup')

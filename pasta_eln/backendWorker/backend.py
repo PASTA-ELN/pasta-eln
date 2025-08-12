@@ -184,7 +184,7 @@ class Backend(CLI_Mixin):
             try:
               shasum  = generic_hash(path)
             except Exception:
-              logging.error('bad01: fetch remote content failed. Data not added')
+              logging.error('bad01: fetch remote content failed. Data not added', exc_info=True)
               return {'id':''}
         elif doc['name']!='' and (self.basePath/doc['name']).is_file():                          # file exists
           path = self.basePath/doc['name']
@@ -357,7 +357,7 @@ class Backend(CLI_Mixin):
             parentPath = Path(path).parent
             newPath = str(parentPath/createDirName(doc, childNum, parentPath))#update,or create (if new doc, update ignored anyhow)
             if (self.basePath/newPath).exists():                             # can be either file or directory
-              logging.error('New path should not exist %s',newPath)
+              logging.error('New path should not exist %s',newPath, exc_info=True)
             else:
               (self.basePath/path).rename(self.basePath/newPath)
           self.db.updateBranch(doc['id'], 0, childNum, hierStack, newPath)
@@ -432,10 +432,10 @@ class Backend(CLI_Mixin):
             try:
               f.write(urlRequest.read())
             except Exception:
-              logging.error('Saving downloaded file to temporary disk')
+              logging.error('Saving downloaded file to temporary disk', exc_info=True)
               return
       except Exception:
-        logging.error('Could not download file from internet %s', filePath.as_posix())
+        logging.error('Could not download file from internet %s', filePath.as_posix(), exc_info=True)
         return
     else:
       if filePath.is_absolute():
@@ -466,8 +466,7 @@ class Backend(CLI_Mixin):
           else:
             for item in doc[meta]:
               if not (isinstance(item, dict) and 'key' in item and 'value' in item and 'unit' in item):
-                logging.error('Complicated extractor return wrong')
-                print('Complicated extractor return wrong')
+                logging.error('Complicated extractor return wrong', exc_info=True)
         if doc['style']['main'].startswith(doc['type'][0]):
           doc['type']     = doc['style']['main'].split('/')
         else:

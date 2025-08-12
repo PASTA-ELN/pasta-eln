@@ -35,7 +35,7 @@ def generic_hash(path:Path, forceFile:bool=False) -> str:
         size = int(meta.get_all('Content-Length')[0])
         return blob_hash(site, size)
     except Exception:
-      logging.error('Could not download content / hashing issue %s \n%s',path.as_posix().replace(':/','://'),traceback.format_exc())
+      logging.error('Could not download content / hashing issue %s',path.as_posix().replace(':/','://'), exc_info=True)
       return ''
   if path.is_dir():
     raise ValueError(f'This seems to be a directory {path.as_posix()}')

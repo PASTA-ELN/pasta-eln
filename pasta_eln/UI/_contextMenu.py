@@ -78,7 +78,7 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
   elif command[0] is CommandMenu.CHANGE_EXTRACTOR:
     widget.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs':[widget.doc['id']],'recipe':command[1]})# type: ignore[attr-defined]
   else:
-    logging.error('Command not found in _contextMenu %s', command)
+    logging.error('Command not found in _contextMenu %s', command, exc_info=True)
   return True
 
 

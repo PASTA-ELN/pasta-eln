@@ -75,7 +75,7 @@ class TerminologyLookupService:
         results.append(result)
     # Log any errors
     if errors:
-      logging.error('Session request errors: %s', errors)
+      logging.error('Session request errors: %s', errors, exc_info=True)
     return results
 
 
@@ -90,7 +90,7 @@ class TerminologyLookupService:
     Returns (dict[str, Any]): Dictionary containing the name, search term and results which is a list of dict(iri, information)
     """
     if (not search_term or not web_result or not lookup_service):
-      logging.error('Invalid search term or web result or lookup service!')
+      logging.error('Invalid search term or web result or lookup service!', exc_info=True)
       return {}
     retrieved_results: dict[str, Any] = {'name': lookup_service['name'], 'search_term': search_term, 'results': []}
     # Get mandatory attributes

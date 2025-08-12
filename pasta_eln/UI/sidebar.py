@@ -166,7 +166,7 @@ class Sidebar(QWidget):
     elif command[0] is Command.SCAN_PROJECT:
       self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.comm.projectID})
     else:
-      logging.error('Sidebar menu unknown: %s',command)
+      logging.error('Sidebar menu unknown: %s',command, exc_info=True)
     return
 
 

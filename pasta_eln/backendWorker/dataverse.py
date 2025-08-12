@@ -476,7 +476,7 @@ class DataverseClient(RepositoryClient):
         self.deleteNonEmptyDataverse()
       else:
         logging.error('Unknown content type: %s while deleting dataverse: %s on server: %s ', content.type,
-                      self.identifier, self.server_url)
+                      self.identifier, self.server_url, exc_info=True)
     resp = requests.delete(f"{self.server_url}/api/dataverses/{self.identifier}", headers=self.headers, timeout=10)
     if resp.status_code == 200:
       return resp.json().get('data').get('message')
