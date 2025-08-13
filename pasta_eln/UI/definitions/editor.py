@@ -162,6 +162,18 @@ class Editor(QDialog):
     return df
 
 
+  def reject(self) -> None:
+    """ Reject the dialog, stop the thread and disconnect signals """
+    self.comm.backendThread.worker.beSendSQL.disconnect(self.onGetData)
+    super().reject()
+
+
+  def accept(self) -> None:
+    """ Accept the dialog, stop the thread and disconnect signals """
+    self.comm.backendThread.worker.beSendSQL.disconnect(self.onGetData)
+    super().accept()
+
+
 class Command(Enum):
   """ Commands used in this file """
   Save   = 1

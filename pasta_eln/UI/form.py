@@ -752,6 +752,21 @@ class Form(QDialog):
       self.btnAddKWPairs.hide()
     return
 
+  def reject(self) -> None:
+    """ Reject the dialog, stop the thread and disconnect signals """
+    self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
+    self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
+    self.checkThreadTimer.stop()
+    super().reject()
+
+
+  def accept(self) -> None:
+    """ Accept the dialog, stop the thread and disconnect signals """
+    self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
+    self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
+    self.checkThreadTimer.stop()
+    super().accept()
+
 
 class Command(Enum):
   """ Commands used in this file """

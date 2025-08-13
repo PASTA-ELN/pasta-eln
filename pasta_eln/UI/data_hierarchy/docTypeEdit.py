@@ -141,3 +141,15 @@ class DocTypeEditor(QDialog):
           self.callback(label)
       self.accept()
     return
+
+
+  def reject(self) -> None:
+    """ Reject the dialog, stop the thread and disconnect signals """
+    self.comm.backendThread.worker.beSendSQL.disconnect(self.onGetData)
+    super().reject()
+
+
+  def accept(self) -> None:
+    """ Accept the dialog, stop the thread and disconnect signals """
+    self.comm.backendThread.worker.beSendSQL.disconnect(self.onGetData)
+    super().accept()
