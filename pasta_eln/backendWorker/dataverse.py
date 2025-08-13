@@ -156,13 +156,15 @@ class DataverseClient(RepositoryClient):
     if resp.status_code == 200:
       element_tree: ElementTree = ElementTree(fromstring(resp.text))
       dataverse_list: list[dict[str, str]] = []
-      for element in element_tree.getroot().findall('.//{http://www.w3.org/2007/app}collection'):#type: ignore[union-attr]
-        title = element.find('.//{http://www.w3.org/2005/Atom}title')
-        if title is not None:
-          title_val = title.text if title.text is not None else ''
-          dataverse_list.append({'id': element.attrib['href'].split('/')[-1],'title': title_val})
-      dataverse_list.sort(key=lambda x: x['title'])
-      return dataverse_list
+      root = element_tree.getroot()
+      if root is not None:
+        for element in root.findall('.//{http://www.w3.org/2007/app}collection'):
+          title = element.find('.//{http://www.w3.org/2005/Atom}title')
+          if title is not None:
+            title_val = title.text if title.text is not None else ''
+            dataverse_list.append({'id': element.attrib['href'].split('/')[-1],'title': title_val})
+        dataverse_list.sort(key=lambda x: x['title'])
+        return dataverse_list
     return f"Error get dataverse list, Server:{self.server_url},  Status:{resp.status_code}"
 
 
