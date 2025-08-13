@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.2.0b4](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b4) (2025-08-11)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b3...v3.2.0b4)
+
 ## [v3.2.0b3](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b3) (2025-08-09)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b2...v3.2.0b3)
