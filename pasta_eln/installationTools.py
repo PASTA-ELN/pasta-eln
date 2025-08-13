@@ -5,7 +5,6 @@ import os
 import platform
 import shutil
 import sys
-import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable, Optional

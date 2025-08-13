@@ -1,7 +1,6 @@
 """ All hash tools for pasta-eln backend worker """
 import logging
 import os
-import traceback
 from io import BufferedReader
 from pathlib import Path
 from urllib import request

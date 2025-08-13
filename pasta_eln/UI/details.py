@@ -100,9 +100,9 @@ class Details(QScrollArea):
     data = data[['id','name']]
     data['type']= docType
     for _, row in data.iterrows():
-      id = row['id']
-      if id in self.idsTypesNames['id'].values:                             # Replace the row with matching id
-        self.idsTypesNames.loc[self.idsTypesNames['id']==id,['name','type']]=row[['name', 'type']].values
+      id_ = row['id']
+      if id_ in self.idsTypesNames['id'].values:                            # Replace the row with matching id
+        self.idsTypesNames.loc[self.idsTypesNames['id']==id_, ['name','type']] = row[['name', 'type']].values
       else:                                                                              # Concatenate new row
         self.idsTypesNames = pd.concat([self.idsTypesNames, pd.DataFrame([row])], ignore_index=True)
 

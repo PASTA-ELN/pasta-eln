@@ -3,7 +3,6 @@ import copy
 import json
 import logging
 import re
-import traceback
 from collections import Counter
 from datetime import datetime
 from typing import Any, Callable

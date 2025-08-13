@@ -4,7 +4,6 @@ import hashlib
 import json
 import logging
 import shutil
-import traceback
 import uuid
 from datetime import datetime
 from pathlib import Path

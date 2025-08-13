@@ -44,7 +44,7 @@ class Form(QDialog):
     for docID in self.allDocIDs:
       self.comm.uiRequestDoc.emit(docID)
     self.tagsAllList: list[str] = []
-    self.comboBoxDocTypeList:dict[str, (QComboBox,str)] = {}    # dict of docType:... for links to other items
+    self.comboBoxDocTypeList:dict[str, tuple[QComboBox,str]] = {}    # dict of docType:... for links to other items
     self.flagNewDoc = 'id' not in self.doc or '_ids' in self.doc
     if self.flagNewDoc:
       self.setWindowTitle('Create new entry')
@@ -238,7 +238,6 @@ class Form(QDialog):
       self.dataHierarchyNode = copy.deepcopy([dict(i) for i in rawData])
     else:
       self.dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
-    pass
     keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in self.dataHierarchyNode]
     keysDocOrg = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k])] if isinstance(self.doc[k], dict) else [f'.{k}']
                for k in self.doc if k not in MAIN_ORDER+['branch','qrCodes','tags']]

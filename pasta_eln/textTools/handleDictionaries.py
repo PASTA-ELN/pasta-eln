@@ -2,7 +2,6 @@
 import difflib
 import json
 import logging
-import traceback
 import uuid
 from datetime import datetime
 from typing import Any
