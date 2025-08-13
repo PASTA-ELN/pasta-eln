@@ -59,7 +59,7 @@ class Backend(CLI_Mixin):
     self.basePath   = Path(confProjectGroup['local']['path'])
     self.cwd        = Path(confProjectGroup['local']['path'])
     self.addOnPath  = Path(confProjectGroup['addOnDir'])
-    sys.path.append(str(self.addOnPath))                                                        #allow add-ons
+    sys.path.insert(0, str(self.addOnPath))                                                        #allow add-ons
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database

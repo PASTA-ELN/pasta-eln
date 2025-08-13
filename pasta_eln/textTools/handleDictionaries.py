@@ -2,6 +2,7 @@
 import difflib
 import json
 import logging
+import re
 import uuid
 from datetime import datetime
 from typing import Any
@@ -142,14 +143,20 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
         dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
         if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
             not isinstance(dataHierarchyItems[0]['list'], list):                         #choice among docType
-          table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
-          names= list(table[table.id==value[0]]['name'])
-          if len(names)==1:                                            # default find one item that we link to
-            value = '\u260D '+names[0]
-          elif not names:        # likely empty link because the value was not yet defined: just print to show
+          #TODO: for now just specify that there is a link to an item
+          #  better solution: already replace the value with the name of the item before calling this
+          #table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
+          # names= list(table[table.id==value[0]]['name'])
+          # if len(names)==1:                                            # default find one item that we link to
+          #   value = '\u260D '+names[0]
+          # elif not names:        # likely empty link because the value was not yet defined: just print to show
+          #   value = value[0] if isinstance(value,tuple) else value
+          # else:
+          #   raise ValueError(f'list target exists multiple times. Key: {key}')
+          if re.search(r'^[a-z\-]-[a-z0-9]{32}$',value[0]) is None:
             value = value[0] if isinstance(value,tuple) else value
           else:
-            raise ValueError(f'list target exists multiple times. Key: {key}')
+            value = '\u260D link to entry'
         elif isinstance(value, list):
           value = ', '.join([str(i) for i in value])
           markdown += f'{key.capitalize()}: {value}\n\n'
@@ -163,7 +170,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
           markdown += f'{key.capitalize()}: {value}'
     except Exception:
       doc.pop('image','')
-      logging.error('Could not convert to markdown value: %s\n  doc: %s',value, doc, exc_info=True)
+      logging.error('Could not convert to markdown value: %s\n  doc: %s',value, doc, exc_info=True, stack_info=True)
   return markdown
 
 

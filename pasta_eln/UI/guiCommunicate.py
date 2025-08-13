@@ -1,5 +1,7 @@
 """ Communication class that sends signals between widgets and the backend worker"""
+import logging
 import os
+import sys
 from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot
@@ -52,6 +54,9 @@ class Communicate(QObject):
     if not self.configuration:
       return
     self.basePath = Path(self.configuration['projectGroups'][self.projectGroup]['local']['path'])
+    addOnPath = self.configuration['projectGroups'][self.projectGroup]['addOnDir']
+    logging.info('Initial python path: %s', sys.path)
+    logging.info('Backend initialized with basePath %s and prepend addOnPath %s', self.basePath, addOnPath)
 
     # Data storage for all widgets
     self.docTypesTitles:dict[str,dict[str,str]] = {}# docType: {'title':title,'icon':icon,'shortcut':shortcut}
