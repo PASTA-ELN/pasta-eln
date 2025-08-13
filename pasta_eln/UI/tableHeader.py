@@ -24,14 +24,13 @@ class TableHeader(QDialog):
       docType (string):  document type
     """
     super().__init__()
-    self.comm = comm
-    self.comm.backendThread.worker.beSendSQL.connect(self.onGetData)
+    self.comm    = comm
     self.docType = docType
+    self.allSet  = set(MAIN_ORDER)
+    self.allSet  = {i[1:] if i[0]=='.' else i for i in self.allSet}
     self.selectedList:list[str] = []
+    self.comm.backendThread.worker.beSendSQL.connect(self.onGetData)
     self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':f'SELECT view FROM docTypes WHERE docType=="{docType}"'}])
-    self.allSet = set(MAIN_ORDER)
-    #clean it
-    self.allSet       = {i[1:] if i[0]=='.' else i for i in self.allSet}
 
     # GUI elements
     self.setWindowTitle('Select table headers')
