@@ -99,7 +99,12 @@ class Details(QScrollArea):
     """
     data = data[['id','name']]
     data['type']= docType
-    self.idsTypesNames = pd.concat([self.idsTypesNames, data], ignore_index=True)
+    for _, row in data.iterrows():
+      id = row['id']
+      if id in self.idsTypesNames['id'].values:                             # Replace the row with matching id
+        self.idsTypesNames.loc[self.idsTypesNames['id']==id,['name','type']]=row[['name', 'type']].values
+      else:                                                                              # Concatenate new row
+        self.idsTypesNames = pd.concat([self.idsTypesNames, pd.DataFrame([row])], ignore_index=True)
 
 
   @Slot()
@@ -288,7 +293,7 @@ class Details(QScrollArea):
             docID = value[0]
             value = '\u260D '+names[0]
             link = True
-          elif not names:        # likely empty link because the value was not yet defined: just print to show
+          elif not names:        # likely empty link bidsTypesNamesecause the value was not yet defined: just print to show
             value = value[0] if isinstance(value,tuple) else value
           else:
             raise ValueError(f'list target exists multiple times. Key: {key}')

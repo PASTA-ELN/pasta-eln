@@ -28,7 +28,7 @@ waitTimeBeforeSendingFirstMessage = 0.1 #ensure all UI elements are up
 class Task(Enum):
   """ Tasks that can be used in BackendWorker """
   ADD_DOC        = (1 , '')                                        #keys: hierStack, docType, doc
-  EDIT_DOC       = (2 , '')                                        #keys: doc
+  EDIT_DOC       = (2 , '')                                        #keys: doc, newProjID
   MOVE_LEAVES    = (3 , '')                                        #keys: docID, stackOld, stackNew, childOld, childNew
   DROP_EXTERNAL  = (4 , 'Including drag&drop files and folders:')  #keys: docID, files, folders
   HIDE_SHOW      = (5 , '')                                        #keys: docID
@@ -182,7 +182,18 @@ class BackendWorker(QObject):
       self.backend.addData(data['docType'], data['doc'], data['hierStack'])
       self.beSendDoc.emit(data['doc'])  # send updated doc back to GUI
 
-    elif task is Task.EDIT_DOC      and set(data.keys())=={'doc'}:
+    elif task is Task.EDIT_DOC      and set(data.keys())=={'doc','newProjID'}:
+      # update the path, if the project changed
+      if data['newProjID'] and 'branch' in data['doc']:
+        parentPath = self.backend.db.getDoc(data['newProjID'][0])['branch'][0]['path']
+        if data['doc']['branch'][0]['stack']!=data['newProjID'][0]:      #only if project changed
+          if data['doc']['branch'][0]['path'] is None:
+            newPath    = ''
+          else:
+            oldPath = self.backend.basePath/data['doc']['branch'][0]['path']
+            newPath = f'{parentPath}/{oldPath.name}'
+          data['doc']['branch'][0] = {'stack':[data['newProjID'][0]], 'path':newPath or None, 'child':9999, 'show':[True,True]}
+      # update the doc in the database
       doc = self.backend.db.getDoc(data['doc']['id'])
       doc.update(data['doc'])
       doc = flatten(doc, True)                                            # type: ignore[assignment]
