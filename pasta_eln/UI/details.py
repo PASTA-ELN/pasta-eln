@@ -293,7 +293,7 @@ class Details(QScrollArea):
             docID = value[0]
             value = '\u260D '+names[0]
             link = True
-          elif not names:        # likely empty link bidsTypesNamesecause the value was not yet defined: just print to show
+          elif not names:
             value = value[0] if isinstance(value,tuple) else value
           else:
             raise ValueError(f'list target exists multiple times. Key: {key}')

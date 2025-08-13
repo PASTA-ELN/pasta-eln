@@ -44,7 +44,7 @@ class Form(QDialog):
     for docID in self.allDocIDs:
       self.comm.uiRequestDoc.emit(docID)
     self.tagsAllList: list[str] = []
-    self.comboBoxDocTypeList:dict[str, tuple[QComboBox,str]] = {}    # dict of docType:... for links to other items
+    self.comboBoxDocTypeList:dict[str, tuple[QComboBox,str]] = {}# dict of docType:.. for links to other items
     self.flagNewDoc = 'id' not in self.doc or '_ids' in self.doc
     if self.flagNewDoc:
       self.setWindowTitle('Create new entry')
@@ -54,7 +54,7 @@ class Form(QDialog):
 
     # GUI elements
     self.mainL = QVBoxLayout(self)
-    self.splitter = QSplitter(Qt.Orientation.Horizontal)  # will be filled during paint
+    self.splitter = QSplitter(Qt.Orientation.Horizontal)                         # will be filled during paint
     self.splitter.setHandleWidth(10)
     self.splitter.setContentsMargins(0,0,0,0)
     self.mainL.addWidget(self.splitter, stretch=2)
@@ -373,7 +373,7 @@ class Form(QDialog):
             else:                                                                        #choice among docType
               getattr(self, elementName).addItem('- no link -', userData='')
               listDocType = dataHierarchyItem[0]['list']
-              if listDocType not in self.comboBoxDocTypeList:              # if listDocType already exists in dict
+              if listDocType not in self.comboBoxDocTypeList:          # if listDocType already exists in dict
                 self.comm.uiRequestTable.emit(listDocType, '', True)
                 self.comboBoxDocTypeList[listDocType] = (getattr(self, elementName), value)
             self.allUserElements.append((key,'ComboBox'))
