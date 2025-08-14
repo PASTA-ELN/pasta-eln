@@ -358,7 +358,7 @@ def testNewPastaVersion(update:bool=False) -> bool:
   url = 'https://pypi.org/pypi/pasta-eln/json'
   with request.urlopen(url) as response:
     data = json.loads(response.read())
-  releases = list(data['releases'].keys())
+  releases = [i for i in list(data['releases'].keys()) if 'b' not in i]  # remove beta versions
   largestVersionOnPypi = sorted(releases, key=parse_version)[-1]
   return largestVersionOnPypi == pasta_eln.__version__ or 'b' in pasta_eln.__version__
 
