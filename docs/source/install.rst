@@ -28,8 +28,8 @@ Automatic Installation
 
 .. raw:: html
 
-   Download <a href="https://raw.githubusercontent.com/PASTA-ELN/pasta-eln/refs/heads/main/docs/source/_static/InstallPastaELN.bat">
-   Installation batch script</a> and execute it
+   Download the <a href="https://raw.githubusercontent.com/PASTA-ELN/pasta-eln/refs/heads/main/docs/source/_static/InstallPastaELN.bat">
+   installation batch script</a> by right-clicking & "Save link as" while ensuring that the file has the extension '.bat'. Then execute it and ignore the warning.
    </div>
 
 
