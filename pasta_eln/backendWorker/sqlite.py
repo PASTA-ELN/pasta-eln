@@ -1083,10 +1083,10 @@ class SqlLiteDB:
             parentDocBranches = parentDoc['branch']
             onePathFound = any(path.startswith(parentBranch['path']) for parentBranch in parentDocBranches)
             if not onePathFound:
-              if docType.startswith('procedure'):
+              if docType.startswith('workflow'):
                 if not minimal:
                   reply+= outputString(outputStyle,'perfect',
-                    f"dch08: procedure parent does not have corresponding path {docID} | parentID {parentID}")
+                    f"dch08: workflow parent does not have corresponding path {docID} | parentID {parentID}")
               else:
                 reply+= outputString(outputStyle,'unsure',
                     f"dch08: parent does not have corresponding path {docID} | parentID {parentID}")
