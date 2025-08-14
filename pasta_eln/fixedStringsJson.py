@@ -168,7 +168,7 @@ Three components are needed for proper functioning of PASTA-ELN:
 - Example project creation
 
 This setup will analyse and (possibly) correct these items
-If an attempt fails: please follow to this [website](https://pasta-eln.github.io/pasta-eln/install.html)
+If an attempt fails: please follow to this [website](https://pasta-eln.github.io/pasta-eln/install.html#troubleshooting-instructions)
 """
 
 

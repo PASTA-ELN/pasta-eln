@@ -3,7 +3,8 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QProgressBar, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QProgressBar, QLabel, QVBoxLayout, QWidget
 from ...fixedStringsJson import exampleDataString, setupText
 from ...installationTools import configuration, createShortcut, exampleData
 from ...miscTools import hardRestart
@@ -33,9 +34,11 @@ class ConfigurationSetup(QWidget):
     self.setLayout(self.mainL)
     self.callbackFinished = callbackFinished
 
-    self.text = QTextEdit()
     self.mainText = setupText
-    self.text.setMarkdown(self.mainText)
+    self.text = QLabel()
+    self.text.setText(self.mainText)
+    self.text.setTextFormat(Qt.TextFormat.MarkdownText)
+    self.text.setOpenExternalLinks(True)
     self.mainL.addWidget(self.text)
     self.progressBar = QProgressBar(self)
     self.progressBar.setMaximum(24)
