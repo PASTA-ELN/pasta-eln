@@ -33,7 +33,7 @@ class Project(QWidget):
 
     self.mainL = QVBoxLayout()
     self.setLayout(self.mainL)
-    self.tree:Optional[TreeView]             = None
+    self.tree                                = TreeView(self, self.comm, QStandardItemModel())
     self.model:Optional[QStandardItemModel]  = None
     self.allDetails                          = QTextEdit()
     self.actHideDetail                       = QAction()
@@ -112,7 +112,7 @@ class Project(QWidget):
     for docType, value in self.comm.docTypesTitles.items():
       if docType[0]!='x':
         icon = 'fa5s.asterisk' if value['icon']=='' else value['icon']
-        Action(f'table of {docType}',   self, [Command.SHOW_TABLE, docType], moreMenu, icon=icon)
+        Action(f'table of {value["title"].lower()}',   self, [Command.SHOW_TABLE, docType], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
     moreMenu.addSeparator()
     projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
@@ -175,14 +175,17 @@ class Project(QWidget):
     self.model.itemChanged.connect(self.modelChanged)
     rootItem = self.model.invisibleRootItem()
     #Populate model body of change project: start recursion
-    if self.hierarchy.name == '__ERROR_in_getHierarchy__':
+    if self.hierarchy is not None and self.hierarchy.name == '__ERROR_in_getHierarchy__':
       showMessage(self, 'Error', 'There is an error in the project hierarchy: a parent of a node is incorrect.', 'Critical')
       return
-    for node in PreOrderIter(self.hierarchy, maxlevel=2):
-      if node.is_root:                                                                        # Project header
-        self.projHeader()
-      else:
-        rootItem.appendRow(self.iterateTree(node))
+    try:
+      for node in PreOrderIter(self.hierarchy, maxlevel=2):
+        if node is None or node.is_root:                                                                        # Project header
+          self.projHeader()
+        else:
+          rootItem.appendRow(self.iterateTree(node))
+    except AttributeError:
+      self.tree = TreeView(self, self.comm, QStandardItemModel())  # if hierarchy is None, create empty tree
     # collapse / expand depending on stored value
     # by iterating each leaf, and converting item and index
     root = self.model.invisibleRootItem()
@@ -192,7 +195,7 @@ class Project(QWidget):
       self.tree.setCurrentIndex(selectedIndex)
     self.mainL.addWidget(self.tree)
     logging.debug('ProjectView elements at 4: %i',self.mainL.count())
-    if len(self.hierarchy.children)>0 and self.btnAddSubfolder is not None:
+    if self.hierarchy is not None and len(self.hierarchy.children)>0 and self.btnAddSubfolder is not None:
       self.btnAddSubfolder.setVisible(False)
     self.tree.expanded.connect(lambda index: self.actionExpandCollapse(index, True))
     self.tree.collapsed.connect(lambda index: self.actionExpandCollapse(index, False))
@@ -274,6 +277,7 @@ class Project(QWidget):
         self.actHideDetail.setText('Show project details')
     elif command[0] is Command.HIDE:
       self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':self.projID})
+      self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
       self.comm.changeSidebar.emit('')
     elif command[0] is Command.SHOW_DETAILS and self.tree is not None:
       def recursiveRowIteration(index:QModelIndex) -> None:

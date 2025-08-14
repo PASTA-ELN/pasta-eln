@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Callable
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFormLayout, QGroupBox, QLabel, QVBoxLayout
 from ...fixedStringsJson import CONF_FILE_NAME, configurationGUI
-from ...miscTools import hardRestart
 from ..guiCommunicate import Communicate
 from ..guiStyle import TextButton
 
@@ -55,7 +54,6 @@ class ConfigurationGUI(QDialog):
             self.comm.configuration['GUI'][k] = getattr(self, k).currentText()
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.configuration,indent=2))
-      hardRestart()                                                                                     #theme
     return
 
 
@@ -73,6 +71,9 @@ class ConfigurationGUI(QDialog):
       QCombobox: filled combobox
     """
     widget = QComboBox()                                                     # pylint: disable=qt-local-widget
+    if label == 'Color style':
+      widget.setToolTip('Restart of PASTA-ELN required.')
+      label += ' *'
     widget.addItems(itemList)
     widget.setCurrentText(default)
     layout.addRow(QLabel(label), widget)

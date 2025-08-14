@@ -136,6 +136,7 @@ class BackendWorker(QObject):
       if error:
         hierarchy = Node('__ERROR_in_getHierarchy__')
       projDoc = self.backend.db.getDoc(projID)
+      logging.debug('returnHierarchy %s %s %s', hierarchy, projID, showAll)
       self.beSendHierarchy.emit(hierarchy, projDoc)
 
 

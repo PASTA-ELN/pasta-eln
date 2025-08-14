@@ -258,7 +258,7 @@ class Table(QWidget):
         if 'F' in self.data['show'][i]:
           item.setText(f'{item.text()}  \U0001F441')
         item.setAccessibleText(self.data['id'][i])
-        if self.docType != 'x0':
+        if self.docType[0] != 'x':
           item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
           item.setCheckState(Qt.CheckState.Unchecked)
       else:
@@ -376,7 +376,7 @@ class Table(QWidget):
           item.setCheckState(Qt.CheckState.Checked)
     elif command[0] is Command.SHOW_ALL:
       self.showAll = not self.showAll
-      self.paint()
+      self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
     elif command[0] is Command.RERUN_EXTRACTORS:
       docIDs = []
       for row in range(self.models[-1].rowCount()):

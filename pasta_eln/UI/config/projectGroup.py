@@ -1,4 +1,5 @@
 """ Table Header dialog: change which columns are shown and in which order """
+import copy
 import json
 import shutil
 from datetime import datetime
@@ -14,7 +15,6 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog
                                QTextEdit, QVBoxLayout)
 from ...backendWorker.elabFTWapi import ElabFTWApi
 from ...fixedStringsJson import CONF_FILE_NAME
-from ...miscTools import hardRestart
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, TextButton, widgetAndLayoutGrid
 from ..messageDialog import showMessage
@@ -152,10 +152,9 @@ class ProjectGroup(QDialog):
 
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
-      if self.requireHardRestart:
-        hardRestart()
-      else:
-        self.callbackFinished(True)
+      self.comm.configuration = copy.deepcopy(self.configuration)
+      self.commSendConfiguration.emit(self.comm.configuration, self.configuration['defaultProjectGroup'])
+      self.callbackFinished(True)
     return
 
 
