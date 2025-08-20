@@ -423,7 +423,7 @@ class BackendWorker(QObject):
         self.beSendSQL.emit(task['cmd'], df)
       else:
         print('**ERROR unknown task command', task)
-      self.backend.db.connection.commit()
+    self.backend.db.connection.commit()
 
 
   def exit(self) -> None:

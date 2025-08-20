@@ -107,7 +107,10 @@ class SchemeEditor(QDialog):
     if self.docType:
       self.finishDocType()
     self.docLabel= label
-    self.docType = [k for k,v in self.docTypesLabels if v==label][0]
+    fittingDocTypes = [k for k,v in self.docTypesLabels if v==label]
+    if not fittingDocTypes:                                        #nothing to save since docType just created
+      return
+    self.docType = fittingDocTypes[0]
     self.cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
           'docTypeSchema.unit, docTypeSchema.mandatory, docTypeSchema.list, definitions.long '\
           'FROM docTypeSchema LEFT JOIN definitions ON definitions.key = (docTypeSchema.class || "." || docTypeSchema.name) '\
@@ -225,17 +228,9 @@ class SchemeEditor(QDialog):
     if command[0] is Command.NEW:
       dialog = DocTypeEditor(self.comm, '', self.createdNewDocType)
       dialog.exec()
-      docLabel = str(self.docLabel)
-      self.selectDocType.clear()
-      _ = [self.selectDocType.addItem(v, k) for k,v in self.docTypesLabels]
-      self.selectDocType.setCurrentText(docLabel)
     elif command[0] is Command.EDIT:
       dialog = DocTypeEditor(self.comm, self.selectDocType.currentData())
       dialog.exec()
-      docIdx = self.selectDocType.currentIndex()
-      self.selectDocType.clear()
-      _ = [self.selectDocType.addItem(v, k) for k,v in self.docTypesLabels]
-      self.selectDocType.setCurrentIndex(docIdx)
     elif command[0] is Command.DEL:
       button = QMessageBox.question(self, 'Question', 'Do you really want to remove the doc-type?',
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
@@ -310,17 +305,17 @@ class SchemeEditor(QDialog):
     return
 
 
-  def createdNewDocType(self,label:str) -> None:
+  def createdNewDocType(self,label:str, docType:str) -> None:
     """ Callback function to change docType after creating a new one
 
     Args:
       label (str): label of the new docType
+      docType (str): name of the new docType
     """
-    self.selectDocType.clear()
-    _ = [self.selectDocType.addItem(v, k) for k,v in self.docTypesLabels]
-    self.selectDocType.setCurrentText(label)
+    if docType not in [self.selectDocType.itemData(i) for i in range(self.selectDocType.count())]:
+      self.selectDocType.addItem(label, docType)
     self.restartAfterClose = True
-    self.changeDocType(label)
+    self.selectDocType.setCurrentText(label)
     return
 
   def reject(self) -> None:

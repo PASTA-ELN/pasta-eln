@@ -1,5 +1,4 @@
 """ Edit properties of a docType """
-import random
 import string
 from typing import Callable, Optional
 import pandas as pd
@@ -117,13 +116,15 @@ class DocTypeEditor(QDialog):
     else:
       label    = self.row2.text()
       if not label or label in [v['title'] for _,v in self.comm.docTypesTitles.items()]:
-        label = 'Random_'+''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        showMessage(self, 'Error', 'The label has to be used and cannot be used already by another type.', 'Critical')
+        return
       icon     = '' if self.docType.startswith('x') else self.comboIcon.currentText()
       shortcut = '' if self.docType.startswith('x') else self.row4.text()
       if self.docType:                                                               # update existing docType
         cmd = f"UPDATE docTypes SET title='{label}', shortcut='{shortcut}', icon='{icon}' WHERE docType = "\
               f"'{self.docType}'"
         self.comm.uiSendSQL.emit([{'type':'one',  'cmd':cmd}])
+        docType = self.docType
       else:                                                  # create new docType, with default schema entries
         docType = self.row1.text()
         if not docType or docType in self.comm.docTypesTitles:
@@ -138,7 +139,7 @@ class DocTypeEditor(QDialog):
                                   {'type':'one', 'cmd':'INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
                                    'list':[docType, '', '2', 'comment', '', '', '']}])
         if self.callback is not None:
-          self.callback(label)
+          self.callback(label, docType)
       self.accept()
     return
 
