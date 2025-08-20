@@ -71,6 +71,7 @@ class Table(QWidget):
     selectionMenu.addSeparator()
     Action('Group Edit',      self, [Command.GROUP_EDIT],       selectionMenu)
     Action('Sequential edit', self, [Command.SEQUENTIAL_EDIT],  selectionMenu)
+    self.toggleHidden  = Action('Invert hidden status of selected', self, [Command.TOGGLE_HIDE],    selectionMenu)
     Action('Rerun extractors',self, [Command.RERUN_EXTRACTORS], selectionMenu)
     Action('Delete',          self, [Command.DELETE],           selectionMenu)
     self.selectionBtn.setMenu(selectionMenu)
@@ -79,7 +80,6 @@ class Table(QWidget):
     visibilityMenu = QMenu(self)
     Action(                    'Add Filter',                        self, [Command.ADD_FILTER],     visibilityMenu)
     self.showHidden    = Action('Show/hide hidden ___',             self, [Command.SHOW_ALL],       visibilityMenu)
-    self.toggleHidden  = Action('Invert hidden status of selected', self, [Command.TOGGLE_HIDE],    visibilityMenu)
     self.toggleGallery = Action('Toggle gallery view',              self, [Command.TOGGLE_GALLERY], visibilityMenu)
     self.toggleGallery.setVisible(False)
     self.visibilityBtn.setMenu(visibilityMenu)
@@ -298,7 +298,8 @@ class Table(QWidget):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           docIDs.append(docID)
-        self.comm.formDoc.emit({'type':self.docType, '_ids':docIDs})
+      if docIDs:
+        self.comm.formDoc.emit({'type':[self.docType], '_ids':docIDs})
     elif command[0] is Command.SEQUENTIAL_EDIT:
       self.stopSequentialEdit = False
       for row in range(self.models[-1].rowCount()):

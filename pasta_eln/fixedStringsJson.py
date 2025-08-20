@@ -31,6 +31,7 @@ defaultSchema: list[list[str|int]] = [
   ['measurement',         '', 2,   'comment',   '',   '',        ''],
   ['measurement',         '', 3,   'sample',    '',   '',        'sample'],
   ['measurement',         '', 4,   'workflow/procedure','','','workflow/procedure'],
+  ['measurement',         '', 5,   'instrument','',   '',        'instrument'],
   ['sample',              '', 0,   'name',      '',   'T',       ''],
   ['sample',              '', 1,   'tags',      '',   '',        ''],
   ['sample',              '', 2,   'chemistry', '',   '',        ''],

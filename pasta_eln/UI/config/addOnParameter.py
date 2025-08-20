@@ -34,7 +34,7 @@ class ConfigurationAddOnParameter(QDialog):
       for addOnType in addOns:                                                        # loop over add-on types
         if addOnType != 'extractors' and addOns[addOnType]:
           for name, _ in addOns[addOnType].items():                                        # loop over add-ons
-            module      = importlib.import_module(name)
+            module      = importlib.import_module(name)       # ISSUE: slow since imports all dependencies,...
             requiredParam = module.reqParameter
             try:
               helpText = module.helpText
