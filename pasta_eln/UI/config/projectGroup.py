@@ -34,7 +34,7 @@ class ProjectGroup(QDialog):
     self.comm    = comm
     self.projectGroupTested = False
     self.callbackFinished = callbackFinished
-    self.configuration = self.comm.configuration
+    self.configuration = copy.deepcopy(self.comm.configuration)
     self.emptyConfig:dict[str,Any] = {'local':{'path':''}, 'remote':{}, 'addOnDir':''}
     self.elabApi: ElabFTWApi|None = None
     self.serverPG: set[tuple[str,Any,Any,Any]] = set()
@@ -153,7 +153,7 @@ class ProjectGroup(QDialog):
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
       self.comm.configuration = copy.deepcopy(self.configuration)
-      self.commSendConfiguration.emit(self.comm.configuration, self.configuration['defaultProjectGroup'])
+      self.comm.commSendConfiguration.emit(self.comm.configuration, self.configuration['defaultProjectGroup'])
       self.callbackFinished(True)
     return
 

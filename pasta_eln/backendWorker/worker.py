@@ -179,7 +179,8 @@ class BackendWorker(QObject):
         self.backend.cwd = Path(self.backend.db.getDoc(parentID)['branch'][0]['path'])
       else:                                                                                        # project
         self.backend.cwd = Path(self.backend.basePath)
-      print(data)
+      if '_projectID' in data['doc']:
+        del data['doc']['_projectID']
       self.backend.addData(data['docType'], data['doc'], data['hierStack'])
       self.beSendDoc.emit(data['doc'])  # send updated doc back to GUI
 
@@ -196,6 +197,8 @@ class BackendWorker(QObject):
           data['doc']['branch'][0] = {'stack':[data['newProjID'][0]], 'path':newPath or None, 'child':9999, 'show':[True,True]}
       # update the doc in the database
       doc = self.backend.db.getDoc(data['doc']['id'])
+      if '_projectID' in data['doc']:
+        del data['doc']['_projectID']
       doc.update(data['doc'])
       doc = flatten(doc, True)                                            # type: ignore[assignment]
       self.backend.editData(doc)

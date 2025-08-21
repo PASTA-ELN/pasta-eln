@@ -6,6 +6,7 @@ import re
 from enum import Enum
 from pathlib import Path
 from typing import Any, Union
+import warnings
 import pandas as pd
 from PySide6.QtCore import QSize, Qt, QTimer, Slot
 from PySide6.QtGui import QRegularExpressionValidator
@@ -641,8 +642,6 @@ class Form(QDialog):
         if 'name' in self.doc:
           del self.doc['name']
         self.doc = {k:v for k,v in self.doc.items() if v}                             # filter out empty items
-        if '_ids' in self.doc:
-          del self.doc['_ids']
         for docID in self.allDocIDsCopy:
           self.comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':self.doc|{'id':docID}, 'newProjID':newProjID})
       elif 'id' in self.doc:                                                          # default update on item
@@ -758,6 +757,7 @@ class Form(QDialog):
 
   def reject(self) -> None:
     """ Reject the dialog, stop the thread and disconnect signals """
+    warnings.filterwarnings("ignore", category=RuntimeWarning)
     self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
     self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
     self.checkThreadTimer.stop()
@@ -766,6 +766,7 @@ class Form(QDialog):
 
   def accept(self) -> None:
     """ Accept the dialog, stop the thread and disconnect signals """
+    warnings.filterwarnings("ignore", category=RuntimeWarning)
     self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
     self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
     self.checkThreadTimer.stop()
