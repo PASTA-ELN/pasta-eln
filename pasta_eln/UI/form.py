@@ -220,7 +220,7 @@ class Form(QDialog):
         widget.setParent(None)
     self.comboBoxDocTypeList = {}                                                  # reset comboBoxDocTypeList
     self.allUserElements     = []
-    self.doc = minimalDocInForm | self.doc
+    self.doc = copy.deepcopy(minimalDocInForm) | self.doc
     if self.flagNewDoc:
       self.doc['name'] = ''
     if 'branch' in self.doc:
