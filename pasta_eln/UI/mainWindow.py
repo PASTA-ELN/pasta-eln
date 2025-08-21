@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
       self.setCentralWidget(QLabel('ERROR: No configuration present!'))
       return
     self.comm.formDoc.connect(self.formDoc)
-    self.comm.softRestart.connect(self.paint)
+    self.comm.changeSidebar.connect(self.paint)
     self.comm.backendThread.worker.beSendTaskReport.connect(self.showReport)
 
     # GUI
@@ -106,8 +106,8 @@ class MainWindow(QMainWindow):
     self.comm.changeTable.emit('x0', '')                                 # show project table, without details
 
 
-  @Slot()
-  def paint(self) -> None:
+  @Slot(str)
+  def paint(self, _:str='') -> None:
     """ Process things that might change """
     # Things that are inside the List menu
     self.viewMenu.clear()

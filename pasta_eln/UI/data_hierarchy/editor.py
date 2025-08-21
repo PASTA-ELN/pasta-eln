@@ -213,7 +213,7 @@ class SchemeEditor(QDialog):
     elif btn.text().endswith('Save'):
       self.finishDocType()
       if self.restartAfterClose:
-        self.comm.softRestart.emit()
+        self.comm.start()
       self.accept()
     return
 

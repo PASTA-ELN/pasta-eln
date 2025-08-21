@@ -43,7 +43,6 @@ class Communicate(QObject):
   # unclear
   formDoc            = Signal(dict)      # send doc from details to new/edit dialog: dialogForm
   testExtractor      = Signal()          # execute extractorTest in widgetDetails
-  softRestart        = Signal()          # restart GUI
 
   def __init__(self, projectGroup:str=''):
     super().__init__()
@@ -86,7 +85,7 @@ class Communicate(QObject):
 
       # start thread now that everything is linked up
       self.backendThread.start()
-      self.commSendConfiguration.emit(self.configuration, self.projectGroup)
+      self.start()
 
 
   @Slot(dict)
@@ -107,6 +106,12 @@ class Communicate(QObject):
       data (list): list of nodes in the hierarchy for this docType
     """
     self.dataHierarchyNodes[docType] = data
+
+  def start(self) -> None:
+    """
+    Start the backend thread
+    """
+    self.commSendConfiguration.emit(self.configuration, self.projectGroup)
 
 
   def shutdownBackendThread(self) -> None:
