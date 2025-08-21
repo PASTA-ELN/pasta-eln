@@ -247,7 +247,7 @@ class Project(QWidget):
       command (list): list of commands
     """
     if command[0] is Command.EDIT:
-      self.comm.formDoc.emit(self.docProj)
+      self.comm.formDoc.emit({'id':self.docProj['id']})
       self.change(self.projID,'')
       #collect information and then change
       oldPath = self.comm.basePath/self.docProj['branch'][0]['path']

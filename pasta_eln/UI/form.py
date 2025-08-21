@@ -191,7 +191,9 @@ class Form(QDialog):
       self.projectComboBox.addItem('- no change' if self.groupEdit else '- not assigned -', userData='')
       for iDocID, iName in data[['id','name']].values.tolist():           # add all projects incl. the present
         self.projectComboBox.addItem(iName, userData=iDocID)
-        if iDocID in (self.doc.get('_projectID',''), self.doc.get('branch',[{}])[0].get('stack', [''])[0]):
+        stack = self.doc.get('branch',[{}])[0].get('stack', [])
+        proj  = stack[0] if stack else ''
+        if iDocID in (self.doc.get('_projectID',''), proj):
           self.projectComboBox.setCurrentIndex(self.projectComboBox.count()-1)
     elif docType in self.comboBoxDocTypeList:
       iComboBox, value = self.comboBoxDocTypeList[docType]
@@ -626,7 +628,7 @@ class Form(QDialog):
       # new key-value pairs
       keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]# type: ignore[union-attr]
       keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
-      keyValueDict = {k:v for k,v in keyValueDict.items() if k}
+      keyValueDict = {f'.{k}':v for k,v in keyValueDict.items() if k}
       self.doc = keyValueDict | self.doc
       # ---- if project changed: only branch save; remaining data still needs saving
       newProjID = [self.projectComboBox.currentData()] if self.projectComboBox.currentData() else []
