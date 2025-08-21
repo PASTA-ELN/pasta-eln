@@ -49,8 +49,9 @@ class SchemeEditor(QDialog):
     self.setMinimumHeight(500)
     mainL = QVBoxLayout(self)
     Label('Schema-editor for document types', 'h1', mainL)
-    Label('Warning: basic verification exists only. Use with care.', 'h2', mainL)
+    Label('Warning: every change of the document type saves that content', 'h3', mainL)
     _, docTypeL = widgetAndLayout('H', mainL, 's')
+    Label('Document type:', '', docTypeL)
     self.selectDocType = QComboBox()
     self.selectDocType.currentTextChanged.connect(self.changeDocType)
     self.selectDocType.setStyleSheet(self.comm.palette.get('secondaryText','color'))
@@ -172,7 +173,7 @@ class SchemeEditor(QDialog):
     """
     df = self.table2schema()
     # verification: uniqueness in names. etc
-    unique =df['name'].nunique()==df.shape[0]
+    unique = ( df.groupby('class')['name'].nunique() == df.groupby('class')['name'].count()  ).all()
     if not unique:
       showMessage(self, 'Error', 'Within each table, the text in the first column has to be unique. E.g. no '
                   'two "tags" are allowed.', 'Critical')
@@ -301,6 +302,7 @@ class SchemeEditor(QDialog):
         self.comm.uiSendSQL.emit([{'type':'one',
                                    'cmd':f"INSERT INTO docTypeSchema VALUES ({', '.join(['?']*7)})",
                                    'list':[self.docType, textNew.strip(), '0', 'item', '', '', '']}])
+        self.docType = ''                # prevent self.finishDocType from deleting new entries
         self.changeDocType(self.docLabel)
     return
 
