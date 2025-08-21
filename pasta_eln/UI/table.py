@@ -227,9 +227,7 @@ class Table(QWidget):
       value = self.data.iloc[i,j]
       if self.docType=='_tags_':                                                                   # tags list
         if j==0:
-          if value=='_curated':                                                                       #curated
-            item = QStandardItem('_curated_')
-          elif re.match(r'_\d', value):                                                                 # star
+          if re.match(r'_\d', value):                                                                 # star
             item = QStandardItem('\u2605'*int(value[1]))
           else:
             item = QStandardItem(value)
@@ -244,8 +242,6 @@ class Table(QWidget):
       else:
         if self.filterHeader[j]=='tags':
           tags = [i.strip() for i in value.split(',')]
-          if '_curated' in tags:
-            tags[tags.index('_curated')] = '_curated_'
           elementStar = list(filter(re.compile(r'^_\d$').match, tags))
           if elementStar:
             tags.remove(elementStar[0])

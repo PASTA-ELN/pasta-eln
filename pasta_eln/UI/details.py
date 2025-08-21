@@ -257,8 +257,7 @@ class Details(QScrollArea):
     labelStr = ''
     if key=='tags':
       rating = ['\u2605'*int(i[1]) for i in value if re.match(r'^_\d$', i)]
-      tags = ['_curated_' if i=='_curated' else i for i in value]
-      tags = [i for i in tags if not re.match(r'^_\d$', i)]
+      tags = [i for i in value if not re.match(r'^_\d$', i)]
       labelStr = f'Rating: {rating[0]}' if rating else ''
       labelStr = f'{labelStr}   Tags: '+' '.join(tags)
       if layout is not None:

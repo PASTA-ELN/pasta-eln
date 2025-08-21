@@ -219,7 +219,6 @@ tableHeaderHelp = """
 If you want to add a column:
 - to add a normal data-field (comment, content, name, type, tags, user, date), enter this field : 'comment'
 - to check the existence of an image: enter 'image'
-- to check if a tag is present: "#tag", in which you replace "tag" by the tag you want to look for. "_curated" is a special tag for measurements
 - to get metadata, use a ".": e.g. "metaVendor.fileExtension", "metaUser.stress". Capitalization is important
 </ul>
 """

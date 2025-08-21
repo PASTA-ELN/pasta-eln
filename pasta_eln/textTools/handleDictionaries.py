@@ -134,7 +134,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
       continue
     try:
       if key=='tags':
-        tags = ['_curated_' if i=='_curated' else f'#{i}' for i in value]
+        tags = [f'#{i}' for i in value]
         tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
         markdown += f'Tags: {" ".join(tags)} \n\n'
       elif (isinstance(value,str) and '\n' in value) or key=='comment':      # long values with /n or comments
