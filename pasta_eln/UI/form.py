@@ -481,6 +481,7 @@ class Form(QDialog):
         if 'branch' in self.doc:
           visibilityIcon = all(all(branch['show']) for branch in self.doc['branch'])
           self.visibilityText.setText('' if visibilityIcon else 'HIDDEN     \U0001F441')
+
     elif command[0] is Command.BUTTON_BAR:
       if command[1]=='bold':
         getattr(self, f'textEdit_{command[2]}').insertPlainText('**TEXT**')
@@ -492,6 +493,7 @@ class Form(QDialog):
         getattr(self, f'textEdit_{command[2]}').insertPlainText('\n1. item 1\n1. item 2')
       elif command[1].startswith('heading'):
         getattr(self, f'textEdit_{command[2]}').insertPlainText('#' * int(command[1][-1]) +' Heading\n')
+
     elif command[0] is Command.FOCUS_AREA:
       unknownWidget = []
       idx = 0 if self.tabW.count()==0 else self.tabW.currentIndex()
@@ -541,6 +543,7 @@ class Form(QDialog):
           item = self.formsL[idx].itemAt(unknownWidget[3])
           if item is not None: item.widget().hide()
       self.allHidden = not self.allHidden
+
     elif command[0] is Command.AUTO_COMMENT:
       try:
         text  = f'\n{"-"*20}\n'
@@ -549,6 +552,7 @@ class Form(QDialog):
         self.textEdit_comment.insertPlainText(text)                               # type: ignore[attr-defined]
       except Exception:
         pass
+
     elif command[0] is Command.FORM_CANCEL:
       if self.comm. configuration['GUI']['autosave'] == 'Yes':
         ret = QMessageBox.critical(self, 'Warning', 'You will lose the entered information. Do you want to '+
@@ -561,6 +565,7 @@ class Form(QDialog):
           self.autosave()
       self.checkThreadTimer.stop()
       self.reject()
+
     elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT, Command.FORM_SAVE_DUPL):
       self.checkThreadTimer.stop()
       if (Path.home()/'.pastaELN.temp').is_file():                               #if there is a temporary file
@@ -641,6 +646,8 @@ class Form(QDialog):
       if self.groupEdit:                                                                        # group update
         if 'name' in self.doc:
           del self.doc['name']
+        if not self.doc['tags']:
+          del self.doc['tags']                                # remove empty tags to not overwrite already set
         self.doc = {k:v for k,v in self.doc.items() if v}                             # filter out empty items
         for docID in self.allDocIDsCopy:
           self.comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':self.doc|{'id':docID}, 'newProjID':newProjID})
@@ -660,6 +667,7 @@ class Form(QDialog):
       else:
         self.accept()                                                                                   #close
         self.close()
+
     elif command[0] is Command.FORM_ADD_KV and self.keyValueListL is not None:
       self.keyValueLabel.show()
       self.keyValueListW.show()
@@ -670,12 +678,14 @@ class Form(QDialog):
       self.values.append(QLineEdit(''))
       self.values[-1].setPlaceholderText('value')
       self.keyValueListL.addRow(self.keyLabels[-1], self.values[-1])
+
     elif command[0] is Command.FORM_SHOW_DOC:
       doc = copy.deepcopy(self.doc)
       if 'image' in doc:
         del doc['image']
       messageWindow = ScrollMessageBox('Details', doc, style='QScrollArea{min-width:600 px; min-height:400px}')
       messageWindow.exec()
+
     else:
       logging.error('Unknown Command %s', command, exc_info=True)
     return

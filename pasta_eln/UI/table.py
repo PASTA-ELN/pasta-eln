@@ -297,6 +297,7 @@ class Table(QWidget):
           docIDs.append(docID)
       if docIDs:
         self.comm.formDoc.emit({'type':[self.docType], '_ids':docIDs})
+        self.changeTable(self.docType, self.comm.projectID)
 
     elif command[0] is Command.SEQUENTIAL_EDIT:
       self.stopSequentialEdit = False
