@@ -182,6 +182,7 @@ class MainWindow(QMainWindow):
       self.close()
     # view menu
     elif command[0] is Command.VIEW:
+      self.comm.projectID = ''
       self.comm.changeTable.emit(command[1], '')
     # system menu
     elif command[0] is Command.CHANGE_PG:
