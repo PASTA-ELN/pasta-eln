@@ -1,5 +1,54 @@
 # Changelog
 
+## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b5...HEAD)
+
+**Fixed bugs:**
+
+- 3.2.0b5 - Add // add + next not working [\#546](https://github.com/PASTA-ELN/pasta-eln/issues/546)
+- Data set duplication for items with file [\#545](https://github.com/PASTA-ELN/pasta-eln/issues/545)
+- Group edit or sequential edit: afterwards an \_ids is present in the database [\#515](https://github.com/PASTA-ELN/pasta-eln/issues/515)
+- Duplicating data sets does not work [\#512](https://github.com/PASTA-ELN/pasta-eln/issues/512)
+- Adding key-value pairs does not work [\#510](https://github.com/PASTA-ELN/pasta-eln/issues/510)
+- Filtering by Tag in column editor does not work [\#502](https://github.com/PASTA-ELN/pasta-eln/issues/502)
+- New item types added are assigned "random" names [\#501](https://github.com/PASTA-ELN/pasta-eln/issues/501)
+- Sidebar: click on workflows closes that project in the sidebar [\#488](https://github.com/PASTA-ELN/pasta-eln/issues/488)
+
+**Closed issues:**
+
+- Hardcoded subtypes for items? [\#544](https://github.com/PASTA-ELN/pasta-eln/issues/544)
+- 3.2.0b3 - Project visibility leads to errors [\#542](https://github.com/PASTA-ELN/pasta-eln/issues/542)
+- Clicking a folder checkbox does not select the folder, but goes to project view [\#541](https://github.com/PASTA-ELN/pasta-eln/issues/541)
+- 3.2.0b3 - update of view after drag&drop [\#538](https://github.com/PASTA-ELN/pasta-eln/issues/538)
+- Feature Request: Link to devices in the measurement item as default [\#537](https://github.com/PASTA-ELN/pasta-eln/issues/537)
+- Feature request: Filter documentation for \*\*\*-Rating [\#535](https://github.com/PASTA-ELN/pasta-eln/issues/535)
+- Renaming folders shifts the numbering? [\#534](https://github.com/PASTA-ELN/pasta-eln/issues/534)
+- Example project ships with database problem [\#533](https://github.com/PASTA-ELN/pasta-eln/issues/533)
+- Link in setup window does not work [\#532](https://github.com/PASTA-ELN/pasta-eln/issues/532)
+- The down-arrow in the column editor moves up [\#531](https://github.com/PASTA-ELN/pasta-eln/issues/531)
+- Cancelling a project group deletion does not stop the deletion [\#530](https://github.com/PASTA-ELN/pasta-eln/issues/530)
+- Suggestion: Move "Invert hidden status of selected" to the "Selection" menu [\#522](https://github.com/PASTA-ELN/pasta-eln/issues/522)
+- Group editing of tags overwrites existing rating [\#521](https://github.com/PASTA-ELN/pasta-eln/issues/521)
+- Check for updates - only for released versions [\#520](https://github.com/PASTA-ELN/pasta-eln/issues/520)
+- New tabs for the data schema editor do not work [\#519](https://github.com/PASTA-ELN/pasta-eln/issues/519)
+- tif extractor source unknown? [\#518](https://github.com/PASTA-ELN/pasta-eln/issues/518)
+- Renaming a folder on the HDD breaks Pasta [\#507](https://github.com/PASTA-ELN/pasta-eln/issues/507)
+- Requirements for installation of Pasta [\#499](https://github.com/PASTA-ELN/pasta-eln/issues/499)
+- batch file download [\#498](https://github.com/PASTA-ELN/pasta-eln/issues/498)
+- Storage of tags in item creation [\#494](https://github.com/PASTA-ELN/pasta-eln/issues/494)
+- New item types are not accesssible? [\#491](https://github.com/PASTA-ELN/pasta-eln/issues/491)
+- Configuration GUI: allow user to check if hidden items are by default hidden \(new\) or shown \(current\) [\#486](https://github.com/PASTA-ELN/pasta-eln/issues/486)
+- Overlap Checkbox - Name of item [\#483](https://github.com/PASTA-ELN/pasta-eln/issues/483)
+- Shift in details view when clicking a linked item [\#479](https://github.com/PASTA-ELN/pasta-eln/issues/479)
+- Marking several items in a project [\#383](https://github.com/PASTA-ELN/pasta-eln/issues/383)
+- Backend; restart function \_\_init\_\_\(restart=False\) [\#341](https://github.com/PASTA-ELN/pasta-eln/issues/341)
+- Progress bar [\#147](https://github.com/PASTA-ELN/pasta-eln/issues/147)
+
+## [v3.2.0b5](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b5) (2025-08-13)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b4...v3.2.0b5)
+
 ## [v3.2.0b4](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b4) (2025-08-11)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b3...v3.2.0b4)
