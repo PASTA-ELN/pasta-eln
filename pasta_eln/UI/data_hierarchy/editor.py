@@ -302,7 +302,7 @@ class SchemeEditor(QDialog):
         self.comm.uiSendSQL.emit([{'type':'one',
                                    'cmd':f"INSERT INTO docTypeSchema VALUES ({', '.join(['?']*7)})",
                                    'list':[self.docType, textNew.strip(), '0', 'item', '', '', '']}])
-        self.docType = ''                # prevent self.finishDocType from deleting new entries
+        self.docType = ''                               # prevent self.finishDocType from deleting new entries
         self.changeDocType(self.docLabel)
     return
 

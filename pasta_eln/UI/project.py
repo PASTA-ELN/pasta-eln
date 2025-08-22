@@ -180,12 +180,12 @@ class Project(QWidget):
       return
     try:
       for node in PreOrderIter(self.hierarchy, maxlevel=2):
-        if node is None or node.is_root:                                                                        # Project header
+        if node is None or node.is_root:                                                      # Project header
           self.projHeader()
         else:
           rootItem.appendRow(self.iterateTree(node))
     except AttributeError:
-      self.tree = TreeView(self, self.comm, QStandardItemModel())  # if hierarchy is None, create empty tree
+      self.tree = TreeView(self, self.comm, QStandardItemModel())    # if hierarchy is None, create empty tree
     # collapse / expand depending on stored value
     # by iterating each leaf, and converting item and index
     root = self.model.invisibleRootItem()
@@ -281,9 +281,9 @@ class Project(QWidget):
       self.comm.changeSidebar.emit('')
     elif command[0] is Command.SHOW_DETAILS and self.tree is not None:
       def recursiveRowIteration(index:QModelIndex) -> None:
-        for subRow in range(self.tree.model().rowCount(index)):                     # type: ignore[union-attr]
-          subIndex = self.tree.model().index(subRow,0, index)                       # type: ignore[union-attr]
-          subItem  = self.tree.model().itemFromIndex(subIndex)                      # type: ignore[union-attr]
+        for subRow in range(self.tree.model().rowCount(index)):
+          subIndex = self.tree.model().index(subRow,0, index)
+          subItem  = self.tree.model().itemFromIndex(subIndex)                    # type: ignore[attr-defined]
           docID    = subItem.data()['hierStack'].split('/')[-1]
           gui      = subItem.data()['gui']
           gui[0]   = self.showDetailsAll

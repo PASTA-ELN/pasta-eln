@@ -73,8 +73,8 @@ class MainWindow(QMainWindow):
     if 'develop' in self.comm.configuration:
       Action('Get',                          self, [Command.SYNC_GET],        syncMenu, shortcut='F4')
       # Action('Smart synce',                  self, [Command.SYNC_SMART],       syncMenu)
-    Action('&Item type editor',            self, [Command.SCHEMA],      systemMenu, shortcut='F8')
-    Action('&Definitions editor',          self, [Command.DEFINITIONS],     systemMenu)
+    Action('&Item type editor',              self, [Command.SCHEMA],      systemMenu, shortcut='F8')
+    Action('&Definitions editor',            self, [Command.DEFINITIONS],     systemMenu)
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
@@ -188,7 +188,7 @@ class MainWindow(QMainWindow):
       self.comm.configuration['defaultProjectGroup'] = command[1]
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.configuration, indent=2))
-      self.commSendConfiguration.emit(self.comm.configuration, command[1])
+      self.comm.commSendConfiguration.emit(self.comm.configuration, command[1])
     elif command[0] is Command.SYNC_SEND:
       self.comm.uiRequestTask.emit(Task.SEND_ELAB,  {'projGroup':self.comm.projectGroup})
     elif command[0] is Command.SYNC_GET:

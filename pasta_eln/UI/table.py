@@ -226,11 +226,10 @@ class Table(QWidget):
     for i, j in itertools.product(range(nRows), range(nCols-2)):
       value = self.data.iloc[i,j]
       if self.docType=='_tags_':                                                                   # tags list
-        if j==0:
-          if re.match(r'_\d', value):                                                                 # star
-            item = QStandardItem('\u2605'*int(value[1]))
-          else:
-            item = QStandardItem(value)
+        if j==0 and re.match(r'_\d', value):                                                                   # star
+          item = QStandardItem('\u2605'*int(value[1]))
+        elif j==0:
+          item = QStandardItem(value)
         else:
           item = QStandardItem(value)
       elif value in ('None','','nan'):                                                           # None, False
@@ -242,8 +241,7 @@ class Table(QWidget):
       else:
         if self.filterHeader[j]=='tags':
           tags = [i.strip() for i in value.split(',')]
-          elementStar = list(filter(re.compile(r'^_\d$').match, tags))
-          if elementStar:
+          if elementStar:=list(filter(re.compile(r'^_\d$').match, tags)):
             tags.remove(elementStar[0])
             tags = ['\u2605'*int(elementStar[0][1])]+tags
           text = ' '.join(tags)
@@ -573,7 +571,7 @@ class Table(QWidget):
         regexStr = f'^{regexStr}$'
     elif self.filterInverse[idxModel].isChecked():
       regexStr = f'^((?!{regexStr}).)*$'
-    self.models[idxModel+1].setFilterRegularExpression(regexStr)                         # type: ignore[union-attr]
+    self.models[idxModel+1].setFilterRegularExpression(regexStr)                    # type: ignore[union-attr]
     return
 
 

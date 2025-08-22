@@ -14,7 +14,7 @@ from ..messageDialog import showMessage
 
 class DocTypeEditor(QDialog):
   """ Edit properties of a docType """
-  def __init__(self, comm:Communicate, docType:str, callback:Optional[Callable[[str],None]]=None):
+  def __init__(self, comm:Communicate, docType:str, callback:Optional[Callable[[str,str],None]]=None):
     """
     Initialization
 

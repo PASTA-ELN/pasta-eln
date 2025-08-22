@@ -1,5 +1,4 @@
 """ Entire config dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-import logging
 from PySide6.QtWidgets import QDialog, QTabWidget, QVBoxLayout, QWidget
 from ..guiCommunicate import Communicate
 from ..repositories.config import ConfigurationRepositories
@@ -39,7 +38,7 @@ class Configuration(QDialog):
     self.tabW = QTabWidget(self)
     self.tabW.currentChanged.connect(self.loadTab)
     mainL.addWidget(self.tabW)
-    self.tabs = {}                                                          # to hold the actual tab instances
+    self.tabs:dict[str,QWidget] = {}                                        # to hold the actual tab instances
     self.placeholders = {}                                                       # to hold placeholder widgets
     self.tabClasses = {
       'Project group': ProjectGroup,
@@ -50,7 +49,7 @@ class Configuration(QDialog):
       'Setup': ConfigurationSetup
     }
     for name in self.tabClasses:
-      placeholder = QWidget()     # Only create empty placeholder tabs initially
+      placeholder = QWidget()                                   # Only create empty placeholder tabs initially
       self.placeholders[name] = placeholder
       self.tabW.addTab(placeholder, name)
 
@@ -76,8 +75,9 @@ class Configuration(QDialog):
       tabClass = self.tabClasses[tabName]
       self.tabs[tabName] = tabClass(self.comm, self.closeWidget)
       placeholder = self.placeholders[tabName]
-      if placeholder.layout():
-        placeholder.layout().deleteLater()                                    # Clear the placeholder's layout
+      placeholderL = placeholder.layout()
+      if placeholderL is not None:
+        placeholderL.deleteLater()                                            # Clear the placeholder's layout
       layout = QVBoxLayout(placeholder)
       layout.setContentsMargins(0, 0, 0, 0)
       layout.addWidget(self.tabs[tabName])                                 # Add the actual tab content widget

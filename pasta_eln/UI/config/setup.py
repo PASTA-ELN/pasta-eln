@@ -71,7 +71,7 @@ class ConfigurationSetup(QWidget):
       res = configuration('test', '')
       if res =='':
         self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration of preferences is acceptable' )
-        self.text.setMarkdown(self.mainText)
+        self.text.setMarkdown(self.mainText)                                      # type: ignore[attr-defined]
       else:
         dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
         if dirName is None:
@@ -84,7 +84,7 @@ class ConfigurationSetup(QWidget):
             configuration('repair', dirName)
           else:
             self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
-            self.text.setMarkdown(self.mainText)
+            self.text.setMarkdown(self.mainText)                                  # type: ignore[attr-defined]
         else:
           configuration('repair', dirName)
       #Shortcut
@@ -95,7 +95,7 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to add a shortcut' )
       else:
         self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to NOT add a shortcut' )
-      self.text.setMarkdown(self.mainText)
+      self.text.setMarkdown(self.mainText)                                        # type: ignore[attr-defined]
       #Example data
       button = QMessageBox.question(self, 'Example data', exampleDataString,
                                     QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
@@ -105,7 +105,7 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Example data', '- Example data was added')
       else:
         self.mainText = self.mainText.replace('- Example data', '- Example data was NOT added, per user choice')
-      self.text.setMarkdown(self.mainText)
+      self.text.setMarkdown(self.mainText)                                        # type: ignore[attr-defined]
       #at end
       self.button1.hide()
       self.button2.show()
