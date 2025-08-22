@@ -64,7 +64,7 @@ class TestStringMethods(unittest.TestCase):
     self.be.db.cursor.execute(f'UPDATE docTypes SET view = "{sampleView}" WHERE docType = "sample"')
     projectView = 'name,.resp1,.dr1'
     self.be.db.cursor.execute(f'UPDATE docTypes SET view = "{projectView}" WHERE docType = "x0"')
-    for docType in ['instrument','instrument/extension','workflow','workflow/worklog','workflow/workplan','workflow/procedure']:
+    for docType in ['device','device/extension','workflow','workflow/worklog','workflow/workplan','workflow/procedure']:
       self.be.db.cursor.execute(f'DELETE FROM docTypes WHERE docType = "{docType}"')
       self.be.db.cursor.execute(f'DELETE FROM docTypeSchema WHERE docType = "{docType}"')
     self.be.db.connection.commit()

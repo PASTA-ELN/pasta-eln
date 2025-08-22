@@ -48,18 +48,18 @@ class SchemeEditor(QDialog):
     self.setMinimumWidth(int(np.sum(COLUMN_WIDTH))+80)
     self.setMinimumHeight(500)
     mainL = QVBoxLayout(self)
-    Label('Schema-editor for document types', 'h1', mainL)
-    Label('Warning: every change of the document type saves that content', 'h3', mainL)
+    Label('Item type editor', 'h1', mainL)
+    Label('Warning: every change of the item type saves that content', 'h3', mainL)
     _, docTypeL = widgetAndLayout('H', mainL, 's')
-    Label('Document type:', '', docTypeL)
+    Label('Item type:', '', docTypeL)
     self.selectDocType = QComboBox()
     self.selectDocType.currentTextChanged.connect(self.changeDocType)
     self.selectDocType.setStyleSheet(self.comm.palette.get('secondaryText','color'))
     docTypeL.addWidget(self.selectDocType)
     docTypeL.addStretch(1)
-    IconButton('fa5s.plus',  self, [Command.NEW],  docTypeL, tooltip='New document type')
-    IconButton('fa5s.edit',  self, [Command.EDIT], docTypeL, tooltip='Edit document type')
-    IconButton('fa5s.trash', self, [Command.DEL],  docTypeL, tooltip='Delete document type')
+    IconButton('fa5s.plus',  self, [Command.NEW],  docTypeL, tooltip='New item type')
+    IconButton('fa5s.edit',  self, [Command.EDIT], docTypeL, tooltip='Edit item type')
+    IconButton('fa5s.trash', self, [Command.DEL],  docTypeL, tooltip='Delete item type')
 
     # tabs: empty
     self.tabW = QTabWidget(self)
@@ -97,10 +97,10 @@ class SchemeEditor(QDialog):
 
 
   def changeDocType(self, label:str) -> None:
-    """ Change the document type
+    """ Change the item / document type
 
     Args:
-      label (str): label of document type
+      label (str): label of item / document type
     """
     # get data frame
     if not label:

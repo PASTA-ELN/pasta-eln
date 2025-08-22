@@ -1,14 +1,14 @@
-"""example addon: fill definitions table with first entry from wikidata
+"""example add-on: fill definitions table with first entry from wikidata
 
 **This file has to be called definition_autofill.py and only this file is called from the definitions GUI.**
 
-**In its default form, the description is commented out to disable this addon and not show in the GUI**
+**In its default form, the description is commented out to disable this add-on and not show in the GUI**
 
-THIS IS A ADVANCED ADDON TUTORIAL
+THIS IS A ADVANCED ADD-ON TUTORIAL
 This tutorial teaches
 - the structure of the definitions table
 - how to fill the definitions table with the first entry from wikidata
-- these addons can have multiple functions inside them
+- these add-ons can have multiple functions inside them
 """
 import requests
 

@@ -57,7 +57,7 @@ class DocTypeEditor(QDialog):
     """
     if cmd == 'SELECT docType, shortcut from docTypes':
       self.shortcuts = [j for i,j in data.values.tolist() if len(j)==1 and i!=self.docType]
-    elif cmd == 'SELECT * from docTypes WHERE docType=="instrument"':
+    elif cmd.startswith('SELECT * from docTypes WHERE'):
       self.initialData = data.values.tolist()[0]
       self.paint()
 
@@ -67,7 +67,7 @@ class DocTypeEditor(QDialog):
     if self.initialData is None:
       return
     self.row1 = QLineEdit(self.initialData[0])
-    self.row1.setToolTip('Name of document type: lower case letters only. Must be unique')
+    self.row1.setToolTip('Name of item type: lower case letters only. Must be unique')
     if self.docType:
       self.row1.setDisabled(True)
     else:

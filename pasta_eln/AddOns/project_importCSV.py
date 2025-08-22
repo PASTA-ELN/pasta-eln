@@ -1,6 +1,6 @@
-"""example addon: use a csv file to input data in rows
+"""example add-on: use a csv file to input data in rows
 
-THIS IS A VERY ADVANCED ADDON TUTORIAL
+THIS IS A VERY ADVANCED ADD-ON TUTORIAL
 This tutorial teaches
 - how to group import metadata
 """

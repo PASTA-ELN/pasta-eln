@@ -1,6 +1,6 @@
-"""example addon: plot data from files
+"""example add-on: plot data from files
 
-THIS IS A VERY ADVANCED ADDON TUTORIAL
+THIS IS A VERY ADVANCED ADD-ON TUTORIAL
 This tutorial teaches
 - how to plot the data from files
 """

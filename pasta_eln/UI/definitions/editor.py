@@ -64,7 +64,7 @@ class Editor(QDialog):
     buttonLineL.addStretch(1)
     projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if 'definition' in projectGroup.get('addOns',{}) and projectGroup['addOns']['definition']:
-      TextButton('Autofill PURL',  self, [Command.AddOn], buttonLineL, 'Autofill by using addon')
+      TextButton('Autofill PURL',  self, [Command.AddOn], buttonLineL, 'Autofill by using add-on')
       buttonLineL.addStretch(1)
     self.saveBtn = TextButton('Save', self, [Command.Save], buttonLineL, 'Save changes')
     self.saveBtn.setShortcut('Ctrl+Return')

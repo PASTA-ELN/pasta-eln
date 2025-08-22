@@ -33,7 +33,7 @@ class TableHeader(QDialog):
     self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':f'SELECT view FROM docTypes WHERE docType=="{docType}"'}])
 
     # GUI elements
-    self.setWindowTitle('Select table headers')
+    self.setWindowTitle('Select list columns')
     self.setMinimumWidth(600)
     mainL = QVBoxLayout(self)
     _, bodyL = widgetAndLayout('H', mainL, spacing='m')

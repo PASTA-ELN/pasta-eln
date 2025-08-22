@@ -1,10 +1,10 @@
-"""example addon: adds to the form content
+"""example add-on: adds to the form content
 
 **This file has to be called form_auto.py and only this file is called from form.**
 
-**In its default form, the description is commented out to disable this addon and not show in the GUI**
+**In its default form, the description is commented out to disable this add-on and not show in the GUI**
 
-THIS IS A ADVANCED ADDON TUTORIAL
+THIS IS A ADVANCED ADD-ON TUTORIAL
 This tutorial teaches
 - do not use chatgpt library, but use the requests library in order to employ less dependencies
 - the structure of documents
@@ -29,7 +29,7 @@ def main(backend, doc, widget, parameter={}):
     """
     apiKey = parameter.get('key')
     if not apiKey:
-        return 'API key not provided in parameters. Please configure it in the addon settings.'
+        return 'API key not provided in parameters. Please configure it in the add-on settings.'
     if not doc['comment']:
         return 'No comment provided in the document. Please add a comment to expand.'
     promptText = f"Expand the following text: '{doc['comment']}'."

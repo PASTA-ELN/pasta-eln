@@ -76,7 +76,7 @@ class TestStringMethods(unittest.TestCase):
     self.assertEqual(output.split('\n')[0][:102], 'name           | tags | chemistry | comment                                  | qrCodes            | id')
     self.assertEqual(output.split('\n')[2][:102], 'Example sample | nan  | A2B2C3    | this sample has multiple groups of me... | 13214124, 99698708 | s-')
 
-    output = self.be.output('instrument')
+    output = self.be.output('device')
     self.assertEqual(output.split('\n')[0][:82], 'name           | tags | comment                                  | vendor    | id ')
     self.assertIn('Big instrument | nan  | Instrument onto which attachments can... | Company A | i-', output)
     self.assertIn('        Sensor | nan  | Attachment that increases functionali... | Company B | i-', output)

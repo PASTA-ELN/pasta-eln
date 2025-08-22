@@ -3,10 +3,10 @@ import copy
 import json
 import logging
 import re
+import warnings
 from enum import Enum
 from pathlib import Path
 from typing import Any, Union
-import warnings
 import pandas as pd
 from PySide6.QtCore import QSize, Qt, QTimer, Slot
 from PySide6.QtGui import QRegularExpressionValidator
@@ -767,7 +767,7 @@ class Form(QDialog):
 
   def reject(self) -> None:
     """ Reject the dialog, stop the thread and disconnect signals """
-    warnings.filterwarnings("ignore", category=RuntimeWarning)
+    warnings.filterwarnings('ignore', category=RuntimeWarning)
     self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
     self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
     self.checkThreadTimer.stop()
@@ -776,7 +776,7 @@ class Form(QDialog):
 
   def accept(self) -> None:
     """ Accept the dialog, stop the thread and disconnect signals """
-    warnings.filterwarnings("ignore", category=RuntimeWarning)
+    warnings.filterwarnings('ignore', category=RuntimeWarning)
     self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
     self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
     self.checkThreadTimer.stop()

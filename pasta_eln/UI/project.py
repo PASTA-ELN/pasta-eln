@@ -112,8 +112,8 @@ class Project(QWidget):
     for docType, value in self.comm.docTypesTitles.items():
       if docType[0]!='x':
         icon = 'fa5s.asterisk' if value['icon']=='' else value['icon']
-        Action(f'table of {value["title"].lower()}',   self, [Command.SHOW_TABLE, docType], moreMenu, icon=icon)
-    Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
+        Action(f'list of {value["title"].lower()}',   self, [Command.SHOW_TABLE, docType], moreMenu, icon=icon)
+    Action('list of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
     moreMenu.addSeparator()
     projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if projectAddOns := projectGroup.get('addOns',{}).get('project',''):

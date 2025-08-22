@@ -1,9 +1,9 @@
-"""example addon: create a report from within the project view
+"""example add-on: create a report from within the project view
 
-THIS IS A VERY ADVANCED ADDON TUTORIAL
+THIS IS A VERY ADVANCED ADD-ON TUTORIAL
 This tutorial teaches
-- the basic structure of project-view-addons (header, function for each node, body, footer)
-- this addon runs as part of the frontend worker (show a GUI element)
+- the basic structure of project-view-add-ons (header, function for each node, body, footer)
+- this add-on runs as part of the frontend worker (show a GUI element)
   -  to get the data one has to use the signal system to communicate to the backend worker
 - the data collection works as part of this system
   - define a variable to store the data

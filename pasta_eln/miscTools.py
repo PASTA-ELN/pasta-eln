@@ -137,7 +137,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
 
 
 def installPythonPackages(directory:str) -> None:
-  """Install a Python packages using pip depending on files in addon folder
+  """Install a Python packages using pip depending on files in add-on folder
   Args:
     directory (str): path to the add-on folder
   """

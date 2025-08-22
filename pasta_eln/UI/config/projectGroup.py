@@ -65,7 +65,7 @@ class ProjectGroup(QDialog):
     self.row1Button = IconButton('fa5.edit',   self, [Command.CHANGE_DIR], tooltip='Edit data path')
     self.formL.addWidget(self.row1Button, 1, 3)
 
-    self.addOnLabel = QLabel('addon')
+    self.addOnLabel = QLabel('add-on')
     self.addOnLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
     self.formL.addWidget(self.addOnLabel, 2, 0, 1, 2)
     self.row2Button = IconButton('fa5.edit',   self, [Command.CHANGE_ADDON], tooltip='Edit add-on path')
@@ -209,7 +209,7 @@ class ProjectGroup(QDialog):
         self.requireHardRestart = True                                      #because python-path has to change
       config['addOnDir'] = answer
       config['addOns'] = {}
-      self.addOnLabel.setText('Add on directory: ' + config['addOnDir'])
+      self.addOnLabel.setText('Add-on directory: ' + config['addOnDir'])
 
     elif command[0] is Command.TEST_SERVER:
       headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
@@ -288,7 +288,7 @@ class ProjectGroup(QDialog):
       self.formL.removeWidget(self.selectGroup)
       self.formL.addWidget(self.groupTextField, 0, 0)
       self.directoryLabel.setText('Data directory: ')
-      self.addOnLabel.setText('Add on directory: ')
+      self.addOnLabel.setText('Add-on directory: ')
       self.serverLabel.setText('')
       self.apiKeyLabel.setText('')
       self.image.setPixmap(QPixmap())
@@ -317,7 +317,7 @@ class ProjectGroup(QDialog):
     """
     config = self.configuration['projectGroups'].get(item, self.emptyConfig)
     self.directoryLabel.setText('Data directory: ' + config['local'].get('path',''))
-    self.addOnLabel.setText('Add on directory: ' + config.get('addOnDir',''))
+    self.addOnLabel.setText('Add-on directory: ' + config.get('addOnDir',''))
     self.serverLabel.setText(config['remote'].get('url', ''))
     if config['remote'].get('key', ''):
       self.apiKeyLabel.setText('--- API key hidden ---')

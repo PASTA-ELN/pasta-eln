@@ -251,19 +251,19 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     callbackPercent(18)
   logging.info('Finished samples creating')
 
-  ### ADD INSTRUMENTS AND THEIR ATTACHMENTS
-  outputString(outputFormat,'h2','ADD INSTRUMENTS AND ATTACHMENTS')
-  backend.addData('instrument', {'name': 'Big instrument', '.vendor':'Company A', '.model':'ABC-123', 'comment':'Instrument onto which attachments can be added'})
-  backend.addData('instrument/extension', {'name': 'Sensor', '.vendor':'Company B', '.model':'org.comp.98765', 'comment':'Attachment that increases functionality of big instrument'})
-  df = backend.db.getView('viewDocType/instrument')
-  idInstrument = df[df['name']=='Big instrument']['id'].values[0]
+  ### ADD DEVICES AND THEIR ATTACHMENTS
+  outputString(outputFormat,'h2','ADD DEVICES AND ATTACHMENTS')
+  backend.addData('device', {'name': 'Big instrument', '.vendor':'Company A', '.model':'ABC-123', 'comment':'Instrument onto which attachments can be added'})
+  backend.addData('device/extension', {'name': 'Sensor', '.vendor':'Company B', '.model':'org.comp.98765', 'comment':'Attachment that increases functionality of big instrument'})
+  df = backend.db.getView('viewDocType/device')
+  idDevice = df[df['name']=='Big instrument']['id'].values[0]
   idSensor = df[df['name']=='Sensor']['id'].values[0]
-  backend.db.initAttachment(idInstrument, 'Right side of instrument', 'instrument/extension')
-  backend.db.addAttachment(idInstrument, 'Right side of instrument',
+  backend.db.initAttachment(idDevice, 'Right side of instrument', 'device/extension')
+  backend.db.addAttachment(idDevice, 'Right side of instrument',
          {'date':datetime.now().isoformat(),'remark':'Worked well','docID':idSensor,'user':'nobody'})
-  backend.db.addAttachment(idInstrument, 'Right side of instrument',
+  backend.db.addAttachment(idDevice, 'Right side of instrument',
          {'date':(datetime.now()+timedelta(hours=1)).isoformat(),'remark':'Service','docID':'','user':'nobody'})
-  outputString(outputFormat,'info',backend.output('instrument'))
+  outputString(outputFormat,'info',backend.output('device'))
 
   ###  TEST MEASUREMENTS AND SCANNING/CURATION
   outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING')

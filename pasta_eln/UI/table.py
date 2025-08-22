@@ -93,7 +93,7 @@ class Table(QWidget):
       for label, description in projectAddOns.items():
         Action(description, self, [Command.ADD_ON, label], self.moreMenu)
       self.moreMenu.addSeparator()
-    self.actionChangeColums = Action('Change columns',  self, [Command.CHANGE_COLUMNS], self.moreMenu)#add this action at end
+    self.actionChangeColums = Action('Change list columns',  self, [Command.CHANGE_COLUMNS], self.moreMenu)#add this action at end
     self.btnMore.setMenu(self.moreMenu)
 
     # filter

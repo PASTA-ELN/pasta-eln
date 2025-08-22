@@ -11,8 +11,8 @@ defaultDocTypes: list[list[str]] = [
   ['workflow/procedure',  'https://schema.org/procedure',                    'Procedure',    '',                      '',     'name,tags,comment,content'],
   ['workflow/workplan' ,  'http://purl.obolibrary.org/obo/PROCO_0000093',    'Work plan',    '',                      '',     'name,tags,comment,content'],
   ['workflow/worklog'  ,  'http://dicom.nema.org/resources/ontology/DCM/LOG','Work log',     '',                      '',     'name,tags,comment,content'],
-  ['instrument',          'http://purl.obolibrary.org/obo/NCIT_C16742',      'Instruments',  'ri.scales-2-line',      'i',    'name,tags,comment,.vendor'],
-  ['instrument/extension','https://www.wikidata.org/wiki/Q19841649',         'Extensions',   '',                      '',     'name,tags,comment,.vendor'],
+  ['device',              'http://purl.obolibrary.org/obo/NCIT_C16742',      'Devices',  'ri.scales-2-line',          'd',    'name,tags,comment,.vendor'],
+  ['device/extension',    'https://www.wikidata.org/wiki/Q19841649',         'Extensions',   '',                      '',     'name,tags,comment,.vendor'],
 ]
 
 
@@ -31,7 +31,7 @@ defaultSchema: list[list[str|int]] = [
   ['measurement',         '', 2,   'comment',   '',   '',        ''],
   ['measurement',         '', 3,   'sample',    '',   '',        'sample'],
   ['measurement',         '', 4,   'workflow/procedure','','','workflow/procedure'],
-  ['measurement',         '', 5,   'instrument','',   '',        'instrument'],
+  ['measurement',         '', 5,   'device','',   '',        'device'],
   ['sample',              '', 0,   'name',      '',   'T',       ''],
   ['sample',              '', 1,   'tags',      '',   '',        ''],
   ['sample',              '', 2,   'chemistry', '',   '',        ''],
@@ -56,14 +56,14 @@ defaultSchema: list[list[str|int]] = [
   ['workflow/worklog',    '', 1,   'tags',      '',   '',        ''],
   ['workflow/worklog',    '', 2,   'comment',   '',   '',        ''],
   ['workflow/worklog',    '', 3,   'content',   '',   '',        ''],
-  ['instrument',          '', 0,   'name',      '',   'T',       ''],
-  ['instrument',          '', 1,   'tags',      '',   '',        ''],
-  ['instrument',          '', 2,   'comment',   '',   '',        ''],
-  ['instrument',          '', 3,   'vendor',    '',   '',        ''],
-  ['instrument/extension','', 0,   'name',      '',   'T',       ''],
-  ['instrument/extension','', 1,   'tags',      '',   '',        ''],
-  ['instrument/extension','', 2,   'comment',   '',   '',        ''],
-  ['instrument/extension','', 3,   'vendor',    '',   '',        '']
+  ['device',              '', 0,   'name',      '',   'T',       ''],
+  ['device',              '', 1,   'tags',      '',   '',        ''],
+  ['device',              '', 2,   'comment',   '',   '',        ''],
+  ['device',              '', 3,   'vendor',    '',   '',        ''],
+  ['device/extension',    '', 0,   'name',      '',   'T',       ''],
+  ['device/extension',    '', 1,   'tags',      '',   '',        ''],
+  ['device/extension',    '', 2,   'comment',   '',   '',        ''],
+  ['device/extension',    '', 3,   'vendor',    '',   '',        '']
 ]
 
 
@@ -195,7 +195,7 @@ shortcuts = """
 
 **Ctrl+W**: List workflows
 
-**Ctrl+I**: List instruments
+**Ctrl+D**: List devices
 
 **Ctrl+T**: List tags
 
