@@ -288,6 +288,7 @@ class Table(QWidget):
       self.comm.changeTable.emit(self.docType, self.comm.projectID)
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')
+
     elif command[0] is Command.GROUP_EDIT:
       docIDs = []
       for row in range(self.models[-1].rowCount()):
@@ -296,6 +297,7 @@ class Table(QWidget):
           docIDs.append(docID)
       if docIDs:
         self.comm.formDoc.emit({'type':[self.docType], '_ids':docIDs})
+
     elif command[0] is Command.SEQUENTIAL_EDIT:
       self.stopSequentialEdit = False
       for row in range(self.models[-1].rowCount()):
@@ -305,6 +307,7 @@ class Table(QWidget):
         if self.stopSequentialEdit:
           break
       self.comm.changeTable.emit(self.docType, self.comm.projectID)
+
     elif command[0] is Command.DELETE:
       ret = None
       for row in range(self.models[-1].rowCount()):
@@ -316,10 +319,12 @@ class Table(QWidget):
           if ret==QMessageBox.StandardButton.Yes:
             self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':docID})
       self.comm.changeTable.emit(self.docType, self.comm.projectID)
+
     elif command[0] is Command.CHANGE_COLUMNS:
       dialog = TableHeader(self.comm, self.docType)
       dialog.exec()
       self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
+
     elif command[0] is Command.EXPORT:
       fileName = QFileDialog.getSaveFileName(self,'Export to ..',str(Path.home()),'*.csv')[0]
       if not fileName.endswith('.csv'):
@@ -333,6 +338,7 @@ class Table(QWidget):
             value = self.models[-1].index( row, col, QModelIndex()).data(Qt.ItemDataRole.DisplayRole)
             rowContent.append(f'"{value}"')
           fOut.write(','.join(rowContent)+'\n')
+
     elif command[0] is Command.ADD_ON:
       # check if one is selected, if yes, only export selected; otherwise use All
       useAll = True
@@ -352,6 +358,7 @@ class Table(QWidget):
           data.append(dataRow)
       df = pd.DataFrame(data, columns=['docID']+self.filterHeader)
       callAddOn(command[1], self.comm, df, self)
+
     elif command[0] is Command.TOGGLE_HIDE:
       changeFlag = False
       for row in range(self.models[-1].rowCount()):
@@ -364,6 +371,7 @@ class Table(QWidget):
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')
       self.paint()
+
     elif command[0] is Command.TOGGLE_SELECTION:
       for row in range(self.models[-1].rowCount()):
         item,_ = self.itemFromRow(row)
@@ -371,9 +379,11 @@ class Table(QWidget):
           item.setCheckState(Qt.CheckState.Unchecked)
         else:
           item.setCheckState(Qt.CheckState.Checked)
+
     elif command[0] is Command.SHOW_ALL:
       self.showAll = not self.showAll
       self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
+
     elif command[0] is Command.RERUN_EXTRACTORS:
       docIDs = []
       for row in range(self.models[-1].rowCount()):
@@ -382,9 +392,11 @@ class Table(QWidget):
           docIDs.append(docID)
       self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs':docIDs,'recipe':''})
       self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
+
     elif command[0] is Command.TOGGLE_GALLERY:
       self.flagGallery = not self.flagGallery
       self.paint()
+
     elif command[0] is Command.ADD_FILTER:
       # gui
       _, rowL = widgetAndLayout('H', self.filterL, 'm', 'xl', '0', 'xl')
@@ -409,6 +421,7 @@ class Table(QWidget):
       filterModel.setFilterKeyColumn(0)
       self.models.append(filterModel)
       self.table.setModel(self.models[-1])
+
     elif command[0] is Command.DELETE_FILTER:                             # Remove filter from list of filters
       row = command[1]
       # change the information in the minus-button command
@@ -429,36 +442,13 @@ class Table(QWidget):
       for i in range(1, len(self.models)):
         self.models[i].setSourceModel(self.models[i-1])                             # type: ignore[union-attr]
       self.table.setModel(self.models[-1])
+
     elif command[0] is Command.SET_FILTER:
       self.filterTextChanged('', command[1])
+
     else:
       logging.error('Menu unknown: %s',command, exc_info=True)
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
-    return
-
-
-  def filterTextChanged(self, _:Any, row:int=-1) -> None:
-    """ text in line-edit in the filter is changed: update regex
-
-    Args:
-      row (int): row number
-    """
-    if row<0:
-      for idx,lineEdit in enumerate(self.filterText):
-        if lineEdit==self.sender():
-          row = idx
-    else:
-      row -= 1
-    regexStr = self.filterText[row].text()
-    if '*' in regexStr:
-      regexStr = regexStr.replace('*','\u2605')
-      if self.filterInverse[row].isChecked():
-        regexStr = f'^((?!{regexStr}).)*$'
-      else:
-        regexStr = f'^{regexStr}$'
-    elif self.filterInverse[row].isChecked():
-      regexStr = f'^((?!{regexStr}).)*$'
-    self.models[row+1].setFilterRegularExpression(regexStr)                         # type: ignore[union-attr]
     return
 
 
@@ -559,6 +549,32 @@ class Table(QWidget):
         if rating:
           self.filterText[idx].setValidator(QRegularExpressionValidator(r'\*+'))
     return
+
+
+  def filterTextChanged(self, _:Any, idxModel:int=-1) -> None:
+    """ text in line-edit in the filter is changed: update regex
+
+    Args:
+      idxModel (int): index of the model in list of models
+    """
+    if idxModel<0:
+      for idx,lineEdit in enumerate(self.filterText):
+        if lineEdit==self.sender():
+          idxModel = idx
+    else:
+      idxModel -= 1
+    regexStr = self.filterText[idxModel].text()
+    if '*' in regexStr:
+      regexStr = regexStr.replace('*','\u2605')
+      if self.filterInverse[idxModel].isChecked():
+        regexStr = f'^((?!{regexStr}).)*$'
+      else:
+        regexStr = f'^{regexStr}$'
+    elif self.filterInverse[idxModel].isChecked():
+      regexStr = f'^((?!{regexStr}).)*$'
+    self.models[idxModel+1].setFilterRegularExpression(regexStr)                         # type: ignore[union-attr]
+    return
+
 
 
 class Command(Enum):
