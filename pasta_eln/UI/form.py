@@ -768,8 +768,9 @@ class Form(QDialog):
   def reject(self) -> None:
     """ Reject the dialog, stop the thread and disconnect signals """
     warnings.filterwarnings('ignore', category=RuntimeWarning)
-    self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
-    self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
+    if hasattr(self.comm, 'backendThread') and self.comm.backendThread.worker is not None:
+      self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
+      self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
     self.checkThreadTimer.stop()
     super().reject()
 
@@ -777,8 +778,9 @@ class Form(QDialog):
   def accept(self) -> None:
     """ Accept the dialog, stop the thread and disconnect signals """
     warnings.filterwarnings('ignore', category=RuntimeWarning)
-    self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
-    self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
+    if hasattr(self.comm, 'backendThread') and self.comm.backendThread.worker is not None:
+      self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
+      self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
     self.checkThreadTimer.stop()
     super().accept()
 

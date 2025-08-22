@@ -174,6 +174,8 @@ def runTests() -> None:
       success -= result.stdout.decode('utf-8').count('**ERROR Red: FAILURE and ERROR')
       for badWord in ['**ERROR got a file','FAILED','ModuleNotFoundError']:
         success += result.stdout.decode('utf-8').count(badWord)
+    success += result.stdout.decode('utf-8').count('========= FAILURES =========')
+    success += result.stdout.decode('utf-8').count('========== ERRORS ==========')
     if success==0:
       print(f"  success: Python unit test {fileI}")
     else:
