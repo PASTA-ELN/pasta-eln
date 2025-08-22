@@ -6,102 +6,17 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 import pandas as pd
-from PySide6.QtCore import QModelIndex, QSortFilterProxyModel, Qt, Slot
-from PySide6.QtGui import QRegularExpressionValidator, QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView, QLineEdit, QMenu, QMessageBox,
-                               QPushButton, QTableView, QVBoxLayout, QWidget)
+from PySide6.QtCore import QModelIndex, Qt, Slot
+from PySide6.QtGui import QStandardItem, QStandardItemModel
+from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView, QMenu, QMessageBox,
+                               QTableView, QVBoxLayout, QWidget)
 from ..backendWorker.worker import Task
 from ..miscTools import callAddOn
 from .gallery import ImageGallery
 from .guiCommunicate import Communicate
-from .guiStyle import Action, IconButton, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
+from .guiStyle import Action, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
 from .tableHeader import TableHeader
-
-
-class FilterItem:
-    """Represents a single filter with its model and associated widgets"""
-
-    def __init__(self, filter_id: int, header_options: list[str], parent_widget):
-        self.id = filter_id
-        self.model = QSortFilterProxyModel()
-        self.model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self.model.setFilterKeyColumn(0)
-
-        # Create widgets
-        self.select = QComboBox()
-        self.select.addItems(header_options + ['rating'] if 'tag' in header_options else header_options)
-        self.select.setMinimumWidth(max(len(i) for i in header_options) * 14)
-
-        self.text = QLineEdit('')
-        self.inverse = IconButton('ph.selection-inverse-fill', parent_widget,
-                                  [Command.SET_FILTER, filter_id, 'invert'], None, checkable=True)
-        self.delete = IconButton('fa5s.minus-square', parent_widget,
-                                 [Command.DELETE_FILTER, filter_id], None)
-
-
-class FilterManager:
-    """Manages the chain of filters applied to a table model"""
-
-    def __init__(self, base_model: QStandardItemModel):
-        self.base_model = base_model
-        self.filters: dict[int, FilterItem] = {}
-        self.next_id = 1
-        self._model_chain: list[QStandardItemModel | QSortFilterProxyModel] = [base_model]
-
-    def add_filter(self, header_options: list[str], parent_widget) -> FilterItem:
-        """Add a new filter to the chain"""
-        filter_id = self.next_id
-        self.next_id += 1
-
-        filter_item = FilterItem(filter_id, header_options, parent_widget)
-        self.filters[filter_id] = filter_item
-
-        # Link to the current end of the chain
-        filter_item.model.setSourceModel(self._model_chain[-1])
-        self._model_chain.append(filter_item.model)
-
-        return filter_item
-
-    def remove_filter(self, filter_id: int) -> None:
-        """Remove a filter and rebuild the chain"""
-        if filter_id not in self.filters:
-            return
-
-        # Remove the filter
-        del self.filters[filter_id]
-
-        # Rebuild the entire model chain
-        self._rebuild_chain()
-
-    def _rebuild_chain(self) -> None:
-        """Rebuild the model chain after filter removal"""
-        self._model_chain = [self.base_model]
-
-        # Re-link all remaining filters in order of their IDs
-        for filter_id in sorted(self.filters.keys()):
-            filter_item = self.filters[filter_id]
-            filter_item.model.setSourceModel(self._model_chain[-1])
-            self._model_chain.append(filter_item.model)
-
-    def get_final_model(self) -> QStandardItemModel | QSortFilterProxyModel:
-        """Get the final model in the chain (for table display)"""
-        return self._model_chain[-1]
-
-    def get_filter(self, filter_id: int) -> FilterItem | None:
-        """Get a specific filter by ID"""
-        return self.filters.get(filter_id)
-
-    def clear_all(self) -> None:
-        """Remove all filters"""
-        self.filters.clear()
-        self._model_chain = [self.base_model]
-
-    def set_base_model(self, new_base_model: QStandardItemModel) -> None:
-        """Update the base model and rebuild chain"""
-        self.base_model = new_base_model
-        self._model_chain[0] = new_base_model
-        self._rebuild_chain()
-
+from .tableFilterManager import FilterManager, FilterCommand
 
 #Scan button to more button
 class Table(QWidget):
@@ -120,8 +35,8 @@ class Table(QWidget):
     self.comm.stopSequentialEdit.connect(self.stopSequentialEditFunction)
     self.stopSequentialEdit = False
     self.data         :pd.DataFrame = pd.DataFrame()
-    self.base_model   :QStandardItemModel = QStandardItemModel()
-    self.filter_manager:FilterManager = FilterManager(self.base_model)
+    self.baseModel   :QStandardItemModel = QStandardItemModel()
+    self.filterManager:FilterManager = FilterManager(self.baseModel)
     self.filterHeader:list[str] = []
     self.lastClickedRow = -1
     self.flagGallery = False
@@ -160,9 +75,9 @@ class Table(QWidget):
 
     self.visibilityBtn = TextButton('Visibility', self, [], headerL)
     visibilityMenu = QMenu(self)
-    Action(                    'Add Filter',                        self, [Command.ADD_FILTER],     visibilityMenu)
-    self.showHidden    = Action('Show/hide hidden ___',             self, [Command.SHOW_ALL],       visibilityMenu)
-    self.toggleGallery = Action('Toggle gallery view',              self, [Command.TOGGLE_GALLERY], visibilityMenu)
+    Action(                    'Add Filter',            self, [FilterCommand.ADD_FILTER],visibilityMenu)
+    self.showHidden    = Action('Show/hide hidden ___', self, [Command.SHOW_ALL],        visibilityMenu)
+    self.toggleGallery = Action('Toggle gallery view',  self, [Command.TOGGLE_GALLERY],  visibilityMenu)
     self.toggleGallery.setVisible(False)
     self.visibilityBtn.setMenu(visibilityMenu)
 
@@ -244,7 +159,7 @@ class Table(QWidget):
       return
 
     # Clear existing filters and GUI elements
-    self.filter_manager.clear_all()
+    self.filterManager.clearAll()
     for i in reversed(range(self.filterL.count())):
       item_1 = self.filterL.itemAt(i)
       if item_1 is not None:
@@ -338,15 +253,15 @@ class Table(QWidget):
       model.setItem(i, j, item)
 
     # Update the filter manager with the new base model
-    self.base_model = model
-    self.filter_manager.set_base_model(model)
+    self.baseModel = model
+    self.filterManager.setBaseModel(model)
 
     if self.flagGallery:
       self.gallery.updateGrid(model)
       self.gallery.setVisible(True)
       self.table.setVisible(False)
     else:
-      self.table.setModel(self.filter_manager.get_final_model())
+      self.table.setModel(self.filterManager.getFinalModel())
       self.table.horizontalHeader().resizeSections(QHeaderView.ResizeMode.ResizeToContents)
       self.table.horizontalHeader().setStretchLastSection(True)
       self.table.sortByColumn(0, Qt.SortOrder.AscendingOrder)
@@ -371,8 +286,8 @@ class Table(QWidget):
 
     elif command[0] is Command.GROUP_EDIT:
       docIDs = []
-      final_model = self.filter_manager.get_final_model()
-      for row in range(final_model.rowCount()):
+      finalModel = self.filterManager.getFinalModel()
+      for row in range(finalModel.rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           docIDs.append(docID)
@@ -382,8 +297,8 @@ class Table(QWidget):
 
     elif command[0] is Command.SEQUENTIAL_EDIT:
       self.stopSequentialEdit = False
-      final_model = self.filter_manager.get_final_model()
-      for row in range(final_model.rowCount()):
+      finalModel = self.filterManager.getFinalModel()
+      for row in range(finalModel.rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           self.comm.formDoc.emit({'id':docID})
@@ -393,8 +308,8 @@ class Table(QWidget):
 
     elif command[0] is Command.DELETE:
       ret = None
-      final_model = self.filter_manager.get_final_model()
-      for row in range(final_model.rowCount()):
+      finalModel = self.filterManager.getFinalModel()
+      for row in range(finalModel.rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           if ret is None:
@@ -413,33 +328,33 @@ class Table(QWidget):
       fileName = QFileDialog.getSaveFileName(self,'Export to ..',str(Path.home()),'*.csv')[0]
       if not fileName.endswith('.csv'):
         fileName += '.csv'
-      final_model = self.filter_manager.get_final_model()
+      finalModel = self.filterManager.getFinalModel()
       with open(fileName,'w', encoding='utf-8') as fOut:
         header = [f'"{i}"' for i in self.filterHeader]
         fOut.write(','.join(header)+'\n')
-        for row in range(final_model.rowCount()):
+        for row in range(finalModel.rowCount()):
           rowContent = []
-          for col in range(final_model.columnCount()):
-            value = final_model.index( row, col, QModelIndex()).data(Qt.ItemDataRole.DisplayRole)
+          for col in range(finalModel.columnCount()):
+            value = finalModel.index( row, col, QModelIndex()).data(Qt.ItemDataRole.DisplayRole)
             rowContent.append(f'"{value}"')
           fOut.write(','.join(rowContent)+'\n')
 
     elif command[0] is Command.ADD_ON:
       # check if one is selected, if yes, only export selected; otherwise use All
-      final_model = self.filter_manager.get_final_model()
+      finalModel = self.filterManager.getFinalModel()
       useAll = True
-      for row in range(final_model.rowCount()):
+      for row in range(finalModel.rowCount()):
         item, _ = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           useAll = False
           break
       data   = []
-      for row in range(final_model.rowCount()):
+      for row in range(finalModel.rowCount()):
         item, docID = self.itemFromRow(row)
         if useAll or  item.checkState() == Qt.CheckState.Checked:
           dataRow = [docID]
-          for col in range(final_model.columnCount()):
-            value = final_model.index(row, col).data(Qt.ItemDataRole.DisplayRole)
+          for col in range(finalModel.columnCount()):
+            value = finalModel.index(row, col).data(Qt.ItemDataRole.DisplayRole)
             dataRow.append(value)
           data.append(dataRow)
       df = pd.DataFrame(data, columns=['docID']+self.filterHeader)
@@ -447,8 +362,8 @@ class Table(QWidget):
 
     elif command[0] is Command.TOGGLE_HIDE:
       changeFlag = False
-      final_model = self.filter_manager.get_final_model()
-      for row in range(final_model.rowCount()):
+      finalModel = self.filterManager.getFinalModel()
+      for row in range(finalModel.rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':docID})
@@ -460,8 +375,8 @@ class Table(QWidget):
       self.paint()
 
     elif command[0] is Command.TOGGLE_SELECTION:
-      final_model = self.filter_manager.get_final_model()
-      for row in range(final_model.rowCount()):
+      finalModel = self.filterManager.getFinalModel()
+      for row in range(finalModel.rowCount()):
         item,_ = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           item.setCheckState(Qt.CheckState.Unchecked)
@@ -474,8 +389,8 @@ class Table(QWidget):
 
     elif command[0] is Command.RERUN_EXTRACTORS:
       docIDs = []
-      final_model = self.filter_manager.get_final_model()
-      for row in range(final_model.rowCount()):
+      finalModel = self.filterManager.getFinalModel()
+      for row in range(finalModel.rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           docIDs.append(docID)
@@ -486,52 +401,54 @@ class Table(QWidget):
       self.flagGallery = not self.flagGallery
       self.paint()
 
-    elif command[0] is Command.ADD_FILTER:
+    elif command[0] is FilterCommand.ADD_FILTER:
       # Create new filter using FilterManager
-      filter_item = self.filter_manager.add_filter(self.filterHeader, self)
-      
+      filterItem = self.filterManager.addFilter(self.filterHeader, self)
+
       # Create GUI row
       _, rowL = widgetAndLayout('H', self.filterL, 'm', 'xl', '0', 'xl')
-      rowL.addWidget(filter_item.select)
-      rowL.addWidget(filter_item.text)
-      rowL.addWidget(filter_item.inverse)
-      rowL.addWidget(filter_item.delete)
-      
-      # Connect signals
-      filter_item.select.currentIndexChanged.connect(lambda idx: self.filterChoice(idx, filter_item.id))
-      filter_item.text.textChanged.connect(lambda text: self.filterTextChanged(text, filter_item.id))
-      
-      # Update table model
-      self.table.setModel(self.filter_manager.get_final_model())
+      rowL.addWidget(filterItem.select)
+      rowL.addWidget(filterItem.text)
+      rowL.addWidget(filterItem.inverse)
+      rowL.addWidget(filterItem.delete)
 
-    elif command[0] is Command.DELETE_FILTER:
-      filter_id = command[1]
-      
+      # Connect signals
+      filterItem.select.currentIndexChanged.connect(lambda idx: self.filterChoice(idx, filterItem.id))
+      filterItem.text.textChanged.connect(lambda text: self.filterTextChanged(text, filterItem.id))
+
+      # Update table model
+      self.table.setModel(self.filterManager.getFinalModel())
+
+    elif command[0] is FilterCommand.DELETE_FILTER:
+      filterID = command[1]
+
       # Find and remove GUI elements for this filter
       for i in range(self.filterL.count()):
-        item = self.filterL.itemAt(i)
-        if item and item.widget():
-          widget = item.widget()
+        itemI = self.filterL.itemAt(i)
+        if itemI and itemI.widget():
+          widget = itemI.widget()
           layout = widget.layout()
           if layout and layout.count() >= 4:
             # Check if this is the right filter by looking at delete button's command
-            delete_btn = layout.itemAt(3).widget()
-            if hasattr(delete_btn, 'command') and delete_btn.command[1] == filter_id:
-              widget.setParent(None)
-              break
-      
-      # Remove filter from manager
-      self.filter_manager.remove_filter(filter_id)
-      
-      # Update table model
-      self.table.setModel(self.filter_manager.get_final_model())
+            itemJ = layout.itemAt(3)
+            if itemJ is not None:
+              delete_btn = itemJ.widget()
+              if hasattr(delete_btn, 'command') and delete_btn.command[1] == filterID:
+                widget.setParent(None)
+                break
 
-    elif command[0] is Command.SET_FILTER:
-      filter_id = command[1]
+      # Remove filter from manager
+      self.filterManager.removeFilter(filterID)
+
+      # Update table model
+      self.table.setModel(self.filterManager.getFinalModel())
+
+    elif command[0] is FilterCommand.SET_FILTER:
+      filterID = command[1]
       if len(command) > 2 and command[2] == 'invert':
-        filter_item = self.filter_manager.get_filter(filter_id)
-        if filter_item:
-          self.filterTextChanged(filter_item.text.text(), filter_id)
+        filterItemI = self.filterManager.getFilter(filterID)
+        if filterItemI:
+          self.filterTextChanged(filterItemI.text.text(), filterID)
 
     else:
       logging.error('Menu unknown: %s',command, exc_info=True)
@@ -611,73 +528,62 @@ class Table(QWidget):
     Returns:
       QItem, str: the item and docID
     """
-    final_model = self.filter_manager.get_final_model()
-    index = final_model.index(row, 0)
-    
+    finalModel = self.filterManager.getFinalModel()
+    index = finalModel.index(row, 0)
     # Map through all proxy models back to base model
-    current_model = final_model
-    while hasattr(current_model, 'mapToSource') and current_model != self.base_model:
-      index = current_model.mapToSource(index)
-      current_model = current_model.sourceModel()
-    
-    item = self.base_model.itemFromIndex(index)
+    currentModel = finalModel
+    while hasattr(currentModel, 'mapToSource') and currentModel != self.baseModel:
+      index = currentModel.mapToSource(index)
+      currentModel = currentModel.sourceModel()                                                 # type: ignore
+    item = self.baseModel.itemFromIndex(index)
     return item, item.accessibleText()
 
 
-  def filterChoice(self, item:int, filter_id:int) -> None:
+  def filterChoice(self, item:int, filterID:int) -> None:
     """
     Change the column which is used for filtering
 
     Args:
        item (int): column number to filter by
-       filter_id (int): ID of the filter being modified
+       filterID (int): ID of the filter being modified
     """
-    filter_item = self.filter_manager.get_filter(filter_id)
-    if not filter_item:
+    filterItem = self.filterManager.getFilter(filterID)
+    if not filterItem:
       return
-      
-    rating = False
     if item == len(self.filterHeader):  # ratings
       item = self.filterHeader.index('tag')
-      rating = True
-      
-    filter_item.model.setFilterKeyColumn(item)
-    filter_item.text.setText('')
-    if rating:
-      filter_item.text.setValidator(QRegularExpressionValidator(r'\*+'))
-    else:
-      filter_item.text.setValidator(None)
+    filterItem.model.setFilterKeyColumn(item)
+    filterItem.text.setText('')
     return
 
 
-  def filterTextChanged(self, text:str, filter_id:int) -> None:
+  def filterTextChanged(self, text:str, filterID:int) -> None:
     """ text in line-edit in the filter is changed: update regex
 
     Args:
       text (str): filter text
-      filter_id (int): ID of the filter being modified
+      filterID (int): ID of the filter being modified
     """
-    filter_item = self.filter_manager.get_filter(filter_id)
-    if not filter_item:
+    filterItem = self.filterManager.getFilter(filterID)
+    if not filterItem:
       return
-      
+
     regexStr = text
     if '*' in regexStr:
       regexStr = regexStr.replace('*','\u2605')
-      if filter_item.inverse.isChecked():
+      if filterItem.inverse.isChecked():
         regexStr = f'^((?!{regexStr}).)*$'
       else:
         regexStr = f'^{regexStr}$'
-    elif filter_item.inverse.isChecked():
+    elif filterItem.inverse.isChecked():
       regexStr = f'^((?!{regexStr}).)*$'
-    filter_item.model.setFilterRegularExpression(regexStr)
+    filterItem.model.setFilterRegularExpression(regexStr)
     return
 
 
 
 class Command(Enum):
   """ Commands used in this file """
-  ADD_FILTER       = 1
   ADD_ITEM         = 2
   TOGGLE_SELECTION = 3
   GROUP_EDIT       = 4
@@ -688,7 +594,5 @@ class Command(Enum):
   SHOW_ALL         = 9
   EXPORT           = 10
   CHANGE_COLUMNS   = 11
-  DELETE_FILTER    = 12
-  SET_FILTER       = 13
   TOGGLE_GALLERY   = 14
   ADD_ON           = 15
