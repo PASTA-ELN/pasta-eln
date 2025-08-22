@@ -246,7 +246,7 @@ class MainWindow(QMainWindow):
     if task is Task.OPEN_EXTERNAL and path:
       QDesktopServices.openUrl(QUrl.fromLocalFile(path))
       return
-    if task is Task.SCAN:
+    if task in (Task.SCAN, Task.DROP_EXTERNAL):
       self.comm.changeProject.emit(self.comm.projectID, '')
     elif task is Task.CHECK_DB:
       regexStr = r'<font color="magenta">image does not exist m-[0-9a-f]+ image: comment:<\/font><br>'

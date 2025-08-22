@@ -169,7 +169,7 @@ class BackendWorker(QObject):
       self.beSendTaskReport.emit(task, report, '', '')
 
     elif task is Task.SCAN         and set(data.keys())=={'docID'}:
-      for _ in range(2):                                                       #scan twice: convert, extract
+      for _ in range(2):                                                         #scan twice: convert, extract
         self.backend.scanProject(None, data['docID'])
       self.beSendTaskReport.emit(task, 'Scanning finished successfully', '', '')
 
@@ -177,18 +177,18 @@ class BackendWorker(QObject):
       if data['hierStack']:
         parentID  = data['hierStack'][-1]
         self.backend.cwd = Path(self.backend.db.getDoc(parentID)['branch'][0]['path'])
-      else:                                                                                        # project
+      else:                                                                                          # project
         self.backend.cwd = Path(self.backend.basePath)
       if '_projectID' in data['doc']:
         del data['doc']['_projectID']
       self.backend.addData(data['docType'], data['doc'], data['hierStack'])
-      self.beSendDoc.emit(data['doc'])  # send updated doc back to GUI
+      self.beSendDoc.emit(data['doc'])                                          # send updated doc back to GUI
 
     elif task is Task.EDIT_DOC      and set(data.keys())=={'doc','newProjID'}:
       # update the path, if the project changed
       if data['newProjID'] and 'branch' in data['doc']:
         parentPath = self.backend.db.getDoc(data['newProjID'][0])['branch'][0]['path']
-        if data['doc']['branch'][0]['stack']!=data['newProjID'][0]:      #only if project changed
+        if data['doc']['branch'][0]['stack']!=data['newProjID'][0]:                   #only if project changed
           if data['doc']['branch'][0]['path'] is None:
             newPath    = ''
           else:
@@ -200,12 +200,12 @@ class BackendWorker(QObject):
       if '_projectID' in data['doc']:
         del data['doc']['_projectID']
       doc.update(data['doc'])
-      doc = flatten(doc, True)                                            # type: ignore[assignment]
+      doc = flatten(doc, True)                                                      # type: ignore[assignment]
       self.backend.editData(doc)
-      self.beSendDoc.emit(self.backend.db.getDoc(data['doc']['id']))  # send updated doc back to GUI
+      self.beSendDoc.emit(self.backend.db.getDoc(data['doc']['id']))            # send updated doc back to GUI
 
     elif task is Task.MOVE_LEAVES and set(data.keys())=={'docID','stackOld','stackNew','childOld','childNew'}:
-      verbose = True                                                               # Convenient for testing
+      verbose = True                                                                  # Convenient for testing
       doc      = self.backend.db.getDoc(data['docID'])
       branchOldList= [i for i in doc['branch'] if i['stack']==data['stackOld']]
       if len(branchOldList)!=1:
@@ -217,14 +217,14 @@ class BackendWorker(QObject):
         if doc['type'][0][0]=='x':
           dirNameNew= createDirName(doc, data['childNew'], parentDir)# create path name: do not create directory on disk yet
         else:
-          dirNameNew= Path(branchOld['path']).name                                            # use old name
+          dirNameNew= Path(branchOld['path']).name                                              # use old name
         pathNew = f'{parentDir}/{dirNameNew}'
       else:
         pathNew = branchOld['path']
       siblingsNew = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackNew']))#sorted by docID
       siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(data['stackNew'])+1]
       childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
-      siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]#sorted by childNum 1st and docID 2nd
+      siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]  #sorted by childNum 1st and docID 2nd
       # --- CHANGE ----
       # change new siblings
       if verbose:
