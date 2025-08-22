@@ -78,8 +78,8 @@ class TestStringMethods(unittest.TestCase):
 
     output = self.be.output('device')
     self.assertEqual(output.split('\n')[0][:82], 'name           | tags | comment                                  | vendor    | id ')
-    self.assertIn('Big instrument | nan  | Instrument onto which attachments can... | Company A | i-', output)
-    self.assertIn('        Sensor | nan  | Attachment that increases functionali... | Company B | i-', output)
+    self.assertIn('Big instrument | nan  | Instrument onto which attachments can... | Company A | d-', output)
+    self.assertIn('        Sensor | nan  | Attachment that increases functionali... | Company B | d-', output)
 
     output = self.be.output('measurement')
     self.assertIn('https://upload.wikimedia.org/wikipedi... |  _3  | - Remote image from wikipedia. Used f... |            measurement/image | Y     | nan    ', output)

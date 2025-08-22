@@ -226,7 +226,7 @@ class Table(QWidget):
     for i, j in itertools.product(range(nRows), range(nCols-2)):
       value = self.data.iloc[i,j]
       if self.docType=='_tags_':                                                                   # tags list
-        if j==0 and re.match(r'_\d', value):                                                                   # star
+        if j==0 and re.match(r'_\d', value):                                                            # star
           item = QStandardItem('\u2605'*int(value[1]))
         elif j==0:
           item = QStandardItem(value)
