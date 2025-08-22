@@ -40,16 +40,14 @@ def test_simple(qtbot):
   # start iteration
   for epoch in range(4):
     print(f'{"*"*40}\nStart drag-drop {epoch}\n{"*"*40}')
-    def recursiveRowIteration(index:QModelIndex) -> None:
+    def recursiveRowIteration(index:QModelIndex) -> list[QModelIndex]:
       item  = window.tree.model().itemFromIndex(index)
       allParentIdx = [index] if item is not None and item.data() is not None and item.data()['docType']==['x1'] else []
       for subRow in range(window.tree.model().rowCount(index)):
         subIndex = window.tree.model().index(subRow,0, index)
         allParentIdx += recursiveRowIteration(subIndex)
       return allParentIdx
-    while window.tree is None:
-      print('Waiting for tree to be initialized')
-      qtbot.wait(100)
+    qtbot.wait(1000)
     allParentIdx = recursiveRowIteration( window.tree.model().index(-1,0))
     validChoices     = [i for i in allParentIdx if window.tree.model().rowCount(i)>0 ]
     sourceParentIdx  = validChoices[choices.pop(0)%len(validChoices)]
