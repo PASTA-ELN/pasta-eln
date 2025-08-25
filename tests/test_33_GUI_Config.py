@@ -11,6 +11,7 @@ def test_simple(qtbot):
   dialog.setMinimumSize(1024,800)
   dialog.show()
   qtbot.addWidget(dialog)
+  qtbot.wait(1000)
   path = qtbot.screenshot(dialog)
   print(path)
 

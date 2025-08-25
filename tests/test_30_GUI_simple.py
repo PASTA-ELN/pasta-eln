@@ -10,6 +10,7 @@ def test_simple(qtbot):
   qtbot.addWidget(window)
   while comm.backendThread.worker.backend is None:
     qtbot.wait(100)
+  qtbot.wait(1000)
 
   # projID1 = window.comm.backend.output('x0').split('|')[-1].strip()
   # print(projID1)
