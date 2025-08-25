@@ -1,6 +1,5 @@
-# CLAUDE.md
+# Guidance for LLMs
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Development Commands
 
@@ -78,11 +77,6 @@ PASTA-ELN is a Qt-based Electronic Lab Notebook (ELN) application built with Pyt
 
 ### Key Modules
 
-**Text Processing (`pasta_eln/textTools/`)**
-- `markdown2html.py`: Markdown to HTML conversion
-- `html2markdown.py`: HTML to Markdown conversion
-- `stringChanges.py`: String manipulation utilities
-
 **Add-ons (`pasta_eln/AddOns/`)**
 - Extensible plugin system
 - File extractors for different formats
@@ -125,7 +119,6 @@ PASTA-ELN is a Qt-based Electronic Lab Notebook (ELN) application built with Pyt
 - Code style enforced via pylint
 - Pre-commit hooks for code quality
 - Comprehensive docstrings required
-- return at the end of every function
 
 ## Important Notes
 

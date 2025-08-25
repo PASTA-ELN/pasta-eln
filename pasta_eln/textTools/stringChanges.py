@@ -22,7 +22,7 @@ def outputString(fmt:str='print', level:str='info', message:str='') -> str:
   if level=='info':
     txtOutput = message.strip()+'\n'
   elif level in prefixes:
-    txtOutput = prefixes[level]+message
+    txtOutput = f'{prefixes[level]} {message}'
     txtOutput+= ' ***' if '***' in prefixes[level] else ''
     txtOutput+= f'{Bcolors.ENDC}\n'
   else:

@@ -33,7 +33,7 @@ class Project(QWidget):
 
     self.mainL = QVBoxLayout()
     self.setLayout(self.mainL)
-    self.tree                                = TreeView(self, self.comm, QStandardItemModel())
+    self.tree :Optional[TreeView]            = None
     self.model:Optional[QStandardItemModel]  = None
     self.allDetails                          = QTextEdit()
     self.actHideDetail                       = QAction()
@@ -93,11 +93,9 @@ class Project(QWidget):
     topLineL.addWidget(QLabel(showStatus))
     topLineL.addStretch(1)
     # buttons in top line
-    buttonW, buttonL = widgetAndLayout('H', spacing='m')
-    topLineL.addWidget(buttonW, alignment=Qt.AlignTop)                                          # type: ignore
-    self.btnAddSubfolder = TextButton('Add subfolder', self, [Command.ADD_CHILD], buttonL)
-    self.btnEditProject =  TextButton('Edit project',  self, [Command.EDIT],      buttonL)
-    self.btnVisibility = TextButton(  'Visibility',    self, [],                  buttonL)
+    self.btnAddSubfolder = TextButton('Add subfolder', self, [Command.ADD_CHILD], topLineL)
+    self.btnEditProject =  TextButton('Edit project',  self, [Command.EDIT],      topLineL)
+    self.btnVisibility = TextButton(  'Visibility',    self, [],                  topLineL)
     visibilityMenu = QMenu(self)
     self.actHideDetail = Action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
     menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
@@ -106,7 +104,7 @@ class Project(QWidget):
     Action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
     self.actionFoldAll     = Action( minimizeItems,    self, [Command.SHOW_DETAILS],     visibilityMenu)
     self.btnVisibility.setMenu(visibilityMenu)
-    self.btnMore = TextButton('More',           self, [], buttonL)
+    self.btnMore = TextButton('More',           self, [], topLineL)
     moreMenu = QMenu(self)
     Action('Scan',                      self, [Command.SCAN], moreMenu)
     for docType, value in self.comm.docTypesTitles.items():
@@ -156,7 +154,6 @@ class Project(QWidget):
     return
 
 
-  @Slot(str, str)
   def paint(self) -> None:
     """
     What happens when user clicks to change project that is shown
@@ -172,6 +169,7 @@ class Project(QWidget):
     self.tree = TreeView(self, self.comm, self.model)
     # self.tree.setSelectionBehavior(QAbstractItemView.SelectRows)
     # self.tree.setSelectionMode(QAbstractItemView.SingleSelection)
+    self.META_ROLE = Qt.ItemDataRole.UserRole + 1
     self.model.itemChanged.connect(self.modelChanged)
     rootItem = self.model.invisibleRootItem()
     #Populate model body of change project: start recursion
@@ -215,7 +213,7 @@ class Project(QWidget):
       return
     for iRow in range(node.rowCount()):
       item = node.child(iRow)
-      data = item.data(role=Qt.ItemDataRole.UserRole+1)
+      data = item.data(self.META_ROLE)
       if data['hierStack'].split('/')[-1][0]=='x':
         index = self.model.indexFromItem(item)
         self.tree.setExpanded(index, data['gui'][1])
@@ -232,9 +230,12 @@ class Project(QWidget):
     """
     if self.model is None:
       return
-    gui  = [index.data(Qt.ItemDataRole.UserRole+1)['gui'][0]]+[flag]
-    docID = index.data(Qt.ItemDataRole.UserRole+1)['hierStack'].split('/')[-1]
-    self.model.itemFromIndex(index).setData({ **index.data(Qt.ItemDataRole.UserRole+1), **{'gui':gui}})
+    meta = index.data(self.META_ROLE)
+    if not isinstance(meta, dict):
+      return
+    gui  = [meta['gui'][0]]+[flag]
+    docID = meta['hierStack'].split('/')[-1]
+    self.model.itemFromIndex(index).setData({ **meta, **{'gui':gui}}, self.META_ROLE)
     self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
     return
 
@@ -284,10 +285,13 @@ class Project(QWidget):
         for subRow in range(self.tree.model().rowCount(index)):
           subIndex = self.tree.model().index(subRow,0, index)
           subItem  = self.tree.model().itemFromIndex(subIndex)                    # type: ignore[attr-defined]
-          docID    = subItem.data()['hierStack'].split('/')[-1]
-          gui      = subItem.data()['gui']
+          meta = subItem.data(self.META_ROLE)
+          if not isinstance(meta, dict):
+            continue
+          docID    = meta['hierStack'].split('/')[-1]
+          gui      = meta['gui']
           gui[0]   = self.showDetailsAll
-          subItem.setData({ **subItem.data(), **{'gui':gui}})
+          subItem.setData({ **meta, **{'gui':gui}}, self.META_ROLE)
           self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
           recursiveRowIteration(subIndex)
       recursiveRowIteration(self.tree.model().index(-1,0))
@@ -317,18 +321,20 @@ class Project(QWidget):
     Args:
       item (QStandardItem): item changed, new location
     """
-    if not item.data():
+    meta = item.data(self.META_ROLE)
+    if not isinstance(meta, dict):
       return
     # gather old information
-    stackOld = item.data()['hierStack'].split('/')[:-1]
-    docID    = item.data()['hierStack'].split('/')[-1]
-    childOld = item.data()['childNum']
+    stackOld = meta['hierStack'].split('/')[:-1]
+    docID    = meta['hierStack'].split('/')[-1]
+    childOld = meta['childNum']
     # gather new information
     stackNew = []                                                                             #create reversed
     currentItem = item
     while currentItem.parent() is not None:
       currentItem = currentItem.parent()
-      docIDj = currentItem.data()['hierStack'].split('/')[-1]
+      metaParent = currentItem.data(self.META_ROLE)
+      docIDj = metaParent['hierStack'].split('/')[-1]
       stackNew.append(docIDj)
     stackNew = [self.projID] + stackNew[::-1]                                      #add project id and reverse
     childNew = item.row()
@@ -356,7 +362,7 @@ class Project(QWidget):
     hierStack = '/'.join([i.id for i in nodeHier.ancestors]+[nodeHier.id])
     gui = nodeHier.gui
     nodeTree = QStandardItem(nodeHier.name)
-    nodeTree.setData({'hierStack':hierStack, 'docType':nodeHier.docType, 'gui':gui, 'childNum':nodeHier.childNum})
+    nodeTree.setData({'hierStack':hierStack, 'docType':nodeHier.docType, 'gui':gui, 'childNum':nodeHier.childNum}, self.META_ROLE)
     if nodeHier.id[0]=='x':
       nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)# type: ignore
     else:

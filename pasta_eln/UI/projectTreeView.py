@@ -79,9 +79,11 @@ class TreeView(QTreeView):
     hierStack = item.data()['hierStack'].split('/')
     if command[0] is Command.ADD_CHILD:
       self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':hierStack, 'docType':'x1', 'doc':{'name':'new item'}})
+
     elif command[0] is Command.ADD_SIBLING:
       hierStack= hierStack[:-1]
       self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':hierStack, 'docType':'x1', 'doc':{'name':'new item'}})
+
     elif command[0] is Command.DELETE:
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data?',\
                                  QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
@@ -95,6 +97,7 @@ class TreeView(QTreeView):
           if parent.rowCount()==1:
             self.aParentWidget.btnAddSubfolder.setVisible(True)                   # type: ignore[attr-defined]
         parent.removeRow(item.row())
+
     elif command[0] is Command.SHOW_DETAILS:
       gui    = item.data()['gui']
       gui[0] = not gui[0]
@@ -114,6 +117,7 @@ class TreeView(QTreeView):
       iterate(self.model().invisibleRootItem())                                   # type: ignore[attr-defined]
       # only one change once the DB
       self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
+
     elif command[0] is Command.HIDE:
       logging.debug('hide document %s',hierStack[-1])
       self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':hierStack[-1]})
@@ -121,16 +125,19 @@ class TreeView(QTreeView):
       # Talk to GW what is the default expectation; system allows for individual hiding
       #
       # after hide, do not hide immediately but wait on next refresh
+
     elif command[0] is Command.OPEN_EXTERNAL or command[0] is Command.OPEN_FILEBROWSER:
       # depending if non-folder / folder; address different item in hierstack
       docID = hierStack[-2] \
         if command[0] is Command.OPEN_FILEBROWSER and hierStack[-1][0]!='x' \
         else hierStack[-1]
       self.comm.uiRequestTask.emit(Task.OPEN_EXTERNAL, {'docID':docID})
+
     elif command[0] is Command.ADD_ON:
       callAddOn(command[1], self.comm, item.data()['hierStack'], self)
     else:
       logging.error('Unknown context menu %s', command, exc_info=True)
+    self.comm.uiRequestHierarchy.emit(self.parent().projID, self.parent().showAll)
     return
 
 

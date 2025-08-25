@@ -333,7 +333,8 @@ def isConnectedToInternet() -> bool:
     bool: True if connected, False otherwise
   """
   try:
-    socket.getaddrinfo('google.com',80)
+    socket.setdefaulttimeout(3)
+    socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(("8.8.8.8", 53))
     return True
   except OSError:
     pass
