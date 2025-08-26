@@ -183,6 +183,9 @@ class BackendWorker(QObject):
         del data['doc']['_projectID']
       self.backend.addData(data['docType'], data['doc'], data['hierStack'])
       self.beSendDoc.emit(data['doc'])                                          # send updated doc back to GUI
+      if data['docType']=='x0':
+        self.beSendProjects.emit(self.backend.db.getView('viewDocType/x0'))
+
 
     elif task is Task.EDIT_DOC      and set(data.keys())=={'doc','newProjID'}:
       # update the path, if the project changed

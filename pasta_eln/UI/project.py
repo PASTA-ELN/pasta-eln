@@ -305,6 +305,8 @@ class Project(QWidget):
       self.change('','')
     elif command[0] is Command.ADD_CHILD:
       self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':[self.projID], 'docType':'x1', 'doc':{'name':'new item'}})
+      self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
+
     elif command[0] is Command.SHOW_TABLE:
       self.comm.changeTable.emit(command[1], self.projID)
     elif command[0] is Command.ADD_ON:
