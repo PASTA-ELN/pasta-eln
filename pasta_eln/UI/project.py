@@ -282,9 +282,9 @@ class Project(QWidget):
       self.comm.changeSidebar.emit('')
     elif command[0] is Command.SHOW_DETAILS and self.tree is not None:
       def recursiveRowIteration(index:QModelIndex) -> None:
-        for subRow in range(self.tree.model().rowCount(index)):
-          subIndex = self.tree.model().index(subRow,0, index)
-          subItem  = self.tree.model().itemFromIndex(subIndex)                    # type: ignore[attr-defined]
+        for subRow in range(self.tree.model().rowCount(index)):                     # type: ignore[union-attr]
+          subIndex = self.tree.model().index(subRow,0, index)                       # type: ignore[union-attr]
+          subItem  = self.tree.model().itemFromIndex(subIndex)                      # type: ignore[union-attr]
           meta = subItem.data(self.META_ROLE)
           if not isinstance(meta, dict):
             continue

@@ -137,7 +137,7 @@ class TreeView(QTreeView):
       callAddOn(command[1], self.comm, item.data()['hierStack'], self)
     else:
       logging.error('Unknown context menu %s', command, exc_info=True)
-    self.comm.uiRequestHierarchy.emit(self.parent().projID, self.parent().showAll)
+    self.comm.uiRequestHierarchy.emit(self.parent().projID, self.parent().showAll)# type: ignore[attr-defined]
     return
 
 
