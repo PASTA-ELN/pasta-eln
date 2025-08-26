@@ -168,10 +168,10 @@ class Table(QWidget):
     if '/' not in self.docType:
       # get list of all subDocTypes
       allDocTypes = [i for i in self.comm.docTypesTitles if i.startswith(self.docType)]
-      if len(allDocTypes)==1:
+      if len(allDocTypes) <= 1:
         self.subDocTypeL.hide()
         self.subDocType.hide()
-      elif len(allDocTypes)>1:
+      elif len(allDocTypes) > 1:
         self.subDocTypeL.show()
         self.subDocType.show()
         alreadyInside = {self.subDocType.itemText(i) for i in range(self.subDocType.count())}

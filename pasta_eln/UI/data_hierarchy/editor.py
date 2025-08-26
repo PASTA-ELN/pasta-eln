@@ -41,7 +41,7 @@ class SchemeEditor(QDialog):
     self.df      = pd.DataFrame()
     self.docTypesLabels = [(k,v['title']) for k,v in self.comm.docTypesTitles.items()]
     self.closeButtons:list[IconButton] = []                                             #close buttons of tabs
-    self.setWindowTitle('Data scheme editor')
+    self.setWindowTitle('Item type editor')
     self.restartAfterClose = False
 
     # GUI elements
