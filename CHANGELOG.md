@@ -2,7 +2,27 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b5...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b6...HEAD)
+
+**Fixed bugs:**
+
+- Filter lines break sometimes\(?\) [\#549](https://github.com/PASTA-ELN/pasta-eln/issues/549)
+
+**Closed issues:**
+
+- Installation Instructions - non-hardcoded Pasta path [\#559](https://github.com/PASTA-ELN/pasta-eln/issues/559)
+- 3.2.0b6 - Creeating a new project group [\#558](https://github.com/PASTA-ELN/pasta-eln/issues/558)
+- Instructions to update for people without terminal [\#555](https://github.com/PASTA-ELN/pasta-eln/issues/555)
+- 3.1.11 - Definitions Editor [\#554](https://github.com/PASTA-ELN/pasta-eln/issues/554)
+- 3.2.0b6 - Definitions editor? [\#553](https://github.com/PASTA-ELN/pasta-eln/issues/553)
+- 3.2.0b6 - The "Unidentified" list keeps dropdown lists from earlier lists [\#552](https://github.com/PASTA-ELN/pasta-eln/issues/552)
+- 3.2.0b6 - Bugs in the item type editor [\#551](https://github.com/PASTA-ELN/pasta-eln/issues/551)
+- Deleting filter lines breaks filter lines [\#550](https://github.com/PASTA-ELN/pasta-eln/issues/550)
+- Shadow of the PastaELN GUI [\#379](https://github.com/PASTA-ELN/pasta-eln/issues/379)
+
+## [v3.2.0b6](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b6) (2025-08-22)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b5...v3.2.0b6)
 
 **Fixed bugs:**
 
@@ -37,7 +57,7 @@
 - Requirements for installation of Pasta [\#499](https://github.com/PASTA-ELN/pasta-eln/issues/499)
 - batch file download [\#498](https://github.com/PASTA-ELN/pasta-eln/issues/498)
 - Storage of tags in item creation [\#494](https://github.com/PASTA-ELN/pasta-eln/issues/494)
-- New item types are not accessible? [\#491](https://github.com/PASTA-ELN/pasta-eln/issues/491)
+- New item types are not accesssible? [\#491](https://github.com/PASTA-ELN/pasta-eln/issues/491)
 - Configuration GUI: allow user to check if hidden items are by default hidden \(new\) or shown \(current\) [\#486](https://github.com/PASTA-ELN/pasta-eln/issues/486)
 - Overlap Checkbox - Name of item [\#483](https://github.com/PASTA-ELN/pasta-eln/issues/483)
 - Shift in details view when clicking a linked item [\#479](https://github.com/PASTA-ELN/pasta-eln/issues/479)
