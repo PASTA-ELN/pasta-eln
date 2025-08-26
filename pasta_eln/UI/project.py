@@ -44,6 +44,7 @@ class Project(QWidget):
     self.btnMore:Optional[TextButton]         = None
     self.btnVisibility:Optional[TextButton]   = None
     self.lineSep = 20
+    self.META_ROLE = Qt.ItemDataRole.UserRole + 1
 
 
   @Slot(Node, dict)
@@ -169,7 +170,6 @@ class Project(QWidget):
     self.tree = TreeView(self, self.comm, self.model)
     # self.tree.setSelectionBehavior(QAbstractItemView.SelectRows)
     # self.tree.setSelectionMode(QAbstractItemView.SingleSelection)
-    self.META_ROLE = Qt.ItemDataRole.UserRole + 1
     self.model.itemChanged.connect(self.modelChanged)
     rootItem = self.model.invisibleRootItem()
     #Populate model body of change project: start recursion

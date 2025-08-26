@@ -725,8 +725,8 @@ class Backend(CLI_Mixin):
     self.db.cursor.execute("SELECT branches.path FROM main JOIN branches USING(id) WHERE type=='x0'")
     projFolders = self.db.cursor.fetchall()
     if nonUsedFolders := set(projLevelFolders).difference([i[0] for i in projFolders]+['pastaELN.db']):
-      output += outputString(outputStyle,'warning',f'These files/folders in data folder are not used for projects:'\
-                              f'{"\n  - ".join(['']+list(nonUsedFolders))}')
+      output += outputString(outputStyle,'warning','These files/folders in data folder are not used for projects:'\
+                            "\n  - ".join(['']+list(nonUsedFolders)) )
     # final summary
     if not minimal:
       output += outputString(outputStyle,'h2','File summary')

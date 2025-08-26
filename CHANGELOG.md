@@ -37,7 +37,7 @@
 - Requirements for installation of Pasta [\#499](https://github.com/PASTA-ELN/pasta-eln/issues/499)
 - batch file download [\#498](https://github.com/PASTA-ELN/pasta-eln/issues/498)
 - Storage of tags in item creation [\#494](https://github.com/PASTA-ELN/pasta-eln/issues/494)
-- New item types are not accesssible? [\#491](https://github.com/PASTA-ELN/pasta-eln/issues/491)
+- New item types are not accessible? [\#491](https://github.com/PASTA-ELN/pasta-eln/issues/491)
 - Configuration GUI: allow user to check if hidden items are by default hidden \(new\) or shown \(current\) [\#486](https://github.com/PASTA-ELN/pasta-eln/issues/486)
 - Overlap Checkbox - Name of item [\#483](https://github.com/PASTA-ELN/pasta-eln/issues/483)
 - Shift in details view when clicking a linked item [\#479](https://github.com/PASTA-ELN/pasta-eln/issues/479)
