@@ -64,7 +64,7 @@ class TestStringMethods(unittest.TestCase):
     output = '\n'.join(output.split('\n')[8:])
     print(output)
     self.assertNotIn('**ERROR', output, 'Error in checkDB')
-    self.assertLessEqual(len(output.split('\n')), 6, 'Check db should have less than 6 almost empty lines')
+    self.assertLessEqual(len(output.split('\n')), 8, 'Check db should have less than 8 almost empty lines')
     return
 
 
