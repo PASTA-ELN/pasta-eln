@@ -8,11 +8,6 @@ class NameColumnDelegate(QStyledItemDelegate):
   """
   Delegate for creating the line edit with lookup icon for the iri column in data hierarchy editor tables
   """
-  def __init__(self, parent:QWidget|None = None):
-    super().__init__(parent)
-    self.res = QLineEdit(parent)
-    self.res.setValidator(QRegularExpressionValidator(r'[a-z][a-z0-9]+'))
-
   def createEditor(self,
                    parent: QWidget,
                    option: QStyleOptionViewItem,
@@ -29,7 +24,9 @@ class NameColumnDelegate(QStyledItemDelegate):
     """
     if index.data() in ['name','tags','comment']:
       return QWidget(parent)
-    return self.res
+    editor = QLineEdit(parent)
+    editor.setValidator(QRegularExpressionValidator(r'[a-z][a-z0-9]+'))
+    return editor
 
 
   def destroyEditor(self, editor:QWidget, index:QModelIndex | QPersistentModelIndex) -> None:
