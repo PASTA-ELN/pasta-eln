@@ -81,12 +81,11 @@ Open terminal and copy-paste following content:
 
     .. code-block:: bash
 
-        export pastaPath="PASTA_ELN"
-        mkdir ~/$pastaPath
-        python3 -m venv ~/$pastaPath/venv
-        source ~/$pastaPath/venv/bin/activate
+        mkdir ~/PASTA_ELN
+        python3 -m venv ~/PASTA_ELN/venv
+        source ~/PASTA_ELN/venv/bin/activate
         pip install pasta-eln
-        python3 -m pasta_eln.installationTools install ~/$pastaPath/data
+        python3 -m pasta_eln.installationTools install ~/PASTA_ELN/data
         python3 -m pasta_eln.installationTools shortcut
         python3 -m pasta_eln.installationTools example
         python3 -m pasta_eln.gui
@@ -129,11 +128,11 @@ Open terminal and copy-paste following content:
     .. code-block:: bash
 
         export pastaPath="PASTA_ELN"
-        mkdir ~/$pastaPath
-        python3 -m venv ~/$pastaPath/venv
-        source ~/$pastaPath/venv/bin/activate
+        mkdir ~/PASTA_ELN
+        python3 -m venv ~/PASTA_ELN/venv
+        source ~/PASTA_ELN/venv/bin/activate
         pip install pasta-eln
-        python3 -m pasta_eln.installationTools install ~/$pastaPath/data
+        python3 -m pasta_eln.installationTools install ~/PASTA_ELN/data
         python3 -m pasta_eln.installationTools shortcut
         python3 -m pasta_eln.installationTools example
         python3 -m pasta_eln.gui
