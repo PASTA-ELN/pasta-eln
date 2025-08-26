@@ -36,7 +36,7 @@ class TestStringMethods(unittest.TestCase):
     projID = self.be.output('x0').split('|')[-2].strip()
     self.be.changeHierarchy(projID)
 
-    choices = random.choices(range(100), k=250)
+    choices = random.choices(range(100), k=260)
     # choices =
     print(f'Current choice: [{",".join([str(i) for i in choices])}]')
     for epoch in range(5):
