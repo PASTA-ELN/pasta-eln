@@ -5,6 +5,7 @@ from PySide6.QtGui import QStandardItemModel
 from PySide6.QtWidgets import QComboBox, QLineEdit, QWidget
 from .guiStyle import IconButton
 
+
 class FilterItem:
   """Represents a single filter with its model and associated widgets"""
 

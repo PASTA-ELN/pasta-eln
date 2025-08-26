@@ -8,15 +8,16 @@ from typing import Any
 import pandas as pd
 from PySide6.QtCore import QModelIndex, Qt, Slot
 from PySide6.QtGui import QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView, QMenu, QMessageBox,
-                               QTableView, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView, QMenu, QMessageBox, QTableView,
+                               QVBoxLayout, QWidget)
 from ..backendWorker.worker import Task
 from ..miscTools import callAddOn
 from .gallery import ImageGallery
 from .guiCommunicate import Communicate
 from .guiStyle import Action, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
+from .tableFilterManager import FilterCommand, FilterManager
 from .tableHeader import TableHeader
-from .tableFilterManager import FilterManager, FilterCommand
+
 
 #Scan button to more button
 class Table(QWidget):
@@ -171,7 +172,7 @@ class Table(QWidget):
       if len(allDocTypes) <= 1:
         self.subDocTypeL.hide()
         self.subDocType.hide()
-      elif len(allDocTypes) > 1:
+      else:
         self.subDocTypeL.show()
         self.subDocType.show()
         alreadyInside = {self.subDocType.itemText(i) for i in range(self.subDocType.count())}
@@ -446,8 +447,7 @@ class Table(QWidget):
     elif command[0] is FilterCommand.SET_FILTER:
       filterID = command[1]
       if len(command) > 2 and command[2] == 'invert':
-        filterItemI = self.filterManager.getFilter(filterID)
-        if filterItemI:
+        if filterItemI := self.filterManager.getFilter(filterID):
           self.filterTextChanged(filterItemI.text.text(), filterID)
 
     else:
@@ -550,7 +550,7 @@ class Table(QWidget):
     filterItem = self.filterManager.getFilter(filterID)
     if not filterItem:
       return
-    if item == len(self.filterHeader):  # ratings
+    if item == len(self.filterHeader):                                                               # ratings
       item = self.filterHeader.index('tag')
     filterItem.model.setFilterKeyColumn(item)
     filterItem.text.setText('')

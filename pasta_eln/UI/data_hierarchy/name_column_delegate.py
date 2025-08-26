@@ -24,7 +24,7 @@ class NameColumnDelegate(QStyledItemDelegate):
     """
     if index.data() in ['name','tags','comment']:
       return QWidget(parent)
-    editor = QLineEdit(parent)
+    editor = QLineEdit(parent)                                               # pylint: disable=qt-local-widget
     editor.setValidator(QRegularExpressionValidator(r'[a-z][a-z0-9]+'))
     return editor
 

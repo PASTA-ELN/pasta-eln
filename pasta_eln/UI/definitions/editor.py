@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 import qtawesome as qta
-from PySide6.QtCore import Slot, Qt
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QDialog, QFileDialog, QTableWidget, QTableWidgetItem, QVBoxLayout
 from ...miscTools import callAddOn
 from ..guiCommunicate import Communicate
