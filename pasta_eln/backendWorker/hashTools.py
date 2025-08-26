@@ -29,7 +29,8 @@ def generic_hash(path:Path, forceFile:bool=False) -> str:
   """
   if str(path).startswith('http'):                                                               #Remote file:
     try:
-      with request.urlopen(path.as_posix().replace(':/','://'), timeout=60) as site:
+      req = request.Request(path.as_posix().replace(':/','://'), headers={'User-Agent': 'Mozilla/5.0'})
+      with request.urlopen(req, timeout=60) as site:
         meta = site.headers
         size = int(meta.get_all('Content-Length')[0])
         return blob_hash(site, size)

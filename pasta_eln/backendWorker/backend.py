@@ -427,7 +427,8 @@ class Backend(CLI_Mixin):
     if str(filePath).startswith('http'):
       absFilePath = Path(tempfile.gettempdir())/filePath.name
       try:
-        with request.urlopen(filePath.as_posix().replace(':/','://'), timeout=60) as urlRequest:
+        req = request.Request(filePath.as_posix().replace(':/','://'), headers={'User-Agent': 'Mozilla/5.0'})
+        with request.urlopen(req, timeout=60) as urlRequest:
           with open(absFilePath, 'wb') as f:
             try:
               f.write(urlRequest.read())
