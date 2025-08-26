@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 import qtawesome as qta
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, Qt
 from PySide6.QtWidgets import QDialog, QFileDialog, QTableWidget, QTableWidgetItem, QVBoxLayout
 from ...miscTools import callAddOn
 from ..guiCommunicate import Communicate
@@ -35,7 +35,6 @@ class Editor(QDialog):
     self.df0:pd.DataFrame = pd.DataFrame()
     self.df1:pd.DataFrame = pd.DataFrame()
     self.setMinimumWidth(1000)
-    self.setMinimumHeight(1000)
     self.setWindowTitle('Edit definitions')
 
     ### GUI elements
@@ -46,6 +45,7 @@ class Editor(QDialog):
     self.table = QTableWidget(1, 5)
     self.table.verticalHeader().hide()
     self.table.setAlternatingRowColors(True)
+    self.table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
     self.table.setHorizontalHeaderLabels(COLUMN_NAMES)
     for idx, width in enumerate(COLUMN_WIDTH):
       self.table.setColumnWidth(idx, width)
