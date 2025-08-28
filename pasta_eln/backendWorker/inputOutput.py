@@ -145,7 +145,8 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
           doc['comment'] = [doc['comment']]
         doc['comment'] = '\n\n'.join([i['text'] for i in doc['comment']])
       if '.comment' in doc:
-        doc['comment'] += '\n\n'.join(['']+[f'{i["dateCreated"]}:\n{i["text"]}' for i in doc.pop('.comment')])
+        doc['comment'] = doc.get('comment','') + \
+                         '\n\n'.join(['']+[f'{i["dateCreated"]}:\n{i["text"]}' for i in doc.pop('.comment')])
       if encodingFormat=='text/html':
         if 'comment' in doc:
           doc['comment'] = html2markdown(doc['comment'])
@@ -182,6 +183,12 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
           if len(newValue)==1:
             newValue = newValue[0]
           doc[key] = newValue
+        elif isinstance(value, dict):
+          for keyI in list(value.keys()):
+            if keyI.startswith('@'):
+              newKey = keyI[1:]
+              newKey = 'imported_'+newKey if newKey in ['id','type','branch'] else newKey
+              value[newKey] = value.pop(keyI)
       # print(f'Node becomes: {json.dumps(doc, indent=2)}')
       return doc, elnID, children, dataType
 
@@ -218,8 +225,11 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         try:
           docS[0][key] = [ [j for j in graph if j['@id']==i][0] for i in items]
         except Exception:
-          docS[0][key] = 'not resolvable connection'
-          logging.error('Could not replace %s -entries using ids: %s. Are all items once in the graph?', key, items, exc_info=True)
+          # Causes for exception
+          # - @id is a link to external IRI (http...). Hence it is not in the file
+          # - the graph is not fully flattend: @id is in a leaf of a node but not a separate note
+          docS[0][key] = value
+          logging.warning('Could not replace %s-entries using ids: %s', key, items)
       # convert to Pasta's style
       doc, elnID, children, dataType = json2pastaFunction(docS[0])
       if elnName == 'PASTA ELN' and elnID.startswith('http') and ':/' in elnID:
@@ -261,7 +271,10 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         for child in children:
           if child['@id'].endswith('/metadata.json') or child['@id'].endswith('_metadata.json'):#skip own metadata
             continue
-          addedDocs += processPart(child)
+          try:
+            addedDocs += processPart(child)
+          except Exception:
+            logging.error('Cannot process child %s', json.dumps(child,indent=2), exc_info=True)
         backend.changeHierarchy(None)
         childrenStack.pop()
       return addedDocs
@@ -271,7 +284,10 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
     #iteratively go through list
     addedDocuments = 0
     for part in mainNode['hasPart']:
-      addedDocuments += processPart(part)
+      try:
+        addedDocuments += processPart(part)
+      except Exception:
+        logging.error('Cannot process main part %s', json.dumps(part,indent=2), exc_info=True)
   #return to home stack and path
   backend.cwd = Path(backend.basePath)
   backend.hierStack = []

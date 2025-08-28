@@ -5,6 +5,7 @@
   "version": "0.2.0",
   "configurations": [
 
+
     {
       "name": "Start default",
       "type": "debugpy",
@@ -40,7 +41,7 @@
       "module": "pytest",
       "args": [
         "-s",
-        "tests/test_01_DefaultExample.py"
+        "tests/test_90_ImportOthers.py"
       ],
       "console": "integratedTerminal"
     }
