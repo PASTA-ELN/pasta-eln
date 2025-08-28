@@ -4,11 +4,13 @@ import hashlib
 import json
 import logging
 import shutil
+import sys
+import time
 import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from zipfile import ZIP_DEFLATED, ZipFile
+from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 import requests
 from anytree import Node
 from pasta_eln import __version__, minisign
@@ -303,6 +305,20 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
   with ZipFile(fileName, 'w', compression=ZIP_DEFLATED) as elnFile:
     graph: list[dict[str,Any]] = []
 
+    def mkDirectory(path:str) -> None:
+      """ create directory in zip file
+
+      Args:
+        path (str): path to create
+      """
+      if sys.version_info >= (3, 10):
+        elnFile.mkdir(path)
+      else:
+        dirInfo = ZipInfo(path if path.endswith('/') else f'{path}/')
+        dirInfo.date_time = time.localtime(time.time())[:6]
+        dirInfo.external_attr = 0o40775 << 16  # drwxrwxr-x
+        elnFile.writestr(dirInfo, "")
+
     def processNode(node:Node) -> str:
       """
       Recursive function to translate the hierarchical node into a tree-node
@@ -368,7 +384,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         elnFile.write(str(fullPath), f'{dirNameGlobal}/{path}')
         docELN['@type'] = 'File'
       elif path is not None and fullPath.exists() and fullPath.is_dir():
-        # elnFile.mkdir(docELN['@id'][:-1]) #NOT REQUIRED for standard and does not work in python 3.10
+        mkDirectory(docELN['@id'][:-1])
         docELN['@type'] = 'Dataset'
       elif path.startswith('http'):
         response = requests.get(path, timeout=10)
@@ -381,7 +397,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       elif '@type' not in docELN:                                                        #samples will be here
         docELN['@type'] = 'Dataset'
         docELN['@id'] = docELN['@id'] if docELN['@id'].endswith('/') else f"{docELN['@id']}/"
-        # elnFile.mkdir(docELN['@id'][:-1]) #NOT REQUIRED for standard and does not work in python 3.10
+        mkDirectory(docELN['@id'][:-1])
       # move docSupp into separate nodes
       variableMeasuredIDs = []
       for kObject, v in flatten(docSupp).items():
