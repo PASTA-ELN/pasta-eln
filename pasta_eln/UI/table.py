@@ -572,9 +572,9 @@ class Table(QWidget):
     if '*' in regexStr:
       regexStr = regexStr.replace('*','\u2605')
       if filterItem.inverse.isChecked():
-        regexStr = f'^((?!{regexStr}).)*$'
+        regexStr = f'((?!((?<!\u2605){regexStr}(?!\u2605))).)*'
       else:
-        regexStr = f'^{regexStr}$'
+        regexStr = f'(?<!\u2605){regexStr}(?!\u2605)'
     elif filterItem.inverse.isChecked():
       regexStr = f'^((?!{regexStr}).)*$'
     filterItem.model.setFilterRegularExpression(regexStr)
