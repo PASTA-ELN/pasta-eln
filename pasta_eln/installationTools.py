@@ -208,13 +208,13 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
 
   ### TEST PROCEDURES
   outputString(outputFormat,'h2','TEST WORKFLOWS')
-  sopDir = backend.basePath/'StandardOperatingProcedures'
+  sopDir = backend.basePath/'CommonFiles'
   os.makedirs(sopDir, exist_ok=True)
   with open(sopDir/'Example_SOP.md','w', encoding='utf-8') as fOut:
     fOut.write('# Put sample in instrument\n# Do something\nDo not forget to\n- not do anything wrong\n- **USE BOLD LETTERS**\n')
   if callbackPercent is not None:
     callbackPercent(13)
-  backend.addData('workflow/procedure', {'name': 'StandardOperatingProcedures/Example_SOP.md', 'tags':['v1']})
+  backend.addData('workflow/procedure', {'name': 'CommonFiles/Example_SOP.md', 'tags':['v1']})
   if callbackPercent is not None:
     callbackPercent(14)
   outputString(outputFormat,'info',backend.output('workflow'))

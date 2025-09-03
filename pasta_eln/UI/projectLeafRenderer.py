@@ -29,7 +29,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.penHighlight       = QPen(QColor(self.comm.palette.primary))
     self.penHighlight.setWidth(2)
     self.leafWidth          = -1
-    self.data:dict[str,Any] = {}
+    self.docs:dict[str,Any] = {}  # docID -> {'size':QSize, 'markdown':str, 'hidden':bool, 'index':QModelIndex}
 
 
   def paint(self, painter:QPainter, option:QStyleOptionViewItem, index:QModelIndex) -> None:    # type: ignore
@@ -43,11 +43,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       option (QStyleOptionViewItem): option incl. current coordinates
       index (QModelIndex): index
     """
-    name = index.data(Qt.ItemDataRole.DisplayRole)
     data = index.data(Qt.ItemDataRole.UserRole+1)
     if not data or data['hierStack'] is None or self.comm is None:
       return
     docID   = data['hierStack'].split('/')[-1]
+    name = self.docs.get(docID, {}).get('name','') or index.data(Qt.ItemDataRole.DisplayRole)
     painter.setPen(self.penDefault)
     x0, y0 = option.rect.topLeft().toTuple()                                      # type: ignore[attr-defined]
     widthContent = min(self.widthContent,  \
@@ -73,7 +73,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       painter.drawStaticText(x0, y0+y, staticText)
       painter.drawStaticText(x0+docTypeOffset, y0+y, QStaticText(docTypeText))
       return
-    hiddenText = '     \U0001F441' if self.data.get(docID, {}).get('hidden', False) else ''
+    hiddenText = '     \U0001F441' if self.docs.get(docID, {}).get('hidden', False) else ''
     staticText = QStaticText(f'<strong>{nameText} {hiddenText}</strong>')
     staticText.setTextWidth(docTypeOffset)
     painter.drawStaticText(x0, y0+y, staticText)
@@ -81,14 +81,14 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if self.debugMode:
       painter.drawStaticText(x0+700, y0+y, QStaticText(data['hierStack']))
     textDoc = QTextDocument()
-    textDoc.setMarkdown(self.data.get(docID, {}).get('markdown',''))
+    textDoc.setMarkdown(self.docs.get(docID, {}).get('markdown',''))
     painter.translate(QPoint(x0-3, y0+y+15))
     self.drawTextDocument(painter, textDoc, int(self.maxHeight-6*self.frameSize))
     painter.translate(-QPoint(x0-3, y0+y+15))
     # right side
-    if self.data.get(docID, {}).get('content','') and not self.data.get(docID, {}).get('image',''):
+    if self.docs.get(docID, {}).get('content','') and not self.docs.get(docID, {}).get('image',''):
       textDoc = QTextDocument()
-      textDoc.setMarkdown(self.data.get(docID, {}).get('content',''))
+      textDoc.setMarkdown(self.docs.get(docID, {}).get('content',''))
       textDoc.setTextWidth(widthContent)
       width:int = textDoc.size().toTuple()[0]                                                   # type: ignore
       topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)# type: ignore[attr-defined]
@@ -96,15 +96,15 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       self.drawTextDocument(painter, textDoc, int(self.maxHeight-3*self.frameSize))
       topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)# type: ignore[attr-defined]
       painter.translate(-topLeftContent)
-    if self.data.get(docID, {}).get('image',''):
-      if self.data.get(docID, {}).get('image','').startswith('data:image/'):
-        pixmap = self.imageFromDoc({'image':self.data.get(docID, {}).get('image','')})
+    if self.docs.get(docID, {}).get('image',''):
+      if self.docs.get(docID, {}).get('image','').startswith('data:image/'):
+        pixmap = self.imageFromDoc({'image':self.docs.get(docID, {}).get('image','')})
         width2nd = min(self.widthImage, pixmap.width()+self.frameSize)
         topLeft2nd     = option.rect.topRight()   - QPoint(width2nd+self.frameSize+1,-self.frameSize)# type: ignore[attr-defined]
         painter.drawPixmap(topLeft2nd, pixmap)
-      elif self.data.get(docID, {}).get('image','').startswith('<?xml'):
+      elif self.docs.get(docID, {}).get('image','').startswith('<?xml'):
         topLeft2nd     = option.rect.topRight()   - QPoint(self.widthImage+self.frameSize+1,-self.frameSize)# type: ignore[attr-defined]
-        image = QSvgRenderer(bytearray(self.data.get(docID, {}).get('image',''), encoding='utf-8'))
+        image = QSvgRenderer(bytearray(self.docs.get(docID, {}).get('image',''), encoding='utf-8'))
         image.render(painter,    QRectF(topLeft2nd, bottomRight2nd))
     return
 
@@ -121,12 +121,12 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if not index.data(Qt.ItemDataRole.UserRole+1)['gui'][0]:              # only show the headline, no details
       return QSize(400, self.lineSep*2)
     docID   = hierStack.split('/')[-1]
-    if docID not in self.data:
+    if docID not in self.docs:
       self.leafWidth = min(self.widthContent,
                            int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )# type: ignore[attr-defined]
-      self.data[docID] = {'size':QSize(400, 30), 'markdown':'', 'hidden':False, 'index':index}
+      self.docs[docID] = {'size':QSize(400, 30), 'markdown':'', 'hidden':False, 'index':index}
       self.comm.uiRequestDoc.emit(docID)
-    return self.data[docID].get('size', QSize(400,self.maxHeight))
+    return self.docs[docID].get('size', QSize(400,self.maxHeight))
 
 
   @Slot(str)
@@ -136,7 +136,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       doc (dict): document
     """
     guiStyle = self.comm.configuration['GUI']
-    if not doc or doc['id'] not in self.data:
+    if not doc or doc['id'] not in self.docs:
       return
     logging.debug('Renderer: onGetDoc %s %s %s', doc['id'], doc.get('type',[]), doc.get('hierStack',''))
     # ... after deleting project, its items cannot be found and it would give many false negatives
@@ -159,12 +159,13 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         heightRightSide = pixmap.height()+2*guiStyle['frameSize']
       else:
         heightRightSide = int(guiStyle['imageWidthProject']*3/4+2*guiStyle['frameSize'])
-    self.data[doc['id']]['size']    = QSize(400, min(max(heightDetails,heightRightSide), guiStyle['maxProjectLeafHeight']))
-    self.data[doc['id']]['hidden']  = any(b for b in doc['branch'] if False in b['show'])
-    self.data[doc['id']]['markdown']= markdownStr
-    self.data[doc['id']]['content'] = markdownEqualizer(doc['content']) if 'content' in doc else ''
-    self.data[doc['id']]['image']   = doc.get('image','')
-    self.sizeHintChanged.emit(self.data[doc['id']]['index'])
+    self.docs[doc['id']]['size']    = QSize(400, min(max(heightDetails,heightRightSide), guiStyle['maxProjectLeafHeight']))
+    self.docs[doc['id']]['hidden']  = any(b for b in doc['branch'] if False in b['show'])
+    self.docs[doc['id']]['markdown']= markdownStr
+    self.docs[doc['id']]['name']    = doc['name']
+    self.docs[doc['id']]['content'] = markdownEqualizer(doc['content']) if 'content' in doc else ''
+    self.docs[doc['id']]['image']   = doc.get('image','')
+    self.sizeHintChanged.emit(self.docs[doc['id']]['index'])
 
 
   def drawTextDocument(self, painter:QPainter, textDoc:QTextDocument, yMax:int) -> None:
