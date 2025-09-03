@@ -191,7 +191,7 @@ class BackendWorker(QObject):
       # update the path, if the project changed
       if data['newProjID'] and 'branch' in data['doc']:
         parentPath = self.backend.db.getDoc(data['newProjID'][0])['branch'][0]['path']
-        if data['doc']['branch'][0]['stack']!=data['newProjID'][0]:                   #only if project changed
+        if data['doc']['branch'][0]['stack'][0]!=data['newProjID'][0]:                   #only if project changed
           if data['doc']['branch'][0]['path'] is None:
             newPath    = ''
           else:
