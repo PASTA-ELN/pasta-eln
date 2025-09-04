@@ -3,8 +3,7 @@ from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.UI.project import Project
 from .test_34_GUI_Form import getTable
 
-import logging, warnings, os, shutil, tempfile
-from pathlib import Path
+import logging, os, shutil, tempfile
 from urllib import request
 from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.backendWorker.worker import Task
@@ -12,7 +11,7 @@ from pasta_eln.backendWorker.inputOutput import importELN
 from pasta_eln.miscTools import getConfiguration
 
 
-def test_simple(qtbot):
+def test_simple(qtbot, caplog):
 
   # remove old data
   configuration, _ = getConfiguration('research')
@@ -34,7 +33,8 @@ def test_simple(qtbot):
 
   # location of data and temp
   tempDir = tempfile.gettempdir()
-  allELNs = {'Pasta.eln'          :'PASTA/PASTA.eln',
+  allELNs = {'PASTA_ELN.eln'      : '', #no download, created by test_11_Export.py
+             'Pasta.eln'          :'PASTA/PASTA.eln',
              'elabFTW.eln'        :'elabftw/export.eln',
              'SampleDB.eln'       :'SampleDB/sampledb_export.eln',
              'kadi4mat_1.eln'     :'kadi4mat/collections-example.eln',
@@ -43,10 +43,10 @@ def test_simple(qtbot):
             }
   urlBase = 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/refs/heads/master/examples/'
 
-
-  for eln, pathName in allELNs.items():
+  for eln, urlSubPath in allELNs.items():
     elnFileName = f'{tempDir}/{eln}'
-    request.urlretrieve(f'{urlBase}{pathName}', elnFileName)
+    if urlSubPath:
+      request.urlretrieve(f'{urlBase}{urlSubPath}', elnFileName)
     print(f'\n\n{"="*30}\nStart with {eln} on {elnFileName}')
     projName = f'{eln[:-4]} Import'
     comm.uiRequestTask.emit(Task.ADD_DOC, {'docType':'x0', 'doc':{'name':projName}, 'hierStack':[]})
@@ -61,7 +61,12 @@ def test_simple(qtbot):
     path = qtbot.screenshot(window)
     print(path)
 
+
+
   comm.shutdownBackendThread()
+
+  errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
+  assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"
 
 
 

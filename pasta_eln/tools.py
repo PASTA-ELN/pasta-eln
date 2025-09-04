@@ -324,7 +324,7 @@ class Tools:
     if not path:
       path = input('Enter path to data: ').strip()
     for aPath, _, files in os.walk(path):
-      if aPath == path or 'StandardOperatingProcedures' in aPath:
+      if aPath == path or 'CommonFiles' in aPath:
         continue
       if '.id_pastaELN.json' not in files:
         print('**ERROR** id file does NOT exist:', aPath,'\n   ',' '.join(files))

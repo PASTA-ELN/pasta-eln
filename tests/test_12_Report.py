@@ -32,6 +32,14 @@ class TestStringMethods(unittest.TestCase):
       logging.getLogger(package).setLevel(logging.WARNING)
     logging.info('Start test')
 
+    log_records = []
+    class ErrorHandler(logging.Handler):
+      def emit(self, record):
+        if record.levelno >= logging.ERROR:
+          log_records.append(record)
+    handler = ErrorHandler()
+    logging.getLogger().addHandler(handler)
+
     # create .eln
     configuration, _ = getConfiguration('research')
     self.be = Backend(configuration, 'research')
@@ -41,6 +49,8 @@ class TestStringMethods(unittest.TestCase):
     print(f'Filename {fileName}')
     main(self.be, projID, None, {'fileNames':[fileName]})
 
+    logging.getLogger().removeHandler(handler)
+    self.assertEqual(len(log_records), 0, f"Logging errors found: {[r.getMessage() for r in log_records]}")
     # test file
     # try:
     #   os.system(f'google-chrome {fileName}')

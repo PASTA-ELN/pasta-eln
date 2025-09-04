@@ -36,12 +36,20 @@ class TestStringMethods(unittest.TestCase):
       logging.getLogger(package).setLevel(logging.WARNING)
     logging.info('Start test')
 
+    log_records = []
+    class ErrorHandler(logging.Handler):
+      def emit(self, record):
+        if record.levelno >= logging.ERROR:
+          log_records.append(record)
+    handler = ErrorHandler()
+    logging.getLogger().addHandler(handler)
+
     # create .
     configuration, _ = getConfiguration('research')
     self.be = Backend(configuration, 'research')
     projID = self.be.output('x0').split('|')[-2].strip()
     tempDir = tempfile.gettempdir()
-    fileName = f'{tempDir}/PASTA.eln'
+    fileName = f'{tempDir}/PASTA_ELN.eln'
     allDocTypes = self.be.db.dataHierarchy('','')+['-']
     print(f'Filename {fileName}: docTypes: {", ".join(allDocTypes)}')
     exportELN(self.be, [projID], fileName, allDocTypes)
@@ -63,10 +71,12 @@ Data on disk:
 │       ├── simple.csv
 │       ├── simple.png
 │       └── story.odt
-└── StandardOperatingProcedures
+└── CommonFiles
     └── Example_SOP.md
 """)
 
+    logging.getLogger().removeHandler(handler)
+    self.assertEqual(len(log_records), 0, f"Logging errors found: {[r.getMessage() for r in log_records]}")
     # try:
     #   os.system(f'code {tempDir}/PASTA/ro-crate-metadata.json')
     # except Exception:

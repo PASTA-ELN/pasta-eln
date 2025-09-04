@@ -1,7 +1,8 @@
+import logging
 from pasta_eln.UI.mainWindow import MainWindow
 from pasta_eln.UI.guiCommunicate import Communicate
 
-def test_simple(qtbot):
+def test_simple(qtbot, caplog):
 
   comm = Communicate('research')
   window = MainWindow(comm)
@@ -24,3 +25,6 @@ def test_simple(qtbot):
   # saved in
   #   /tmp/pytest-of-steffen/pytest-0/test_simple0/
   #   /tmp/pytest-of-runner/pytest-0/test_simple0/screenshot_MainWindow.png
+
+  errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
+  assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"

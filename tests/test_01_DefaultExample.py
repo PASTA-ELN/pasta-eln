@@ -33,6 +33,14 @@ class TestStringMethods(unittest.TestCase):
       logging.getLogger(package).setLevel(logging.WARNING)
     logging.info('Start 01 test')
 
+    log_records = []
+    class ErrorHandler(logging.Handler):
+      def emit(self, record):
+        if record.levelno >= logging.ERROR:
+          log_records.append(record)
+    handler = ErrorHandler()
+    logging.getLogger().addHandler(handler)
+
     configuration, _ = getConfiguration('research')
     exampleData(True, None, 'research', '')
     self.be = Backend(configuration, 'research')
@@ -93,6 +101,9 @@ class TestStringMethods(unittest.TestCase):
     output = '\n'.join(output.split('\n')[8:])
     self.assertNotIn('**ERROR', output, 'Error in checkDB')
     self.assertEqual(len(output.split('\n')), 8, 'Check db should have 8 more-less empty lines')
+
+    logging.getLogger().removeHandler(handler)
+    self.assertEqual(len(log_records), 0, f"Logging errors found: {[r.getMessage() for r in log_records]}")
     return
 
 

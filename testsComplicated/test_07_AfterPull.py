@@ -8,7 +8,7 @@ from pasta_eln.miscTools import getConfiguration
 from .misc import verify, handleReport
 
 
-def test_simple(qtbot):
+def test_simple(qtbot, caplog):
   """
   main function
   """
@@ -52,4 +52,5 @@ def test_simple(qtbot):
 
   # verify
   verify(backend)
-  return
+  errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
+  assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"

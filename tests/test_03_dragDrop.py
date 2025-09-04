@@ -9,7 +9,7 @@ from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.backendWorker.worker import Task
 
 
-def test_simple(qtbot):
+def test_simple(qtbot, caplog):
   """
   main function
   """
@@ -70,6 +70,9 @@ def test_simple(qtbot):
   # close everything
   print(f'{"*"*40}\nEND TEST 03\n{"*"*40}')
   comm.shutdownBackendThread()
+
+  errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
+  assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"
   return
 
 

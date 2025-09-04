@@ -32,6 +32,14 @@ class TestStringMethods(unittest.TestCase):
     for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
       logging.getLogger(package).setLevel(logging.WARNING)
 
+    log_records = []
+    class ErrorHandler(logging.Handler):
+      def emit(self, record):
+        if record.levelno >= logging.ERROR:
+          log_records.append(record)
+    handler = ErrorHandler()
+    logging.getLogger().addHandler(handler)
+
     # setup and sync to server
     configuration, _ = getConfiguration('research')
     self.be = Backend(configuration, 'research')
@@ -47,6 +55,8 @@ class TestStringMethods(unittest.TestCase):
 
     # verify
     verify(self.be)
+    logging.getLogger().removeHandler(handler)
+    self.assertEqual(len(log_records), 0, f"Logging errors found: {[r.getMessage() for r in log_records]}")
     return
 
   def tearDown(self):

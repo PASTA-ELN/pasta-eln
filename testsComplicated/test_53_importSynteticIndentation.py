@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create 3 projects; simplified form of testTutorialComplex """
-import os, shutil
+import os, shutil, logging
 import warnings
 import unittest
 import re
@@ -30,6 +30,14 @@ class TestStringMethods(unittest.TestCase):
     warnings.filterwarnings('ignore', message='invalid escape sequence')
     warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
     warnings.filterwarnings('ignore', category=ImportWarning)
+
+    log_records = []
+    class ErrorHandler(logging.Handler):
+      def emit(self, record):
+        if record.levelno >= logging.ERROR:
+          log_records.append(record)
+    handler = ErrorHandler()
+    logging.getLogger().addHandler(handler)
 
     projectGroup = 'research'
     configuration, _ = getConfiguration(projectGroup)
@@ -88,3 +96,7 @@ class TestStringMethods(unittest.TestCase):
     doc = self.be.db.getDoc(docID)
     del doc['image']
     print(doc)
+
+    logging.getLogger().removeHandler(handler)
+    self.assertEqual(len(log_records), 0, f"Logging errors found: {[r.getMessage() for r in log_records]}")
+

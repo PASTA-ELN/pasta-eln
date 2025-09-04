@@ -35,6 +35,14 @@ class TestStringMethods(unittest.TestCase):
       logging.getLogger(package).setLevel(logging.WARNING)
     logging.info('Start test')
 
+    log_records = []
+    class ErrorHandler(logging.Handler):
+      def emit(self, record):
+        if record.levelno >= logging.ERROR:
+          log_records.append(record)
+    handler = ErrorHandler()
+    logging.getLogger().addHandler(handler)
+
     # create .eln
     configuration, _ = getConfiguration('research')
     self.be = Backend(configuration, 'research')
@@ -55,6 +63,9 @@ class TestStringMethods(unittest.TestCase):
     self.assertIn('sample B | sample', output, 'Sample B incorrect')
     self.assertIn('sample C | sample', output, 'Sample C incorrect')
     print(f'{"*"*40}\nEND TEST 02 \n{"*"*40}')
+
+    logging.getLogger().removeHandler(handler)
+    self.assertEqual(len(log_records), 0, f"Logging errors found: {[r.getMessage() for r in log_records]}")
     return
 
 

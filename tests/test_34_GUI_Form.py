@@ -1,3 +1,4 @@
+import logging
 from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.UI.form import Form
 
@@ -13,7 +14,7 @@ def getTable(qtbot, comm, docType):
   return table
 
 
-def test_simple(qtbot):
+def test_simple(qtbot, caplog):
 
   comm = Communicate('research')
   while comm.backendThread.worker.backend is None:
@@ -32,5 +33,7 @@ def test_simple(qtbot):
   qtbot.wait(1000)
   path = qtbot.screenshot(dialog)
   print(path)
-
   comm.shutdownBackendThread()
+
+  errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
+  assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"

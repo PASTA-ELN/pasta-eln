@@ -424,7 +424,7 @@ class Form(QDialog):
               self.docTypeComboBox.addItem(value1['title'], userData=key1)
           self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
           formL.addRow(QLabel('Data type'), self.docTypeComboBox)
-    if [i for i in self.doc if i.startswith('_')]:
+    if [i for i in self.doc if i.startswith('_') and i not in ['_projectID']]:
       logging.error('There should not be "_" in a doc: %s', str(self.doc), exc_info=True)
 
 

@@ -12,7 +12,7 @@ from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.UI.palette import Palette
 from .test_03_dragDrop import verify
 
-def test_simple(qtbot):
+def test_simple(qtbot, caplog):
   """
   main function
   """
@@ -48,7 +48,7 @@ def test_simple(qtbot):
   projID = df[df['name']=='A testing project']['id'].values[0]
   doc = {'comment':'# PASTA-ELN | The favorite ELN for experimental scientists\n - This is an example .eln output for sharing between different ELNs.',
          'id': projID}
-  comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':doc})
+  comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':doc, 'newProjID':''})
 
   # test scanning
   qtbot.wait(1000)  # wait for backend to finish
@@ -76,4 +76,7 @@ def test_simple(qtbot):
   verify(comm, projID, 0)
   print(f'{"*"*40}\nEND TEST 10\n{"*"*40}')
   comm.shutdownBackendThread()
+
+  errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
+  assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"
   return

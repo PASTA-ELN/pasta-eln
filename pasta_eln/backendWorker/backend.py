@@ -717,16 +717,17 @@ class Backend(CLI_Mixin):
               self.db.cursor.execute(f"UPDATE branches SET path='*' WHERE id == '{res[0][3]}' and path == '{orphan}'")
               self.db.connection.commit()
     # identify trash_ files and trash_folders
-    numTrash = sum(len([i for i in dirs + files if i.startswith('trash_')])
-                   for _, dirs, files in os.walk(self.basePath))
-    if numTrash>0:
-      output += outputString(outputStyle,'warning',f'There are {numTrash} trash_files and trash_folders')
     projLevelFolders = os.listdir(self.basePath)
     self.db.cursor.execute("SELECT branches.path FROM main JOIN branches USING(id) WHERE type=='x0'")
     projFolders = self.db.cursor.fetchall()
     if nonUsedFolders := set(projLevelFolders).difference([i[0] for i in projFolders]+['pastaELN.db']):
-      output += outputString(outputStyle,'warning','These files/folders in data folder are not used for projects:'\
+      output += outputString(outputStyle,'warning','These files/folders in data folder are not used for projects:'+
                             '\n  - '.join(['']+list(nonUsedFolders)) )
+    for projFolder in projFolders:
+      numTrash = sum(len([i for i in dirs + files if i.startswith('trash_')])
+                     for _, dirs, files in os.walk(self.basePath/projFolder[0]))
+    if numTrash>0:
+      output += outputString(outputStyle,'warning',f'There are {numTrash} trash_files and trash_folders')
     # final summary
     if not minimal:
       output += outputString(outputStyle,'h2','File summary')
