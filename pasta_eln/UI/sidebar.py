@@ -6,7 +6,7 @@ import pandas as pd
 from anytree import Node
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QResizeEvent
-from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QLabel, QTreeWidgetItem, QVBoxLayout, QWidget
 from ..backendWorker.worker import Task
 from .guiCommunicate import Communicate
 from .guiStyle import IconButton, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
@@ -18,7 +18,7 @@ class Sidebar(QWidget):
     super().__init__()
     self.comm = comm
     self.comm.changeSidebar.connect(self.paint)
-    self.comm.backendThread.worker.beSendProjects.connect(self.onGetData)
+    self.comm.backendThread.worker.beSendTable.connect(self.onGetData)
     self.projects = pd.DataFrame()
     self.sideBarWidth = self.comm.configuration['GUI']['sidebarWidth']
 
@@ -39,19 +39,20 @@ class Sidebar(QWidget):
     self.btnScan:TextButton|None         = None
     self.btnDocTypes:list[IconButton]    = []                         # list of buttons to show docType tables
     self.btnUnknown:IconButton|None      = None
-    self.paint()
+    self.comm.uiRequestTable.emit('x0', '', True)
 
 
-  @Slot(pd.DataFrame)
-  def onGetData(self, projects:pd.DataFrame) -> None:
+  @Slot(pd.DataFrame, str)
+  def onGetData(self, projects:pd.DataFrame, docType:str) -> None:
     """
     Callback function to handle the received projects data
 
     Args:
       projects (pd.DataFrame): DataFrame containing project information
     """
-    self.projects = projects
-    self.paint('redraw')
+    if docType == 'x0':
+      self.projects = projects
+      self.paint('redraw')
 
 
   @Slot(str)
@@ -72,6 +73,7 @@ class Sidebar(QWidget):
     self.widgetsProject = {}                                #title bar and widget that contains all of project
     # fill sidebar
     if self.projects.empty:
+      self.projectsListL.addWidget(QLabel('Error: projects not received'))
       return
     if 'status' in self.projects.columns and len(self.projects)>5:
       temp = self.projects[self.projects['status']=='active']

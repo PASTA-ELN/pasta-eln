@@ -64,7 +64,6 @@ class BackendWorker(QObject):
   beSendDocTypes          = Signal(dict)           # Send processed data back
   beSendDataHierarchyNode = Signal(str,list)       # Send data hierarchy nodes
   beSendDataHierarchyAll  = Signal(list)           # Send all entries for this docType
-  beSendProjects          = Signal(pd.DataFrame)
   beSendTable             = Signal(pd.DataFrame, str)   # all tables
   beSendHierarchy         = Signal(Node, dict)
   beSendDoc               = Signal(dict)
@@ -92,7 +91,6 @@ class BackendWorker(QObject):
       docTypesTitlesIcons[k]['shortcut'] = v
     time.sleep(waitTimeBeforeSendingFirstMessage)
     self.beSendDocTypes.emit(docTypesTitlesIcons)
-    self.beSendProjects.emit(self.backend.db.getView('viewDocType/x0'))
     for docType in docTypesTitlesIcons:
       self.beSendDataHierarchyNode.emit(docType, self.backend.db.dataHierarchy(docType, 'meta'))
 
@@ -184,7 +182,7 @@ class BackendWorker(QObject):
       self.backend.addData(data['docType'], data['doc'], data['hierStack'])
       self.beSendDoc.emit(data['doc'])                                          # send updated doc back to GUI
       if data['docType']=='x0':
-        self.beSendProjects.emit(self.backend.db.getView('viewDocType/x0'))
+        self.beSendTable.emit(self.backend.db.getView('viewDocType/x0'))
 
 
     elif task is Task.EDIT_DOC      and set(data.keys())=={'doc','newProjID'}:
@@ -308,7 +306,7 @@ class BackendWorker(QObject):
         self.backend.db.remove(docID)
       # finish it
       if doc['type'][0]=='x0':
-        self.beSendProjects.emit(self.backend.db.getView('viewDocType/x0'))
+        self.beSendTable.emit(self.backend.db.getView('viewDocType/x0'))
 
     elif task is Task.EXPORT_ELN and set(data.keys())=={'fileName','projID','docTypes'}:
       report = exportELN(self.backend, [data['projID']], data['fileName'], data['docTypes'])
