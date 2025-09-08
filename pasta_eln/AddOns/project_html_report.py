@@ -16,14 +16,14 @@ import base64
 import re
 from io import BytesIO
 from pathlib import Path
-from anytree import Node, PreOrderIter
+from anytree import PreOrderIter
 from PIL import Image
-from PySide6.QtCore import Slot
 from PySide6.QtGui import QTextDocument  # This is used for html-markdown conversion: works fine here
 from PySide6.QtWidgets import QFileDialog
 import pasta_eln
 from pasta_eln.Resources import Icons as icons
 from pasta_eln.textTools.stringChanges import markdownEqualizer
+from pasta_eln.miscTools import getHierarchy, getDoc
 
 # The following two variables are mandatory
 description  = 'Create html report'  #short description that is shown in the menu
@@ -38,10 +38,10 @@ HTML_HEADER = '<!DOCTYPE html>\n<html>\n<head>\n<style>'\
     '</style>\n</head>\n<body>\n'
 HTML_FOOTER = '</body>\n</html>\n'
 
-def main(backend, hierStack, widget, parameter={}):
+def main(comm, hierStack, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        backend (backend): backend
+        comm (Communicate): communicate-backend
         hierStack (list): node in hierarchy to start the creation
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters
@@ -56,7 +56,7 @@ def main(backend, hierStack, widget, parameter={}):
             return False
     else:
         res = parameter['fileNames']
-    hierarchy, _ = backend.db.getHierarchy(hierStack.split('/')[0])
+    hierarchy, _ = getHierarchy(comm, hierStack.split('/')[0])
     qtDocument = QTextDocument()   #used for markdown -> html conversion
 
     # function to handle each data entry
@@ -74,7 +74,7 @@ def main(backend, hierStack, widget, parameter={}):
         hidden = not all(node.gui)        # is this node hidden?
         if hidden:
             return ''
-        doc = backend.db.getDoc(node.id)  # GET ALL INFORMATION OF THIS NODE
+        doc = getDoc(comm, node.id)  # GET ALL INFORMATION OF THIS NODE
         output = '<div class="node">\n'
         # headline of each node: either as html headline or normal text, incl. the objective
         if node.depth<4 and node.docType[0][0]=='x':

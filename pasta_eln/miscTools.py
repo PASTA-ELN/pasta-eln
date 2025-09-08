@@ -7,6 +7,7 @@ import platform
 import socket
 import subprocess
 import sys
+import time
 import tempfile
 from collections.abc import Mapping
 from pathlib import Path
@@ -16,6 +17,8 @@ import pandas as pd
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from packaging.version import parse as parse_version
+from anytree import Node
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QWidget
 import pasta_eln
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
@@ -224,6 +227,56 @@ def callDataExtractor(filePath:Path, backend:Any) -> Any:
   return None
 
 
+def getHierarchy(comm, docID:str, showAll:bool=True) -> tuple[Node, dict[str, Any]]:
+  """ Helper for add-ons: get hierarchy of a project from backend
+  Args:
+    comm (Communicate): communicate-backend
+    docID (str): project ID
+    showAll (bool): show all nodes, even hidden ones
+
+  Returns:
+    tuple: (hierarchy as anytree, project document as dict)
+  """
+  hierarchy = None
+  projDoc   = None
+  @Slot(Node, dict)
+  def receiveData(h:Node, doc:dict[str,Any]) -> None:
+    nonlocal hierarchy
+    hierarchy = h
+    nonlocal projDoc
+    projDoc   = doc
+  comm.backendThread.worker.beSendHierarchy.connect(receiveData)
+  comm.uiRequestHierarchy.emit(docID, showAll)
+  while hierarchy is None:
+    time.sleep(0.1)
+  return hierarchy, projDoc
+
+
+def getDoc(comm, docID:str) -> dict[str, Any]:
+  """ Helper for add-ons: get document from backend
+  Args:
+    comm (Communicate): communicate-backend
+    docID (str): document ID
+
+  Returns:
+    dict: document as dict
+  """
+  doc = None
+  @Slot(dict)
+  def receiveData(iDoc:dict[str,Any]):
+    """ Slot to receive data
+    Args:
+      iDoc (dict): document
+    """
+    nonlocal doc
+    doc = iDoc
+  comm.backendThread.worker.beSendDoc.connect(receiveData)
+  comm.uiRequestDoc.emit(docID)
+  while doc is None:
+    time.sleep(0.1)
+  return doc
+
+
 def isFloat(val:str) -> bool:
   """Check if a value can be converted to float
   Args:
@@ -270,25 +323,6 @@ class MplCanvas(FigureCanvas):
     self.axes   = self.figure.add_subplot(111)
     super().__init__(self.figure)
 
-
-class DummyProgressBar():
-  """ Class representing a progressbar that does not do anything
-  - needed for pytest
-  """
-  def setValue(self, value:int) -> int:
-    """
-    Set value
-
-    Args:
-      value (int): value to be set
-    """
-    return value
-  def show(self) -> None:
-    """ show progress bar """
-    return
-  def hide(self) -> None:
-    """ hide progress bar """
-    return
 
 def getConfiguration(defaultProjectGroup:str='') -> tuple[dict[str, Any],str]:
   """ Get configuration from home directory
