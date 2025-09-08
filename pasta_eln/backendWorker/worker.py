@@ -129,7 +129,7 @@ class BackendWorker(QObject):
       projID (str): Project ID to get the hierarchy for
       showAll (bool): Whether to return all items or only the non-hidden ones
     """
-    if self.backend is not None:
+    if self.backend is not None and projID:#TODO: during test_13 for some reason the projID is empty, not sure why
       hierarchy, error = self.backend.db.getHierarchy(projID, allItems=showAll)
       if error:
         hierarchy = Node('__ERROR_in_getHierarchy__')

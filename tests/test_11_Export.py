@@ -47,7 +47,9 @@ class TestStringMethods(unittest.TestCase):
     # create .
     configuration, _ = getConfiguration('research')
     self.be = Backend(configuration, 'research')
-    projID = self.be.output('x0').split('|')[-2].strip()
+    projID = self.be.output('x0').split('\n')
+    projID = [x for x in projID if 'PASTAs Example Project' in x]
+    projID = projID[0].split('|')[-2].strip()
     tempDir = tempfile.gettempdir()
     fileName = f'{tempDir}/PASTA_ELN.eln'
     allDocTypes = self.be.db.dataHierarchy('','')+['-']
