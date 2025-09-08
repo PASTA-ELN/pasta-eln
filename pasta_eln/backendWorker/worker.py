@@ -206,7 +206,7 @@ class BackendWorker(QObject):
       self.beSendDoc.emit(self.backend.db.getDoc(data['doc']['id']))            # send updated doc back to GUI
 
     elif task is Task.MOVE_LEAVES and set(data.keys())=={'docID','stackOld','stackNew','childOld','childNew'}:
-      verbose = True                                                                  # Convenient for testing
+      verbose = False                                                                 # Convenient for testing
       doc      = self.backend.db.getDoc(data['docID'])
       branchOldList= [i for i in doc['branch'] if i['stack']==data['stackOld']]
       if len(branchOldList)!=1:
