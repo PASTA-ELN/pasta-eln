@@ -49,6 +49,7 @@ class Sidebar(QWidget):
 
     Args:
       projects (pd.DataFrame): DataFrame containing project information
+      docType (str): document type (should be 'x0' for projects for the sidebar)
     """
     if docType == 'x0':
       self.projects = projects

@@ -334,8 +334,8 @@ def getArtifacts() -> None:
 
 if __name__=='__main__':
   #run tests and create default files
-  success = runTests()
-  if not success:
+  successTests = runTests()
+  if not successTests:
     sys.exit(1)
   createContributors()
   runSourceVerification()

@@ -182,7 +182,7 @@ class BackendWorker(QObject):
       self.backend.addData(data['docType'], data['doc'], data['hierStack'])
       self.beSendDoc.emit(data['doc'])                                          # send updated doc back to GUI
       if data['docType']=='x0':
-        self.beSendTable.emit(self.backend.db.getView('viewDocType/x0'))
+        self.beSendTable.emit(self.backend.db.getView('viewDocType/x0'), 'x0')
 
 
     elif task is Task.EDIT_DOC      and set(data.keys())=={'doc','newProjID'}:
@@ -306,7 +306,7 @@ class BackendWorker(QObject):
         self.backend.db.remove(docID)
       # finish it
       if doc['type'][0]=='x0':
-        self.beSendTable.emit(self.backend.db.getView('viewDocType/x0'))
+        self.beSendTable.emit(self.backend.db.getView('viewDocType/x0'), 'x0')
 
     elif task is Task.EXPORT_ELN and set(data.keys())=={'fileName','projID','docTypes'}:
       report = exportELN(self.backend, [data['projID']], data['fileName'], data['docTypes'])

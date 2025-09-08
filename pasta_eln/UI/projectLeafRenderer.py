@@ -29,7 +29,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.penHighlight       = QPen(QColor(self.comm.palette.primary))
     self.penHighlight.setWidth(2)
     self.leafWidth          = -1
-    self.docs:dict[str,Any] = {}  # docID -> {'size':QSize, 'markdown':str, 'hidden':bool, 'index':QModelIndex}
+    self.docs:dict[str,Any] = {}   # docID: {'size':QSize, 'markdown':str, 'hidden':bool, 'index':QModelIndex}
 
 
   def paint(self, painter:QPainter, option:QStyleOptionViewItem, index:QModelIndex) -> None:    # type: ignore
