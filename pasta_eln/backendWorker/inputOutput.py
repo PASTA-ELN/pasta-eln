@@ -77,10 +77,13 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
   statistics:dict[str,Any] = {}
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     files = elnFile.namelist()
+    if len(set(Path(i).parts[0] for i in files)) != 1:
+      logging.error('eln file has multiple top-level directories, cannot process')
+      return 'ERROR: eln file has multiple top-level directories, cannot process',{}
     dirName=Path(files[0]).parts[0]
     statistics['num. files'] = len([i for i in files if Path(i).parent!=Path(dirName)])
     if f'{dirName}/ro-crate-metadata.json' not in files:
-      logging.error('ro-crate does not exist in folder. EXIT', exc_info=True)
+      logging.error('ro-crate does not exist in folder. EXIT')
       return 'ERROR: ro-crate does not exist in folder. EXIT',{}
     graph = json.loads(elnFile.read(f'{dirName}/ro-crate-metadata.json'))['@graph']
     listAllTypes = [i['@type'] for i in graph if isinstance(i['@type'],str)]
@@ -236,7 +239,9 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         fullPath = None
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
-      if fullPath is not None and f'{dirName}/{elnID}' in elnFile.namelist():        #Copy file onto hard disk
+      # Copy file onto hard disk
+      if fullPath is not None and f'{dirName}/{elnID}' in elnFile.namelist() and \
+          not [i for i in elnFile.infolist() if f'{dirName}/{elnID}'==i.filename][0].is_dir():#prevent folders
         target = open(fullPath, 'wb')
         source = elnFile.open(f'{dirName}/{elnID}')
         with source, target:                                          #extract one file to its target directly
@@ -327,10 +332,14 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       Args:
         path (str): path to create
       """
-      if sys.version_info >= (3, 10):
-        elnFile.mkdir(path)
+      if path.startswith('./'):
+        fullPath = f'{dirNameGlobal}/{path[2:]}'
       else:
-        dirInfo = ZipInfo(path if path.endswith('/') else f'{path}/')
+        fullPath = f'{dirNameGlobal}/{path}'
+      if sys.version_info >= (3, 10):
+        elnFile.mkdir(fullPath)
+      else:
+        dirInfo = ZipInfo(fullPath if fullPath.endswith('/') else f'{fullPath}/')
         dirInfo.date_time = time.localtime(time.time())[:6]
         dirInfo.external_attr = 0o40775 << 16                                                     # drwxrwxr-x
         elnFile.writestr(dirInfo, '')
