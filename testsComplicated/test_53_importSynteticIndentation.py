@@ -99,4 +99,3 @@ class TestStringMethods(unittest.TestCase):
 
     logging.getLogger().removeHandler(handler)
     self.assertEqual(len(log_records), 0, f"Logging errors found: {[r.getMessage() for r in log_records]}")
-

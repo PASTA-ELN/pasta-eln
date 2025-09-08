@@ -333,7 +333,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         dirInfo = ZipInfo(path if path.endswith('/') else f'{path}/')
         dirInfo.date_time = time.localtime(time.time())[:6]
         dirInfo.external_attr = 0o40775 << 16  # drwxrwxr-x
-        elnFile.writestr(dirInfo, "")
+        elnFile.writestr(dirInfo, '')
 
     def processNode(node:Node) -> str:
       """

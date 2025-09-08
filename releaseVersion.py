@@ -157,11 +157,14 @@ def createRequirementsFile() -> None:
   return
 
 
-def runTests() -> None:
+def runTests() -> bool:
   """
   run unit-tests: can only work if all add-ons and dependencies are fulfilled
 
   Cannot be an action, since dependencies are partly private
+
+  Returns:
+    bool: True if all tests passed
   """
   print('Start running tests')
   tests = [i for i in os.listdir('tests') if i.endswith('.py') and i.startswith('test_')]
@@ -182,6 +185,7 @@ def runTests() -> None:
       print(f"  FAILED: Python unit test {fileI}")
       print(f"    run: 'pytest -s tests/{fileI}' and check logFile")
       print(f"\n---------------------------\n{result.stdout.decode('utf-8')}\n---------------------------\n")
+      return False
   print('Start running complicated tests')
   tests = [i for i in os.listdir('testsComplicated') if i.endswith('.py') and i.startswith('test_')]
   for fileI in sorted(tests):
@@ -199,7 +203,8 @@ def runTests() -> None:
       print(f"  FAILED: Python unit test {fileI}")
       print(f"    run: 'pytest -s testsComplicated/{fileI}' and check logFile")
       print(f"\n---------------------------\n{result.stdout.decode('utf-8')}\n---------------------------\n")
-  return
+      return False
+  return True
 
 
 def copyAddOns() -> None:
@@ -329,7 +334,9 @@ def getArtifacts() -> None:
 
 if __name__=='__main__':
   #run tests and create default files
-  runTests()
+  success = runTests()
+  if not success:
+    sys.exit(1)
   createContributors()
   runSourceVerification()
   createRequirementsFile()
