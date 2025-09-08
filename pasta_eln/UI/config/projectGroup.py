@@ -12,7 +12,7 @@ import requests
 from PIL.ImageQt import ImageQt
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator, Qt
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QLabel, QLineEdit, QMessageBox,
-                               QTextEdit, QVBoxLayout)
+                               QSpacerItem, QSizePolicy, QTextEdit, QVBoxLayout)
 from ...backendWorker.elabFTWapi import ElabFTWApi
 from ...fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
@@ -71,29 +71,40 @@ class ProjectGroup(QDialog):
     self.row2Button = IconButton('fa5.edit',   self, [Command.CHANGE_ADDON], tooltip='Edit add-on path')
     self.formL.addWidget(self.row2Button, 2, 3)
 
-    self.formL.addWidget(QLabel('Server address:'), 3, 0)
+    self.formL.addItem(QSpacerItem(0, 5, QSizePolicy.Minimum, QSizePolicy.Fixed), 3, 0, 1, self.formL.columnCount())
+    self.formL.addWidget(QLabel('Central elabFTW server'), 4, 0)
+
+    self.formL.addWidget(QLabel('\tServer address:'),      5, 0)
     self.serverLabel = QLineEdit('server')
     self.serverLabel.setPlaceholderText('Enter server address')
-    self.formL.addWidget(self.serverLabel, 3, 1)
+    self.formL.addWidget(self.serverLabel,                 5, 1)
     self.row3Button = TextButton('Verify',   self, [Command.TEST_SERVER], tooltip='Check server')
-    self.formL.addWidget(self.row3Button, 3, 3)
+    self.formL.addWidget(self.row3Button,                  5, 3)
 
-    self.formL.addWidget(QLabel('API-key:'), 4, 0)
+    self.formL.addWidget(QLabel('\tAPI-key:'),             6, 0)
     self.apiKeyLabel = QTextEdit()
     self.apiKeyLabel.setPlaceholderText('Enter API key')
     self.apiKeyLabel.setFixedHeight(48)
     # self.apiKeyLabel.setValidator(QRegularExpressionValidator(r"\d+-[0-9a-f]{85}"))
-    self.formL.addWidget(self.apiKeyLabel, 4, 1)
-    self.row4Button1 = IconButton('fa5s.question-circle', self,      [Command.TEST_API_HELP], tooltip='Help on obtaining API key')
-    self.formL.addWidget(self.row4Button1, 4, 2)
+    self.formL.addWidget(self.apiKeyLabel,                 6, 1)
+    self.row4Button1 = IconButton('fa5s.question-circle', self, [Command.TEST_API_HELP], tooltip='Help on obtaining API key')
+    self.formL.addWidget(self.row4Button1,                 6, 2)
     self.row4Button2 = TextButton('Verify',   self, [Command.TEST_APIKEY], tooltip='Check API-key')
-    self.formL.addWidget(self.row4Button2, 4, 3)
+    self.formL.addWidget(self.row4Button2,                 6, 3)
 
-    self.formL.addWidget(QLabel('Storage block:'), 5, 0)
+    self.formL.addWidget(QLabel('\tStorage block:'),       7, 0)
     self.serverProjectGroupLabel = QComboBox()
-    self.formL.addWidget(self.serverProjectGroupLabel, 5, 1)
+    self.formL.addWidget(self.serverProjectGroupLabel,     7, 1)
     self.row5Button2 = TextButton('Verify',   self, [Command.TEST_SERVERPG], tooltip='Check access to storage block')
-    self.formL.addWidget(self.row5Button2, 5, 3)
+    self.formL.addWidget(self.row5Button2,                 7, 3)
+
+    self.formL.addItem(QSpacerItem(0, 25, QSizePolicy.Minimum, QSizePolicy.Fixed), 8, 0, 1, self.formL.columnCount())
+    self.formL.addWidget(QLabel('Folder for common files:'),9, 0)
+    self.commonFolder = QLineEdit('commonFiles')
+    self.commonFolder.setPlaceholderText('Enter folder for common files in project group. Leave empty to disable.')
+    self.formL.addWidget(self.commonFolder,                9, 1)
+    self.row4Button = TextButton('Create',   self, [Command.CREATE_FOLDER], tooltip='Create folder')
+    self.formL.addWidget(self.row4Button,                  9, 3)
 
     # RIGHT SIDE: button and image
     self.qrButton = TextButton('Create QR code', self, [Command.CREATE_QRCODE])
@@ -237,6 +248,7 @@ class ProjectGroup(QDialog):
                   'Open the tab "API keys"\n\nCreate a new API key:\n\n  a) Specify a name, like "pasta_eln"\n\n  b) '
                   'Change the permissions to "Read/Write"\n\n  c) Click on "Generate new API key"\n\nCopy+Paste that '
                   'key into the text box on the right-hand side')
+
     elif command[0] is Command.TEST_APIKEY:
       if self.apiKeyLabel.toPlainText()!='--- API key hidden ---':
         config['remote']['key'] = self.apiKeyLabel.toPlainText().strip()
@@ -274,6 +286,16 @@ class ProjectGroup(QDialog):
         self.changeButtonOnTest(True, self.row5Button2)
       else:
         self.changeButtonOnTest(False, self.row5Button2, 'You do not have access to this project group')
+
+    elif command[0] is Command.CREATE_FOLDER:
+      folder = self.commonFolder.text().strip()
+      if not folder:
+        return
+      path = Path(config['local']['path'])/folder
+      try:
+        path.mkdir(parents=True, exist_ok=True)
+      except Exception as e:
+        showMessage(self, 'Error', f'Could not create folder {str(path)}.\n\n{str(e)}')
 
     elif command[0] is Command.CREATE_QRCODE:
       text   = json.dumps(config['remote'])
@@ -358,3 +380,4 @@ class Command(Enum):
   TEST_API_HELP= 7
   CREATE_QRCODE= 8
   TEST_SERVERPG= 9
+  CREATE_FOLDER= 10
