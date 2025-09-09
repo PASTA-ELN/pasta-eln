@@ -43,7 +43,7 @@ class Task(Enum):
   SMART_ELAB     = (14, 'Syncing with elabFTW server:')            #keys: projGroup
   EXPORT_ELN     = (15, 'Exporting to .eln:')                      #keys: fileName, projID, docTypes
   IMPORT_ELN     = (16, 'Importing an .eln file:')                 #keys: fileName, projID
-  SEND_REPOSITORY= (17, 'Sending data to repository:')             #keys: projID, docTypes
+  SEND_REPOSITORY= (17, 'Sending data to repository:')             #keys: projID, docTypes,repositories,metadata,uploadZenodo
   CHECK_DB       = (18, 'Checking database integrity:')            #keys: style
   OPEN_EXTERNAL  = (19, '')                                        #keys: docID
 
@@ -335,7 +335,7 @@ class BackendWorker(QObject):
     elif task is Task.SEND_TBL_COLUMN and set(data.keys())=={'docType','newList'}:
       self.backend.db.dataHierarchyChangeView(data['docType'], data['newList'])
 
-    elif task is Task.SEND_REPOSITORY and set(data.keys())=={'projID','docTypes','repositories','metadata'}:
+    elif task is Task.SEND_REPOSITORY and set(data.keys())=={'projID','docTypes','repositories','metadata','uploadZenodo'}:
       tempELN = str(Path(tempfile.gettempdir())/'export.eln')
       res0 = exportELN(self.backend, [data['projID']], tempELN, data['docTypes'])
       print('Export eln',res0)

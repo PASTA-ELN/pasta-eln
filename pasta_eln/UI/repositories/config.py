@@ -27,6 +27,10 @@ class ConfigurationRepositories(QDialog):
     """
     super().__init__()
     self.comm    = comm
+    conf = {'zenodo':{'url':'https://zenodo.org', 'key':''},'dataverse':{'url':'','key':'','dataverse':''},
+            'category':'', 'additional': {}}
+    conf |= self.comm.configuration.get('repositories', {})
+
     self.callbackFinished = callbackFinished
     self.checkedZenodo = False
     self.checkedDataverse = True
@@ -41,11 +45,11 @@ class ConfigurationRepositories(QDialog):
     leftSideW.setStyleSheet('border-right: 2px solid black;')
     leftSide.addWidget(QLabel('Zenodo'), 0, 0)
     leftSide.addWidget(QLabel('URL'), 1, 0)
-    self.urlZenodo = QLineEdit('https://zenodo.org')
+    self.urlZenodo = QLineEdit(conf['zenodo']['url'])
     self.urlZenodo.setMinimumWidth(350)
     leftSide.addWidget(self.urlZenodo, 1, 1)
     leftSide.addWidget(QLabel('API key'), 2, 0)
-    self.apiZenodo = QLineEdit()
+    self.apiZenodo = QLineEdit(conf['zenodo']['key'])
     leftSide.addWidget(self.apiZenodo, 2, 1)
     self.zenodoButton = TextButton('Check',   self, [Command.CHECK_ZENODO], tooltip='Check Zenodo login details')
     leftSide.addWidget(self.zenodoButton, 3, 1)
@@ -53,20 +57,21 @@ class ConfigurationRepositories(QDialog):
     _, rightSide = widgetAndLayoutGrid(center, spacing='m', right='l')
     rightSide.addWidget(QLabel('Dataverse'), 0, 0)
     rightSide.addWidget(QLabel('URL'), 1, 0)
-    self.urlDatavese = QLineEdit()
+    self.urlDatavese = QLineEdit(conf['dataverse']['url'])
     self.urlDatavese.setMinimumWidth(350)
     rightSide.addWidget(self.urlDatavese, 1, 1)
     self.dataverseButton1 = TextButton('Check',   self, [Command.CHECK_DV1], tooltip='Check Dataverse server details')
     self.dataverseButton1.setMinimumWidth(100)
     rightSide.addWidget(self.dataverseButton1, 1, 2)
     rightSide.addWidget(QLabel('API key'), 2, 0)
-    self.apiDataverse = QLineEdit()
+    self.apiDataverse = QLineEdit(conf['dataverse']['key'])
     rightSide.addWidget(self.apiDataverse, 2, 1)
     self.dataverseButton2 = TextButton('Check',   self, [Command.CHECK_DV2], tooltip='Check Dataverse API-key')
     rightSide.addWidget(self.dataverseButton2, 2, 2)
     self.dataverseButton2.setMinimumWidth(100)
     rightSide.addWidget(QLabel('Sub dataverse'), 3, 0)
     self.dvDataverse = QComboBox()
+    self.dvDataverse.addItem(conf['dataverse']['dataverse'])
     self.dvDataverse.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     rightSide.addWidget(self.dvDataverse, 3, 1)
 
@@ -103,6 +108,7 @@ class ConfigurationRepositories(QDialog):
       else:
         self.changeButtonOnTest(False, self.zenodoButton)
         showMessage(self, 'Error', message)
+
     elif command[0] is Command.CHECK_DV1:
       url = self.urlDatavese.text().strip()
       if re.match(r'(http:|https:)+\/\/[\w\.]+', url) is None:
@@ -115,6 +121,7 @@ class ConfigurationRepositories(QDialog):
       else:
         self.changeButtonOnTest(False, self.dataverseButton1)
         showMessage(self, 'Error', message)
+
     elif command[0] is Command.CHECK_DV2:
       url = self.urlDatavese.text().strip()
       if re.match(r'(http:|https:)+\/\/[\w\.]+', url) is None:
@@ -134,15 +141,17 @@ class ConfigurationRepositories(QDialog):
       else:
         self.changeButtonOnTest(False, self.dataverseButton2)
         showMessage(self, 'Error', 'API key invalid')
+
     elif command[0] is Command.CANCEL:
       self.reject()
       self.callbackFinished(False)
+
     elif command[0] is Command.SAVE:
       if 'repositories' not in self.comm.configuration:
         self.comm.configuration['repositories'] = {}
       if self.checkedZenodo:
         self.comm.configuration['repositories']['zenodo'] = {'url':self.urlZenodo.text(),
-                                                        'key':self.apiZenodo.text()}
+                                                             'key':self.apiZenodo.text()}
       if self.checkedDataverse:
         self.comm.configuration['repositories']['dataverse'] = {'url':self.urlDatavese.text(),
                                                           'key':self.apiDataverse.text(),

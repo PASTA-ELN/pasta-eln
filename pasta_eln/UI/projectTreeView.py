@@ -90,13 +90,8 @@ class TreeView(QTreeView):
       if ret==QMessageBox.StandardButton.Yes:
         docID = hierStack[-1]
         self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':docID})
-        item  = self.model().itemFromIndex(self.currentIndex())                   # type: ignore[attr-defined]
-        parent = item.parent()
-        if parent is None:                                                                          #top level
-          parent = self.model().invisibleRootItem()                               # type: ignore[attr-defined]
-          if parent.rowCount()==1:
-            self.aParentWidget.btnAddSubfolder.setVisible(True)                   # type: ignore[attr-defined]
-        parent.removeRow(item.row())
+        self.comm.changeProject.emit(self.parent().projID, '')
+        return
 
     elif command[0] is Command.SHOW_DETAILS:
       gui    = item.data()['gui']
