@@ -122,7 +122,7 @@ configurationGUI: dict[str, Any] = {
   'dimensions': {
     'sidebarWidth': ['Sidebar width', 280, [220, 280, 340]],
     'maxTableColumnWidth': ['Maximum column width in tables', 400, [300, 400, 500, 600]],
-    'imageSizeDetails': ['Image size in details view and form', 600, [300, 400, 500, 600]],
+    'imageSizeDetails': ['Image size in form', 600, [300, 400, 500, 600]],
     'imageWidthProject': ['Image width in project view', 300, [200, 250, 300, 350, 400]],
     'maxProjectLeafHeight': ['Maximum height of item in project view', 250, [200, 250, 300, 400]],
     'widthContent': ['Width of procedures in project view', 600, [400, 500, 600, 700]],

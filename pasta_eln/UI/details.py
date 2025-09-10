@@ -51,19 +51,15 @@ class Details(QScrollArea):
     self.btnDetails = TextButton('Details', self, [Command.SHOW, 'Details'], self.mainL, \
                                  'Show / hide details', checkable=True, style='margin-top: 3px')
     self.metaDetailsW, self.metaDetailsL  = widgetAndLayout('V', self.mainL)
-    self.metaDetailsW.setMaximumWidth(self.width())
     self.btnVendor = TextButton('Vendor metadata', self, [Command.SHOW, 'Vendor'], self.mainL, \
                                 'Show / hide vendor metadata', checkable=True, style='margin-top: 15px')
     self.metaVendorW, self.metaVendorL = widgetAndLayout('V', self.mainL)
-    self.metaVendorW.setMaximumWidth(self.width())
     self.btnUser = TextButton('User metadata', self, [Command.SHOW, 'User'], self.mainL, \
                               'Show / hide user metadata', checkable=True, style='margin-top: 15px')
     self.metaUserW, self.metaUserL     = widgetAndLayout('V', self.mainL)
-    self.metaUserW.setMaximumWidth(self.width())
     self.btnDatabase = TextButton('ELN details', self, [Command.SHOW,'Database'], self.mainL, \
                                   'Show / hide database details', checkable= True, style='margin-top: 15px')
     self.metaDatabaseW, self.metaDatabaseL = widgetAndLayout('V', self.mainL)
-    self.metaDatabaseW.setMaximumWidth(self.width())
     self.mainL.addStretch(1)
 
 
@@ -144,18 +140,19 @@ class Details(QScrollArea):
     self.labelW.setText(self.doc['name'] if len(self.doc['name'])<80 else self.doc['name'][:77]+'...')
     if 'metaVendor' not in self.doc:
       self.btnVendor.hide()
-    if 'metUser' not in self.doc:
+    if 'metaUser' not in self.doc:
       self.btnUser.hide()
-    size = self.comm.configuration['GUI']['imageSizeDetails'] if hasattr(self.comm, 'configuration') else 300
     for key in self.doc:
       if key=='image':
-        Image(self.doc['image'], self.specialL, anyDimension=size)
+        Image(self.doc['image'], self.specialL, anyDimension=self.width()-20)
         self.specialW.show()
       elif key=='content':
         text = QTextEdit()                                                   # pylint: disable=qt-local-widget
         text.setMarkdown(self.doc['content'])
+        size = self.comm.configuration['GUI']['imageSizeDetails'] if hasattr(self.comm, 'configuration') else 300
         text.setFixedHeight(int(size/3*2))
         text.setReadOnly(True)
+        self.textEditors.append(text)
         self.specialL.addWidget(text)
         self.specialW.show()
       elif key in ['name']:                                                                              #skip
@@ -278,6 +275,7 @@ class Details(QScrollArea):
       height:int = text.document().size().toTuple()[1]                                    # type:ignore[index]
       text.setFixedHeight(height)
       text.setReadOnly(True)
+      self.textEditors.append(text)
       labelL.addWidget(text, stretch=1)
     else:
       dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
