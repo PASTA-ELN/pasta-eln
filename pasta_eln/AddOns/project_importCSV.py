@@ -24,7 +24,7 @@ def main(comm, hierStack, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
         comm (Communicate): communicate-backend
-        hierStack (list): node in hierarchy to start the creation
+        hierStack (str): node in hierarchy to start the creation
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters
 

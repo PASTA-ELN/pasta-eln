@@ -1,37 +1,20 @@
-"""example add-on: create a report from within the project view
-
-THIS IS A VERY ADVANCED ADD-ON TUTORIAL
-This tutorial teaches
-- the basic structure of project-view-add-ons (header, function for each node, body, footer)
-- this add-on runs as part of the frontend worker (show a GUI element)
-  -  to get the data one has to use the signal system to communicate to the backend worker
-- the data collection works as part of this system
-  - define a variable to store the data
-  - define a function to fill the data
-  - say that this function should be used whenever new data arrives
-  - request new data
-  - do a while loop until all data is here: wait
+"""example add-on: sort direct children of node
 """
-import base64
-import re
-from io import BytesIO
 from anytree import PreOrderIter
 from PIL import Image
 from PySide6.QtWidgets import QMessageBox
-from PySide6.QtGui import QTextDocument  # This is used for html-markdown conversion: works fine here
-import pasta_eln
-from pasta_eln.Resources import Icons as icons
-from pasta_eln.textTools.stringChanges import markdownEqualizer
+from pasta_eln.miscTools import getHierarchy
+from pasta_eln.backendWorker.worker import Task
 
 # The following two variables are mandatory
 description  = 'Sort children'  #short description that is shown in the menu
 reqParameter = {} #possibility for required parameters: like API-key, etc. {'API': 'text'}
 
-def main(backend, hierStack, widget, parameter={}):
+def main(comm, hierStack, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        backend (backend): backend
-        hierStack (list): node in hierarchy to start the creation
+        comm (Communicate): communicate-backend
+        hierStack (str): node in hierarchy to start the creation
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters
 
@@ -45,10 +28,10 @@ def main(backend, hierStack, widget, parameter={}):
     if res == QMessageBox.StandardButton.Cancel:
         return False
     ascendingFlag = res == QMessageBox.StandardButton.Yes
-    # possibly
-    hierarchy, _ = backend.db.getHierarchy(hierStack.split('/')[0])
-
-    # main function that calls the render function
-
-
+    hierarchy, _ = getHierarchy(comm, hierStack)
+    hierStackI = hierStack.split('/')
+    for revIdx, node in enumerate(sorted(hierarchy.children, key=lambda n: n.name.lower(), reverse=ascendingFlag)):
+      idx = len(hierarchy.children) - 1 - revIdx
+      comm.uiRequestTask.emit(Task.MOVE_LEAVES, {'docID':node.id, 'stackOld':hierStackI,'stackNew':hierStackI,
+                                                 'childOld':node.childNum, 'childNew':idx})
     return True
