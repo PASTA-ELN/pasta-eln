@@ -12,7 +12,7 @@ import requests
 from PIL.ImageQt import ImageQt
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator, Qt
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QLabel, QLineEdit, QMessageBox,
-                               QSpacerItem, QSizePolicy, QTextEdit, QVBoxLayout)
+                               QSizePolicy, QSpacerItem, QTextEdit, QVBoxLayout)
 from ...backendWorker.elabFTWapi import ElabFTWApi
 from ...fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
@@ -71,7 +71,8 @@ class ProjectGroup(QDialog):
     self.row2Button = IconButton('fa5.edit',   self, [Command.CHANGE_ADDON], tooltip='Edit add-on path')
     self.formL.addWidget(self.row2Button, 2, 3)
 
-    self.formL.addItem(QSpacerItem(0, 5, QSizePolicy.Minimum, QSizePolicy.Fixed), 3, 0, 1, self.formL.columnCount())
+    self.formL.addItem(QSpacerItem(0, 5, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed), 3, 0, 1,
+                       self.formL.columnCount())
     self.formL.addWidget(QLabel('Central elabFTW server'), 4, 0)
 
     self.formL.addWidget(QLabel('\tServer address:'),      5, 0)
@@ -98,7 +99,8 @@ class ProjectGroup(QDialog):
     self.row5Button2 = TextButton('Verify',   self, [Command.TEST_SERVERPG], tooltip='Check access to storage block')
     self.formL.addWidget(self.row5Button2,                 7, 3)
 
-    self.formL.addItem(QSpacerItem(0, 25, QSizePolicy.Minimum, QSizePolicy.Fixed), 8, 0, 1, self.formL.columnCount())
+    self.formL.addItem(QSpacerItem(0, 25, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed), 8, 0, 1,
+                       self.formL.columnCount())
     self.formL.addWidget(QLabel('Folder for common files:'),9, 0)
     self.commonFolder = QLineEdit('commonFiles')
     self.commonFolder.setPlaceholderText('Enter folder for common files in project group. Leave empty to disable.')

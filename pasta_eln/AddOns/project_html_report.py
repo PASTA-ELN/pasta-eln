@@ -21,9 +21,9 @@ from PIL import Image
 from PySide6.QtGui import QTextDocument  # This is used for html-markdown conversion: works fine here
 from PySide6.QtWidgets import QFileDialog
 import pasta_eln
+from pasta_eln.miscTools import getDoc, getHierarchy
 from pasta_eln.Resources import Icons as icons
 from pasta_eln.textTools.stringChanges import markdownEqualizer
-from pasta_eln.miscTools import getHierarchy, getDoc
 
 # The following two variables are mandatory
 description  = 'Create html report'  #short description that is shown in the menu

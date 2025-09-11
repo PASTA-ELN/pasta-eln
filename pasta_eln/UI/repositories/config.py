@@ -45,11 +45,11 @@ class ConfigurationRepositories(QDialog):
     leftSideW.setStyleSheet('border-right: 2px solid black;')
     leftSide.addWidget(QLabel('Zenodo'), 0, 0)
     leftSide.addWidget(QLabel('URL'), 1, 0)
-    self.urlZenodo = QLineEdit(conf['zenodo']['url'])
+    self.urlZenodo = QLineEdit(conf['zenodo']['url'])                                    # type: ignore[index]
     self.urlZenodo.setMinimumWidth(350)
     leftSide.addWidget(self.urlZenodo, 1, 1)
     leftSide.addWidget(QLabel('API key'), 2, 0)
-    self.apiZenodo = QLineEdit(conf['zenodo']['key'])
+    self.apiZenodo = QLineEdit(conf['zenodo']['key'])                                    # type: ignore[index]
     leftSide.addWidget(self.apiZenodo, 2, 1)
     self.zenodoButton = TextButton('Check',   self, [Command.CHECK_ZENODO], tooltip='Check Zenodo login details')
     leftSide.addWidget(self.zenodoButton, 3, 1)
@@ -57,21 +57,21 @@ class ConfigurationRepositories(QDialog):
     _, rightSide = widgetAndLayoutGrid(center, spacing='m', right='l')
     rightSide.addWidget(QLabel('Dataverse'), 0, 0)
     rightSide.addWidget(QLabel('URL'), 1, 0)
-    self.urlDatavese = QLineEdit(conf['dataverse']['url'])
+    self.urlDatavese = QLineEdit(conf['dataverse']['url'])                               # type: ignore[index]
     self.urlDatavese.setMinimumWidth(350)
     rightSide.addWidget(self.urlDatavese, 1, 1)
     self.dataverseButton1 = TextButton('Check',   self, [Command.CHECK_DV1], tooltip='Check Dataverse server details')
     self.dataverseButton1.setMinimumWidth(100)
     rightSide.addWidget(self.dataverseButton1, 1, 2)
     rightSide.addWidget(QLabel('API key'), 2, 0)
-    self.apiDataverse = QLineEdit(conf['dataverse']['key'])
+    self.apiDataverse = QLineEdit(conf['dataverse']['key'])                              # type: ignore[index]
     rightSide.addWidget(self.apiDataverse, 2, 1)
     self.dataverseButton2 = TextButton('Check',   self, [Command.CHECK_DV2], tooltip='Check Dataverse API-key')
     rightSide.addWidget(self.dataverseButton2, 2, 2)
     self.dataverseButton2.setMinimumWidth(100)
     rightSide.addWidget(QLabel('Sub dataverse'), 3, 0)
     self.dvDataverse = QComboBox()
-    self.dvDataverse.addItem(conf['dataverse']['dataverse'])
+    self.dvDataverse.addItem(conf['dataverse']['dataverse'])                             # type: ignore[index]
     self.dvDataverse.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
     rightSide.addWidget(self.dvDataverse, 3, 1)
 

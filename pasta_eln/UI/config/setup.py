@@ -84,7 +84,7 @@ class ConfigurationSetup(QWidget):
             configuration('repair', dirName)
           else:
             self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
-            self.text.setText(self.mainText)                                  # type: ignore[attr-defined]
+            self.text.setText(self.mainText)
         else:
           configuration('repair', dirName)
       #Shortcut

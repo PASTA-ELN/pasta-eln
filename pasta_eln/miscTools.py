@@ -7,20 +7,21 @@ import platform
 import socket
 import subprocess
 import sys
-import time
 import tempfile
+import time
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Union
 from urllib import request
 import pandas as pd
+from anytree import Node
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from packaging.version import parse as parse_version
-from anytree import Node
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QWidget
 import pasta_eln
+from .UI.guiCommunicate import Communicate
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
 
 
@@ -227,7 +228,7 @@ def callDataExtractor(filePath:Path, backend:Any) -> Any:
   return None
 
 
-def getHierarchy(comm, docID:str, showAll:bool=True) -> tuple[Node, dict[str, Any]]:
+def getHierarchy(comm:Communicate, docID:str, showAll:bool=True) -> tuple[Node, dict[str, Any]]:
   """ Helper for add-ons: get hierarchy of a project from backend
   Args:
     comm (Communicate): communicate-backend
@@ -237,23 +238,24 @@ def getHierarchy(comm, docID:str, showAll:bool=True) -> tuple[Node, dict[str, An
   Returns:
     tuple: (hierarchy as anytree, project document as dict)
   """
-  hierarchy = None
+  hierarchyI = None
   projDoc   = None
   @Slot(Node, dict)
   def receiveData(h:Node, doc:dict[str,Any]) -> None:
-    nonlocal hierarchy
-    hierarchy = h
+    nonlocal hierarchyI
+    hierarchyI = h
     nonlocal projDoc
     projDoc   = doc
   comm.backendThread.worker.beSendHierarchy.connect(receiveData)
   comm.uiRequestHierarchy.emit(docID, showAll)
-  while hierarchy is None:
+  while hierarchyI is None or projDoc is None:
     time.sleep(0.1)
-  return hierarchy, projDoc
+  return hierarchyI, projDoc
 
 
-def getDoc(comm, docID:str) -> dict[str, Any]:
+def getDoc(comm:Communicate, docID:str) -> dict[str, Any]:
   """ Helper for add-ons: get document from backend
+
   Args:
     comm (Communicate): communicate-backend
     docID (str): document ID
@@ -263,7 +265,7 @@ def getDoc(comm, docID:str) -> dict[str, Any]:
   """
   doc = None
   @Slot(dict)
-  def receiveData(iDoc:dict[str,Any]):
+  def receiveData(iDoc:dict[str,Any]) -> None:
     """ Slot to receive data
     Args:
       iDoc (dict): document

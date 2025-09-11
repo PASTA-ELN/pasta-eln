@@ -77,7 +77,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
   statistics:dict[str,Any] = {}
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     files = elnFile.namelist()
-    if len(set(Path(i).parts[0] for i in files)) != 1:
+    if len({Path(i).parts[0] for i in files}) != 1:
       logging.error('eln file has multiple top-level directories, cannot process')
       return 'ERROR: eln file has multiple top-level directories, cannot process',{}
     dirName=Path(files[0]).parts[0]

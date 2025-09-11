@@ -90,7 +90,7 @@ class TreeView(QTreeView):
       if ret==QMessageBox.StandardButton.Yes:
         docID = hierStack[-1]
         self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':docID})
-        self.comm.changeProject.emit(self.parent().projID, '')
+        self.comm.changeProject.emit(self.parent().projID, '')                    # type: ignore[attr-defined]
         return
 
     elif command[0] is Command.SHOW_DETAILS:
