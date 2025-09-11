@@ -1,7 +1,5 @@
 """example add-on: sort direct children of node
 """
-from anytree import PreOrderIter
-from PIL import Image
 from PySide6.QtWidgets import QMessageBox
 from pasta_eln.backendWorker.worker import Task
 from pasta_eln.miscTools import getHierarchy
