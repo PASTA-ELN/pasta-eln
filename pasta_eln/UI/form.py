@@ -67,16 +67,29 @@ class Form(QDialog):
     buttonLineL.addStretch(1)
     self.btnAddKWPairs = IconButton('ri.menu-add-fill', self, [Command.FORM_ADD_KV],   buttonLineL,
                                     'Add key-value pair', style='border-width:1')
+    self.btnAddKWPairs.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+    self.btnAddKWPairs.setAutoDefault(False)
+    self.btnAddKWPairs.setDefault(False)
     if not self.flagNewDoc:                                                                  #existing dataset
-      IconButton('fa5s.poll-h',      self, [Command.FORM_SHOW_DOC], buttonLineL, 'Show all information',
+      self.showDocBtn = IconButton('fa5s.poll-h',      self, [Command.FORM_SHOW_DOC], buttonLineL, 'Show all information',
                  style='border-width:1')
+      self.showDocBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+      self.showDocBtn.setAutoDefault(False)
       self.btnDuplicate = IconButton('fa5s.plus-circle', self, [Command.FORM_SAVE_NEXT], buttonLineL,
                                      'Duplicate data set', style='border-width:1')
+      self.btnDuplicate.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+      self.btnDuplicate.setAutoDefault(False)
     self.saveBtn = TextButton('Save',             self, [Command.FORM_SAVE],     buttonLineL, 'Save changes')
     self.saveBtn.setShortcut('Ctrl+Return')
-    TextButton('Cancel',           self, [Command.FORM_CANCEL],   buttonLineL, 'Discard changes')
+    self.saveBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+    self.saveBtn.setAutoDefault(False)
+    self.cancelBtn = TextButton('Cancel',           self, [Command.FORM_CANCEL],   buttonLineL, 'Discard changes')
+    self.cancelBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+    self.cancelBtn.setAutoDefault(False)
     if self.flagNewDoc:                                                                           #new dataset
-      TextButton('Save && Next', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Save this and handle next')
+      self.saveNextBtn = TextButton('Save && Next', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Save this and handle next')
+      self.saveNextBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+      self.saveNextBtn.setAutoDefault(False)
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
 
     #GUI elements, filled later
@@ -315,6 +328,7 @@ class Form(QDialog):
           self.otherChoices.setValidator(QRegularExpressionValidator('[a-zA-Z]\\w+'))
           self.otherChoices.setIconSize(QSize(0,0))
           self.otherChoices.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
+          self.otherChoices.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
           tagsBarMainL.addWidget(self.otherChoices)
           formL.addRow(QLabel('Rating:'), self.tagsBarMainW)
           self.allUserElements.append(('tags',''))
