@@ -230,7 +230,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         except Exception:
           # Causes for exception
           # - @id is a link to external IRI (http...). Hence it is not in the file
-          # - the graph is not fully flattend: @id is in a leaf of a node but not a separate note
+          # - the graph is not fully flattened: @id is in a leaf of a node but not a separate note
           docS[0][key] = value
           logging.warning('Could not replace %s-entries using ids: %s', key, items)
       # convert to Pasta's style
