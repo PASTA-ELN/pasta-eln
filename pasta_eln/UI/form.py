@@ -320,7 +320,8 @@ class Form(QDialog):
           self.gradeChoices.setCurrentText(gradeTagStr)
           tagsBarMainL.addWidget(self.gradeChoices)
           Label('Tags:', '',  tagsBarMainL, style='margin-left: 20px;')
-          _, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL, spacing='s', right='m', left='m')#part which shows all the tags
+          tagsBarSubW, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL, spacing='s', right='m', left='m')#part which shows all the tags
+          tagsBarSubW.setMaximumWidth(420)
           self.otherChoices = QComboBox()                             #part/combobox that allow user to select
           self.otherChoices.setToolTip('Choose a tag or type a new one')
           self.otherChoices.setEditable(True)
