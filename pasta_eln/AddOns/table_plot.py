@@ -224,10 +224,10 @@ class DataAnalyse(QDialog):
     return
 
 
-def main(backend, df, widget, parameter={}):
+def main(comm, df, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        backend (pasta backend): allow to extract data
+        comm (communication): pasta communication layer
         df (Dataframe): dataframe with the data to plot
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters

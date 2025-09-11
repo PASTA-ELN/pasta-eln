@@ -53,9 +53,9 @@ class Communicate(QObject):
     if not self.configuration:
       return
     self.basePath = Path(self.configuration['projectGroups'][self.projectGroup]['local']['path'])
-    addOnPath = self.configuration['projectGroups'][self.projectGroup]['addOnDir']
+    self.addOnPath = self.configuration['projectGroups'][self.projectGroup]['addOnDir']
     logging.info('Initial python path: %s', sys.path)
-    logging.info('Backend initialized with basePath %s and prepend addOnPath %s', self.basePath, addOnPath)
+    logging.info('Backend initialized with basePath %s and prepend addOnPath %s', self.basePath, self.addOnPath)
 
     # Data storage for all widgets
     self.docTypesTitles:dict[str,dict[str,str]] = {}# docType: {'title':title,'icon':icon,'shortcut':shortcut}

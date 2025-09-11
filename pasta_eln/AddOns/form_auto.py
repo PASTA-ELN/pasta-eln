@@ -16,10 +16,10 @@ import requests
 reqParameter = {'key':'API key of google'} #possibility for required parameters: like API-key, etc. {'API': 'text'}
 helpText = 'To get API key, you have to register at https://aistudio.google.com/app/apikey and create a new key.'
 
-def main(backend, doc, widget, parameter={}):
+def main(comm, doc, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        backend (pasta backend): allow to extract data
+        comm (Communicate): communicate-backend
         doc (dict): dictionary of the content: comment, title, image might be helpful
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters

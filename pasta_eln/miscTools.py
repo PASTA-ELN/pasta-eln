@@ -190,16 +190,18 @@ def callAddOn(name:str, comm:Any, content:Any, widget:QWidget) -> Any:
   return module.main(comm, content, widget, subParameter)
 
 
-def callDataExtractor(filePath:Path, backend:Any) -> Any:
+def callDataExtractor(docID:str, comm:Any) -> Any:
   """ Call data extractor for a given file path: CALL THE DATA FUNCTION
 
   Args:
-    filePath (Path): path to file
-    backend (str): backend
+    docID (str): docID
+    comm (Communication): communication layer
 
   Returns:
     Any: result of the data extractor
   """
+  doc = getDoc(comm, docID)
+  filePath = comm.basePath/doc['branch'][0]['path']
   if not isinstance(filePath, Path):
     filePath = Path(filePath)
   extension = filePath.suffix[1:]                                                   #cut off initial . of .jpg
@@ -213,10 +215,10 @@ def callDataExtractor(filePath:Path, backend:Any) -> Any:
           print('Error saving downloaded file to temporary disk')
   else:
     if filePath.is_absolute():
-      filePath  = filePath.relative_to(backend.basePath)
-    absFilePath = backend.basePath/filePath
+      filePath  = filePath.relative_to(comm.basePath)
+    absFilePath = comm.basePath/filePath
   pyFile = f'extractor_{extension.lower()}.py'
-  pyPath = backend.addOnPath/pyFile
+  pyPath = Path(comm.addOnPath)/pyFile
   if pyPath.is_file():
     # import module and use to get data
     try:

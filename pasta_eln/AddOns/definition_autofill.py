@@ -33,10 +33,10 @@ def getFirstWikidataEntry(definition):
     return ''
 
 
-def main(backend, df, widget, parameter={}):
+def main(comm, df, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        backend (pasta backend): allow to extract data
+        comm (Communicate): communicate-backend
         df (DataFrame): pandas dataframe with data
            Columns are: 'key', 'long', 'PURL', 'defType' with the PURL being filled
         widget (QWidget): allows to create new gui dialogs

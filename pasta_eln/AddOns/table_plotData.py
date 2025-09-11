@@ -9,7 +9,7 @@ import pandas as pd
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLineEdit, QTableWidget, QTableWidgetItem
-from pasta_eln.miscTools import MplCanvas, callDataExtractor, isFloat
+from pasta_eln.miscTools import MplCanvas, callDataExtractor, isFloat, getDoc
 from pasta_eln.UI.guiStyle import Label, space, widgetAndLayout
 
 # The following two variables are mandatory
@@ -138,10 +138,10 @@ class DataAnalyse(QDialog):
     self.refresh()
 
 
-def main(backend, df, widget, parameter={}):
+def main(comm, df, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        backend (pasta backend): allow to extract data
+        comm (communication): pasta communication layer
         df (Dataframe): dataframe with the data to plot. The docIDand path columns are of most interest
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters
@@ -152,7 +152,7 @@ def main(backend, df, widget, parameter={}):
     # no cleaning needed since we only use id and path columns
     data = []
     for idx, row in df.iterrows():
-        res = callDataExtractor(row['path'], backend)
+        res = callDataExtractor(row['docID'], comm)
         if res is None:
             continue
         # Here you can process the extracted data further, e.g., plot it
