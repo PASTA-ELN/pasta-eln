@@ -1,5 +1,32 @@
 # Changelog
 
+## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0...HEAD)
+
+**Fixed bugs:**
+
+- Non-extractor add-ons do not work in 3.2.0 [\#560](https://github.com/PASTA-ELN/pasta-eln/issues/560)
+
+**Closed issues:**
+
+- Re-installation // Repair broken [\#561](https://github.com/PASTA-ELN/pasta-eln/issues/561)
+- 3.2.06b - Creating a new project broken [\#557](https://github.com/PASTA-ELN/pasta-eln/issues/557)
+- Standard Operation Procedures - Folder [\#556](https://github.com/PASTA-ELN/pasta-eln/issues/556)
+- "Instrument" vs. "Instruments" [\#543](https://github.com/PASTA-ELN/pasta-eln/issues/543)
+- 3.2.0b3 - "unfolding" of Project view [\#540](https://github.com/PASTA-ELN/pasta-eln/issues/540)
+- sidebar buttons vanish when selecting item type list [\#539](https://github.com/PASTA-ELN/pasta-eln/issues/539)
+- unidentified items show full folder path [\#525](https://github.com/PASTA-ELN/pasta-eln/issues/525)
+- Column for metaVendor.Fileextension is empty [\#524](https://github.com/PASTA-ELN/pasta-eln/issues/524)
+- Details window contents do not scale with the window size [\#516](https://github.com/PASTA-ELN/pasta-eln/issues/516)
+- Linking via the lists in the data schema editor does not work [\#509](https://github.com/PASTA-ELN/pasta-eln/issues/509)
+- Sidebar: change to list of Todo, Todo priority [\#307](https://github.com/PASTA-ELN/pasta-eln/issues/307)
+- Order files / subitems by name in project view  [\#260](https://github.com/PASTA-ELN/pasta-eln/issues/260)
+
+## [v3.2.0](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0) (2025-09-08)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b7...v3.2.0)
+
 ## [v3.2.0b7](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b7) (2025-08-26)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b6...v3.2.0b7)
@@ -11,7 +38,7 @@
 **Closed issues:**
 
 - Installation Instructions - non-hardcoded Pasta path [\#559](https://github.com/PASTA-ELN/pasta-eln/issues/559)
-- 3.2.0b6 - Creating a new project group [\#558](https://github.com/PASTA-ELN/pasta-eln/issues/558)
+- 3.2.0b6 - Creeating a new project group [\#558](https://github.com/PASTA-ELN/pasta-eln/issues/558)
 - Instructions to update for people without terminal [\#555](https://github.com/PASTA-ELN/pasta-eln/issues/555)
 - 3.1.11 - Definitions Editor [\#554](https://github.com/PASTA-ELN/pasta-eln/issues/554)
 - 3.2.0b6 - Definitions editor? [\#553](https://github.com/PASTA-ELN/pasta-eln/issues/553)
@@ -57,7 +84,7 @@
 - Requirements for installation of Pasta [\#499](https://github.com/PASTA-ELN/pasta-eln/issues/499)
 - batch file download [\#498](https://github.com/PASTA-ELN/pasta-eln/issues/498)
 - Storage of tags in item creation [\#494](https://github.com/PASTA-ELN/pasta-eln/issues/494)
-- New item types are not accessible? [\#491](https://github.com/PASTA-ELN/pasta-eln/issues/491)
+- New item types are not accesssible? [\#491](https://github.com/PASTA-ELN/pasta-eln/issues/491)
 - Configuration GUI: allow user to check if hidden items are by default hidden \(new\) or shown \(current\) [\#486](https://github.com/PASTA-ELN/pasta-eln/issues/486)
 - Overlap Checkbox - Name of item [\#483](https://github.com/PASTA-ELN/pasta-eln/issues/483)
 - Shift in details view when clicking a linked item [\#479](https://github.com/PASTA-ELN/pasta-eln/issues/479)
