@@ -336,7 +336,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         fullPath = f'{dirNameGlobal}/{path[2:]}'
       else:
         fullPath = f'{dirNameGlobal}/{path}'
-      if sys.version_info >= (3, 10):
+      if sys.version_info >= (3, 9):
         elnFile.mkdir(fullPath)
       else:
         dirInfo = ZipInfo(fullPath if fullPath.endswith('/') else f'{fullPath}/')
