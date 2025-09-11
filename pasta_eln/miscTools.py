@@ -21,7 +21,6 @@ from packaging.version import parse as parse_version
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QWidget
 import pasta_eln
-from .UI.guiCommunicate import Communicate
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
 
 
@@ -228,7 +227,7 @@ def callDataExtractor(filePath:Path, backend:Any) -> Any:
   return None
 
 
-def getHierarchy(comm:Communicate, docID:str, showAll:bool=True) -> tuple[Node, dict[str, Any]]:
+def getHierarchy(comm:Any, docID:str, showAll:bool=True) -> tuple[Node, dict[str, Any]]:
   """ Helper for add-ons: get hierarchy of a project from backend
   Args:
     comm (Communicate): communicate-backend
@@ -253,7 +252,7 @@ def getHierarchy(comm:Communicate, docID:str, showAll:bool=True) -> tuple[Node, 
   return hierarchyI, projDoc
 
 
-def getDoc(comm:Communicate, docID:str) -> dict[str, Any]:
+def getDoc(comm:Any, docID:str) -> dict[str, Any]:
   """ Helper for add-ons: get document from backend
 
   Args:
