@@ -239,7 +239,7 @@ class Form(QDialog):
     if 'branch' in self.doc:
       visibilityIcon = all(all(branch['show']) for branch in self.doc['branch'])
       self.visibilityText = QLabel('' if visibilityIcon else 'HIDDEN     \U0001F441')
-      self.btnDuplicate.setHidden(self.doc['branch'][0]['path'] is None)
+      self.btnDuplicate.setHidden(self.doc['branch'][0]['path'] is not None)
 
     # image
     if 'image' in self.doc:
