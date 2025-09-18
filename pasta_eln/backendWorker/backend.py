@@ -436,7 +436,7 @@ class Backend(CLI_Mixin):
               logging.error('Saving downloaded file to temporary disk', exc_info=True)
               return
       except Exception:
-        logging.error('Could not download file from internet %s', filePath.as_posix(), exc_info=True)
+        logging.error('Could not download file from internet %s', filePath.as_posix())
         return
     else:
       if filePath.is_absolute():
@@ -449,9 +449,12 @@ class Backend(CLI_Mixin):
       try:
         module  = importlib.import_module(pyFile[:-3])
         content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
-        for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','links','style']]:#only allow accepted keys
+        general = content.get('general',[])
+        for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','style']]:#only allow accepted keys
           del content[key]
         doc |= content
+        for item in general:
+          doc[item[0]] = item[1]
         for meta in ['metaVendor','metaUser']:
           if meta not in doc:
             doc[meta] = {}

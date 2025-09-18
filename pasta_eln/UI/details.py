@@ -101,6 +101,7 @@ class Details(QScrollArea):
         self.idsTypesNames.loc[self.idsTypesNames['id']==id_, ['name','type']] = row[['name', 'type']].values
       else:                                                                              # Concatenate new row
         self.idsTypesNames = pd.concat([self.idsTypesNames, pd.DataFrame([row])], ignore_index=True)
+    self.paint()
 
 
   @Slot()

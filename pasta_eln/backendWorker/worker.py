@@ -20,7 +20,7 @@ from ..miscTools import flatten
 from ..textTools.stringChanges import createDirName
 from .backend import Backend
 from .dataverse import DataverseClient
-from .elabFTWsync import Pasta2Elab, MERGE_LABELS
+from .elabFTWsync import MERGE_LABELS, Pasta2Elab
 from .inputOutput import exportELN, importELN
 from .zenodo import ZenodoClient
 

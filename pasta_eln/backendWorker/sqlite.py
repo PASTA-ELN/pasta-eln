@@ -489,6 +489,7 @@ class SqlLiteDB:
         elif key not in dataOld:
           cmd = 'INSERT INTO properties VALUES (?, ?, ?, ?);'
           self.cursor.execute(cmd ,[docID, key, value, ''])
+          changesDict[key] = value
       elif isinstance(value, tuple) and len(value)==4:
         if key in dataOld and value[0]!=dataOld[key]:
           self.cursor.execute(f"UPDATE properties SET value='{value[0]}' WHERE id = '{docID}' and key = '{key}'")

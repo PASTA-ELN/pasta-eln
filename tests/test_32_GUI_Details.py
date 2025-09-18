@@ -9,7 +9,7 @@ def test_simple(qtbot, caplog):
   while comm.backendThread.worker.backend is None:
     qtbot.wait(100)
   window = Details(comm)
-  window.setMinimumSize(1024,800)
+  window.setMinimumSize(300, 800)
   window.show()
   qtbot.addWidget(window)
 
