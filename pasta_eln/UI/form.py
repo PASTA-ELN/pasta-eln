@@ -176,7 +176,7 @@ class Form(QDialog):
         intersection = set(self.doc).intersection(set(doc))
         #remove keys that should not be group edited and build dict
         intersection = intersection.difference({'branch', 'user', 'client', 'metaVendor', 'shasum', 'id', 'type',
-                           'metaUser', 'rev', 'name', 'dateCreated', 'dateModified', 'image', 'links', 'gui', ''})
+                           'metaUser', 'rev', 'name', 'dateCreated', 'dateModified', 'image', 'gui', ''})
         docType = list(self.doc['type'])
         self.doc = {i:'' for i in intersection}
         self.doc['tags'] = []
