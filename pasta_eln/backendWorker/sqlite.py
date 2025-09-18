@@ -487,7 +487,7 @@ class SqlLiteDB:
           self.cursor.execute(f"UPDATE properties SET value='{value}' WHERE id = '{docID}' and key = '{key}'")
           changesDict[key] = dataOld[key]
         elif key not in dataOld:
-          cmd = 'INSERT INTO properties VALUES (?, ?, ?, ?);'
+          cmd = 'INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);'
           self.cursor.execute(cmd ,[docID, key, value, ''])
           changesDict[key] = value
       elif isinstance(value, tuple) and len(value)==4:
@@ -1145,8 +1145,10 @@ class SqlLiteDB:
         # No more warnings if images are not present: happens often in propriatary binary files,... users see it
         # comment = comment.replace('\n','..')
         # reply+=outputString(outputStyle,'unsure',f"image does not exist {docID} image:{image} comment:{comment}")
+      elif not image:
+        reply+= outputString(outputStyle,'info',f"dch14: empty image {docID}")
       else:
-        reply+= outputString(outputStyle,'error',f"dch14: image not valid {docID} {image}")
+        reply+= outputString(outputStyle,'error',f"dch14: image not valid {docID} |{image}|")
 
     #test hierarchy
     for projID in self.getView('viewDocType/x0')['id'].values:
