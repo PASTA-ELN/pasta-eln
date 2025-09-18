@@ -7,6 +7,7 @@ import os
 import shutil
 import tempfile
 import time
+from collections import Counter
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -19,7 +20,7 @@ from ..miscTools import flatten
 from ..textTools.stringChanges import createDirName
 from .backend import Backend
 from .dataverse import DataverseClient
-from .elabFTWsync import Pasta2Elab
+from .elabFTWsync import Pasta2Elab, MERGE_LABELS
 from .inputOutput import exportELN, importELN
 from .zenodo import ZenodoClient
 
@@ -320,17 +321,24 @@ class BackendWorker(QObject):
       if 'ERROR' in self.backend.checkDB(minimal=True):
         self.beSendTaskReport.emit(task, 'ERRORs are present in your database. Fix them before uploading', '', '')
       else:
-        sync = Pasta2Elab(self.backend, data['projGroup'])
-        if hasattr(sync, 'api') and sync.api.url:                             #if hostname and api-key given
-          if task is Task.SEND_ELAB:
-            stats = sync.sync('sA')
-          elif task is Task.GET_ELAB:
-            stats = sync.sync('gA')
-          else:
-            stats = sync.sync('')
-          self.beSendTaskReport.emit(task, 'Success: Synchronized data with elabFTW server'+str(stats), '', '')
-        else:                                                                                  #if not given
-          self.beSendTaskReport.emit(task, 'ERROR: Please specify a server address and API-key in the Configuration', '', '')
+        try:
+          sync = Pasta2Elab(self.backend, data['projGroup'])
+          if hasattr(sync, 'api') and sync.api.url:                             #if hostname and api-key given
+            if task is Task.SEND_ELAB:
+              stats = sync.sync('sA')
+            elif task is Task.GET_ELAB:
+              stats = sync.sync('gA')
+            else:
+              stats = sync.sync('')
+            logging.debug('elabFTW sync stats: %s', stats)
+            statsCount = Counter([i[1] for i in stats])
+            msg = ', '.join([f'{MERGE_LABELS[k]}: {v}' for k,v in statsCount.items()])
+            self.beSendTaskReport.emit(task, f'Success: Synchronized with server. Items per action: {msg}', '', '')
+          else:                                                                                  #if not given
+            self.beSendTaskReport.emit(task, 'ERROR: Please specify a server address and API-key in the Configuration', '', '')
+        except ConnectionError as e:
+          logging.error('Connection-Error connecting to elabFTW server')
+          self.beSendTaskReport.emit(task, f'ERROR: Connection error to elabFTW server\n{e}', '', '')
 
     elif task is Task.SEND_TBL_COLUMN and set(data.keys())=={'docType','newList'}:
       self.backend.db.dataHierarchyChangeView(data['docType'], data['newList'])

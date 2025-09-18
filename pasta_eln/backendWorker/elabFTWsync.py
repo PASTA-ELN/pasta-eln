@@ -222,13 +222,13 @@ class Pasta2Elab:
     flagServerChange = False
     for k,v in docServer.items():
       if isinstance(v, str):
-        if v != html2markdown(markdown2html(docOther[k])):
+        if k not in docOther or v != html2markdown(markdown2html(docOther[k])):
           flagServerChange = True
           if self.verbose:
             print(f'str change k:{k}; v:\n|{v}|\nvOther:\n|{docOther[k]}|\n|{html2markdown(markdown2html(docOther[k]))}|\ntype:{type(v)}')
           docOther[k] = docServer[k]
       elif isinstance(v, dict):
-        if v != docOther[k]:
+        if k not in docOther or v != docOther[k]:
           flagServerChange = True
           if self.verbose:
             print(f'dict change k:{k}; v:{v}; vOther:{docOther[k]}|type:{type(v)}')

@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
     Action('&Upload to repository',          self, [Command.REPOSITORY],     projectMenu)
     Action('&Exit',                          self, [Command.EXIT],           projectMenu)
 
-    self.viewMenu = menu.addMenu('&Lists')
+    self.viewMenu = menu.addMenu('Common &Lists')
 
     systemMenu = menu.addMenu('Project &group')
     self.changeProjectGroups = systemMenu.addMenu('&Change project group')
