@@ -134,8 +134,11 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
       continue
     try:
       if key=='tags':
-        tags = [f'#{i}' for i in value]
-        tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
+        pattern = re.compile('^_\d$')
+        rating = list(filter(pattern.match, value))
+        if len(rating)==1:
+          markdown += f'Rating: {"\u2605"*int(rating[0][1])}     '
+        tags = set(value).difference(rating)
         markdown += f'Tags: {" ".join(tags)} \n\n'
       elif (isinstance(value,str) and '\n' in value) or key=='comment':      # long values with /n or comments
         markdown += markdownEqualizer(value)+'\n\n'
