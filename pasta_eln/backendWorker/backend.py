@@ -243,7 +243,8 @@ class Backend(CLI_Mixin):
           logging.warning('AddData edit of folder should have oldPath and that should exist: %s\n This can be '\
             'triggered if user moved the folder.',oldPath)
           return  {'id':''}
-        (self.basePath/oldPath).rename(self.basePath/path)
+        if oldPath != path.as_posix():
+          (self.basePath/oldPath).rename(self.basePath/path)
       else:
         (self.basePath/path).mkdir(exist_ok=True)#if exist, create again; moving not necessary since directory moved in changeHierarchy
       with open(self.basePath/path/'.id_pastaELN.json','w', encoding='utf-8') as f:#local path, update in any case
@@ -358,7 +359,7 @@ class Backend(CLI_Mixin):
             newPath = str(parentPath/createDirName(doc, childNum, parentPath))#update,or create (if new doc, update ignored anyhow)
             if (self.basePath/newPath).exists():                             # can be either file or directory
               logging.error('New path should not exist %s',newPath, exc_info=True)
-            else:
+            elif path != newPath:
               (self.basePath/path).rename(self.basePath/newPath)
           self.db.updateBranch(doc['id'], 0, childNum, hierStack, newPath)
         else:

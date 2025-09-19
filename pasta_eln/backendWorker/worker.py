@@ -300,7 +300,8 @@ class BackendWorker(QObject):
         while newPath.is_dir():
           newPath = oldPath.parent/f'trash_{oldPath.name}_{nextIteration}'
           nextIteration += 1
-        oldPath.rename(newPath)
+        if oldPath != newPath:
+          oldPath.rename(newPath)
       # go through children, remove from DB
       children = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey=data['docID'])
       for docID in {line['id'] for line in children if line['id']!=data['docID']}:

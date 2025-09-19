@@ -254,7 +254,8 @@ class Project(QWidget):
       oldPath = self.comm.basePath/self.docProj['branch'][0]['path']
       if oldPath.is_dir():
         newPath = self.comm.basePath/createDirName(self.docProj, 0, self.comm.basePath)
-        oldPath.rename(newPath)
+        if oldPath != newPath:
+          oldPath.rename(newPath)
       self.comm.changeSidebar.emit('redraw')
     elif command[0] is Command.DELETE:
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?', \
