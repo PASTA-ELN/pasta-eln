@@ -1,11 +1,12 @@
 import logging
-from pathlib import Path
+import pytest
 from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.UI.details import Details
 from pasta_eln.backendWorker.worker import Task
 from .test_34_GUI_Form import getTable
 from .test_35_GUI_CreatedLinka import LINE
 
+@pytest.mark.timeout(600)
 def test_simple(qtbot, caplog):
 
   comm = Communicate('research')
@@ -26,6 +27,8 @@ def test_simple(qtbot, caplog):
 
   window.comm.changeDetails.emit(idMeasurement)
   qtbot.wait(1000)
+  while window.metaDetailsL.itemAt(0) is None:
+    qtbot.wait(500)
   path = qtbot.screenshot(window)
   print(path)
 

@@ -29,7 +29,7 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip cache purge
         pip install -r requirements-linux.txt
-        pip install coverage pytest pytest-qt pytest-qt-app pytest-mock coverage typing-extensions
+        pip install coverage pytest pytest-qt pytest-qt-app pytest-mock pytest-timeout coverage typing-extensions
     - name: Check installation
       run: |
         coverage run -m pasta_eln.installationTools
