@@ -1,10 +1,11 @@
 """ Table Header dialog: change which columns are shown and in which order """
 import logging
+from collections import defaultdict
 from enum import Enum
 from typing import Any
 import pandas as pd
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QListWidget, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QComboBox, QListWidget, QVBoxLayout
 from ..backendWorker.sqlite import MAIN_ORDER
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import tableHeaderHelp
@@ -29,23 +30,28 @@ class TableHeader(QDialog):
     self.allSet  = set(MAIN_ORDER)
     self.allSet  = {i[1:] if i[0]=='.' else i for i in self.allSet}
     self.selectedList:list[str] = []
-    self.comm.backendThread.worker.beSendSQL.connect(self.onGetData)
-    self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':f'SELECT view FROM docTypes WHERE docType=="{docType}"'}])
+    self.otherDict:dict[str, list[str]] = {}
 
     # GUI elements
     self.setWindowTitle('Select list columns')
     self.setMinimumWidth(600)
     mainL = QVBoxLayout(self)
     _, bodyL = widgetAndLayout('H', mainL, spacing='m')
+
     _, leftL = widgetAndLayout('V', bodyL, spacing='m')
     self.choicesW = QListWidget()
     self.choicesW.setMinimumHeight(250)
     leftL.addWidget(self.choicesW)
-    _, textL = widgetAndLayout('H', leftL, spacing='0')
-    self.inputLine = QLineEdit()
-    self.inputLine.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
-    textL.addWidget(self.inputLine)
-    IconButton('fa5s.angle-double-right', self, [Command.USE_TEXT],  textL,   'use text field')
+    _, otherL = widgetAndLayout('H', leftL, spacing='s')
+    self.other1 = QComboBox()
+    self.other1.addItems(sorted(self.otherDict.keys()))
+    self.other1.currentTextChanged.connect(self.changeCB1)
+    otherL.addWidget(self.other1)
+    self.other2 = QComboBox()
+    self.other2.addItems(self.otherDict.get(self.other1.currentText(),[]))
+    self.other2.activated.connect(self.changeCB2)
+    otherL.addWidget(self.other2)
+
     _, centerL = widgetAndLayout('V', bodyL)
     IconButton('fa5s.angle-right',        self, [Command.ADD],       centerL, 'add to right')
     IconButton('fa5s.angle-left',         self, [Command.DELETE],    centerL, 'delete from right')
@@ -57,6 +63,12 @@ class TableHeader(QDialog):
     buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Help)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
+    # request data
+    self.comm.backendThread.worker.beSendSQL.connect(self.onGetData)
+    self.sqlCmd1 = f'SELECT view FROM docTypes WHERE docType LIKE "{docType}%"'
+    self.sqlCmd2 = f'SELECT DISTINCT properties.key FROM properties JOIN main USING(id) WHERE main.type LIKE "{docType}%"'
+    self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':self.sqlCmd1}])
+    self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':self.sqlCmd2}])
 
 
 
@@ -67,11 +79,21 @@ class TableHeader(QDialog):
       cmd (str): command that was sent
       data (pd.DataFrame): DataFrame containing table
     """
-    if cmd == f'SELECT view FROM docTypes WHERE docType=="{self.docType}"':
+    if cmd == self.sqlCmd1:
       self.selectedList = data.values[0][0].split(',')
       self.selectedList = [i[1:] if i[0]=='.' else i for i in self.selectedList]
       self.allSet       = self.allSet.union(self.selectedList)
       self.paint()
+    elif cmd == self.sqlCmd2:
+      otherList = [i.split('.', 1) for i in data['key'].to_list()]
+      otherDict = defaultdict(set)
+      for k,v in otherList:
+        otherDict[k].add(v)
+      self.otherDict = {k:sorted(v) for k,v in otherDict.items()}
+      self.other1.clear()
+      self.other2.clear()
+      self.other1.addItems(sorted(self.otherDict.keys()))
+      self.other2.addItems(self.otherDict.get(self.other1.currentText(),[]))
 
 
   def paint(self) -> None:
@@ -80,6 +102,7 @@ class TableHeader(QDialog):
     self.selectW.clear()
     self.choicesW.addItems(list(self.allSet.difference(self.selectedList)))
     self.selectW.addItems(self.selectedList)
+
 
   def execute(self, command:list[Any]) -> None:
     """
@@ -103,9 +126,6 @@ class TableHeader(QDialog):
       oldIndex = self.selectedList.index(selectedRight[0])
       if oldIndex<len(self.selectedList)-1:
         newIndex = oldIndex+1
-    elif command[0] is Command.USE_TEXT and self.inputLine.text()!='':
-      self.selectedList += [self.inputLine.text()]
-      self.allSet.add(self.inputLine.text())
     else:
       logging.error('Menu unknown: %s',command, exc_info=True)
     #change content
@@ -117,6 +137,26 @@ class TableHeader(QDialog):
     self.selectW.addItems(self.selectedList)
     if oldIndex>-1 and newIndex>-1:
       self.selectW.setCurrentRow(newIndex)
+    return
+
+  def changeCB1(self, text:str) -> None:
+    """ change content of 2nd combobox based on 1st combobox
+    Args:
+      text (str): text of 1st combobox
+    """
+    self.other2.clear()
+    self.other2.addItems(self.otherDict.get(text,[]))
+    return
+
+  def changeCB2(self, idx:int) -> None:
+    """ add entry to the right list
+    Args:
+      idx (int): index of 2nd combobox
+    """
+    newEntry = f'{self.other1.currentText()}.{self.other2.itemText(idx)}'
+    if newEntry not in self.selectedList:
+      self.selectedList.append(newEntry)
+      self.paint()
     return
 
 
