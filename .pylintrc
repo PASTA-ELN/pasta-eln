@@ -91,7 +91,8 @@ disable=raw-checker-failed,
         missing-raises-doc,
         no-else-return,
         unused-argument,
-        broad-except
+        broad-except,
+        unsubscriptable-object
 
 #Reasons:
 # looks better: len-as-condition, multiple-statements, bad-whitespace, multiple-imports

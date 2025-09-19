@@ -38,7 +38,7 @@
 **Closed issues:**
 
 - Installation Instructions - non-hardcoded Pasta path [\#559](https://github.com/PASTA-ELN/pasta-eln/issues/559)
-- 3.2.0b6 - Creeating a new project group [\#558](https://github.com/PASTA-ELN/pasta-eln/issues/558)
+- 3.2.0b6 - Creating a new project group [\#558](https://github.com/PASTA-ELN/pasta-eln/issues/558)
 - Instructions to update for people without terminal [\#555](https://github.com/PASTA-ELN/pasta-eln/issues/555)
 - 3.1.11 - Definitions Editor [\#554](https://github.com/PASTA-ELN/pasta-eln/issues/554)
 - 3.2.0b6 - Definitions editor? [\#553](https://github.com/PASTA-ELN/pasta-eln/issues/553)
@@ -84,7 +84,7 @@
 - Requirements for installation of Pasta [\#499](https://github.com/PASTA-ELN/pasta-eln/issues/499)
 - batch file download [\#498](https://github.com/PASTA-ELN/pasta-eln/issues/498)
 - Storage of tags in item creation [\#494](https://github.com/PASTA-ELN/pasta-eln/issues/494)
-- New item types are not accesssible? [\#491](https://github.com/PASTA-ELN/pasta-eln/issues/491)
+- New item types are not accessible? [\#491](https://github.com/PASTA-ELN/pasta-eln/issues/491)
 - Configuration GUI: allow user to check if hidden items are by default hidden \(new\) or shown \(current\) [\#486](https://github.com/PASTA-ELN/pasta-eln/issues/486)
 - Overlap Checkbox - Name of item [\#483](https://github.com/PASTA-ELN/pasta-eln/issues/483)
 - Shift in details view when clicking a linked item [\#479](https://github.com/PASTA-ELN/pasta-eln/issues/479)
