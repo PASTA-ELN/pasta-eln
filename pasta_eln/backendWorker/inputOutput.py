@@ -19,6 +19,7 @@ from ..miscTools import flatten
 from ..textTools.html2markdown import html2markdown
 from ..textTools.stringChanges import camelCase
 from .backend import Backend
+from .htmlString import htmlStart, htmlEnd, importantKeys
 
 # .eln file: common between all ELNs
 # - can be exported / imported generally; not a 1:1 backup (just zip it)
@@ -447,6 +448,59 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       graph.append(docELN)
       return docELN['@id']
 
+
+    def createNodeHTML(node:dict[str,Any]) -> str:
+      """
+      create HTML representation of a node
+      Args:
+        node (dict): node to represent
+
+      Returns:
+        str: HTML representation
+      """
+      output = f'<h3 id="{node['@id']}">{node.get("name", node["@id"])} ({node["@type"]})</h3>\n'
+      output += '<table>\n<colgroup><col style="width: 300px;"><col></colgroup>\n<tbody>'
+      for key in importantKeys:
+        if key not in node:
+          continue
+        value = node[key]
+        if key == 'hasPart':
+          value = ', <br>'.join([f'<a href="#{i["@id"]}">{i.get('name', i["@id"])}</a>' for i in value])
+        if key == 'identifier':
+          if isinstance(value, str) and value.startswith('http'):
+            value = f'<a href="{value}">{value}</a>'
+          else:
+            continue
+        output += f'<tr><td>{key}</td><td>{value}</td></tr>\n'
+      output += '</tbody></table>\n'
+      output += "<details><summary>Details</summary>\n"
+      output += '<table>\n<colgroup><col style="width: 300px;"><col></colgroup>\n<tbody>'
+      for key, value in node.items():
+        if key in importantKeys and key != 'identifier':
+          continue
+        output += f'<tr><td>{key}</td><td>{value}</td></tr>\n'
+      output += '</tbody></table>\n'
+      output += "</details>"
+      output += '<hr>\n'
+      return output
+
+
+    def createHTML(graph:list[dict[str,Any]]) -> str:
+      """ create HTML representation of the graph
+      Args:
+        graph (list): list of nodes
+
+      Returns:
+        str: HTML representation
+      """
+      output = createNodeHTML([i for i in graph if i['@id']=='./'][0])
+      for node in graph:
+        if node['@id']=='./' or node['@id'].endswith('ro-crate-metadata.json'):
+          continue
+        output += createNodeHTML(node)
+      return htmlStart + output + htmlEnd.replace('___VERSION___', __version__).replace('___DATE___', str(datetime.now()))
+
+
     # for each project, append to graph
     masterParts = []
     for projectID in projectIDs:
@@ -501,7 +555,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       for affiliation in author['organizations']:
         affiliationId    = f"affiliation_{affiliation['organization']}"
         if affiliationId not in graphMaster:
-          graphMaster.append({'@id':affiliationId, '@type':'organization', 'name':affiliation['organization'], 'RODID':affiliation['rorid']})
+          graphMaster.append({'@id':affiliationId, '@type':'Organization', 'name':affiliation['organization'], 'RORID':affiliation['rorid']})
           affiliationNodes.append({'@id':affiliationId})
       authorID = f"author_{author['first']}_{author['last']}"
       graphMaster.append({'@id':authorID, '@type':'Person', 'givenName': author['first'], 'familyName': author['last'],
@@ -518,6 +572,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     #finalize file
     index['@graph'] = graphMaster+graph+graphMisc
     elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json', json.dumps(index, indent=2))
+    elnFile.writestr(f'{dirNameGlobal}/ro-crate-preview.html',  createHTML(index['@graph']))
 
     #sign file
     if 'signingKeyPair' not in backend.configuration or not backend.configuration['signingKeyPair']:
