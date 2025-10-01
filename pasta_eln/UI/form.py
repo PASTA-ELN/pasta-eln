@@ -424,9 +424,7 @@ class Form(QDialog):
         self.keyValueLabel = QLabel('Key - values')
         self.keyValueLabel.hide()
         formL.addRow(self.keyValueLabel, self.keyValueListW)
-        # add extra questions at bottom of form
-        if self.allowProjectChange or self.allowDocTypeChange:
-          formL.addRow(QLabel('Special properties:'), QLabel('') )
+        ### add extra questions at bottom of form
         # project change
         if self.allowProjectChange:
           formL.addRow(QLabel('Project'), self.projectComboBox)
@@ -438,7 +436,7 @@ class Form(QDialog):
             if key1[0]!='x':
               self.docTypeComboBox.addItem(value1['title'], userData=key1)
           self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
-          formL.addRow(QLabel('Data type'), self.docTypeComboBox)
+          formL.addRow(QLabel('Item type'), self.docTypeComboBox)
     if [i for i in self.doc if i.startswith('_') and i not in ['_projectID']]:
       logging.error('There should not be "_" in a doc: %s', str(self.doc), exc_info=True)
 

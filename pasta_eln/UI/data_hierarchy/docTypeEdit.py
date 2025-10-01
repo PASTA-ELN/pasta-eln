@@ -31,7 +31,7 @@ class DocTypeEditor(QDialog):
     self.callback = callback
     mainL = QVBoxLayout(self)
     _, self.mainForm = widgetAndLayoutForm(mainL)
-    self.setWindowTitle('Edit docType properties')
+    self.setWindowTitle('Edit item type properties')
     mainL.addStretch(1)
     buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
     buttonBox.clicked.connect(self.closeDialog)

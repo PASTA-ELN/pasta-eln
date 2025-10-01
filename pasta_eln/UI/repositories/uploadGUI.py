@@ -90,7 +90,7 @@ class UploadGUI(QDialog):
     projectString = ', '.join(i[1] for i in self.allDocTypes if i[0].startswith('x'))
     _, rightSide = widgetAndLayout('V', center, spacing='m', right='l')
     rightSide.setAlignment(Qt.AlignTop)                                           # type: ignore[attr-defined]
-    Label('Include data types','h2', rightSide)
+    Label('Include item types','h2', rightSide)
     self.allCheckboxes = [QCheckBox(projectString, self)]
     self.allCheckboxes[0].setChecked(True)
     self.allCheckboxes[0].setDisabled(True)

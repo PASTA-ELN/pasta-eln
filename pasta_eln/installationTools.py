@@ -122,7 +122,8 @@ def configuration(command:str, pathData:str) -> str:
   return output
 
 
-def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]=None, projectGroup:str='', outputFormat:str='print') -> str:
+def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]=None, projectGroup:str='research',
+                outputFormat:str='print') -> str:
   '''
   Create example data after installation
 

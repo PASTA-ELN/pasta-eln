@@ -78,9 +78,10 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
   statistics:dict[str,Any] = {}
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     files = elnFile.namelist()
-    if len({Path(i).parts[0] for i in files}) != 1:
-      logging.error('eln file has multiple top-level directories, cannot process')
-      return 'ERROR: eln file has multiple top-level directories, cannot process',{}
+    baseFolderSet = {Path(i).parts[0] for i in files}
+    if len(baseFolderSet) != 1:
+      logging.error('eln file has multiple top-level directories: %s. Cannot process',str(baseFolderSet))
+      return f'ERROR: eln file has multiple top-level directories: {baseFolderSet}. Cannot process',{}
     dirName=Path(files[0]).parts[0]
     statistics['num. files'] = len([i for i in files if Path(i).parent!=Path(dirName)])
     if f'{dirName}/ro-crate-metadata.json' not in files:
@@ -546,7 +547,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     masterNodeInfo2 = {'@id':'PASTA-ELN','@type': 'Organization', 'name': 'PASTA ELN',
             'logo': 'https://raw.githubusercontent.com/PASTA-ELN/desktop/main/pasta.png',
             'slogan': 'The favorite ELN for experimental scientists',
-            'url': 'https://github.com/PASTA-ELN/', 'description': f'Version {__version__}'
+            'url': 'https://github.com/PASTA-ELN/', 'version': __version__
     }
     graphMaster.append(masterNodeInfo2)
     authorNodes = []
@@ -555,7 +556,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       for affiliation in author['organizations']:
         affiliationId    = f"affiliation_{affiliation['organization']}"
         if affiliationId not in graphMaster:
-          graphMaster.append({'@id':affiliationId, '@type':'Organization', 'name':affiliation['organization'], 'RORID':affiliation['rorid']})
+          graphMaster.append({'@id':affiliationId, '@type':'Organization', 'name':affiliation['organization'], 'identifier':affiliation['rorid']})
           affiliationNodes.append({'@id':affiliationId})
       authorID = f"author_{author['first']}_{author['last']}"
       graphMaster.append({'@id':authorID, '@type':'Person', 'givenName': author['first'], 'familyName': author['last'],
