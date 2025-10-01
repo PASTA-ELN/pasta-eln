@@ -156,7 +156,7 @@ class Image():
       policy.setHorizontalPolicy(QSizePolicy.Policy.Fixed)
       policy.setVerticalPolicy(QSizePolicy.Policy.Fixed)
       imageSVG.setSizePolicy(policy)
-      imageSVG.renderer().load(bytearray(data, encoding='utf-8'))
+      imageSVG.load(bytearray(data, encoding='utf-8'))
       if height>0:
         imageSVG.setMaximumSize(int(float(imageSVG.width())/float(imageSVG.height())*height) ,height)
       if width>0:
