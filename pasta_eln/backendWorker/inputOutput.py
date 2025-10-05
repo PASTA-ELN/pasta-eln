@@ -3,6 +3,7 @@ import copy
 import hashlib
 import json
 import logging
+import re
 import shutil
 import sys
 import time
@@ -556,7 +557,10 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       for affiliation in author['organizations']:
         affiliationId    = f"affiliation_{affiliation['organization']}"
         if affiliationId not in graphMaster:
-          graphMaster.append({'@id':affiliationId, '@type':'Organization', 'name':affiliation['organization'], 'identifier':affiliation['rorid']})
+          data = {'@id':affiliationId, '@type':'Organization', 'name':affiliation['organization']}
+          if 'rorid' in affiliation and affiliation['rorid']:
+            data['identifier'] = f"https://ror.org/{affiliation['rorid']}"
+          graphMaster.append(data)
           affiliationNodes.append({'@id':affiliationId})
       authorID = f"author_{author['first']}_{author['last']}"
       graphMaster.append({'@id':authorID, '@type':'Person', 'givenName': author['first'], 'familyName': author['last'],
@@ -574,6 +578,14 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     index['@graph'] = graphMaster+graph+graphMisc
     elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json', json.dumps(index, indent=2))
     elnFile.writestr(f'{dirNameGlobal}/ro-crate-preview.html',  createHTML(index['@graph']))
+    # find nodes that could be defined
+    possDefined = [(i['@id'], i['@type'],i.get('identifier','')) for i in index['@graph'] if not re.search(r'\w-[0-9a-f]{32}',i.get('identifier',''))]
+    definedStr = '  -'+'\n  -'.join([str(i) for i in possDefined if i[2]!=''])
+    logging.info('Defined identifiers:\n'+definedStr)
+    undefinedProperty = '  -'+'\n  -'.join([i[0] for i in possDefined if i[2]=='' and i[1]=='PropertyValue'])
+    logging.info('Undefined PropertyValue identifiers:\n'+undefinedProperty)
+    undefinedNonProperty = '  -'+'\n  -'.join([i[0] for i in possDefined if i[2]=='' and i[1]!='PropertyValue' and i[0] not in ('./','ro-crate-metadata.json')])
+    logging.info('Undefined NON-PropertyValue identifiers:\n'+undefinedNonProperty)
 
     #sign file
     if 'signingKeyPair' not in backend.configuration or not backend.configuration['signingKeyPair']:
@@ -598,7 +610,10 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
   if verbose:
     with open(f'{fileName[:-3]}json', 'w', encoding='utf-8') as fOut:
       fOut.write( json.dumps(index, indent=2) )
-  return f'Success: exported {len(graph)} graph-nodes into file {fileName}'
+  return f'Success: exported {len(graph)} nodes into file {fileName}. '\
+         f'Number of defined nodes: {len(definedStr.split("\n"))}, '\
+         f'Number of undefined properties: {len(undefinedProperty.split("\n"))}, '\
+         f'Number of undefined others: {len(undefinedNonProperty.split("\n"))}'
 
 
 def validateSignature(fileName:str) -> bool:

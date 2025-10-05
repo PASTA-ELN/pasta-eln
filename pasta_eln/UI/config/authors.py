@@ -97,8 +97,12 @@ class ConfigurationAuthors(QDialog):
     if sender == 'rorid':
       if re.match(r'^\w{9}$', self.userRorid.text().strip() ) is not None:
         reply = requests.get(f'https://api.ror.org/organizations/{self.userRorid.text().strip()}', timeout=10)
-        self.userOrg.setText(reply.json()['name'])
-        self.orgaCB.setItemText(self.orgaCB.currentIndex(), reply.json()['name'])
+        labels = [i for i in reply.json()['names'] if 'ror_display' in i['types']]
+        labels = labels or [i for i in reply.json()['names'] if 'acronym' not in i['types']]
+        labels = labels or reply.json()['names']
+        if labels:
+          self.userOrg.setText(labels[0]['value'])
+          self.orgaCB.setItemText(self.orgaCB.currentIndex(), labels[0]['value'])
     elif sender == 'orcid':
       if re.match(r'^\w{4}-\w{4}-\w{4}-\w{4}$', self.userOrcid.text().strip() ) is not None:
         reply = requests.get(f'https://pub.orcid.org/v3.0/{self.userOrcid.text().strip()}', timeout=10)
@@ -136,6 +140,7 @@ class ConfigurationAuthors(QDialog):
       self.comm.configuration['authors'][0] = self.author
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.configuration,indent=2))
+      self.comm.commSendConfiguration.emit(self.comm.configuration, self.comm.projectGroup)
     self.callbackFinished(False)
     return
 
