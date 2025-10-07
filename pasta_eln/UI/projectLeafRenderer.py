@@ -48,6 +48,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       return
     docID   = data['hierStack'].split('/')[-1]
     name = self.docs.get(docID, {}).get('name','') or index.data(Qt.ItemDataRole.DisplayRole)
+    docType = self.docs.get(docID, {}).get('type',[]) or data['docType']
     painter.setPen(self.penDefault)
     x0, y0 = option.rect.topLeft().toTuple()                                      # type: ignore[attr-defined]
     widthContent = min(self.widthContent,  \
@@ -56,14 +57,14 @@ class ProjectLeafRenderer(QStyledItemDelegate):
                         int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/3.5) )# type: ignore[attr-defined]
     bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)# type: ignore[attr-defined]
     painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.comm.palette.leafShadow)# type: ignore[attr-defined]
-    if data['docType'][0][0]=='x':
+    if docType=='x':
       painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafX)# type: ignore[attr-defined]
     else:
       painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafO)# type: ignore[attr-defined]
     # header
     y = self.lineSep/2
-    docTypeText= '/'.join(data['docType'])
-    if data['docType'][0][0]=='x':
+    docTypeText= '/'.join(docType)
+    if docType[0][0]=='x':
       docTypeText = self.comm.docTypesTitles['x1']['title'].lower()[:-1]
     maxCharacter = int(docTypeOffset/7.5)
     nameText = name if len(name)<maxCharacter else f'...{name[-maxCharacter+3:]}'
@@ -163,6 +164,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.docs[doc['id']]['hidden']  = any(b for b in doc['branch'] if False in b['show'])
     self.docs[doc['id']]['markdown']= markdownStr
     self.docs[doc['id']]['name']    = doc['name']
+    self.docs[doc['id']]['type'] = doc['type']
     self.docs[doc['id']]['content'] = markdownEqualizer(doc['content']) if 'content' in doc else ''
     self.docs[doc['id']]['image']   = doc.get('image','')
     self.sizeHintChanged.emit(self.docs[doc['id']]['index'])

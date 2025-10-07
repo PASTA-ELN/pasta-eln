@@ -54,6 +54,7 @@ class Form(QDialog):
       self.setWindowTitle('Create new entry')
     else:
       self.setWindowTitle('Edit information')
+    self.setMinimumSize(QSize(800,600))
     self.mainL = QVBoxLayout(self)
     self.splitter = QSplitter(Qt.Orientation.Horizontal)                         # will be filled during paint
     self.splitter.setHandleWidth(10)
