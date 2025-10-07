@@ -11,43 +11,37 @@ import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from functools import reduce
-from json import load
 from os import getcwd
 from os.path import dirname, join, realpath
 from typing import Any
 import requests
 from PySide6.QtGui import QPixmap
+from .terminology_lookup_config import lookupConfig
 
 
 class TerminologyLookupService:
   """
   Terminology Lookup service which allows user to query for a search term online
-  A list of online portals (terminology_lookup_config.json) are queried for the search term
+  A list of online portals (lookupConfig) are queried for the search term
   and the results (dict(information, iri)) are returned
   """
-
   def __init__(self) -> None:
     self.session_timeout = 10                # Timeout in seconds for the requests send to the lookup services
-    current_path = realpath(join(getcwd(), dirname(__file__)))
-    self.lookupConfig = join(current_path, 'terminology_lookup_config.json')
 
 
   async def do_lookup(self, search_term: str) -> list[dict[str, Any]]:
     """
-    Do the lookup for the search term using the services in the terminology_lookup_config.json
+    Do the lookup for the search term using the services in the lookupConfig
     Args:
       search_term (str): Search term used for the lookup
 
-    Returns: List of IRI information for the search term crawled online using the services in the terminology_lookup_config.json
+    Returns: List of IRI information for the search term crawled online using the services in the lookupConfig
     In case of error, an empty list is returned and errors is updated with failures
     """
     if not search_term.strip():
       return []
     errors = []
     results = []
-    # Load the lookup configuration
-    with open(self.lookupConfig, encoding='utf-8') as config_file:
-      lookup_services = load(config_file)
 
     # Define a function to perform the HTTP request
     def fetch_service(service: dict[str, Any]) -> dict[str, str] | None:
@@ -67,7 +61,7 @@ class TerminologyLookupService:
     # Use ThreadPoolExecutor to run requests in parallel
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor() as executor:
-      tasks = [loop.run_in_executor(executor, fetch_service, service) for service in lookup_services]
+      tasks = [loop.run_in_executor(executor, fetch_service, service) for service in lookupConfig]
       fetched_results = await asyncio.gather(*tasks)
     # Collect valid results
     for result in fetched_results:
@@ -85,7 +79,7 @@ class TerminologyLookupService:
     Args:
       search_term (str): Search term used for the lookup
       web_result (dict[str, Any]): Web result returned by querying the lookup service
-      lookup_service (dict[str, Any]): Lookup service taken from the terminology_lookup_config.json
+      lookup_service (dict[str, Any]): Lookup service taken from the lookupConfig
 
     Returns (dict[str, Any]): Dictionary containing the name, search term and results which is a list of dict(iri, information)
     """
@@ -121,8 +115,7 @@ class TerminologyLookupService:
     """
     current_path = realpath(join(getcwd(), dirname(__file__)))
     resources_path = join(current_path, '../../Resources/Icons')
-    iconsPixMap = {}
-    with open(self.lookupConfig, encoding='utf-8') as config_file:
-      for data in load(config_file):
-        iconsPixMap[data['name']] = QPixmap(join(resources_path, f'{data["icon_name"]}')).scaledToWidth(50)
+    iconsPixMap:dict[str, QPixmap] = {}
+    for data in lookupConfig:
+      iconsPixMap[data['name']] = QPixmap(join(resources_path, f'{data["icon_name"]}')).scaledToWidth(50)
     return iconsPixMap
