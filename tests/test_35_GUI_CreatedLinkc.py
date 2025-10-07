@@ -14,7 +14,7 @@ def test_simple(qtbot, caplog):
 
   # change file back
   pathExtractor = Path(__file__).parent.parent/'pasta_eln'/'AddOns'/'extractor_tif.py'
-  with open(pathExtractor, 'r') as fIn:
+  with open(pathExtractor) as fIn:
     contentOld = fIn.read()
   contentNew = ''
   for line in contentOld.splitlines():

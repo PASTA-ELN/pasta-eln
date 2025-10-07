@@ -4,7 +4,6 @@ import json
 import logging
 import os
 import platform
-import requests
 import socket
 import subprocess
 import sys
@@ -15,6 +14,7 @@ from pathlib import Path
 from typing import Any, Union
 from urllib import request
 import pandas as pd
+import requests
 from anytree import Node
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure

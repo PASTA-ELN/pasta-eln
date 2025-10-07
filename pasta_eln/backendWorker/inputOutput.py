@@ -20,7 +20,7 @@ from ..miscTools import flatten
 from ..textTools.html2markdown import html2markdown
 from ..textTools.stringChanges import camelCase
 from .backend import Backend
-from .htmlString import htmlStart, htmlEnd, importantKeys
+from .htmlString import htmlEnd, htmlStart, importantKeys
 
 # .eln file: common between all ELNs
 # - can be exported / imported generally; not a 1:1 backup (just zip it)
@@ -475,14 +475,14 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
             continue
         output += f'<tr><td>{key}</td><td>{value}</td></tr>\n'
       output += '</tbody></table>\n'
-      output += "<details><summary>Details</summary>\n"
+      output += '<details><summary>Details</summary>\n'
       output += '<table>\n<colgroup><col style="width: 300px;"><col></colgroup>\n<tbody>'
       for key, value in node.items():
         if key in importantKeys and key != 'identifier':
           continue
         output += f'<tr><td>{key}</td><td>{value}</td></tr>\n'
       output += '</tbody></table>\n'
-      output += "</details>"
+      output += '</details>'
       output += '<hr>\n'
       return output
 
@@ -581,11 +581,11 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     # find nodes that could be defined
     possDefined = [(i['@id'], i['@type'],i.get('identifier','')) for i in index['@graph'] if not re.search(r'\w-[0-9a-f]{32}',i.get('identifier',''))]
     definedStr = '  -'+'\n  -'.join([str(i) for i in possDefined if i[2]!=''])
-    logging.info('Defined identifiers:\n'+definedStr)
+    logging.info('Defined identifiers:\n%s',definedStr)
     undefinedProperty = '  -'+'\n  -'.join([i[0] for i in possDefined if i[2]=='' and i[1]=='PropertyValue'])
-    logging.info('Undefined PropertyValue identifiers:\n'+undefinedProperty)
+    logging.info('Undefined PropertyValue identifiers:\n%s',undefinedProperty)
     undefinedNonProperty = '  -'+'\n  -'.join([i[0] for i in possDefined if i[2]=='' and i[1]!='PropertyValue' and i[0] not in ('./','ro-crate-metadata.json')])
-    logging.info('Undefined NON-PropertyValue identifiers:\n'+undefinedNonProperty)
+    logging.info('Undefined NON-PropertyValue identifiers:\n%s',undefinedNonProperty)
 
     #sign file
     if 'signingKeyPair' not in backend.configuration or not backend.configuration['signingKeyPair']:

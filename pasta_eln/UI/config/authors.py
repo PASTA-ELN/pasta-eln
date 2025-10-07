@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Callable
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout
 from ...fixedStringsJson import CONF_FILE_NAME
-from ...miscTools import getRORIDLabel, getORCIDName
+from ...miscTools import getORCIDName, getRORIDLabel
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, TextButton, widgetAndLayout, widgetAndLayoutForm
 

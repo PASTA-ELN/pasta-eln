@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any
 import pandas as pd
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QComboBox, QListWidget, QVBoxLayout
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QListWidget, QVBoxLayout
 from ..backendWorker.sqlite import MAIN_ORDER
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import tableHeaderHelp

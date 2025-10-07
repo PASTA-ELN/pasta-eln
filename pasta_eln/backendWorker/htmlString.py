@@ -1,3 +1,6 @@
+""" HTML string parts for HTML export of .eln files """
+
+
 htmlStart = """
 <!DOCTYPE HTML>
 <html lang='en'>

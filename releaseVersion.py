@@ -231,7 +231,7 @@ def rightAlignComments() -> None:
   for root, _, files in os.walk('pasta_eln'):
     for file in files:
       if file.endswith('.py') and \
-          file not in ['markdown2html.py','html2markdown.py','html2mdConfig.py','html2mdUtils.py',
+          file not in ['markdown2html.py','html2markdown.py','html2mdConfig.py','html2mdUtils.py','htmlString.py',
                        'guiCommunicate.py','worker.py'] and 'Resources/' not in root and '/AddOns' not in root:
         file_path = os.path.join(root, file)
         with open(file_path, encoding='utf-8') as f:
