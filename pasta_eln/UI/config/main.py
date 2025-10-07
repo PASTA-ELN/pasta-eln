@@ -42,7 +42,7 @@ class Configuration(QDialog):
     self.placeholders = {}                                                       # to hold placeholder widgets
     self.tabClasses = {
       'Project group': ProjectGroup,
-      'Appearance': ConfigurationGUI,
+      'Interface': ConfigurationGUI,
       'Author': ConfigurationAuthors,
       'Repository': ConfigurationRepositories,
       'Add-on parameters': ConfigurationAddOnParameter,
