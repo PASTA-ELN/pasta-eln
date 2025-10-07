@@ -216,7 +216,7 @@ class Details(QScrollArea):
           path = self.comm.basePath/path
         self.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST, {'fileName':str(path), 'style':'html', 'recipe':'', 'saveFig':''})
     else:
-      showMessage(self, 'Warning', 'No item was selected via table-view, i.e. no details are shown.')
+      showMessage(self, 'Warning', 'No item was selected via list-view, i.e. no details are shown.')
     return
 
 
