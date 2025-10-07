@@ -25,11 +25,13 @@ def getFirstWikidataEntry(definition):
         str: The URL of the first Wikidata entry, or '' if not found
     """
     url = f'https://www.wikidata.org/w/api.php?action=wbsearchentities&search={definition}&language=en&format=json'
-    response = requests.get(url)
+    headers = {'User-Agent': 'PASTA-ELN (https://github.com/PASTA-ELN/pasta-eln)'}
+    response = requests.get(url, headers=headers, timeout=10)
     if response.status_code == 200:  # success
         data = response.json()
         if 'search' in data and len(data['search']) > 0: # check if search results exist
             return data['search'][0]['concepturi']
+    print('Error in html request:', response.status_code, response.text)
     return ''
 
 

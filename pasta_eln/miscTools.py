@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import platform
+import requests
 import socket
 import subprocess
 import sys
@@ -376,6 +377,34 @@ def isConnectedToInternet() -> bool:
   except OSError:
     pass
   return False
+
+
+def getRORIDLabel(idString:str) -> str :
+  """ Get label from RORID
+  Args:
+    idString (str): RORID
+  Returns:
+    str: label of the RORID
+  """
+  reply = requests.get(f'https://api.ror.org/organizations/{idString}', timeout=10)
+  labels = [i for i in reply.json()['names'] if 'ror_display' in i['types']]
+  labels = labels or [i for i in reply.json()['names'] if 'acronym' not in i['types']]
+  labels = labels or reply.json()['names']
+  return labels[0]['value'] if labels else ''
+
+
+def getORCIDName(idString:str) -> tuple[str, str]:
+  """ Get name from ORCID
+  Args:
+    idString (str): ORCID
+  Returns:
+    tuple: (first name, last name)
+  """
+  reply = requests.get(f'https://pub.orcid.org/v3.0/{idString}', timeout=10)
+  text = reply.content.decode()
+  first = text.split('<personal-details:given-names>')[1].split('</personal-details:given-names>')[0]
+  last = text.split('<personal-details:family-name>')[1].split('</personal-details:family-name>')[0]
+  return first, last
 
 
 def testNewPastaVersion(update:bool=False) -> bool:

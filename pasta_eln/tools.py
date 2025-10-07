@@ -7,11 +7,8 @@ import re
 import shutil
 import sys
 import traceback
-from pathlib import Path
 from sqlite3 import IntegrityError
 from typing import Any, Callable, Union
-import requests
-from requests.structures import CaseInsensitiveDict
 from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
 from pasta_eln.fixedStringsJson import defaultDocTypes, defaultSchema
@@ -47,14 +44,6 @@ class Tools:
     helpString += '  [s]can all projects\n'
     if command == 's':
       self.scanAllProjects()
-
-    helpString += 'Commands - update Version 2 -> Version 3:\n'
-    helpString += '  [u1] convert couchDB to SQLite\n'
-    if command == 'u1':
-      self.couchDB2SQLite()
-    helpString += '  [u2] update disk structure from V2->v3\n'
-    if command == 'u2':
-      self.translateV2_V3()
 
     helpString += 'Commands - update:\n'
     helpString += '  [u3] convert from one procedure to 3 workflows\n'
@@ -223,65 +212,6 @@ class Tools:
     return
 
 
-  def couchDB2SQLite(self, userName:str='', password:str='', database:str='', path:str='') -> None:
-    """
-    Backup everything of the CouchDB installation (local couchdb instance)
-
-    Args:
-      userName (str): username
-      password (str): password
-      database (str): database
-      path     (str): path to location of sqlite file
-    """
-    headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
-    headers['Content-Type'] = 'application/json'
-    # get arguments if not given
-    location = '127.0.0.1'
-    if not userName:
-      userName = input('Enter local admin username: ').strip()
-    if not password:
-      password = input('Enter password: ').strip()
-    if not path:
-      path = input('Enter path to data: ').strip()
-    # use information
-    authUser = requests.auth.HTTPBasicAuth(userName, password)
-    resp = requests.get(f'http://{location}:5984/_all_dbs', headers=headers, auth=authUser, timeout=10)
-    if resp.status_code != 200:
-      print('**ERROR response for _all_dbs wrong', resp.text)
-      print('Username and password', userName, password)
-      return
-    databases = resp.json()
-    print('Databases:',databases)
-    if not database:
-      database = input('Enter database: ').strip()
-    # big loop over all documents
-    if self.backend is None:
-      return
-    db = self.backend.db
-    resp = requests.get(f'http://{location}:5984/{database}/_all_docs', headers=headers, auth=authUser, timeout=10)
-    for item in resp.json()['rows']:
-      docID = item['id']
-      if docID in ('-dataHierarchy-','-ontology-') or docID.startswith('_design/'):
-        continue
-      # print(f'DocID: {docID}')
-      doc   = requests.get(f'http://{location}:5984/{database}/{docID}', headers=headers, auth=authUser, timeout=10).json()
-      doc, attachments = self.translateDoc(doc)
-      db.saveDoc(doc)
-      for att in attachments:
-        docAttach = requests.get(f'http://{location}:5984/{database}/{docID}/{att}',
-                                  headers=headers, auth=authUser, timeout=10).json()
-        setAll = set(docAttach.keys())
-        setImportant  = setAll.difference({'-date','date','-client','image','type','-type','client','-name','-branch','branch'})
-        if not setImportant or ('-name' in docAttach and docAttach['-name']=='new folder'):
-          continue
-        date = docAttach['-date'] if '-date' in docAttach else docAttach['date'] if 'date' in docAttach else att
-        if '-client' in docAttach:
-          del docAttach['-client']
-        db.cursor.execute('INSERT INTO changes VALUES (?,?,?)', [docID, date, json.dumps(docAttach)])
-        db.connection.commit()
-    return
-
-
   def translateDoc(self, doc:dict[str,Any], comment:str='') -> tuple[dict[str,Any],list[Any]]:
     """ translate to new style
 
@@ -314,28 +244,6 @@ class Tools:
       print('Input document has mistakes in: ',comment,'\n',json.dumps(doc, indent=2))
       raise
     return doc, attachments
-
-
-  def translateV2_V3(self, path:str='') -> None:
-    """ Translate old id files in the file-tree into the new style
-    Args:
-      path (str): path to file-tree
-    """
-    if not path:
-      path = input('Enter path to data: ').strip()
-    for aPath, _, files in os.walk(path):
-      if aPath == path or 'CommonFiles' in aPath:
-        continue
-      if '.id_pastaELN.json' not in files:
-        print('**ERROR** id file does NOT exist:', aPath,'\n   ',' '.join(files))
-      with open(Path(aPath)/'.id_pastaELN.json', encoding='utf-8') as fIn:
-        doc = json.load(fIn)
-      docNew, _ = self.translateDoc(doc, aPath)
-      del docNew['branch']['op']
-      docNew['branch'] = [docNew['branch']]
-      with open(Path(aPath)/'.id_pastaELN.json','w', encoding='utf-8') as fOut:
-        fOut.write(json.dumps(docNew))
-    return
 
 
   def update3Workflow(self, projectGroup:str='') -> None:

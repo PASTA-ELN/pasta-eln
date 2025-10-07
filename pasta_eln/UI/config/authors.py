@@ -5,9 +5,9 @@ import re
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
-import requests
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout
 from ...fixedStringsJson import CONF_FILE_NAME
+from ...miscTools import getRORIDLabel, getORCIDName
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, TextButton, widgetAndLayout, widgetAndLayoutForm
 
@@ -96,19 +96,12 @@ class ConfigurationAuthors(QDialog):
     sender = self.sender().accessibleName()                                       # type: ignore[attr-defined]
     if sender == 'rorid':
       if re.match(r'^\w{9}$', self.userRorid.text().strip() ) is not None:
-        reply = requests.get(f'https://api.ror.org/organizations/{self.userRorid.text().strip()}', timeout=10)
-        labels = [i for i in reply.json()['names'] if 'ror_display' in i['types']]
-        labels = labels or [i for i in reply.json()['names'] if 'acronym' not in i['types']]
-        labels = labels or reply.json()['names']
-        if labels:
-          self.userOrg.setText(labels[0]['value'])
-          self.orgaCB.setItemText(self.orgaCB.currentIndex(), labels[0]['value'])
+        if label:= getRORIDLabel(self.userRorid.text().strip()):
+          self.userOrg.setText(label)
+          self.orgaCB.setItemText(self.orgaCB.currentIndex(), label)
     elif sender == 'orcid':
       if re.match(r'^\w{4}-\w{4}-\w{4}-\w{4}$', self.userOrcid.text().strip() ) is not None:
-        reply = requests.get(f'https://pub.orcid.org/v3.0/{self.userOrcid.text().strip()}', timeout=10)
-        text = reply.content.decode()
-        first = text.split('<personal-details:given-names>')[1].split('</personal-details:given-names>')[0]
-        last = text.split('<personal-details:family-name>')[1].split('</personal-details:family-name>')[0]
+        first, last = getORCIDName(self.userOrcid.text().strip())
         self.userFirst.setText(first)
         self.userLast.setText(last)
     elif sender == 'organization':

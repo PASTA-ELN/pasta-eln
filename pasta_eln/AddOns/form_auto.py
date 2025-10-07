@@ -6,7 +6,8 @@
 
 THIS IS A ADVANCED ADD-ON TUTORIAL
 This tutorial teaches
-- do not use chatgpt library, but use the requests library in order to employ less dependencies
+- HERE: do not use chatgpt library, but use the requests library in order to employ less dependencies
+- generally : use a library!!
 - the structure of documents
 """
 import requests

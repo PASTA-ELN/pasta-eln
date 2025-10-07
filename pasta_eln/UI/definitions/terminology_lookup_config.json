@@ -7,6 +7,9 @@
       "q": "searchTerm",
       "limit": 5
     },
+    "header": {
+      "User-Agent": "PASTA-ELN (https://github.com/PASTA-ELN/pasta-eln)"
+    },
     "iri_prefix": "https://en.wikipedia.org/w/index.php?curid=",
     "search_criteria": {
       "results_keys": [
@@ -31,6 +34,9 @@
       "language": "en",
       "type": "item",
       "continue": "0"
+    },
+    "header": {
+      "User-Agent": "PASTA-ELN (https://github.com/PASTA-ELN/pasta-eln)"
     },
     "search_criteria": {
       "results_keys": [

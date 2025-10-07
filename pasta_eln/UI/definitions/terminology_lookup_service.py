@@ -53,15 +53,15 @@ class TerminologyLookupService:
     def fetch_service(service: dict[str, Any]) -> dict[str, str] | None:
       try:
         service['request_params'][service['search_term_key']] = search_term
-        response = requests.get(service['url'], params=service['request_params'],
-          timeout=self.session_timeout)
+        response = requests.get(service['url'], params=service['request_params'], headers=service.get('header',{}),
+                                timeout=self.session_timeout)
         if response.status_code == 200:
           web_result = response.json()
           return self.parse_web_result(search_term, web_result, service)
         else:
           errors.append(f"Error querying {service['name']}: {response.status_code} {response.reason}")
       except requests.RequestException as e:
-        errors.append(f"Error querying {service['name']}: {str(e)}")
+        errors.append(f"Exception querying {service['name']}: {str(e)}")
       return None
 
     # Use ThreadPoolExecutor to run requests in parallel

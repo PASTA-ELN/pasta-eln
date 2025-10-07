@@ -7,8 +7,8 @@
 #  Filename: terminology_lookup_dialog.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information
+import asyncio
 import textwrap
-from asyncio import get_event_loop
 from typing import Callable
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QPixmap
@@ -112,9 +112,9 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
                           QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.Ok)
       return
     self.searchProgressBar.setValue(5)
-    event_loop = get_event_loop()
-    if lookup_results := event_loop.run_until_complete(
-        self.terminology_lookup_service.do_lookup(search_term)):
+    event_loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(event_loop)
+    if lookup_results := event_loop.run_until_complete(self.terminology_lookup_service.do_lookup(search_term)):
       for service in lookup_results:
         for result in service['results']:
           self.add_scroll_area_entry(self.icons_pixmap[service['name']],
