@@ -1,5 +1,6 @@
 """ Main methods that start the gui """
 import logging
+import sys
 import traceback
 from pathlib import Path
 from PySide6.QtCore import QCoreApplication
@@ -71,4 +72,4 @@ def startMain(projectGroup:str='') -> None:
 
 # called by python3 -m pasta_eln.gui
 if __name__ == '__main__':
-  startMain()
+  startMain(sys.argv[1] if len(sys.argv)>1 else '')

@@ -349,7 +349,8 @@ def getConfiguration(defaultProjectGroup:str='') -> tuple[dict[str, Any],str]:
     return {},''
   defaultProjectGroup = defaultProjectGroup or configuration['defaultProjectGroup']
   if defaultProjectGroup not in configuration['projectGroups']:
-    raise ValueError(f'BadConfigurationFileError: {defaultProjectGroup} not in projectGroups')
+    listPossible = list(configuration['projectGroups'].keys())
+    raise ValueError(f'BadProjectGroup: {defaultProjectGroup}. Possible: {listPossible}')
   return configuration, defaultProjectGroup
 
 
