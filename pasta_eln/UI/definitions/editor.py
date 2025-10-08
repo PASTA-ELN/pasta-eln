@@ -15,7 +15,7 @@ from .key_delegate import KeyDelegate
 from .link_online_delegate import LinkOnlineDelegate
 from .lookup_delegate import LookupDelegate
 
-COLUMN_NAMES = ['key','long','PURL','', '']
+COLUMN_NAMES = ['key','label','PURL','', '']
 COLUMN_WIDTH = [200,  400,   250, 50, 50]
 
 
@@ -89,6 +89,7 @@ class Editor(QDialog):
       data['defType'] = 'class'
       self.df0 = data.rename({'docType':'key', 'title':'long'}, axis=1)
     self.data = pd.concat([self.df0,self.df1])[['key','long','PURL','defType']]
+    self.data.rename({'long':'label'}, axis=1, inplace=True)
     self.paint()
 
 
@@ -157,7 +158,7 @@ class Editor(QDialog):
     df = pd.DataFrame(data)
     df = df.rename({0:'key',1:'description',2:'PURL'}, axis=1)
     df = df.merge(self.data, how='left', left_on='key', right_on='key')
-    df = df.drop(['long','PURL_y'], axis=1).rename({'PURL_x':'PURL'}, axis=1)
+    df = df.drop(['label','PURL_y'], axis=1).rename({'PURL_x':'PURL'}, axis=1)
     # df['defType']=self.data['defType'].values    # ignore
     return df
 

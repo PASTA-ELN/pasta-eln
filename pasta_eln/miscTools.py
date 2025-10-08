@@ -507,7 +507,11 @@ def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
     if len(keys) == 1:
       if key in d:
         raise ValueError(f"duplicated key '{key}'")
-      d[key] = value
+      try:
+        d[key] = value
+      except TypeError as e:
+        print('TypeError:', type(d), d, type(key), key, type(value), value)
+        raise e
       return
     d = d.setdefault(key, {})
     nested_set_dict(d, keys[1:], value)

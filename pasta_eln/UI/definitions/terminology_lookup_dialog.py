@@ -38,9 +38,10 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     self.selected_iris: list[str] = []
     # Load the icon images for lookup portals
     self.icons_pixmap = self.terminology_lookup_service.getIconDict()
-    # Hide the error console and connect the slot
+    # Hide the error console and button, constantly
     self.errorConsole.hide()
-    self.errorConsoleBtn.clicked.connect(lambda: self.errorConsole.setVisible(not self.errorConsole.isVisible()))
+    self.errorConsoleBtn.hide()
+    # self.errorConsoleBtn.clicked.connect(lambda: self.errorConsole.setVisible(not self.errorConsole.isVisible()))
     self.buttonBox.accepted.connect(self.set_selected_iris)
     self.buttonBox.accepted.connect(lambda: self.accepted_callback(self.selected_iris))
     self.terminologySearchPushButton.clicked.connect(self.terminology_search_button_clicked)

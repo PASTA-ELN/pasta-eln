@@ -78,6 +78,24 @@ def markdownEqualizer(text:str) -> str:
   return re.sub(r'(^|\n)(#+)', r'\1##\2', text.strip())
 
 
+def tuple2html(key:str, value:tuple) -> tuple[str,str]:
+  """
+  Convert tuple to html string
+
+  Args:
+    key   (str): key/label to add
+    value (tuple): tuple to convert
+
+  Returns:
+    str,str: key, html string
+  """
+  key = key if value[2] is None or value[2]=='' else value[2]
+  valueString = f'{value[0]} {value[1]}'
+  valueString = valueString if value[3] is None or value[3]=='' else \
+                f'{valueString}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
+  return key, valueString
+
+
 def camelCase(text:str) -> str:
   """
   Produce camelCase from normal string

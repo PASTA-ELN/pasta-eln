@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QLabel, QLayout, QScrollArea, QTextEdit
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import SORTED_DB_KEYS, cssStyleHtmlEditors, defaultDataHierarchyNode
 from ..textTools.handleDictionaries import dict2ul
-from ..textTools.stringChanges import markdownEqualizer
+from ..textTools.stringChanges import markdownEqualizer, tuple2html
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
 from .guiCommunicate import Communicate
 from .guiStyle import IconButton, Image, Label, TextButton, widgetAndLayout
@@ -249,9 +249,9 @@ class Details(QScrollArea):
     """
     if not key and isinstance(value,dict):
       return '\n'.join([self.addDocDetails(layout, k, v, dataHierarchyNode) for k, v in value.items()])
-    link = False
     if not value:
       return ''
+    link = False
     labelStr = ''
     if key=='tags':
       rating = ['\u2605'*int(i[1]) for i in value if re.match(r'^_\d$', i)]
@@ -299,14 +299,19 @@ class Details(QScrollArea):
         value = ', '.join([str(i) for i in value])
       labelStr = f'<b>{key.capitalize()}</b>: {value}'
       if isinstance(value, tuple) and len(value)==4:
-        key = key if value[2] is None or value[2]=='' else value[2]
-        valueString = f'{value[0]} {value[1]}'
-        valueString = valueString if value[3] is None or value[3]=='' else \
-                      f'{valueString}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
-        labelStr = f'{key.capitalize()}: {valueString}<br>'
+        k,v = tuple2html(key, value)
+        labelStr = f'{k.capitalize()}: {v}<br>'
       if isinstance(value, dict):
-        value = {k:(v[0] if isinstance(v, (list,tuple)) else v) for k,v in value.items()}
-        labelStr = f'{cssStyleHtmlEditors}{key.capitalize()}: {dict2ul(value)}'
+        newValue = {}
+        for k,v in value.items():
+          if isinstance(v, tuple) and len(v)==4:
+            k2,v2 = tuple2html(k, v)
+            newValue[k2] = v2
+          elif isinstance(v, (list, tuple)):
+            newValue[k] = v[0]
+          else:
+            newValue[k] = v
+        labelStr = f'{cssStyleHtmlEditors}{key.capitalize()}: {dict2ul(newValue)}'
       if layout is not None:
         label = Label(labelStr, function=lambda x,y: self.clickLink(x,y) if link else None, docID=docID)
         label.setOpenExternalLinks(True)
