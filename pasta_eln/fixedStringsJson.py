@@ -68,20 +68,20 @@ defaultSchema: list[list[str|int]] = [
 
 
 defaultDefinitions = [
-  ['name',              'What is the name this item?',                                    ''],
-  ['tags',              'What are the tags?',                                             ''],
-  ['status',            'What is the project status',                                     ''],
-  ['objective',         'What is the objective?',                                         ''],
-  ['comment',           'What are the comments?',                                         ''],
-  ['content',           'What is procedure (Markdown possible; autofill if file given)?', ''],
-  ['vendor',            'Who is the vendor?',                                             ''],
-  ['sample',            'Which sample was used?',                                         ''],
-  ['workflow/procedure','Which procedure was used?',                                      ''],
-  ['chemistry',         'What is its chemical composition?',                              ''],
-  ['qrCodes',           '',                           'https://www.wikidata.org/wiki/Q12203'],
-  ['geometry.width',    'Sample width',                                                   ''],
-  ['geometry.length',   'Sample length',                                                  ''],
-  ['geometry.height',   'Sample height',                         'https://schema.org/height']
+  ['name',               'What is the name this item?',                                    ''],
+  ['tags',               'What are the tags?',                                             ''],
+  ['.status',            'What is the project status',                                     ''],
+  ['.objective',         'What is the objective?',                                         ''],
+  ['comment',            'What are the comments?',                                         ''],
+  ['content',            'What is procedure (Markdown possible; autofill if file given)?', ''],
+  ['.vendor',            'Who is the vendor?',                                             ''],
+  ['.sample',            'Which sample was used?',                                         ''],
+  ['.workflow/procedure','Which procedure was used?',                                      ''],
+  ['.chemistry',         'What is its chemical composition?',                              ''],
+  ['qrCodes',            '',                           'https://www.wikidata.org/wiki/Q12203'],
+  ['geometry.width',     'Sample width',                                                   ''],
+  ['geometry.length',    'Sample length',                                                  ''],
+  ['geometry.height',    'Sample height',                         'https://schema.org/height']
 ]
 
 
