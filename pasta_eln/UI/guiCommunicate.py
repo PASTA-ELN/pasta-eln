@@ -107,11 +107,16 @@ class Communicate(QObject):
     """
     self.dataHierarchyNodes[docType] = data
 
-  def start(self) -> None:
+
+  def start(self, projectGroup:str='') -> None:
     """
     Start the backend thread
+
+    Args:
+      projectGroup (str): project group to use, if empty use the one from initialization
     """
-    self.commSendConfiguration.emit(self.configuration, self.projectGroup)
+    self.commSendConfiguration.emit(self.configuration, projectGroup or self.projectGroup)
+    self.changeTable.emit('x0', '')                                      # show project table, without details
 
 
   def shutdownBackendThread(self) -> None:
@@ -130,7 +135,6 @@ class Communicate(QObject):
     Args:
       task (Task): task to execute
     """
-
     if task.msgWaitDialog == '' or 'PYTEST_CURRENT_TEST' in os.environ:
       return
     self.waitDialog.text.setMarkdown(task.msgWaitDialog)
