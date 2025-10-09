@@ -112,14 +112,14 @@ defaultConfiguration: dict[str, Any] = {
 #   within each: array of 3: description, default, all_choices
 configurationGUI: dict[str, Any] = {
   'general': {
-    'theme': ['Color style', 'none', ['amber', 'blue', 'cyan', 'pink', 'purple', 'teal', 'yellow', 'none']],
     'loggingLevel': ['Logging level (more->less)', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR']],
     'autosave': ['Autosave entries in form', 'No', ['Yes', 'No']],
-    'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']],
     'showHidden': ['Show hidden items by default', 'Yes', ['Yes','No']],
     'checkForUpdates': ['Check for updates on startup', 'Yes', ['Yes', 'No']]
   },
-  'dimensions': {
+  'appearance': {
+    'theme': ['Color style', 'none', ['amber', 'blue', 'cyan', 'pink', 'purple', 'teal', 'yellow', 'none']],
+    'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']],
     'sidebarWidth': ['Sidebar width', 280, [220, 280, 340]],
     'maxTableColumnWidth': ['Maximum column width in tables', 400, [300, 400, 500, 600]],
     'imageSizeDetails': ['Image size in form', 600, [300, 400, 500, 600]],

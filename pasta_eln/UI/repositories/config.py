@@ -6,7 +6,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 import qtawesome as qta
-from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit, QVBoxLayout
+from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit, QToolButton, QVBoxLayout
 from ...backendWorker.dataverse import DataverseClient
 from ...backendWorker.zenodo import ZenodoClient
 from ...fixedStringsJson import CONF_FILE_NAME
@@ -51,6 +51,15 @@ class ConfigurationRepositories(QDialog):
     leftSide.addWidget(QLabel('API key'), 2, 0)
     self.apiZenodo = QLineEdit(conf['zenodo']['key'])                                    # type: ignore[index]
     leftSide.addWidget(self.apiZenodo, 2, 1)
+    self.apiZenodo.setEchoMode(QLineEdit.Password)
+    self.zenodoToggle = QToolButton()
+    self.zenodoToggle.setCheckable(True)
+    self.zenodoToggle.setIcon(qta.icon('fa5s.eye-slash'))  # hidden by default
+    def _toggle_zenodo(checked: bool) -> None:
+      self.apiZenodo.setEchoMode(QLineEdit.Normal if checked else QLineEdit.Password)
+      self.zenodoToggle.setIcon(qta.icon('fa5s.eye' if checked else 'fa5s.eye-slash'))
+    self.zenodoToggle.toggled.connect(_toggle_zenodo)
+    leftSide.addWidget(self.zenodoToggle, 2, 2)
     self.zenodoButton = TextButton('Check',   self, [Command.CHECK_ZENODO], tooltip='Check Zenodo login details')
     leftSide.addWidget(self.zenodoButton, 3, 1)
 
@@ -62,13 +71,21 @@ class ConfigurationRepositories(QDialog):
     rightSide.addWidget(self.urlDatavese, 1, 1)
     self.dataverseButton1 = TextButton('Check',   self, [Command.CHECK_DV1], tooltip='Check Dataverse server details')
     self.dataverseButton1.setMinimumWidth(100)
-    rightSide.addWidget(self.dataverseButton1, 1, 2)
+    rightSide.addWidget(self.dataverseButton1, 1, 3)
     rightSide.addWidget(QLabel('API key'), 2, 0)
     self.apiDataverse = QLineEdit(conf['dataverse']['key'])                              # type: ignore[index]
+    self.apiDataverse.setEchoMode(QLineEdit.Password)
+    self.dataverseToggle = QToolButton()
+    self.dataverseToggle.setCheckable(True)
+    self.dataverseToggle.setIcon(qta.icon('fa5s.eye-slash'))
+    def _toggle_dataverse(checked: bool) -> None:
+      self.apiDataverse.setEchoMode(QLineEdit.Normal if checked else QLineEdit.Password)
+      self.dataverseToggle.setIcon(qta.icon('fa5s.eye' if checked else 'fa5s.eye-slash'))
+    self.dataverseToggle.toggled.connect(_toggle_dataverse)
+    rightSide.addWidget(self.dataverseToggle, 2, 2)
     rightSide.addWidget(self.apiDataverse, 2, 1)
     self.dataverseButton2 = TextButton('Check',   self, [Command.CHECK_DV2], tooltip='Check Dataverse API-key')
-    rightSide.addWidget(self.dataverseButton2, 2, 2)
-    self.dataverseButton2.setMinimumWidth(100)
+    rightSide.addWidget(self.dataverseButton2, 2, 3)
     rightSide.addWidget(QLabel('Sub dataverse'), 3, 0)
     self.dvDataverse = QComboBox()
     self.dvDataverse.addItem(conf['dataverse']['dataverse'])                             # type: ignore[index]

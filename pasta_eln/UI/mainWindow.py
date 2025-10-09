@@ -182,6 +182,7 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.VIEW:
       self.comm.projectID = ''
       self.comm.changeTable.emit(command[1], '')
+      self.comm.changeSidebar.emit('')
     # system menu
     elif command[0] is Command.CHANGE_PG:
       self.comm.configuration['defaultProjectGroup'] = command[1]

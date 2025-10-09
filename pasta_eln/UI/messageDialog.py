@@ -1,6 +1,7 @@
 """ Dialog that shows a message and possibly an image """
 import qtawesome as qta
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QTextDocument
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QWidget
 from .guiStyle import Image, Label, TextButton, widgetAndLayout
 
@@ -59,6 +60,10 @@ class MessageDialog(QDialog):
     Args:
       text (str): text to copy
     """
+    if text.startswith('<') and text.endswith('>'):
+      doc = QTextDocument()
+      doc.setHtml(text)
+      text = doc.toPlainText()
     clipboard = QApplication.clipboard()
     clipboard.setText(text)
 
