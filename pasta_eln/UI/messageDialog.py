@@ -33,7 +33,8 @@ class MessageDialog(QDialog):
     if icon:
       iconLabel = QLabel('')
       iconLabel.setPixmap(iconSymbol.pixmap(ICON_SIZE, ICON_SIZE))
-      iconLabel.setStyleSheet(f'background: {color};')
+      if color!='#':
+        iconLabel.setStyleSheet(f'background: {color};')
       iconLabel.setMinimumSize(ICON_SIZE, ICON_SIZE)
       mainL.addWidget(iconLabel, alignment=Qt.AlignHCenter)                                     # type: ignore
     if image is not None:

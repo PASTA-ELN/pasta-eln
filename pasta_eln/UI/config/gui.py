@@ -1,4 +1,4 @@
-""" Main class of config tab on GUI elements """
+""" config tab on GUI / Appearance / Interface elements """
 import json
 from pathlib import Path
 from typing import Callable
@@ -9,7 +9,7 @@ from ..guiStyle import TextButton
 
 
 class ConfigurationGUI(QDialog):
-  """ Main class of config tab on GUI elements """
+  """ config tab on GUI / Appearance / Interface elements """
   def __init__(self, comm:Communicate, callbackFinished:Callable[[bool],None]):
     """
     Initialization
@@ -54,6 +54,8 @@ class ConfigurationGUI(QDialog):
             self.comm.configuration['GUI'][k] = getattr(self, k).currentText()
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.configuration,indent=2))
+      self.accept()
+      self.callbackFinished(True)
     return
 
 
@@ -71,10 +73,12 @@ class ConfigurationGUI(QDialog):
       QCombobox: filled combobox
     """
     widget = QComboBox()                                                     # pylint: disable=qt-local-widget
+    labelWidget = QLabel(label)
     if label == 'Color style':
-      widget.setToolTip('Restart of PASTA-ELN required.')
-      label += ' *'
+      widget.setToolTip('For change to take effect, restart PASTA-ELN.')
+      labelWidget = QLabel(label+' (For change to take effect, restart PASTA-ELN.)')
+      labelWidget.setToolTip('For change to take effect, restart PASTA-ELN.')
     widget.addItems(itemList)
     widget.setCurrentText(default)
-    layout.addRow(QLabel(label), widget)
+    layout.addRow(labelWidget, widget)
     return widget

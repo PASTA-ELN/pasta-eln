@@ -1,9 +1,10 @@
 """ Main class of config tab on parameters (e.g. API keys) for add-ons """
 import importlib
 import json
+from enum import Enum
 from pathlib import Path
 from typing import Callable
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QVBoxLayout
+from PySide6.QtWidgets import QApplication, QDialog, QGroupBox, QLineEdit, QVBoxLayout
 from ...fixedStringsJson import CONF_FILE_NAME
 from ..guiCommunicate import Communicate
 from ..guiStyle import Label, TextButton, widgetAndLayout
@@ -28,32 +29,27 @@ class ConfigurationAddOnParameter(QDialog):
     Label('Define Add-On parameters','h2',mainL)
 
     #GUI elements
-    self.allLineEdits = []
+    self.allGroupBoxes = []
     if hasattr(comm, 'configuration'):
       addOns = comm.configuration['projectGroups'][comm.projectGroup]['addOns']
       for addOnType in addOns:                                                        # loop over add-on types
         if addOnType != 'extractors' and addOns[addOnType]:
           for name, _ in addOns[addOnType].items():                                        # loop over add-ons
-            module      = importlib.import_module(name)       # ISSUE: slow since imports all dependencies,...
-            requiredParam = module.reqParameter
-            try:
-              helpText = module.helpText
-            except AttributeError:
-              helpText = ''
-            for param, tooltip in requiredParam.items():                                # loop over parameters
-              _, barL = widgetAndLayout('H', mainL, 'm', 's', 's', 's', 's')
-              Label(f'{addOnType}/{name}.py: {param}', 'h4', barL, tooltip=tooltip)
-              lineEdit = QLineEdit()                                         # pylint: disable=qt-local-widget
-              barL.addWidget(lineEdit)
-              if helpText:
-                TextButton('?', self, command=[helpText], layout=barL)
-              self.allLineEdits.append((addOnType,name,param,lineEdit))
+            groupbox = QGroupBox(name.capitalize())
+            mainL.addWidget(groupbox)
+            groupLayout = QVBoxLayout(groupbox)
+            self.allGroupBoxes.append((addOnType, name, groupbox, groupLayout))
 
     #final button box
     mainL.addStretch(1)
-    buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
-    buttonBox.clicked.connect(self.closeDialog)
-    mainL.addWidget(buttonBox)
+    _, buttonLineL = widgetAndLayout('H', mainL, 'm')
+    tooltip = 'Scan files to find parameters. Takes time.'
+    scanBtn = TextButton('Scan',                self, [Command.SCAN],   buttonLineL, tooltip)
+    scanBtn.setStyleSheet('background: orange; color: black;')
+    buttonLineL.addStretch(1)
+    self.saveBtn = TextButton('Save', self, [Command.SAVE],   buttonLineL, 'Save changes')
+    self.saveBtn.setShortcut('Ctrl+Return')
+    TextButton('Cancel',              self, [Command.CANCEL], buttonLineL, 'Discard changes')
 
 
   def execute(self, command:list[str]) -> None:
@@ -63,20 +59,10 @@ class ConfigurationAddOnParameter(QDialog):
     Args:
       command (list[str]): command to execute
     """
-    showMessage(self, 'Help', command[0], 'Information')
-    return
-
-
-  def closeDialog(self, btn:TextButton) -> None:
-    """
-    cancel or save entered data
-
-    Args:
-      btn (QButton): save or cancel button
-    """
-    if btn.text().endswith('Cancel'):
+    if command[0] is Command.CANCEL:
       self.reject()
-    else:
+      self.callbackFinished(False)
+    elif command[0] is Command.SAVE:
       apiKeys = self.comm.configuration.get('addOnParameter',{})
       for _, name, param, lineEdit in self.allLineEdits:
         if name not in apiKeys:
@@ -86,5 +72,34 @@ class ConfigurationAddOnParameter(QDialog):
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.configuration,indent=2))
       self.accept()
-    self.callbackFinished(False)
+      self.callbackFinished(False)
+    elif command[0] is Command.SCAN:
+      self.allLineEdits = []
+      for addonType, name, groupbox, groupLayout in self.allGroupBoxes:
+        QApplication.processEvents()                                                        # Force GUI update
+        module      = importlib.import_module(name)           # ISSUE: slow since imports all dependencies,...
+        requiredParam = module.reqParameter
+        try:
+          helpText = module.helpText
+        except AttributeError:
+          helpText = ''
+        if not requiredParam:
+          groupbox.hide()
+        for param, tooltip in requiredParam.items():                                    # loop over parameters
+          _, barL = widgetAndLayout('H', groupLayout, 'm', 's', 's', 's', 's')
+          Label(f'{name}.py: {param}', 'h4', barL, tooltip=tooltip)
+          lineEdit = QLineEdit()                                             # pylint: disable=qt-local-widget
+          barL.addWidget(lineEdit)
+          if helpText:
+            TextButton('?', self, command=[helpText], layout=barL)
+          self.allLineEdits.append((addonType,name,param,lineEdit))
+    else:
+      showMessage(self, 'Help', command[0], 'Information')
     return
+
+
+class Command(Enum):
+  """ Commands used in this file """
+  SCAN        = 1
+  SAVE        = 2
+  CANCEL      = 3
