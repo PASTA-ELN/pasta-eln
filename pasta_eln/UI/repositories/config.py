@@ -51,12 +51,12 @@ class ConfigurationRepositories(QDialog):
     leftSide.addWidget(QLabel('API key'), 2, 0)
     self.apiZenodo = QLineEdit(conf['zenodo']['key'])                                    # type: ignore[index]
     leftSide.addWidget(self.apiZenodo, 2, 1)
-    self.apiZenodo.setEchoMode(QLineEdit.Password)
+    self.apiZenodo.setEchoMode(QLineEdit.EchoMode.Password)
     self.zenodoToggle = QToolButton()
     self.zenodoToggle.setCheckable(True)
-    self.zenodoToggle.setIcon(qta.icon('fa5s.eye-slash'))  # hidden by default
+    self.zenodoToggle.setIcon(qta.icon('fa5s.eye-slash'))                                  # hidden by default
     def _toggle_zenodo(checked: bool) -> None:
-      self.apiZenodo.setEchoMode(QLineEdit.Normal if checked else QLineEdit.Password)
+      self.apiZenodo.setEchoMode(QLineEdit.EchoMode.Normal if checked else QLineEdit.EchoMode.Password)
       self.zenodoToggle.setIcon(qta.icon('fa5s.eye' if checked else 'fa5s.eye-slash'))
     self.zenodoToggle.toggled.connect(_toggle_zenodo)
     leftSide.addWidget(self.zenodoToggle, 2, 2)
@@ -74,12 +74,12 @@ class ConfigurationRepositories(QDialog):
     rightSide.addWidget(self.dataverseButton1, 1, 3)
     rightSide.addWidget(QLabel('API key'), 2, 0)
     self.apiDataverse = QLineEdit(conf['dataverse']['key'])                              # type: ignore[index]
-    self.apiDataverse.setEchoMode(QLineEdit.Password)
+    self.apiDataverse.setEchoMode(QLineEdit.EchoMode.Password)
     self.dataverseToggle = QToolButton()
     self.dataverseToggle.setCheckable(True)
     self.dataverseToggle.setIcon(qta.icon('fa5s.eye-slash'))
     def _toggle_dataverse(checked: bool) -> None:
-      self.apiDataverse.setEchoMode(QLineEdit.Normal if checked else QLineEdit.Password)
+      self.apiDataverse.setEchoMode(QLineEdit.EchoMode.Normal if checked else QLineEdit.EchoMode.Password)
       self.dataverseToggle.setIcon(qta.icon('fa5s.eye' if checked else 'fa5s.eye-slash'))
     self.dataverseToggle.toggled.connect(_toggle_dataverse)
     rightSide.addWidget(self.dataverseToggle, 2, 2)

@@ -76,7 +76,7 @@ class ConfigurationGUI(QDialog):
     labelWidget = QLabel(label)
     if label == 'Color style':
       widget.setToolTip('For change to take effect, restart PASTA-ELN.')
-      labelWidget = QLabel(label+' (For change to take effect, restart PASTA-ELN.)')
+      labelWidget = QLabel(f'{label} (For change to take effect, restart PASTA-ELN.)')
       labelWidget.setToolTip('For change to take effect, restart PASTA-ELN.')
     widget.addItems(itemList)
     widget.setCurrentText(default)

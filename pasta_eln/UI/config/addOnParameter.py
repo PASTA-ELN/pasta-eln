@@ -29,6 +29,7 @@ class ConfigurationAddOnParameter(QDialog):
     Label('Define Add-On parameters','h2',mainL)
 
     #GUI elements
+    self.allLineEdits:list[tuple[str,str,str,QLineEdit]] = []
     self.allGroupBoxes = []
     if hasattr(comm, 'configuration'):
       addOns = comm.configuration['projectGroups'][comm.projectGroup]['addOns']
@@ -44,12 +45,12 @@ class ConfigurationAddOnParameter(QDialog):
     mainL.addStretch(1)
     _, buttonLineL = widgetAndLayout('H', mainL, 'm')
     tooltip = 'Scan files to find parameters. Takes time.'
-    scanBtn = TextButton('Scan',                self, [Command.SCAN],   buttonLineL, tooltip)
-    scanBtn.setStyleSheet('background: orange; color: black;')
+    self.scanBtn = TextButton('Scan',                self, [Command.SCAN],   buttonLineL, tooltip)
+    self.scanBtn.setStyleSheet('background: orange; color: black;')
     buttonLineL.addStretch(1)
     self.saveBtn = TextButton('Save', self, [Command.SAVE],   buttonLineL, 'Save changes')
     self.saveBtn.setShortcut('Ctrl+Return')
-    TextButton('Cancel',              self, [Command.CANCEL], buttonLineL, 'Discard changes')
+    self.cancelBtn = TextButton('Cancel',              self, [Command.CANCEL], buttonLineL, 'Discard changes')
 
 
   def execute(self, command:list[str]) -> None:
@@ -86,10 +87,10 @@ class ConfigurationAddOnParameter(QDialog):
             helpText = ''
           if not requiredParam:
             groupbox.hide()
-          for param, tooltip in requiredParam.items():                                    # loop over parameters
+          for param, tooltip in requiredParam.items():                                  # loop over parameters
             _, barL = widgetAndLayout('H', groupLayout, 'm', 's', 's', 's', 's')
             Label(f'{name}.py: {param}', 'h4', barL, tooltip=tooltip)
-            lineEdit = QLineEdit()                                             # pylint: disable=qt-local-widget
+            lineEdit = QLineEdit()                                           # pylint: disable=qt-local-widget
             barL.addWidget(lineEdit)
             if helpText:
               TextButton('?', self, command=[helpText], layout=barL)

@@ -78,7 +78,7 @@ def markdownEqualizer(text:str) -> str:
   return re.sub(r'(^|\n)(#+)', r'\1##\2', text.strip())
 
 
-def tuple2html(key:str, value:tuple) -> tuple[str,str]:
+def tuple2html(key:str, value:tuple[str,str,str,str]) -> tuple[str,str]:
   """
   Convert tuple to html string
 
