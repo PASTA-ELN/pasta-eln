@@ -59,7 +59,8 @@ class TestStringMethods(unittest.TestCase):
                             }[service['name']]
             answers.append(f"{result['iri'][:30]:<30} {serviceShort}  {result['information'][:100]}")
             successServices.add(serviceShort.strip())
-      print(f'Search term: {searchTerm} \n - {"\n - ".join(answers)}')
+      listStr = "\n - ".join(answers)
+      print(f'Search term: {searchTerm} \n - {listStr}')
       print('Services used:', ', '.join(sorted(successServices)),'\n')
       assert successServices=={'wikiD', 'wiki', 'TIB', 'OLS'}
 

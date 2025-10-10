@@ -460,7 +460,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       Returns:
         str: HTML representation
       """
-      output = '<h3 id="{i}">{n} ({t})</h3>\n'.format(i=node['@id'],n=node.get('name',node['@id']),
+      output = '<h3 id="{i}">{n} ({t})</h3>\n'.format(i=node['@id'],n=node.get('name',node['@id']),# pylint: disable=consider-using-f-string
                                                       t=node['@type'])
       output += '<table>\n<colgroup><col style="width: 300px;"><col></colgroup>\n<tbody>'
       for key in importantKeys:
@@ -468,7 +468,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
           continue
         value = node[key]
         if key == 'hasPart':
-          value = ', <br>'.join(['<a href="#{i}">{n}</a>'.format(i=node['@id'],n=node.get('name',node['@id']))
+          value = ', <br>'.join(['<a href="#{i}">{n}</a>'.format(i=node['@id'],n=node.get('name',node['@id']))# pylint: disable=consider-using-f-string
                                  for i in value])
         if key == 'identifier':
           if isinstance(value, str) and value.startswith('http'):
