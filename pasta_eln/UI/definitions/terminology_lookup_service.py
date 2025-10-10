@@ -115,6 +115,5 @@ class TerminologyLookupService:
     """
     current_path = realpath(join(getcwd(), dirname(__file__)))
     resources_path = join(current_path, '../../Resources/Icons')
-    iconsPixMap = {data['name'] : QPixmap(join(resources_path, f'{data["icon_name"]}')).scaledToWidth(50)
-                   for data in lookupConfig}
-    return iconsPixMap
+    return {data['name'] : QPixmap(join(resources_path, f'{data["icon_name"]}')).scaledToWidth(50)
+            for data in lookupConfig}

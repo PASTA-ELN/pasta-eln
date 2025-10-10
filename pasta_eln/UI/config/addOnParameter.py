@@ -79,7 +79,7 @@ class ConfigurationAddOnParameter(QDialog):
       for addonType, name, groupbox, groupLayout in self.allGroupBoxes:
         QApplication.processEvents()                                                        # Force GUI update
         try:
-          module      = importlib.import_module(name)           # ISSUE: slow since imports all dependencies,...
+          module      = importlib.import_module(name)         # ISSUE: slow since imports all dependencies,...
           requiredParam = module.reqParameter
           try:
             helpText = module.helpText
