@@ -41,7 +41,7 @@
       "module": "pytest",
       "args": [
         "-s",
-        "tests/test_13_ImportCSV.py"
+        "tests/test_01_DefaultExample.py"
       ],
       "console": "integratedTerminal"
     }

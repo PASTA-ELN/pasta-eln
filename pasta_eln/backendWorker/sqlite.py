@@ -341,6 +341,7 @@ class SqlLiteDB:
         elif str(value)!='':
           try:
             self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), ''])
+            self.cursor.execute(cmdDef, [parentKeys+key, '', ''])
           except Exception:
             logging.error('SQL command %s did not succeed %s', cmd, [doc['id'], parentKeys+key, str(value), ''],
                           exc_info=True)

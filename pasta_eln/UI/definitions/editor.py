@@ -83,6 +83,7 @@ class Editor(QDialog):
       data (pd.DataFrame): DataFrame containing the data
     """
     if cmd == 'SELECT * FROM definitions':
+      data = data[data['key'].str.contains(r'\.')]  #filter out rows that do not contain a . in the key column
       data['defType'] = 'attribute'
       self.df1 = data
     elif cmd == 'SELECT docType, PURL, title FROM docTypes':
