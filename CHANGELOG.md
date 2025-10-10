@@ -2,7 +2,34 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.1b1...HEAD)
+
+**Fixed bugs:**
+
+- Restart when changing Research group? [\#572](https://github.com/PASTA-ELN/pasta-eln/issues/572)
+- Changing item type works only unreliably [\#569](https://github.com/PASTA-ELN/pasta-eln/issues/569)
+- Data set duplication for items with file [\#545](https://github.com/PASTA-ELN/pasta-eln/issues/545)
+- Adding key-value pairs does not work [\#510](https://github.com/PASTA-ELN/pasta-eln/issues/510)
+
+**Closed issues:**
+
+- Scan button remains visible when accessing common lists [\#578](https://github.com/PASTA-ELN/pasta-eln/issues/578)
+- Templates for items [\#571](https://github.com/PASTA-ELN/pasta-eln/issues/571)
+- Export/Import of projects [\#568](https://github.com/PASTA-ELN/pasta-eln/issues/568)
+- 3.2.1b1 - Repair/Re-installation broken [\#567](https://github.com/PASTA-ELN/pasta-eln/issues/567)
+- Windows: rename on the same name does not work. Go through code and search for all, wrap in if-clause [\#565](https://github.com/PASTA-ELN/pasta-eln/issues/565)
+- Renaming the "List" dropdown menu to "Global List" [\#564](https://github.com/PASTA-ELN/pasta-eln/issues/564)
+- Duplicating projects messes up file system [\#563](https://github.com/PASTA-ELN/pasta-eln/issues/563)
+- Not assigned items [\#562](https://github.com/PASTA-ELN/pasta-eln/issues/562)
+- Squished dialogs in some random cases on Ubuntu Wayland [\#548](https://github.com/PASTA-ELN/pasta-eln/issues/548)
+- De-selection when closing item details [\#503](https://github.com/PASTA-ELN/pasta-eln/issues/503)
+- Order of tags/rating in the project view [\#490](https://github.com/PASTA-ELN/pasta-eln/issues/490)
+- v3.0: possible column headers [\#337](https://github.com/PASTA-ELN/pasta-eln/issues/337)
+- create more applied test with links [\#17](https://github.com/PASTA-ELN/pasta-eln/issues/17)
+
+## [v3.2.1b1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.1b1) (2025-09-11)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0...v3.2.1b1)
 
 **Fixed bugs:**
 
@@ -54,10 +81,8 @@
 **Fixed bugs:**
 
 - 3.2.0b5 - Add // add + next not working [\#546](https://github.com/PASTA-ELN/pasta-eln/issues/546)
-- Data set duplication for items with file [\#545](https://github.com/PASTA-ELN/pasta-eln/issues/545)
 - Group edit or sequential edit: afterwards an \_ids is present in the database [\#515](https://github.com/PASTA-ELN/pasta-eln/issues/515)
 - Duplicating data sets does not work [\#512](https://github.com/PASTA-ELN/pasta-eln/issues/512)
-- Adding key-value pairs does not work [\#510](https://github.com/PASTA-ELN/pasta-eln/issues/510)
 - Filtering by Tag in column editor does not work [\#502](https://github.com/PASTA-ELN/pasta-eln/issues/502)
 - New item types added are assigned "random" names [\#501](https://github.com/PASTA-ELN/pasta-eln/issues/501)
 - Sidebar: click on workflows closes that project in the sidebar [\#488](https://github.com/PASTA-ELN/pasta-eln/issues/488)
