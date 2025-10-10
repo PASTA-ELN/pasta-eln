@@ -460,7 +460,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       Returns:
         str: HTML representation
       """
-      output = f'<h3 id="{node['@id']}">{node.get("name", node["@id"])} ({node["@type"]})</h3>\n'
+      output = '<h3 id="{i}">{n} ({t})</h3>\n'.format(i=node['@id'], n=node.get('name',node.get('@id')),
+                                                      t=node['@type'])
       output += '<table>\n<colgroup><col style="width: 300px;"><col></colgroup>\n<tbody>'
       for key in importantKeys:
         if key not in node:
