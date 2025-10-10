@@ -77,22 +77,25 @@ class ConfigurationAddOnParameter(QDialog):
       self.allLineEdits = []
       for addonType, name, groupbox, groupLayout in self.allGroupBoxes:
         QApplication.processEvents()                                                        # Force GUI update
-        module      = importlib.import_module(name)           # ISSUE: slow since imports all dependencies,...
-        requiredParam = module.reqParameter
         try:
-          helpText = module.helpText
-        except AttributeError:
-          helpText = ''
-        if not requiredParam:
-          groupbox.hide()
-        for param, tooltip in requiredParam.items():                                    # loop over parameters
-          _, barL = widgetAndLayout('H', groupLayout, 'm', 's', 's', 's', 's')
-          Label(f'{name}.py: {param}', 'h4', barL, tooltip=tooltip)
-          lineEdit = QLineEdit()                                             # pylint: disable=qt-local-widget
-          barL.addWidget(lineEdit)
-          if helpText:
-            TextButton('?', self, command=[helpText], layout=barL)
-          self.allLineEdits.append((addonType,name,param,lineEdit))
+          module      = importlib.import_module(name)           # ISSUE: slow since imports all dependencies,...
+          requiredParam = module.reqParameter
+          try:
+            helpText = module.helpText
+          except AttributeError:
+            helpText = ''
+          if not requiredParam:
+            groupbox.hide()
+          for param, tooltip in requiredParam.items():                                    # loop over parameters
+            _, barL = widgetAndLayout('H', groupLayout, 'm', 's', 's', 's', 's')
+            Label(f'{name}.py: {param}', 'h4', barL, tooltip=tooltip)
+            lineEdit = QLineEdit()                                             # pylint: disable=qt-local-widget
+            barL.addWidget(lineEdit)
+            if helpText:
+              TextButton('?', self, command=[helpText], layout=barL)
+            self.allLineEdits.append((addonType,name,param,lineEdit))
+        except Exception:
+          Label(f'{name}.py: Error occurred; please check add-on.', 'h4', groupLayout)
     else:
       showMessage(self, 'Help', command[0], 'Information')
     return
