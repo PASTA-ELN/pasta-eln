@@ -614,9 +614,9 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       fOut.write( json.dumps(index, indent=2) )
   return f'Success: exported {len(graph)} nodes into file {fileName}. '\
     'Count of defined nodes: {n1}, count of undefined properties: {n2}, count of undefined others: {n3}'.format(
-    n1=len(definedStr.split("\n")),
-    n2=len(undefinedProperty.split("\n")),
-    n3=len(undefinedNonProperty.split("\n")))
+    n1=len(definedStr.split('\n')),
+    n2=len(undefinedProperty.split('\n')),
+    n3=len(undefinedNonProperty.split('\n')))
 
 
 def validateSignature(fileName:str) -> bool:
