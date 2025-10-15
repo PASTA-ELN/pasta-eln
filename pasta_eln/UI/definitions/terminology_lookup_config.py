@@ -109,7 +109,7 @@ lookupConfig.append({
       'q': 'searchTerm'
     },
     'header': {
-      'Caller': 'PASTA_ELN'
+      'caller': 'PASTA_ELN'
     },
     'duplicate_ontology_names': [
       'afo', 'bco', 'bto', 'chiro', 'chmo', 'duo', 'edam', 'efo', 'fix', 'hp', 'iao', 'mod', 'mop', 'ms',

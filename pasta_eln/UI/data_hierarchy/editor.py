@@ -6,6 +6,7 @@ import pandas as pd
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QInputDialog, QMessageBox, QTabBar, QTableWidget,
                                QTableWidgetItem, QTabWidget, QVBoxLayout)
+from ...fixedStringsJson import defaultDataHierarchyNode
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, TextButton, widgetAndLayout
 from ..messageDialog import showMessage
@@ -110,6 +111,11 @@ class SchemeEditor(QDialog):
     self.docLabel= label
     fittingDocTypes = [k for k,v in self.docTypesLabels if v==label]
     if not fittingDocTypes:                                        #nothing to save since docType just created
+      self.df = pd.DataFrame(defaultDataHierarchyNode)
+      self.df['docType'] = self.selectDocType.currentData()
+      self.df.drop(['PURL'], axis=1, inplace=True)
+      self.df.rename(columns={'query':'long'}, inplace=True)
+      self.paint()
       return
     self.docType = fittingDocTypes[0]
     self.cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
