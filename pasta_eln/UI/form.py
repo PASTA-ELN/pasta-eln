@@ -398,9 +398,10 @@ class Form(QDialog):
           listDocTypeFromValue = None
           if value and re.search(r'^[a-z\-]-[a-z0-9]{32}$', value):
             # Value matches item ID pattern, fetch the document to get its type
-            if hasattr(self.comm, 'backendThread') and self.comm.backendThread.worker is not None and \
-               self.comm.backendThread.worker.backend is not None:
-              linkedDoc = self.comm.backendThread.worker.backend.db.getDoc(value, noError=True)
+            backend = getattr(self.comm.backendThread.worker, 'backend', None) if \
+                      hasattr(self.comm, 'backendThread') and self.comm.backendThread.worker is not None else None
+            if backend is not None:
+              linkedDoc = backend.db.getDoc(value, noError=True)
               if linkedDoc and 'type' in linkedDoc and linkedDoc['type']:
                 listDocTypeFromValue = linkedDoc['type'][0]
           if dataHierarchyItem[0]['list']:                                                    #choice dropdown
