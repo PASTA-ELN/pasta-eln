@@ -394,6 +394,15 @@ class Form(QDialog):
             value = defaultValue[0]
             label += '' if defaultValue[1] is None or defaultValue[1]=='' else f' [{defaultValue[1]}]'
             label += '' if defaultValue[3] is None or defaultValue[3]=='' else f'&nbsp;<b><a href="{defaultValue[3]}">&uArr;</a></b>'
+          # Check if value is an item ID and determine its docType
+          listDocTypeFromValue = None
+          if value and re.search(r'^[a-z\-]-[a-z0-9]{32}$', value):
+            # Value matches item ID pattern, fetch the document to get its type
+            if hasattr(self.comm, 'backendThread') and self.comm.backendThread.worker is not None and \
+               self.comm.backendThread.worker.backend is not None:
+              linkedDoc = self.comm.backendThread.worker.backend.db.getDoc(value, noError=True)
+              if linkedDoc and 'type' in linkedDoc and linkedDoc['type']:
+                listDocTypeFromValue = linkedDoc['type'][0]
           if dataHierarchyItem[0]['list']:                                                    #choice dropdown
             setattr(self, elementName, QComboBox())
             if ',' in dataHierarchyItem[0]['list']:                             #dataHierarchy-defined choices
@@ -404,6 +413,12 @@ class Form(QDialog):
               if listDocType not in self.comboBoxDocTypeList:          # if listDocType already exists in dict
                 self.comm.uiRequestTable.emit(listDocType, '', True)
                 self.comboBoxDocTypeList[listDocType] = (getattr(self, elementName), value)
+            self.allUserElements.append((key,'ComboBox'))
+          elif listDocTypeFromValue:                                          #value is an item ID, create dropdown
+            setattr(self, elementName, QComboBox())
+            if listDocTypeFromValue not in self.comboBoxDocTypeList:    # if listDocType already exists in dict
+              self.comm.uiRequestTable.emit(listDocTypeFromValue, '', True)
+              self.comboBoxDocTypeList[listDocTypeFromValue] = (getattr(self, elementName), value)
             self.allUserElements.append((key,'ComboBox'))
           else:                                                                                     #text area
             setattr(self, elementName, QLineEdit(value))
