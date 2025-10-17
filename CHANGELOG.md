@@ -2,7 +2,16 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.1b1...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.1b2...HEAD)
+
+**Closed issues:**
+
+- 3.2.1.b2 - Changing an item type of a file [\#585](https://github.com/PASTA-ELN/pasta-eln/issues/585)
+- 3.2.1b2 - Creation of new items? [\#583](https://github.com/PASTA-ELN/pasta-eln/issues/583)
+
+## [v3.2.1b2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.1b2) (2025-10-10)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.1b1...v3.2.1b2)
 
 **Fixed bugs:**
 
