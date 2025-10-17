@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 from ..fixedStringsJson import SORTED_KEYS, SQLiteTranslation
+from ..miscTools import isDocID
 from .stringChanges import markdownEqualizer
 
 
@@ -157,7 +158,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
           #   value = value[0] if isinstance(value,tuple) else value
           # else:
           #   raise ValueError(f'list target exists multiple times. Key: {key}')
-          if re.search(r'^[a-z\-]-[a-z0-9]{32}$',value[0]) is None:
+          if isDocID(value[0]):
             value = value[0] if isinstance(value,tuple) else value
           else:
             value = '\u260D link to entry'

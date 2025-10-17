@@ -16,7 +16,7 @@ import requests
 from anytree import Node
 from pasta_eln import __version__, minisign
 from ..fixedStringsJson import CONF_FILE_NAME
-from ..miscTools import flatten
+from ..miscTools import flatten, isDocID
 from ..textTools.html2markdown import html2markdown
 from ..textTools.stringChanges import camelCase
 from .backend import Backend
@@ -581,7 +581,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json', json.dumps(index, indent=2))
     elnFile.writestr(f'{dirNameGlobal}/ro-crate-preview.html',  createHTML(index['@graph']))
     # find nodes that could be defined
-    possDefined = [(i['@id'], i['@type'],i.get('identifier','')) for i in index['@graph'] if not re.search(r'\w-[0-9a-f]{32}',i.get('identifier',''))]
+    possDefined = [(i['@id'], i['@type'],i.get('identifier','')) for i in index['@graph'] if not isDocID(i.get('identifier',''))]
     definedStr = '  -'+'\n  -'.join([str(i) for i in possDefined if i[2]!=''])
     logging.info('Defined identifiers:\n%s',definedStr)
     undefinedProperty = '  -'+'\n  -'.join([i[0] for i in possDefined if i[2]=='' and i[1]=='PropertyValue'])
