@@ -116,7 +116,6 @@ class Table(QWidget):
     mainL.addWidget(self.gallery)
     self.setLayout(mainL)
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
-    self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
 
 
   @Slot(str, str)
