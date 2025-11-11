@@ -193,7 +193,7 @@ class Storage:
           dict: key,default pairs of parameters
         """
         text = self.get_text(name)
-        params = re.findall(r"\|\w+\|.*\|", text)
+        params = re.findall(r"\|[^|]+\|[^|]+\|", text)
         return {i.split("|")[1]: i.split("|")[2] for i in params}
 
     def get_text(self, name: str) -> str:

@@ -6,7 +6,7 @@ WORKPLAN_TEMPLATE = ['# common workflow description v1.0; head of workflow: alwa
                      'except ImportError:\n',
                      '    from common_workflow_description import Workflow\n',
                      'from analysis_steps import plot_curves, calc_YoungsModulus\n',
-                     '\n', "wf = Workflow('{workflow_name}', automate_execution=False)\n",
+                     '\n', "wf = Workflow('{workplan_name}', automate_execution=False)\n",
                      "proceduresLibrary = urlparse('{library_url}')\n",
                      'storage=Storage(proceduresLibrary)\n',
                      "sample = Sample('{sample_name}')\n",
