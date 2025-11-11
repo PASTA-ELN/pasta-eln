@@ -2,7 +2,158 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.11...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.1b2...HEAD)
+
+**Closed issues:**
+
+- 3.2.1.b2 - Changing an item type of a file [\#585](https://github.com/PASTA-ELN/pasta-eln/issues/585)
+- 3.2.1b2 - Creation of new items? [\#583](https://github.com/PASTA-ELN/pasta-eln/issues/583)
+
+## [v3.2.1b2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.1b2) (2025-10-10)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.1b1...v3.2.1b2)
+
+**Fixed bugs:**
+
+- Restart when changing Research group? [\#572](https://github.com/PASTA-ELN/pasta-eln/issues/572)
+- Changing item type works only unreliably [\#569](https://github.com/PASTA-ELN/pasta-eln/issues/569)
+- Data set duplication for items with file [\#545](https://github.com/PASTA-ELN/pasta-eln/issues/545)
+- Adding key-value pairs does not work [\#510](https://github.com/PASTA-ELN/pasta-eln/issues/510)
+
+**Closed issues:**
+
+- Scan button remains visible when accessing common lists [\#578](https://github.com/PASTA-ELN/pasta-eln/issues/578)
+- Templates for items [\#571](https://github.com/PASTA-ELN/pasta-eln/issues/571)
+- Export/Import of projects [\#568](https://github.com/PASTA-ELN/pasta-eln/issues/568)
+- 3.2.1b1 - Repair/Re-installation broken [\#567](https://github.com/PASTA-ELN/pasta-eln/issues/567)
+- Windows: rename on the same name does not work. Go through code and search for all, wrap in if-clause [\#565](https://github.com/PASTA-ELN/pasta-eln/issues/565)
+- Renaming the "List" dropdown menu to "Global List" [\#564](https://github.com/PASTA-ELN/pasta-eln/issues/564)
+- Duplicating projects messes up file system [\#563](https://github.com/PASTA-ELN/pasta-eln/issues/563)
+- Not assigned items [\#562](https://github.com/PASTA-ELN/pasta-eln/issues/562)
+- Squished dialogs in some random cases on Ubuntu Wayland [\#548](https://github.com/PASTA-ELN/pasta-eln/issues/548)
+- De-selection when closing item details [\#503](https://github.com/PASTA-ELN/pasta-eln/issues/503)
+- Order of tags/rating in the project view [\#490](https://github.com/PASTA-ELN/pasta-eln/issues/490)
+- v3.0: possible column headers [\#337](https://github.com/PASTA-ELN/pasta-eln/issues/337)
+- create more applied test with links [\#17](https://github.com/PASTA-ELN/pasta-eln/issues/17)
+
+## [v3.2.1b1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.1b1) (2025-09-11)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0...v3.2.1b1)
+
+**Fixed bugs:**
+
+- Non-extractor add-ons do not work in 3.2.0 [\#560](https://github.com/PASTA-ELN/pasta-eln/issues/560)
+
+**Closed issues:**
+
+- Re-installation // Repair broken [\#561](https://github.com/PASTA-ELN/pasta-eln/issues/561)
+- 3.2.06b - Creating a new project broken [\#557](https://github.com/PASTA-ELN/pasta-eln/issues/557)
+- Standard Operation Procedures - Folder [\#556](https://github.com/PASTA-ELN/pasta-eln/issues/556)
+- "Instrument" vs. "Instruments" [\#543](https://github.com/PASTA-ELN/pasta-eln/issues/543)
+- 3.2.0b3 - "unfolding" of Project view [\#540](https://github.com/PASTA-ELN/pasta-eln/issues/540)
+- sidebar buttons vanish when selecting item type list [\#539](https://github.com/PASTA-ELN/pasta-eln/issues/539)
+- unidentified items show full folder path [\#525](https://github.com/PASTA-ELN/pasta-eln/issues/525)
+- Column for metaVendor.Fileextension is empty [\#524](https://github.com/PASTA-ELN/pasta-eln/issues/524)
+- Details window contents do not scale with the window size [\#516](https://github.com/PASTA-ELN/pasta-eln/issues/516)
+- Linking via the lists in the data schema editor does not work [\#509](https://github.com/PASTA-ELN/pasta-eln/issues/509)
+- Sidebar: change to list of Todo, Todo priority [\#307](https://github.com/PASTA-ELN/pasta-eln/issues/307)
+- Order files / subitems by name in project view  [\#260](https://github.com/PASTA-ELN/pasta-eln/issues/260)
+
+## [v3.2.0](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0) (2025-09-08)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b7...v3.2.0)
+
+## [v3.2.0b7](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b7) (2025-08-26)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b6...v3.2.0b7)
+
+**Fixed bugs:**
+
+- Filter lines break sometimes\(?\) [\#549](https://github.com/PASTA-ELN/pasta-eln/issues/549)
+
+**Closed issues:**
+
+- Installation Instructions - non-hardcoded Pasta path [\#559](https://github.com/PASTA-ELN/pasta-eln/issues/559)
+- 3.2.0b6 - Creating a new project group [\#558](https://github.com/PASTA-ELN/pasta-eln/issues/558)
+- Instructions to update for people without terminal [\#555](https://github.com/PASTA-ELN/pasta-eln/issues/555)
+- 3.1.11 - Definitions Editor [\#554](https://github.com/PASTA-ELN/pasta-eln/issues/554)
+- 3.2.0b6 - Definitions editor? [\#553](https://github.com/PASTA-ELN/pasta-eln/issues/553)
+- 3.2.0b6 - The "Unidentified" list keeps dropdown lists from earlier lists [\#552](https://github.com/PASTA-ELN/pasta-eln/issues/552)
+- 3.2.0b6 - Bugs in the item type editor [\#551](https://github.com/PASTA-ELN/pasta-eln/issues/551)
+- Deleting filter lines breaks filter lines [\#550](https://github.com/PASTA-ELN/pasta-eln/issues/550)
+- Shadow of the PastaELN GUI [\#379](https://github.com/PASTA-ELN/pasta-eln/issues/379)
+
+## [v3.2.0b6](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b6) (2025-08-22)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b5...v3.2.0b6)
+
+**Fixed bugs:**
+
+- 3.2.0b5 - Add // add + next not working [\#546](https://github.com/PASTA-ELN/pasta-eln/issues/546)
+- Group edit or sequential edit: afterwards an \_ids is present in the database [\#515](https://github.com/PASTA-ELN/pasta-eln/issues/515)
+- Duplicating data sets does not work [\#512](https://github.com/PASTA-ELN/pasta-eln/issues/512)
+- Filtering by Tag in column editor does not work [\#502](https://github.com/PASTA-ELN/pasta-eln/issues/502)
+- New item types added are assigned "random" names [\#501](https://github.com/PASTA-ELN/pasta-eln/issues/501)
+- Sidebar: click on workflows closes that project in the sidebar [\#488](https://github.com/PASTA-ELN/pasta-eln/issues/488)
+
+**Closed issues:**
+
+- Hardcoded subtypes for items? [\#544](https://github.com/PASTA-ELN/pasta-eln/issues/544)
+- 3.2.0b3 - Project visibility leads to errors [\#542](https://github.com/PASTA-ELN/pasta-eln/issues/542)
+- Clicking a folder checkbox does not select the folder, but goes to project view [\#541](https://github.com/PASTA-ELN/pasta-eln/issues/541)
+- 3.2.0b3 - update of view after drag&drop [\#538](https://github.com/PASTA-ELN/pasta-eln/issues/538)
+- Feature Request: Link to devices in the measurement item as default [\#537](https://github.com/PASTA-ELN/pasta-eln/issues/537)
+- Feature request: Filter documentation for \*\*\*-Rating [\#535](https://github.com/PASTA-ELN/pasta-eln/issues/535)
+- Renaming folders shifts the numbering? [\#534](https://github.com/PASTA-ELN/pasta-eln/issues/534)
+- Example project ships with database problem [\#533](https://github.com/PASTA-ELN/pasta-eln/issues/533)
+- Link in setup window does not work [\#532](https://github.com/PASTA-ELN/pasta-eln/issues/532)
+- The down-arrow in the column editor moves up [\#531](https://github.com/PASTA-ELN/pasta-eln/issues/531)
+- Cancelling a project group deletion does not stop the deletion [\#530](https://github.com/PASTA-ELN/pasta-eln/issues/530)
+- Suggestion: Move "Invert hidden status of selected" to the "Selection" menu [\#522](https://github.com/PASTA-ELN/pasta-eln/issues/522)
+- Group editing of tags overwrites existing rating [\#521](https://github.com/PASTA-ELN/pasta-eln/issues/521)
+- Check for updates - only for released versions [\#520](https://github.com/PASTA-ELN/pasta-eln/issues/520)
+- New tabs for the data schema editor do not work [\#519](https://github.com/PASTA-ELN/pasta-eln/issues/519)
+- tif extractor source unknown? [\#518](https://github.com/PASTA-ELN/pasta-eln/issues/518)
+- Renaming a folder on the HDD breaks Pasta [\#507](https://github.com/PASTA-ELN/pasta-eln/issues/507)
+- Requirements for installation of Pasta [\#499](https://github.com/PASTA-ELN/pasta-eln/issues/499)
+- batch file download [\#498](https://github.com/PASTA-ELN/pasta-eln/issues/498)
+- Storage of tags in item creation [\#494](https://github.com/PASTA-ELN/pasta-eln/issues/494)
+- New item types are not accessible? [\#491](https://github.com/PASTA-ELN/pasta-eln/issues/491)
+- Configuration GUI: allow user to check if hidden items are by default hidden \(new\) or shown \(current\) [\#486](https://github.com/PASTA-ELN/pasta-eln/issues/486)
+- Overlap Checkbox - Name of item [\#483](https://github.com/PASTA-ELN/pasta-eln/issues/483)
+- Shift in details view when clicking a linked item [\#479](https://github.com/PASTA-ELN/pasta-eln/issues/479)
+- Marking several items in a project [\#383](https://github.com/PASTA-ELN/pasta-eln/issues/383)
+- Backend; restart function \_\_init\_\_\(restart=False\) [\#341](https://github.com/PASTA-ELN/pasta-eln/issues/341)
+- Progress bar [\#147](https://github.com/PASTA-ELN/pasta-eln/issues/147)
+
+## [v3.2.0b5](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b5) (2025-08-13)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b4...v3.2.0b5)
+
+## [v3.2.0b4](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b4) (2025-08-11)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b3...v3.2.0b4)
+
+## [v3.2.0b3](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b3) (2025-08-09)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b2...v3.2.0b3)
+
+## [v3.2.0b2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b2) (2025-08-08)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.0b1...v3.2.0b2)
+
+**Closed issues:**
+
+- De-selection of rating not possible [\#517](https://github.com/PASTA-ELN/pasta-eln/issues/517)
+- Label moves when Selecting entry in table [\#514](https://github.com/PASTA-ELN/pasta-eln/issues/514)
+- Group edit [\#504](https://github.com/PASTA-ELN/pasta-eln/issues/504)
+- Automated update of packages [\#463](https://github.com/PASTA-ELN/pasta-eln/issues/463)
+- Remove \#TODO in code [\#398](https://github.com/PASTA-ELN/pasta-eln/issues/398)
+- Use pyside6 binding in matplotlib [\#340](https://github.com/PASTA-ELN/pasta-eln/issues/340)
+
+## [v3.2.0b1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.0b1) (2025-07-03)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.1.11...v3.2.0b1)
 
 **Closed issues:**
 

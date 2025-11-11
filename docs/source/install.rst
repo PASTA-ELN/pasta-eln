@@ -12,7 +12,8 @@ Installation and Troubleshooting Instructions
       </div>
    </div>
 
-**Overview**: Install Pasta-ELN on :ref:`Windows <windows_installation>`, :ref:`Linux <linux_installation>`, and :ref:`MacOS <macOS_installation>`. :ref:`Troubleshooting <troubleshooting>` tips are provided at the end.
+**Overview**: Install Pasta-ELN on :ref:`Windows <windows_installation>`, :ref:`Linux <linux_installation>`, and :ref:`MacOS <macOS_installation>`.
+Pasta-ELN requires Python 3.10 or newer. General :ref:`Troubleshooting <troubleshooting>` tips are provided at the end.
 
 .. _windows_installation:
 
@@ -28,8 +29,8 @@ Automatic Installation
 
 .. raw:: html
 
-   Download <a href="https://raw.githubusercontent.com/PASTA-ELN/pasta-eln/refs/heads/main/docs/source/_static/InstallPastaELN.bat">
-   Installation batch script</a> and execute it
+   Download the <a href="https://raw.githubusercontent.com/PASTA-ELN/pasta-eln/refs/heads/main/docs/source/_static/InstallPastaELN.bat">
+   installation batch script</a> by right-clicking & "Save link as" while ensuring that the file has the extension '.bat'. Then execute it and ignore the warning.
    </div>
 
 
@@ -80,12 +81,11 @@ Open terminal and copy-paste following content:
 
     .. code-block:: bash
 
-        export pastaPath="PASTA_ELN"
-        mkdir ~/$pastaPath
-        python3 -m venv ~/$pastaPath/venv
-        source ~/$pastaPath/venv/bin/activate
+        mkdir ~/PASTA_ELN
+        python3 -m venv ~/PASTA_ELN/venv
+        source ~/PASTA_ELN/venv/bin/activate
         pip install pasta-eln
-        python3 -m pasta_eln.installationTools install ~/$pastaPath/data
+        python3 -m pasta_eln.installationTools install ~/PASTA_ELN/data
         python3 -m pasta_eln.installationTools shortcut
         python3 -m pasta_eln.installationTools example
         python3 -m pasta_eln.gui
@@ -128,11 +128,11 @@ Open terminal and copy-paste following content:
     .. code-block:: bash
 
         export pastaPath="PASTA_ELN"
-        mkdir ~/$pastaPath
-        python3 -m venv ~/$pastaPath/venv
-        source ~/$pastaPath/venv/bin/activate
+        mkdir ~/PASTA_ELN
+        python3 -m venv ~/PASTA_ELN/venv
+        source ~/PASTA_ELN/venv/bin/activate
         pip install pasta-eln
-        python3 -m pasta_eln.installationTools install ~/$pastaPath/data
+        python3 -m pasta_eln.installationTools install ~/PASTA_ELN/data
         python3 -m pasta_eln.installationTools shortcut
         python3 -m pasta_eln.installationTools example
         python3 -m pasta_eln.gui
@@ -154,18 +154,23 @@ Open terminal and copy-paste following content:
 Troubleshooting Instructions
 ----------------------------
 
-If large errors occur:
+**Error:** Installing Pasta-ELN leads to a syntax error
+   **Solution**
+      - Verify that you use Python version 3.10 or newer. (execute 'python' on the command-shell)
+      - Verify that you do not use conda. (Pasta-ELN installation spins up its own pip-environment.)
+      - (Linux) Verify that you do not use a python environment inside another python environment. When you open a new terminal does it start with (...)?
 
-1. Copy terminal output into an email.
-2. Attach `pastaELN.log` (found in your home folder or "My Documents" on Windows).
-3. Zip the `pastaELN` folder contents.
 
-Send the email with attachments to our support team.
+**Error:** File on hard disk but not DB"
+   **Solution** Scan the folder for new data.
 
-**Error Resolutions**:
+**Error:** Other errors
+   **Solution:** File a new issue on `github <https://github.com/PASTA-ELN/pasta-eln/issues>`__
+      - Copy terminal output into the new issue.
+      - Attach `pastaELN.log` (found in your home folder or "My Documents" on Windows).
+      - (possibly) Zip the `pastaELN` folder contents and attach it.
 
-1. "ERROR: File on harddisk but not DB": Scan the folder for new data.
-2. Deleting Documents: Use the serverActions API or write a script to remove duplicates.
+
 
 .. raw:: html
 

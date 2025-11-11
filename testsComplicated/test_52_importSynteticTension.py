@@ -1,15 +1,15 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create 3 projects; simplified form of testTutorialComplex """
-import os, shutil, json, uuid
+import os, shutil, logging
 import warnings
 import unittest
-import pandas as pd
-import numpy as np
 import re
 from pathlib import Path
-from pasta_eln.backend import Backend
+from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.miscTools import DummyProgressBar
 from pasta_eln.textTools.stringChanges import outputString
+from pasta_eln.miscTools import getConfiguration
+
 
 class TestStringMethods(unittest.TestCase):
   """
@@ -33,15 +33,24 @@ class TestStringMethods(unittest.TestCase):
     warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
     warnings.filterwarnings('ignore', category=ImportWarning)
 
+    log_records = []
+    class ErrorHandler(logging.Handler):
+      def emit(self, record):
+        if record.levelno >= logging.ERROR:
+          log_records.append(record)
+    handler = ErrorHandler()
+    logging.getLogger().addHandler(handler)
+
     projectGroup = 'research'
+    configuration, _ = getConfiguration(projectGroup)
     path = 'Data_SynteticALMTensile'
-    self.be = Backend(projectGroup)
+    self.be = Backend(configuration, projectGroup)
 
     self.dirName = self.be.basePath
     self.be.exit()
     shutil.rmtree(self.dirName)
     os.makedirs(self.dirName)
-    self.be = Backend(projectGroup)
+    self.be = Backend(configuration, projectGroup)
     print()
 
     # adopt measurements view
@@ -86,3 +95,6 @@ class TestStringMethods(unittest.TestCase):
     doc = self.be.db.getDoc(docID)
     del doc['image']
     print(doc)
+
+    logging.getLogger().removeHandler(handler)
+    self.assertEqual(len(log_records), 0, f"Logging errors found: {[r.getMessage() for r in log_records]}")

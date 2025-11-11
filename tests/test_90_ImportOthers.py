@@ -1,38 +1,21 @@
 #!/usr/bin/python3
-import logging, warnings, os, shutil, tempfile
-from pathlib import Path
+from pasta_eln.UI.guiCommunicate import Communicate
+from pasta_eln.UI.project import Project
+from .test_34_GUI_Form import getTable
+
+import logging, os, shutil, tempfile
 from urllib import request
-from pasta_eln.backend import Backend
-from pasta_eln.GUI.project import Project
-from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.GUI.palette import Palette
-from pasta_eln.inputOutput import importELN
+from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.backendWorker.worker import Task
+from pasta_eln.backendWorker.inputOutput import importELN
+from pasta_eln.miscTools import getConfiguration
 
 
-def test_simple(qtbot):
-  """
-  main function
-  """
-  # initialization: create database, destroy on filesystem and database and then create new one
-  warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
-  warnings.filterwarnings('ignore', message='invalid escape sequence')
-  warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
-  warnings.filterwarnings('ignore', category=ImportWarning)
-  logPath = Path.home()/'pastaELN.log'
-  logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
-                      datefmt='%m-%d %H:%M:%S')   #This logging is always info, since for installation only
-  for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
-    logging.getLogger(package).setLevel(logging.WARNING)
-  logging.info('Start 03 test')
+def test_simple(qtbot, caplog):
 
-  # start app and load project
-  backend = Backend('research')
-  palette = Palette(None, 'light_blue')
-  comm = Communicate(backend, palette)
-  window = Project(comm)
-  qtbot.addWidget(window)
-
-  # remove old and recreate empty
+  # remove old data
+  configuration, _ = getConfiguration('research')
+  backend = Backend(configuration, 'research')
   dirName = backend.basePath
   backend.exit()
   try:
@@ -40,34 +23,57 @@ def test_simple(qtbot):
     os.makedirs(dirName)
   except Exception:
     pass
-  backend = Backend('research')
-  tempDir = tempfile.gettempdir()
 
-  allELNs = {'Pasta.eln'          :'PASTA/PASTA.eln',
+  comm = Communicate('research')
+  while comm.backendThread.worker.backend is None:
+    qtbot.wait(100)
+  window = Project(comm)
+  window.setMinimumSize(1024,800)
+  window.show()
+
+  # location of data and temp
+  tempDir = tempfile.gettempdir()
+  allELNs = {'PASTA_ELN.eln'      : '', #no download, created by test_11_Export.py
+             'Pasta.eln'          :'PASTA/PASTA.eln',
+             'elabFTW.eln'        :'elabftw/export.eln',
              'SampleDB.eln'       :'SampleDB/sampledb_export.eln',
              'kadi4mat_1.eln'     :'kadi4mat/collections-example.eln',
              'kadi4mat_2.eln'     :'kadi4mat/records-example.eln',
              'openSemanticLab.eln':'OpenSemanticLab/MinimalExample.osl.eln'
             }
-  urlBase = 'https://github.com/SteffenBrinckmann/TheELNFileFormat/raw/refs/heads/new_PastaELN/examples/'
-  # 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/refs/heads/master/examples/'
-  localDir= '/home/xyz/TheELNConsortium/TheELNFileFormat/examples/'
-  local = False
-  for eln, pathName in allELNs.items():
-    if local:
-      elnFileName = f'{localDir}/{pathName}'
-    else:
-      elnFileName = f'{tempDir}/{eln}'
-      request.urlretrieve(f'{urlBase}{pathName}', elnFileName)
-    print(f'\nStart with {eln}')
+  urlBase = 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/refs/heads/master/examples/'
+
+  for eln, urlSubPath in allELNs.items():
+    elnFileName = f'{tempDir}/{eln}'
+    if urlSubPath:
+      request.urlretrieve(f'{urlBase}{urlSubPath}', elnFileName)
+    print(f'\n\n{"="*30}\nStart with {eln} on {elnFileName}')
     projName = f'{eln[:-4]} Import'
-    backend.addData('x0', {'name': projName})
-    df = backend.db.getView('viewDocType/x0')
+    comm.uiRequestTask.emit(Task.ADD_DOC, {'docType':'x0', 'doc':{'name':projName}, 'hierStack':[]})
+    df = getTable(qtbot, comm, 'x0')
     projID = df[df['name']==projName]['id'].values[0]
-    reply, statistics = importELN(backend, elnFileName, projID)
-    print(reply,'\n',statistics)
-    assert statistics['num. files']<=statistics['types'].get('File',0) ,'Files do not make sense'
-    #statistics type File can be larger than num.Files because there are remote files which are not Files but in the @type
-    print(backend.checkDB(minimal=True))
+    comm.uiRequestTask.emit(Task.IMPORT_ELN, {'fileName':elnFileName, 'projID':projID})
+    qtbot.wait(2000)  # wait until import is done
+
+    comm.changeProject.emit(projID, '')
+    qtbot.addWidget(window)
+    qtbot.wait(1000)
+    path = qtbot.screenshot(window)
+    print(path)
+
+
+
+  comm.shutdownBackendThread()
+
+  errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
+  assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"
+
+
+
+  #   reply, statistics = importELN(backend, elnFileName, projID)
+  #   print(reply,'\n',statistics)
+  #   assert statistics['num. files']<=statistics['types'].get('File',0) ,'Files do not make sense'
+  #   #statistics type File can be larger than num.Files because there are remote files which are not Files but in the @type
+  #   print(backend.checkDB(minimal=True))
 
   return

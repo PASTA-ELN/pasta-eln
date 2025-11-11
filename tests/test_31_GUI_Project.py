@@ -1,28 +1,26 @@
-from PySide6.QtWidgets import QMainWindow
-from pasta_eln.backend import Backend
-from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.GUI.palette import Palette
-from pasta_eln.GUI.project import Project
+import logging
+from pasta_eln.UI.guiCommunicate import Communicate
+from pasta_eln.UI.project import Project
+from .test_34_GUI_Form import getTable
 
-def test_simple(qtbot):
-  class MainWindow(QMainWindow):
-    def __init__(self):
-      super().__init__()
-      self.backend = Backend('research')
-      palette = Palette(self,'none')
-      comm = Communicate(self.backend, palette)
-      widget = Project(comm)
-      self.setCentralWidget(widget)
-      projID1 = self.backend.output('x0').split('|')[-1].strip()
-      comm.changeProject.emit(projID1, '')
+def test_simple(qtbot, caplog):
 
-  window = MainWindow()
+  comm = Communicate('research')
+  while comm.backendThread.worker.backend is None:
+    qtbot.wait(100)
+  window = Project(comm)
   window.setMinimumSize(1024,800)
   window.show()
+
+  df = getTable(qtbot, comm, 'x0')
+  projID = df[df['name']=='PASTAs Example Project']['id'].values[0]
+  comm.changeProject.emit(projID, '')
   qtbot.addWidget(window)
+  qtbot.wait(1000)
 
   path = qtbot.screenshot(window)
   print(path)
-  # saved in
-  #   /tmp/pytest-of-steffen/pytest-0/test_simple0/
-  #   /tmp/pytest-of-runner/pytest-0/test_simple0/screenshot_MainWindow.png
+  comm.shutdownBackendThread()
+
+  errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
+  assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"

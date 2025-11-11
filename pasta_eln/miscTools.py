@@ -4,23 +4,25 @@ import json
 import logging
 import os
 import platform
+import socket
 import subprocess
 import sys
 import tempfile
-import traceback
+import time
 from collections.abc import Mapping
-from io import BufferedReader
 from pathlib import Path
 from typing import Any, Union
 from urllib import request
+import pandas as pd
+import requests
+from anytree import Node
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-import pandas as pd
 from packaging.version import parse as parse_version
-from PySide6.QtWidgets import QWidget                                      # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QWidget
 import pasta_eln
-from .fixedStringsJson import CONF_FILE_NAME
-
+from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
 
 
 class Bcolors:
@@ -45,100 +47,6 @@ class Bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
-
-
-def generic_hash(path:Path, forceFile:bool=False) -> str:
-  """
-  Hash an object based on its mode.
-
-  inspired by:
-  https://github.com/chris3torek/scripts/blob/master/githash.py
-
-  Example implementation:
-      result = generic_hash(sys.argv[1])
-      print('%s: hash = %s' % (sys.argv[1], result))
-
-  Args:
-    path (Path): path
-    forceFile (bool): force to get shasum of file and not of link (False for gitshasum)
-
-  Returns:
-    string: shasum
-
-  Raises:
-    ValueError: shasum of directory not supported
-  """
-  if str(path).startswith('http'):                                                               #Remote file:
-    try:
-      with request.urlopen(path.as_posix().replace(':/','://'), timeout=60) as site:
-        meta = site.headers
-        size = int(meta.get_all('Content-Length')[0])
-        return blob_hash(site, size)
-    except Exception:
-      logging.error('Could not download content / hashing issue %s \n%s',path.as_posix().replace(':/','://'),traceback.format_exc())
-      return ''
-  if path.is_dir():
-    raise ValueError(f'This seems to be a directory {path.as_posix()}')
-  if forceFile and path.is_symlink():
-    path = path.resolve()
-  shasum = ''
-  if path.is_symlink():                                                                #if link, hash the link
-    shasum = symlink_hash(path)
-  elif path.is_file():                                                                             #Local file
-    with open(path, 'rb') as stream:
-      shasum = blob_hash(stream, path.stat().st_size)
-  return shasum
-
-
-def symlink_hash(path:Path) -> str:
-  """
-  Return (as hash instance) the hash of a symlink.
-  Caller must use hexdigest() or digest() as needed on
-  the result.
-
-  Args:
-    path (string): path to symlink
-
-  Returns:
-    string: shasum of link, aka short string
-  """
-  from hashlib import sha1
-  hasher = sha1()
-  data = os.readlink(path).encode('utf8', 'surrogateescape')
-  hasher.update(b'blob {len(data)}\0')
-  hasher.update(data)
-  return hasher.hexdigest()
-
-
-def blob_hash(stream:BufferedReader, size:int) -> str:
-  """
-  Return (as hash instance) the hash of a blob,
-  as read from the given stream.
-
-  Args:
-    stream (string): content to be hashed
-    size (int): size of the content
-
-  Returns:
-    string: shasum
-
-  Raises:
-    ValueError: size given is not the size of the stream
-  """
-  from hashlib import sha1
-  hasher = sha1()
-  hasher.update(f'blob {size}\0'.encode('ascii'))
-  nRead = 0
-  while True:
-    data = stream.read(65536)                                    # read 64K at a time for storage requirements
-    if data == b'':
-      break
-    nRead += len(data)
-    hasher.update(data)
-  if nRead != size:
-    raise ValueError(f'{stream.name}: expected {size} bytes, found {nRead} bytes')
-  return hasher.hexdigest()
-
 
 def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   """
@@ -213,7 +121,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
         ending = fileName.split('_')[1].split('.')[0]
         extractorsAll[ending]=extractorsThis
     # header not used for now
-    # Project, et al.
+    # Project, et al
     if fileName.endswith('.py') and '_' in fileName and fileName.split('_')[0] in ['project','table','definition','form']:
       name        = fileName[:-3]
       try:
@@ -232,11 +140,41 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   return {'addon directory':directory} | extractorsAll | otherAddOns
 
 
-def callAddOn(name:str, backend:Any, content:Any, widget:QWidget) -> Any:
+def installPythonPackages(directory:str) -> None:
+  """Install a Python packages using pip depending on files in add-on folder
+  Args:
+    directory (str): path to the add-on folder
+  """
+  allLibs = set()
+  for fileName in os.listdir(directory):
+    if fileName.endswith('.py'):
+      #start with file
+      with open(Path(directory)/fileName, encoding='utf-8') as fIn:
+        lines = [i.strip() for i in fIn.readlines() if 'import' in i]
+        libsList =  [i.split('import')[1].strip().split(',') for i in lines if i.startswith('import')]
+        libs =  [i.strip() for j in libsList for i in j]
+        libs += [i.split('from')[1].strip().split('import')[0].strip() for i in lines if i.startswith('from')]
+        libs = [i.split('.')[0] for i in libs]                                           #only look at package
+        libs = [i.split()[0] for i in libs]                                  #get rid of all things at the end
+        allLibs.update(libs)
+  allLibs = allLibs.difference(sys.stdlib_module_names)        # all libs that are not in the standard library
+  allLibs = allLibs.difference([i[:-3] for i in os.listdir(directory) if i.endswith('.py')])#remove all libs that are in the directory
+  allLibs = allLibs.difference({i.split('.')[0] for i in sys.modules})# remove libs used by pasta, already in use
+  for lib in allLibs:
+    try:
+      importlib.import_module(lib)                                 # check if the package is already installed
+    except ImportError:
+      if lib == 'sklearn':
+        lib = 'scikit-learn'
+      subprocess.check_call([sys.executable, '-m', 'pip', 'install', lib])
+  return
+
+
+def callAddOn(name:str, comm:Any, content:Any, widget:QWidget) -> Any:
   """ Call add-ons
   Args:
     name (str): name of the add-on
-    backend (str): backend to be used
+    comm (Any): communication object
     content (Any): content to be consumed by addon, e.g. projectID, document
     widget: widget to be used
 
@@ -244,25 +182,27 @@ def callAddOn(name:str, backend:Any, content:Any, widget:QWidget) -> Any:
     Any: result of the add-on
   """
   module      = importlib.import_module(name)
-  parameter   = backend.configuration.get('addOnParameter', {})
+  parameter   = comm.configuration.get('addOnParameter', {})
   try:
     subParameter = parameter[name]
   except KeyError:
     print('**Info: No parameter for this add-on')
     subParameter = {}
-  return module.main(backend, content, widget, subParameter)
+  return module.main(comm, content, widget, subParameter)
 
 
-def callDataExtractor(filePath:Path, backend:Any) -> Any:
+def callDataExtractor(docID:str, comm:Any) -> Any:
   """ Call data extractor for a given file path: CALL THE DATA FUNCTION
 
   Args:
-    filePath (Path): path to file
-    backend (str): backend
+    docID (str): docID
+    comm (Communication): communication layer
 
   Returns:
     Any: result of the data extractor
   """
+  doc = getDoc(comm, docID)
+  filePath = comm.basePath/doc['branch'][0]['path']
   if not isinstance(filePath, Path):
     filePath = Path(filePath)
   extension = filePath.suffix[1:]                                                   #cut off initial . of .jpg
@@ -276,10 +216,10 @@ def callDataExtractor(filePath:Path, backend:Any) -> Any:
           print('Error saving downloaded file to temporary disk')
   else:
     if filePath.is_absolute():
-      filePath  = filePath.relative_to(backend.basePath)
-    absFilePath = backend.basePath/filePath
+      filePath  = filePath.relative_to(comm.basePath)
+    absFilePath = comm.basePath/filePath
   pyFile = f'extractor_{extension.lower()}.py'
-  pyPath = backend.addOnPath/pyFile
+  pyPath = Path(comm.addOnPath)/pyFile
   if pyPath.is_file():
     # import module and use to get data
     try:
@@ -290,8 +230,59 @@ def callDataExtractor(filePath:Path, backend:Any) -> Any:
   return None
 
 
+def getHierarchy(comm:Any, docID:str, showAll:bool=True) -> tuple[Node, dict[str, Any]]:
+  """ Helper for add-ons: get hierarchy of a project from backend
+  Args:
+    comm (Communicate): communicate-backend
+    docID (str): project ID
+    showAll (bool): show all nodes, even hidden ones
+
+  Returns:
+    tuple: (hierarchy as anytree, project document as dict)
+  """
+  hierarchyI = None
+  projDoc   = None
+  @Slot(Node, dict)
+  def receiveData(h:Node, doc:dict[str,Any]) -> None:
+    nonlocal hierarchyI
+    hierarchyI = h
+    nonlocal projDoc
+    projDoc   = doc
+  comm.backendThread.worker.beSendHierarchy.connect(receiveData)
+  comm.uiRequestHierarchy.emit(docID, showAll)
+  while hierarchyI is None or projDoc is None:
+    time.sleep(0.1)
+  return hierarchyI, projDoc
+
+
+def getDoc(comm:Any, docID:str) -> dict[str, Any]:
+  """ Helper for add-ons: get document from backend
+
+  Args:
+    comm (Communicate): communicate-backend
+    docID (str): document ID
+
+  Returns:
+    dict: document as dict
+  """
+  doc = None
+  @Slot(dict)
+  def receiveData(iDoc:dict[str,Any]) -> None:
+    """ Slot to receive data
+    Args:
+      iDoc (dict): document
+    """
+    nonlocal doc
+    doc = iDoc
+  comm.backendThread.worker.beSendDoc.connect(receiveData)
+  comm.uiRequestDoc.emit(docID)
+  while doc is None:
+    time.sleep(0.1)
+  return doc
+
+
 def isFloat(val:str) -> bool:
-  """Check if a value can be converted to float.
+  """Check if a value can be converted to float
   Args:
     val (str): value to check
   Returns:
@@ -332,20 +323,89 @@ class MplCanvas(FigureCanvas):
       height (float): height in inch
       dpi (int): dots per inch
     """
-    fig = Figure(figsize=(width, height), dpi=dpi)
-    self.axes = fig.add_subplot(111)
-    super().__init__(fig)
+    self.figure = Figure(figsize=(width, height), dpi=dpi)
+    self.axes   = self.figure.add_subplot(111)
+    super().__init__(self.figure)
 
 
-def restart() -> None:
+def getConfiguration(defaultProjectGroup:str='') -> tuple[dict[str, Any],str]:
+  """ Get configuration from home directory
+  Args:
+    defaultProjectGroup (str): project group to use, if not given, use default
+  Returns:
+    tuple: configuration dict and default project group
+  """
+  configuration = defaultConfiguration
+  configFileName = Path.home() / CONF_FILE_NAME
+  if configFileName.is_file():
+    with open(configFileName, encoding='utf-8') as confFile:
+      configuration |= json.load(confFile)
+  for _, items in configurationGUI.items():
+    for k,v in items.items():
+      if k not in configuration['GUI']:
+        configuration['GUI'][k] = v[1]
+  if configuration['version'] != 3:
+    print('**Info: configuration file does not exist or version is != 3')
+    return {},''
+  defaultProjectGroup = defaultProjectGroup or configuration['defaultProjectGroup']
+  if defaultProjectGroup not in configuration['projectGroups']:
+    listPossible = list(configuration['projectGroups'].keys())
+    raise ValueError(f'BadProjectGroup: {defaultProjectGroup}. Possible: {listPossible}')
+  return configuration, defaultProjectGroup
+
+
+def hardRestart() -> None:
   """
   Complete restart: cold restart
   """
   try:
     os.execv('pastaELN',[''])                                                               #installed version
   except Exception:
-    os.execv(sys.executable, ['python3','-m','pasta_eln.gui'])           #started for programming or debugging
-  return                                                             #TODO replace python3 with sys.executable
+    os.execv(sys.executable, [sys.executable,'-m','pasta_eln.gui'])      #started for programming or debugging
+  return
+
+
+def isConnectedToInternet() -> bool:
+  """Check if the system is connected to the internet
+
+  Returns:
+    bool: True if connected, False otherwise
+  """
+  try:
+    socket.setdefaulttimeout(3)
+    socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(('8.8.8.8', 53))
+    return True
+  except OSError:
+    pass
+  return False
+
+
+def getRORIDLabel(idString:str) -> str :
+  """ Get label from RORID
+  Args:
+    idString (str): RORID
+  Returns:
+    str: label of the RORID
+  """
+  reply = requests.get(f'https://api.ror.org/organizations/{idString}', timeout=10)
+  labels = [i for i in reply.json()['names'] if 'ror_display' in i['types']]
+  labels = labels or [i for i in reply.json()['names'] if 'acronym' not in i['types']]
+  labels = labels or reply.json()['names']
+  return labels[0]['value'] if labels else ''
+
+
+def getORCIDName(idString:str) -> tuple[str, str]:
+  """ Get name from ORCID
+  Args:
+    idString (str): ORCID
+  Returns:
+    tuple: (first name, last name)
+  """
+  reply = requests.get(f'https://pub.orcid.org/v3.0/{idString}', timeout=10)
+  text = reply.content.decode()
+  first = text.split('<personal-details:given-names>')[1].split('</personal-details:given-names>')[0]
+  last = text.split('<personal-details:family-name>')[1].split('</personal-details:family-name>')[0]
+  return first, last
 
 
 def testNewPastaVersion(update:bool=False) -> bool:
@@ -358,13 +418,15 @@ def testNewPastaVersion(update:bool=False) -> bool:
   Returns:
     bool: if up-to-date or if current version is a beta
   """
+  if not isConnectedToInternet():
+    return True
   if update:
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pasta-eln'])
-    restart()
+    hardRestart()
   url = 'https://pypi.org/pypi/pasta-eln/json'
   with request.urlopen(url) as response:
     data = json.loads(response.read())
-  releases = list(data['releases'].keys())
+  releases = [i for i in list(data['releases'].keys()) if 'b' not in i]                 # remove beta versions
   largestVersionOnPypi = sorted(releases, key=parse_version)[-1]
   return largestVersionOnPypi == pasta_eln.__version__ or 'b' in pasta_eln.__version__
 
@@ -373,11 +435,11 @@ def testNewPastaVersion(update:bool=False) -> bool:
 # - reduce dependencies and only have python 3 code
 # - add conversion of dict to list if applicable
 def flatten(d:dict[Any,Any], keepPastaStruct:bool=False) -> dict[object, Any]:
-  """Flatten `Mapping` object.
+  """Flatten `Mapping` object
 
   Args:
     d : dict-like object
-        The dict that will be flattened.
+        The dict that will be flattened
     keepPastaStruct : bool
         keep pasta elements from flattening
 
@@ -394,7 +456,7 @@ def flatten(d:dict[Any,Any], keepPastaStruct:bool=False) -> dict[object, Any]:
 
   def _flatten(_d:Union[Mapping[Any, Any], list[Any]], depth:int, parent:object=None) -> bool:
     """ Recursive function """
-    key_value_iterable = (enumerate(_d) if isinstance(_d, enumerate_types) else _d.items())
+    key_value_iterable = enumerate(_d) if isinstance(_d, enumerate_types) else _d.items()
     has_item = False
     for key, value in key_value_iterable:
       has_item = True
@@ -404,18 +466,18 @@ def flatten(d:dict[Any,Any], keepPastaStruct:bool=False) -> dict[object, Any]:
         has_child = _flatten(value, depth=depth + 1, parent=flat_key)
         if has_child or not isinstance(value, ()):# ignore key in this level because it already has child key or its value is empty
           continue
+      if flat_key in flat_dict and parent is not None:
+        continue  # skip if key already exists and if data comes from database after merging with changed data
       # add an item to the result
-      if flat_key in flat_dict:
-        raise ValueError(f"duplicated key '{flat_key}'")
       flat_dict[flat_key] = value
     return has_item
 
   # start recursive calling
-  backup = {'type':d.pop('type',''), 'branch':d.pop('branch',''), 'tags':d.pop('tags',''),
-            'gui':d.pop('gui',''), 'qrCodes':d.pop('qrCodes',''), '_ids':d.pop('_ids','')} \
+  backup = {'type':d.pop('type',None), 'branch':d.pop('branch',None),   'tags':d.pop('tags',None),
+            'gui':d.pop('gui',None),   'qrCodes':d.pop('qrCodes',None), '_ids':d.pop('_ids',None)} \
            if keepPastaStruct else {}
   _flatten(d, depth=1)
-  return flat_dict | {k:v for k,v in backup.items() if v}
+  return flat_dict | {k:v for k,v in backup.items() if v is not None}
 
 
 def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
@@ -445,7 +507,11 @@ def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
     if len(keys) == 1:
       if key in d:
         raise ValueError(f"duplicated key '{key}'")
-      d[key] = value
+      try:
+        d[key] = value
+      except TypeError as e:
+        print('TypeError:', type(d), d, type(key), key, type(value), value)
+        raise e
       return
     d = d.setdefault(key, {})
     nested_set_dict(d, keys[1:], value)

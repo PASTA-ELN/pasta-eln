@@ -5,11 +5,10 @@ import os
 import platform
 import shutil
 import sys
-import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable, Optional
-from .backend import Backend
+from .backendWorker.backend import Backend
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
 from .textTools.stringChanges import outputString
 
@@ -123,7 +122,8 @@ def configuration(command:str, pathData:str) -> str:
   return output
 
 
-def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]=None, projectGroup:str='', outputFormat:str='print') -> str:
+def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]=None, projectGroup:str='research',
+                outputFormat:str='print') -> str:
   '''
   Create example data after installation
 
@@ -136,8 +136,10 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   logging.info('Start example data creation')
   if callbackPercent is not None:
     callbackPercent(0)
+  with open(Path.home()/CONF_FILE_NAME, encoding='utf-8') as fConf:
+    conf = json.load(fConf)
   if force:
-    backend = Backend(projectGroup)
+    backend = Backend(conf, projectGroup)
     dirName = backend.basePath
     backend.exit()
     try:
@@ -146,10 +148,10 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
       if platform.system()=='Windows':
         logging.info('recreate example data: remove folder went as expected')
     except Exception:
-      logging.error('recreate example data: remove folder impossible possible %s', traceback.format_exc())
+      logging.error('recreate example data: remove folder impossible possible', exc_info=True)
   if callbackPercent is not None:
     callbackPercent(1)
-  backend = Backend(projectGroup)
+  backend = Backend(conf, projectGroup)
   if callbackPercent is not None:
     callbackPercent(2)
   ### CREATE PROJECTS AND SHOW
@@ -207,13 +209,13 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
 
   ### TEST PROCEDURES
   outputString(outputFormat,'h2','TEST WORKFLOWS')
-  sopDir = backend.basePath/'StandardOperatingProcedures'
+  sopDir = backend.basePath/'CommonFiles'
   os.makedirs(sopDir, exist_ok=True)
   with open(sopDir/'Example_SOP.md','w', encoding='utf-8') as fOut:
     fOut.write('# Put sample in instrument\n# Do something\nDo not forget to\n- not do anything wrong\n- **USE BOLD LETTERS**\n')
   if callbackPercent is not None:
     callbackPercent(13)
-  backend.addData('workflow/procedure', {'name': 'StandardOperatingProcedures/Example_SOP.md', 'tags':['v1']})
+  backend.addData('workflow/procedure', {'name': 'CommonFiles/Example_SOP.md', 'tags':['v1']})
   if callbackPercent is not None:
     callbackPercent(14)
   outputString(outputFormat,'info',backend.output('workflow'))
@@ -250,19 +252,19 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     callbackPercent(18)
   logging.info('Finished samples creating')
 
-  ### ADD INSTRUMENTS AND THEIR ATTACHMENTS
-  outputString(outputFormat,'h2','ADD INSTRUMENTS AND ATTACHMENTS')
-  backend.addData('instrument', {'name': 'Big instrument', '.vendor':'Company A', '.model':'ABC-123', 'comment':'Instrument onto which attachments can be added'})
-  backend.addData('instrument/extension', {'name': 'Sensor', '.vendor':'Company B', '.model':'org.comp.98765', 'comment':'Attachment that increases functionality of big instrument'})
-  df = backend.db.getView('viewDocType/instrument')
-  idInstrument = df[df['name']=='Big instrument']['id'].values[0]
+  ### ADD DEVICES AND THEIR ATTACHMENTS
+  outputString(outputFormat,'h2','ADD DEVICES AND ATTACHMENTS')
+  backend.addData('device', {'name': 'Big instrument', '.vendor':'Company A', '.model':'ABC-123', 'comment':'Instrument onto which attachments can be added'})
+  backend.addData('device/extension', {'name': 'Sensor', '.vendor':'Company B', '.model':'org.comp.98765', 'comment':'Attachment that increases functionality of big instrument'})
+  df = backend.db.getView('viewDocType/device')
+  idDevice = df[df['name']=='Big instrument']['id'].values[0]
   idSensor = df[df['name']=='Sensor']['id'].values[0]
-  backend.db.initAttachment(idInstrument, 'Right side of instrument', 'instrument/extension')
-  backend.db.addAttachment(idInstrument, 'Right side of instrument',
+  backend.db.initAttachment(idDevice, 'Right side of instrument', 'device/extension')
+  backend.db.addAttachment(idDevice, 'Right side of instrument',
          {'date':datetime.now().isoformat(),'remark':'Worked well','docID':idSensor,'user':'nobody'})
-  backend.db.addAttachment(idInstrument, 'Right side of instrument',
+  backend.db.addAttachment(idDevice, 'Right side of instrument',
          {'date':(datetime.now()+timedelta(hours=1)).isoformat(),'remark':'Service','docID':'','user':'nobody'})
-  outputString(outputFormat,'info',backend.output('instrument'))
+  outputString(outputFormat,'info',backend.output('device'))
 
   ###  TEST MEASUREMENTS AND SCANNING/CURATION
   outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING')
@@ -372,7 +374,7 @@ def createShortcut() -> None:
         fBat.write(batContent)
       shortcut.Targetpath = batLocation
     else:
-      shortcut.Targetpath = r'python -m pasta_eln.gui'
+      shortcut.Targetpath = r'cmd.exe /c python -m pasta_eln.gui'
     shortcut.WorkingDirectory = str(Path.home())
     shortcut.IconLocation = str(Path(__file__).parent/'Resources'/'Icons'/'favicon64.ico')
     shortcut.save()
@@ -406,7 +408,7 @@ def main() -> None:
   print('Add "example" argument to create example data.')
   if len(sys.argv)>1 and 'example' in sys.argv:
     print('---- Create Example data ----')
-    print('create example data  :', exampleData())
+    print('create example data  :', exampleData(projectGroup='research'))
   print('Add "shortcut" argument to create a desktop shortcut.')
   if len(sys.argv)>1 and 'shortcut' in sys.argv:
     print('---- Create Shortcut ----')

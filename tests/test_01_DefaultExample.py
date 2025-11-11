@@ -4,9 +4,8 @@ import logging
 import warnings
 import unittest
 from pathlib import Path
-from pasta_eln.backend import Backend
-from pasta_eln.textTools.stringChanges import outputString
-from pasta_eln.miscTools import DummyProgressBar
+from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.miscTools import getConfiguration
 from pasta_eln.installationTools import exampleData
 
 class TestStringMethods(unittest.TestCase):
@@ -22,8 +21,6 @@ class TestStringMethods(unittest.TestCase):
     """
     main function
     """
-    outputFormat = ''  #change to 'print' for human usage, '' for less output
-    dummyProgressBar = DummyProgressBar()
     # initialization: create database, destroy on filesystem and database and then create new one
     warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
     warnings.filterwarnings('ignore', message='invalid escape sequence')
@@ -36,14 +33,23 @@ class TestStringMethods(unittest.TestCase):
       logging.getLogger(package).setLevel(logging.WARNING)
     logging.info('Start 01 test')
 
+    log_records = []
+    class ErrorHandler(logging.Handler):
+      def emit(self, record):
+        if record.levelno >= logging.ERROR:
+          log_records.append(record)
+    handler = ErrorHandler()
+    logging.getLogger().addHandler(handler)
+
+    configuration, _ = getConfiguration('research')
     exampleData(True, None, 'research', '')
-    self.be = Backend('research')
+    self.be = Backend(configuration, 'research')
     output = self.be.output('x0')
     self.assertEqual(output.split('\n')[0][:129],
                       'name                   | tags      | status | objective                                | comment                             | id')
     self.assertEqual(output.split('\n')[2][:126],
                       'PASTAs Example Project | Important | active | Test if everything is working as inte... | Can be used as reference or deleted |')
-    projID = output.split('|')[-1].strip()
+    projID = output.split('|')[-2].strip()
     self.be.changeHierarchy(projID)
 
     output = self.be.outputHierarchy(False, False)
@@ -78,10 +84,10 @@ class TestStringMethods(unittest.TestCase):
     self.assertEqual(output.split('\n')[0][:102], 'name           | tags | chemistry | comment                                  | qrCodes            | id')
     self.assertEqual(output.split('\n')[2][:102], 'Example sample | nan  | A2B2C3    | this sample has multiple groups of me... | 13214124, 99698708 | s-')
 
-    output = self.be.output('instrument')
+    output = self.be.output('device')
     self.assertEqual(output.split('\n')[0][:82], 'name           | tags | comment                                  | vendor    | id ')
-    self.assertIn('Big instrument | nan  | Instrument onto which attachments can... | Company A | i-', output)
-    self.assertIn('        Sensor | nan  | Attachment that increases functionali... | Company B | i-', output)
+    self.assertIn('Big instrument | nan  | Instrument onto which attachments can... | Company A | d-', output)
+    self.assertIn('        Sensor | nan  | Attachment that increases functionali... | Company B | d-', output)
 
     output = self.be.output('measurement')
     self.assertIn('https://upload.wikimedia.org/wikipedi... |  _3  | - Remote image from wikipedia. Used f... |            measurement/image | Y     | nan    ', output)
@@ -91,9 +97,13 @@ class TestStringMethods(unittest.TestCase):
 
     #Verify DB
     output = self.be.checkDB(outputStyle='text')
+    print(output)
     output = '\n'.join(output.split('\n')[8:])
     self.assertNotIn('**ERROR', output, 'Error in checkDB')
-    self.assertEqual(len(output.split('\n')), 6, 'Check db should have 6 more-less empty lines')
+    self.assertEqual(len(output.split('\n')), 8, 'Check db should have 8 more-less empty lines')
+
+    logging.getLogger().removeHandler(handler)
+    self.assertEqual(len(log_records), 0, f"Logging errors found: {[r.getMessage() for r in log_records]}")
     return
 
 

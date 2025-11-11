@@ -2,6 +2,8 @@
 import logging
 import re
 import traceback
+from pathlib import Path
+from typing import Any
 from ..miscTools import Bcolors
 
 
@@ -20,11 +22,11 @@ def outputString(fmt:str='print', level:str='info', message:str='') -> str:
   if level=='info':
     txtOutput = message.strip()+'\n'
   elif level in prefixes:
-    txtOutput = prefixes[level]+message
+    txtOutput = f'{prefixes[level]} {message}'
     txtOutput+= ' ***' if '***' in prefixes[level] else ''
     txtOutput+= f'{Bcolors.ENDC}\n'
   else:
-    logging.error('Level not in prefixes %s',level)
+    logging.error('Level not in prefixes %s',level, exc_info=True)
   # depend on format
   if 'print' in fmt:
     print(txtOutput)
@@ -33,11 +35,11 @@ def outputString(fmt:str='print', level:str='info', message:str='') -> str:
   if 'text' in fmt:
     return txtOutput
   if fmt=='html':
-    colors = {'info':'black','error':'red','warning':'orangered','perfect':'green','ok':'blue','unsure':'darkmagenta'}
+    colors = {'info':'black','error':'red','warning':'orangered','perfect':'green','ok':'blue','unsure':'magenta'}
     if level[0]=='h':
       return f'<{level}>{message}</{level}>'
     if level not in colors:
-      logging.error('Wrong level %s', level)
+      logging.error('Wrong level %s', level, exc_info=True)
       return ''
     return f'<font color="{colors[level]}">' + message.replace('\n', '<br>') + '</font><br>'
   return ''
@@ -63,7 +65,7 @@ def tracebackString(log:bool=False, docID:str='') -> str:
 
 def markdownEqualizer(text:str) -> str:
   """
-  Create a markdown that well balanced with regard to font size, etc.
+  Create a markdown that well balanced with regard to font size, etc
 
   Args:
     text (str): input string
@@ -74,6 +76,24 @@ def markdownEqualizer(text:str) -> str:
   if isinstance(text, tuple):
     text=text[0]
   return re.sub(r'(^|\n)(#+)', r'\1##\2', text.strip())
+
+
+def tuple2html(key:str, value:tuple[str,str,str,str]) -> tuple[str,str]:
+  """
+  Convert tuple to html string
+
+  Args:
+    key   (str): key/label to add
+    value (tuple): tuple to convert
+
+  Returns:
+    str,str: key, html string
+  """
+  key = key if value[2] is None or value[2]=='' else value[2]
+  valueString = f'{value[0]} {value[1]}'
+  valueString = valueString if value[3] is None or value[3]=='' else \
+                f'{valueString}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
+  return key, valueString
 
 
 def camelCase(text:str) -> str:
@@ -92,18 +112,26 @@ def camelCase(text:str) -> str:
   return re.sub(r'(_|-)+', ' ', text).title().replace(' ','').replace('*','')
 
 
-def createDirName(name:str, docType:str, thisChildNumber:int) -> str:
+def createDirName(doc:dict[str,Any], thisChildNumber:int, parentDir:Path) -> str:
   """ create directory-name by using camelCase and a prefix
 
   Args:
-      name (string): name with spaces etc.
-      docType (string): document type used for prefix
+      doc (dict): document with all information
       thisChildNumber (int): number of myself
+      parentDir (Path): parent directory where the new directory should be created
 
   Returns:
     string: directory name with leading number
   """
-  if docType == 'x0':
-    return camelCase(name)
-  #steps, tasks
-  return f'{thisChildNumber:03d}_{camelCase(name)}'
+  name = camelCase(doc['name']) if doc['type'][0] == 'x0' else \
+         f'{thisChildNumber:03d}_{camelCase(doc["name"])}'
+  if 'branch' in doc and name in [i['path'].split('/')[-1] for i in doc['branch']]:#only change if not the same name as before
+    logging.debug('createDirName: %s used', name)
+    return name
+  idx = 0
+  nameTest = name
+  while (parentDir/name).exists():
+    idx += 1
+    nameTest = f'{name}_{idx:02d}'
+  logging.debug('createDirName: %s created', nameTest)
+  return nameTest

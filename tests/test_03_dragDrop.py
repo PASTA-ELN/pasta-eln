@@ -2,13 +2,14 @@
 """TEST the project view: drag drop randomly items around """
 import logging, warnings, random
 from pathlib import Path
-from PySide6.QtCore import QModelIndex                                  # pylint: disable=no-name-in-module
-from pasta_eln.backend import Backend
-from pasta_eln.GUI.project import Project
-from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.GUI.palette import Palette
+from anytree import PreOrderIter
+from PySide6.QtCore import QModelIndex, QEventLoop                         # pylint: disable=no-name-in-module
+from pasta_eln.UI.project import Project
+from pasta_eln.UI.guiCommunicate import Communicate
+from pasta_eln.backendWorker.worker import Task
 
-def test_simple(qtbot):
+
+def test_simple(qtbot, caplog):
   """
   main function
   """
@@ -25,28 +26,28 @@ def test_simple(qtbot):
   logging.info('Start 03 test')
 
   # start app and load project
-  backend = Backend('research')
-  palette = Palette(None, 'light_blue')
-  comm = Communicate(backend, palette)
+  comm = Communicate('research')
   window = Project(comm)
   qtbot.addWidget(window)
-  projID = backend.output('x0').split('|')[-1].strip()
+  while comm.backendThread.worker.backend is None:
+    qtbot.wait(100)
+  projID = comm.backendThread.worker.backend.output('x0').split('|')[-2].strip()  #for testing purposes
   window.change(projID,'')
 
   choices = random.choices(range(100), k=16)
   # choices =
   print(f'Current choice: [{",".join([str(i) for i in choices])}]')
-
   # start iteration
   for epoch in range(4):
     print(f'{"*"*40}\nStart drag-drop {epoch}\n{"*"*40}')
-    def recursiveRowIteration(index:QModelIndex) -> None:
+    def recursiveRowIteration(index:QModelIndex) -> list[QModelIndex]:
       item  = window.tree.model().itemFromIndex(index)
       allParentIdx = [index] if item is not None and item.data() is not None and item.data()['docType']==['x1'] else []
       for subRow in range(window.tree.model().rowCount(index)):
         subIndex = window.tree.model().index(subRow,0, index)
         allParentIdx += recursiveRowIteration(subIndex)
       return allParentIdx
+    qtbot.wait(1000)
     allParentIdx = recursiveRowIteration( window.tree.model().index(-1,0))
     validChoices     = [i for i in allParentIdx if window.tree.model().rowCount(i)>0 ]
     sourceParentIdx  = validChoices[choices.pop(0)%len(validChoices)]
@@ -64,16 +65,37 @@ def test_simple(qtbot):
     targetChildRow   = validChoices[choices.pop(0)%len(validChoices)]
     print('  ',sourceItem.data(),'->\n  ', targetParent.data(),'   child', targetChildRow)
     targetParent.setChild(targetChildRow, sourceItem)
-    backend.changeHierarchy(projID)
-    print(backend.outputHierarchy(False, True))
-    backend.changeHierarchy(None)
-    verify(backend)
-    print(f'{"*"*40}\nEND TEST 03\n{"*"*40}')
+    verify(comm, projID, epoch)
+
+  # close everything
+  print(f'{"*"*40}\nEND TEST 03\n{"*"*40}')
+  comm.shutdownBackendThread()
+
+  errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
+  assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"
   return
 
-def verify(backend): # Verify DB
-  output = backend.checkDB(outputStyle='text')
-  print(output)
-  output = '\n'.join(output.split('\n')[8:])
-  assert '**ERROR' not in output, 'Error in checkDB'
+
+def verify(comm, projID, epoch): # Output hierarchy and verify DB
+  # to communicate with backend
+  loop = QEventLoop()
+  def hierarchyCallback(hierarchy):
+    print(f'{"*"*40}\nHierarchy after drag-drop {epoch}\n{"*"*40}')
+    print(''.join('  '*node.depth + node.name + ' | ' + '/'.join(node.docType) + (f' | {node.id}') +'\n'
+                   for node in PreOrderIter(hierarchy)))
+    loop.quit()
+  def checkDBCallback(_, output):
+    print(f'{"*"*40}\nCheckDB after drag-drop {epoch}\n{"*"*40}')
+    print(output)
+    output = '\n'.join(output.split('\n')[8:])
+    assert '**ERROR' not in output, 'Error in checkDB'
+    loop.quit()
+  comm.backendThread.worker.beSendHierarchy.connect(hierarchyCallback)
+  comm.backendThread.worker.beSendTaskReport.connect(checkDBCallback)
+  comm.uiRequestHierarchy.emit(projID, True)
+  loop.exec()
+  comm.uiRequestTask.emit(Task.CHECK_DB, {'style':'text'})
+  loop.exec()
+  comm.backendThread.worker.beSendHierarchy.disconnect(hierarchyCallback)
+  comm.backendThread.worker.beSendTaskReport.disconnect(checkDBCallback)
   return

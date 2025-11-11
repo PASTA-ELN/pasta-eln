@@ -1,14 +1,14 @@
-"""example addon: fill definitions table with first entry from wikidata
+"""example add-on: fill definitions table with first entry from wikidata
 
 **This file has to be called definition_autofill.py and only this file is called from the definitions GUI.**
 
-**In its default form, the description is commented out to disable this addon and not show in the GUI**
+**In its default form, the description is commented out to disable this add-on and not show in the GUI**
 
-THIS IS A ADVANCED ADDON TUTORIAL
+THIS IS A ADVANCED ADD-ON TUTORIAL
 This tutorial teaches
 - the structure of the definitions table
 - how to fill the definitions table with the first entry from wikidata
-- these addons can have multiple functions inside them
+- these add-ons can have multiple functions inside them
 """
 import requests
 
@@ -25,18 +25,20 @@ def getFirstWikidataEntry(definition):
         str: The URL of the first Wikidata entry, or '' if not found
     """
     url = f'https://www.wikidata.org/w/api.php?action=wbsearchentities&search={definition}&language=en&format=json'
-    response = requests.get(url)
+    headers = {'User-Agent': 'PASTA-ELN (https://github.com/PASTA-ELN/pasta-eln)'}
+    response = requests.get(url, headers=headers, timeout=10)
     if response.status_code == 200:  # success
         data = response.json()
         if 'search' in data and len(data['search']) > 0: # check if search results exist
             return data['search'][0]['concepturi']
+    print('Error in html request:', response.status_code, response.text)
     return ''
 
 
-def main(backend, df, widget, parameter={}):
+def main(comm, df, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        backend (pasta backend): allow to extract data
+        comm (Communicate): communicate-backend
         df (DataFrame): pandas dataframe with data
            Columns are: 'key', 'long', 'PURL', 'defType' with the PURL being filled
         widget (QWidget): allows to create new gui dialogs

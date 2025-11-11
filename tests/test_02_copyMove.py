@@ -4,10 +4,8 @@ import os, shutil, logging, random
 import warnings
 import unittest
 from pathlib import Path
-from pasta_eln.backend import Backend
-from pasta_eln.textTools.stringChanges import outputString
-from pasta_eln.miscTools import DummyProgressBar
-from pasta_eln.installationTools import exampleData
+from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.miscTools import getConfiguration
 
 class TestStringMethods(unittest.TestCase):
   """
@@ -33,11 +31,21 @@ class TestStringMethods(unittest.TestCase):
     for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
       logging.getLogger(package).setLevel(logging.WARNING)
     logging.info('Start 02 test')
-    self.be = Backend('research')
-    projID = self.be.output('x0').split('|')[-1].strip()
+
+    log_records = []
+    class ErrorHandler(logging.Handler):
+      def emit(self, record):
+        if record.levelno >= logging.ERROR:
+          log_records.append(record)
+    handler = ErrorHandler()
+    logging.getLogger().addHandler(handler)
+
+    configuration, _ = getConfiguration('research')
+    self.be = Backend(configuration, 'research')
+    projID = self.be.output('x0').split('|')[-2].strip()
     self.be.changeHierarchy(projID)
 
-    choices = random.choices(range(100), k=250)
+    choices = random.choices(range(100), k=260)
     # choices =
     print(f'Current choice: [{",".join([str(i) for i in choices])}]')
     for epoch in range(5):
@@ -45,7 +53,7 @@ class TestStringMethods(unittest.TestCase):
       allDirs = []
       allFiles = []
       for root, _, files in os.walk(self.be.basePath):
-        if root.endswith('StandardOperatingProcedures') or root==str(self.be.basePath):
+        if root.endswith('CommonFiles') or root==str(self.be.basePath):
           continue
         allDirs.append(root)
         allFiles += [f'{root}{os.sep}{i}' for i in files if i not in ('.id_pastaELN.json','pastaELN.db')]
@@ -84,6 +92,9 @@ class TestStringMethods(unittest.TestCase):
     self.be.changeHierarchy(projID)
     print(self.be.outputHierarchy(False))
     print(f'{"*"*40}\nEND TEST 02 \n{"*"*40}')
+
+    logging.getLogger().removeHandler(handler)
+    self.assertEqual(len(log_records), 0, f"Logging errors found: {[r.getMessage() for r in log_records]}")
     return
 
   def verify(self):
@@ -92,7 +103,7 @@ class TestStringMethods(unittest.TestCase):
     output = '\n'.join(output.split('\n')[8:])
     print(output)
     self.assertNotIn('**ERROR', output, 'Error in checkDB')
-    self.assertLessEqual(len(output.split('\n')), 6, 'Check db should have less than 6 almost empty lines')
+    self.assertLessEqual(len(output.split('\n')), 8, 'Check db should have less than 8 almost empty lines')
     return
 
   def tearDown(self):

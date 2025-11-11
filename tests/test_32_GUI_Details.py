@@ -1,26 +1,29 @@
-from PySide6.QtWidgets import QMainWindow
-from pasta_eln.backend import Backend
-from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.GUI.palette import Palette
-from pasta_eln.GUI.details import Details
+import logging
+from pasta_eln.UI.guiCommunicate import Communicate
+from pasta_eln.UI.details import Details
+from .test_34_GUI_Form import getTable
 
-def test_simple(qtbot):
-  class MainWindow(QMainWindow):
-    def __init__(self):
-      super().__init__()
-      self.backend = Backend('research')
-      palette = Palette(self,'none')
-      self.comm = Communicate(self.backend, palette)
-      widget = Details(self.comm)
-      self.setCentralWidget(widget)
-      self.docIDs = [i.split('|')[-1].strip() for i in self.backend.output('measurement').split('\n')[-3:]]
+def test_simple(qtbot, caplog):
 
-  window = MainWindow()
-  window.setMinimumSize(600,800)
+  comm = Communicate('research')
+  while comm.backendThread.worker.backend is None:
+    qtbot.wait(100)
+  window = Details(comm)
+  window.setMinimumSize(300, 800)
   window.show()
   qtbot.addWidget(window)
 
+  table = getTable(qtbot, comm, 'measurement')
+  docIDs = table['id'].values[:3].tolist()
+  print(docIDs)
+
   for i in range(3):
-    window.comm.changeDetails.emit(window.docIDs[i])
+    window.comm.changeDetails.emit(docIDs[i])
+    qtbot.wait(1000)
     path = qtbot.screenshot(window)
     print(path)
+
+  comm.shutdownBackendThread()
+
+  errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
+  assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"

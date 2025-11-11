@@ -1,7 +1,6 @@
 """ Long strings and dictionaries/JSON that would obfuscate code """
 from typing import Any
 
-
 defaultDocTypes: list[list[str]] = [
   #docType,               PURL,                                              title,          icon,                   shortcut, view
   ['x0',                  'http://purl.obolibrary.org/obo/NCIT_C47885',      'Projects',     '',                     'space', 'name,tags,.status,.objective,comment'],
@@ -12,8 +11,8 @@ defaultDocTypes: list[list[str]] = [
   ['workflow/procedure',  'https://schema.org/procedure',                    'Procedure',    '',                      '',     'name,tags,comment,content'],
   ['workflow/workplan' ,  'http://purl.obolibrary.org/obo/PROCO_0000093',    'Work plan',    '',                      '',     'name,tags,comment,content'],
   ['workflow/worklog'  ,  'http://dicom.nema.org/resources/ontology/DCM/LOG','Work log',     '',                      '',     'name,tags,comment,content'],
-  ['instrument',          'http://purl.obolibrary.org/obo/NCIT_C16742',      'Instruments',  'ri.scales-2-line',      'i',    'name,tags,comment,.vendor'],
-  ['instrument/extension','https://www.wikidata.org/wiki/Q19841649',         'Extensions',   '',                      '',     'name,tags,comment,.vendor'],
+  ['device',              'http://purl.obolibrary.org/obo/NCIT_C16742',      'Devices',  'ri.scales-2-line',          'd',    'name,tags,comment,.vendor'],
+  ['device/extension',    'https://www.wikidata.org/wiki/Q19841649',         'Extensions',   '',                      '',     'name,tags,comment,.vendor'],
 ]
 
 
@@ -32,6 +31,7 @@ defaultSchema: list[list[str|int]] = [
   ['measurement',         '', 2,   'comment',   '',   '',        ''],
   ['measurement',         '', 3,   'sample',    '',   '',        'sample'],
   ['measurement',         '', 4,   'workflow/procedure','','','workflow/procedure'],
+  ['measurement',         '', 5,   'device','',   '',        'device'],
   ['sample',              '', 0,   'name',      '',   'T',       ''],
   ['sample',              '', 1,   'tags',      '',   '',        ''],
   ['sample',              '', 2,   'chemistry', '',   '',        ''],
@@ -56,32 +56,32 @@ defaultSchema: list[list[str|int]] = [
   ['workflow/worklog',    '', 1,   'tags',      '',   '',        ''],
   ['workflow/worklog',    '', 2,   'comment',   '',   '',        ''],
   ['workflow/worklog',    '', 3,   'content',   '',   '',        ''],
-  ['instrument',          '', 0,   'name',      '',   'T',       ''],
-  ['instrument',          '', 1,   'tags',      '',   '',        ''],
-  ['instrument',          '', 2,   'comment',   '',   '',        ''],
-  ['instrument',          '', 3,   'vendor',    '',   '',        ''],
-  ['instrument/extension','', 0,   'name',      '',   'T',       ''],
-  ['instrument/extension','', 1,   'tags',      '',   '',        ''],
-  ['instrument/extension','', 2,   'comment',   '',   '',        ''],
-  ['instrument/extension','', 3,   'vendor',    '',   '',        '']
+  ['device',              '', 0,   'name',      '',   'T',       ''],
+  ['device',              '', 1,   'tags',      '',   '',        ''],
+  ['device',              '', 2,   'comment',   '',   '',        ''],
+  ['device',              '', 3,   'vendor',    '',   '',        ''],
+  ['device/extension',    '', 0,   'name',      '',   'T',       ''],
+  ['device/extension',    '', 1,   'tags',      '',   '',        ''],
+  ['device/extension',    '', 2,   'comment',   '',   '',        ''],
+  ['device/extension',    '', 3,   'vendor',    '',   '',        '']
 ]
 
 
 defaultDefinitions = [
-  ['name',              'What is the name this item?',                                    ''],
-  ['tags',              'What are the tags?',                                             ''],
-  ['status',            'What is the project status',                                     ''],
-  ['objective',         'What is the objective?',                                         ''],
-  ['comment',           'What are the comments?',                                         ''],
-  ['content',           'What is procedure (Markdown possible; autofill if file given)?', ''],
-  ['vendor',            'Who is the vendor?',                                             ''],
-  ['sample',            'Which sample was used?',                                         ''],
-  ['workflow/procedure','Which procedure was used?',                                      ''],
-  ['chemistry',         'What is its chemical composition?',                              ''],
-  ['qrCodes',           '',                           'https://www.wikidata.org/wiki/Q12203'],
-  ['geometry.width',    'Sample width',                                                   ''],
-  ['geometry.length',   'Sample length',                                                  ''],
-  ['geometry.height',   'Sample height',                         'https://schema.org/height']
+  ['name',               'What is the name this item?',                                    ''],
+  ['tags',               'What are the tags?',                                             ''],
+  ['.status',            'What is the project status',                                     ''],
+  ['.objective',         'What is the objective?',                                         ''],
+  ['comment',            'What are the comments?',                                         ''],
+  ['content',            'What is procedure (Markdown possible; autofill if file given)?', ''],
+  ['.vendor',            'Who is the vendor?',                                             ''],
+  ['.sample',            'Which sample was used?',                                         ''],
+  ['.workflow/procedure','Which procedure was used?',                                      ''],
+  ['.chemistry',         'What is its chemical composition?',                              ''],
+  ['qrCodes',            '',                           'https://www.wikidata.org/wiki/Q12203'],
+  ['geometry.width',     'Sample width',                                                   ''],
+  ['geometry.length',    'Sample length',                                                  ''],
+  ['geometry.height',    'Sample height',                         'https://schema.org/height']
 ]
 
 
@@ -112,17 +112,17 @@ defaultConfiguration: dict[str, Any] = {
 #   within each: array of 3: description, default, all_choices
 configurationGUI: dict[str, Any] = {
   'general': {
-    'theme': ['Color style', 'none', ['amber', 'blue', 'cyan', 'pink', 'purple', 'teal', 'yellow', 'none']],
     'loggingLevel': ['Logging level (more->less)', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR']],
     'autosave': ['Autosave entries in form', 'No', ['Yes', 'No']],
-    'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']],
     'showHidden': ['Show hidden items by default', 'Yes', ['Yes','No']],
     'checkForUpdates': ['Check for updates on startup', 'Yes', ['Yes', 'No']]
   },
-  'dimensions': {
+  'appearance': {
+    'theme': ['Color style', 'none', ['amber', 'blue', 'cyan', 'pink', 'purple', 'teal', 'yellow', 'none']],
+    'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']],
     'sidebarWidth': ['Sidebar width', 280, [220, 280, 340]],
     'maxTableColumnWidth': ['Maximum column width in tables', 400, [300, 400, 500, 600]],
-    'imageSizeDetails': ['Image size in details view and form', 600, [300, 400, 500, 600]],
+    'imageSizeDetails': ['Image size in form', 600, [300, 400, 500, 600]],
     'imageWidthProject': ['Image width in project view', 300, [200, 250, 300, 350, 400]],
     'maxProjectLeafHeight': ['Maximum height of item in project view', 250, [200, 250, 300, 400]],
     'widthContent': ['Width of procedures in project view', 600, [400, 500, 600, 700]],
@@ -168,20 +168,20 @@ Three components are needed for proper functioning of PASTA-ELN:
 - Shortcut creation
 - Example project creation
 
-This setup will analyse and (possibly) correct these items.
-If an attempt fails: please follow to this [website](https://pasta-eln.github.io/pasta-eln/install.html).
+This setup will analyse and (possibly) correct these items
+If an attempt fails: please follow to this [website](https://pasta-eln.github.io/pasta-eln/install.html#troubleshooting-instructions)
 """
 
 
 exampleDataString = """
 Do you want to create an example project?
 
-This step helps to verify the installation and provides an helpful example for new users.
+This step helps to verify the installation and provides an helpful example for new users
 
-!WARNING! This process will RESET everything and thereby DELETE EVERYTHING since you installed pastaELN.
+!WARNING! This process will RESET everything and thereby DELETE EVERYTHING since you installed pastaELN
 
 This step usually takes up to 20sec, so please be patient. Sometimes, Linux mentions that the program
-is not responding and asks if to close/wait. Please WAIT.
+is not responding and asks if to close/wait. Please WAIT
 """
 
 shortcuts = """
@@ -195,7 +195,7 @@ shortcuts = """
 
 **Ctrl+W**: List workflows
 
-**Ctrl+I**: List instruments
+**Ctrl+D**: List devices
 
 **Ctrl+T**: List tags
 
@@ -214,13 +214,12 @@ shortcuts = """
 
 
 tableHeaderHelp = """
-## You can add custom rows via bottom text area.
+## You can add custom rows via bottom text area
 
 If you want to add a column:
 - to add a normal data-field (comment, content, name, type, tags, user, date), enter this field : 'comment'
 - to check the existence of an image: enter 'image'
-- to check if a tag is present: "#tag", in which you replace "tag" by the tag you want to look for. "_curated" is a special tag for measurements.
-- to get metadata, use a ".": e.g. "metaVendor.fileExtension", "metaUser.stress". Capitalization is important.
+- to get metadata, use a ".": e.g. "metaVendor.fileExtension", "metaUser.stress". Capitalization is important
 </ul>
 """
 

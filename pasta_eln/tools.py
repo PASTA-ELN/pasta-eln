@@ -7,14 +7,12 @@ import re
 import shutil
 import sys
 import traceback
-from pathlib import Path
 from sqlite3 import IntegrityError
 from typing import Any, Callable, Union
-import requests
-from requests.structures import CaseInsensitiveDict
-from pasta_eln.backend import Backend
-from pasta_eln.elabFTWsync import Pasta2Elab
-from pasta_eln.fixedStringsJson import CONF_FILE_NAME, defaultDocTypes, defaultSchema
+from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
+from pasta_eln.fixedStringsJson import defaultDocTypes, defaultSchema
+from pasta_eln.miscTools import getConfiguration
 from pasta_eln.textTools.stringChanges import outputString
 
 
@@ -25,6 +23,7 @@ class Tools:
   def __init__(self) -> None:
     self.backend:Backend|None = None
     self.projectGroup = ''
+    self.configuration, _ = getConfiguration(self.projectGroup)
 
 
   def __choice__(self, command:str) -> str:
@@ -45,14 +44,6 @@ class Tools:
     helpString += '  [s]can all projects\n'
     if command == 's':
       self.scanAllProjects()
-
-    helpString += 'Commands - update Version 2 -> Version 3:\n'
-    helpString += '  [u1] convert couchDB to SQLite\n'
-    if command == 'u1':
-      self.couchDB2SQLite()
-    helpString += '  [u2] update disk structure from V2->v3\n'
-    if command == 'u2':
-      self.translateV2_V3()
 
     helpString += 'Commands - update:\n'
     helpString += '  [u3] convert from one procedure to 3 workflows\n'
@@ -99,20 +90,19 @@ class Tools:
     Args:
       projectGroup (str): "name" of project group
     """
-    with open(Path.home()/CONF_FILE_NAME, encoding='utf-8') as fIn:
-      config = json.load(fIn)
-      print('Project groups:','  '.join(f'{idx+1}-{i}' for idx,i in enumerate(config['projectGroups'].keys())))
+    projectGroupKeys = list(self.configuration['projectGroups'].keys())
+    print('Project groups:','  '.join(f'{idx+1}-{i}' for idx,i in enumerate(projectGroupKeys)))
     while not self.projectGroup:
       projectGroup = projectGroup or input('  Enter project group [number or name or entire text]: ').strip()
       if re.match(r'^\d+-\w+$', projectGroup):
         self.projectGroup = projectGroup.split('-')[1]
       elif re.match(r'^\d+$', projectGroup):
-        self.projectGroup = list(config['projectGroups'].keys())[int(projectGroup)-1]
-      elif projectGroup in config['projectGroups'].keys():
+        self.projectGroup = projectGroupKeys[int(projectGroup)-1]
+      elif projectGroup in projectGroupKeys:
         self.projectGroup = projectGroup
       else:
         projectGroup = ''
-    self.backend = Backend(self.projectGroup)
+    self.backend = Backend(self.configuration, self.projectGroup)
     return
 
 
@@ -197,7 +187,6 @@ class Tools:
       self.__setBackend__(projectGroup)
     if self.backend is None:
       return
-    self.backend = Backend(projectGroup)
     if not docID:
       docID = input('Enter docID: ').strip()
     if output:
@@ -220,65 +209,6 @@ class Tools:
     projectGroups = self.backend.db.getView('viewDocType/x0')['id'].values
     for projID in projectGroups:
       self.backend.scanProject(lambda i: self.__updateProgressBar__('count',i), projID)
-    return
-
-
-  def couchDB2SQLite(self, userName:str='', password:str='', database:str='', path:str='') -> None:
-    """
-    Backup everything of the CouchDB installation (local couchdb instance)
-
-    Args:
-      userName (str): username
-      password (str): password
-      database (str): database
-      path     (str): path to location of sqlite file
-    """
-    headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
-    headers['Content-Type'] = 'application/json'
-    # get arguments if not given
-    location = '127.0.0.1'
-    if not userName:
-      userName = input('Enter local admin username: ').strip()
-    if not password:
-      password = input('Enter password: ').strip()
-    if not path:
-      path = input('Enter path to data: ').strip()
-    # use information
-    authUser = requests.auth.HTTPBasicAuth(userName, password)
-    resp = requests.get(f'http://{location}:5984/_all_dbs', headers=headers, auth=authUser, timeout=10)
-    if resp.status_code != 200:
-      print('**ERROR response for _all_dbs wrong', resp.text)
-      print('Username and password', userName, password)
-      return
-    databases = resp.json()
-    print('Databases:',databases)
-    if not database:
-      database = input('Enter database: ').strip()
-    # big loop over all documents
-    if self.backend is None:
-      return
-    db = self.backend.db
-    resp = requests.get(f'http://{location}:5984/{database}/_all_docs', headers=headers, auth=authUser, timeout=10)
-    for item in resp.json()['rows']:
-      docID = item['id']
-      if docID in ('-dataHierarchy-','-ontology-') or docID.startswith('_design/'):
-        continue
-      # print(f'DocID: {docID}')
-      doc   = requests.get(f'http://{location}:5984/{database}/{docID}', headers=headers, auth=authUser, timeout=10).json()
-      doc, attachments = self.translateDoc(doc)
-      db.saveDoc(doc)
-      for att in attachments:
-        docAttach = requests.get(f'http://{location}:5984/{database}/{docID}/{att}',
-                                  headers=headers, auth=authUser, timeout=10).json()
-        setAll = set(docAttach.keys())
-        setImportant  = setAll.difference({'-date','date','-client','image','type','-type','client','-name','-branch','branch'})
-        if not setImportant or ('-name' in docAttach and docAttach['-name']=='new folder'):
-          continue
-        date = docAttach['-date'] if '-date' in docAttach else docAttach['date'] if 'date' in docAttach else att
-        if '-client' in docAttach:
-          del docAttach['-client']
-        db.cursor.execute('INSERT INTO changes VALUES (?,?,?)', [docID, date, json.dumps(docAttach)])
-        db.connection.commit()
     return
 
 
@@ -314,28 +244,6 @@ class Tools:
       print('Input document has mistakes in: ',comment,'\n',json.dumps(doc, indent=2))
       raise
     return doc, attachments
-
-
-  def translateV2_V3(self, path:str='') -> None:
-    """ Translate old id files in the file-tree into the new style
-    Args:
-      path (str): path to file-tree
-    """
-    if not path:
-      path = input('Enter path to data: ').strip()
-    for aPath, _, files in os.walk(path):
-      if aPath == path or 'StandardOperatingProcedures' in aPath:
-        continue
-      if '.id_pastaELN.json' not in files:
-        print('**ERROR** id file does NOT exist:', aPath,'\n   ',' '.join(files))
-      with open(Path(aPath)/'.id_pastaELN.json', encoding='utf-8') as fIn:
-        doc = json.load(fIn)
-      docNew, _ = self.translateDoc(doc, aPath)
-      del docNew['branch']['op']
-      docNew['branch'] = [docNew['branch']]
-      with open(Path(aPath)/'.id_pastaELN.json','w', encoding='utf-8') as fOut:
-        fOut.write(json.dumps(docNew))
-    return
 
 
   def update3Workflow(self, projectGroup:str='') -> None:

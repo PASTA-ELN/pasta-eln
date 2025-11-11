@@ -141,12 +141,6 @@ Debugging on a conventional install: linux
 - start with 'pudb3 temp.py'
 
 
-Running pytests (python 3.12)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- python3 -m tests.test_01_3Projects
-
-
 General notes
 ^^^^^^^^^^^^^
 

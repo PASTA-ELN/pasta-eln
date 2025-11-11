@@ -3,12 +3,13 @@
 import shutil, os, platform
 import logging, warnings
 from pathlib import Path
-from pasta_eln.backend import Backend
-from pasta_eln.elabFTWsync import Pasta2Elab
+from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
+from pasta_eln.miscTools import getConfiguration
 from .misc import verify
 
 
-def test_simple(qtbot):
+def test_simple(qtbot, caplog):
   """
   main function
   """
@@ -24,7 +25,8 @@ def test_simple(qtbot):
     logging.getLogger(package).setLevel(logging.WARNING)
 
   # start app and load project
-  backend = Backend('research')
+  configuration, _ = getConfiguration('research')
+  backend = Backend(configuration, 'research')
   dirName = backend.basePath
   backend.exit()
   try:
@@ -34,9 +36,11 @@ def test_simple(qtbot):
       print('Try-Except unnecessary')
   except Exception:
     pass
-  backend = Backend('research')
+  backend = Backend(configuration, 'research')
   Pasta2Elab(backend, 'research', purge=False)
 
   # verify
   verify(backend)
-  return
+
+  errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
+  assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"

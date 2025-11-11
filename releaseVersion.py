@@ -157,11 +157,14 @@ def createRequirementsFile() -> None:
   return
 
 
-def runTests() -> None:
+def runTests() -> bool:
   """
   run unit-tests: can only work if all add-ons and dependencies are fulfilled
 
   Cannot be an action, since dependencies are partly private
+
+  Returns:
+    bool: True if all tests passed
   """
   print('Start running tests')
   tests = [i for i in os.listdir('tests') if i.endswith('.py') and i.startswith('test_')]
@@ -174,12 +177,15 @@ def runTests() -> None:
       success -= result.stdout.decode('utf-8').count('**ERROR Red: FAILURE and ERROR')
       for badWord in ['**ERROR got a file','FAILED','ModuleNotFoundError']:
         success += result.stdout.decode('utf-8').count(badWord)
+    success += result.stdout.decode('utf-8').count('========= FAILURES =========')
+    success += result.stdout.decode('utf-8').count('========== ERRORS ==========')
     if success==0:
       print(f"  success: Python unit test {fileI}")
     else:
       print(f"  FAILED: Python unit test {fileI}")
       print(f"    run: 'pytest -s tests/{fileI}' and check logFile")
       print(f"\n---------------------------\n{result.stdout.decode('utf-8')}\n---------------------------\n")
+      return False
   print('Start running complicated tests')
   tests = [i for i in os.listdir('testsComplicated') if i.endswith('.py') and i.startswith('test_')]
   for fileI in sorted(tests):
@@ -197,7 +203,8 @@ def runTests() -> None:
       print(f"  FAILED: Python unit test {fileI}")
       print(f"    run: 'pytest -s testsComplicated/{fileI}' and check logFile")
       print(f"\n---------------------------\n{result.stdout.decode('utf-8')}\n---------------------------\n")
-  return
+      return False
+  return True
 
 
 def copyAddOns() -> None:
@@ -224,21 +231,42 @@ def rightAlignComments() -> None:
   for root, _, files in os.walk('pasta_eln'):
     for file in files:
       if file.endswith('.py') and \
-          file not in ['markdown2html.py','html2markdown.py','html2mdConfig.py','html2mdUtils.py','guiCommunicate.py'] and\
-          'Resources/' not in root and '/AddOns' not in root:
+          file not in ['markdown2html.py','html2markdown.py','html2mdConfig.py','html2mdUtils.py','htmlString.py',
+                       'guiCommunicate.py','worker.py'] and 'Resources/' not in root and '/AddOns' not in root:
         file_path = os.path.join(root, file)
         with open(file_path, encoding='utf-8') as f:
           content = f.read()
         output = ''                                                                  # sourcery skip: use-join
         for number, line in enumerate(content.splitlines()):
           if pattern1.search(line) and not line.strip().startswith('#') and len(line)!=110 and \
-             pattern2.search(line) and 'background' not in line:
+             pattern2.search(line) and 'background' not in line and 'import' not in line:
             output += f'{number+1}: {line.strip()}\n'
         if output and 'Resources/' not in file_path:
           print('Processing file:', file_path)
           print(output)
   print('================ END RIGHT-ALIGNMENT CHECK ================')
   return
+
+
+def findTasks() -> None:
+  """ Find all tasks in the pasta_eln codebase that are emitted by the UI.
+  This is used to find discrepancies in keys.
+  - information also in guiCommunicate
+  """
+  target:dict[str,list[str]] = {}
+  result1 = subprocess.run(['grep', '-r','uiRequestTask', 'pasta_eln'], capture_output=True, text=True, check=False)
+  for line in result1.stdout.split('\n'):
+    if len(line)<10:
+      continue
+    fileName, code = line.split(':', maxsplit=1)
+    if 'uiRequestTask.emit(Task.' in code:  # this is how it should be
+      task = code.split('emit(Task.')[1].split(',', maxsplit=1)[0]
+      data = code.split('emit(Task.')[1].split(',', maxsplit=1)[1][:-1]
+      if task not in target:
+        target[task] = []
+      target[task].append(f'{fileName.strip()}: {data.strip()}')
+  print(json.dumps(target, indent=2))
+
 
 
 def runSourceVerification() -> None:
@@ -251,11 +279,11 @@ def runSourceVerification() -> None:
   - sourcery
   """
   tools = {'pre-commit': 'pre-commit run --all-files',
-           #'isort'     : 'isort --ca pasta_eln/',
+           'isort'     : 'isort --ca pasta_eln/',
            'pylint'    : 'pylint pasta_eln/',
            'mypy'      : 'mypy --no-warn-unused-ignores pasta_eln/',
            'sourcery'  : 'sourcery review pasta_eln/',
-           #'isort2'    : 'isort releaseVersion.py',
+           'isort2'    : 'isort releaseVersion.py',
            'pylint2'   : 'pylint releaseVersion.py',
            'mypy2'     : 'mypy --no-warn-unused-ignores releaseVersion.py',
            'sourcery2' : 'sourcery review releaseVersion.py',
@@ -268,9 +296,47 @@ def runSourceVerification() -> None:
   return
 
 
+def getArtifacts() -> None:
+  """ Get artifacts from action """
+  if not os.path.exists('artifacts'):
+    os.makedirs('artifacts')
+  owner='PASTA-ELN'
+  repo='pasta-eln'
+  workflowFile='installLinux.yml'
+  url = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/{workflowFile}/runs?per_page=1"
+  response = requests.get(url, timeout=30)
+  response.raise_for_status()
+  data = response.json()
+  runID = data['workflow_runs'][0]['id'] if data['workflow_runs'] else None
+
+  url = f"https://api.github.com/repos/{owner}/{repo}/actions/runs/{runID}/artifacts"
+  response = requests.get(url, timeout=30)
+  response.raise_for_status()
+  data = response.json()
+  artifactUrl = str(data['artifacts'][0]['archive_download_url']) if data['artifacts'] else None
+  if artifactUrl is None:
+    print('No artifacts found.')
+    return
+  print('Download:',artifactUrl,'into artifacts/...')
+
+  with open(Path.home()/'.ssh'/'github.token', encoding='utf-8') as fIn:
+    token = fIn.read().strip()
+  headers = {'Authorization': f"token {token}"}
+  response = requests.get(artifactUrl, headers=headers, stream=True, timeout=60)
+  response.raise_for_status()
+  with open('artifacts/artifact.zip', 'wb') as f:
+    for chunk in response.iter_content(chunk_size=8192):
+      if chunk:
+        f.write(chunk)
+  os.system('cd artifacts && unzip -o artifact.zip && rm artifact.zip')
+  return
+
+
 if __name__=='__main__':
   #run tests and create default files
-  runTests()
+  successTests = runTests()
+  if not successTests:
+    sys.exit(1)
   createContributors()
   runSourceVerification()
   createRequirementsFile()
@@ -286,6 +352,7 @@ if __name__=='__main__':
 """)
     if input('Continue: only "y" continues. ') == 'y':
       newVersion(versionLevel)
+      getArtifacts()
       print("""You should do here after:
 - 'git checkout sb_staging'
 - 'git merge main'

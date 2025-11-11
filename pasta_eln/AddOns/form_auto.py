@@ -1,12 +1,13 @@
-"""example addon: adds to the form content.
+"""example add-on: adds to the form content
 
 **This file has to be called form_auto.py and only this file is called from form.**
 
-**In its default form, the description is commented out to disable this addon and not show in the GUI**
+**In its default form, the description is commented out to disable this add-on and not show in the GUI**
 
-THIS IS A ADVANCED ADDON TUTORIAL
+THIS IS A ADVANCED ADD-ON TUTORIAL
 This tutorial teaches
-- do not use chatgpt library, but use the requests library in order to employ less dependencies
+- HERE: do not use chatgpt library, but use the requests library in order to employ less dependencies
+- generally : use a library!!
 - the structure of documents
 """
 import requests
@@ -16,10 +17,10 @@ import requests
 reqParameter = {'key':'API key of google'} #possibility for required parameters: like API-key, etc. {'API': 'text'}
 helpText = 'To get API key, you have to register at https://aistudio.google.com/app/apikey and create a new key.'
 
-def main(backend, doc, widget, parameter={}):
+def main(comm, doc, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        backend (pasta backend): allow to extract data
+        comm (Communicate): communicate-backend
         doc (dict): dictionary of the content: comment, title, image might be helpful
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters
@@ -29,7 +30,7 @@ def main(backend, doc, widget, parameter={}):
     """
     apiKey = parameter.get('key')
     if not apiKey:
-        return 'API key not provided in parameters. Please configure it in the addon settings.'
+        return 'API key not provided in parameters. Please configure it in the add-on settings.'
     if not doc['comment']:
         return 'No comment provided in the document. Please add a comment to expand.'
     promptText = f"Expand the following text: '{doc['comment']}'."

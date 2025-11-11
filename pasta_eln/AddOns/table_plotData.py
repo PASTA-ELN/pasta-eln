@@ -1,16 +1,16 @@
-"""example addon: plot data from files
+"""example add-on: plot data from files
 
-THIS IS A VERY ADVANCED ADDON TUTORIAL
+THIS IS A VERY ADVANCED ADD-ON TUTORIAL
 This tutorial teaches
 - how to plot the data from files
 """
-from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtWidgets import QDialog, QComboBox, QLineEdit, QHBoxLayout, QTableWidget, QTableWidgetItem
 import matplotlib
 import pandas as pd
-from pasta_eln.miscTools import callDataExtractor, isFloat, MplCanvas
-from pasta_eln.GUI.guiStyle import widgetAndLayout, space, Label
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLineEdit, QTableWidget, QTableWidgetItem
+from pasta_eln.miscTools import MplCanvas, callDataExtractor, getDoc, isFloat
+from pasta_eln.UI.guiStyle import Label, space, widgetAndLayout
 
 # The following two variables are mandatory
 description  = 'Default data plot'  #short description that is shown in the menu
@@ -128,7 +128,7 @@ class DataAnalyse(QDialog):
     self.graph.axes.set_xlim(left=xMin, right=xMax)
     self.graph.axes.set_ylim(bottom=yMin, top=yMax)
     self.graph.axes.tick_params(axis='both', direction='in')
-    self.graph.draw() # Trigger the canvas to update and redraw.
+    self.graph.draw() # Trigger the canvas to update and redraw
     self.graphToolbar.show()
     self.graph.show()
 
@@ -138,10 +138,10 @@ class DataAnalyse(QDialog):
     self.refresh()
 
 
-def main(backend, df, widget, parameter={}):
+def main(comm, df, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        backend (pasta backend): allow to extract data
+        comm (communication): pasta communication layer
         df (Dataframe): dataframe with the data to plot. The docIDand path columns are of most interest
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters
@@ -152,7 +152,7 @@ def main(backend, df, widget, parameter={}):
     # no cleaning needed since we only use id and path columns
     data = []
     for idx, row in df.iterrows():
-        res = callDataExtractor(row['path'], backend)
+        res = callDataExtractor(row['docID'], comm)
         if res is None:
             continue
         # Here you can process the extracted data further, e.g., plot it

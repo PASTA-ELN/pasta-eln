@@ -6,10 +6,10 @@ THIS IS THE BASIC EXTRACTOR TUTORIAL, WHICH TEACHES
 - how to create images
 - code is recreated in this example, which is not ideal. But this is a tutorial and ok
 """
-import pandas as pd
 from io import StringIO
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 def use(filePath, style={'main':''}, saveFileName=None):

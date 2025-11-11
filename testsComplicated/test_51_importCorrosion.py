@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create 3 projects; simplified form of testTutorialComplex """
-import os, shutil, json, uuid
+import os, shutil, json, uuid, logging
 import warnings
 import unittest
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from pasta_eln.backend import Backend
-from pasta_eln.miscTools import DummyProgressBar
+from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.textTools.stringChanges import outputString
+from pasta_eln.miscTools import getConfiguration
 
 fastTesting = [140211,240037,440182,540113,840047,940160,940372,1240182,1940004,2040113,2040353,2040561,2040768,2040970,2041178,2041400,2240058,2240276,2440166,3440008,4640004,6840020,8340039,8640153,8940012,9140206,9440033,9540062,9740103,9840032,10240079,48240105,48240317,48240521,48240733,48840006,48840221,49740035,49840099,51740129,]
 flagfastTesting = True  #test only some entries with those sample numbers; False=test all
@@ -28,7 +28,6 @@ class TestStringMethods(unittest.TestCase):
     """
     main function
     """
-    dummyProgressBar = DummyProgressBar()
     outputFormat = 'print'  #change to 'print' for human usage, '' for less output
     # initialization: create database, destroy on filesystem and database and then create new one
     warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
@@ -36,16 +35,25 @@ class TestStringMethods(unittest.TestCase):
     warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
     warnings.filterwarnings('ignore', category=ImportWarning)
 
+    log_records = []
+    class ErrorHandler(logging.Handler):
+      def emit(self, record):
+        if record.levelno >= logging.ERROR:
+          log_records.append(record)
+    handler = ErrorHandler()
+    logging.getLogger().addHandler(handler)
+
     projectGroup = 'research'
+    configuration, _ = getConfiguration(projectGroup)
     path = 'testsComplicated/Data_CorrosionDB/'
     idBase = uuid.uuid4().hex[:-9]
-    self.be = Backend(projectGroup)
+    self.be = Backend(configuration, projectGroup)
 
     self.dirName = self.be.basePath
     self.be.exit()
     shutil.rmtree(self.dirName)
     os.makedirs(self.dirName)
-    self.be = Backend(projectGroup)
+    self.be = Backend(configuration, projectGroup)
     print()
 
     ### Update sample information
@@ -64,7 +72,7 @@ class TestStringMethods(unittest.TestCase):
     self.be.db.cursor.execute(f'UPDATE docTypes SET view = "{sampleView}" WHERE docType = "sample"')
     projectView = 'name,.resp1,.dr1'
     self.be.db.cursor.execute(f'UPDATE docTypes SET view = "{projectView}" WHERE docType = "x0"')
-    for docType in ['instrument','instrument/extension','workflow','workflow/worklog','workflow/workplan','workflow/procedure']:
+    for docType in ['device','device/extension','workflow','workflow/worklog','workflow/workplan','workflow/procedure']:
       self.be.db.cursor.execute(f'DELETE FROM docTypes WHERE docType = "{docType}"')
       self.be.db.cursor.execute(f'DELETE FROM docTypeSchema WHERE docType = "{docType}"')
     self.be.db.connection.commit()
@@ -296,3 +304,6 @@ class TestStringMethods(unittest.TestCase):
         shutil.copy(fromPath, self.be.basePath/self.be.cwd/f'{id5}.csv')
       self.be.addData('measurement', doc)
     outputString(outputFormat, 'info', self.be.output('measurement'))
+
+    logging.getLogger().removeHandler(handler)
+    self.assertEqual(len(log_records), 0, f"Logging errors found: {[r.getMessage() for r in log_records]}")

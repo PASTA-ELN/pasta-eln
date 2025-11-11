@@ -4,7 +4,7 @@
 THIS IS THE BASIC EXTRACTOR TUTORIAL, WHICH TEACHES
 - how to use style recipes:
   - in the code these are lines which have an if-statement and this is followed by a comment "#:" which is then used for the human readable part
-  - the default case is with "elif True and" which is a little strange but follows above rule of if-statement and ....
+  - the default case is with "elif True and" which is a little strange but follows above rule of if-statement and ...
   - please use this way of writing code and the extractors should work
 - how to create metadata conveniently using "Long name [Unit]" nomenclature
 - how to create images

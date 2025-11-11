@@ -2,16 +2,14 @@
 """TEST the form """
 import logging, warnings
 from pathlib import Path
-from pasta_eln.backend import Backend
+from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
 from pasta_eln.installationTools import exampleData
-from pasta_eln.GUI.form import Form
-from pasta_eln.guiCommunicate import Communicate
-from pasta_eln.GUI.palette import Palette
-from pasta_eln.elabFTWsync import Pasta2Elab
+from pasta_eln.miscTools import getConfiguration
 from .misc import verify
 
 
-def test_simple(qtbot):
+def test_simple(qtbot, caplog):
   """
   main function
   """
@@ -27,12 +25,12 @@ def test_simple(qtbot):
     logging.getLogger(package).setLevel(logging.WARNING)
 
   # start app and load project
+  configuration, _ = getConfiguration('research')
   exampleData(True, None, 'research', '')
-  backend = Backend('research')
-  palette = Palette(None, 'dark_blue')
-  comm = Communicate(backend, palette)
-  window = Form(comm, {'_projectID': '', 'type': ['x0']})
-  qtbot.addWidget(window)
+  backend = Backend(configuration, 'research')
+
   _ = Pasta2Elab(backend, 'research', purge=True)
   verify(backend)
-  return
+
+  errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
+  assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"

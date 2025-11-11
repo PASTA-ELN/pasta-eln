@@ -7,7 +7,7 @@ from pasta_eln.tools import Tools
 from .misc import verify, handleReport
 
 
-def test_simple(qtbot):
+def test_simple(caplog):
   """
   main function
   """
@@ -34,4 +34,5 @@ def test_simple(qtbot):
   tools.run(['research','v','ss','v','q']) #sync to server
   tools.run(['research','pL','sg','v','q']) #sync from server
 
-  return
+  errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
+  assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"

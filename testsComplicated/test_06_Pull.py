@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 """TEST the form """
-import shutil, os, platform
 import logging, warnings
 from pathlib import Path
-from pasta_eln.backend import Backend
-from pasta_eln.elabFTWsync import Pasta2Elab
+from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
+from pasta_eln.miscTools import getConfiguration
 from .misc import verify, handleReport
 
 
-def test_simple(qtbot):
+def test_simple(qtbot, caplog):
   """
   main function
   """
@@ -24,7 +24,8 @@ def test_simple(qtbot):
     logging.getLogger(package).setLevel(logging.WARNING)
 
   # start app and load project
-  backend = Backend('research')
+  configuration, _ = getConfiguration('research')
+  backend = Backend(configuration, 'research')
   sync = Pasta2Elab(backend, 'research', purge=False)
   if not sync.api.url:
     return
@@ -38,4 +39,6 @@ def test_simple(qtbot):
   projID = output.split('|')[-1].strip()
   backend.changeHierarchy(projID)
   print(backend.outputHierarchy(False, True))
-  return
+
+  errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
+  assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"

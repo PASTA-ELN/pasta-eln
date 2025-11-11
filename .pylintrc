@@ -1,4 +1,5 @@
 [MASTER]
+init-hook='import sys, os; sys.path.insert(0, os.getcwd())'
 
 # A comma-separated list of package or module names from where C extensions may
 # be loaded. Extensions are loading into the active Python interpreter and may
@@ -102,7 +103,8 @@ disable=raw-checker-failed,
         missing-raises-doc,
         no-else-return,
         unused-argument,
-        broad-except
+        broad-except,
+        unsubscriptable-object
 
 #Reasons:
 # looks better: len-as-condition, multiple-statements, bad-whitespace, multiple-imports
@@ -447,10 +449,10 @@ max-args=10  #Steffen's change
 max-positional-arguments=10
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=32 #Steffen's change
+max-attributes=40 #Steffen's change
 
 # Maximum number of boolean expressions in a if statement
-max-bool-expr=5
+max-bool-expr=6 #SB change
 
 # Maximum number of branch for function / method body
 max-branches=85 #Steffen's change
