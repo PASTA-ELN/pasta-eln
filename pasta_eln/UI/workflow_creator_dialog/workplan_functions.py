@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Tuple
 
 from .workplan_template import WORKPLAN_TEMPLATE
-from ...guiCommunicate import Communicate
+from ..guiCommunicate import Communicate
 
 
 def generate_workplan(comm: Communicate, workplan_name: str, library_url: str, sample_name: str, procedures: list[str],

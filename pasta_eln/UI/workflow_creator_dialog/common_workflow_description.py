@@ -21,6 +21,10 @@ from urllib.error import HTTPError
 from urllib.parse import ParseResult, urlunparse, urlparse
 from urllib.request import urlopen
 
+import pandas as pd
+
+from pasta_eln.UI.guiCommunicate import Communicate
+
 try:
     from pyiron_workflow import Workflow
 
@@ -164,24 +168,38 @@ class Storage:
             self.procedures[key] = urlparse(path + rel_path)
         # print(json.dumps(self.procedures))
 
-    def add_pasta_database(self, backend):
-        df = backend.db.getView('viewDocType/workflow/procedure')
-        for row in df.itertuples(index=False):
-            name = row.name
-            id = row.id
-            doc = backend.db.getDoc(id)
+    def add_pasta_database(self, df_procedures: pd.DataFrame, comm: Communicate) -> None:
+        """
+        Add Procedures from PastaELN Dataframe to Storage
+
+        Args:
+            df_procedures (pd.DataFrame)
+
+        """
+        #print("DEGUG Storage.add_pasta_database:\n", df_procedures)
+        self.counter = df_procedures.shape[0]
+        def add_procedure_from_doc(doc):
             docPath = doc['branch'][0]['path']
             if docPath:
-                path = backend.basePath/docPath
+                path = comm.basePath/docPath
             else:
                 path = Path()
             if path.is_file():
-                self.procedures[name] = path
+                self.procedures[doc['name']] = path
             else:
                 try:
-                    self.procedures[name] = doc['content']
+                    self.procedures[doc['name']] = doc['content']
                 except KeyError:
-                    self.procedures[name] = ""
+                    self.procedures[doc['name']] = ""
+
+            self.counter-=1
+            if self.counter == 0:
+                comm.proceduresChanged.emit()
+
+        comm.backendThread.worker.beSendDoc.connect(lambda doc: add_procedure_from_doc(doc))
+
+        for procedure in df_procedures.itertuples(False):
+            comm.uiRequestDoc.emit(procedure.id)
 
     def list_parameters(self, name: str) -> dict[str, str]:
         """list all the parameters in this procedure

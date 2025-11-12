@@ -2,9 +2,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QDragEnterEvent, QDropEvent
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 
-from pasta_eln.GUI.workflow_creator_dialog.central_text_widget import CentralTextWidget
+from pasta_eln.UI.workflow_creator_dialog.central_text_widget import CentralTextWidget
 from .step_widget import StepWidget
-from ...guiCommunicate import Communicate
+from ..guiCommunicate import Communicate
 
 
 class StepList(QWidget):

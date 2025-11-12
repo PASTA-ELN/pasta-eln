@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot
+
 from ..backendWorker.worker import BackendThread, Task
 from ..miscTools import getConfiguration
 from .palette import Palette
@@ -39,6 +40,7 @@ class Communicate(QObject):
   uiSendSQL             = Signal(list)          # request to execute SQL commands directly
   # signals that are emitted from this comm that data changed
   docTypesChanged    = Signal()          # redraw main window, e.g. after change of docType titles
+  proceduresChanged  = Signal()
 
   # unclear
   formDoc            = Signal(dict)      # send doc from details to new/edit dialog: dialogForm
@@ -61,6 +63,8 @@ class Communicate(QObject):
     self.docTypesTitles:dict[str,dict[str,str]] = {}# docType: {'title':title,'icon':icon,'shortcut':shortcut}
     self.dataHierarchyNodes:dict[str,list[Any]] = {}
     self.projectID                              = ''
+    from .workflow_creator_dialog.common_workflow_description import Storage # Import hier verhindert Circular Import
+    self.storage:Storage                        = Storage({}) # From Common Workflow Description to store procedures
 
     if self.configuration:
       # Backend worker thread

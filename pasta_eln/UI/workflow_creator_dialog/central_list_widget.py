@@ -8,7 +8,7 @@ from .export_workplan_dialog import ExportWorkplanDialog
 from .new_step_button import NewStepButton
 from .step_list import StepList
 from .workplan_functions import generate_workplan
-from ...guiCommunicate import Communicate
+from ..guiCommunicate import Communicate
 
 
 class CentralListWidget(QWidget):
@@ -35,7 +35,7 @@ class CentralListWidget(QWidget):
         self.scroll_area.setWidget(self.step_list)
 
         # New Step Button
-        new_step_button = NewStepButton(self.step_list, self.comm)
+        new_step_button = NewStepButton(self.comm)
 
         # Font for the buttons
         font = QFont()

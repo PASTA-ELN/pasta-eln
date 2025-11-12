@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QLabel, QLineEdit, QComboBox, QPushButton,
                                QHBoxLayout)
 
-from pasta_eln.GUI.workflow_creator_dialog.workplan_functions import get_db_samples
+from pasta_eln.UI.workflow_creator_dialog.workplan_functions import get_db_samples
 
 
 class ExportWorkplanDialog(QDialog):

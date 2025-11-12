@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QWidget, QGridLayout
 
 from .central_list_widget import CentralListWidget
 from .central_text_widget import CentralTextWidget
-from ...guiCommunicate import Communicate
+from ..guiCommunicate import Communicate
 
 
 class CentralWidget(QWidget):

@@ -11,6 +11,7 @@ from PySide6.QtCore import QEvent, QUrl, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QPixmap, QShortcut
 from PySide6.QtWidgets import QFileDialog, QLabel, QMainWindow
 from pasta_eln import __version__
+from .workflow_creator_dialog.workplan_creator_dialog import WorkplanCreatorDialog
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
 from ..miscTools import hardRestart, installPythonPackages, updateAddOnList
@@ -74,6 +75,7 @@ class MainWindow(QMainWindow):
       # Action('Smart synce',                  self, [Command.SYNC_SMART],       syncMenu)
     Action('&Item type editor',              self, [Command.SCHEMA],         systemMenu, shortcut='F8')
     Action('&Definitions editor',            self, [Command.DEFINITIONS],    systemMenu)
+    Action('Workplan Creator',               self,[Command.WORKPLANCREATOR], systemMenu)
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],          systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],          systemMenu, shortcut='F2')
@@ -227,6 +229,9 @@ class MainWindow(QMainWindow):
       showMessage(self, 'Keyboard shortcuts', shortcuts, 'Information')
     elif command[0] is Command.ABOUT:
       showMessage(self, 'About', f'{AboutMessage}Environment: {sys.prefix}\n','Information')
+    elif command[0] is Command.WORKPLANCREATOR:
+      workflow_dialog = WorkplanCreatorDialog(self.comm)
+      workflow_dialog.exec()
     elif command[0] is Command.RESTART:
       hardRestart()
     else:
@@ -282,3 +287,4 @@ class Command(Enum):
   ABOUT      = 19
   DEFINITIONS= 20
   REPOSITORY = 21
+  WORKPLANCREATOR = 22

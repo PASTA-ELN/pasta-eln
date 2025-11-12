@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QWidget, QLabel, QSizePolicy, QPushButton, QStyle,
 from .central_text_widget import CentralTextWidget
 from .param_widget import ParamWidget
 from .workplan_functions import get_procedure_default_paramaters, get_procedure_text
-from ...guiCommunicate import Communicate
+from ..guiCommunicate import Communicate
 
 
 class StepWidget(QWidget):
