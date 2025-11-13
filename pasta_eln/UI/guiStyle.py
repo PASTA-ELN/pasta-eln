@@ -5,7 +5,8 @@ import qtawesome as qta
 from PySide6.QtCore import QByteArray, Qt
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtWidgets import (QBoxLayout, QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox,
+from PySide6.QtWidgets import (QBoxLayout, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu,
+                               QMessageBox,
                                QPushButton, QScrollArea, QSizePolicy, QSplitter, QVBoxLayout, QWidget)
 from ..textTools.handleDictionaries import dict2ul
 
@@ -325,3 +326,14 @@ def widgetAndLayoutGrid(parentLayout:Optional[QLayout]=None, spacing:str='0', le
   if parentLayout is not None:
     parentLayout.addWidget(widget)
   return widget, layout
+
+class HSeperator(QFrame):
+  """
+  Horizontal Seperator
+  """
+
+  def __init__(self):
+    super().__init__()
+    self.setFrameShape(QFrame.Shape.HLine)
+    self.setFrameShadow(QFrame.Shadow.Sunken)
+    self.setLineWidth(1)

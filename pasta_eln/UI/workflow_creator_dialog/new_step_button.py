@@ -19,7 +19,7 @@ class NewStepButton(QToolButton):
         self.storage = self.comm.storage
         self.procedures = []
         self.menu = QMenu(self)
-        self.comm.proceduresChanged.connect(self.update_dropdownmenu)
+        self.comm.storageUpdated.connect(self.update_dropdownmenu)
 
         # Configure Appearence of Button
         self.setText("Add new Step")
