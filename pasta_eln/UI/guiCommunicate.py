@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot
-
 from ..backendWorker.worker import BackendThread, Task
 from ..miscTools import getConfiguration
 from .palette import Palette
@@ -40,11 +39,15 @@ class Communicate(QObject):
   uiSendSQL             = Signal(list)          # request to execute SQL commands directly
   # signals that are emitted from this comm that data changed
   docTypesChanged    = Signal()          # redraw main window, e.g. after change of docType titles
-  proceduresChanged  = Signal()
 
   # unclear
   formDoc            = Signal(dict)      # send doc from details to new/edit dialog: dialogForm
   testExtractor      = Signal()          # execute extractorTest in widgetDetails
+
+  # Workplan Creator Signals
+  storageUpdated         = Signal() # When the Procedure Storage from the CWD is updated
+  activeProcedureChanged = Signal(str) # Change active procedure in central widget
+
 
   def __init__(self, projectGroup:str=''):
     super().__init__()

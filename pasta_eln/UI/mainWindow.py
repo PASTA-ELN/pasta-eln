@@ -11,7 +11,7 @@ from PySide6.QtCore import QEvent, QUrl, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QPixmap, QShortcut
 from PySide6.QtWidgets import QFileDialog, QLabel, QMainWindow
 from pasta_eln import __version__
-from .workflow_creator_dialog.workplan_creator_dialog import WorkplanCreatorDialog
+from .workplanCreator.workplanCreatorDialog import WorkplanCreatorDialog
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
 from ..miscTools import hardRestart, installPythonPackages, updateAddOnList
@@ -230,8 +230,8 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.ABOUT:
       showMessage(self, 'About', f'{AboutMessage}Environment: {sys.prefix}\n','Information')
     elif command[0] is Command.WORKPLANCREATOR:
-      workflow_dialog = WorkplanCreatorDialog(self.comm)
-      workflow_dialog.exec()
+      workplanCreatorDialog = WorkplanCreatorDialog(self.comm)
+      workplanCreatorDialog.exec()
     elif command[0] is Command.RESTART:
       hardRestart()
     else:
