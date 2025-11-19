@@ -4,11 +4,13 @@ import os
 import sys
 from pathlib import Path
 from typing import Any
+
 from PySide6.QtCore import QObject, Signal, Slot
-from ..backendWorker.worker import BackendThread, Task
-from ..miscTools import getConfiguration
+
 from .palette import Palette
 from .waitDialog import WaitDialog, Worker
+from ..backendWorker.worker import BackendThread, Task
+from ..miscTools import getConfiguration
 
 
 class Communicate(QObject):
@@ -46,8 +48,9 @@ class Communicate(QObject):
 
   # Workplan Creator Signals
   storageUpdated         = Signal() # When the Procedure Storage from the CWD is updated
-  activeProcedureChanged = Signal(str) # Change active procedure in central widget
-
+  activeProcedureChanged = Signal(str, str, dict) # Change active procedure in central widget
+  addProcedure = Signal(str, list, str,
+    dict)  # add a procedure to the workplan on the right side. Params: title, tags, sample, procedures
 
   def __init__(self, projectGroup:str=''):
     super().__init__()
@@ -66,7 +69,7 @@ class Communicate(QObject):
     self.docTypesTitles:dict[str,dict[str,str]] = {}# docType: {'title':title,'icon':icon,'shortcut':shortcut}
     self.dataHierarchyNodes:dict[str,list[Any]] = {}
     self.projectID                              = ''
-    from .workflow_creator_dialog.common_workflow_description import Storage # Import hier verhindert Circular Import
+    from .workplanCreator.commonWorkflowDescription import Storage # Import here prevents Circular Import
     self.storage:Storage                        = Storage({}) # From Common Workflow Description to store procedures
 
     if self.configuration:

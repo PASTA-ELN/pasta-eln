@@ -197,11 +197,11 @@ class Label(QLabel):
       self.setTextFormat(Qt.TextFormat.RichText)
     self.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
     if size == 'h1':
-      style += 'font-size: 14pt'
+      style += 'font-size: 18pt'
     elif size == 'h2':
-      style += 'font-size: 12pt'
+      style += 'font-size: 14pt'
     elif size == 'h3':
-      style += 'font-size: 10pt'
+      style += 'font-size: 12pt'
     if style:
       self.setStyleSheet(style)
     if layout is not None:
