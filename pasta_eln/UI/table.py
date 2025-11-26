@@ -43,6 +43,7 @@ class Table(QWidget):
     self.flagGallery = False
     self.docType = 'x0'
     self.showAll= self.comm.configuration['GUI']['showHidden']=='Yes'
+    self.detailsDocID = ''
 
     ### GUI elements
     mainL = QVBoxLayout()
@@ -147,6 +148,8 @@ class Table(QWidget):
     logging.debug('got table data %s', docType)
     if docType == self.docType:
       self.data = data
+      if self.detailsDocID and self.detailsDocID not in data.id.values:
+        self.comm.changeDetails.emit('')
       self.paint()
 
 
@@ -488,6 +491,7 @@ class Table(QWidget):
         self.comm.changeSidebar.emit(self.comm.projectID)
     else:
       self.comm.changeDetails.emit(docID)
+      self.detailsDocID = docID
     return
 
 
