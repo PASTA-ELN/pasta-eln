@@ -188,6 +188,7 @@ class MainWindow(QMainWindow):
       self.comm.configuration['defaultProjectGroup'] = command[1]
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.configuration, indent=2))
+      self.comm.projectGroup = command[1]
       self.comm.start(command[1])
     elif command[0] is Command.SYNC_SEND:
       self.comm.uiRequestTask.emit(Task.SEND_ELAB,  {'projGroup':self.comm.projectGroup})
