@@ -82,7 +82,7 @@ class MainWindow(QMainWindow):
       systemMenu.addSeparator()
       Action('&Verify database',             self, [Command.CHECK_DB],       systemMenu, shortcut='Ctrl+?')
 
-    helpMenu = menu.addMenu('&Help')
+    helpMenu = menu.addMenu('&Other')
     Action('&Website',                       self, [Command.WEBSITE],        helpMenu)
     Action('Shortcuts',                      self, [Command.SHORTCUTS],      helpMenu)
     Action('About',                          self, [Command.ABOUT],          helpMenu)

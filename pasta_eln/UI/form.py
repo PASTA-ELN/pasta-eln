@@ -47,7 +47,6 @@ class Form(QDialog):
     if len(self.allDocIDs)>1:                                                                   #if group edit
       self.allowDocTypeChange = all(docID[0] != 'x' for docID in self.allDocIDs)
     self.allowDocTypeChange = self.allowDocTypeChange and not self.flagNewDoc
-    self.allowProjectChange = True
 
     # GUI elements
     if self.flagNewDoc:
@@ -184,7 +183,6 @@ class Form(QDialog):
         self.doc = {i:'' for i in intersection}
         self.doc['tags'] = []
         self.doc['type'] = docType
-      self.allowProjectChange = self.allowProjectChange and self.doc['type'][0]!='x0'# none of the items can be a project
     if len(self.allDocIDs)==0:
       self.paint()
 
@@ -429,7 +427,7 @@ class Form(QDialog):
         formL.addRow(self.keyValueLabel, self.keyValueListW)
         ### add extra questions at bottom of form
         # project change
-        if self.allowProjectChange:
+        if self.doc['type'][0]!='x0':
           formL.addRow(QLabel('Project'), self.projectComboBox)
         # docType change
         if self.allowDocTypeChange:                                                 #if not-new and non-folder
