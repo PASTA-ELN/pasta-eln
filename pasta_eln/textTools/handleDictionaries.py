@@ -161,6 +161,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
           if isDocID(value[0]):
             value = value[0] if isinstance(value,tuple) else value
           else:
+            markdown += f'{key.capitalize()}: {value[0] if isinstance(value, tuple) and len(value)==4 else value}\n\n'
             value = '\u260D link to entry'
         elif isinstance(value, list):
           value = ', '.join([str(i) for i in value])
