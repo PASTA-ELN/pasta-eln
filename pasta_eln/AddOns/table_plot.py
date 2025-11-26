@@ -152,6 +152,10 @@ class DataAnalyse(QDialog):
       self.df.sort_values(self.xAxisCB.currentText(), inplace=True)
     except KeyError:
       pass
+    if self.xAxisCB.currentText() not in self.df.columns or \
+       self.yAxisCB.currentText() not in self.df.columns or \
+       self.cAxisCB.currentText() not in self.df.columns:
+      return
     x = self.df[self.xAxisCB.currentText()]
     y = self.df[self.yAxisCB.currentText()]
     c = self.df[self.cAxisCB.currentText()]
