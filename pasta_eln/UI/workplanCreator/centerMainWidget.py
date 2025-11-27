@@ -5,8 +5,6 @@ from PySide6.QtWidgets import QComboBox, QFormLayout, QFrame, QGridLayout, QHBox
 
 from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.UI.guiStyle import HSeperator, Label
-from pasta_eln.UI.workplanCreator.workplanFunctions import getProcedureDefaultParamaters, getProcedureTags, \
-  getProcedureText, getProcedureTitle
 
 
 class CenterMainWidget(QWidget):
@@ -17,7 +15,8 @@ class CenterMainWidget(QWidget):
   def __init__(self, comm: Communicate):
     super().__init__()
     self.comm = comm
-    self.activeProcedure = None
+    self.storage = self.comm.storage
+    self.activeProcedureID = None
 
     # GUI Elements init; setup in changeActiveProcedure()
     self.headerLabel = Label("", "h1")
@@ -46,10 +45,9 @@ class CenterMainWidget(QWidget):
 
     """
     # Create empty Layout if layout is not created yet (FIRST SETUP)
-    if not self.activeProcedure:
+    if not self.activeProcedureID:
       self.layout.takeAt(0).widget().deleteLater()
       # Procedure Name / Header Label
-      # self.headerLabel.setStyleSheet(
       self.layout.addWidget(self.headerLabel, 0, 0, 1, -1)
       # Tags
       self.layout.addLayout(self.tagLayout, 1, 0, 1, -1)
@@ -71,7 +69,7 @@ class CenterMainWidget(QWidget):
       # Sample and Parameter field
       self.comm.backendThread.worker.beSendTable.connect(
         lambda table, docType, samplebox=self.sampleBox: samplebox.addItems(
-          table['name'] if docType == 'sample' else None))
+          table['name'] if docType == 'sample' else None))  # TODO:C++ Runtime Error when reopening workplanCreator
       self.comm.uiRequestTable.emit('sample', self.comm.projectID, False)
       formFrame = QFrame()
       formFrame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -87,16 +85,15 @@ class CenterMainWidget(QWidget):
       self.addToWorkplanButton.setIcon(qta.icon("ei.plus", scale_factor=1))
       self.layout.addWidget(self.addToWorkplanButton, 6, 1)
       self.addToWorkplanButton.clicked.connect(lambda: self.comm.addProcedure.emit(
-        self.activeProcedure, self.tags, self.sampleBox.currentText(), self.getFilledParameters()))
+        self.activeProcedureID, self.sampleBox.currentText(), self.getFilledParameters()))
     # END OF FIRST SETUP
 
     # Fill Layout with active Procedure
-    self.activeProcedure = toProcedure
+    self.activeProcedureID = toProcedure
     # Procedure Name
-    self.headerLabel.setText(getProcedureTitle(self.activeProcedure, self.comm))
+    self.headerLabel.setText(self.storage.getProcedureTitle(self.activeProcedureID))
     # self.headerLabel.setWordWrap(True)
     # Tags
-    self.tags = getProcedureTags(self.activeProcedure, self.comm)
     # remove old tags
     while self.tagLayout.count():
       item = self.tagLayout.takeAt(0)
@@ -104,19 +101,20 @@ class CenterMainWidget(QWidget):
       if w:
         w.setParent(None)
       # add new tags
-    for tag in self.tags:
+    for tag in self.storage.getProcedureTags(self.activeProcedureID):
       self.tagLayout.addWidget(QPushButton(tag))
     self.tagLayout.addStretch(1)
     # Short Description
-    self.shortDesc.setText("getShortDescription from DB")
+    self.shortDesc.setText(self.storage.getProcedureShortDescription(self.activeProcedureID))
     # Long Description
-    self.description.setMarkdown(getProcedureText(self.activeProcedure, self.comm))
+    self.description.setMarkdown(self.storage.getProcedureText(self.activeProcedureID))
     # Sample and Parameter Form
     for _ in range(self.parameterForm.rowCount() - 3):
       self.parameterForm.removeRow(3)  # Lösche Parameter, ab Zeile 3 sind alle Zeilen Parameter
-    defaultParameters = getProcedureDefaultParamaters(self.activeProcedure, self.comm)
     if sample:
       self.sampleBox.setCurrentText(sample)
+
+    defaultParameters = self.storage.getProcedureDefaultParameters(self.activeProcedureID)
     if not defaultParameters:
       self.parameterForm.addWidget(Label("This Procedure has no Parameters", "h3"))
     for parameter in defaultParameters:
@@ -128,9 +126,10 @@ class CenterMainWidget(QWidget):
   def getFilledParameters(self):
     filledParameters = {}
     for i in range(3, self.parameterForm.rowCount()):
-      labelItemText = self.parameterForm.itemAt(i, QFormLayout.ItemRole.LabelRole).widget().text()
-      fieldItemText = self.parameterForm.itemAt(i, QFormLayout.ItemRole.FieldRole).widget().text()
-
-      if fieldItemText:
+      labelItem = self.parameterForm.itemAt(i, QFormLayout.ItemRole.LabelRole)
+      fieldItem = self.parameterForm.itemAt(i, QFormLayout.ItemRole.FieldRole)
+      if labelItem and fieldItem:
+        labelItemText = labelItem.widget().text()
+        fieldItemText = fieldItem.widget().text()
         filledParameters[labelItemText] = fieldItemText
     return filledParameters

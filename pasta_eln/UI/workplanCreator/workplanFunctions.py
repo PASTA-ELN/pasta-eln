@@ -1,93 +1,77 @@
-import os
-from pathlib import Path
-from typing import Tuple
+import json
+import re
 
-from .workplanTemplate import WORKPLAN_TEMPLATE
+import pandas as pd
+
 from ..guiCommunicate import Communicate
+from ...backendWorker.worker import Task
 
 
-def generate_workplan(comm: Communicate, workplan_name: str, library_url: str, sample_name: str, procedures: list[str],
-                      parameters: list[dict[str, str]], docType: str) -> None:
+def generateAndSaveWorkplan(comm: Communicate, workplan: dict, filename: str) -> None:
   """
   Write the given parameters of a workplan in a file with the format of the common workplan description.
   """
-  # Read Template
-  template = WORKPLAN_TEMPLATE
-
-  # Generate Common Workflow Description
-  step_string1 = "".join(
-    [f"wf.step{i} = step(storage, sample, '{step}', {parameters[i]}, run_after_init = True)\n" for i, step in
-     enumerate(procedures)])
-  step_string2 = ''
-  for i in range(len(procedures)):
-    if i < len(procedures) - 1:
-      step_string2 += f'wf.step{i} >> '
-    else:
-      step_string2 += f'wf.step{i}'
-  cwd_string = ''.join(template[0:14]).format(**locals()) + step_string1 + "\n" + step_string2 + "\n" + "".join(
-    template[14:])
-
-  sop_dir = comm.backend.basePath / 'StandardOperatingProcedures'
-  os.makedirs(sop_dir, exist_ok=True)
-  with open(sop_dir / workplan_name, 'w', encoding='utf-8') as fOut:
-    fOut.write(cwd_string)
-  comm.backend.addData(docType, {'name': 'StandardOperatingProcedures/' + workplan_name, 'content': cwd_string},
-                       [comm.projectID])
+  jsonWorkplan = json.dumps(workplan, indent=2)
+  comm.uiRequestTask.emit(Task.ADD_DOC, {
+    'hierStack': [comm.projectID],
+    'docType': "workflow/workplan",
+    'doc': {'name': filename, 'content': jsonWorkplan}})
 
 
-def getDBProcedures(comm: Communicate) -> dict[str, str | Path]:
-  return comm.storage.procedures
+class Storage:
+  """
+  TODO
+  """
 
+  def __init__(self, comm: Communicate, projectID: str):
+    self.comm = comm
+    self.procedureTable = pd.DataFrame()
 
-def getProcedureDefaultParamaters(procedure: str, comm: Communicate) -> dict[str, str]:
-  parameters = {}
-  try:
-    parameters = comm.storage.list_parameters(procedure)
-  finally:
+    self.updateStorage(projectID)
+
+  def updateStorage(self, projectID: str):
+    def onGetTable(table: pd.DataFrame, docType: str):
+      if docType == "workflow/procedure":
+        self.procedureTable = table
+        self.comm.storageUpdated.emit()
+
+    self.comm.backendThread.worker.beSendTable.connect(onGetTable)
+    self.comm.uiRequestTable.emit("workflow/procedure", projectID, False)
+
+  def getProcedureIDs(self) -> list[str]:
+    return self.procedureTable["id"].to_list()
+
+  def getProcedureTitle(self, procedureID: str) -> str:
+    title = ""
+    row = self.procedureTable.loc[self.procedureTable["id"] == procedureID]
+    if not row.empty:
+      title = row["name"].iloc[0]
+    return title
+
+  def getProcedureTags(self, procedureID: str) -> list[str]:
+    tags = self.procedureTable[self.procedureTable["id"] == procedureID]["tags"].to_list()
+    return tags
+
+  def getProcedureText(self, procedureID: str) -> str:
+    text = ""
+    row = self.procedureTable.loc[self.procedureTable["id"] == procedureID]
+    if not row.empty:
+      text = row["content"].iloc[0]
+    return text
+
+  def getProcedureDefaultParameters(self, procedureID: str) -> dict[str, str]:
+    parameters = {}
+    text = self.getProcedureText(procedureID)
+    params = re.findall(r"\|[^|]+\|[^|]+\|", text)
+    try:
+      parameters = {s.split("|")[1]: s.split("|")[2] for s in params}
+    except Exception as e:
+      print(e, "This exception should thrown, when no parameters are in a procedure, fix it!")
     return parameters
 
-
-def getProcedureText(procedure: str, comm: Communicate) -> str:
-  try:
-    text = comm.storage.get_text(procedure)
-  except UnboundLocalError:
-    text = procedure
-  return text
-
-
-def getProcedureTitle(procedure: str, comm: Communicate) -> str:
-  """
-  TODO
-  """
-  return procedure
-
-
-def getProcedureTags(procedure: str, comm: Communicate) -> list[str]:
-  """
-  TODO
-  """
-  tags = ["#Not", "#yet", "#implemented"]
-  return tags
-
-
-def getStepsFromFile(filename: str) -> Tuple[list[str], list[dict[str, str]]]:
-  names = []
-  parameters = []
-  with open(filename, 'r') as reader:
-    lines = reader.readlines()
-    for line in lines[14:]:
-      if line.startswith('wf.step'):
-        line = line.split(', ', 3)
-        names.append(eval(line[2]))
-        parameters.append(eval(line[3].rsplit(", ", 1)[0]))
-      else:
-        break
-  return names, parameters
-
-
-def getSampleNameFromFile(filename: str) -> str:
-  with open(filename, 'r') as reader:
-    lines = reader.readlines()
-    line = lines[12]
-    line = line.split('\'')[1]
-    return line
+  def getProcedureShortDescription(self, procedureID: str) -> str:
+    comment = ""
+    row = self.procedureTable.loc[self.procedureTable["id"] == procedureID]
+    if not row.empty:
+      comment = row["comment"].iloc[0]
+    return comment

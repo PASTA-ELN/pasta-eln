@@ -1,10 +1,12 @@
 import qtawesome
 from PySide6.QtGui import Qt
-from PySide6.QtWidgets import QFrame, QLabel, QLineEdit, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QInputDialog, QLabel, QPushButton, QScrollArea, QSizePolicy, \
+  QVBoxLayout, QWidget
 
 from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.UI.guiStyle import HSeperator, Label
-from pasta_eln.UI.workplanCreator.workplanListItem import WorkPlanListItem
+from pasta_eln.UI.workplanCreator.workplanFunctions import generateAndSaveWorkplan
+from pasta_eln.UI.workplanCreator.workplanListItem import WorkplanListItem
 
 
 class RightMainWidget(QFrame):
@@ -15,17 +17,30 @@ class RightMainWidget(QFrame):
   def __init__(self, comm: Communicate):
     super().__init__()
     self.comm = comm
+    self.storage = self.comm.storage
     self.headerLabel = Label("Current Workplan", 'h1')
-    self.nameEdit = QLineEdit(placeholderText="Enter name of Workplan", clearButtonEnabled=True, frame=False)
     self.workplanWidget = QWidget()
     self.workplanLayout = QVBoxLayout()
+    self.saveButton = QPushButton("Finish and Save Workplan")
 
     self.comm.addProcedure.connect(self.addProcedure)
+
+    # scrollarea for list
+    scrollarea = QScrollArea(widgetResizable=True)
+    # scrollarea.setContentsMargins(0, 0, 0, 0)
+    scrollarea.setStyleSheet("border:None;")
+    # scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    scrollarea.setWidget(self.workplanWidget)
 
     # Workplanlayout
     self.workplanLayout.setSpacing(0)
     self.workplanLayout.setContentsMargins(0, 0, 0, 0)
+    self.workplanLayout.addStretch(1)
     self.workplanWidget.setLayout(self.workplanLayout)
+
+    # SaveButton
+    self.saveButton.setIcon(qtawesome.icon("mdi.content-save-move"))
+    self.saveButton.clicked.connect(self.saveWorkplan)
 
     # Style
     self.setFrameShape(QFrame.Shape.StyledPanel)
@@ -34,15 +49,47 @@ class RightMainWidget(QFrame):
     # layout
     self.layout = QVBoxLayout()
     self.layout.addWidget(self.headerLabel)
-    self.layout.addWidget(self.nameEdit)
     self.layout.addWidget(HSeperator())
-    self.layout.addWidget(self.workplanWidget)
-    self.layout.addStretch(1)
+    self.layout.addWidget(scrollarea)
+    self.layout.addWidget(self.saveButton)
     self.setLayout(self.layout)
 
-  def addProcedure(self, title: str, tags: list[str], sample: str, procedures: dict[str, str]):
-    listItem = WorkPlanListItem(self.comm, title, tags, sample, procedures)
-    self.workplanLayout.addWidget(listItem)
-    icon = qtawesome.icon("ei.arrow-down").pixmap(30, 30).scaled(10, 30, Qt.AspectRatioMode.IgnoreAspectRatio,
-                                                                 Qt.TransformationMode.SmoothTransformation)
-    self.workplanLayout.addWidget(QLabel(pixmap=icon), alignment=Qt.AlignmentFlag.AlignHCenter)
+  def addProcedure(self, procedureID: str, sample: str, parameters: dict[str, str]):
+    listItem = WorkplanListItem(
+      self.comm,
+      procedureID,
+      sample,
+      parameters)
+    icon = qtawesome.icon("ph.arrow-down").pixmap(30, 30)
+    label = QLabel(pixmap=icon)
+    insertAt = self.workplanLayout.count() - 1
+    self.workplanLayout.insertWidget(insertAt, label, alignment=Qt.AlignmentFlag.AlignHCenter)
+    self.workplanLayout.insertWidget(insertAt, listItem)
+
+  def saveWorkplan(self):
+    filename, ok = QInputDialog.getText(self, "Choose Workplan Name",
+                                        "Choose a Name for your Workplan File:",
+                                        text="unnamed_workplan")
+    if not ok:
+      return
+    elif not filename:
+      filename = "unnamed_workplan"
+    workplan = {
+      "procedures": []
+    }
+    for i in range(self.workplanLayout.count()):
+      item = self.workplanLayout.itemAt(i).widget()
+      if isinstance(item, WorkplanListItem):
+        procedureID = item.procedureID
+        sample = item.sample
+        filledParameters = item.parameters
+        defaultParameters = self.storage.getProcedureDefaultParameters(procedureID)
+        for param in defaultParameters:
+          if param in filledParameters:
+            defaultParameters[param] = filledParameters[param]
+        workplan["procedures"].append({
+          "procedure": procedureID,
+          "sample": sample,
+          "parameters": defaultParameters
+        })
+    generateAndSaveWorkplan(self.comm, workplan, filename)

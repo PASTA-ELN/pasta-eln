@@ -5,35 +5,39 @@ from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.UI.guiStyle import Label
 
 
-class WorkPlanListItem(QFrame):
+class WorkplanListItem(QFrame):
   clicked = Signal()
 
-  def __init__(self, comm: Communicate, title: str, tags: list[str], sample: str, parameters: dict[str, str]):
+  def __init__(self, comm: Communicate, procedureID: str, sample: str, parameters: dict[str, str]):
     super().__init__()
     self.comm = comm
-    self.titleLabel = Label(title, "h3")
-    tagString = ""
-    for tag in tags:
-      tagString += tag + ", "
-    self.tagLabel = Label(tagString[:-2], style="color: grey")  # self.comm.palette.get('secondaryText', 'color')
+    self.storage = self.comm.storage
+    self.procedureID = procedureID
+    self.title = self.storage.getProcedureTitle(self.procedureID)
+    self.titleLabel = Label(self.title.replace("_", "_\u200B"), "h3")
+    self.tagLabel = Label("", style="color: grey")  # self.comm.palette.get('secondaryText', 'color')
     self.sample = sample
     self.sampleLabel = Label("Sample: " + self.sample)
     self.parameters = parameters
 
-    self.clicked.connect(lambda: self.comm.activeProcedureChanged.emit(title, sample, parameters))
+    self.clicked.connect(lambda: self.comm.activeProcedureChanged.emit(procedureID, sample, parameters))
 
     # titleLabel
     self.titleLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-    self.titleLabel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+    self.titleLabel.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
     self.titleLabel.setWordWrap(True)
 
     # tagLabel
+    tagString = ""
+    for tag in self.storage.getProcedureTags(procedureID):
+      tagString += tag + ", "
+    self.tagLabel.setText(tagString[:-2])
     self.tagLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-    # self.tagLabel.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+    self.tagLabel.setWordWrap(True)
 
     # sampleLabel
     self.sampleLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-    # self.sampleLabel.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+    self.sampleLabel.setWordWrap(True)
 
     # style
     self.setFrameShape(QFrame.Shape.StyledPanel)

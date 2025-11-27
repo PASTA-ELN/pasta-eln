@@ -173,7 +173,7 @@ class BackendWorker(QObject):
       self.beSendTaskReport.emit(task, 'Scanning finished successfully', '', '')
 
     elif task is Task.ADD_DOC      and set(data.keys())=={'hierStack','docType','doc'}:
-      if data['hierStack']:
+      if data['hierStack'] and data['hierStack'][-1]:
         parentID  = data['hierStack'][-1]
         self.backend.cwd = Path(self.backend.db.getDoc(parentID)['branch'][0]['path'])
       else:                                                                                          # project

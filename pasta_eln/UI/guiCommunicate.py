@@ -49,8 +49,8 @@ class Communicate(QObject):
   # Workplan Creator Signals
   storageUpdated         = Signal() # When the Procedure Storage from the CWD is updated
   activeProcedureChanged = Signal(str, str, dict) # Change active procedure in central widget
-  addProcedure = Signal(str, list, str,
-    dict)  # add a procedure to the workplan on the right side. Params: title, tags, sample, procedures
+  addProcedure = Signal(str, str,
+    dict)  # add a procedure to the workplan on the right side. Params: procedure, sample, parameters
 
   def __init__(self, projectGroup:str=''):
     super().__init__()
@@ -69,8 +69,7 @@ class Communicate(QObject):
     self.docTypesTitles:dict[str,dict[str,str]] = {}# docType: {'title':title,'icon':icon,'shortcut':shortcut}
     self.dataHierarchyNodes:dict[str,list[Any]] = {}
     self.projectID                              = ''
-    from .workplanCreator.commonWorkflowDescription import Storage # Import here prevents Circular Import
-    self.storage:Storage                        = Storage({}) # From Common Workflow Description to store procedures
+    self.storage                                = None
 
     if self.configuration:
       # Backend worker thread

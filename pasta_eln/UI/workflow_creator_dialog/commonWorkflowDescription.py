@@ -175,30 +175,37 @@ class Storage:
         df_procedures (pd.DataFrame)
 
     """
-    self.counter = df_procedures.shape[0]
-
+    self.procedures.clear()
+    counter = df_procedures.shape[0]
+    docsToAdd = []
     def add_procedure_from_doc(doc):
+      if 'id' in doc and doc['id'] in docsToAdd:
+        docsToAdd.remove(doc['id'])
+      else:
+        return  # cancel if this doc was not meant for this function
       docPath = doc['branch'][0]['path']
       if docPath:
         path = comm.basePath / docPath
       else:
         path = Path()
       if path.is_file():
-        self.procedures[doc['name']] = path
+        self.procedures[doc['id']] = path
       else:
         try:
-          self.procedures[doc['name']] = doc['content']
+          self.procedures[doc['id']] = doc['content']
         except KeyError:
-          self.procedures[doc['name']] = ""
+          self.procedures[doc['id']] = ""
 
-      self.counter -= 1
-      if self.counter == 0:
+      nonlocal counter
+      counter -= 1
+      if counter == 0:
         comm.storageUpdated.emit()
 
     comm.backendThread.worker.beSendDoc.connect(lambda doc: add_procedure_from_doc(doc))
 
     for procedure in df_procedures.itertuples(False):
       comm.uiRequestDoc.emit(procedure.id)
+      docsToAdd.append(procedure.id)
 
   def list_parameters(self, name: str) -> dict[str, str]:
     """list all the parameters in this procedure

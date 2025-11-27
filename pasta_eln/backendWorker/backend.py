@@ -139,7 +139,7 @@ class Backend(CLI_Mixin):
     else:                                                                                             #new doc
       edit = False
       doc['type'] = docType.split('/')
-      if len(hierStack) == 0:
+      if len(hierStack) == 0 or any(s == "" for s in hierStack):
         hierStack = self.hierStack
     logging.debug('Add/edit data in cwd:%s with stack:%s and name: %s and type: %s and edit: %s',self.cwd, hierStack, doc['name'], doc['type'], edit)
     # collect structure-doc and prepare
