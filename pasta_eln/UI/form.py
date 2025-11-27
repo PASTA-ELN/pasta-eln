@@ -282,6 +282,9 @@ class Form(QDialog):
       #mask = [allKeys.difference(i.keys()) for i in self.dataHierarchyNode]
       raise ValueError('dataHierarchyNode is not complete. Missing keys')
     # END TEMPORARY CHECK
+
+    print('>>', self.dataHierarchyNode)
+
     groups = {i['class'] for i in self.dataHierarchyNode}.difference({'metaVendor','metaUser'})
     # create tabs or not: depending on the number of groups
     if len(groups)>1:
@@ -297,10 +300,13 @@ class Form(QDialog):
         formW, formL = widgetAndLayoutForm(None, 's', top='m')
         self.tabW.addTab(formW, 'Home' if group=='' else group)
       self.formsL.append(formL)
-      for name in [i['name'] for i in self.dataHierarchyNode if i['class']==group]:
-        key = f"{group}.{name}"
+      dataframe = pd.DataFrame(self.dataHierarchyNode)
+      dataframe = dataframe[dataframe['class']==group]
+      dataframe = dataframe.sort_values('idx')
+      for row in dataframe.itertuples(index=False):
+        key = f"{group}.{row.name}"
         defaultValue = self.doc['qrCodes'] if key=='.qrCodes' and 'qrCodes' in self.doc else \
-                       self.doc.get(group, {}).get(name, ('','','',''))#tags, name, comment are handled separately
+                       self.doc.get(group, {}).get(row.name, ('','','',''))#tags, name, comment are handled separately
         elementName = f"key_{len(self.allUserElements)}"
 
         # case list
@@ -414,8 +420,8 @@ class Form(QDialog):
           formL.addRow(formLabelW, getattr(self, elementName))
         else:
           print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(defaultValue)}")
-        if group in self.doc and name in self.doc[group]:
-          del self.doc[group][name]
+        if group in self.doc and row.name in self.doc[group]:
+          del self.doc[group][row.name]
           if not self.doc[group]:
             del self.doc[group]
       if group == '':
