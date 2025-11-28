@@ -106,22 +106,26 @@ class CenterMainWidget(QWidget):
     self.tagLayout.addStretch(1)
     # Short Description
     self.shortDesc.setText(self.storage.getProcedureShortDescription(self.activeProcedureID))
-    # Long Description
-    self.description.setMarkdown(self.storage.getProcedureText(self.activeProcedureID))
-    # Sample and Parameter Form
-    for _ in range(self.parameterForm.rowCount() - 3):
-      self.parameterForm.removeRow(3)  # Lösche Parameter, ab Zeile 3 sind alle Zeilen Parameter
-    if sample:
-      self.sampleBox.setCurrentText(sample)
+    # Long Description, content gets cut-off --> need to wait for Thread and reading of file
+    def onProcedureTextUpdated(docID):
+      if docID == self.activeProcedureID:
+        self.description.setMarkdown(self.storage.getProcedureText(self.activeProcedureID))
+      # Sample and Parameter Form
+      for _ in range(self.parameterForm.rowCount() - 3):
+        self.parameterForm.removeRow(3)  # Lösche Parameter, ab Zeile 3 sind alle Zeilen Parameter
+      if sample:
+        self.sampleBox.setCurrentText(sample)
 
-    defaultParameters = self.storage.getProcedureDefaultParameters(self.activeProcedureID)
-    if not defaultParameters:
-      self.parameterForm.addWidget(Label("This Procedure has no Parameters", "h3"))
-    for parameter in defaultParameters:
-      lineEdit = QLineEdit(placeholderText=defaultParameters[parameter])
-      self.parameterForm.addRow(Label(parameter, "h3"), lineEdit)
-      if parameter in parameters:
-        lineEdit.setText(parameters[parameter])
+      defaultParameters = self.storage.getProcedureDefaultParameters(self.activeProcedureID)
+      if not defaultParameters:
+        self.parameterForm.addWidget(Label("This Procedure has no Parameters", "h3"))
+      for parameter in defaultParameters:
+        lineEdit = QLineEdit(placeholderText=defaultParameters[parameter])
+        self.parameterForm.addRow(Label(parameter, "h3"), lineEdit)
+        if parameter in parameters:
+          lineEdit.setText(parameters[parameter])
+    self.comm.storageUpdated.connect(onProcedureTextUpdated)
+    self.storage.requestProcedureText(self.activeProcedureID)
 
   def getFilledParameters(self):
     filledParameters = {}

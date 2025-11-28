@@ -1,5 +1,6 @@
 import json
 import re
+from pathlib import Path
 
 import pandas as pd
 
@@ -12,6 +13,7 @@ def generateAndSaveWorkplan(comm: Communicate, workplan: dict, filename: str) ->
   Write the given parameters of a workplan in a file with the format of the common workplan description.
   """
   jsonWorkplan = json.dumps(workplan, indent=2)
+  print("SAVED:", jsonWorkplan)
   comm.uiRequestTask.emit(Task.ADD_DOC, {
     'hierStack': [comm.projectID],
     'docType': "workflow/workplan",
@@ -33,10 +35,10 @@ class Storage:
     def onGetTable(table: pd.DataFrame, docType: str):
       if docType == "workflow/procedure":
         self.procedureTable = table
-        self.comm.storageUpdated.emit()
+        self.comm.storageUpdated.emit(projectID)
 
     self.comm.backendThread.worker.beSendTable.connect(onGetTable)
-    self.comm.uiRequestTable.emit("workflow/procedure", projectID, False)
+    self.comm.uiRequestTable.emit("workflow/procedure", projectID, True)
 
   def getProcedureIDs(self) -> list[str]:
     return self.procedureTable["id"].to_list()
@@ -52,7 +54,31 @@ class Storage:
     tags = self.procedureTable[self.procedureTable["id"] == procedureID]["tags"].to_list()
     return tags
 
+  def requestProcedureText(self, procedureID: str) -> str:
+    """
+    Reads the file where the procedure is stored and replaces content in Storage with complete content
+    emits self.comm.storageUpdated(procedureID) to notify when it is ready (with procedureID as identifier)
+    """
+    def onGetDoc(doc: dict):
+      if procedureID == doc["id"]:
+        docPath = doc['branch'][0]['path']
+        if docPath:
+          path = self.comm.basePath / docPath
+        else:
+          path = Path()
+        if path.is_file():
+          with open(path, "r", encoding="utf-8") as file:
+            text = file.read()
+          self.procedureTable.loc[self.procedureTable["id"] == procedureID, "content"] = text
+        self.comm.storageUpdated.emit(procedureID)
+    self.comm.backendThread.worker.beSendDoc.connect(onGetDoc)
+    self.comm.uiRequestDoc.emit(procedureID)
+
   def getProcedureText(self, procedureID: str) -> str:
+    """
+    get Text/Content of procedure, if the content is cut off because of character-limit, call requestProcedureText()
+    first
+    """
     text = ""
     row = self.procedureTable.loc[self.procedureTable["id"] == procedureID]
     if not row.empty:

@@ -75,6 +75,7 @@ class RightMainWidget(QFrame):
     elif not filename:
       filename = "unnamed_workplan"
     workplan = {
+      "name": filename,
       "procedures": []
     }
     for i in range(self.workplanLayout.count()):

@@ -15,6 +15,7 @@ class LeftMainWidget(QFrame):
     super().__init__()
     self.comm = comm
     self.storage = None
+    self.currentProjectID = self.comm.projectID
     self.procedures = []
 
     # headerLabel
@@ -59,13 +60,15 @@ class LeftMainWidget(QFrame):
 
     # function calls
     self.comm.storageUpdated.connect(self.updateProcedures)
-    self.comm.storage = Storage(self.comm, self.comm.projectID)
+    self.comm.storage = Storage(self.comm, self.currentProjectID)
     self.storage = self.comm.storage
 
-  def updateProcedures(self):
+  def updateProcedures(self, projID:str):
     """
 
     """
+    if projID != self.currentProjectID:
+      return
     self.procedures = self.storage.getProcedureIDs()
     # Layout leeren
     while self.procedureListLayout.count():
