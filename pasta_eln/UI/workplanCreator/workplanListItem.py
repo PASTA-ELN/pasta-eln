@@ -42,7 +42,7 @@ class WorkplanListItem(QFrame):
     # style
     self.setFrameShape(QFrame.Shape.StyledPanel)
     self.setFrameShadow(QFrame.Shadow.Raised)
-    self.setStyleSheet("background-color: white")
+    #self.setStyleSheet("background-color: white")
     self.setCursor(Qt.CursorShape.PointingHandCursor)
     self.setToolTip(self.titleLabel.text() + "\n" + self.tagLabel.text() + "\n" + self.sampleLabel.text())
 

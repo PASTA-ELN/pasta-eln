@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QFrame, QLineEdit, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QLineEdit, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.UI.guiStyle import HSeperator, Label
@@ -6,7 +6,7 @@ from pasta_eln.UI.workplanCreator.procedureListItem import ProcedureListItem
 from pasta_eln.UI.workplanCreator.workplanFunctions import Storage
 
 
-class LeftMainWidget(QFrame):
+class LeftMainWidget(QWidget):
   """
 
   """
@@ -26,7 +26,7 @@ class LeftMainWidget(QFrame):
     self.searchbar = QLineEdit(clearButtonEnabled=True)
     self.searchbar.setPlaceholderText("Search Procedure or #tag")
     self.searchbar.textEdited.connect(self.filterItems)
-    self.headerLabel.setContentsMargins(11, 11, 11, 11)
+    self.searchbar.setContentsMargins(11, 0, 11, 0)
 
     # seperator
     self.seperator = HSeperator()
@@ -45,7 +45,7 @@ class LeftMainWidget(QFrame):
     scrollarea.setWidget(self.procedureList)
 
     # Style
-    self.setFrameShape(QFrame.Shape.StyledPanel)
+    # self.setFrameShape(QFrame.Shape.StyledPanel)
     self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
     # self.setFrameShadow(QFrame.Shadow.Raised)
 
@@ -63,7 +63,7 @@ class LeftMainWidget(QFrame):
     self.comm.storage = Storage(self.comm, self.currentProjectID)
     self.storage = self.comm.storage
 
-  def updateProcedures(self, projID:str):
+  def updateProcedures(self, projID: str):
     """
 
     """
@@ -90,6 +90,7 @@ class LeftMainWidget(QFrame):
   def filterItems(self, filterText: str):
     filterText = filterText.lower().split(",")
     filterText = [word.strip() for word in filterText]
+    print("1:", filterText)
     for i in range(0, self.procedureListLayout.count() - 1, 2):
       widget = self.procedureListLayout.itemAt(i).widget()
       seperator = self.procedureListLayout.itemAt(i + 1).widget()
@@ -97,19 +98,21 @@ class LeftMainWidget(QFrame):
       seperator.show()
       if not isinstance(widget, ProcedureListItem):
         continue
-      procedure = widget.procedureID
+      procedureID = widget.procedureID
       for word in filterText:
         if word.startswith("#"):
-          tags = self.storage.getProcedureTags(procedure)
+          tags = self.storage.getProcedureTags(procedureID)
+          print("2:", tags)
           widget.hide()
           seperator.hide()
           for tag in tags:
             if word.lower() in tag.lower():
+              print("DEBUG; Wort:", word.lower(), "; TAG:", tag.lower())
               widget.show()
               seperator.show()
               break
         else:
-          if word in procedure or filterText == [""]:
+          if word in procedureID or filterText == [""]:
             continue
           else:
             widget.hide()

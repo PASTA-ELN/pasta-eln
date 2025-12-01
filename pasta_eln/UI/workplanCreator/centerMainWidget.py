@@ -23,6 +23,7 @@ class CenterMainWidget(QWidget):
     self.tagLayout = QHBoxLayout()
     self.shortDesc = Label("", "h2")
     self.description = QTextEdit(markdown="", readOnly=True)
+    self.formFrame = QFrame()
     self.parameterForm = QFormLayout()
     self.addToWorkplanButton = QPushButton("Add to Workplan")
     self.sampleBox = QComboBox()
@@ -51,45 +52,45 @@ class CenterMainWidget(QWidget):
       self.layout.addWidget(self.headerLabel, 0, 0, 1, -1)
       # Tags
       self.layout.addLayout(self.tagLayout, 1, 0, 1, -1)
-      # Long Seperator
-      self.layout.addWidget(HSeperator(), 2, 0, 1, -1)
       # Short Description
       self.shortDesc.setWordWrap(True)
-      self.layout.addWidget(self.shortDesc, 3, 0)
+      self.layout.addWidget(self.shortDesc, 2, 0)
       # Short Seperator (Between short and long description)
-      self.layout.addWidget(HSeperator(), 4, 0)
+      self.layout.addWidget(HSeperator(), 3, 0)
       # Long Description
-      self.layout.addWidget(self.description, 5, 0)
-      self.description.setStyleSheet(self.comm.palette.get('secondaryDark', 'background-color') +
-                                     self.comm.palette.get('primaryText', 'color') + """
-                                     border: none;
-                                     padding: 0px;
-                                     """)
+      self.layout.addWidget(self.description, 4, 0)
+      # self.description.setStyleSheet(self.comm.palette.get('secondaryDark', 'background-color') +
+      #                                self.comm.palette.get('primaryText', 'color') + """
+      #                                border: none;
+      #                                padding: 0px;
+      #                                """)
       self.description.document().setDocumentMargin(0)
       # Sample and Parameter field
-      self.comm.backendThread.worker.beSendTable.connect(
-        lambda table, docType, samplebox=self.sampleBox: samplebox.addItems(
-          table['name'] if docType == 'sample' else None))  # TODO:C++ Runtime Error when reopening workplanCreator
+      self.comm.backendThread.worker.beSendTable.connect(self._addSampleBoxItems)
       self.comm.uiRequestTable.emit('sample', self.comm.projectID, False)
-      formFrame = QFrame()
-      formFrame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-      formFrame.setFrameStyle(QFrame.Shape.StyledPanel | QFrame.Shadow.Sunken)
-      formFrame.setStyleSheet(self.comm.palette.get('secondary', 'background-color'))  # +
+      self.formFrame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+      self.formFrame.setFrameStyle(QFrame.Shape.StyledPanel | QFrame.Shadow.Sunken)
+      # formFrame.setStyleSheet(self.comm.palette.get('secondary', 'background-color'))  # +
       # self.comm.palette.get('secondaryLight', 'border-color'))
-      formFrame.setLayout(self.parameterForm)
+      self.formFrame.setLayout(self.parameterForm)
       self.parameterForm.addRow(Label("Choose Sample:", "h2"))
       self.parameterForm.addRow(self.sampleBox)
       self.parameterForm.addRow(Label("Choose Parameters:", "h2"))
-      self.layout.addWidget(formFrame, 3, 1, 3, 1)
+      self.layout.addWidget(self.formFrame, 2, 1, 3, 1)
+      self.comm.storageUpdated.connect(self._onProcedureTextUpdated)
       # Add-Button
       self.addToWorkplanButton.setIcon(qta.icon("ei.plus", scale_factor=1))
       self.layout.addWidget(self.addToWorkplanButton, 6, 1)
       self.addToWorkplanButton.clicked.connect(lambda: self.comm.addProcedure.emit(
         self.activeProcedureID, self.sampleBox.currentText(), self.getFilledParameters()))
-    # END OF FIRST SETUP
+      # END OF FIRST SETUP
 
     # Fill Layout with active Procedure
     self.activeProcedureID = toProcedure
+    self.sample = sample
+    self.parameters = parameters
+    # Long Description, content gets cut-off --> need to wait for Thread and reading of file
+    self.storage.requestProcedureText(self.activeProcedureID)
     # Procedure Name
     self.headerLabel.setText(self.storage.getProcedureTitle(self.activeProcedureID))
     # self.headerLabel.setWordWrap(True)
@@ -106,26 +107,6 @@ class CenterMainWidget(QWidget):
     self.tagLayout.addStretch(1)
     # Short Description
     self.shortDesc.setText(self.storage.getProcedureShortDescription(self.activeProcedureID))
-    # Long Description, content gets cut-off --> need to wait for Thread and reading of file
-    def onProcedureTextUpdated(docID):
-      if docID == self.activeProcedureID:
-        self.description.setMarkdown(self.storage.getProcedureText(self.activeProcedureID))
-      # Sample and Parameter Form
-      for _ in range(self.parameterForm.rowCount() - 3):
-        self.parameterForm.removeRow(3)  # Lösche Parameter, ab Zeile 3 sind alle Zeilen Parameter
-      if sample:
-        self.sampleBox.setCurrentText(sample)
-
-      defaultParameters = self.storage.getProcedureDefaultParameters(self.activeProcedureID)
-      if not defaultParameters:
-        self.parameterForm.addWidget(Label("This Procedure has no Parameters", "h3"))
-      for parameter in defaultParameters:
-        lineEdit = QLineEdit(placeholderText=defaultParameters[parameter])
-        self.parameterForm.addRow(Label(parameter, "h3"), lineEdit)
-        if parameter in parameters:
-          lineEdit.setText(parameters[parameter])
-    self.comm.storageUpdated.connect(onProcedureTextUpdated)
-    self.storage.requestProcedureText(self.activeProcedureID)
 
   def getFilledParameters(self):
     filledParameters = {}
@@ -137,3 +118,24 @@ class CenterMainWidget(QWidget):
         fieldItemText = fieldItem.widget().text()
         filledParameters[labelItemText] = fieldItemText
     return filledParameters
+
+  def _onProcedureTextUpdated(self, docID):
+    if docID == self.activeProcedureID:
+      self.description.setMarkdown(self.storage.getProcedureText(self.activeProcedureID))
+    # Sample and Parameter Form
+    for _ in range(self.parameterForm.rowCount() - 3):
+      self.parameterForm.removeRow(3)  # Lösche Parameter, ab Zeile 3 sind alle Zeilen Parameter
+    if self.sample:
+      self.sampleBox.setCurrentText(self.sample)
+    defaultParameters = self.storage.getProcedureDefaultParameters(self.activeProcedureID)
+    if not defaultParameters:
+      self.parameterForm.addWidget(Label("This Procedure has no Parameters", "h3"))
+    for parameter in defaultParameters:
+      lineEdit = QLineEdit(placeholderText=defaultParameters[parameter])
+      self.parameterForm.addRow(Label(parameter, "h3"), lineEdit)
+      if parameter in self.parameters:
+        lineEdit.setText(self.parameters[parameter])
+
+  def _addSampleBoxItems(self, table: dict, docType: str):
+    if docType == "sample":
+      self.sampleBox.addItems(table["name"])

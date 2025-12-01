@@ -5,6 +5,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QApplication, QMainWindow
 from qt_material import apply_stylesheet, get_theme  # of https://github.com/UN-GCPDS/qt-material
 from ..fixedStringsJson import CONF_FILE_NAME, DEFAULT_COLORS_PALETTE
+import qdarktheme
 
 
 class Palette():
@@ -39,6 +40,7 @@ class Palette():
     Args:
       application (QApplication): application to set the theme
     """
+    qdarktheme.setup_theme('auto')
     if self.theme != 'none':
       apply_stylesheet(application, theme=f'{self.theme}.xml')
     return

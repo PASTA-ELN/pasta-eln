@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 
 import pandas as pd
+from PySide6.QtCore import Qt
 
 from ..guiCommunicate import Communicate
 from ...backendWorker.worker import Task
@@ -13,7 +14,6 @@ def generateAndSaveWorkplan(comm: Communicate, workplan: dict, filename: str) ->
   Write the given parameters of a workplan in a file with the format of the common workplan description.
   """
   jsonWorkplan = json.dumps(workplan, indent=2)
-  print("SAVED:", jsonWorkplan)
   comm.uiRequestTask.emit(Task.ADD_DOC, {
     'hierStack': [comm.projectID],
     'docType': "workflow/workplan",
@@ -37,7 +37,7 @@ class Storage:
         self.procedureTable = table
         self.comm.storageUpdated.emit(projectID)
 
-    self.comm.backendThread.worker.beSendTable.connect(onGetTable)
+    self.comm.backendThread.worker.beSendTable.connect(onGetTable, type=Qt.ConnectionType.SingleShotConnection)
     self.comm.uiRequestTable.emit("workflow/procedure", projectID, True)
 
   def getProcedureIDs(self) -> list[str]:
@@ -51,7 +51,8 @@ class Storage:
     return title
 
   def getProcedureTags(self, procedureID: str) -> list[str]:
-    tags = self.procedureTable[self.procedureTable["id"] == procedureID]["tags"].to_list()
+    tags = self.procedureTable[self.procedureTable["id"] == procedureID]["tags"].iloc[0]
+    tags = ['#'+tag for tag in tags.split(", ")]
     return tags
 
   def requestProcedureText(self, procedureID: str) -> str:
@@ -71,7 +72,7 @@ class Storage:
             text = file.read()
           self.procedureTable.loc[self.procedureTable["id"] == procedureID, "content"] = text
         self.comm.storageUpdated.emit(procedureID)
-    self.comm.backendThread.worker.beSendDoc.connect(onGetDoc)
+    self.comm.backendThread.worker.beSendDoc.connect(onGetDoc, type=Qt.ConnectionType.SingleShotConnection)
     self.comm.uiRequestDoc.emit(procedureID)
 
   def getProcedureText(self, procedureID: str) -> str:
@@ -92,7 +93,7 @@ class Storage:
     try:
       parameters = {s.split("|")[1]: s.split("|")[2] for s in params}
     except Exception as e:
-      print(e, "This exception should thrown, when no parameters are in a procedure, fix it!")
+      print(e)
     return parameters
 
   def getProcedureShortDescription(self, procedureID: str) -> str:
