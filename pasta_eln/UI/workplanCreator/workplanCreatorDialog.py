@@ -30,7 +30,7 @@ class WorkplanCreatorDialog(QDialog):
     self.rightMainWidget = RightMainWidget(self.comm)
 
     # splitter to resize each column
-    self.splitter = QSplitter(handleWidth=5)
+    self.splitter = QSplitter(handleWidth=3)
     self.splitter.addWidget(self.leftMainWidget)
     self.splitter.setStretchFactor(0, 1)
     self.splitter.addWidget(self.centerMainWidget)

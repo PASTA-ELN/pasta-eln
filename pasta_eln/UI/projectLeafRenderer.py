@@ -25,8 +25,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.frameSize          = self.comm.configuration['GUI']['frameSize']
     self.maxHeight          = self.comm.configuration['GUI']['maxProjectLeafHeight']
     self.lineSep            = 20
-    self.penDefault         = QPen(QColor(self.comm.palette.text))
-    self.penHighlight       = QPen(QColor(self.comm.palette.primary))
+    self.penDefault         = QPen(self.comm.palette.text)
+    self.penHighlight       = QPen(self.comm.palette.primary)
     self.penHighlight.setWidth(2)
     self.leafWidth          = -1
     self.docs:dict[str,Any] = {}   # docID: {'size':QSize, 'markdown':str, 'hidden':bool, 'index':QModelIndex}

@@ -20,16 +20,16 @@ class LeftMainWidget(QWidget):
 
     # headerLabel
     self.headerLabel = Label("Choose Procedures", "h1")
-    self.headerLabel.setContentsMargins(11, 11, 11, 11)
+    #self.headerLabel.setContentsMargins(0,0,0,0)
 
     # searchbar
     self.searchbar = QLineEdit(clearButtonEnabled=True)
     self.searchbar.setPlaceholderText("Search Procedure or #tag")
     self.searchbar.textEdited.connect(self.filterItems)
-    self.searchbar.setContentsMargins(11, 0, 11, 0)
+    #self.searchbar.setContentsMargins(0, 0, 11, 0)
 
     # seperator
-    self.seperator = HSeperator()
+    #self.seperator = HSeperator()
 
     # procedureList
     self.procedureList = QWidget()
@@ -51,10 +51,10 @@ class LeftMainWidget(QWidget):
 
     # layout
     self.layout = QVBoxLayout()
-    self.layout.setContentsMargins(0, 0, 0, 0)
+    #self.layout.setContentsMargins(11, 11, 0, 11)
     self.layout.addWidget(self.headerLabel)
     self.layout.addWidget(self.searchbar)
-    self.layout.addWidget(self.seperator)
+    #self.layout.addWidget(self.seperator)
     self.layout.addWidget(scrollarea)
     self.setLayout(self.layout)
 
@@ -76,7 +76,8 @@ class LeftMainWidget(QWidget):
       widget = item.widget()
       if widget:
         widget.deleteLater()
-
+    firstSeperator = HSeperator()
+    self.procedureListLayout.addWidget(firstSeperator)
     for procedureID in self.procedures:
       listItem = ProcedureListItem(
         self.comm,
@@ -84,14 +85,14 @@ class LeftMainWidget(QWidget):
       self.procedureListLayout.addWidget(listItem)
       self.procedureListLayout.addWidget(HSeperator())
     if not self.procedures:
-      self.procedureListLayout.addWidget(Label("No Procedures found.", "h1", style="color: grey;"))
+      firstSeperator.hide()
+      self.procedureListLayout.addWidget(Label("No Procedure found in\ncurrent Project.", "h1", style="color: grey;"))
     self.procedureListLayout.addStretch(1)
 
   def filterItems(self, filterText: str):
     filterText = filterText.lower().split(",")
     filterText = [word.strip() for word in filterText]
-    print("1:", filterText)
-    for i in range(0, self.procedureListLayout.count() - 1, 2):
+    for i in range(1, self.procedureListLayout.count() - 1, 2):
       widget = self.procedureListLayout.itemAt(i).widget()
       seperator = self.procedureListLayout.itemAt(i + 1).widget()
       widget.show()
@@ -99,22 +100,20 @@ class LeftMainWidget(QWidget):
       if not isinstance(widget, ProcedureListItem):
         continue
       procedureID = widget.procedureID
+      procedureName = self.storage.getProcedureTitle(procedureID).lower()
       for word in filterText:
         if word.startswith("#"):
           tags = self.storage.getProcedureTags(procedureID)
-          print("2:", tags)
           widget.hide()
           seperator.hide()
           for tag in tags:
             if word.lower() in tag.lower():
-              print("DEBUG; Wort:", word.lower(), "; TAG:", tag.lower())
               widget.show()
               seperator.show()
               break
+        elif word in procedureName or filterText == [""]:
+          continue
         else:
-          if word in procedureID or filterText == [""]:
-            continue
-          else:
-            widget.hide()
-            seperator.hide()
-            break
+          widget.hide()
+          seperator.hide()
+          break

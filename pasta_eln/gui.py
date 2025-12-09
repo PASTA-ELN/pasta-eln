@@ -3,6 +3,8 @@ import logging
 import sys
 import traceback
 from pathlib import Path
+
+import qdarktheme
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
@@ -37,8 +39,8 @@ def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
   comm = Communicate(projectGroup=projectGroup)
   mainWindow = MainWindow(comm)
   logging.getLogger().setLevel(getattr(logging, comm.configuration.get('GUI',{'loggingLevel':'DEBUG'})['loggingLevel']))
-  if mainWindow.comm.palette is not None and application is not None:
-    mainWindow.comm.palette.setTheme(application)                                    # type: ignore [arg-type]
+  if mainWindow.comm.palette is not None:
+    mainWindow.comm.palette.setTheme()                                    # type: ignore [arg-type]
   import qtawesome as qta  # qtawesome and matplot cannot coexist
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
@@ -60,6 +62,7 @@ def startMain(projectGroup:str='') -> None:
   Args:
     projectGroup (str): project group to load
   """
+  qdarktheme.enable_hi_dpi()
   try:
     app, window = mainGUI(projectGroup=projectGroup)
     window.show()

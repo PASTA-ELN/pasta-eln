@@ -533,3 +533,32 @@ def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
     nested_set_dict(normalDict, key_tuple, value)
   normalDict =  dict2list(normalDict)                                               # type: ignore[assignment]
   return normalDict
+
+def makeStringWrappable(text: str, string: str = "\u200B", nChars: int = 25):
+  """
+  Inserts string into a text so that no nChar-long sequence of unwrappable chars may exist in text.
+  Inserts string behind all "-._"-characters for additional wrapping.
+  Great if you want to enforce Wordwrapping for Strings that have few characters that are automatically wrapped.
+
+  Args:
+    text: Text to put strings into
+    string: String that gets inserted into text where automatic word wrap should wrap (\u200B is an invisible char)
+    nChars: max number of chars that can not be wrapped
+  """
+  result = text
+  wrappableChars = [' ', '\t', '\n', '\r', '\u00AD','\u200B']
+  altWrappableChars = list("-._")
+  for char in altWrappableChars:
+    result = result.replace(char, char+string)
+  i = 0
+  while i < len(result)-nChars:
+    textSlice = result[i:i+nChars]
+    for char in wrappableChars:
+      pos = textSlice.find(char)
+      if pos != -1:
+        i += pos+1
+        break
+    else:
+      result = string.join([result[:i+nChars], result[i+nChars:]])
+      i += nChars+len(string)
+  return result

@@ -9,7 +9,7 @@ from pasta_eln.UI.workplanCreator.workplanFunctions import generateAndSaveWorkpl
 from pasta_eln.UI.workplanCreator.workplanListItem import WorkplanListItem
 
 
-class RightMainWidget(QFrame):
+class RightMainWidget(QWidget):
   """
 
   """
@@ -28,8 +28,8 @@ class RightMainWidget(QFrame):
     # scrollarea for list
     scrollarea = QScrollArea(widgetResizable=True)
     # scrollarea.setContentsMargins(0, 0, 0, 0)
-    scrollarea.setStyleSheet("border:None;")
-    # scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    scrollarea.setStyleSheet("QScrollArea {border: none;}")
+    scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     scrollarea.setWidget(self.workplanWidget)
 
     # Workplanlayout
@@ -40,16 +40,17 @@ class RightMainWidget(QFrame):
 
     # SaveButton
     self.saveButton.setIcon(qtawesome.icon("mdi.content-save-move"))
+    self.saveButton.setAutoDefault(True)
     self.saveButton.clicked.connect(self.saveWorkplan)
 
     # Style
-    self.setFrameShape(QFrame.Shape.StyledPanel)
     self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
 
     # layout
     self.layout = QVBoxLayout()
+    #self.layout.setContentsMargins(0,0,0,0)
     self.layout.addWidget(self.headerLabel)
-    self.layout.addWidget(HSeperator())
+    #self.layout.addWidget(HSeperator())
     self.layout.addWidget(scrollarea)
     self.layout.addWidget(self.saveButton)
     self.setLayout(self.layout)
@@ -65,6 +66,9 @@ class RightMainWidget(QFrame):
     insertAt = self.workplanLayout.count() - 1
     self.workplanLayout.insertWidget(insertAt, label, alignment=Qt.AlignmentFlag.AlignHCenter)
     self.workplanLayout.insertWidget(insertAt, listItem)
+    listItem.clicked.connect(lambda: self.highlightActiveItem(listItem))
+    self.highlightActiveItem(listItem)
+    self.saveButton.setFocus()
 
   def saveWorkplan(self):
     filename, ok = QInputDialog.getText(self, "Choose Workplan Name",
@@ -94,3 +98,10 @@ class RightMainWidget(QFrame):
           "parameters": defaultParameters
         })
     generateAndSaveWorkplan(self.comm, workplan, filename)
+
+  def highlightActiveItem(self, listItem: WorkplanListItem):
+    for i in range(self.workplanLayout.count()):
+      item = self.workplanLayout.itemAt(i).widget()
+      if isinstance(item, WorkplanListItem):
+        item.lowlight()
+    listItem.highlight()

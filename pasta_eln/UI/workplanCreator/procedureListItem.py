@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
 from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.UI.guiStyle import Label
+from pasta_eln.miscTools import makeStringWrappable
 
 
 class ProcedureListItem(QFrame):
@@ -19,12 +20,12 @@ class ProcedureListItem(QFrame):
     self.title = self.storage.getProcedureTitle(self.procedureID)
     self.tags = self.storage.getProcedureTags(self.procedureID)
     self.titleLabel = Label("", "h3")
-    self.tagLabel = Label("", style="color:grey")
+    self.tagLabel = Label("", style="color: grey;")
 
-    self.clicked.connect(lambda p=procedureID: self.comm.activeProcedureChanged.emit(p, None, None))
+    self.clicked.connect(lambda p=procedureID: self.comm.activeProcedureChanged.emit(p, None, None, None))
 
     # titleLabel
-    self.titleLabel.setText(self.title.replace("_", "_\u200B", ))
+    self.titleLabel.setText(makeStringWrappable(self.title))
     self.titleLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     self.titleLabel.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
     self.titleLabel.setWordWrap(True)
@@ -32,6 +33,7 @@ class ProcedureListItem(QFrame):
     # tagLabel
     tagString = ""
     for tag in self.tags:
+      tag = makeStringWrappable(tag)
       tagString += tag + ", "
     self.tagLabel.setText(tagString[:-2])
     self.tagLabel.setWordWrap(True)

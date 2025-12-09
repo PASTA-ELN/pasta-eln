@@ -48,7 +48,7 @@ class Communicate(QObject):
 
   # Workplan Creator Signals
   storageUpdated         = Signal(str) # When the Procedure Storage is updated, param: docID (to identify)
-  activeProcedureChanged = Signal(str, str, dict) # Change active procedure in central widget
+  activeProcedureChanged = Signal(str, str, dict, object) # Change active procedure in central widget
   addProcedure = Signal(str, str,
     dict)  # add a procedure to the workplan on the right side. Params: procedure, sample, parameters
 
