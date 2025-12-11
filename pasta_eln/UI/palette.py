@@ -38,12 +38,6 @@ class Palette():
     color: grey;
     font-size: 10pt;
     }
-    
-    QTextEdit {
-    background-color: {{ background|color }};
-    border: none;
-    padding: 0px;
-    }
     """
     qdarktheme.setup_theme(self.qtheme, additional_qss=css)
 

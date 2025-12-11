@@ -22,13 +22,15 @@ class WorkplanListItem(QFrame):
     self.rightMainWidget = rightMainWidget
     self.procedureID = procedureID
     self.title = self.storage.getProcedureTitle(self.procedureID)
-    self.titleLabel = Label("", "h3")
-    self.tagLabel = Label("", style=f"color: {self.comm.palette.getThemeColor('foreground', 'disabled')};")  # self.comm.palette.get('secondaryText', 'color')
     self.sample = sample
-    self.sampleLabel = Label("")
     self.parameters = parameters
+    # Widgets
+    self.titleLabel = Label("", "h3")
     self.deleteButton = QPushButton("")
     self.header = QHBoxLayout()
+    self.tagLabel = Label("", style=f"color: {self.comm.palette.getThemeColor('foreground', 'disabled')};")  # self.comm.palette.get('secondaryText', 'color')
+    self.sampleLabel = Label("")
+    self.frame = QFrame()
 
     self.clicked.connect(lambda: self.comm.activeProcedureChanged.emit(self.procedureID, self.sample, self.parameters, self))
     self.clicked.emit()
@@ -70,16 +72,42 @@ class WorkplanListItem(QFrame):
     self.sampleLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     self.sampleLabel.setWordWrap(True)
 
+    # framelayout
+    self.frameLayout = QVBoxLayout()
+    self.frameLayout.addLayout(self.header)
+    self.frameLayout.addWidget(self.tagLabel)
+    self.frameLayout.addWidget(self.sampleLabel)
+
+    # frame
+    self.frame.setFrameShape(QFrame.Shape.Panel)
+    self.frame.setCursor(Qt.CursorShape.PointingHandCursor)
+    self.frame.setLayout(self.frameLayout)
+
+    # arrow
+    icon = qtawesome.icon("ph.arrow-down").pixmap(30, 30)
+    self.arrow = QLabel(pixmap=icon)
+
     # style
-    self.setFrameShape(QFrame.Shape.Panel)
-    self.setCursor(Qt.CursorShape.PointingHandCursor)
-    #self.setToolTip(self.titleLabel.text() + "\n" + self.tagLabel.text() + "\n" + self.sampleLabel.text())
+    self.defaultCSS = f"""
+        WorkplanListItem{{
+          border-color: transparent;
+          border-width: 2px;
+        }}
+        QFrame[highlight="true"] {{
+          background-color:{self.comm.palette.getThemeColor("primary", "selection.background")};
+        }}
+        QFrame[highlight="true"] QLabel{{
+          color: {self.comm.palette.getThemeColor("background", "base")};
+        }}"""
+    self.setStyleSheet(self.defaultCSS)
+
 
     # layout
     self.layout = QVBoxLayout()
-    self.layout.addLayout(self.header)
-    self.layout.addWidget(self.tagLabel)
-    self.layout.addWidget(self.sampleLabel)
+    self.layout.addWidget(self.frame)
+    self.layout.addWidget(self.arrow, alignment=Qt.AlignmentFlag.AlignHCenter)
+    self.layout.setSpacing(0)
+    self.layout.setContentsMargins(0,0,0,0)
     self.setLayout(self.layout)
 
   def mousePressEvent(self, event):
@@ -96,19 +124,14 @@ class WorkplanListItem(QFrame):
     self.sampleLabel.setText("Sample: " + makeStringWrappable(self.sample))
 
   def highlight(self):
-    color = self.comm.palette.getThemeColor("primary", "selection.background")
-    textcolor = self.comm.palette.getThemeColor("background", "base")
-    self.setStyleSheet(f"""
-    background-color:{color};
-    color: {textcolor};""")
+    self.frame.setProperty("highlight", True)
+    self.setStyleSheet(self.defaultCSS)
 
   def lowlight(self):
-    self.setStyleSheet("")
+    self.frame.setProperty("highlight", False)
+    self.setStyleSheet(self.defaultCSS)
 
   def _onDeleteClicked(self):
-    parentLayout = self.parentWidget().layout()
-    selfidx = parentLayout.indexOf(self)
-    parentLayout.itemAt(selfidx+1).widget().deleteLater()
     self.deleteLater()
 
   def mouseMoveEvent(self, event):
@@ -116,10 +139,10 @@ class WorkplanListItem(QFrame):
       return
     if (event.pos() - self.dragStartPos).manhattanLength() < QApplication.startDragDistance():
       return
+    pixmap = QPixmap(self.frame.size())
+    self.frame.render(pixmap)
     drag = QDrag(self)
     mimeData = QMimeData()
-    pixmap = QPixmap(self.size())
-    self.render(pixmap)
 
     drag.setMimeData(mimeData)
     drag.setPixmap(pixmap)
@@ -132,18 +155,16 @@ class WorkplanListItem(QFrame):
   def dragMoveEvent(self, event):
     midheight = self.height() // 2
     if event.position().y() < midheight:
-      self.setStyleSheet("")
-      self.setStyleSheet("""
-        border-top-color: green;
-        border-top-width: 2px;""")
+      self.setStyleSheet(self.defaultCSS + f"""
+        WorkplanListItem{{
+        border-top-color: {self.comm.palette.getThemeColor("primary", "base")};}}""")
     else:
-      self.setStyleSheet("")
-      self.setStyleSheet("""
-        border-bottom-color: green;
-        border-bottom-width: 2px;""")
+      self.setStyleSheet(self.defaultCSS + f"""
+        WorkplanListItem{{
+        border-bottom-color: {self.comm.palette.getThemeColor("primary", "base")};}}""")
 
   def dragLeaveEvent(self, event):
-    self.setStyleSheet("")
+    self.setStyleSheet(self.defaultCSS)
 
   def dropEvent(self, event):
     if isinstance(event.source(), WorkplanListItem):
@@ -157,6 +178,6 @@ class WorkplanListItem(QFrame):
     if event.position().y() < midheight:
       self.rightMainWidget.addProcedure(droppedItem.procedureID, droppedItem.sample, droppedItem.parameters, selfidx)
     else:
-      self.rightMainWidget.addProcedure(droppedItem.procedureID, droppedItem.sample, droppedItem.parameters, selfidx+2)
+      self.rightMainWidget.addProcedure(droppedItem.procedureID, droppedItem.sample, droppedItem.parameters, selfidx+1)
     droppedItem._onDeleteClicked()
     event.acceptProposedAction()

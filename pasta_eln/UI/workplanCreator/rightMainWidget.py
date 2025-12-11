@@ -66,13 +66,10 @@ class RightMainWidget(QWidget):
       sample,
       parameters,
       self)
-    icon = qtawesome.icon("ph.arrow-down").pixmap(30, 30)
-    label = QLabel(pixmap=icon)
     if at is not None:
       insertAt = at
     else:
       insertAt = self.workplanLayout.count() - 1
-    self.workplanLayout.insertWidget(insertAt, label, alignment=Qt.AlignmentFlag.AlignHCenter)
     self.workplanLayout.insertWidget(insertAt, listItem)
     listItem.clicked.connect(lambda: self.highlightActiveItem(listItem))
     self.highlightActiveItem(listItem)
