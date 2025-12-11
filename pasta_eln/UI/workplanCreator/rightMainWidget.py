@@ -1,3 +1,5 @@
+import copy
+
 import qtawesome
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QFrame, QInputDialog, QLabel, QPushButton, QScrollArea, QSizePolicy, \
@@ -24,6 +26,7 @@ class RightMainWidget(QWidget):
     self.saveButton = QPushButton("Finish and Save Workplan")
 
     self.comm.addProcedure.connect(self.addProcedure)
+    self.setAcceptDrops(True)
 
     # scrollarea for list
     scrollarea = QScrollArea(widgetResizable=True)
@@ -36,6 +39,7 @@ class RightMainWidget(QWidget):
     self.workplanLayout.setSpacing(0)
     self.workplanLayout.setContentsMargins(0, 0, 0, 0)
     self.workplanLayout.addStretch(1)
+    # Workplanwidget
     self.workplanWidget.setLayout(self.workplanLayout)
 
     # SaveButton
@@ -55,15 +59,19 @@ class RightMainWidget(QWidget):
     self.layout.addWidget(self.saveButton)
     self.setLayout(self.layout)
 
-  def addProcedure(self, procedureID: str, sample: str, parameters: dict[str, str]):
+  def addProcedure(self, procedureID: str, sample: str, parameters: dict[str, str], at: int = None):
     listItem = WorkplanListItem(
       self.comm,
       procedureID,
       sample,
-      parameters)
+      parameters,
+      self)
     icon = qtawesome.icon("ph.arrow-down").pixmap(30, 30)
     label = QLabel(pixmap=icon)
-    insertAt = self.workplanLayout.count() - 1
+    if at is not None:
+      insertAt = at
+    else:
+      insertAt = self.workplanLayout.count() - 1
     self.workplanLayout.insertWidget(insertAt, label, alignment=Qt.AlignmentFlag.AlignHCenter)
     self.workplanLayout.insertWidget(insertAt, listItem)
     listItem.clicked.connect(lambda: self.highlightActiveItem(listItem))

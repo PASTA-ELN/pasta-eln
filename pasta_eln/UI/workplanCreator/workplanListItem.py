@@ -1,6 +1,9 @@
 import qdarktheme
-from PySide6.QtGui import QPalette
-from PySide6.QtCore import Qt, Signal
+import qtawesome
+from PySide6.QtGui import QDrag, QPixmap
+from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel
+from PySide6.QtWidgets import QPushButton
+from PySide6.QtCore import QMimeData, QPoint, QSize, Qt, Signal
 from PySide6.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
 from pasta_eln.UI.guiCommunicate import Communicate
@@ -10,11 +13,13 @@ from pasta_eln.miscTools import makeStringWrappable
 
 class WorkplanListItem(QFrame):
   clicked = Signal()
+  dragStartPos = QPoint()
 
-  def __init__(self, comm: Communicate, procedureID: str, sample: str, parameters: dict[str, str]):
+  def __init__(self, comm: Communicate, procedureID: str, sample: str, parameters: dict[str, str], rightMainWidget):
     super().__init__()
     self.comm = comm
     self.storage = self.comm.storage
+    self.rightMainWidget = rightMainWidget
     self.procedureID = procedureID
     self.title = self.storage.getProcedureTitle(self.procedureID)
     self.titleLabel = Label("", "h3")
@@ -22,15 +27,32 @@ class WorkplanListItem(QFrame):
     self.sample = sample
     self.sampleLabel = Label("")
     self.parameters = parameters
+    self.deleteButton = QPushButton("")
+    self.header = QHBoxLayout()
 
     self.clicked.connect(lambda: self.comm.activeProcedureChanged.emit(self.procedureID, self.sample, self.parameters, self))
     self.clicked.emit()
+    self.setAcceptDrops(True)
+
+    # deleteButton
+    self.deleteButton.setIcon(qtawesome.icon("ei.remove"))
+    #self.deleteButton.setIconSize(QSize(10, 10))
+    self.deleteButton.setFixedSize(16, 16)
+    self.deleteButton.setContentsMargins(0,0,0,0)
+    self.deleteButton.clicked.connect(self._onDeleteClicked)
+    self.deleteButton.setStyleSheet("border:none;")
 
     # titleLabel
     # add an invisible char every 25 chars for Wordwrapping
     self.titleLabel.setText(makeStringWrappable(self.title))
     self.titleLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     self.titleLabel.setWordWrap(True)
+    self.titleLabel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+
+    # header
+    self.header.setContentsMargins(0,0,0,0)
+    self.header.addWidget(self.titleLabel)
+    self.header.addWidget(self.deleteButton, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
     # tagLabel
     tagString = ""
@@ -55,13 +77,15 @@ class WorkplanListItem(QFrame):
 
     # layout
     self.layout = QVBoxLayout()
-    self.layout.addWidget(self.titleLabel)
+    self.layout.addLayout(self.header)
     self.layout.addWidget(self.tagLabel)
     self.layout.addWidget(self.sampleLabel)
     self.setLayout(self.layout)
 
   def mousePressEvent(self, event):
-    self.clicked.emit()
+    if event.button() == Qt.MouseButton.LeftButton:
+      self.dragStartPos = event.pos()
+      self.clicked.emit()
     super().mousePressEvent(event)
 
   def updateParameter(self, text, parameter):
@@ -69,6 +93,7 @@ class WorkplanListItem(QFrame):
 
   def updateSample(self, text):
     self.sample = text
+    self.sampleLabel.setText("Sample: " + makeStringWrappable(self.sample))
 
   def highlight(self):
     color = self.comm.palette.getThemeColor("primary", "selection.background")
@@ -79,3 +104,59 @@ class WorkplanListItem(QFrame):
 
   def lowlight(self):
     self.setStyleSheet("")
+
+  def _onDeleteClicked(self):
+    parentLayout = self.parentWidget().layout()
+    selfidx = parentLayout.indexOf(self)
+    parentLayout.itemAt(selfidx+1).widget().deleteLater()
+    self.deleteLater()
+
+  def mouseMoveEvent(self, event):
+    if not event.buttons() == Qt.MouseButton.LeftButton:
+      return
+    if (event.pos() - self.dragStartPos).manhattanLength() < QApplication.startDragDistance():
+      return
+    drag = QDrag(self)
+    mimeData = QMimeData()
+    pixmap = QPixmap(self.size())
+    self.render(pixmap)
+
+    drag.setMimeData(mimeData)
+    drag.setPixmap(pixmap)
+    drag.setHotSpot(event.pos())
+    drag.exec(Qt.DropAction.MoveAction)
+
+  def dragEnterEvent(self, event):
+    event.acceptProposedAction()
+
+  def dragMoveEvent(self, event):
+    midheight = self.height() // 2
+    if event.position().y() < midheight:
+      self.setStyleSheet("")
+      self.setStyleSheet("""
+        border-top-color: green;
+        border-top-width: 2px;""")
+    else:
+      self.setStyleSheet("")
+      self.setStyleSheet("""
+        border-bottom-color: green;
+        border-bottom-width: 2px;""")
+
+  def dragLeaveEvent(self, event):
+    self.setStyleSheet("")
+
+  def dropEvent(self, event):
+    if isinstance(event.source(), WorkplanListItem):
+      droppedItem: WorkplanListItem = event.source()
+    else:
+      return
+    self.setStyleSheet("")
+    parentLayout = self.parentWidget().layout()
+    selfidx = parentLayout.indexOf(self)
+    midheight = self.height() // 2
+    if event.position().y() < midheight:
+      self.rightMainWidget.addProcedure(droppedItem.procedureID, droppedItem.sample, droppedItem.parameters, selfidx)
+    else:
+      self.rightMainWidget.addProcedure(droppedItem.procedureID, droppedItem.sample, droppedItem.parameters, selfidx+2)
+    droppedItem._onDeleteClicked()
+    event.acceptProposedAction()
