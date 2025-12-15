@@ -1,19 +1,18 @@
-import copy
-
+"""Widget on the right of the WorkplanCreator-Dialog. Contains a list of workplanListItems that represents the Workplan"""
 import qtawesome
 from PySide6.QtGui import Qt
-from PySide6.QtWidgets import QFrame, QInputDialog, QLabel, QPushButton, QScrollArea, QSizePolicy, \
+from PySide6.QtWidgets import QInputDialog, QPushButton, QScrollArea, QSizePolicy, \
   QVBoxLayout, QWidget
 
 from pasta_eln.UI.guiCommunicate import Communicate
-from pasta_eln.UI.guiStyle import HSeperator, Label
+from pasta_eln.UI.guiStyle import Label
 from pasta_eln.UI.workplanCreator.workplanFunctions import generateAndSaveWorkplan
 from pasta_eln.UI.workplanCreator.workplanListItem import WorkplanListItem
 
 
 class RightMainWidget(QWidget):
   """
-
+  Widget on the right of the WorkplanCreator-Dialog. Contains a list of workplanListItems that represents the Workplan
   """
 
   def __init__(self, comm: Communicate):
@@ -52,14 +51,22 @@ class RightMainWidget(QWidget):
 
     # layout
     self.layout = QVBoxLayout()
-    #self.layout.setContentsMargins(0,0,0,0)
+    # self.layout.setContentsMargins(0,0,0,0)
     self.layout.addWidget(self.headerLabel)
-    #self.layout.addWidget(HSeperator())
+    # self.layout.addWidget(HSeperator())
     self.layout.addWidget(scrollarea)
     self.layout.addWidget(self.saveButton)
     self.setLayout(self.layout)
 
-  def addProcedure(self, procedureID: str, sample: str, parameters: dict[str, str], at: int = None):
+  def addProcedure(self, procedureID: str, sample: str, parameters: dict[str, str], at: int = None) -> None:
+    """
+    Add a new workPlanListItem to the list
+    Args:
+      procedureID: ID of the procedure that is represented by this item
+      sample: the user-chosen sample for this particular Item
+      parameters: the filled-out parameters for this item
+      at: Optional. Position where to insert the Item into the list. Default: at the end.
+    """
     listItem = WorkplanListItem(
       self.comm,
       procedureID,
@@ -75,7 +82,10 @@ class RightMainWidget(QWidget):
     self.highlightActiveItem(listItem)
     self.saveButton.setFocus()
 
-  def saveWorkplan(self):
+  def saveWorkplan(self) -> None:
+    """
+    Extracts info from the workplanItems and creates the json for saving it
+    """
     filename, ok = QInputDialog.getText(self, "Choose Workplan Name",
                                         "Choose a Name for your Workplan File:",
                                         text="unnamed_workplan")
@@ -104,9 +114,15 @@ class RightMainWidget(QWidget):
         })
     generateAndSaveWorkplan(self.comm, workplan, filename)
 
-  def highlightActiveItem(self, listItem: WorkplanListItem):
+  def highlightActiveItem(self, listItem: WorkplanListItem) -> None:
+    """
+    Highlights the WorkplanListItem in the argument and lowlights every other one
+    Args:
+      listItem: The WorkplanListItem to hightlight
+    """
     for i in range(self.workplanLayout.count()):
       item = self.workplanLayout.itemAt(i).widget()
       if isinstance(item, WorkplanListItem):
         item.lowlight()
-    listItem.highlight()
+    if listItem:
+      listItem.highlight()

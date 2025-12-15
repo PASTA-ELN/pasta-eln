@@ -1,3 +1,4 @@
+"""Widgets inside the leftMainWidget List. Displays Procedure Name and Tags and is clickable"""
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
@@ -8,7 +9,7 @@ from pasta_eln.miscTools import makeStringWrappable
 
 class ProcedureListItem(QFrame):
   """
-
+  Widgets inside the leftMainWidget List. Displays Procedure Name and Tags and is clickable
   """
   clicked = Signal()
 

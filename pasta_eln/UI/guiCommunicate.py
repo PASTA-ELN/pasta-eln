@@ -56,7 +56,7 @@ class Communicate(QObject):
     super().__init__()
     self.waitDialog            = WaitDialog()
     self.worker:Worker|None    = None
-    self.palette                                = Palette(None, 'none')               #reset to real one later
+    self.palette                                = Palette('')               #reset to real one later
     self.configuration, self.projectGroup = getConfiguration(projectGroup)
     if not self.configuration:
       return

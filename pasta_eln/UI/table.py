@@ -10,6 +10,8 @@ from PySide6.QtCore import QModelIndex, Qt, Slot
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView, QMenu, QMessageBox, QTableView,
                                QVBoxLayout, QWidget)
+
+from .workplanCreator.workplanCreatorDialog import WorkplanCreatorDialog
 from ..backendWorker.worker import Task
 from ..miscTools import callAddOn
 from .gallery import ImageGallery
@@ -280,7 +282,11 @@ class Table(QWidget):
       command (list): list of commands
     """
     if command[0] is Command.ADD_ITEM:
-      self.comm.formDoc.emit({'type':[self.docType], '_projectID':self.comm.projectID})
+      if self.docType == "workflow/workplan":
+        workplanCreatorDialog = WorkplanCreatorDialog(self.comm)
+        workplanCreatorDialog.exec()
+      else:
+        self.comm.formDoc.emit({'type':[self.docType], '_projectID':self.comm.projectID})
       self.comm.changeTable.emit(self.docType, self.comm.projectID)
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')

@@ -1,46 +1,51 @@
-""" Color palette allows easy color access """
-import json
-import platform
-from pathlib import Path
+""" Color palette allows easy color access and manages Theme"""
 
-from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QApplication, QMainWindow
-from qt_material import apply_stylesheet, get_theme  # of https://github.com/UN-GCPDS/qt-material
-
-from ..fixedStringsJson import CONF_FILE_NAME, DEFAULT_COLORS_PALETTE, THEME_COLOR_VALUES
 import qdarktheme
+from PySide6.QtGui import QColor
+
+from ..fixedStringsJson import THEME_COLOR_VALUES
 
 
-class Palette():
-  """ Color palette allows easy color access """
-  def __init__(self, mainWindow:QMainWindow|None, accent:str) -> None:
+class Palette:
+  """ Color palette allows easy color access and manages Theme"""
+
+  def __init__(self, theme: str) -> None:
     """ Initialize the color palette
     Args:
-      mainWindow (QMainWindow): main window for getting system theme
-      accent (str): accent color, e.g. 'pink'
+      theme (str): 'light' or 'dark'
     """
-    self.qtheme = 'light' if mainWindow is None or mainWindow.palette().button().color().red()>128 or \
-      platform.system() != 'Linux' else 'dark'                                 # system color mode: dark/light
-    self.primary       = self.getThemeColor("primary", "base")
+    if theme in ['light', 'dark']:
+      self.qtheme = theme
+    else:
+      self.qtheme = "light"
+    self.primary = self.getThemeColor("primary", "base")
     self.text = self.getThemeColor("background", "base")
-    self.leafX = "green"#self.getThemeColor("foreground", "base")
+    self.leafX = "green"  # self.getThemeColor("foreground", "base")
     self.leafO = self.getThemeColor("background", "panel")
     self.leafShadow = self.getThemeColor("background", "panel")
 
-  def setTheme(self, theme:str = ""):
-    if theme not in ["dark", "light", ""]:
-      print("Could not find Theme:", theme)
-      return
-    if theme:
-      self.qtheme = theme
+  def setTheme(self, theme: str = "", saveTheme: bool = True) -> None:
+    """
+    Update the theme of the whole App.
+    Args:
+      theme: 'dark'/'light' for the dark/light theme. Empty String ('') for update without changing the theme.
+      saveTheme: Whether the theme should be changed permanently or just until theme is updated again.
+    """
     css = """
     QLabel[inactive="true"] {
     color: grey;
     font-size: 10pt;
     }
     """
-    qdarktheme.setup_theme(self.qtheme, additional_qss=css)
-
+    if theme not in ["dark", "light", ""]:
+      print("Could not find Theme:", theme)
+      return
+    if theme != "" and saveTheme:
+      self.qtheme = theme
+    if theme != "" and not saveTheme:
+      qdarktheme.setup_theme(theme, additional_qss=css)
+    else:
+      qdarktheme.setup_theme(self.qtheme, additional_qss=css)
 
   def get(self, color: str, prefix: str) -> str:
     """
@@ -56,14 +61,14 @@ class Palette():
     COLORS = {
       "primary": self.getThemeColor("primary", "base"),
       "primaryLight": "",
-      "secondary":"",
-      "secondaryLight":"",
-      "secondaryDark":"",
-      "primaryText":"",
-      "secondaryText":"",
+      "secondary": "",
+      "secondaryLight": "",
+      "secondaryDark": "",
+      "primaryText": "",
+      "secondaryText": "",
     }
-    if color=='buttonText':
-      return  f'{prefix}: {self.text}; '
+    if color == 'buttonText':
+      return f'{prefix}: {self.text}; '
     if COLORS[color] == "":
       return ""
     return f'{prefix}: {COLORS[color]}; '

@@ -43,6 +43,7 @@ class ConfigurationGUI(QDialog):
     Save changes to hard-disk
     """
     if btn.text().endswith('Cancel'):
+      self.comm.palette.setTheme()
       self.reject()
       self.callbackFinished(False)
     else:
@@ -52,6 +53,8 @@ class ConfigurationGUI(QDialog):
             self.comm.configuration['GUI'][k] = int(getattr(self, k).currentText())
           except Exception:
             self.comm.configuration['GUI'][k] = getattr(self, k).currentText()
+          if k == "theme":
+            self.comm.palette.setTheme(getattr(self, k).currentText())
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.configuration,indent=2))
       self.accept()
@@ -75,9 +78,7 @@ class ConfigurationGUI(QDialog):
     widget = QComboBox()                                                     # pylint: disable=qt-local-widget
     labelWidget = QLabel(label)
     if label == 'Color style':
-      widget.setToolTip('For change to take effect, restart PASTA-ELN.')
-      labelWidget = QLabel(f'{label} (For change to take effect, restart PASTA-ELN.)')
-      labelWidget.setToolTip('For change to take effect, restart PASTA-ELN.')
+      widget.currentTextChanged.connect(lambda: self.comm.palette.setTheme(widget.currentText(), False))
     widget.addItems(itemList)
     widget.setCurrentText(default)
     layout.addRow(labelWidget, widget)

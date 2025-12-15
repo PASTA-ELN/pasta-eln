@@ -1,10 +1,8 @@
-import qdarktheme
+"""Item inside the list of the rightMainWidget."""
 import qtawesome
+from PySide6.QtCore import QMimeData, QPoint, Qt, Signal
 from PySide6.QtGui import QDrag, QPixmap
-from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel
-from PySide6.QtWidgets import QPushButton
-from PySide6.QtCore import QMimeData, QPoint, QSize, Qt, Signal
-from PySide6.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
+from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout
 
 from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.UI.guiStyle import Label
@@ -12,6 +10,9 @@ from pasta_eln.miscTools import makeStringWrappable
 
 
 class WorkplanListItem(QFrame):
+  """
+  Item inside the list of the rightMainWidget.
+  """
   clicked = Signal()
   dragStartPos = QPoint()
 
@@ -28,19 +29,20 @@ class WorkplanListItem(QFrame):
     self.titleLabel = Label("", "h3")
     self.deleteButton = QPushButton("")
     self.header = QHBoxLayout()
-    self.tagLabel = Label("", style=f"color: {self.comm.palette.getThemeColor('foreground', 'disabled')};")  # self.comm.palette.get('secondaryText', 'color')
+    self.tagLabel = Label("",
+                          style=f"color: {self.comm.palette.getThemeColor('foreground', 'disabled')};")  # self.comm.palette.get('secondaryText', 'color')
     self.sampleLabel = Label("")
     self.frame = QFrame()
 
-    self.clicked.connect(lambda: self.comm.activeProcedureChanged.emit(self.procedureID, self.sample, self.parameters, self))
+    self.clicked.connect(
+      lambda: self.comm.activeProcedureChanged.emit(self.procedureID, self.sample, self.parameters, self))
     self.clicked.emit()
     self.setAcceptDrops(True)
 
     # deleteButton
     self.deleteButton.setIcon(qtawesome.icon("ei.remove"))
-    #self.deleteButton.setIconSize(QSize(10, 10))
     self.deleteButton.setFixedSize(16, 16)
-    self.deleteButton.setContentsMargins(0,0,0,0)
+    self.deleteButton.setContentsMargins(0, 0, 0, 0)
     self.deleteButton.clicked.connect(self._onDeleteClicked)
     self.deleteButton.setStyleSheet("border:none;")
 
@@ -52,7 +54,7 @@ class WorkplanListItem(QFrame):
     self.titleLabel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
     # header
-    self.header.setContentsMargins(0,0,0,0)
+    self.header.setContentsMargins(0, 0, 0, 0)
     self.header.addWidget(self.titleLabel)
     self.header.addWidget(self.deleteButton, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
@@ -101,13 +103,12 @@ class WorkplanListItem(QFrame):
         }}"""
     self.setStyleSheet(self.defaultCSS)
 
-
     # layout
     self.layout = QVBoxLayout()
     self.layout.addWidget(self.frame)
     self.layout.addWidget(self.arrow, alignment=Qt.AlignmentFlag.AlignHCenter)
     self.layout.setSpacing(0)
-    self.layout.setContentsMargins(0,0,0,0)
+    self.layout.setContentsMargins(0, 0, 0, 0)
     self.setLayout(self.layout)
 
   def mousePressEvent(self, event):
@@ -116,22 +117,38 @@ class WorkplanListItem(QFrame):
       self.clicked.emit()
     super().mousePressEvent(event)
 
-  def updateParameter(self, text, parameter):
+  def updateParameter(self, text, parameter) -> None:
+    """
+    Setter of the value (text) for the given parameter
+    """
     self.parameters[parameter] = text
 
-  def updateSample(self, text):
+  def updateSample(self, text) -> None:
+    """
+    Setter for the Sample. updates sampleLabel, too.
+    """
     self.sample = text
     self.sampleLabel.setText("Sample: " + makeStringWrappable(self.sample))
 
   def highlight(self):
+    """
+    Updates the Style of this Item to highlight it
+    """
     self.frame.setProperty("highlight", True)
     self.setStyleSheet(self.defaultCSS)
 
   def lowlight(self):
+    """
+    Updates the Style of this Item to reset the highlight
+    """
     self.frame.setProperty("highlight", False)
     self.setStyleSheet(self.defaultCSS)
 
   def _onDeleteClicked(self):
+    """
+    Deletes this widget.
+    """
+    self.hide()
     self.deleteLater()
 
   def mouseMoveEvent(self, event):
@@ -178,6 +195,7 @@ class WorkplanListItem(QFrame):
     if event.position().y() < midheight:
       self.rightMainWidget.addProcedure(droppedItem.procedureID, droppedItem.sample, droppedItem.parameters, selfidx)
     else:
-      self.rightMainWidget.addProcedure(droppedItem.procedureID, droppedItem.sample, droppedItem.parameters, selfidx+1)
-    droppedItem._onDeleteClicked()
+      self.rightMainWidget.addProcedure(droppedItem.procedureID, droppedItem.sample, droppedItem.parameters,
+                                        selfidx + 1)
+    droppedItem._onDeleteClicked()  # pylint: disable=protected-access
     event.acceptProposedAction()

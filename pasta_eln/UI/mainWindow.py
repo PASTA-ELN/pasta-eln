@@ -40,7 +40,7 @@ class MainWindow(QMainWindow):
     super().__init__()
     self.comm = comm
     if self.comm.configuration:
-      self.comm.palette = Palette(self, self.comm.configuration['GUI']['theme'])
+      self.comm.palette = Palette(self.comm.configuration['GUI']['theme'])
       self.comm.docTypesChanged.connect(self.paint)
     else:
       configWindow = Configuration(self.comm, 'setup')

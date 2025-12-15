@@ -9,8 +9,8 @@ defaultDocTypes: list[list[str]] = [
   ['sample',              'http://purl.obolibrary.org/obo/NCIT_C19157',      'Samples',      'fa5s.vial',             's',    'name,tags,.chemistry,comment,qrCodes'],
   ['workflow',            'http://purl.obolibrary.org/obo/NCIT_C42753',      'Workflows',    'fa5s.list-ol',          'w',    'name,tags,comment'],
   ['workflow/procedure',  'https://schema.org/procedure',                    'Procedure',    '',                      '',     'name,tags,comment,content'],
-  ['workflow/workplan' ,  'http://purl.obolibrary.org/obo/PROCO_0000093',    'Work plan',    '',                      '',     'name,tags,comment,content'],
-  ['workflow/worklog'  ,  'http://dicom.nema.org/resources/ontology/DCM/LOG','Work log',     '',                      '',     'name,tags,comment,content'],
+  ['workflow/workplan' ,  'http://purl.obolibrary.org/obo/PROCO_0000093',    'Workplan',    '',                      '',     'name,tags,comment,content'],
+  ['workflow/worklog'  ,  'http://dicom.nema.org/resources/ontology/DCM/LOG','Worklog',     '',                      '',     'name,tags,comment,content'],
   ['device',              'http://purl.obolibrary.org/obo/NCIT_C16742',      'Devices',  'ri.scales-2-line',          'd',    'name,tags,comment,.vendor'],
   ['device/extension',    'https://www.wikidata.org/wiki/Q19841649',         'Extensions',   '',                      '',     'name,tags,comment,.vendor'],
 ]
@@ -118,7 +118,7 @@ configurationGUI: dict[str, Any] = {
     'checkForUpdates': ['Check for updates on startup', 'Yes', ['Yes', 'No']]
   },
   'appearance': {
-    'theme': ['Color style', 'none', ['amber', 'blue', 'cyan', 'pink', 'purple', 'teal', 'yellow', 'none']],
+    'theme': ['Color style', 'light', ['dark', 'light']],
     'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']],
     'sidebarWidth': ['Sidebar width', 280, [220, 280, 340]],
     'maxTableColumnWidth': ['Maximum column width in tables', 400, [300, 400, 500, 600]],

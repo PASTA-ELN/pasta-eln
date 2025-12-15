@@ -1,3 +1,4 @@
+"""Widget on the left side of the WorkplanCreator-Dialog. Contains a Searchbar and a list of Procedures to choose from"""
 from PySide6.QtWidgets import QLineEdit, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 from pasta_eln.UI.guiCommunicate import Communicate
@@ -8,7 +9,7 @@ from pasta_eln.UI.workplanCreator.workplanFunctions import Storage
 
 class LeftMainWidget(QWidget):
   """
-
+  Widget on the left side of the WorkplanCreator-Dialog. Contains a Searchbar and a list of Procedures to choose from
   """
 
   def __init__(self, comm: Communicate):
@@ -20,16 +21,11 @@ class LeftMainWidget(QWidget):
 
     # headerLabel
     self.headerLabel = Label("Choose Procedures", "h1")
-    #self.headerLabel.setContentsMargins(0,0,0,0)
 
     # searchbar
     self.searchbar = QLineEdit(clearButtonEnabled=True)
     self.searchbar.setPlaceholderText("Search Procedure or #tag")
     self.searchbar.textEdited.connect(self.filterItems)
-    #self.searchbar.setContentsMargins(0, 0, 11, 0)
-
-    # seperator
-    #self.seperator = HSeperator()
 
     # procedureList
     self.procedureList = QWidget()
@@ -41,36 +37,33 @@ class LeftMainWidget(QWidget):
     # scrollarea
     scrollarea = QScrollArea(widgetResizable=True)
     scrollarea.setContentsMargins(0, 0, 0, 0)
-    # scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     scrollarea.setWidget(self.procedureList)
 
     # Style
-    # self.setFrameShape(QFrame.Shape.StyledPanel)
     self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-    # self.setFrameShadow(QFrame.Shadow.Raised)
 
     # layout
     self.layout = QVBoxLayout()
-    #self.layout.setContentsMargins(11, 11, 0, 11)
     self.layout.addWidget(self.headerLabel)
     self.layout.addWidget(self.searchbar)
-    #self.layout.addWidget(self.seperator)
     self.layout.addWidget(scrollarea)
     self.setLayout(self.layout)
 
-    # function calls
+    # misc
     self.comm.storageUpdated.connect(self.updateProcedures)
     self.comm.storage = Storage(self.comm, self.currentProjectID)
     self.storage = self.comm.storage
 
-  def updateProcedures(self, projID: str):
+  def updateProcedures(self, projID: str) -> None:
     """
-
+    Add all Procedures from the current project to the list
+    Args:
+      projID: Identifier, if the Signal is meant for this function
     """
     if projID != self.currentProjectID:
       return
     self.procedures = self.storage.getProcedureIDs()
-    # Layout leeren
+    # empty Layout
     while self.procedureListLayout.count():
       item = self.procedureListLayout.takeAt(0)
       widget = item.widget()
@@ -90,6 +83,11 @@ class LeftMainWidget(QWidget):
     self.procedureListLayout.addStretch(1)
 
   def filterItems(self, filterText: str):
+    """
+    hides/shows the procedures that match the phrase in the searchbar
+    Args:
+      filterText: text that is used to filter the procedures in the list (e.g. Content of the Searchbar)
+    """
     filterText = filterText.lower().split(",")
     filterText = [word.strip() for word in filterText]
     for i in range(1, self.procedureListLayout.count() - 1, 2):
