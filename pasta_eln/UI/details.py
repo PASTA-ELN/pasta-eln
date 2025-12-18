@@ -270,7 +270,10 @@ class Details(QScrollArea):
       bgColor = self.comm.palette.get('secondaryDark', 'background-color')
       fgColor = self.comm.palette.get('secondaryText', 'color')
       text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; {bgColor} {fgColor}}}")
-      text.document().setTextWidth(labelW.width())
+      try:                                    #Temporary debugging until June26 to identify the cause of issue
+        text.document().setTextWidth(labelW.width())
+      except Exception:
+        logging.error('text.document is something erroneous: %s, %s', type(text), type(text.document()))
       if hasattr(self, 'rescaleTexts'):
         self.textEditors.append(text)
       height:int = text.document().size().toTuple()[1]                                    # type:ignore[index]

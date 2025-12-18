@@ -31,7 +31,7 @@ class Task(Enum):
   ADD_DOC        = (1 , '')                                        #keys: hierStack, docType, doc
   EDIT_DOC       = (2 , '')                                        #keys: doc, newProjID
   MOVE_LEAVES    = (3 , '')                                        #keys: docID, stackOld, stackNew, childOld, childNew
-  DROP_EXTERNAL  = (4 , 'Including drag&drop files and folders:')  #keys: docID, files, folders
+  DROP_EXTERNAL  = (4 , 'Including drag&drop files and folders:')  #keys: docID, items
   HIDE_SHOW      = (5 , '')                                        #keys: docID
   SET_GUI        = (6 , '')                                        #keys: docID, gui
   DELETE_DOC     = (7 , '')                                        #keys: docID
@@ -273,17 +273,15 @@ class BackendWorker(QObject):
         print('Step 4: end of function')
         print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
 
-    elif task is Task.DROP_EXTERNAL and set(data.keys())=={'docID','files','folders'}:
-      commonBase   = os.path.commonpath(data['folders']+[str(i) for i in data['files']])
+    elif task is Task.DROP_EXTERNAL and set(data.keys())=={'docID','items'}:
       doc = self.backend.db.getDoc(data['docID'])
       targetFolder = Path(self.backend.cwd/doc['branch'][0]['path'])
-      # create folders and copy files
-      for folder in data['folders']:
-        (targetFolder/(Path(folder).relative_to(commonBase))).mkdir(parents=True, exist_ok=True)
-      for fileStr in data['files']:
-        file = Path(fileStr)
-        if file.is_file():
-          shutil.copy(file, targetFolder/(file.relative_to(commonBase)))
+      for item in data['items']:
+        itemPath = Path(item)
+        if itemPath.is_dir():
+          shutil.copytree(itemPath, targetFolder/itemPath.name)
+        else:
+          shutil.copy(itemPath, targetFolder/itemPath.name)
       # scan
       for _ in range(2):                                                       #scan twice: convert, extract
         self.backend.scanProject(None, data['docID'], targetFolder.relative_to(self.backend.basePath))

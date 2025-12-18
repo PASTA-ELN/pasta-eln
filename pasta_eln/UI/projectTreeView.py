@@ -202,20 +202,13 @@ class TreeView(QTreeView):
       if item is None or item.data()['docType'][0][0]!='x':
         showMessage(self, 'Error', 'You can drop external files only onto folders.')
         return
-      # create a list of all files
-      files, folders = [], []
-      for url in event.mimeData().urls():
-        path = url.toLocalFile()
-        if Path(path).is_file():
-          files.append(path)
-        else:
-          files +=   list(Path(path).rglob('*'))                                      # type: ignore[arg-type]
-          folders += [x[0] for x in os.walk(path)]
-      if not (folders+[str(i) for i in files]):
-        showMessage(self, 'Error', 'The files seem empty.')
+      # create a list of all items
+      items = [url.toLocalFile() for url in event.mimeData().urls()]
+      if not (items):
+        showMessage(self, 'Error', 'The files / folders you dropped are empty.')
         return
       docID = item.data()['hierStack'].split('/')[-1]
-      self.comm.uiRequestTask.emit(Task.DROP_EXTERNAL, {'docID':docID, 'files':files, 'folders':folders})
+      self.comm.uiRequestTask.emit(Task.DROP_EXTERNAL, {'docID':docID, 'items':items})
       event.ignore()
     elif 'application/x-qstandarditemmodeldatalist' in event.mimeData().formats():
       super().dropEvent(event)
