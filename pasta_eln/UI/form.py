@@ -289,8 +289,6 @@ class Form(QDialog):
       raise ValueError('dataHierarchyNode is not complete. Missing keys')
     # END TEMPORARY CHECK
 
-    print('>>', self.dataHierarchyNode)
-
     groups = {i['class'] for i in self.dataHierarchyNode}.difference({'metaVendor','metaUser'})
     # create tabs or not: depending on the number of groups
     if len(groups)>1:
