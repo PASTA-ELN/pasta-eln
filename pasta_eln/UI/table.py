@@ -11,7 +11,7 @@ from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView, QMenu, QMessageBox, QTableView,
                                QVBoxLayout, QWidget)
 from ..backendWorker.worker import Task
-from ..miscTools import callAddOn
+from ..miscTools import callAddOn, isDocID
 from .gallery import ImageGallery
 from .guiCommunicate import Communicate
 from .guiStyle import Action, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
@@ -230,7 +230,7 @@ class Table(QWidget):
         item = QStandardItem('-')
       elif value=='True':                                                                               # True
         item = QStandardItem('Y')
-      elif isinstance(value, str) and re.match(r'^[a-z\-]-[a-z0-9]{32}$',value):                        # Link
+      elif isinstance(value, str) and isDocID(value):                                                   # Link
         item = QStandardItem('oo')
       else:
         if self.filterHeader[j]=='tags':

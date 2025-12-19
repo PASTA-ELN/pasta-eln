@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QLa
 from ..backendWorker.sqlite import MAIN_ORDER
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
-from ..miscTools import callAddOn
+from ..miscTools import callAddOn, isDocID
 from ..textTools.stringChanges import markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
 from .guiCommunicate import Communicate
@@ -417,7 +417,9 @@ class Form(QDialog):
                 self.comm.uiRequestTable.emit(listDocType, '', True)
                 self.comboBoxDocTypeList[listDocType] = (getattr(self, elementName), value)
             self.allUserElements.append((key,'ComboBox'))
-          else:                                                                                     #text area
+          elif isDocID(value):
+            continue
+          else:
             setattr(self, elementName, QLineEdit(value))
             self.allUserElements.append((key,'LineEdit'))
           formLabelW = QLabel(label)
@@ -473,8 +475,7 @@ class Form(QDialog):
       elif guiType=='ComboBox':
         valueNew = getattr(self, elementName).currentText()
         dataNew  = getattr(self, elementName).currentData()                 #if docID is stored in currentData
-        if ((dataNew is not None and re.search(r'^[a-z\-]-[a-z0-9]{32}$',dataNew) is not None)
-            or dataNew==''):
+        if ((dataNew is not None and isDocID(dataNew)) or dataNew==''):
           subContent[key] = dataNew
         elif valueNew!='- no link -' or dataNew is None:
           subContent[key] = valueNew
@@ -647,8 +648,7 @@ class Form(QDialog):
           if guiType=='ComboBox':
             valueNew = getattr(self, elementName).currentText()
             dataNew  = getattr(self, elementName).currentData()             #if docID is stored in currentData
-            if ((dataNew is not None and re.search(r'^[a-z\-]-[a-z0-9]{32}$',dataNew) is not None)
-                or dataNew==''):
+            if ((dataNew is not None and isDocID(dataNew)) or dataNew==''):
               self.doc[key] = dataNew
             elif valueNew!='- no link -' or dataNew is None:
               self.doc[key] = valueNew

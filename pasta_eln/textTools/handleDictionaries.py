@@ -7,8 +7,8 @@ import uuid
 from datetime import datetime
 from typing import Any
 from ..fixedStringsJson import SORTED_KEYS, SQLiteTranslation
+from ..miscTools import isDocID
 from .stringChanges import markdownEqualizer
-
 
 def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   """ Fill the data before submission to database with common data
@@ -157,7 +157,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
           #   value = value[0] if isinstance(value,tuple) else value
           # else:
           #   raise ValueError(f'list target exists multiple times. Key: {key}')
-          if re.search(r'^[a-z\-]-[a-z0-9]{32}$',value[0]) is None:
+          if not isDocID(value[0]):
             value = value[0] if isinstance(value,tuple) else value
           else:
             value = '\u260D link to entry'
@@ -166,8 +166,11 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
           markdown += f'{key.capitalize()}: {value}\n\n'
         if isinstance(value, tuple) and len(value)==4:
           key = key if value[2] is None or value[2]=='' else value[2]
-          valueString = f'{value[0]} {value[1]}'
-          valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;**[&uArr;]({value[3]})**'
+          if isDocID(value[0]):
+            valueString = 'Cannot resolve link'
+          else:
+            valueString = f'{value[0]} {value[1]}'
+            valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;**[&uArr;]({value[3]})**'
           markdown += f'{key.capitalize()}: {valueString}\n\n'
         if isinstance(value, dict):
           value = dict2ul({k:(v[0]  if isinstance(v, (list,tuple)) else v) for k,v in value.items()}, 'markdown')

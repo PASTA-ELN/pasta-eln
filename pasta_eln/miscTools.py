@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import platform
+import re
 import socket
 import subprocess
 import sys
@@ -293,6 +294,16 @@ def isFloat(val:str) -> bool:
     return True
   except (ValueError, TypeError):
     return False
+
+
+def isDocID(val:str) -> bool:
+  """Check if a value is a docID
+  Args:
+    val (str): value to check
+  Returns:
+    bool: True if value is a docID, False otherwise
+  """
+  return re.match(r'^[a-z\-]-[a-z0-9]{32}$', val) is not None
 
 
 def dfConvertColumns(df:pd.DataFrame, ratio:int=10) -> pd.DataFrame:

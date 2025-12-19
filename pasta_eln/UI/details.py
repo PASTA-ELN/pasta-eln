@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QLabel, QLayout, QScrollArea, QTextEdit
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import SORTED_DB_KEYS, cssStyleHtmlEditors, defaultDataHierarchyNode
+from ..miscTools import isDocID
 from ..textTools.handleDictionaries import dict2ul
 from ..textTools.stringChanges import markdownEqualizer, tuple2html
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
@@ -300,6 +301,8 @@ class Details(QScrollArea):
             raise ValueError(f'list target exists multiple times. Key: {key}')
       elif isinstance(value, list):
         value = ', '.join([str(i) for i in value])
+      if isinstance(value, tuple) and len(value)==4 and isDocID(value[0]):
+        value = 'Cannot resolve link'
       labelStr = f'<b>{key.capitalize()}</b>: {value}'
       if isinstance(value, tuple) and len(value)==4:
         k,v = tuple2html(key, value)
