@@ -48,6 +48,7 @@ class Form(QDialog):
       self.allowDocTypeChange = all(docID[0] != 'x' for docID in self.allDocIDs)
     self.allowDocTypeChange = self.allowDocTypeChange and not self.flagNewDoc
     self.allowProjectChange = True
+    self.allowProjectUnassign = True
 
     # GUI elements
     if self.flagNewDoc:
@@ -183,6 +184,8 @@ class Form(QDialog):
         self.doc['tags'] = []
         self.doc['type'] = docType
       self.allowProjectChange = self.allowProjectChange and self.doc['type'][0]!='x0'# none of the items can be a project
+      if doc['branch'][0]['path']:
+        self.allowProjectUnassign = False
     if len(self.allDocIDs)==0:
       self.paint()
 
@@ -203,7 +206,10 @@ class Form(QDialog):
       self.updateTagsBar()
     elif docType == 'x0':
       self.projectComboBox.clear()
-      self.projectComboBox.addItem('- no change' if self.groupEdit else '- not assigned -', userData='')
+      if self.groupEdit:
+        self.projectComboBox.addItem('- no change -',    userData='')
+      elif self.allowProjectUnassign:
+        self.projectComboBox.addItem('- not assigned -', userData='NONE')
       for iDocID, iName in data[['id','name']].values.tolist():           # add all projects incl. the present
         self.projectComboBox.addItem(iName, userData=iDocID)
         stack = self.doc.get('branch',[{}])[0].get('stack', [])
@@ -434,6 +440,8 @@ class Form(QDialog):
         ### add extra questions at bottom of form
         # project change
         if self.allowProjectChange:
+          if not self.allowProjectUnassign and self.projectComboBox.count()>1:
+            self.projectComboBox.removeItem(0)
           formL.addRow(QLabel('Project'), self.projectComboBox)
         # docType change
         if self.allowDocTypeChange:                                                 #if not-new and non-folder

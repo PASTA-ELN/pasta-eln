@@ -189,14 +189,16 @@ class BackendWorker(QObject):
     elif task is Task.EDIT_DOC      and set(data.keys())=={'doc','newProjID'}:
       # update the path, if the project changed
       if data['newProjID'] and 'branch' in data['doc']:
-        parentPath = self.backend.db.getDoc(data['newProjID'][0])['branch'][0]['path']
-        if data['doc']['branch'][0]['stack'][0]!=data['newProjID'][0]:                   #only if project changed
+        if len(data['doc']['branch'][0]['stack'])>0 and \
+           data['doc']['branch'][0]['stack'][0]!=data['newProjID'][0]:                   #only if project changed
           if data['doc']['branch'][0]['path'] is None:
             newPath    = ''
           else:
             oldPath = self.backend.basePath/data['doc']['branch'][0]['path']
+            parentPath = self.backend.db.getDoc(data['newProjID'][0])['branch'][0]['path']
             newPath = f'{parentPath}/{oldPath.name}'
-          data['doc']['branch'][0] = {'stack':[data['newProjID'][0]], 'path':newPath or None, 'child':9999, 'show':[True,True]}
+          data['doc']['branch'][0] = {'stack':[] if data['newProjID'][0]=='NONE' else [data['newProjID'][0]],
+                                      'path':newPath or None, 'child':9999, 'show':[True,True]}
       # update the doc in the database
       doc = self.backend.db.getDoc(data['doc']['id'])
       if '_projectID' in data['doc']:
