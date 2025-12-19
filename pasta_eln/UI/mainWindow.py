@@ -211,7 +211,7 @@ class MainWindow(QMainWindow):
       configProjecGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
       installPythonPackages(configProjecGroup['addOnDir'])
       reportDict = updateAddOnList(self.comm.projectGroup)
-      messageWindow = ScrollMessageBox('Add-on list updated', reportDict,
+      messageWindow = ScrollMessageBox('Add-on list updated', {'main':reportDict},
                                        style='QScrollArea{min-width:600 px; min-height:400px}')
       messageWindow.exec()
       hardRestart()

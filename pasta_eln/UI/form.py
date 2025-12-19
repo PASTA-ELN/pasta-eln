@@ -3,6 +3,7 @@ import copy
 import json
 import logging
 import re
+import time
 import warnings
 from enum import Enum
 from pathlib import Path
@@ -709,7 +710,25 @@ class Form(QDialog):
       doc = copy.deepcopy(self.doc)
       if 'image' in doc:
         del doc['image']
-      messageWindow = ScrollMessageBox('Details', doc, style='QScrollArea{min-width:600 px; min-height:400px}')
+      # get history
+      history = None
+      @Slot(str,pd.DataFrame)
+      def receiveData(cmd:str, df:pd.DataFrame) -> None:
+        """ Slot to receive data
+        Args:
+          cmd (str): command
+          df (pd.DataFrame): dataframe
+        """
+        nonlocal history
+        history = {i[1]:i[2] for i in df.itertuples()}
+      self.comm.backendThread.worker.beSendSQL.connect(receiveData)
+      docID = self.doc['id']
+      sqlCmd = f"SELECT date, change FROM changes WHERE id=='{docID}'"
+      self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':sqlCmd}])
+      while history is None:
+        time.sleep(0.1)
+      messageWindow = ScrollMessageBox('Details', {'current':doc,'history':history},
+                                       style='QScrollArea{min-width:600 px; min-height:400px}')
       messageWindow.exec()
 
     else:

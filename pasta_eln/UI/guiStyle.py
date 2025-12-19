@@ -6,7 +6,7 @@ from PySide6.QtCore import QByteArray, Qt
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (QBoxLayout, QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox,
-                               QPushButton, QScrollArea, QSizePolicy, QSplitter, QVBoxLayout, QWidget)
+                               QPushButton, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QVBoxLayout, QWidget)
 from ..textTools.handleDictionaries import dict2ul
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                   # spaces: padding and margin
@@ -236,14 +236,25 @@ class ScrollMessageBox(QMessageBox):
       self.setStyleSheet('QScrollArea{min-width:300 px; min-height: 400px}')
     else:
       self.setStyleSheet(style)
-    scroll = QScrollArea(self)
-    scroll.setWidgetResizable(True)
-    self.content = QLabel()
-    self.content.setWordWrap(True)
-    self.content.setText(cssStyle+dict2ul(content))
-    self.content.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-    scroll.setWidget(self.content)
-    self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount())                       # type: ignore
+    self.scrollAreas = []
+    self.labels = []
+    for key, value in content.items():
+      scroll = QScrollArea(self)
+      scroll.setWidgetResizable(True)
+      label = QLabel()
+      label.setWordWrap(True)
+      label.setText(cssStyle+dict2ul(value))
+      label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+      scroll.setWidget(label)
+      self.scrollAreas.append(scroll)
+      self.labels.append(label)
+    if len(content)==1:
+      self.layout().addWidget(self.scrollAreas[0], 0, 0, 1, self.layout().columnCount())                     # type: ignore
+    else:
+      self.tabW = QTabWidget(self)
+      for idx, key in enumerate(content):
+        self.tabW.addTab(self.scrollAreas[idx], key)
+      self.layout().addWidget(self.tabW, 0, 0, 1, self.layout().columnCount())                               # type: ignore
 
 
 def widgetAndLayout(direction:str='V', parentLayout:Optional[Union[QLayout,QSplitter]]=None, spacing:str='0', left:str='0',
