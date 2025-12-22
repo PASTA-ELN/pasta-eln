@@ -9,7 +9,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Union
 import pandas as pd
-from PySide6.QtCore import QSize, Qt, QTimer, Slot, QRect, QPoint
+from PySide6.QtCore import QSize, Qt, QTimer, Slot
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLayout, QLineEdit, QMessageBox,
                                QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget)
@@ -20,7 +20,8 @@ from ..miscTools import callAddOn, isDocID
 from ..textTools.stringChanges import markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
 from .guiCommunicate import Communicate
-from .guiStyle import IconButton, Image, Label, ScrollMessageBox, TextButton, widgetAndLayout, widgetAndLayoutForm
+from .guiStyle import (FlowLayout, IconButton, Image, Label, ScrollMessageBox, TextButton, widgetAndLayout,
+                       widgetAndLayoutForm)
 from .messageDialog import showMessage
 from .textEditor import TextEditor
 
@@ -332,8 +333,13 @@ class Form(QDialog):
           self.gradeChoices.setCurrentText(gradeTagStr)
           tagsBarMainL.addWidget(self.gradeChoices)
           Label('Tags:', '',  tagsBarMainL, style='margin-left: 20px;')
-          tagsBarSubW, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL, spacing='s', right='m', left='m')#part which shows all the tags
-          tagsBarSubW.setMaximumWidth(420)
+          tagsBarSubW = QWidget()
+          flow = FlowLayout(spacing=5)
+          flow.setContentsMargins(0, 7, 0, 0)
+          tagsBarSubW.setLayout(flow)
+          tagsBarSubW.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+          self.tagsBarSubL = flow
+          tagsBarMainL.addWidget(tagsBarSubW)
           self.otherChoices = QComboBox()                             #part/combobox that allow user to select
           self.otherChoices.setToolTip('Choose a tag or type a new one')
           self.otherChoices.setEditable(True)
@@ -346,7 +352,8 @@ class Form(QDialog):
           formL.addRow(QLabel('Rating:'), self.tagsBarMainW)
           self.allUserElements.append(('tags',''))
           self.updateTagsBar()
-          self.otherChoices.currentIndexChanged.connect(self.addTag)#connect to slot only after all painting is done
+          self.otherChoices.currentIndexChanged.connect(self.addTag) #connect to slot only after all painting is done
+
         elif key in ['.comment', '.content']:
           key = key[1:]
           labelW, labelL = widgetAndLayout('V', spacing='s')
@@ -788,7 +795,6 @@ class Form(QDialog):
     for tag in (self.doc['tags'] if 'tags' in self.doc else []):
       if not re.match(r'^_\d$', tag):
         Label(tag, 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
-    self.tagsBarSubL.addWidget(QWidget(), stretch=2)                                   #type: ignore[call-arg]
     #update choices in combobox
     tagsSet = {i for i in self.tagsAllList if i[0]!='_'}
     newChoicesList = ['']+list(tagsSet.difference([i for i in self.doc['tags'] if i[0]!='_']))

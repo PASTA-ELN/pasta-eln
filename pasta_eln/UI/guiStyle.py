@@ -2,7 +2,7 @@
 import logging
 from typing import Any, Callable, Optional, Union
 import qtawesome as qta
-from PySide6.QtCore import QByteArray, Qt
+from PySide6.QtCore import QByteArray, Qt, QRect, QPoint, QSize
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (QBoxLayout, QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox,
@@ -336,3 +336,71 @@ def widgetAndLayoutGrid(parentLayout:Optional[QLayout]=None, spacing:str='0', le
   if parentLayout is not None:
     parentLayout.addWidget(widget)
   return widget, layout
+
+
+
+class FlowLayout(QLayout):
+    """A simple flow layout that wraps widgets into multiple rows."""
+    def __init__(self, spacing=-1):
+        super().__init__(None)
+        self.itemList = []
+        if spacing >= 0:
+            self.setSpacing(spacing)
+
+    def addItem(self, item):
+        self.itemList.append(item)
+
+    def count(self):
+        return len(self.itemList)
+
+    def itemAt(self, index):
+        return self.itemList[index] if 0 <= index < len(self.itemList) else None
+
+    def takeAt(self, index):
+        return self.itemList.pop(index) if 0 <= index < len(self.itemList) else None
+
+    def expandingDirections(self):
+        return Qt.Orientations(0)
+
+    def hasHeightForWidth(self):
+        return True
+
+    def heightForWidth(self, width):
+        return self._doLayout(QRect(0, 0, width, 0), True)
+
+    def setGeometry(self, rect):
+        super().setGeometry(rect)
+        self._doLayout(rect, False)
+
+    def sizeHint(self):
+        return self.minimumSize()
+
+    def minimumSize(self):
+        size = QSize()
+        for item in self.itemList:
+            size = size.expandedTo(item.sizeHint())
+        l, t, r, b = self.getContentsMargins()
+        size += QSize(l + r, t + b)
+        return size
+
+    def _doLayout(self, rect, testOnly):
+        left, top, right, bottom = self.getContentsMargins()
+        effective = rect.adjusted(left, top, -right, -bottom)
+        x = effective.x()
+        y = effective.y()
+        lineHeight = 0
+        spacingX = self.spacing()
+        spacingY = self.spacing()
+        for item in self.itemList:
+            itemSize = item.sizeHint()
+            nextX = x + itemSize.width() + spacingX
+            if nextX - spacingX > effective.x() + effective.width() and lineHeight > 0:
+                x = effective.x()
+                y += lineHeight + spacingY
+                lineHeight = 0
+                nextX = x + itemSize.width() + spacingX
+            if not testOnly:
+                item.setGeometry(QRect(QPoint(x, y), itemSize))
+            x = nextX
+            lineHeight = max(lineHeight, itemSize.height())
+        return y + lineHeight + bottom - rect.y()
