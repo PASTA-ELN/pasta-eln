@@ -76,7 +76,7 @@ class Table(QWidget):
 
     self.visibilityBtn = TextButton('Visibility', self, [], headerL)
     visibilityMenu = QMenu(self)
-    Action(                    'Add Filter',            self, [FilterCommand.ADD_FILTER],visibilityMenu)
+    self.addFilterActn = Action('Add Filter',           self, [FilterCommand.ADD_FILTER],visibilityMenu)
     self.showHidden    = Action('Show/hide hidden ___', self, [Command.SHOW_ALL],        visibilityMenu)
     self.toggleGallery = Action('Toggle gallery view',  self, [Command.TOGGLE_GALLERY],  visibilityMenu)
     self.toggleGallery.setVisible(False)
@@ -257,8 +257,13 @@ class Table(QWidget):
       self.gallery.setVisible(True)
       self.table.setVisible(False)
       self.tagWidget.setVisible(False)
+      self.addBtn.show()
+      self.selectionBtn.show()
+      self.btnMore.show()
+      self.addFilterActn.setDisabled(False)
     elif self.docType=='_tags_':
       self.tagWidget.setVisible(True)
+      self.showHidden.setText(f'Show/hide hidden items')
       self.tagWidget.clear()
       items = []
       for tag, df in self.data.groupby(['tag']):
@@ -273,12 +278,17 @@ class Table(QWidget):
               break
           if not docTypeLabel:
             docTypeLabel = row[3]
-          child = QTreeWidgetItem([row[2], docTypeLabel, row[4], row[3], row[6]])
+          name  = row[2] + (' \U0001F441' if 'F' in row[5] else '')
+          child = QTreeWidgetItem([name, docTypeLabel, row[4], row[3], row[6]])
           item.addChild(child)
         items.append(item)
       self.tagWidget.insertTopLevelItems(0, items)
       self.table.setVisible(False)
       self.gallery.setVisible(False)
+      self.addBtn.hide()
+      self.selectionBtn.hide()
+      self.btnMore.hide()
+      self.addFilterActn.setDisabled(True)
     else:
       self.table.setModel(self.filterManager.getFinalModel())
       self.table.horizontalHeader().resizeSections(QHeaderView.ResizeMode.ResizeToContents)
@@ -288,6 +298,10 @@ class Table(QWidget):
       self.gallery.setVisible(False)
       self.tagWidget.setVisible(False)
       self.table.setVisible(True)
+      self.addBtn.show()
+      self.selectionBtn.show()
+      self.btnMore.show()
+      self.addFilterActn.setDisabled(False)
     return
 
 

@@ -815,9 +815,11 @@ class SqlLiteDB:
       results = [{'id':i[0], 'key':i[1],
                   'value':[i[2], i[3].split('/')]+list(i[4:])} for i in results if i[1] is not None]
     elif viewType=='viewIdentify' and docType=='viewTags':
-      return pd.read_sql_query('SELECT tags.tag, main.name, main.type, tags.id, branches.show, branches.stack '
-                               'FROM tags INNER JOIN main USING(id) INNER JOIN branches USING(id)',
-                               self.connection).fillna('')
+      cmd = 'SELECT tags.tag, main.name, main.type, tags.id, branches.show, branches.stack '\
+            'FROM tags INNER JOIN main USING(id) INNER JOIN branches USING(id)'
+      if not allFlag:
+        cmd += r" WHERE NOT branches.show LIKE '%F%'"
+      return pd.read_sql_query(cmd, self.connection).fillna('')
     elif viewType=='viewIdentify':
       if docType=='viewQR':
         if startKey is None:
