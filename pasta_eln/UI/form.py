@@ -9,7 +9,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Union
 import pandas as pd
-from PySide6.QtCore import QSize, Qt, QTimer, Slot
+from PySide6.QtCore import QSize, Qt, QTimer, Slot, QRect, QPoint
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLayout, QLineEdit, QMessageBox,
                                QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget)
@@ -338,7 +338,7 @@ class Form(QDialog):
           self.otherChoices.setToolTip('Choose a tag or type a new one')
           self.otherChoices.setEditable(True)
           self.otherChoices.setMinimumWidth(80)
-          self.otherChoices.setValidator(QRegularExpressionValidator('[a-zA-Z]\\w+'))
+          self.otherChoices.setValidator(QRegularExpressionValidator('[a-zA-Z]\\w{1,12}'))
           self.otherChoices.setIconSize(QSize(0,0))
           self.otherChoices.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
           self.otherChoices.setFocusPolicy(Qt.FocusPolicy.StrongFocus)

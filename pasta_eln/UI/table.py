@@ -550,6 +550,7 @@ class Table(QWidget):
     else:
       row = index.row()
       _, docID = self.itemFromRow(row)
+      docType = self.docType
 
     if docType=='x0':
       self.comm.changeProject.emit(docID, '')
