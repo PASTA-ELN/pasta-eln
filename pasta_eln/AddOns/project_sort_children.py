@@ -9,11 +9,6 @@ from pasta_eln.miscTools import getHierarchy
 description  = 'Sort children'  #short description that is shown in the menu
 reqParameter = {} #possibility for required parameters: like API-key, etc. {'API': 'text'}
 
-def printSQL(text, data):
-  data['slash_count'] = data['stack'].str.count('/')
-  min_slashes = data['slash_count'].min()
-  print(text, data[data['slash_count'] == min_slashes])
-
 
 def main(comm, hierStack, widget, parameter={}):
   """ main function: has to exist and is called by the menu
