@@ -337,7 +337,7 @@ class Form(QDialog):
           flow = FlowLayout(spacing=5)
           flow.setContentsMargins(0, 7, 0, 0)
           tagsBarSubW.setLayout(flow)
-          tagsBarSubW.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+          tagsBarSubW.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
           self.tagsBarSubL = flow
           tagsBarMainL.addWidget(tagsBarSubW)
           self.otherChoices = QComboBox()                             #part/combobox that allow user to select

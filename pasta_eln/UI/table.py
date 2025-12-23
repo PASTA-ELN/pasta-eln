@@ -263,12 +263,12 @@ class Table(QWidget):
       self.addFilterActn.setDisabled(False)
     elif self.docType=='_tags_':
       self.tagWidget.setVisible(True)
-      self.showHidden.setText(f'Show/hide hidden items')
+      self.showHidden.setText('Show/hide hidden items')
       self.tagWidget.clear()
       items = []
       for tag, df in self.data.groupby(['tag']):
         label = '\u2605'*int(tag[0][1]) if re.match(r'_\d', tag[0]) else tag[0]                          #star
-        item = QTreeWidgetItem([label])
+        itemTree = QTreeWidgetItem([label])
         for row in df.itertuples():
           docTypeLabel = ''
           for i in range(row[3].count('/')+1):
@@ -280,8 +280,8 @@ class Table(QWidget):
             docTypeLabel = row[3]
           name  = row[2] + (' \U0001F441' if 'F' in row[5] else '')
           child = QTreeWidgetItem([name, docTypeLabel, row[4], row[3], row[6]])
-          item.addChild(child)
-        items.append(item)
+          itemTree.addChild(child)
+        items.append(itemTree)
       self.tagWidget.insertTopLevelItems(0, items)
       self.table.setVisible(False)
       self.gallery.setVisible(False)
@@ -498,11 +498,11 @@ class Table(QWidget):
       index (QModelIndex): cell clicked
     """
     if isinstance(self.sender(), QTreeWidget):
-      docID = self.sender().currentItem().text(2)
+      docID = self.tagWidget.currentItem().text(2)
       if docID=='':
         return
-      docType = self.sender().currentItem().text(3)
-      projID  = self.sender().currentItem().text(4).split('/')[0]
+      docType = self.tagWidget.currentItem().text(3)
+      projID  = self.tagWidget.currentItem().text(4).split('/')[0]
     else:
       row = index.row()
       _, docID = self.itemFromRow(row)
@@ -543,10 +543,10 @@ class Table(QWidget):
       index (QModelIndex): cell clicked
     """
     if isinstance(self.sender(), QTreeWidget):
-      docID = self.sender().currentItem().text(2)
+      docID = self.tagWidget.currentItem().text(2)
       if docID=='':
         return
-      docType = self.sender().currentItem().text(3)
+      docType = self.tagWidget.currentItem().text(3)
     else:
       row = index.row()
       _, docID = self.itemFromRow(row)

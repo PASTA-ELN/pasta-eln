@@ -6,7 +6,8 @@ from PySide6.QtCore import QByteArray, Qt, QRect, QPoint, QSize
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (QBoxLayout, QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox,
-                               QPushButton, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QVBoxLayout, QWidget)
+                               QPushButton, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QVBoxLayout, QWidget,
+                               QLayoutItem)
 from ..textTools.handleDictionaries import dict2ul
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                   # spaces: padding and margin
@@ -340,67 +341,135 @@ def widgetAndLayoutGrid(parentLayout:Optional[QLayout]=None, spacing:str='0', le
 
 
 class FlowLayout(QLayout):
-    """A simple flow layout that wraps widgets into multiple rows."""
-    def __init__(self, spacing=-1):
-        super().__init__(None)
-        self.itemList = []
-        if spacing >= 0:
-            self.setSpacing(spacing)
+  """A simple flow layout that wraps widgets into multiple rows."""
+  def __init__(self, spacing:int=-1):
+    """
+    Initialize
 
-    def addItem(self, item):
-        self.itemList.append(item)
+    Args:
+      spacing (int): spacing between elements
+    """
+    super().__init__(None)
+    self.itemList:list[QLayoutItem] = []
+    if spacing >= 0:
+      self.setSpacing(spacing)
 
-    def count(self):
-        return len(self.itemList)
+  def addItem(self, item:QLayoutItem) -> None:
+    """ Add an item to the layout
 
-    def itemAt(self, index):
-        return self.itemList[index] if 0 <= index < len(self.itemList) else None
+    Args:
+      item (QLayoutItem): item to add
+    """
+    self.itemList.append(item)
 
-    def takeAt(self, index):
-        return self.itemList.pop(index) if 0 <= index < len(self.itemList) else None
+  def count(self) -> int:
+    """ Return the number of items in the layout.
+    Return:
+      int: number of items
+    """
+    return len(self.itemList)
 
-    def expandingDirections(self):
-        return Qt.Orientations(0)
+  def itemAt(self, index:int) -> QLayoutItem|None:
+    """ Return the item at the given index.
+    Args:
+      index (int): index of the item
+    Return:
+      QLayoutItem: item at index
+    """
+    return self.itemList[index] if 0 <= index < len(self.itemList) else None
 
-    def hasHeightForWidth(self):
-        return True
+  def takeAt(self, index:int) -> QLayoutItem:
+    """ Take widget at index.
+    Args:
+      index (int): index of the item
+    Return:
+      QLayoutItem: item at index
+    """
+    return self.itemList.pop(index) if 0 <= index < len(self.itemList) else QLayoutItem()
 
-    def heightForWidth(self, width):
-        return self._doLayout(QRect(0, 0, width, 0), True)
+  def expandingDirections(self) -> Qt.Orientation:
+    """ Define direction to expand into
+    Return:
+      Qt.Orientation: expand in height direction
+    """
+    return Qt.Orientations(0)                                                     # type: ignore[attr-defined]
 
-    def setGeometry(self, rect):
-        super().setGeometry(rect)
-        self._doLayout(rect, False)
+  def hasHeightForWidth(self) -> bool:
+    """ Define that height is given by width
+    Return:
+      bool: True
+    """
+    return True
 
-    def sizeHint(self):
-        return self.minimumSize()
+  def heightForWidth(self, width:int) -> int:
+    """ Return height for given width
+    Args:
+      width (int): width
+    Returns:
+      int: height
+    """
+    return self._doLayout(QRect(0, 0, width, 0), True)
 
-    def minimumSize(self):
-        size = QSize()
-        for item in self.itemList:
-            size = size.expandedTo(item.sizeHint())
-        l, t, r, b = self.getContentsMargins()
-        size += QSize(l + r, t + b)
-        return size
+  def setGeometry(self, rect:QRect) -> None:
+    """ Set geometry by giving rectangle
+    Args:
+      rect (QRect): rectangle
+    """
+    super().setGeometry(rect)
+    self._doLayout(rect, False)
 
-    def _doLayout(self, rect, testOnly):
-        left, top, right, bottom = self.getContentsMargins()
-        effective = rect.adjusted(left, top, -right, -bottom)
+  def sizeHint(self) -> QSize:
+    """ Return size hint
+    Return:
+      QSize: size hint = minimum size
+    """
+    return self.minimumSize()
+
+  def minimumSize(self) -> QSize:
+    """ Return minimum size
+    Return:
+      QSize: minimum size
+    """
+    size = QSize()
+    for item in self.itemList:
+      size = size.expandedTo(item.sizeHint())
+    l:int = 0
+    t:int = 0
+    r:int = 0
+    b:int = 0
+    l, t, r, b = self.getContentsMargins()                                                # type: ignore[misc]
+    size += QSize(l + r, t + b)
+    return size
+
+  def _doLayout(self, rect:QRect, testOnly:bool) -> int:
+    """ Calculate the layout of the widgets
+    Args:
+      rect (QRect): rectangle
+      testOnly (bool): only test if content fits
+    Return:
+      int: height of layout
+    """
+    left:int = 0
+    top:int = 0
+    right:int = 0
+    bottom:int = 0
+    left, top, right, bottom = self.getContentsMargins()                                  # type: ignore[misc]
+    effective = rect.adjusted(left, top, -right, -bottom)
+    x = effective.x()
+    y = effective.y()
+    lineHeight = 0
+    spacingX = self.spacing()
+    spacingY = self.spacing()
+    for item in self.itemList:
+      itemSize = item.sizeHint()
+      nextX = x + itemSize.width() + spacingX
+      if nextX - spacingX > effective.x() + effective.width() and lineHeight > 0:
         x = effective.x()
-        y = effective.y()
+        y += lineHeight + spacingY
         lineHeight = 0
-        spacingX = self.spacing()
-        spacingY = self.spacing()
-        for item in self.itemList:
-            itemSize = item.sizeHint()
-            nextX = x + itemSize.width() + spacingX
-            if nextX - spacingX > effective.x() + effective.width() and lineHeight > 0:
-                x = effective.x()
-                y += lineHeight + spacingY
-                lineHeight = 0
-                nextX = x + itemSize.width() + spacingX
-            if not testOnly:
-                item.setGeometry(QRect(QPoint(x, y), itemSize))
-            x = nextX
-            lineHeight = max(lineHeight, itemSize.height())
-        return y + lineHeight + bottom - rect.y()
+        nextX = x + itemSize.width() + spacingX
+      if not testOnly:
+        item.setGeometry(QRect(QPoint(x, y), itemSize))
+      x = nextX
+      lineHeight = max(lineHeight, itemSize.height())
+    return y + lineHeight + bottom - rect.y()

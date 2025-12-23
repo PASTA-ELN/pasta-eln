@@ -1,8 +1,6 @@
 """ Custom tree view on data model """
 import logging
-import os
 from enum import Enum
-from pathlib import Path
 from typing import Any
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QDropEvent, QEventPoint, QStandardItem, QStandardItemModel
@@ -204,7 +202,7 @@ class TreeView(QTreeView):
         return
       # create a list of all items
       items = [url.toLocalFile() for url in event.mimeData().urls()]
-      if not (items):
+      if not items:
         showMessage(self, 'Error', 'The files / folders you dropped are empty.')
         return
       docID = item.data()['hierStack'].split('/')[-1]

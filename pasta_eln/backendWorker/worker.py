@@ -3,7 +3,6 @@ CONNECT TO ALL THESE SIGNALS IN COMMUNICATE and UI
 """
 import json
 import logging
-import os
 import shutil
 import tempfile
 import time
