@@ -352,7 +352,7 @@ class Form(QDialog):
           formL.addRow(QLabel('Rating:'), self.tagsBarMainW)
           self.allUserElements.append(('tags',''))
           self.updateTagsBar()
-          self.otherChoices.currentIndexChanged.connect(self.addTag) #connect to slot only after all painting is done
+          self.otherChoices.currentIndexChanged.connect(self.addTag)   #connect to slot after painting is done
 
         elif key in ['.comment', '.content']:
           key = key[1:]
@@ -620,10 +620,7 @@ class Form(QDialog):
       for idx, (key, guiType) in enumerate(self.allUserElements):
         elementName = f"key_{idx}"
         valueOld = self.doc.get(key, '')
-        if '.' in key:
-          group, subItem = key.split('.')
-        else:
-          group, subItem = '', key
+        group, subItem = key.split('.') if '.' in key else '', key
         if [i['mandatory'] for i in self.dataHierarchyNode if i['class']==group and i['name']==subItem] == ['T'] and \
           getattr(self, elementName).text().strip()=='':
           print(f'**ERROR group:{group}| key:{key}| subItem:{subItem}: mandatory field is empty')

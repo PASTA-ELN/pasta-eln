@@ -221,7 +221,7 @@ class Table(QWidget):
     model.setHorizontalHeaderLabels(self.filterHeader)
     for i, j in itertools.product(range(nRows), range(nCols-2)):
       value = self.data.iloc[i,j]
-      if value in ('None','','nan'):                                                           # None, False
+      if value in ('None','','nan'):                                                             # None, False
         item = QStandardItem('-')
       elif value=='True':                                                                               # True
         item = QStandardItem('Y')
@@ -511,7 +511,7 @@ class Table(QWidget):
 
       # Check if shift is held and lastClickedRow is set
       modifiers = QApplication.keyboardModifiers()
-      if modifiers == Qt.ShiftModifier and self.lastClickedRow > -1:                # type: ignore[attr-defined]
+      if modifiers == Qt.ShiftModifier and self.lastClickedRow > -1:              # type: ignore[attr-defined]
         start = min(self.lastClickedRow, row)
         end = max(self.lastClickedRow, row)
         target_state = Qt.CheckState.Checked if self.itemFromRow(row)[0].checkState() == Qt.CheckState.Checked \
@@ -519,11 +519,11 @@ class Table(QWidget):
         for r in range(start, end + 1):
           item, _ = self.itemFromRow(r)
           item.setCheckState(target_state)
-      else:                                             # No need to toggle only the clicked row, just record it
+      else:                                           # No need to toggle only the clicked row, just record it
         self.lastClickedRow = row
 
     # Change view
-    if docType[0] == 'x':                                                      # only show items for non-folders
+    if docType[0] == 'x':                                                    # only show items for non-folders
       if docType == 'x0':
         self.comm.changeProject.emit(docID, '')
         self.comm.changeSidebar.emit(docID)

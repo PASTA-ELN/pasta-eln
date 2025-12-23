@@ -2,12 +2,12 @@
 import logging
 from typing import Any, Callable, Optional, Union
 import qtawesome as qta
-from PySide6.QtCore import QByteArray, Qt, QRect, QPoint, QSize
+from PySide6.QtCore import QByteArray, QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtWidgets import (QBoxLayout, QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu, QMessageBox,
-                               QPushButton, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QVBoxLayout, QWidget,
-                               QLayoutItem)
+from PySide6.QtWidgets import (QBoxLayout, QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QLayoutItem, QMenu,
+                               QMessageBox, QPushButton, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QVBoxLayout,
+                               QWidget)
 from ..textTools.handleDictionaries import dict2ul
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                   # spaces: padding and margin
@@ -239,7 +239,7 @@ class ScrollMessageBox(QMessageBox):
       self.setStyleSheet(style)
     self.scrollAreas = []
     self.labels = []
-    for key, value in content.items():
+    for value in content.values():
       scroll = QScrollArea(self)
       scroll.setWidgetResizable(True)
       label = QLabel()
@@ -250,12 +250,12 @@ class ScrollMessageBox(QMessageBox):
       self.scrollAreas.append(scroll)
       self.labels.append(label)
     if len(content)==1:
-      self.layout().addWidget(self.scrollAreas[0], 0, 0, 1, self.layout().columnCount())                     # type: ignore
+      self.layout().addWidget(self.scrollAreas[0], 0, 0, 1, self.layout().columnCount())        # type: ignore
     else:
       self.tabW = QTabWidget(self)
       for idx, key in enumerate(content):
         self.tabW.addTab(self.scrollAreas[idx], key)
-      self.layout().addWidget(self.tabW, 0, 0, 1, self.layout().columnCount())                               # type: ignore
+      self.layout().addWidget(self.tabW, 0, 0, 1, self.layout().columnCount())                  # type: ignore
 
 
 def widgetAndLayout(direction:str='V', parentLayout:Optional[Union[QLayout,QSplitter]]=None, spacing:str='0', left:str='0',
@@ -366,7 +366,7 @@ class FlowLayout(QLayout):
     """ Return the number of items in the layout.
     Return:
       int: number of items
-    """
+      """
     return len(self.itemList)
 
   def itemAt(self, index:int) -> QLayoutItem|None:

@@ -10,6 +10,7 @@ from ..fixedStringsJson import SORTED_KEYS, SQLiteTranslation
 from ..miscTools import isDocID
 from .stringChanges import markdownEqualizer
 
+
 def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   """ Fill the data before submission to database with common data
   - type, project, children

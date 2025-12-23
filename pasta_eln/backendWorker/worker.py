@@ -187,9 +187,8 @@ class BackendWorker(QObject):
 
     elif task is Task.EDIT_DOC      and set(data.keys())=={'doc','newProjID'}:
       # update the path, if the project changed
-      if data['newProjID'] and 'branch' in data['doc']:
-        if len(data['doc']['branch'][0]['stack'])>0 and \
-           data['doc']['branch'][0]['stack'][0]!=data['newProjID'][0]:                   #only if project changed
+      if data['newProjID'] and 'branch' in data['doc'] and len(data['doc']['branch'][0]['stack'])>0 and \
+           data['doc']['branch'][0]['stack'][0]!=data['newProjID'][0]:                #only if project changed
           if data['doc']['branch'][0]['path'] is None:
             newPath    = ''
           else:
