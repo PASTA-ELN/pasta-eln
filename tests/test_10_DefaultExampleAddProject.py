@@ -10,7 +10,7 @@ from pasta_eln.miscTools import getConfiguration
 from pasta_eln.UI.form import Form
 from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.UI.palette import Palette
-from .test_03_dragDrop import verify
+from .skip_test_03_dragDrop import verify
 
 def test_simple(qtbot, caplog):
   """
