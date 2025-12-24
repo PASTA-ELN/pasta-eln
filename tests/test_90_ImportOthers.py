@@ -34,7 +34,7 @@ def test_simple(qtbot, caplog):
   # location of data and temp
   tempDir = tempfile.gettempdir()
   allELNs = {'PASTA_ELN.eln'      : '', #no download, created by test_11_Export.py
-             'Pasta.eln'          :'PASTA/PASTA.eln',
+             #'Pasta.eln'          :'PASTA/PASTA.eln',  #TEMPORARILY COMMENT OUT BECAUSE OLD wiki-resource
              'elabFTW.eln'        :'elabftw/export.eln',
              'SampleDB.eln'       :'SampleDB/sampledb_export.eln',
              'kadi4mat_1.eln'     :'kadi4mat/collections-example.eln',

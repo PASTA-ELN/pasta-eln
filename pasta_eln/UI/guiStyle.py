@@ -433,12 +433,8 @@ class FlowLayout(QLayout):
     size = QSize()
     for item in self.itemList:
       size = size.expandedTo(item.sizeHint())
-    l:int = 0
-    t:int = 0
-    r:int = 0
-    b:int = 0
-    l, t, r, b = self.getContentsMargins()                                                # type: ignore[misc]
-    size += QSize(l + r, t + b)
+    margins:tuple[int,int,int,int] = self.getContentsMargins()                      # type: ignore[assignment]
+    size += QSize(margins[0] + margins[2], margins[1] + margins[3])
     return size
 
   def _doLayout(self, rect:QRect, testOnly:bool) -> int:
@@ -449,12 +445,8 @@ class FlowLayout(QLayout):
     Return:
       int: height of layout
     """
-    left:int = 0
-    top:int = 0
-    right:int = 0
-    bottom:int = 0
-    left, top, right, bottom = self.getContentsMargins()                                  # type: ignore[misc]
-    effective = rect.adjusted(left, top, -right, -bottom)
+    margins:tuple[int,int,int,int] = self.getContentsMargins()                      # type: ignore[assignment]
+    effective = rect.adjusted(margins[0], margins[1], -margins[2], -margins[3])
     x = effective.x()
     y = effective.y()
     lineHeight = 0
@@ -472,4 +464,4 @@ class FlowLayout(QLayout):
         item.setGeometry(QRect(QPoint(x, y), itemSize))
       x = nextX
       lineHeight = max(lineHeight, itemSize.height())
-    return y + lineHeight + bottom - rect.y()
+    return y + lineHeight + margins[3] - rect.y()
