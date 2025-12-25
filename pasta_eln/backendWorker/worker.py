@@ -275,7 +275,7 @@ class BackendWorker(QObject):
 
     elif task is Task.DROP_EXTERNAL and set(data.keys())=={'docID','items'}:
       doc = self.backend.db.getDoc(data['docID'])
-      targetFolder = Path(self.backend.cwd/doc['branch'][0]['path'])
+      targetFolder = Path(self.backend.basePath/doc['branch'][0]['path'])
       for item in data['items']:
         itemPath = Path(item)
         if itemPath.is_dir():

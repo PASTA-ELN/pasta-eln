@@ -685,6 +685,8 @@ class Form(QDialog):
       elif 'id' in self.doc:                                                          # default update on item
         self.comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':self.doc, 'newProjID':newProjID})
       else:                                                                               # create new dataset
+        if newProjID==['NONE']:
+          newProjID = []
         self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':newProjID, 'docType':self.doc['type'][0],
                                                     'doc':self.doc})
       self.doc = docBackup
