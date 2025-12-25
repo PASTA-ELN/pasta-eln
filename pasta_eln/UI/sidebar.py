@@ -39,7 +39,7 @@ class Sidebar(QWidget):
     self.btnScan:TextButton|None         = None
     self.btnDocTypes:list[IconButton]    = []                         # list of buttons to show docType tables
     self.btnUnknown:IconButton|None      = None
-    self.comm.uiRequestTable.emit('x0', '', True)
+    self.comm.changeTable.emit('x0', '')
 
 
   @Slot(pd.DataFrame, str)

@@ -70,8 +70,11 @@ class Details(QScrollArea):
     Args:
       docID (str): document-id
     """
-    self.docID = docID
-    self.comm.uiRequestDoc.emit(self.docID)
+    if docID:
+      self.docID = docID
+      self.comm.uiRequestDoc.emit(self.docID)
+    else:
+      self.hide()
 
 
   @Slot(dict)

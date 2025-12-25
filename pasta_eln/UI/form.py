@@ -128,6 +128,9 @@ class Form(QDialog):
     self.comm.uiRequestTable.emit('_tags_','', True)
     self.comm.uiRequestTable.emit('x0','', True)
 
+    # do main paint before including autosave
+    self.paint()
+
     # setup Autosave, start it and paint form
     if (Path.home()/'.pastaELN.temp').is_file():
       with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:
@@ -159,7 +162,6 @@ class Form(QDialog):
     self.checkThreadTimer.setInterval(1*60*1000)                                                       # 1 min
     self.checkThreadTimer.timeout.connect(self.autosave)
     self.checkThreadTimer.start()
-    self.paint()
 
 
   @Slot(dict)
@@ -412,13 +414,13 @@ class Form(QDialog):
             value = defaultValue[0]
             label += '' if defaultValue[1] is None or defaultValue[1]=='' else f' [{defaultValue[1]}]'
             label += '' if defaultValue[3] is None or defaultValue[3]=='' else f'&nbsp;<b><a href="{defaultValue[3]}">&uArr;</a></b>'
-          if dataHierarchyItem[0]['list']:                                                    #choice dropdown
+          if dataHierarchyItem[0]['list'] or isDocID(value):                                                    #choice dropdown
             setattr(self, elementName, QComboBox())
             if ',' in dataHierarchyItem[0]['list']:                             #dataHierarchy-defined choices
               getattr(self, elementName).addItems(dataHierarchyItem[0]['list'].split(','))
               getattr(self, elementName).setCurrentText(value)
             else:                                                                        #choice among docType
-              listDocType = dataHierarchyItem[0]['list']
+              listDocType = dataHierarchyItem[0]['list'] or dataHierarchyItem[0]['docType']
               if listDocType not in self.comboBoxDocTypeList:          # if listDocType already exists in dict
                 self.comm.uiRequestTable.emit(listDocType, '', True)
                 self.comboBoxDocTypeList[listDocType] = (getattr(self, elementName), value)

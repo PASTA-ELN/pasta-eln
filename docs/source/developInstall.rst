@@ -48,7 +48,7 @@ Reinstall / retry windows installation
   - C:\\Users\\....\\AppData\\Local\\Programs\\Python [If deleted python]
   - Pasta-Folder in Documents
 
-- remove Users\\...\\.pastaELN.json
+- remove C:\\Users\\...\\.pastaELN.json
 - remove shortcut on Windows desktop
 - **python -m pasta_eln.gui**
 

@@ -365,17 +365,19 @@ def createShortcut() -> None:
     import winshell
     from win32com.client import Dispatch
     shell = Dispatch('WScript.Shell')
-    shortcut = shell.CreateShortCut( os.path.join(winshell.desktop(), 'pastaELN.lnk') )
+    shortcut = shell.CreateShortCut(os.path.join(winshell.desktop(), 'pastaELN.lnk'))
     if env := os.environ.get('CONDA_PREFIX', ''):
-      env = env.split('\\')[-1]                                                             #just the env name
+      # create a starter .bat that activates the conda env and runs the app
+      envName = env.split('\\')[-1]  # just the env name
       user = os.getlogin()
-      batContent = f"cmd.exe /c \"C:\\Users\\{user}\\anaconda3\\Scripts\\activate {env} && python -m pasta_eln.gui\""
-      batLocation= f"C:\\Users\\{user}\\startPastaELN.bat"
+      batContent = f'cmd.exe /c "C:\\Users\\{user}\\anaconda3\\Scripts\\activate {envName} && "{sys.executable}" -m pasta_eln.gui"'
+      batLocation = f"C:\\Users\\{user}\\startPastaELN.bat"
       with open(batLocation, 'w', encoding='utf-8') as fBat:
         fBat.write(batContent)
-      shortcut.Targetpath = batLocation
+      shortcut.TargetPath = batLocation
     else:
-      shortcut.Targetpath = r'cmd.exe /c python -m pasta_eln.gui'
+      shortcut.TargetPath = str(sys.executable)
+      shortcut.Arguments = '-m pasta_eln.gui'
     shortcut.WorkingDirectory = str(Path.home())
     shortcut.IconLocation = str(Path(__file__).parent/'Resources'/'Icons'/'favicon64.ico')
     shortcut.save()
