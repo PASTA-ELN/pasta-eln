@@ -368,7 +368,7 @@ def createShortcut() -> None:
     shortcut = shell.CreateShortCut(os.path.join(winshell.desktop(), 'pastaELN.lnk'))
     if env := os.environ.get('CONDA_PREFIX', ''):
       # create a starter .bat that activates the conda env and runs the app
-      envName = env.split('\\')[-1]  # just the env name
+      envName = env.split('\\')[-1]                                                        # just the env name
       user = os.getlogin()
       batContent = f'cmd.exe /c "C:\\Users\\{user}\\anaconda3\\Scripts\\activate {envName} && "{sys.executable}" -m pasta_eln.gui"'
       batLocation = f"C:\\Users\\{user}\\startPastaELN.bat"
