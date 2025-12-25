@@ -2,7 +2,41 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.1b2...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.1...HEAD)
+
+**Fixed bugs:**
+
+- Creation of new item type jumps to a different research group [\#590](https://github.com/PASTA-ELN/pasta-eln/issues/590)
+- Re-ordering of item type key-value-pairs [\#589](https://github.com/PASTA-ELN/pasta-eln/issues/589)
+
+**Closed issues:**
+
+- Feature Request: Linking items automtatically in the same folder [\#626](https://github.com/PASTA-ELN/pasta-eln/issues/626)
+- Feature Request: Add several items by applying one extractor [\#618](https://github.com/PASTA-ELN/pasta-eln/issues/618)
+- Renaming and adding a K-V pair lead to rerunning of extractors [\#615](https://github.com/PASTA-ELN/pasta-eln/issues/615)
+- Drag&drop of images is not working [\#614](https://github.com/PASTA-ELN/pasta-eln/issues/614)
+- Order of extractions when importing several files [\#613](https://github.com/PASTA-ELN/pasta-eln/issues/613)
+- User metadata - ordering by name? By relevance? [\#611](https://github.com/PASTA-ELN/pasta-eln/issues/611)
+- Drag+Drop of a folder - Adding only files? [\#601](https://github.com/PASTA-ELN/pasta-eln/issues/601)
+- Sorting children? [\#600](https://github.com/PASTA-ELN/pasta-eln/issues/600)
+- Default data plot yields error [\#599](https://github.com/PASTA-ELN/pasta-eln/issues/599)
+- When swithing to hidden items only in table view, make sure that the details of hidden items do not remain open [\#597](https://github.com/PASTA-ELN/pasta-eln/issues/597)
+- Assigning of non-assigned item to project is not working [\#596](https://github.com/PASTA-ELN/pasta-eln/issues/596)
+- Add-On folder in a new project group [\#594](https://github.com/PASTA-ELN/pasta-eln/issues/594)
+- Visibility of project status in project view [\#593](https://github.com/PASTA-ELN/pasta-eln/issues/593)
+- Creation of new projects allows assignment of projects to other projects [\#592](https://github.com/PASTA-ELN/pasta-eln/issues/592)
+- Unexpected behaviour while deleting the folder with existing content in GUI [\#591](https://github.com/PASTA-ELN/pasta-eln/issues/591)
+- 3.2.1.b2 - key-value pairs when changing item type [\#584](https://github.com/PASTA-ELN/pasta-eln/issues/584)
+- 3.2.1b2 - Labeling of items does not work properly [\#582](https://github.com/PASTA-ELN/pasta-eln/issues/582)
+- 3.2.1b2 - Assigning "not assigned" as project does not work [\#581](https://github.com/PASTA-ELN/pasta-eln/issues/581)
+- Button visibility in pink/purple color schema [\#575](https://github.com/PASTA-ELN/pasta-eln/issues/575)
+- A large number of tags obscures the preview [\#500](https://github.com/PASTA-ELN/pasta-eln/issues/500)
+- List of tags [\#492](https://github.com/PASTA-ELN/pasta-eln/issues/492)
+- Create GUIs for history [\#348](https://github.com/PASTA-ELN/pasta-eln/issues/348)
+
+## [v3.2.1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.1) (2025-10-17)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.1b2...v3.2.1)
 
 **Closed issues:**
 
