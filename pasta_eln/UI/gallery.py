@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 from PySide6.QtCore import QByteArray, Qt, Signal, Slot
-from PySide6.QtGui import QImage, QMouseEvent, QPixmap, QStandardItemModel
+from PySide6.QtGui import QImage, QMouseEvent, QPixmap, QStandardItemModel, QIcon
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import QGridLayout, QPushButton, QScrollArea, QVBoxLayout, QWidget
 from .guiCommunicate import Communicate
@@ -78,6 +78,7 @@ class ImageGallery(QWidget):
     scrollArea.setWidget(scrollContent)
     layout.addWidget(scrollArea)
 
+
   def updateGrid(self, model:QStandardItemModel) -> None:
     """
     Args:
@@ -89,6 +90,7 @@ class ImageGallery(QWidget):
     row, col = 0, 0
     for idx in range(self.model.rowCount()):
       docID = model.itemFromIndex(model.index(idx,0)).accessibleText()
+      self.comm.uiRequestDoc.emit(docID)
       self.data[docID] = (row, col)
       col += 1
       if col >= 4:                                                                        # Assuming 4 columns
@@ -161,8 +163,8 @@ class ImageGallery(QWidget):
           if imageW.loadFromData(byteArr, format=fmt):
             pixmap = QPixmap.fromImage(imageW).scaled(IMG_SIZE,IMG_SIZE,Qt.KeepAspectRatio,Qt.SmoothTransformation)# type: ignore[attr-defined]
             button = ClickableFrame(doc['id'])
-            button.setIcon(pixmap)
-            button.setAlignment(Qt.AlignCenter)                                   # type: ignore[attr-defined]
+            button.setIcon(QIcon(pixmap))
+            button.setIconSize(pixmap.size())
             button.clicked.connect(self.imageClicked)
             button.doubleClicked.connect(self.image2Clicked)
             self.gridL.addWidget(button, row, col)

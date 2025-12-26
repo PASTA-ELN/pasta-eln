@@ -359,7 +359,7 @@ class Form(QDialog):
         elif key in ['.comment', '.content']:
           key = key[1:]
           labelW, labelL = widgetAndLayout('V', spacing='s')
-          labelL.addWidget(QLabel(key.capitalize()))
+          labelL.addWidget(QLabel(key))
           TextButton('More', self, [Command.FOCUS_AREA, key], labelL, checkable=True)
           projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
           if 'form' in projectGroup.get('addOns',{}) and projectGroup['addOns']['form']:
@@ -398,7 +398,7 @@ class Form(QDialog):
           if len(defaultValue)>0 and isinstance(defaultValue[0], str):
             setattr(self, elementName, QLineEdit(' '.join(defaultValue)))
             self.allUserElements.append((key,'LineEdit'))
-            formL.addRow(QLabel(key.capitalize()), getattr(self, elementName))
+            formL.addRow(QLabel(key), getattr(self, elementName))
           else:
             logging.info('Cannot display value of key=%s: %s. Write unknown value for docID=%s',
                          key, str(defaultValue), self.doc['id'])
@@ -407,7 +407,7 @@ class Form(QDialog):
           dataHierarchyItem = [i for i in self.dataHierarchyNode if i['class']==group and f"{i['class']}.{i['name']}"==key]
           if len(dataHierarchyItem)!=1:
             raise ValueError('more than one dataHierarchyItem')
-          label = dataHierarchyItem[0]['name'].capitalize()
+          label = dataHierarchyItem[0]['name']
           if isinstance(defaultValue, str):
             value = defaultValue
           else:                                                                                         #tuple

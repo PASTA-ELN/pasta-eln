@@ -306,10 +306,10 @@ class Details(QScrollArea):
         value = ', '.join([str(i) for i in value])
       if isinstance(value, tuple) and len(value)==4 and isDocID(value[0]):
         value = 'Cannot resolve link'
-      labelStr = f'<b>{key.capitalize()}</b>: {value}'
+      labelStr = f'{key}: {value}'
       if isinstance(value, tuple) and len(value)==4:
         k,v = tuple2html(key, value)
-        labelStr = f'{k.capitalize()}: {v}<br>'
+        labelStr = f'{k}: {v}<br>'
       if isinstance(value, dict):
         newValue = {}
         for k,v in value.items():
@@ -320,7 +320,7 @@ class Details(QScrollArea):
             newValue[k] = v[0]
           else:
             newValue[k] = v
-        labelStr = f'{cssStyleHtmlEditors}{key.capitalize()}: {dict2ul(newValue)}'
+        labelStr = f'{cssStyleHtmlEditors}{key}: {dict2ul(newValue)}'
       if layout is not None:
         label = Label(labelStr, function=lambda x,y: self.clickLink(x,y) if link else None, docID=docID)
         label.setOpenExternalLinks(True)
