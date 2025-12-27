@@ -695,7 +695,7 @@ class Form(QDialog):
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
       if command[0] in [Command.FORM_SAVE_NEXT, Command.FORM_SAVE_DUPL]:
-        for delKey in [i for i in self.doc if i in ['id'] or i.startswith('meta')]: # delete these keys
+        for delKey in [i for i in self.doc if i in ['id'] or i.startswith('meta')]:        # delete these keys
           del self.doc[delKey]
         if command[0] is Command.FORM_SAVE_NEXT:
           self.comm.changeTable.emit(self.doc['type'][0], '')

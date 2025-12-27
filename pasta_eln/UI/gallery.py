@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 from PySide6.QtCore import QByteArray, Qt, Signal, Slot
-from PySide6.QtGui import QImage, QMouseEvent, QPixmap, QStandardItemModel, QIcon
+from PySide6.QtGui import QIcon, QImage, QMouseEvent, QPixmap, QStandardItemModel
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import QGridLayout, QPushButton, QScrollArea, QVBoxLayout, QWidget
 from .guiCommunicate import Communicate
