@@ -2,7 +2,17 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.1...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.2b1...HEAD)
+
+**Closed issues:**
+
+- Feature Request: More possibilities for Key-writing [\#623](https://github.com/PASTA-ELN/pasta-eln/issues/623)
+- Capitalization of user metadata [\#610](https://github.com/PASTA-ELN/pasta-eln/issues/610)
+- Gallery View not working [\#605](https://github.com/PASTA-ELN/pasta-eln/issues/605)
+
+## [v3.2.2b1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.2b1) (2025-12-25)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.1...v3.2.2b1)
 
 **Fixed bugs:**
 
