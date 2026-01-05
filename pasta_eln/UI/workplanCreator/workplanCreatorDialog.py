@@ -1,20 +1,26 @@
+"""
+The Top level Widget of the Workplan Creator Dialog. Containing the 3 Main Widgets:
+  - LeftMainWidget: Displays list and search for choosing procedures
+  - CenterMainWidget: Displays information and fill in Sample+Parameters for chosen procedure
+  - RightMainWidget: Displays Workplan and export-button
+"""
 from PySide6.QtWidgets import QApplication, QDialog, QGridLayout, QSplitter
 
-from .centerMainWidget import CenterMainWidget
-from .leftMainWidget import LeftMainWidget
-from .rightMainWidget import RightMainWidget
-from ..guiCommunicate import Communicate
+from pasta_eln.UI.guiCommunicate import Communicate
+from pasta_eln.UI.workplanCreator.centerMainWidget import CenterMainWidget
+from pasta_eln.UI.workplanCreator.leftMainWidget import LeftMainWidget
+from pasta_eln.UI.workplanCreator.rightMainWidget import RightMainWidget
 
 
 class WorkplanCreatorDialog(QDialog):
   """
   The Top level Widget of the Workplan Creator Dialog. Containing the 3 Main Widgets:
   - LeftMainWidget: Displays list and search for choosing procedures
-  - CenterMainWidget: Displays information and fill in Sample+Paramaters for chosen procedure
+  - CenterMainWidget: Displays information and fill in Sample+Parameters for chosen procedure
   - RightMainWidget: Displays Workplan and export-button
   """
 
-  def __init__(self, comm: Communicate):
+  def __init__(self, comm: Communicate, displayWorkplan: dict = None):
     super().__init__()
 
     # Configure Backend / Storage
@@ -23,11 +29,11 @@ class WorkplanCreatorDialog(QDialog):
     # Widget that Displays list and search for choosing procedures
     self.leftMainWidget = LeftMainWidget(self.comm)
 
-    # Widget that Displays information and fill in Sample+Paramaters for chosen procedure
+    # Widget that Displays information and fill in Sample+Parameters for chosen procedure
     self.centerMainWidget = CenterMainWidget(self.comm)
 
     # Widget that Displays Workplan and export-button
-    self.rightMainWidget = RightMainWidget(self.comm)
+    self.rightMainWidget = RightMainWidget(self.comm, displayWorkplan)
 
     # splitter to resize each column
     self.splitter = QSplitter(handleWidth=3)
@@ -40,9 +46,10 @@ class WorkplanCreatorDialog(QDialog):
 
     # style
     if self.comm.projectID:
-      self.setWindowTitle("Workplan Creator - Current Project:" + self.comm.projectID)
+      self.comm.backendThread.worker.beSendDoc.connect(self._onGetProjectDoc)
+      self.comm.uiRequestDoc.emit(self.comm.projectID)
     else:
-      self.setWindowTitle("Workplan Creator - Current Project: None/All")
+      self.setWindowTitle("Workplan Creator")
     screen = QApplication.primaryScreen().availableGeometry()
     self.resize(int(screen.width() * 0.75), int(screen.height() * 0.75))
 
@@ -51,3 +58,12 @@ class WorkplanCreatorDialog(QDialog):
     self.layout.addWidget(self.splitter, 0, 0)
     self.layout.setContentsMargins(0, 0, 0, 0)
     self.setLayout(self.layout)
+
+  def _onGetProjectDoc(self, doc: dict) -> None:
+    """
+    Callback function to set the window Title
+    Args:
+      doc: Document of the current project (contains name)
+    """
+    if doc["id"] == self.comm.projectID:
+      self.setWindowTitle("Workplan Creator - Current Project: " + doc["name"])

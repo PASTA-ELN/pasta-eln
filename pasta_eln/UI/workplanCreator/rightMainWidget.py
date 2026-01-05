@@ -15,7 +15,7 @@ class RightMainWidget(QWidget):
   Widget on the right of the WorkplanCreator-Dialog. Contains a list of workplanListItems that represents the Workplan
   """
 
-  def __init__(self, comm: Communicate):
+  def __init__(self, comm: Communicate, displayWorkplan: dict = None):
     super().__init__()
     self.comm = comm
     self.storage = self.comm.storage
@@ -58,6 +58,9 @@ class RightMainWidget(QWidget):
     self.layout.addWidget(self.saveButton)
     self.setLayout(self.layout)
 
+    if displayWorkplan:
+      self.displayWorkplan(displayWorkplan)
+
   def addProcedure(self, procedureID: str, sample: str, parameters: dict[str, str], at: int = None) -> None:
     """
     Add a new workPlanListItem to the list
@@ -86,7 +89,8 @@ class RightMainWidget(QWidget):
     """
     Extracts info from the workplanItems and creates the json for saving it
     """
-    filename, ok = QInputDialog.getText(self, "Choose Workplan Name",
+    dialog = QInputDialog()
+    filename, ok = dialog.getText(self, "Choose Workplan Name",
                                         "Choose a Name for your Workplan File:",
                                         text="unnamed_workplan")
     if not ok:
@@ -118,7 +122,7 @@ class RightMainWidget(QWidget):
     """
     Highlights the WorkplanListItem in the argument and lowlights every other one
     Args:
-      listItem: The WorkplanListItem to hightlight
+      listItem: The WorkplanListItem to highlight
     """
     for i in range(self.workplanLayout.count()):
       item = self.workplanLayout.itemAt(i).widget()
@@ -126,3 +130,16 @@ class RightMainWidget(QWidget):
         item.lowlight()
     if listItem:
       listItem.highlight()
+
+  def displayWorkplan(self, workplan: dict) -> None:
+    """
+    Adds all the procedures from a given workplan-dict to the Workplan in the Creator.
+    What happens when the procedure, sample or parameters are not in Pasta? -Currently not handled
+    Args:
+      workplan: Currently a json-like dict containing the serialized Workplan
+    """
+    for procedure in workplan["procedures"]:
+      procedureID:str = procedure["procedure"]
+      sample:str = procedure["sample"]
+      parameters:dict = procedure["parameters"]
+      self.addProcedure(procedureID, sample, parameters)

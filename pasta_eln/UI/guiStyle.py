@@ -328,9 +328,9 @@ def widgetAndLayoutGrid(parentLayout:Optional[QLayout]=None, spacing:str='0', le
     parentLayout.addWidget(widget)
   return widget, layout
 
-class HSeperator(QFrame):
+class HSeparator(QFrame):
   """
-  Horizontal Seperator
+  Horizontal Separator
   """
 
   def __init__(self):

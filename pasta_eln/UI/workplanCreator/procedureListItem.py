@@ -52,5 +52,8 @@ class ProcedureListItem(QFrame):
     self.setLayout(self.layout)
 
   def mousePressEvent(self, event):
+    """
+    Override Event to register clicks
+    """
     self.clicked.emit()
     super().mousePressEvent(event)

@@ -112,6 +112,9 @@ class WorkplanListItem(QFrame):
     self.setLayout(self.layout)
 
   def mousePressEvent(self, event):
+    """
+    Override Event to simulate click and Position of potential drag start.
+    """
     if event.button() == Qt.MouseButton.LeftButton:
       self.dragStartPos = event.pos()
       self.clicked.emit()
@@ -152,6 +155,9 @@ class WorkplanListItem(QFrame):
     self.deleteLater()
 
   def mouseMoveEvent(self, event):
+    """
+    Override event to implement drag and drop
+    """
     if not event.buttons() == Qt.MouseButton.LeftButton:
       return
     if (event.pos() - self.dragStartPos).manhattanLength() < QApplication.startDragDistance():
@@ -167,9 +173,15 @@ class WorkplanListItem(QFrame):
     drag.exec(Qt.DropAction.MoveAction)
 
   def dragEnterEvent(self, event):
+    """
+    Override event to accept drops
+    """
     event.acceptProposedAction()
 
   def dragMoveEvent(self, event):
+    """
+    Override event to visualize drag and drop indicators
+    """
     midheight = self.height() // 2
     if event.position().y() < midheight:
       self.setStyleSheet(self.defaultCSS + f"""
@@ -181,9 +193,15 @@ class WorkplanListItem(QFrame):
         border-bottom-color: {self.comm.palette.getThemeColor("primary", "base")};}}""")
 
   def dragLeaveEvent(self, event):
+    """
+    Override event to remove drag and drop indicators
+    """
     self.setStyleSheet(self.defaultCSS)
 
   def dropEvent(self, event):
+    """
+    Override event to implement drag and drop
+    """
     if isinstance(event.source(), WorkplanListItem):
       droppedItem: WorkplanListItem = event.source()
     else:

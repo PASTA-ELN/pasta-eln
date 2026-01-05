@@ -31,7 +31,13 @@ class Palette:
       theme: 'dark'/'light' for the dark/light theme. Empty String ('') for update without changing the theme.
       saveTheme: Whether the theme should be changed permanently or just until theme is updated again.
     """
+    cornershape = "rounded" # rounded or sharp
     css = """
+    QDialogButtonBox {
+    min-height: 30px;
+    padding-bottom: 25px;
+    }
+    
     QLabel[inactive="true"] {
     color: grey;
     font-size: 10pt;
@@ -43,9 +49,9 @@ class Palette:
     if theme != "" and saveTheme:
       self.qtheme = theme
     if theme != "" and not saveTheme:
-      qdarktheme.setup_theme(theme, additional_qss=css)
+      qdarktheme.setup_theme(theme, additional_qss=css, corner_shape=cornershape)
     else:
-      qdarktheme.setup_theme(self.qtheme, additional_qss=css)
+      qdarktheme.setup_theme(self.qtheme, additional_qss=css, corner_shape=cornershape)
 
   def get(self, color: str, prefix: str) -> str:
     """

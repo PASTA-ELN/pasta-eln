@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QComboBox, QFormLayout, QFrame, QGridLayout, QHBox
   QScrollArea, QSizePolicy, QTextEdit, QWidget
 
 from pasta_eln.UI.guiCommunicate import Communicate
-from pasta_eln.UI.guiStyle import HSeperator, Label
+from pasta_eln.UI.guiStyle import HSeparator, Label
 from pasta_eln.UI.workplanCreator.workplanListItem import WorkplanListItem
 
 
@@ -74,8 +74,8 @@ class CenterMainWidget(QWidget):
       self.shortDesc.setMaximumHeight(100)
       self.shortDesc.setProperty("inactive", True)
       self.layout.addWidget(self.shortDesc, 2, 0)
-      # Short Seperator (Between short and long description)
-      self.layout.addWidget(HSeperator(), 3, 0)
+      # Short Separator (Between short and long description)
+      self.layout.addWidget(HSeparator(), 3, 0)
       # Long Description
       self.description.setStyleSheet(f"""
       background-color: {self.palette().window().color().name()};
@@ -169,7 +169,7 @@ class CenterMainWidget(QWidget):
     """
     Callback for when the Storage-Object has read the files for the content; This function works as an extension to
     changeActiveProcedure() and contains the changes to description and parameters.
-    Both the description and the parameters are dependend on this Storage update caused by storage.requestProcedureText.
+    Both the description and the parameters are dependent on this Storage update caused by storage.requestProcedureText.
     Args:
       docID: identifier, if the signal is meant for this function. Has to match self.currentActiveProcedureID
     """

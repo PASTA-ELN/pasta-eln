@@ -2,7 +2,7 @@
 from PySide6.QtWidgets import QLineEdit, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 from pasta_eln.UI.guiCommunicate import Communicate
-from pasta_eln.UI.guiStyle import HSeperator, Label
+from pasta_eln.UI.guiStyle import HSeparator, Label
 from pasta_eln.UI.workplanCreator.procedureListItem import ProcedureListItem
 from pasta_eln.UI.workplanCreator.workplanFunctions import Storage
 
@@ -69,16 +69,16 @@ class LeftMainWidget(QWidget):
       widget = item.widget()
       if widget:
         widget.deleteLater()
-    firstSeperator = HSeperator()
-    self.procedureListLayout.addWidget(firstSeperator)
+    firstSeparator = HSeparator()
+    self.procedureListLayout.addWidget(firstSeparator)
     for procedureID in self.procedures:
       listItem = ProcedureListItem(
         self.comm,
         procedureID)
       self.procedureListLayout.addWidget(listItem)
-      self.procedureListLayout.addWidget(HSeperator())
+      self.procedureListLayout.addWidget(HSeparator())
     if not self.procedures:
-      firstSeperator.hide()
+      firstSeparator.hide()
       self.procedureListLayout.addWidget(Label("No Procedure found in\ncurrent Project.", "h1", style="color: grey;"))
     self.procedureListLayout.addStretch(1)
 
@@ -92,9 +92,9 @@ class LeftMainWidget(QWidget):
     filterText = [word.strip() for word in filterText]
     for i in range(1, self.procedureListLayout.count() - 1, 2):
       widget = self.procedureListLayout.itemAt(i).widget()
-      seperator = self.procedureListLayout.itemAt(i + 1).widget()
+      separator = self.procedureListLayout.itemAt(i + 1).widget()
       widget.show()
-      seperator.show()
+      separator.show()
       if not isinstance(widget, ProcedureListItem):
         continue
       procedureID = widget.procedureID
@@ -103,15 +103,15 @@ class LeftMainWidget(QWidget):
         if word.startswith("#"):
           tags = self.storage.getProcedureTags(procedureID)
           widget.hide()
-          seperator.hide()
+          separator.hide()
           for tag in tags:
             if word.lower() in tag.lower():
               widget.show()
-              seperator.show()
+              separator.show()
               break
         elif word in procedureName or filterText == [""]:
           continue
         else:
           widget.hide()
-          seperator.hide()
+          separator.hide()
           break
