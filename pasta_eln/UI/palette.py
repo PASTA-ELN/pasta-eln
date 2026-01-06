@@ -31,8 +31,12 @@ class Palette:
       theme: 'dark'/'light' for the dark/light theme. Empty String ('') for update without changing the theme.
       saveTheme: Whether the theme should be changed permanently or just until theme is updated again.
     """
-    cornershape = "rounded" # rounded or sharp
+    cornershape = "sharp" # rounded or sharp
     css = """
+    QWidget {
+    border-radius: 3px;
+    }
+    
     QDialogButtonBox {
     min-height: 30px;
     padding-bottom: 25px;

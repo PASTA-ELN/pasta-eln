@@ -23,7 +23,7 @@ class ProcedureListItem(QFrame):
     self.titleLabel = Label("", "h3")
     self.tagLabel = Label("", style="color: grey;")
 
-    self.clicked.connect(lambda p=procedureID: self.comm.activeProcedureChanged.emit(p, None, None, None))
+    self.clicked.connect(lambda: self.comm.activeProcedureChangedOnlyProcID.emit(self.procedureID))
 
     # titleLabel
     self.titleLabel.setText(makeStringWrappable(self.title))
@@ -55,5 +55,6 @@ class ProcedureListItem(QFrame):
     """
     Override Event to register clicks
     """
-    self.clicked.emit()
+    if event.button() == event.button().LeftButton:
+      self.clicked.emit()
     super().mousePressEvent(event)

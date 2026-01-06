@@ -36,6 +36,7 @@ class CenterMainWidget(QWidget):
 
     # Signal
     self.comm.activeProcedureChanged.connect(self.changeActiveProcedure)
+    self.comm.activeProcedureChangedOnlyProcID.connect(self.changeActiveProcedure)
 
     # Style
     self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)  # Causes whole Widget to be fully
@@ -126,7 +127,10 @@ class CenterMainWidget(QWidget):
     self.activeProcedureID = toProcedure
     self.activeListItem = workplanListItem
     self.sample = sample
-    self.parameters = parameters
+    if self.parameters is None:
+      self.parameters = {}
+    else:
+      self.parameters = parameters
     # Long Description, content gets cut-off --> need to wait for Thread and reading of file
     self.storage.requestProcedureText(self.activeProcedureID)
     # Procedure Name
