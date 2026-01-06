@@ -3,7 +3,6 @@ CONNECT TO ALL THESE SIGNALS IN COMMUNICATE and UI
 """
 import json
 import logging
-import os
 import shutil
 import tempfile
 import time
@@ -31,7 +30,7 @@ class Task(Enum):
   ADD_DOC        = (1 , '')                                        #keys: hierStack, docType, doc
   EDIT_DOC       = (2 , '')                                        #keys: doc, newProjID
   MOVE_LEAVES    = (3 , '')                                        #keys: docID, stackOld, stackNew, childOld, childNew
-  DROP_EXTERNAL  = (4 , 'Including drag&drop files and folders:')  #keys: docID, files, folders
+  DROP_EXTERNAL  = (4 , 'Including drag&drop files and folders:')  #keys: docID, items
   HIDE_SHOW      = (5 , '')                                        #keys: docID
   SET_GUI        = (6 , '')                                        #keys: docID, gui
   DELETE_DOC     = (7 , '')                                        #keys: docID
@@ -188,15 +187,16 @@ class BackendWorker(QObject):
 
     elif task is Task.EDIT_DOC      and set(data.keys())=={'doc','newProjID'}:
       # update the path, if the project changed
-      if data['newProjID'] and 'branch' in data['doc']:
-        parentPath = self.backend.db.getDoc(data['newProjID'][0])['branch'][0]['path']
-        if data['doc']['branch'][0]['stack'][0]!=data['newProjID'][0]:                   #only if project changed
-          if data['doc']['branch'][0]['path'] is None:
-            newPath    = ''
-          else:
-            oldPath = self.backend.basePath/data['doc']['branch'][0]['path']
-            newPath = f'{parentPath}/{oldPath.name}'
-          data['doc']['branch'][0] = {'stack':[data['newProjID'][0]], 'path':newPath or None, 'child':9999, 'show':[True,True]}
+      if data['newProjID'] and 'branch' in data['doc'] and len(data['doc']['branch'][0]['stack'])>0 and \
+         data['doc']['branch'][0]['stack'][0]!=data['newProjID'][0]:                  #only if project changed
+        if data['doc']['branch'][0]['path'] is None:
+          newPath    = ''
+        else:
+          oldPath = self.backend.basePath/data['doc']['branch'][0]['path']
+          parentPath = self.backend.db.getDoc(data['newProjID'][0])['branch'][0]['path']
+          newPath = f'{parentPath}/{oldPath.name}'
+        data['doc']['branch'][0] = {'stack':[] if data['newProjID'][0]=='NONE' else [data['newProjID'][0]],
+                                    'path':newPath or None, 'child':9999, 'show':[True,True]}
       # update the doc in the database
       doc = self.backend.db.getDoc(data['doc']['id'])
       if '_projectID' in data['doc']:
@@ -273,17 +273,15 @@ class BackendWorker(QObject):
         print('Step 4: end of function')
         print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
 
-    elif task is Task.DROP_EXTERNAL and set(data.keys())=={'docID','files','folders'}:
-      commonBase   = os.path.commonpath(data['folders']+[str(i) for i in data['files']])
+    elif task is Task.DROP_EXTERNAL and set(data.keys())=={'docID','items'}:
       doc = self.backend.db.getDoc(data['docID'])
-      targetFolder = Path(self.backend.cwd/doc['branch'][0]['path'])
-      # create folders and copy files
-      for folder in data['folders']:
-        (targetFolder/(Path(folder).relative_to(commonBase))).mkdir(parents=True, exist_ok=True)
-      for fileStr in data['files']:
-        file = Path(fileStr)
-        if file.is_file():
-          shutil.copy(file, targetFolder/(file.relative_to(commonBase)))
+      targetFolder = Path(self.backend.basePath/doc['branch'][0]['path'])
+      for item in data['items']:
+        itemPath = Path(item)
+        if itemPath.is_dir():
+          shutil.copytree(itemPath, targetFolder/itemPath.name)
+        else:
+          shutil.copy(itemPath, targetFolder/itemPath.name)
       # scan
       for _ in range(2):                                                       #scan twice: convert, extract
         self.backend.scanProject(None, data['docID'], targetFolder.relative_to(self.backend.basePath))
@@ -303,7 +301,7 @@ class BackendWorker(QObject):
         if oldPath != newPath:
           oldPath.rename(newPath)
       # go through children, remove from DB
-      children = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey=data['docID'])
+      children = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(doc['branch'][0]['stack']+[data['docID']]))
       for docID in {line['id'] for line in children if line['id']!=data['docID']}:
         self.backend.db.remove(docID)
       # finish it

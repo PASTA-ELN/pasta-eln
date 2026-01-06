@@ -97,13 +97,13 @@ lookupConfig.append({
 
 
 # TIB Terminology Service configuration
-# requests.get('https://service.tib.eu/ts4tib/api/search',
+# requests.get('https://api.terminology.tib.eu/api/search',
 #              params={'q': 'force'},
 #              headers={'Caller': 'PASTA_ELN'},
 #              timeout=10)
 lookupConfig.append({
     'name': 'tib_terminology_service',
-    'url': 'https://service.tib.eu/ts4tib/api/search',
+    'url': 'https://api.terminology.tib.eu/api/search',
     'search_term_key': 'q',
     'request_params': {
       'q': 'searchTerm'

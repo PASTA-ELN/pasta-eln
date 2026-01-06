@@ -2,12 +2,12 @@
 import logging
 from typing import Any, Callable, Optional, Union
 import qtawesome as qta
-from PySide6.QtCore import QByteArray, Qt
+from PySide6.QtCore import QByteArray, QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtWidgets import (QBoxLayout, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel, QLayout, QMenu,
-                               QMessageBox,
-                               QPushButton, QScrollArea, QSizePolicy, QSplitter, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QBoxLayout, QFormLayout,QFrame, QGridLayout, QHBoxLayout, QLabel, QLayout, QLayoutItem, QMenu,
+                               QMessageBox, QPushButton, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QVBoxLayout,
+                               QWidget)
 from ..textTools.handleDictionaries import dict2ul
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                   # spaces: padding and margin
@@ -238,14 +238,25 @@ class ScrollMessageBox(QMessageBox):
       self.setStyleSheet('QScrollArea{min-width:300 px; min-height: 400px}')
     else:
       self.setStyleSheet(style)
-    scroll = QScrollArea(self)
-    scroll.setWidgetResizable(True)
-    self.content = QLabel()
-    self.content.setWordWrap(True)
-    self.content.setText(cssStyle+dict2ul(content))
-    self.content.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-    scroll.setWidget(self.content)
-    self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount())                       # type: ignore
+    self.scrollAreas = []
+    self.labels = []
+    for value in content.values():
+      scroll = QScrollArea(self)
+      scroll.setWidgetResizable(True)
+      label = QLabel()
+      label.setWordWrap(True)
+      label.setText(cssStyle+dict2ul(value))
+      label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+      scroll.setWidget(label)
+      self.scrollAreas.append(scroll)
+      self.labels.append(label)
+    if len(content)==1:
+      self.layout().addWidget(self.scrollAreas[0], 0, 0, 1, self.layout().columnCount())        # type: ignore
+    else:
+      self.tabW = QTabWidget(self)
+      for idx, key in enumerate(content):
+        self.tabW.addTab(self.scrollAreas[idx], key)
+      self.layout().addWidget(self.tabW, 0, 0, 1, self.layout().columnCount())                  # type: ignore
 
 
 def widgetAndLayout(direction:str='V', parentLayout:Optional[Union[QLayout,QSplitter]]=None, spacing:str='0', left:str='0',
@@ -338,3 +349,131 @@ class HSeparator(QFrame):
     self.setFrameShape(QFrame.Shape.HLine)
     self.setFrameShadow(QFrame.Shadow.Sunken)
     self.setLineWidth(1)
+
+
+
+class FlowLayout(QLayout):
+  """A simple flow layout that wraps widgets into multiple rows."""
+  def __init__(self, spacing:int=-1):
+    """
+    Initialize
+
+    Args:
+      spacing (int): spacing between elements
+    """
+    super().__init__(None)
+    self.itemList:list[QLayoutItem] = []
+    if spacing >= 0:
+      self.setSpacing(spacing)
+
+  def addItem(self, item:QLayoutItem) -> None:
+    """ Add an item to the layout
+
+    Args:
+      item (QLayoutItem): item to add
+    """
+    self.itemList.append(item)
+
+  def count(self) -> int:
+    """ Return the number of items in the layout.
+    Return:
+      int: number of items
+      """
+    return len(self.itemList)
+
+  def itemAt(self, index:int) -> QLayoutItem|None:
+    """ Return the item at the given index.
+    Args:
+      index (int): index of the item
+    Return:
+      QLayoutItem: item at index
+    """
+    return self.itemList[index] if 0 <= index < len(self.itemList) else None
+
+  def takeAt(self, index:int) -> QLayoutItem:
+    """ Take widget at index.
+    Args:
+      index (int): index of the item
+    Return:
+      QLayoutItem: item at index
+    """
+    return self.itemList.pop(index) if 0 <= index < len(self.itemList) else QLayoutItem()
+
+  def expandingDirections(self) -> Qt.Orientation:
+    """ Define direction to expand into
+    Return:
+      Qt.Orientation: expand in height direction
+    """
+    return Qt.Orientations(0)                                                     # type: ignore[attr-defined]
+
+  def hasHeightForWidth(self) -> bool:
+    """ Define that height is given by width
+    Return:
+      bool: True
+    """
+    return True
+
+  def heightForWidth(self, width:int) -> int:
+    """ Return height for given width
+    Args:
+      width (int): width
+    Returns:
+      int: height
+    """
+    return self._doLayout(QRect(0, 0, width, 0), True)
+
+  def setGeometry(self, rect:QRect) -> None:
+    """ Set geometry by giving rectangle
+    Args:
+      rect (QRect): rectangle
+    """
+    super().setGeometry(rect)
+    self._doLayout(rect, False)
+
+  def sizeHint(self) -> QSize:
+    """ Return size hint
+    Return:
+      QSize: size hint = minimum size
+    """
+    return self.minimumSize()
+
+  def minimumSize(self) -> QSize:
+    """ Return minimum size
+    Return:
+      QSize: minimum size
+    """
+    size = QSize()
+    for item in self.itemList:
+      size = size.expandedTo(item.sizeHint())
+    margins:tuple[int,int,int,int] = self.getContentsMargins()                      # type: ignore[assignment]
+    size += QSize(margins[0] + margins[2], margins[1] + margins[3])
+    return size
+
+  def _doLayout(self, rect:QRect, testOnly:bool) -> int:
+    """ Calculate the layout of the widgets
+    Args:
+      rect (QRect): rectangle
+      testOnly (bool): only test if content fits
+    Return:
+      int: height of layout
+    """
+    margins:tuple[int,int,int,int] = self.getContentsMargins()                      # type: ignore[assignment]
+    effective = rect.adjusted(margins[0], margins[1], -margins[2], -margins[3])
+    x = effective.x()
+    y = effective.y()
+    lineHeight = 0
+    spacingX = self.spacing()
+    spacingY = self.spacing()
+    for item in self.itemList:
+      itemSize = item.sizeHint()
+      nextX = x + itemSize.width() + spacingX
+      if nextX - spacingX > effective.x() + effective.width() and lineHeight > 0:
+        x = effective.x()
+        y += lineHeight + spacingY
+        lineHeight = 0
+        nextX = x + itemSize.width() + spacingX
+      if not testOnly:
+        item.setGeometry(QRect(QPoint(x, y), itemSize))
+      x = nextX
+      lineHeight = max(lineHeight, itemSize.height())
+    return y + lineHeight + margins[3] - rect.y()

@@ -6,7 +6,6 @@ import unittest
 import re
 from pathlib import Path
 from pasta_eln.backendWorker.backend import Backend
-from pasta_eln.miscTools import DummyProgressBar
 from pasta_eln.textTools.stringChanges import outputString
 from pasta_eln.miscTools import getConfiguration
 
@@ -25,7 +24,6 @@ class TestStringMethods(unittest.TestCase):
     """
     main function
     """
-    dummyProgressBar = DummyProgressBar()
     outputFormat = 'print'  #change to 'print' for human usage, '' for less output
     # initialization: create database, destroy on filesystem and database and then create new one
     warnings.filterwarnings('ignore', message='numpy.ufunc size changed')

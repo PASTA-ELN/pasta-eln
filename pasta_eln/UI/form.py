@@ -3,6 +3,7 @@ import copy
 import json
 import logging
 import re
+import time
 import warnings
 from enum import Enum
 from pathlib import Path
@@ -15,11 +16,12 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QLa
 from ..backendWorker.sqlite import MAIN_ORDER
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
-from ..miscTools import callAddOn
+from ..miscTools import callAddOn, isDocID
 from ..textTools.stringChanges import markdownEqualizer
 from ._contextMenu import CommandMenu, executeContextMenu, initContextMenu
 from .guiCommunicate import Communicate
-from .guiStyle import IconButton, Image, Label, ScrollMessageBox, TextButton, widgetAndLayout, widgetAndLayoutForm
+from .guiStyle import (FlowLayout, IconButton, Image, Label, ScrollMessageBox, TextButton, widgetAndLayout,
+                       widgetAndLayoutForm)
 from .messageDialog import showMessage
 from .textEditor import TextEditor
 
@@ -48,6 +50,7 @@ class Form(QDialog):
       self.allowDocTypeChange = all(docID[0] != 'x' for docID in self.allDocIDs)
     self.allowDocTypeChange = self.allowDocTypeChange and not self.flagNewDoc
     self.allowProjectChange = True
+    self.allowProjectUnassign = True
 
     # GUI elements
     if self.flagNewDoc:
@@ -125,6 +128,9 @@ class Form(QDialog):
     self.comm.uiRequestTable.emit('_tags_','', True)
     self.comm.uiRequestTable.emit('x0','', True)
 
+    # do main paint before including autosave
+    self.paint()
+
     # setup Autosave, start it and paint form
     if (Path.home()/'.pastaELN.temp').is_file():
       with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:
@@ -156,7 +162,6 @@ class Form(QDialog):
     self.checkThreadTimer.setInterval(1*60*1000)                                                       # 1 min
     self.checkThreadTimer.timeout.connect(self.autosave)
     self.checkThreadTimer.start()
-    self.paint()
 
 
   @Slot(dict)
@@ -183,6 +188,8 @@ class Form(QDialog):
         self.doc['tags'] = []
         self.doc['type'] = docType
       self.allowProjectChange = self.allowProjectChange and self.doc['type'][0]!='x0'# none of the items can be a project
+      if doc['branch'][0]['path']:
+        self.allowProjectUnassign = False
     if len(self.allDocIDs)==0:
       self.paint()
 
@@ -203,7 +210,10 @@ class Form(QDialog):
       self.updateTagsBar()
     elif docType == 'x0':
       self.projectComboBox.clear()
-      self.projectComboBox.addItem('- no change' if self.groupEdit else '- not assigned -', userData='')
+      if self.groupEdit:
+        self.projectComboBox.addItem('- no change -',    userData='')
+      elif self.allowProjectUnassign:
+        self.projectComboBox.addItem('- not assigned -', userData='NONE')
       for iDocID, iName in data[['id','name']].values.tolist():           # add all projects incl. the present
         self.projectComboBox.addItem(iName, userData=iDocID)
         stack = self.doc.get('branch',[{}])[0].get('stack', [])
@@ -282,6 +292,7 @@ class Form(QDialog):
       #mask = [allKeys.difference(i.keys()) for i in self.dataHierarchyNode]
       raise ValueError('dataHierarchyNode is not complete. Missing keys')
     # END TEMPORARY CHECK
+
     groups = {i['class'] for i in self.dataHierarchyNode}.difference({'metaVendor','metaUser'})
     # create tabs or not: depending on the number of groups
     if len(groups)>1:
@@ -297,10 +308,13 @@ class Form(QDialog):
         formW, formL = widgetAndLayoutForm(None, 's', top='m')
         self.tabW.addTab(formW, 'Home' if group=='' else group)
       self.formsL.append(formL)
-      for name in [i['name'] for i in self.dataHierarchyNode if i['class']==group]:
-        key = f"{group}.{name}"
+      dataframe = pd.DataFrame(self.dataHierarchyNode)
+      dataframe = dataframe[dataframe['class']==group]
+      dataframe = dataframe.sort_values('idx')
+      for row in dataframe.itertuples(index=False):
+        key = f"{group}.{row.name}"
         defaultValue = self.doc['qrCodes'] if key=='.qrCodes' and 'qrCodes' in self.doc else \
-                       self.doc.get(group, {}).get(name, ('','','',''))#tags, name, comment are handled separately
+                       self.doc.get(group, {}).get(row.name, ('','','',''))#tags, name, comment are handled separately
         elementName = f"key_{len(self.allUserElements)}"
 
         # case list
@@ -321,13 +335,18 @@ class Form(QDialog):
           self.gradeChoices.setCurrentText(gradeTagStr)
           tagsBarMainL.addWidget(self.gradeChoices)
           Label('Tags:', '',  tagsBarMainL, style='margin-left: 20px;')
-          tagsBarSubW, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL, spacing='s', right='m', left='m')#part which shows all the tags
-          tagsBarSubW.setMaximumWidth(420)
+          tagsBarSubW = QWidget()
+          flow = FlowLayout(spacing=5)
+          flow.setContentsMargins(0, 7, 0, 0)
+          tagsBarSubW.setLayout(flow)
+          tagsBarSubW.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+          self.tagsBarSubL = flow
+          tagsBarMainL.addWidget(tagsBarSubW)
           self.otherChoices = QComboBox()                             #part/combobox that allow user to select
           self.otherChoices.setToolTip('Choose a tag or type a new one')
           self.otherChoices.setEditable(True)
           self.otherChoices.setMinimumWidth(80)
-          self.otherChoices.setValidator(QRegularExpressionValidator('[a-zA-Z]\\w+'))
+          self.otherChoices.setValidator(QRegularExpressionValidator('[a-zA-Z]\\w{1,12}'))
           self.otherChoices.setIconSize(QSize(0,0))
           self.otherChoices.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
           self.otherChoices.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -335,11 +354,12 @@ class Form(QDialog):
           formL.addRow(QLabel('Rating:'), self.tagsBarMainW)
           self.allUserElements.append(('tags',''))
           self.updateTagsBar()
-          self.otherChoices.currentIndexChanged.connect(self.addTag)#connect to slot only after all painting is done
+          self.otherChoices.currentIndexChanged.connect(self.addTag)   #connect to slot after painting is done
+
         elif key in ['.comment', '.content']:
           key = key[1:]
           labelW, labelL = widgetAndLayout('V', spacing='s')
-          labelL.addWidget(QLabel(key.capitalize()))
+          labelL.addWidget(QLabel(key))
           TextButton('More', self, [Command.FOCUS_AREA, key], labelL, checkable=True)
           projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
           if 'form' in projectGroup.get('addOns',{}) and projectGroup['addOns']['form']:
@@ -378,7 +398,7 @@ class Form(QDialog):
           if len(defaultValue)>0 and isinstance(defaultValue[0], str):
             setattr(self, elementName, QLineEdit(' '.join(defaultValue)))
             self.allUserElements.append((key,'LineEdit'))
-            formL.addRow(QLabel(key.capitalize()), getattr(self, elementName))
+            formL.addRow(QLabel(key), getattr(self, elementName))
           else:
             logging.info('Cannot display value of key=%s: %s. Write unknown value for docID=%s',
                          key, str(defaultValue), self.doc['id'])
@@ -387,25 +407,27 @@ class Form(QDialog):
           dataHierarchyItem = [i for i in self.dataHierarchyNode if i['class']==group and f"{i['class']}.{i['name']}"==key]
           if len(dataHierarchyItem)!=1:
             raise ValueError('more than one dataHierarchyItem')
-          label = dataHierarchyItem[0]['name'].capitalize()
+          label = dataHierarchyItem[0]['name']
           if isinstance(defaultValue, str):
             value = defaultValue
           else:                                                                                         #tuple
             value = defaultValue[0]
             label += '' if defaultValue[1] is None or defaultValue[1]=='' else f' [{defaultValue[1]}]'
             label += '' if defaultValue[3] is None or defaultValue[3]=='' else f'&nbsp;<b><a href="{defaultValue[3]}">&uArr;</a></b>'
-          if dataHierarchyItem[0]['list']:                                                    #choice dropdown
+          if dataHierarchyItem[0]['list'] or isDocID(value):                                  #choice dropdown
             setattr(self, elementName, QComboBox())
             if ',' in dataHierarchyItem[0]['list']:                             #dataHierarchy-defined choices
               getattr(self, elementName).addItems(dataHierarchyItem[0]['list'].split(','))
               getattr(self, elementName).setCurrentText(value)
             else:                                                                        #choice among docType
-              listDocType = dataHierarchyItem[0]['list']
+              listDocType = dataHierarchyItem[0]['list'] or dataHierarchyItem[0]['docType']
               if listDocType not in self.comboBoxDocTypeList:          # if listDocType already exists in dict
                 self.comm.uiRequestTable.emit(listDocType, '', True)
                 self.comboBoxDocTypeList[listDocType] = (getattr(self, elementName), value)
             self.allUserElements.append((key,'ComboBox'))
-          else:                                                                                     #text area
+          elif isDocID(value):
+            continue
+          else:
             setattr(self, elementName, QLineEdit(value))
             self.allUserElements.append((key,'LineEdit'))
           formLabelW = QLabel(label)
@@ -414,8 +436,8 @@ class Form(QDialog):
           formL.addRow(formLabelW, getattr(self, elementName))
         else:
           print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(defaultValue)}")
-        if group in self.doc and name in self.doc[group]:
-          del self.doc[group][name]
+        if group in self.doc and row.name in self.doc[group]:
+          del self.doc[group][row.name]
           if not self.doc[group]:
             del self.doc[group]
       if group == '':
@@ -428,6 +450,8 @@ class Form(QDialog):
         ### add extra questions at bottom of form
         # project change
         if self.allowProjectChange:
+          if not self.allowProjectUnassign and self.projectComboBox.count()>1:
+            self.projectComboBox.removeItem(0)
           formL.addRow(QLabel('Project'), self.projectComboBox)
         # docType change
         if self.allowDocTypeChange:                                                 #if not-new and non-folder
@@ -459,8 +483,7 @@ class Form(QDialog):
       elif guiType=='ComboBox':
         valueNew = getattr(self, elementName).currentText()
         dataNew  = getattr(self, elementName).currentData()                 #if docID is stored in currentData
-        if ((dataNew is not None and re.search(r'^[a-z\-]-[a-z0-9]{32}$',dataNew) is not None)
-            or dataNew==''):
+        if ((dataNew is not None and isDocID(dataNew)) or dataNew==''):
           subContent[key] = dataNew
         elif valueNew!='- no link -' or dataNew is None:
           subContent[key] = valueNew
@@ -599,10 +622,7 @@ class Form(QDialog):
       for idx, (key, guiType) in enumerate(self.allUserElements):
         elementName = f"key_{idx}"
         valueOld = self.doc.get(key, '')
-        if '.' in key:
-          group, subItem = key.split('.')
-        else:
-          group, subItem = '', key
+        group, subItem = key.split('.') if '.' in key else '', key
         if [i['mandatory'] for i in self.dataHierarchyNode if i['class']==group and i['name']==subItem] == ['T'] and \
           getattr(self, elementName).text().strip()=='':
           print(f'**ERROR group:{group}| key:{key}| subItem:{subItem}: mandatory field is empty')
@@ -633,8 +653,7 @@ class Form(QDialog):
           if guiType=='ComboBox':
             valueNew = getattr(self, elementName).currentText()
             dataNew  = getattr(self, elementName).currentData()             #if docID is stored in currentData
-            if ((dataNew is not None and re.search(r'^[a-z\-]-[a-z0-9]{32}$',dataNew) is not None)
-                or dataNew==''):
+            if ((dataNew is not None and isDocID(dataNew)) or dataNew==''):
               self.doc[key] = dataNew
             elif valueNew!='- no link -' or dataNew is None:
               self.doc[key] = valueNew
@@ -668,13 +687,15 @@ class Form(QDialog):
       elif 'id' in self.doc:                                                          # default update on item
         self.comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':self.doc, 'newProjID':newProjID})
       else:                                                                               # create new dataset
+        if newProjID==['NONE']:
+          newProjID = []
         self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':newProjID, 'docType':self.doc['type'][0],
                                                     'doc':self.doc})
       self.doc = docBackup
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
       if command[0] in [Command.FORM_SAVE_NEXT, Command.FORM_SAVE_DUPL]:
-        for delKey in [i for i in self.doc.keys() if i in ['id'] or i.startswith('meta')]: # delete these keys
+        for delKey in [i for i in self.doc if i in ['id'] or i.startswith('meta')]:        # delete these keys
           del self.doc[delKey]
         if command[0] is Command.FORM_SAVE_NEXT:
           self.comm.changeTable.emit(self.doc['type'][0], '')
@@ -697,7 +718,25 @@ class Form(QDialog):
       doc = copy.deepcopy(self.doc)
       if 'image' in doc:
         del doc['image']
-      messageWindow = ScrollMessageBox('Details', doc, style='QScrollArea{min-width:600 px; min-height:400px}')
+      # get history
+      history = None
+      @Slot(str,pd.DataFrame)
+      def receiveData(cmd:str, df:pd.DataFrame) -> None:
+        """ Slot to receive data
+        Args:
+          cmd (str): command
+          df (pd.DataFrame): dataframe
+        """
+        nonlocal history
+        history = {i[1]:i[2] for i in df.itertuples()}
+      self.comm.backendThread.worker.beSendSQL.connect(receiveData)
+      docID = self.doc['id']
+      sqlCmd = f"SELECT date, change FROM changes WHERE id=='{docID}'"
+      self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':sqlCmd}])
+      while history is None:
+        time.sleep(0.1)
+      messageWindow = ScrollMessageBox('Details', {'current':doc,'history':history},
+                                       style='QScrollArea{min-width:600 px; min-height:400px}')
       messageWindow.exec()
 
     else:
@@ -757,7 +796,6 @@ class Form(QDialog):
     for tag in (self.doc['tags'] if 'tags' in self.doc else []):
       if not re.match(r'^_\d$', tag):
         Label(tag, 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
-    self.tagsBarSubL.addWidget(QWidget(), stretch=2)                                   #type: ignore[call-arg]
     #update choices in combobox
     tagsSet = {i for i in self.tagsAllList if i[0]!='_'}
     newChoicesList = ['']+list(tagsSet.difference([i for i in self.doc['tags'] if i[0]!='_']))

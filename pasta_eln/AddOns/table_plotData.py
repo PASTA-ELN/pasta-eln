@@ -9,7 +9,7 @@ import pandas as pd
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLineEdit, QTableWidget, QTableWidgetItem
-from pasta_eln.miscTools import MplCanvas, callDataExtractor, getDoc, isFloat
+from pasta_eln.miscTools import MplCanvas, callDataExtractor, isFloat
 from pasta_eln.UI.guiStyle import Label, space, widgetAndLayout
 
 # The following two variables are mandatory

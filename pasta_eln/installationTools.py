@@ -287,8 +287,9 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     callbackPercent(21)
 
   backend.addData('measurement', {
-    'name'   :'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
-    'comment':'- Remote image from wikipedia. Used for testing and reference\n- This item links to a procedure that was used for its creation.'
+    #'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
+    'name'   :'https://download.samplelib.com/jpeg/sample-clouds-400x300.jpg',\
+    'comment':'- Remote image from samplelib. Used for testing and reference\n- This item links to a procedure that was used for its creation.'
               '\n- One can link to samples, etc. to create complex metadata\n- This item also has a rating', 'tags':['_3'],
     '.workflow/procedure':procedureID })
   if callbackPercent is not None:
@@ -364,17 +365,19 @@ def createShortcut() -> None:
     import winshell
     from win32com.client import Dispatch
     shell = Dispatch('WScript.Shell')
-    shortcut = shell.CreateShortCut( os.path.join(winshell.desktop(), 'pastaELN.lnk') )
+    shortcut = shell.CreateShortCut(os.path.join(winshell.desktop(), 'pastaELN.lnk'))
     if env := os.environ.get('CONDA_PREFIX', ''):
-      env = env.split('\\')[-1]                                                             #just the env name
+      # create a starter .bat that activates the conda env and runs the app
+      envName = env.split('\\')[-1]                                                        # just the env name
       user = os.getlogin()
-      batContent = f"cmd.exe /c \"C:\\Users\\{user}\\anaconda3\\Scripts\\activate {env} && python -m pasta_eln.gui\""
-      batLocation= f"C:\\Users\\{user}\\startPastaELN.bat"
+      batContent = f'cmd.exe /c "C:\\Users\\{user}\\anaconda3\\Scripts\\activate {envName} && "{sys.executable}" -m pasta_eln.gui"'
+      batLocation = f"C:\\Users\\{user}\\startPastaELN.bat"
       with open(batLocation, 'w', encoding='utf-8') as fBat:
         fBat.write(batContent)
-      shortcut.Targetpath = batLocation
+      shortcut.TargetPath = batLocation
     else:
-      shortcut.Targetpath = r'cmd.exe /c python -m pasta_eln.gui'
+      shortcut.TargetPath = str(sys.executable)
+      shortcut.Arguments = '-m pasta_eln.gui'
     shortcut.WorkingDirectory = str(Path.home())
     shortcut.IconLocation = str(Path(__file__).parent/'Resources'/'Icons'/'favicon64.ico')
     shortcut.save()

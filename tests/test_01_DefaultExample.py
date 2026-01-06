@@ -63,7 +63,7 @@ class TestStringMethods(unittest.TestCase):
     story.odt | -
     simple.png | measurement/image
     example.tif | measurement/image
-    https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg | measurement/image
+    https://download.samplelib.com/jpeg/sample-clouds-400x300.jpg | measurement/image
     simple.csv | measurement/csv/linesAndDots
   procedure.md | workflow/procedure/markdown
   workplan.py | workflow/workplan
@@ -90,7 +90,7 @@ class TestStringMethods(unittest.TestCase):
     self.assertIn('        Sensor | nan  | Attachment that increases functionali... | Company B | d-', output)
 
     output = self.be.output('measurement')
-    self.assertIn('https://upload.wikimedia.org/wikipedi... |  _3  | - Remote image from wikipedia. Used f... |            measurement/image | Y     | nan    ', output)
+    self.assertIn('https://download.samplelib.com/jpeg/s... |  _3  | - Remote image from samplelib. Used f... |            measurement/image | Y     | nan    ', output)
     self.assertIn('simple.csv | nan  | # These .csv files use the simple con... | measurement/csv/linesAndDots | Y     | nan    |                                nan | m-', output)
     self.assertIn('simple.png | nan  | # File with two locations', output)
     self.assertIn('- The sam... |            measurement/image | Y     | nan    |                                nan | m-', output)

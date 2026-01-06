@@ -9,11 +9,10 @@ import pandas as pd
 from PySide6.QtCore import QModelIndex, Qt, Slot
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView, QMenu, QMessageBox, QTableView,
-                               QVBoxLayout, QWidget)
-
+                               QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
 from .workplanCreator.workplanCreatorDialog import WorkplanCreatorDialog
 from ..backendWorker.worker import Task
-from ..miscTools import callAddOn
+from ..miscTools import callAddOn, isDocID
 from .gallery import ImageGallery
 from .guiCommunicate import Communicate
 from .guiStyle import Action, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid
@@ -45,6 +44,7 @@ class Table(QWidget):
     self.flagGallery = False
     self.docType = 'x0'
     self.showAll= self.comm.configuration['GUI']['showHidden']=='Yes'
+    self.detailsDocID = ''
 
     ### GUI elements
     mainL = QVBoxLayout()
@@ -78,7 +78,7 @@ class Table(QWidget):
 
     self.visibilityBtn = TextButton('Visibility', self, [], headerL)
     visibilityMenu = QMenu(self)
-    Action(                    'Add Filter',            self, [FilterCommand.ADD_FILTER],visibilityMenu)
+    self.addFilterActn = Action('Add Filter',           self, [FilterCommand.ADD_FILTER],visibilityMenu)
     self.showHidden    = Action('Show/hide hidden ___', self, [Command.SHOW_ALL],        visibilityMenu)
     self.toggleGallery = Action('Toggle gallery view',  self, [Command.TOGGLE_GALLERY],  visibilityMenu)
     self.toggleGallery.setVisible(False)
@@ -116,9 +116,16 @@ class Table(QWidget):
     self.gallery = ImageGallery(self.comm)
     self.gallery.setVisible(False)
     mainL.addWidget(self.gallery)
+    self.tagWidget = QTreeWidget()
+    self.tagWidget.setColumnCount(2)
+    self.tagWidget.setHeaderLabels(['Name','Type'])
+    self.tagWidget.header().resizeSection(0, 600)
+    self.tagWidget.setVisible(False)
+    self.tagWidget.clicked.connect(self.cellClicked)
+    self.tagWidget.doubleClicked.connect(self.cell2Clicked)
+    mainL.addWidget(self.tagWidget)
     self.setLayout(mainL)
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
-    self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
 
 
   @Slot(str, str)
@@ -150,6 +157,8 @@ class Table(QWidget):
     logging.debug('got table data %s', docType)
     if docType == self.docType:
       self.data = data
+      if self.detailsDocID and self.detailsDocID not in data.id.values:
+        self.comm.changeDetails.emit('')
       self.paint()
 
 
@@ -187,52 +196,39 @@ class Table(QWidget):
       self.toggleGallery.setVisible(False)
       self.flagGallery = False
     # start tables: use data
-    if self.docType=='_tags_':
-      self.addBtn.hide()
-      self.filterHeader = ['tag','name','type']
-      self.headline.setText('TAGS')
-      self.actionChangeColums.setVisible(False)
+    self.addBtn.show()
+    if self.docType.startswith('x0'):
+      self.selectionBtn.hide()
+      self.toggleHidden.setVisible(False)
     else:
-      self.addBtn.show()
-      if self.docType.startswith('x0'):
-        self.selectionBtn.hide()
-        self.toggleHidden.setVisible(False)
-      else:
-        self.selectionBtn.show()
-        self.toggleHidden.setVisible(True)
-      self.showState.setText('(show all rows)' if self.showAll else '(hide hidden rows)')
-      docLabel = 'Unidentified'
-      if self.docType=='-':
-        self.actionChangeColums.setVisible(False)
-      else:
-        self.actionChangeColums.setVisible(True)
-        docLabel = self.comm.docTypesTitles[self.docType]['title']
-      if self.comm.projectID:
-        self.headline.setText(docLabel)
-        self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
-      else:
-        self.headline.setText(f'All {docLabel.lower()}')
-        self.showHidden.setText(f'Show/hide all hidden {docLabel.lower()}')
-      columnNames = [i.replace('metaUser.','u.') for i in self.data.columns]
-      self.filterHeader = list(columnNames)[:-2]
+      self.selectionBtn.show()
+      self.toggleHidden.setVisible(True)
+    self.showState.setText('(show all rows)' if self.showAll else '(hide hidden rows)')
+    docLabel = 'Unidentified'
+    if self.docType=='-':
+      self.actionChangeColums.setVisible(False)
+    elif self.docType!='_tags_':
+      self.actionChangeColums.setVisible(True)
+      docLabel = self.comm.docTypesTitles[self.docType]['title']
+    if self.comm.projectID:
+      self.headline.setText(docLabel)
+      self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
+    else:
+      self.headline.setText(f'All {docLabel.lower()}')
+      self.showHidden.setText(f'Show/hide all hidden {docLabel.lower()}')
+    columnNames = [i.replace('metaUser.','u.') for i in self.data.columns]
+    self.filterHeader = list(columnNames)[:-2]
     self.headerW.show()
     nRows, nCols = self.data.shape
     model = QStandardItemModel(nRows, nCols-2)
     model.setHorizontalHeaderLabels(self.filterHeader)
     for i, j in itertools.product(range(nRows), range(nCols-2)):
       value = self.data.iloc[i,j]
-      if self.docType=='_tags_':                                                                   # tags list
-        if j==0 and re.match(r'_\d', value):                                                            # star
-          item = QStandardItem('\u2605'*int(value[1]))
-        elif j==0:
-          item = QStandardItem(value)
-        else:
-          item = QStandardItem(value)
-      elif value in ('None','','nan'):                                                           # None, False
+      if value in ('None','','nan'):                                                             # None, False
         item = QStandardItem('-')
       elif value=='True':                                                                               # True
         item = QStandardItem('Y')
-      elif isinstance(value, str) and re.match(r'^[a-z\-]-[a-z0-9]{32}$',value):                        # Link
+      elif isinstance(value, str) and isDocID(value):                                                   # Link
         item = QStandardItem('oo')
       else:
         if self.filterHeader[j]=='tags':
@@ -244,7 +240,7 @@ class Table(QWidget):
         else:
           text = value
         item = QStandardItem(text)
-      if (j==0 and self.docType!='_tags_') or (self.docType=='_tags_' and j==1):
+      if j==0:
         if 'F' in self.data['show'][i]:
           item.setText(f'{item.text()}  \U0001F441')
         item.setAccessibleText(self.data['id'][i])
@@ -263,6 +259,39 @@ class Table(QWidget):
       self.gallery.updateGrid(model)
       self.gallery.setVisible(True)
       self.table.setVisible(False)
+      self.tagWidget.setVisible(False)
+      self.addBtn.show()
+      self.selectionBtn.show()
+      self.btnMore.show()
+      self.addFilterActn.setDisabled(False)
+    elif self.docType=='_tags_':
+      self.tagWidget.setVisible(True)
+      self.showHidden.setText('Show/hide hidden items')
+      self.tagWidget.clear()
+      items = []
+      for tag, df in self.data.groupby(['tag']):
+        label = '\u2605'*int(tag[0][1]) if re.match(r'_\d', tag[0]) else tag[0]                          #star
+        itemTree = QTreeWidgetItem([label])
+        for row in df.itertuples():
+          docTypeLabel = ''
+          for i in range(row[3].count('/')+1):
+            testStr = '/'.join(row[3].split('/')[:1 if i==0 else -i])
+            if testStr in self.comm.docTypesTitles:
+              docTypeLabel = self.comm.docTypesTitles[testStr]['title']
+              break
+          if not docTypeLabel:
+            docTypeLabel = row[3]
+          name  = row[2] + (' \U0001F441' if 'F' in row[5] else '')
+          child = QTreeWidgetItem([name, docTypeLabel, row[4], row[3], row[6]])
+          itemTree.addChild(child)
+        items.append(itemTree)
+      self.tagWidget.insertTopLevelItems(0, items)
+      self.table.setVisible(False)
+      self.gallery.setVisible(False)
+      self.addBtn.hide()
+      self.selectionBtn.hide()
+      self.btnMore.hide()
+      self.addFilterActn.setDisabled(True)
     else:
       self.table.setModel(self.filterManager.getFinalModel())
       self.table.horizontalHeader().resizeSections(QHeaderView.ResizeMode.ResizeToContents)
@@ -270,7 +299,12 @@ class Table(QWidget):
       self.table.sortByColumn(0, Qt.SortOrder.AscendingOrder)
       self.table.show()
       self.gallery.setVisible(False)
+      self.tagWidget.setVisible(False)
       self.table.setVisible(True)
+      self.addBtn.show()
+      self.selectionBtn.show()
+      self.btnMore.show()
+      self.addFilterActn.setDisabled(False)
     return
 
 
@@ -470,31 +504,42 @@ class Table(QWidget):
     Args:
       index (QModelIndex): cell clicked
     """
-    row = index.row()
-    _, docID = self.itemFromRow(row)
+    if isinstance(self.sender(), QTreeWidget):
+      docID = self.tagWidget.currentItem().text(2)
+      if docID=='':
+        return
+      docType = self.tagWidget.currentItem().text(3)
+      projID  = self.tagWidget.currentItem().text(4).split('/')[0]
+    else:
+      row = index.row()
+      _, docID = self.itemFromRow(row)
+      docType = self.docType
+      projID  = self.comm.projectID
 
-    # Check if shift is held and lastClickedRow is set
-    modifiers = QApplication.keyboardModifiers()
-    if modifiers == Qt.ShiftModifier and self.lastClickedRow > -1:                # type: ignore[attr-defined]
-      start = min(self.lastClickedRow, row)
-      end = max(self.lastClickedRow, row)
-      target_state = Qt.CheckState.Checked if self.itemFromRow(row)[0].checkState() == Qt.CheckState.Checked \
-                      else Qt.CheckState.Unchecked
-      for r in range(start, end + 1):
-        item, _ = self.itemFromRow(r)
-        item.setCheckState(target_state)
-    else:                                             # No need to toggle only the clicked row, just record it
-      self.lastClickedRow = row
+      # Check if shift is held and lastClickedRow is set
+      modifiers = QApplication.keyboardModifiers()
+      if modifiers == Qt.ShiftModifier and self.lastClickedRow > -1:              # type: ignore[attr-defined]
+        start = min(self.lastClickedRow, row)
+        end = max(self.lastClickedRow, row)
+        target_state = Qt.CheckState.Checked if self.itemFromRow(row)[0].checkState() == Qt.CheckState.Checked \
+                        else Qt.CheckState.Unchecked
+        for r in range(start, end + 1):
+          item, _ = self.itemFromRow(r)
+          item.setCheckState(target_state)
+      else:                                           # No need to toggle only the clicked row, just record it
+        self.lastClickedRow = row
+
     # Change view
-    if docID[0] == 'x':                                                      # only show items for non-folders
-      if self.docType == 'x0':
+    if docType[0] == 'x':                                                    # only show items for non-folders
+      if docType == 'x0':
         self.comm.changeProject.emit(docID, '')
         self.comm.changeSidebar.emit(docID)
       else:
-        self.comm.changeProject.emit(self.comm.projectID, docID)
-        self.comm.changeSidebar.emit(self.comm.projectID)
+        self.comm.changeProject.emit(projID, docID)
+        self.comm.changeSidebar.emit(projID)
     else:
       self.comm.changeDetails.emit(docID)
+      self.detailsDocID = docID
     return
 
 
@@ -505,9 +550,17 @@ class Table(QWidget):
     Args:
       index (QModelIndex): cell clicked
     """
-    row = index.row()
-    _, docID = self.itemFromRow(row)
-    if self.docType=='x0':
+    if isinstance(self.sender(), QTreeWidget):
+      docID = self.tagWidget.currentItem().text(2)
+      if docID=='':
+        return
+      docType = self.tagWidget.currentItem().text(3)
+    else:
+      row = index.row()
+      _, docID = self.itemFromRow(row)
+      docType = self.docType
+
+    if docType=='x0':
       self.comm.changeProject.emit(docID, '')
       self.comm.changeSidebar.emit(docID)
     else:

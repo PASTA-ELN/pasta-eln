@@ -43,7 +43,6 @@ class SchemeEditor(QDialog):
     self.docTypesLabels = [(k,v['title']) for k,v in self.comm.docTypesTitles.items()]
     self.closeButtons:list[IconButton] = []                                             #close buttons of tabs
     self.setWindowTitle('Item type editor')
-    self.restartAfterClose = False
 
     # GUI elements
     self.setMinimumWidth(int(np.sum(COLUMN_WIDTH))+80)
@@ -219,8 +218,7 @@ class SchemeEditor(QDialog):
       self.reject()
     elif btn.text().endswith('Save'):
       self.finishDocType()
-      if self.restartAfterClose:
-        self.comm.start()
+      self.comm.start()
       self.accept()
     return
 
@@ -322,7 +320,6 @@ class SchemeEditor(QDialog):
     """
     if docType not in [self.selectDocType.itemData(i) for i in range(self.selectDocType.count())]:
       self.selectDocType.addItem(label, docType)
-    self.restartAfterClose = True
     self.selectDocType.setCurrentText(label)
     return
 
