@@ -1,5 +1,6 @@
 """ Python Backend: all operations with the filesystem are here """
 import importlib
+import inspect
 import json
 import logging
 import os
@@ -449,7 +450,26 @@ class Backend(CLI_Mixin):
       plt.clf()
       try:
         module  = importlib.import_module(pyFile[:-3])
-        content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
+        useFunc = getattr(module, 'use', None)
+        acceptsKwargs = False
+        if useFunc:
+          try:
+            sig = inspect.signature(useFunc)
+            acceptsKwargs = any(param.kind == inspect.Parameter.VAR_KEYWORD 
+                               for param in sig.parameters.values())
+          except (ValueError, TypeError):
+            acceptsKwargs = False
+        
+        kwargs = {}
+        if acceptsKwargs:
+          itemExists = 'id' in doc and doc.get('id', '') != ''
+          if itemExists:
+            systemFields = {'id', 'type', 'name', 'comment', 'tags', 'branch', 'user', 'dateCreated', 
+                           'dateModified', 'dateSync', 'shasum', 'image', 'content', 'metaVendor', 'metaUser', 
+                           'gui', 'externalId', 'links', 'qrCodes', 'style', 'childNum'}
+            kwargs = {k: v for k, v in doc.items() if k not in systemFields}
+        
+        content = module.use(absFilePath, style={'main':'/'.join(doc['type'])}, **kwargs)
         general = content.get('general',[])
         for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','style']]:#only allow accepted keys
           del content[key]
