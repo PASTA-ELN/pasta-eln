@@ -1,5 +1,6 @@
 """ Misc functions that do not require instances """
 import importlib
+import inspect
 import json
 import logging
 import os
@@ -225,7 +226,29 @@ def callDataExtractor(docID:str, comm:Any) -> Any:
     # import module and use to get data
     try:
       module = importlib.import_module(pyFile[:-3])
-      return module.data(absFilePath, {})
+      dataFunc = getattr(module, 'data', None)
+      if dataFunc is None:
+        return None
+      
+      # Check if data function accepts kwargs
+      acceptsKwargs = False
+      try:
+        sig = inspect.signature(dataFunc)
+        acceptsKwargs = any(param.kind == inspect.Parameter.VAR_KEYWORD 
+                           for param in sig.parameters.values())
+      except (ValueError, TypeError):
+        acceptsKwargs = False
+      
+      kwargs = {}
+      if acceptsKwargs:
+        itemExists = 'id' in doc and doc.get('id', '') != ''
+        if itemExists:
+          systemFields = {'id', 'type', 'name', 'comment', 'tags', 'branch', 'user', 'dateCreated', 
+                         'dateModified', 'dateSync', 'shasum', 'image', 'content', 'metaVendor', 'metaUser', 
+                         'gui', 'externalId', 'links', 'qrCodes', 'style', 'childNum'}
+          kwargs = {k: v for k, v in doc.items() if k not in systemFields}
+      
+      return dataFunc(absFilePath, {}, **kwargs)
     except Exception as e:
       logging.warning('CallDataExtractor: %s',e)
   return None
