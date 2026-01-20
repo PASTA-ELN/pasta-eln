@@ -77,10 +77,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     hiddenText = '     \U0001F441' if self.docs.get(docID, {}).get('hidden', False) else ''
     staticText = QStaticText(f'<strong>{nameText} {hiddenText}</strong>')
     staticText.setTextWidth(docTypeOffset)
+    secondaryText = docTypeText
+    secondaryText += f" | {data['hierStack']}" if self.debugMode and len(data['hierStack'])<72 else \
+                     f" | ...{data['hierStack'][-76:]}" if self.debugMode else ''
     painter.drawStaticText(x0, y0+y, staticText)
-    painter.drawStaticText(x0+docTypeOffset, y0+y, QStaticText(docTypeText))
-    if self.debugMode:
-      painter.drawStaticText(x0+700, y0+y, QStaticText(data['hierStack']))
+    painter.drawStaticText(x0+docTypeOffset, y0+y, QStaticText(secondaryText))
     textDoc = QTextDocument()
     textDoc.setMarkdown(self.docs.get(docID, {}).get('markdown',''))
     painter.translate(QPoint(x0-3, y0+y+15))
