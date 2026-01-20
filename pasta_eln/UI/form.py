@@ -793,14 +793,14 @@ class Form(QDialog):
     for i in reversed(range(self.tagsBarSubL.count())):
       item = self.tagsBarSubL.itemAt(i)
       if item is not None: item.widget().setParent(None)
-    for tag in (self.doc['tags'] if 'tags' in self.doc else []):
+    for tag in sorted(self.doc['tags'] if 'tags' in self.doc else []):
       if not re.match(r'^_\d$', tag):
         Label(tag, 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
     #update choices in combobox
     tagsSet = {i for i in self.tagsAllList if i[0]!='_'}
     newChoicesList = ['']+list(tagsSet.difference([i for i in self.doc['tags'] if i[0]!='_']))
     self.otherChoices.clear()
-    self.otherChoices.addItems(newChoicesList)
+    self.otherChoices.addItems(sorted(newChoicesList))
     return
 
 
