@@ -451,27 +451,35 @@ class Backend(CLI_Mixin):
       try:
         module  = importlib.import_module(pyFile[:-3])
         useFunc = getattr(module, 'use', None)
-        acceptsKwargs = False
+        takesExtractorParams = False
         if useFunc:
           try:
             sig = inspect.signature(useFunc)
-            acceptsKwargs = any(param.kind == inspect.Parameter.VAR_KEYWORD 
-                               for param in sig.parameters.values())
+            takesExtractorParams = 'extractor_parameters' in sig.parameters
           except (ValueError, TypeError):
-            acceptsKwargs = False
-        
-        kwargs = {}
-        if acceptsKwargs:
-          itemExists = 'id' in doc and doc.get('id', '') != ''
-          if itemExists:
-            systemFields = {'id', 'type', 'name', 'comment', 'tags', 'branch', 'user', 'dateCreated', 
-                           'dateModified', 'dateSync', 'shasum', 'image', 'content', 'metaVendor', 'metaUser', 
-                           'gui', 'externalId', 'links', 'qrCodes', 'style', 'childNum'}
-            kwargs = {k: v for k, v in doc.items() if k not in systemFields}
-        
-        content = module.use(absFilePath, style={'main':'/'.join(doc['type'])}, **kwargs)
+            takesExtractorParams = False
+
+        # Normalize extractor_parameters in doc to simple values (no 4-tuples)
+        extractor_params_clean:dict[str,Any] = {}
+        if 'extractor_parameters' in doc:
+          extractor_params = doc.get('extractor_parameters', {})
+          if isinstance(extractor_params, dict):
+            for key, value in extractor_params.items():
+              if isinstance(value, tuple) and value:
+                extractor_params_clean[key] = value[0]
+              else:
+                extractor_params_clean[key] = value
+            # Update doc with normalized values for persistence
+            doc['extractor_parameters'] = extractor_params_clean
+
+        # Call extractor: pass extractor_parameters only if the function declares it
+        if takesExtractorParams and extractor_params_clean:
+          content = module.use(absFilePath, style={'main':'/'.join(doc['type'])},
+                               extractor_parameters=extractor_params_clean)
+        else:
+          content = module.use(absFilePath, style={'main':'/'.join(doc['type'])})
         general = content.get('general',[])
-        for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','style']]:#only allow accepted keys
+        for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','style','extractor_parameters']]:#only allow accepted keys
           del content[key]
         doc |= content
         for item in general:
@@ -492,6 +500,20 @@ class Backend(CLI_Mixin):
             for item in doc[meta]:
               if not (isinstance(item, dict) and 'key' in item and 'value' in item and 'unit' in item):
                 logging.error('Complicated extractor return wrong', exc_info=True)
+
+        # Ensure extractor_parameters (if present) are JSON-serializable simple values
+        if 'extractor_parameters' in doc:
+          if isinstance(doc['extractor_parameters'], dict):
+            for paramKey, paramVal in doc['extractor_parameters'].items():
+              if isinstance(paramVal, tuple):
+                doc['extractor_parameters'][paramKey] = list(paramVal)
+              try:
+                _ = json.dumps(paramVal)
+              except (ValueError, TypeError):
+                doc['extractor_parameters'][paramKey] = str(paramVal)
+                logging.warning('stringified  extractor_parameters %s', paramKey)
+          else:
+            logging.error('extractor_parameters must be a dict, got %s', type(doc['extractor_parameters']).__name__, exc_info=True)
         if doc['style']['main'].startswith(doc['type'][0]):
           doc['type']     = doc['style']['main'].split('/')
         else:

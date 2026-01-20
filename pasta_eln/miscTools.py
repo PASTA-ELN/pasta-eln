@@ -229,26 +229,32 @@ def callDataExtractor(docID:str, comm:Any) -> Any:
       dataFunc = getattr(module, 'data', None)
       if dataFunc is None:
         return None
-      
-      # Check if data function accepts kwargs
-      acceptsKwargs = False
+
+      # Check if data function explicitly accepts extractor_parameters
+      takesExtractorParams = False
       try:
         sig = inspect.signature(dataFunc)
-        acceptsKwargs = any(param.kind == inspect.Parameter.VAR_KEYWORD 
-                           for param in sig.parameters.values())
+        takesExtractorParams = 'extractor_parameters' in sig.parameters
       except (ValueError, TypeError):
-        acceptsKwargs = False
-      
-      kwargs = {}
-      if acceptsKwargs:
-        itemExists = 'id' in doc and doc.get('id', '') != ''
-        if itemExists:
-          systemFields = {'id', 'type', 'name', 'comment', 'tags', 'branch', 'user', 'dateCreated', 
-                         'dateModified', 'dateSync', 'shasum', 'image', 'content', 'metaVendor', 'metaUser', 
-                         'gui', 'externalId', 'links', 'qrCodes', 'style', 'childNum'}
-          kwargs = {k: v for k, v in doc.items() if k not in systemFields}
-      
-      return dataFunc(absFilePath, {}, **kwargs)
+        takesExtractorParams = False
+
+      # Only work with extractor_parameters if the function declares it
+      extractor_params_clean:dict[str,Any] = {}
+      if takesExtractorParams and 'extractor_parameters' in doc:
+        extractor_params = doc.get('extractor_parameters', {})
+        if isinstance(extractor_params, dict):
+          for key, value in extractor_params.items():
+            if isinstance(value, tuple) and value:
+              extractor_params_clean[key] = value[0]
+            else:
+              extractor_params_clean[key] = value
+          # Update doc with normalized values for persistence
+          doc['extractor_parameters'] = extractor_params_clean
+
+      # Call data extractor: pass extractor_parameters only if the function declares it
+      if takesExtractorParams and extractor_params_clean:
+        return dataFunc(absFilePath, {}, extractor_parameters=extractor_params_clean)
+      return dataFunc(absFilePath, {})
     except Exception as e:
       logging.warning('CallDataExtractor: %s',e)
   return None

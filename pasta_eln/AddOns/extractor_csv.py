@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 
 
-def use(filePath, style={'main':''}, saveFileName=None):
+def use(filePath, style={'main':''}, saveFileName=None, extractor_parameters=None):
   """
   Args:
     filePath (Path): full path file name
@@ -24,10 +24,30 @@ def use(filePath, style={'main':''}, saveFileName=None):
                      main is / separated hierarchical elements parent->child
                      can contain more elements
     saveFileName (string): if given, save the image to this file-name
+    extractor_parameters (dict | None): parameters passed from the application,
+            e.g. {'xlabel': 'Time [s]', 'ylabel': 'Value [m]'}
   Returns:
     dict: containing image, metaVendor, metaUser, style
   """
+  ###########################################################################
+  # Extractor parameters: initialization and normalization
+  ###########################################################################
   maxLength = 200  #max. number of rows to not cause performance issues
+  extractor_parameters = extractor_parameters or {}
+  # labels: read directly from extractor_parameters dict, apply defaults and normalize
+  xlabel = extractor_parameters.get('xlabel', 'time [sec]')
+  if isinstance(xlabel, tuple) and xlabel:
+    xlabel = xlabel[0]
+  ylabel = extractor_parameters.get('ylabel', 'value [m]')
+  if isinstance(ylabel, tuple) and ylabel:
+    ylabel = ylabel[0]
+  # ensure defaults are written back so callers see the effective parameters
+  extractor_parameters['xlabel'] = xlabel
+  extractor_parameters['ylabel'] = ylabel
+
+  ###########################################################################
+  # CSV parsing and data extraction
+  ###########################################################################
   # this part identifies how the csv-file is formatted: whether it uses , or ; to separate; you can skip this part when learning extractors
   # producer = 'comma separated'
   delimiter = ','
@@ -67,8 +87,8 @@ def use(filePath, style={'main':''}, saveFileName=None):
     except Exception:
       plt.plot([0,1], [0,1],'o-')
       plt.text(0.5, 0.5, 'ERROR: unclear csv file')
-  plt.xlabel('time [sec]')
-  plt.ylabel('value [m]')                                                    # the units are an example for this tutorial and should be changed
+  plt.xlabel(xlabel)
+  plt.ylabel(ylabel)                                                    # the units are an example for this tutorial and should be changed
   try:
     if data.shape[0]>1:
       sampleFrequency = 1.0 / (data.iloc[1,0]-data.iloc[0,0])                  # a simple equation to calculate the sample frequency
@@ -91,7 +111,13 @@ def use(filePath, style={'main':''}, saveFileName=None):
   image = figfile.getvalue()
 
   # return everything
-  return {'image':image, 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser}
+  return {
+    'image': image,
+    'style': style,
+    'metaVendor': metaVendor,
+    'metaUser': metaUser,
+    'extractor_parameters': extractor_parameters,
+  }
 
 
 def data(filePath, style):
