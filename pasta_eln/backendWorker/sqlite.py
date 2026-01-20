@@ -518,8 +518,8 @@ class SqlLiteDB:
         changesDict[key] = mainOld[key]
     # save change content in database: main and changes are updated
     if set(changesDict.keys()).difference(('dateModified','client','user')):
-      changeString = ', '.join([f"{k}='{v}'" for k,v in changesDB['main'].items()])
-      self.cursor.execute(f"UPDATE main SET {changeString} WHERE id = '{docID}'")
+      if changeString:= ', '.join([f"{k}='{v}'" for k,v in changesDB['main'].items()]):
+        self.cursor.execute(f"UPDATE main SET {changeString} WHERE id = '{docID}'")
       if 'name' not in changesDict or changesDict['name']!='new item':#don't save initial change from new item
         self.cursor.execute('INSERT INTO changes VALUES (?,?,?)', [docID, datetime.now().isoformat(), json.dumps(changesDict)])
       self.connection.commit()
