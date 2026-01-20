@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.2b1...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.2b2...HEAD)
+
+**Closed issues:**
+
+- Question/Feature request: Extractor arguments [\#633](https://github.com/PASTA-ELN/pasta-eln/issues/633)
+
+## [v3.2.2b2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.2b2) (2025-12-27)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.2b1...v3.2.2b2)
 
 **Closed issues:**
 

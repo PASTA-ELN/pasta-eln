@@ -371,12 +371,12 @@ class BackendWorker(QObject):
     elif task is Task.EXTRACTOR_RERUN and set(data.keys())=={'docIDs','recipe'}:
       for docID in data['docIDs']:
         doc = self.backend.db.getDoc(docID)
-        if data['recipe']:
-          doc['type'] = data['recipe'].split('/')
         #any path is good since the file is the same everywhere; data-changed by reference
         if doc['branch'][0]['path'] is not None:
+          if data['recipe']:
+            doc['type'] = data['recipe'].split('/')
           oldDocType = doc['type']
-          doc['type'] = ['']
+          # doc['type'] = [''] TODO WHY IS THIS HERE???
           if doc['branch'][0]['path'].startswith('http'):
             path = Path(doc['branch'][0]['path'])
           else:

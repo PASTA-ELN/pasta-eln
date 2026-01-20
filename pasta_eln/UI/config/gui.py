@@ -36,7 +36,7 @@ class ConfigurationGUI(QDialog):
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
-
+    #TODO allow users to switch of info after extractor success
 
   def closeDialog(self, btn:TextButton) -> None:
     """

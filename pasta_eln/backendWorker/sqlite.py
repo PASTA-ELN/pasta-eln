@@ -321,6 +321,8 @@ class SqlLiteDB:
       cmdDef = 'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);'
       for key,value in data.items():
         key = str(key) if isinstance(key, int) else key
+        if not value:
+          continue
         if isinstance(value, dict):
           insertMetadata(value, f'{parentKeys}{key}')
         elif key.endswith(']') and ('[') in key:
