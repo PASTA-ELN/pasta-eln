@@ -278,17 +278,22 @@ class BackendWorker(QObject):
       targetFolder = Path(self.backend.basePath/doc['branch'][0]['path'])
       for item in data['items']:
         itemPath = Path(item)
+        targetName = targetFolder/itemPath.name
+        idx = 1
+        while targetName.exists():
+          targetName = targetFolder/ (itemPath.stem+f'_{idx}'+itemPath.suffix)
+          idx += 1
         if itemPath.is_dir():
-          shutil.copytree(itemPath, targetFolder/itemPath.name)
+          shutil.copytree(itemPath, targetName)
         else:
-          shutil.copy(itemPath, targetFolder/itemPath.name)
+          shutil.copy(itemPath, targetName)
       # scan
       reply = ''
       for _ in range(2):                                                       #scan twice: convert, extract
         reply += self.backend.scanProject(None, data['docID'], targetFolder.relative_to(self.backend.basePath))
       msg = 'Drag-drop operation finished successfully.'
       if reply:
-        msg += f'<br><p style="color:red;">{reply}</p>'
+        msg += f' <p style="color:red;">{reply}</p>'
       self.beSendTaskReport.emit(task, msg, '', '')
 
     elif task is Task.DELETE_DOC   and  set(data.keys())=={'docID'}:
