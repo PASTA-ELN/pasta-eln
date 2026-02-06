@@ -283,9 +283,13 @@ class BackendWorker(QObject):
         else:
           shutil.copy(itemPath, targetFolder/itemPath.name)
       # scan
+      reply = ''
       for _ in range(2):                                                       #scan twice: convert, extract
-        self.backend.scanProject(None, data['docID'], targetFolder.relative_to(self.backend.basePath))
-      self.beSendTaskReport.emit(task, 'Drag-drop operation finished successfully', '', '')
+        reply += self.backend.scanProject(None, data['docID'], targetFolder.relative_to(self.backend.basePath))
+      msg = 'Drag-drop operation finished successfully.'
+      if reply:
+        msg += f'<br><p style="color:red;">{reply}</p>'
+      self.beSendTaskReport.emit(task, msg, '', '')
 
     elif task is Task.DELETE_DOC   and  set(data.keys())=={'docID'}:
       # delete doc: possibly a folder or a project or a measurement

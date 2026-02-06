@@ -298,6 +298,7 @@ class Backend(CLI_Mixin):
       ValueError: could not add new measurement to database
     """
     rerunScanTree = False
+    reply = ''
     self.hierStack = [projID]
     if projPath is None:
       pathPosix:str = self.db.getDoc(projID)['branch'][0]['path']
@@ -390,6 +391,7 @@ class Backend(CLI_Mixin):
             self.addData('', {'name':path}, hierStack)
           else:
             self.db.updateBranch(view[0]['id'], -1, 9999, hierStack, path)
+            reply = 'Create a link to existing entry instead of new entry.'
     #finish method
     self.cwd = self.basePath/projPath
     orphans = [
@@ -410,8 +412,8 @@ class Backend(CLI_Mixin):
     self.hierStack = []
     self.cwd = Path(self.basePath)
     if rerunScanTree:
-      self.scanProject(progressBar, projID, projPath)
-    return
+      reply += self.scanProject(progressBar, projID, projPath)
+    return reply
 
 
   def useExtractors(self, filePath:Path, shasum:str, doc:dict[str,Any]) -> None:
