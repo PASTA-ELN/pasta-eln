@@ -280,7 +280,7 @@ class Backend(CLI_Mixin):
     return
 
 
-  def scanProject(self, progressBar:Callable[...,None]|None, projID:str, projPath:Path|None=None) -> None:
+  def scanProject(self, progressBar:Callable[...,None]|None, projID:str, projPath:Path|None=None) -> str:
     """ Scan directory tree recursively from project/... or project/task/...
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
@@ -293,6 +293,9 @@ class Backend(CLI_Mixin):
       progressBar (func): progress bar
       projID (str): project's docID
       projPath (str): project's path from basePath; if not given, will be determined
+
+    Returns:
+      str: statement if item was found in database and link was created. Default new item added
 
     Raises:
       ValueError: could not add new measurement to database
