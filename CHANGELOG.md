@@ -38,7 +38,7 @@
 - Drag+Drop of a folder - Adding only files? [\#601](https://github.com/PASTA-ELN/pasta-eln/issues/601)
 - Sorting children? [\#600](https://github.com/PASTA-ELN/pasta-eln/issues/600)
 - Default data plot yields error [\#599](https://github.com/PASTA-ELN/pasta-eln/issues/599)
-- When swithing to hidden items only in table view, make sure that the details of hidden items do not remain open [\#597](https://github.com/PASTA-ELN/pasta-eln/issues/597)
+- When switching to hidden items only in table view, make sure that the details of hidden items do not remain open [\#597](https://github.com/PASTA-ELN/pasta-eln/issues/597)
 - Assigning of non-assigned item to project is not working [\#596](https://github.com/PASTA-ELN/pasta-eln/issues/596)
 - Add-On folder in a new project group [\#594](https://github.com/PASTA-ELN/pasta-eln/issues/594)
 - Visibility of project status in project view [\#593](https://github.com/PASTA-ELN/pasta-eln/issues/593)
