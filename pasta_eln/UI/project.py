@@ -349,7 +349,24 @@ class Project(QWidget):
     self.comm.uiRequestTask.emit(Task.MOVE_LEAVES, {'docID':docID, 'stackOld':stackOld, 'stackNew':stackNew,
                                                     'childOld':childOld, 'childNew':childNew})
     item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID]), 'childNum':childNew})
+    # def updateChildrenStacks(parentItem:QStandardItem, parentStack:list[str]) -> None:
+    #   """ recursive function to update children stacks
+    #   Args:
+    #     parentItem (QStandardItem): parent item
+    #     parentStack (list[str]): parent stack
+    #   """
+    #   for row in range(parentItem.rowCount()):
+    #     childItem = parentItem.child(row)
+    #     metaChild = childItem.data(self.META_ROLE)
+    #     if not isinstance(metaChild, dict):
+    #       continue
+    #     childId = metaChild['hierStack'].split('/')[-1]
+    #     newStack = parentStack + [childId]
+    #     childItem.setData(metaChild | {'hierStack': '/'.join(newStack), 'childNum': row}, self.META_ROLE)
+    #     updateChildrenStacks(childItem, newStack)
+    # updateChildrenStacks(item, stackNew + [docID])
     return
+
 
   def iterateTree(self, nodeHier:Node) -> QStandardItem:
     """
