@@ -445,6 +445,9 @@ class BackendWorker(QObject):
       else:
         print('**ERROR unknown task command', task)
     self.backend.db.connection.commit()
+    if  task['type']=='one' and 'UPDATE properties' in task['cmd'] and 'id' in task['cmd'] :#send from form during key-change
+      docID = task['cmd'].split("id='")[1].split("'")[0]
+      self.beSendDoc.emit(self.backend.db.getDoc(docID))                        # send updated doc back to GUI
 
 
   def exit(self) -> None:

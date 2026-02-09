@@ -12,7 +12,8 @@ import pandas as pd
 from PySide6.QtCore import QSize, Qt, QTimer, Slot
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLayout, QLineEdit, QMessageBox,
-                               QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget)
+                               QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget,
+                               QInputDialog)
 from ..backendWorker.sqlite import MAIN_ORDER
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
@@ -271,9 +272,10 @@ class Form(QDialog):
 
     # create data hierarchy node: data structure
     if self.doc['type'][0] in self.comm.docTypesTitles:
-      rawData = self.comm.dataHierarchyNodes[self.doc['type'][0]]
-      self.dataHierarchyNode = copy.deepcopy([dict(i) for i in rawData])
+      self.dataHierarchyNodeRaw = self.comm.dataHierarchyNodes[self.doc['type'][0]]
+      self.dataHierarchyNode = copy.deepcopy([dict(i) for i in self.dataHierarchyNodeRaw])
     else:
+      self.dataHierarchyNodeRaw = copy.deepcopy(defaultDataHierarchyNode)
       self.dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
     keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in self.dataHierarchyNode]
     keysDocOrg = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k])] if isinstance(self.doc[k], dict) else [f'.{k}']
@@ -431,6 +433,8 @@ class Form(QDialog):
             setattr(self, elementName, QLineEdit(value))
             self.allUserElements.append((key,'LineEdit'))
           formLabelW = QLabel(label)
+          if key not in [f"{i['class']}.{i['name']}" for i in self.dataHierarchyNodeRaw]:
+            formLabelW.mousePressEvent = lambda event, label=formLabelW, labelKey=key: self.formLabelClicked(label, labelKey, event)
           formLabelW.setOpenExternalLinks(True)
           formLabelW.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse)
           formL.addRow(formLabelW, getattr(self, elementName))
@@ -464,6 +468,19 @@ class Form(QDialog):
           formL.addRow(QLabel('Item type'), self.docTypeComboBox)
     if [i for i in self.doc if i.startswith('_') and i not in ['_projectID']]:
       logging.error('There should not be "_" in a doc: %s', str(self.doc), exc_info=True)
+
+
+  def formLabelClicked(self, label: QLabel, key: str, event) -> None:
+    if event.button() == Qt.MouseButton.LeftButton and len(self.allDocIDsCopy)==1:
+      warning = 'Enter new key: <br>IF YOU CONTINUE<ol><li>THE FORM WILL CLOSE AND HAS TO REOPENED. <li>ALL CHANGES WILL BE LOST)</ol>'
+      res, ok = QInputDialog.getText(self, "Edit key", warning)
+      if ok:
+        keyNew = f"{key.split('.')[0]}.{res.strip()}"
+        cmd = f"UPDATE properties SET key='{keyNew}' WHERE key='{key}' AND id='{self.allDocIDsCopy[0]}'"
+        self.comm.uiSendSQL.emit([{'type':'one', 'cmd':cmd}])
+        self.accept()                                                                                   #close
+        self.close()
+    QLabel.mousePressEvent(label, event)
 
 
   def autosave(self) -> None:
