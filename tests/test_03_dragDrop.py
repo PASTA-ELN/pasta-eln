@@ -63,7 +63,7 @@ def test_simple(qtbot, caplog):
                           window.tree.model().itemFromIndex(i).data()['hierStack'].split('/')[-1] != sourceItem.data()['hierStack'].split('/')[-1] ]
     docID = sourceItem.data()['hierStack'].split('/')[-1]
     validChoices = [item for item in validChoices if
-                   not any([item.child(row).data()['hierStack'].split('/')[-1] == docID for row in range(item.rowCount()) if item.child(row) is not None])]
+                   not any([item.child(row).data()['hierStack'].split('/')[-1] == docID for row in range(item.rowCount()) if item.child(row) is not None and item.child(row).data() is not None])]
     targetParent     = validChoices[choices.pop(0)%len(validChoices)]
     validChoices     = range(targetParent.rowCount()+1)
     targetChildRow   = validChoices[choices.pop(0)%len(validChoices)]
