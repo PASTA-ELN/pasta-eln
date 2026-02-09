@@ -211,8 +211,6 @@ class BackendWorker(QObject):
       verbose = False                                                                 # Convenient for testing
       doc = self.backend.db.getDoc(data['docID'])
       branchOldList= [i for i in doc['branch'] if i['stack']==data['stackOld']]
-      # if len(branchOldList)!=1:
-      #   branchOldList = [i for i in branchOldList if i['child'] == data['childOld']]
       if len(branchOldList)!=1:
         logging.error('Cannot move leaves: %s has no branch with stack %s', doc['id'], data['stackOld'], exc_info=True)
         return
