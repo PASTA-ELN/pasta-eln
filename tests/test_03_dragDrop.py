@@ -37,6 +37,7 @@ def test_simple(qtbot, caplog):
   choices = random.choices(range(100), k=16)
   choices = [75,29,33,0,35,50,77,29,57,56,36,51,29,29,5,15]
   print(f'Current choice: [{",".join([str(i) for i in choices])}]')
+  verify(comm, projID, -1)
   # start iteration
   for epoch in range(4):
     print(f'{"*"*40}\nStart drag-drop {epoch}\n{"*"*40}')
