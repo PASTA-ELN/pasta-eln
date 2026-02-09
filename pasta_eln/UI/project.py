@@ -197,9 +197,6 @@ class Project(QWidget):
       self.btnAddSubfolder.setVisible(False)
     self.tree.expanded.connect(lambda index: self.actionExpandCollapse(index, True))
     self.tree.collapsed.connect(lambda index: self.actionExpandCollapse(index, False))
-    #TODO NEW
-    # self.model.rowsInserted.connect(self.modelRowsInserted)
-    #TODO NEW
     if self.docIDHighlight:
       self.tree.scrollToDoc(self.docIDHighlight)
       self.docIDHighlight = ''                                                         # reset after scrolling
@@ -352,38 +349,8 @@ class Project(QWidget):
     self.comm.uiRequestTask.emit(Task.MOVE_LEAVES, {'docID':docID, 'stackOld':stackOld, 'stackNew':stackNew,
                                                     'childOld':childOld, 'childNew':childNew})
     item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID]), 'childNum':childNew})
-    #TODO NEW
-
-    # def updateChildrenStacks(parentItem:QStandardItem, parentStack:list[str]) -> None:
-    #   """recursive function to update children stacks in the project view
-    #   - backend does it correctly anyhow
-    #   Args:
-    #     parentItem (QStandardItem): parent item
-    #     parentStack (list[str]): parent stack
-    #   """
-    #   for row in range(parentItem.rowCount()):
-    #     childItem = parentItem.child(row)
-    #     metaChild = childItem.data(self.META_ROLE)
-    #     if not isinstance(metaChild, dict):
-    #       continue
-    #     childId = metaChild['hierStack'].split('/')[-1]
-    #     newStack = parentStack + [childId]
-    #     childItem.setData(metaChild | {'hierStack': '/'.join(newStack), 'childNum': row}, self.META_ROLE)
-    #     updateChildrenStacks(childItem, newStack)
-    # updateChildrenStacks(item, stackNew + [docID])
-    #TODO NEW
     return
 
-  # def modelRowsInserted(self, parent: QModelIndex, first: int, last: int) -> None:
-  #   if self.model is None:
-  #     return
-  #   for row in range(first, last + 1):
-  #     index = self.model.index(row, 0, parent)
-  #     item = self.model.itemFromIndex(index)
-  #     if item is None:
-  #       continue
-  #     self.modelChanged(item)
-  #   return
 
   def iterateTree(self, nodeHier:Node) -> QStandardItem:
     """
