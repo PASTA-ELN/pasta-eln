@@ -209,7 +209,19 @@ class TreeView(QTreeView):
       self.comm.uiRequestTask.emit(Task.DROP_EXTERNAL, {'docID':docID, 'items':items})
       event.ignore()
     elif 'application/x-qstandarditemmodeldatalist' in event.mimeData().formats():
-      super().dropEvent(event)
+      sourceView = event.source()
+      sourceIndexes = sourceView.selectionModel().selectedIndexes()
+      docIDsender = sourceIndexes[0].data(Qt.ItemDataRole.UserRole + 1)['hierStack'].split('/')[-1]
+      targetIndex = self.indexAt(event.position().toPoint())
+      allowDrop = True  # only allow drop if does not already contain child with that docID
+      for row in range(self.model().rowCount(targetIndex)):
+        childIndex = self.model().index(row, 0, targetIndex)
+        docIDchild = childIndex.data(Qt.ItemDataRole.UserRole+1)['hierStack'].split('/')[-1]
+        if docIDchild == docIDsender:
+          allowDrop = False
+          break
+      if allowDrop:
+        super().dropEvent(event)
     else:
       logging.error('Drop unknown data: %s', event.mimeData().formats(), exc_info=True)
     return
