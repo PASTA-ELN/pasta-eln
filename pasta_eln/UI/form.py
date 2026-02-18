@@ -684,7 +684,7 @@ class Form(QDialog):
       # new key-value pairs
       keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]# type: ignore[union-attr]
       keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
-      keyValueDict = {f'.{k}':v for k,v in keyValueDict.items() if k}
+      keyValueDict = {f'.{k}':v for k,v in keyValueDict.items() if k and v and f'.{k}' not in self.doc}
       self.doc = keyValueDict | self.doc
       # ---- if project changed: only branch save; remaining data still needs saving
       newProjID = [self.projectComboBox.currentData()] if self.projectComboBox.currentData() else []
