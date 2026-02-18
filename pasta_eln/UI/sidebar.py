@@ -74,7 +74,7 @@ class Sidebar(QWidget):
     self.widgetsProject = {}                                #title bar and widget that contains all of project
     # fill sidebar
     if self.projects.empty:
-      self.projectsListL.addWidget(QLabel('Error: projects not received'))
+      self.projectsListL.addWidget(QLabel('Error: No projects exist'))
       return
     if 'status' in self.projects.columns and len(self.projects)>5:
       temp = self.projects[self.projects['status']=='active']
