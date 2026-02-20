@@ -366,8 +366,9 @@ class Project(QWidget):
     hierStack = '/'.join([i.id for i in nodeHier.ancestors]+[nodeHier.id])
     gui = nodeHier.gui
     nodeTree = QStandardItem(nodeHier.name)
-    nodeTree.setData({'hierStack':hierStack, 'docType':nodeHier.docType, 'gui':gui, 'childNum':nodeHier.childNum}, self.META_ROLE)
-    if nodeHier.id[0]=='x':
+    nodeTree.setData({'hierStack':hierStack, 'docType':nodeHier.docType, 'gui':gui, 'childNum':nodeHier.childNum,
+                      'fPath':nodeHier.fPath}, self.META_ROLE)
+    if nodeHier.id[0]=='x' or nodeHier.fPath == '*':
       nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)# type: ignore
     else:
       nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled)          # type: ignore

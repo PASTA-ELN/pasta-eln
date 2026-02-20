@@ -2,9 +2,9 @@
 import logging
 from typing import Any
 from PySide6.QtCore import QByteArray, Qt, Signal, Slot
-from PySide6.QtGui import QIcon, QImage, QMouseEvent, QPixmap, QStandardItemModel
+from PySide6.QtGui import QIcon, QImage, QMouseEvent, QPixmap, QStandardItem, QStandardItemModel
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtWidgets import QGridLayout, QPushButton, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QCheckBox, QGridLayout, QPushButton, QScrollArea, QVBoxLayout, QWidget
 from .guiCommunicate import Communicate
 
 IMG_SIZE = 300
@@ -70,6 +70,8 @@ class ImageGallery(QWidget):
     self.comm.backendThread.worker.beSendDoc.connect(self.onGetData)
     self.data:dict[str,tuple[int,int]] = {}
     self.model:QStandardItemModel | None = None
+    self.docRows:dict[str,int] = {}
+    self.checkboxes:dict[str,QCheckBox] = {}
     layout = QVBoxLayout(self)
     scrollArea = QScrollArea(self)
     scrollArea.setWidgetResizable(True)
@@ -79,19 +81,77 @@ class ImageGallery(QWidget):
     layout.addWidget(scrollArea)
 
 
+  def _isDocSelected(self, docID:str) -> bool:
+    if not self.model or docID not in self.docRows:
+      return False
+    item = self.model.item(self.docRows[docID], 0)
+    if item is None:
+      return False
+    return item.checkState() == Qt.CheckState.Checked
+
+
+  def _attachCheckbox(self, parent:QWidget, docID:str) -> None:
+    checkbox = QCheckBox(parent)
+    checkbox.setStyleSheet('background-color: rgba(255, 255, 255, 0.8); border-radius: 3px;')
+    checkbox.setFixedSize(26, 26)
+    checkbox.move(8, 8)
+    checkbox.setFocusPolicy(Qt.FocusPolicy.NoFocus)                                         # type: ignore[attr-defined]
+    checkbox.stateChanged.connect(lambda state, docID=docID: self._onCheckboxStateChanged(docID, state))
+    checkbox.blockSignals(True)
+    checkbox.setChecked(self._isDocSelected(docID))
+    checkbox.blockSignals(False)
+    checkbox.raise_()
+    self.checkboxes[docID] = checkbox
+
+
+  def _onCheckboxStateChanged(self, docID:str, state:int) -> None:
+    if not self.model or docID not in self.docRows:
+      return
+    item = self.model.item(self.docRows[docID], 0)
+    if item is None:
+      return
+    desiredState = Qt.CheckState.Checked if state == Qt.CheckState.Checked else Qt.CheckState.Unchecked
+    if item.checkState() != desiredState:
+      item.setCheckState(desiredState)
+
+
+  def onModelItemChanged(self, item:QStandardItem) -> None:
+    if item.column() != 0:
+      return
+    docID = item.accessibleText()
+    checkbox = self.checkboxes.get(docID)
+    if not checkbox:
+      return
+    checked = item.checkState() == Qt.CheckState.Checked
+    if checkbox.isChecked() != checked:
+      checkbox.blockSignals(True)
+      checkbox.setChecked(checked)
+      checkbox.blockSignals(False)
+
+
   def updateGrid(self, model:QStandardItemModel) -> None:
     """
     Args:
       model: The data model containing information about the images to display
              The first column of each row is expected to have an 'accessibleText'
     """
+    if self.model is not None:
+      try:
+        self.model.itemChanged.disconnect(self.onModelItemChanged)
+      except (TypeError, RuntimeError):
+        pass
     self.data = {}
+    self.docRows.clear()
+    self.checkboxes.clear()
     self.model = model
+    self.model.itemChanged.connect(self.onModelItemChanged)
     row, col = 0, 0
+
     for idx in range(self.model.rowCount()):
       docID = model.itemFromIndex(model.index(idx,0)).accessibleText()
       self.comm.uiRequestDoc.emit(docID)
       self.data[docID] = (row, col)
+      self.docRows[docID] = idx
       col += 1
       if col >= 4:                                                                        # Assuming 4 columns
         col = 0
@@ -148,6 +208,7 @@ class ImageGallery(QWidget):
         layout.setAlignment(Qt.AlignCenter)                                       # type: ignore[attr-defined]
         button.clicked.connect(lambda checked=False, docID=doc['id']: self.imageClicked(docID))
         button.doubleClicked.connect(self.image2Clicked)
+        self._attachCheckbox(button, doc['id'])
         self.gridL.addWidget(button, row, col)
       elif 'base64,' in image:                                               # Basic check for base64 data URI
         try:
@@ -167,6 +228,7 @@ class ImageGallery(QWidget):
             button.setIconSize(pixmap.size())
             button.clicked.connect(self.imageClicked)
             button.doubleClicked.connect(self.image2Clicked)
+            self._attachCheckbox(button, doc['id'])
             self.gridL.addWidget(button, row, col)
           else:
             logging.warning('Could not load image data for docID: %s with format %s', doc['id'], fmt)

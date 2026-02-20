@@ -2,6 +2,7 @@
 import logging
 from enum import Enum
 from typing import Any
+from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QDropEvent, QEventPoint, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget
@@ -197,31 +198,40 @@ class TreeView(QTreeView):
     """
     if event.mimeData().hasUrls():                                                    #file dropped onto pasta
       item = self.model().itemFromIndex(self.indexAt(event.pos()))                # type: ignore[attr-defined]
-      if item is None or item.data()['docType'][0][0]!='x':
-        showMessage(self, 'Error', 'You can drop external files only onto folders.')
+      if item is None or (item.data()['docType'][0][0]!='x' and item.data()['fPath']!='*'):
+        showMessage(self, 'Error', 'You can drop external files only onto folders or items without a file connected.')
         return
       # create a list of all items
       items = [url.toLocalFile() for url in event.mimeData().urls()]
       if not items:
         showMessage(self, 'Error', 'The files / folders you dropped are empty.')
         return
+      if item.data()['fPath']=='*' and (len(items)>1 or Path(items[0]).is_dir()):
+        showMessage(self, 'Error', 'You can drop only one file onto an item without a file connected.')
+        return
       docID = item.data()['hierStack'].split('/')[-1]
-      self.comm.uiRequestTask.emit(Task.DROP_EXTERNAL, {'docID':docID, 'items':items})
+      self.comm.uiRequestTask.emit(Task.DROP_EXTERNAL, {'docID':docID, 'items':items,
+                                                        'addToExisting':item.data()['fPath']=='*'}) # if true, add to existing; if false, create new
       event.ignore()
     elif 'application/x-qstandarditemmodeldatalist' in event.mimeData().formats():
-      sourceView = event.source()
-      sourceIndexes = sourceView.selectionModel().selectedIndexes()
-      docIDsender = sourceIndexes[0].data(Qt.ItemDataRole.UserRole + 1)['hierStack'].split('/')[-1]
+      sourceIndex = event.source().selectionModel().selectedIndexes()[0]
+      sourceDocID = sourceIndex.data(Qt.ItemDataRole.UserRole + 1)['hierStack'].split('/')[-1]
       targetIndex = self.indexAt(event.position().toPoint())
-      allowDrop = True  # only allow drop if does not already contain child with that docID
-      for row in range(self.model().rowCount(targetIndex)):
-        childIndex = self.model().index(row, 0, targetIndex)
-        docIDchild = childIndex.data(Qt.ItemDataRole.UserRole+1)['hierStack'].split('/')[-1]
-        if docIDchild == docIDsender:
-          allowDrop = False
-          break
-      if allowDrop:
-        super().dropEvent(event)
+      if self.dropIndicatorPosition() == QAbstractItemView.DropIndicatorPosition.OnItem and \
+        not targetIndex.data(Qt.ItemDataRole.UserRole + 1)['docType'][0].startswith('x'):# this is not a folder but an item with no path
+        QMessageBox.critical(self, 'Error', 'You can drop items only onto folders.')
+        return
+      if self.dropIndicatorPosition() in (QAbstractItemView.DropIndicatorPosition.AboveItem,
+                                          QAbstractItemView.DropIndicatorPosition.BelowItem ):
+        targetIndex = targetIndex.parent()
+      if targetIndex != sourceIndex.parent():                               # if not moving within same parent
+        for row in range(self.model().rowCount(targetIndex)):
+          childIndex = self.model().index(row, 0, targetIndex)
+          docIDchild = childIndex.data(Qt.ItemDataRole.UserRole+1)['hierStack'].split('/')[-1]
+          if docIDchild == sourceDocID:
+            QMessageBox.critical(self, 'Error', 'You can drop this item here because a copy already exists here.')
+            return
+      super().dropEvent(event)
     else:
       logging.error('Drop unknown data: %s', event.mimeData().formats(), exc_info=True)
     return
