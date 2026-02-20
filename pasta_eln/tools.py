@@ -66,6 +66,9 @@ class Tools:
     helpString += '  [rp1] repair properties: add missing "."\n'
     if command == 'rp1':
       self.repairPropertiesDot()
+    helpString += '  [rp2] repair branches for windows: replace backslash by frontslash\n'
+    if command == 'rp2':
+      self.repairBranchesSlash()
     helpString += '  [cp]-create a lost and found project: helpful for some repair operations\n'
     if command == 'cp':
       self.createLostAndFound()
@@ -427,6 +430,20 @@ class Tools:
     print('Done')
     return
 
+  def repairBranchesSlash(self, projectGroup:str='') -> None:
+    """ Repair sqlite database by changing branches table: replace backslash by frontslash
+    Args:
+      projectGroup (str): name of project group
+    """
+    if not self.projectGroup:
+      self.__setBackend__(projectGroup)
+    if self.backend is None:
+      return
+    self.backend.db.cursor.execute("UPDATE branches SET path = REPLACE(path, '\\', '/') "
+                        "WHERE path IS NOT NULL AND path NOT LIKE 'http%' AND path != '*'")
+    self.backend.db.connection.commit()
+    print('Done')
+    return
 
 
 def main() -> None:

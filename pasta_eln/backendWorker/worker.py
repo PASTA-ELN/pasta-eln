@@ -221,7 +221,7 @@ class BackendWorker(QObject):
           dirNameNew= createDirName(doc, data['childNew'], parentDir)# create path name: do not create directory on disk yet
         else:
           dirNameNew= Path(branchOld['path']).name                                              # use old name
-        pathNew = f'{parentDir}/{dirNameNew}'
+        pathNew = (parentDir / dirNameNew).as_posix()
       else:
         pathNew = branchOld['path']
       siblingsNew = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackNew']))#sorted by docID
