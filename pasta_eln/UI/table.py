@@ -325,7 +325,8 @@ class Table(QWidget):
       finalModel = self.filterManager.getFinalModel()
       for row in range(finalModel.rowCount()):
         item, docID = self.itemFromRow(row)
-        if item.checkState() == Qt.CheckState.Checked:
+        if (self.flagGallery and self.gallery.isDocSelected(docID)) or \
+           (not self.flagGallery and item.checkState() == Qt.CheckState.Checked):
           docIDs.append(docID)
       if docIDs:
         self.comm.formDoc.emit({'type':[self.docType], '_ids':docIDs})
@@ -336,7 +337,8 @@ class Table(QWidget):
       finalModel = self.filterManager.getFinalModel()
       for row in range(finalModel.rowCount()):
         item, docID = self.itemFromRow(row)
-        if item.checkState() == Qt.CheckState.Checked:
+        if (self.flagGallery and self.gallery.isDocSelected(docID)) or \
+           (not self.flagGallery and item.checkState() == Qt.CheckState.Checked):
           self.comm.formDoc.emit({'id':docID})
         if self.stopSequentialEdit:
           break
@@ -347,7 +349,8 @@ class Table(QWidget):
       finalModel = self.filterManager.getFinalModel()
       for row in range(finalModel.rowCount()):
         item, docID = self.itemFromRow(row)
-        if item.checkState() == Qt.CheckState.Checked:
+        if (self.flagGallery and self.gallery.isDocSelected(docID)) or \
+           (not self.flagGallery and item.checkState() == Qt.CheckState.Checked):
           if ret is None:
             ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete the data?',
                 QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
@@ -377,6 +380,9 @@ class Table(QWidget):
 
     elif command[0] is Command.ADD_ON:
       # check if one is selected, if yes, only export selected; otherwise use All
+      if self.flagGallery:
+        QMessageBox.information(self, 'Information', 'You can only use the table add-ons in table mode, not in gallery mode.')
+        return
       finalModel = self.filterManager.getFinalModel()
       useAll = True
       for row in range(finalModel.rowCount()):
@@ -411,13 +417,16 @@ class Table(QWidget):
       self.paint()
 
     elif command[0] is Command.TOGGLE_SELECTION:
-      finalModel = self.filterManager.getFinalModel()
-      for row in range(finalModel.rowCount()):
-        item,_ = self.itemFromRow(row)
-        if item.checkState() == Qt.CheckState.Checked:
-          item.setCheckState(Qt.CheckState.Unchecked)
-        else:
-          item.setCheckState(Qt.CheckState.Checked)
+      if self.flagGallery:
+        self.gallery.toggleSelection()
+      else:
+        finalModel = self.filterManager.getFinalModel()
+        for row in range(finalModel.rowCount()):
+          item,_ = self.itemFromRow(row)
+          if item.checkState() == Qt.CheckState.Checked:
+            item.setCheckState(Qt.CheckState.Unchecked)
+          else:
+            item.setCheckState(Qt.CheckState.Checked)
 
     elif command[0] is Command.SHOW_ALL:
       self.showAll = not self.showAll
@@ -428,7 +437,8 @@ class Table(QWidget):
       finalModel = self.filterManager.getFinalModel()
       for row in range(finalModel.rowCount()):
         item, docID = self.itemFromRow(row)
-        if item.checkState() == Qt.CheckState.Checked:
+        if (self.flagGallery and self.gallery.isDocSelected(docID)) or \
+           (not self.flagGallery and item.checkState() == Qt.CheckState.Checked):
           docIDs.append(docID)
       self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs':docIDs,'recipe':''})
       self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)

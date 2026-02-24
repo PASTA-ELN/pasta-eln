@@ -81,7 +81,7 @@ class ImageGallery(QWidget):
     layout.addWidget(scrollArea)
 
 
-  def _isDocSelected(self, docID:str) -> bool:
+  def isDocSelected(self, docID:str) -> bool:
     if not self.model or docID not in self.docRows:
       return False
     item = self.model.item(self.docRows[docID], 0)
@@ -89,16 +89,20 @@ class ImageGallery(QWidget):
       return False
     return item.checkState() == Qt.CheckState.Checked
 
+  def toggleSelection(self) -> None:
+    for checkbox in self.checkboxes.values():
+      checkbox.toggle()
+    return
 
   def _attachCheckbox(self, parent:QWidget, docID:str) -> None:
     checkbox = QCheckBox(parent)
-    checkbox.setStyleSheet('background-color: rgba(255, 255, 255, 0.8); border-radius: 3px;')
+    checkbox.setStyleSheet('background-color: rgb(255, 255, 255); border-radius: 3px;')
     checkbox.setFixedSize(26, 26)
     checkbox.move(8, 8)
     checkbox.setFocusPolicy(Qt.FocusPolicy.NoFocus)                                         # type: ignore[attr-defined]
     checkbox.stateChanged.connect(lambda state, docID=docID: self._onCheckboxStateChanged(docID, state))
     checkbox.blockSignals(True)
-    checkbox.setChecked(self._isDocSelected(docID))
+    checkbox.setChecked(self.isDocSelected(docID))
     checkbox.blockSignals(False)
     checkbox.raise_()
     self.checkboxes[docID] = checkbox
@@ -110,23 +114,9 @@ class ImageGallery(QWidget):
     item = self.model.item(self.docRows[docID], 0)
     if item is None:
       return
-    desiredState = Qt.CheckState.Checked if state == Qt.CheckState.Checked else Qt.CheckState.Unchecked
+    desiredState = Qt.CheckState.Unchecked if state == Qt.CheckState.Unchecked else Qt.CheckState.Checked
     if item.checkState() != desiredState:
       item.setCheckState(desiredState)
-
-
-  def onModelItemChanged(self, item:QStandardItem) -> None:
-    if item.column() != 0:
-      return
-    docID = item.accessibleText()
-    checkbox = self.checkboxes.get(docID)
-    if not checkbox:
-      return
-    checked = item.checkState() == Qt.CheckState.Checked
-    if checkbox.isChecked() != checked:
-      checkbox.blockSignals(True)
-      checkbox.setChecked(checked)
-      checkbox.blockSignals(False)
 
 
   def updateGrid(self, model:QStandardItemModel) -> None:
@@ -135,16 +125,10 @@ class ImageGallery(QWidget):
       model: The data model containing information about the images to display
              The first column of each row is expected to have an 'accessibleText'
     """
-    if self.model is not None:
-      try:
-        self.model.itemChanged.disconnect(self.onModelItemChanged)
-      except (TypeError, RuntimeError):
-        pass
     self.data = {}
     self.docRows.clear()
     self.checkboxes.clear()
     self.model = model
-    self.model.itemChanged.connect(self.onModelItemChanged)
     row, col = 0, 0
 
     for idx in range(self.model.rowCount()):
