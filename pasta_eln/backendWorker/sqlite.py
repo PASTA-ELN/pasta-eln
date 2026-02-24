@@ -786,7 +786,7 @@ class SqlLiteDB:
       df = df.astype('str').fillna('')
       return df
     elif thePath=='viewHierarchy/viewHierarchy':
-      cmd = 'SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui, branches.idx '\
+      cmd = 'SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui, branches.idx, branches.path '\
             f"FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '{startKey}%'"
       if not allFlag:
         cmd += r" and NOT branches.show LIKE '%F%'"
@@ -795,7 +795,7 @@ class SqlLiteDB:
       results = self.cursor.fetchall()
       # value: [child, doc['type'], doc['name'], doc['gui'], branches.idx]
       results = [{'id':i[0], 'key':i[1],
-                  'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]], i[6]]} for i in results]
+                  'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]], i[6], i[7]]} for i in results]
     elif thePath=='viewHierarchy/viewPaths':
       cmd = 'SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum, branches.idx '\
             'FROM branches INNER JOIN main USING(id)'
@@ -875,7 +875,7 @@ class SqlLiteDB:
         nonFolders.append(item)
         continue
       _id     = item['id']
-      childNum, docType, name, gui, _ = item['value']
+      childNum, docType, name, gui, _childNum, path = item['value']
       if dataTree is None:
         dataTree = Node(id=_id, docType=docType, name=name, gui=gui, childNum=childNum)
         id2Node[_id] = dataTree
@@ -886,20 +886,20 @@ class SqlLiteDB:
         else:
           parentNode, error = (dataTree, True)
           logging.error('Error in the hierarchy tree with parent %s missing', parent, exc_info=True)
-        subNode = Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum)
+        subNode = Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum, fPath=path)
         id2Node[_id] = subNode
     # add non-folders into tree
     # print(len(nonFolders),'length: crop if too long')
     for item in nonFolders:
       _id     = item['id']
-      childNum, docType, name, gui, _ = item['value']
+      childNum, docType, name, gui, _childNum, path = item['value']
       parentId = item['key'].split('/')[-2]
       if parentId in id2Node:
         parentNode = id2Node[parentId]
       else:
         outputString('print','error',f'repair branch table as parentID {parentId} is missing')
         parentNode, error = (dataTree,True)
-      Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum)
+      Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum, fPath=path)
     # sort children
     for parentNode in id2Node.values():
       children = parentNode.children

@@ -32,7 +32,7 @@ class Task(Enum):
   ADD_DOC        = (1 , '')                                        #keys: hierStack, docType, doc
   EDIT_DOC       = (2 , '')                                        #keys: doc, newProjID
   MOVE_LEAVES    = (3 , '')                                        #keys: docID, stackOld, stackNew, childOld, childNew
-  DROP_EXTERNAL  = (4 , 'Including drag&drop files and folders:')  #keys: docID, items
+  DROP_EXTERNAL  = (4 , 'Including drag&drop files and folders:')  #keys: docID, items, addToExisting
   HIDE_SHOW      = (5 , '')                                        #keys: docID
   SET_GUI        = (6 , '')                                        #keys: docID, gui
   DELETE_DOC     = (7 , '')                                        #keys: docID
@@ -274,9 +274,13 @@ class BackendWorker(QObject):
         print('Step 4: end of function')
         print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
 
-    elif task is Task.DROP_EXTERNAL and set(data.keys())=={'docID','items'}:
+    elif task is Task.DROP_EXTERNAL and set(data.keys())=={'docID','items','addToExisting'}:
       doc = self.backend.db.getDoc(data['docID'])
-      targetFolder = Path(self.backend.basePath/doc['branch'][0]['path'])
+      if data['addToExisting']:
+        parentDoc = self.backend.db.getDoc(doc['branch'][0]['stack'][-1])
+        targetFolder = self.backend.basePath/parentDoc['branch'][0]['path']
+      else:
+        targetFolder = Path(self.backend.basePath/doc['branch'][0]['path'])
       for item in data['items']:
         itemPath = Path(item)
         targetName = targetFolder/itemPath.name
@@ -288,10 +292,27 @@ class BackendWorker(QObject):
           shutil.copytree(itemPath, targetName)
         else:
           shutil.copy(itemPath, targetName)
-      # scan
       reply = ''
-      for _ in range(2):                                                       #scan twice: convert, extract
-        reply += self.backend.scanProject(None, data['docID'], targetFolder.relative_to(self.backend.basePath))
+      if data['addToExisting']:
+        docID = data['docID']
+        path = targetName.relative_to(self.backend.basePath)
+        self.backend.db.cursor.execute(f"UPDATE branches SET path='{path}' WHERE id='{docID}' AND idx='0'")
+        self.backend.db.connection.commit()
+        #rerun extractors
+        oldDocType = doc['type']
+        self.backend.useExtractors(targetName, '', doc)
+        if doc['type'][0] == oldDocType[0]:
+          del doc['branch']                                                                      #don't update
+          self.backend.db.updateDoc(doc, docID)
+        else:
+          self.backend.db.remove( docID )
+          del doc['id']
+          doc['name'] = doc['branch'][0]['path']
+          self.backend.addData('/'.join(doc['type']), doc, doc['branch'][0]['stack'])
+      else:
+        # scan
+        for _ in range(2):                                                       #scan twice: convert, extract
+          reply += self.backend.scanProject(None, data['docID'], targetFolder.relative_to(self.backend.basePath))
       msg = 'Drag-drop operation finished successfully.'
       if reply:
         msg += f' <p style="color:red;">{reply}</p>'
