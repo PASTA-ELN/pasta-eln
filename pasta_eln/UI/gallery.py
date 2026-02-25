@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 from PySide6.QtCore import QByteArray, Qt, Signal, Slot
-from PySide6.QtGui import QIcon, QImage, QMouseEvent, QPixmap, QStandardItem, QStandardItemModel
+from PySide6.QtGui import QIcon, QImage, QMouseEvent, QPixmap, QStandardItemModel
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import QCheckBox, QGridLayout, QPushButton, QScrollArea, QVBoxLayout, QWidget
 from .guiCommunicate import Communicate
@@ -82,6 +82,12 @@ class ImageGallery(QWidget):
 
 
   def isDocSelected(self, docID:str) -> bool:
+    """ Test if item is selected in gallery
+    Args:
+      docID (str): docID to test
+    Returns:
+      bool: True if selected, False otherwise
+    """
     if not self.model or docID not in self.docRows:
       return False
     item = self.model.item(self.docRows[docID], 0)
@@ -89,23 +95,30 @@ class ImageGallery(QWidget):
       return False
     return item.checkState() == Qt.CheckState.Checked
 
+
   def toggleSelection(self) -> None:
+    """ Toggle the selection of all items in the gallery """
     for checkbox in self.checkboxes.values():
       checkbox.toggle()
     return
 
+
   def _attachCheckbox(self, parent:QWidget, docID:str) -> None:
-    checkbox = QCheckBox(parent)
-    checkbox.setStyleSheet('background-color: rgb(255, 255, 255); border-radius: 3px;')
-    checkbox.setFixedSize(26, 26)
-    checkbox.move(8, 8)
-    checkbox.setFocusPolicy(Qt.FocusPolicy.NoFocus)                                         # type: ignore[attr-defined]
-    checkbox.stateChanged.connect(lambda state, docID=docID: self._onCheckboxStateChanged(docID, state))
-    checkbox.blockSignals(True)
-    checkbox.setChecked(self.isDocSelected(docID))
-    checkbox.blockSignals(False)
-    checkbox.raise_()
-    self.checkboxes[docID] = checkbox
+    """ Attach a checkbox to an image
+    Args:
+      parent (QWidget): widget to attach checkbox to
+      docID (str): docID of image
+    """
+    self.checkboxes[docID] = QCheckBox(parent)
+    self.checkboxes[docID].setStyleSheet('background-color: rgb(255, 255, 255); border-radius: 3px;')
+    self.checkboxes[docID].setFixedSize(26, 26)
+    self.checkboxes[docID].move(8, 8)
+    self.checkboxes[docID].setFocusPolicy(Qt.FocusPolicy.NoFocus)
+    self.checkboxes[docID].stateChanged.connect(lambda state, docID=docID: self._onCheckboxStateChanged(docID, state))
+    self.checkboxes[docID].blockSignals(True)
+    self.checkboxes[docID].setChecked(self.isDocSelected(docID))
+    self.checkboxes[docID].blockSignals(False)
+    self.checkboxes[docID].raise_()
 
 
   def _onCheckboxStateChanged(self, docID:str, state:int) -> None:

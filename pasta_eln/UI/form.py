@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Union
 import pandas as pd
 from PySide6.QtCore import QSize, Qt, QTimer, Slot
-from PySide6.QtGui import QRegularExpressionValidator
+from PySide6.QtGui import QRegularExpressionValidator, QMouseEvent
 from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLayout, QLineEdit, QMessageBox,
                                QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget,
                                QInputDialog)
@@ -478,7 +478,13 @@ class Form(QDialog):
       logging.error('There should not be "_" in a doc: %s', str(self.doc), exc_info=True)
 
 
-  def formLabelClicked(self, label: QLabel, key: str, event) -> None:
+  def formLabelClicked(self, label: QLabel, key: str, event:QMouseEvent) -> None:
+    """ Form label clicked to allow to edit the key
+    Args:
+      label (QLabel): label that was clicked
+      key (str): key that was clicked
+      event (QMouseEvent): mouse event
+    """
     if event.button() == Qt.MouseButton.LeftButton and len(self.allDocIDsCopy)==1:
       warning = 'Enter new key: <br>IF YOU CONTINUE<ol><li>THE FORM WILL CLOSE AND HAS TO REOPENED. <li>ALL CHANGES WILL BE LOST)</ol>'
       res, ok = QInputDialog.getText(self, "Edit key", warning)

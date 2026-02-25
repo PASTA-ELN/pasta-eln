@@ -4,7 +4,6 @@ import re
 from enum import Enum
 from pathlib import Path
 from typing import Any
-import pandas as pd
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QLabel, QLayout, QScrollArea, QTextEdit
 from ..backendWorker.worker import Task

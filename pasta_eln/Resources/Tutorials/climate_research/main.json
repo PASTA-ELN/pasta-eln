@@ -1,0 +1,53 @@
+{
+  "id": "climate_intro",
+  "title": "Rising Temperature & CO₂",
+  "description": "Learn to import and interpret global temperature and CO₂ trends.\n- Download data from https://github.com/owid/co2-data?utm_source=chatgpt.com\n",
+  "prerequisites": [],
+  "steps": [
+    {
+      "id": "create_project",
+      "title": "Create a project",
+      "instruction": "Create a project named \"Climate Watch\".",
+      "trigger": {
+        "event": "ADD_DOC",
+        "docType": "x0",
+        "name": "Climate Watch"
+      }
+    },
+    {
+      "id": "import_temperature",
+      "title": "Import temperature data",
+      "instruction": "Drag-and-drop `global_temp.csv` from `Resources/Tutorials/data` into the project.",
+      "trigger": {
+        "event": "DROP_EXTERNAL",
+        "file": "global_temp.csv"
+      }
+    },
+    {
+      "id": "plot_temperature",
+      "title": "Plot temperature trend",
+      "instruction": "Use Table Plot on the temperature CSV to visualize the trend.",
+      "trigger": {
+        "event": "EXTRACTOR_TEST"
+      }
+    },
+    {
+      "id": "import_co2",
+      "title": "Import CO₂ data",
+      "instruction": "Drag-and-drop `global_co2.csv` from `Resources/Tutorials/data` into the project.",
+      "trigger": {
+        "event": "DROP_EXTERNAL",
+        "file": "global_co2.csv"
+      }
+    },
+    {
+      "id": "write_summary",
+      "title": "Write a short interpretation",
+      "instruction": "Add a text entry summarizing the relationship.",
+      "trigger": {
+        "event": "ADD_DOC",
+        "docType": "x1"
+      }
+    }
+  ]
+}

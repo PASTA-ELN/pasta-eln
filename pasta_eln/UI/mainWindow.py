@@ -7,9 +7,9 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QEvent, QUrl, Slot
+from PySide6.QtCore import QEvent, Qt, QUrl, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QPixmap, QShortcut
-from PySide6.QtWidgets import QFileDialog, QLabel, QMainWindow
+from PySide6.QtWidgets import QFileDialog, QLabel, QDockWidget, QMainWindow
 from pasta_eln import __version__
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
@@ -25,6 +25,8 @@ from .messageDialog import showMessage
 from .palette import Palette
 from .repositories.uploadGUI import UploadGUI
 from .sidebar import Sidebar
+from .tutorials.manager import TutorialManager
+from .tutorials.tutorialPanel import TutorialPanel
 
 
 class MainWindow(QMainWindow):
@@ -49,6 +51,19 @@ class MainWindow(QMainWindow):
     self.comm.formDoc.connect(self.formDoc)
     self.comm.changeSidebar.connect(self.paint)
     self.comm.backendThread.worker.beSendTaskReport.connect(self.showReport)
+
+    if self.comm.configuration['GUI'].get('tutorial',''):
+      self.tutorialManager = TutorialManager(self.comm.configuration['GUI']['tutorial'])
+      self.tutorialPanel = TutorialPanel(self.tutorialManager)
+      self.tutorialDock = QDockWidget('Tutorials', self)
+      self.tutorialDock.setWidget(self.tutorialPanel)
+      self.tutorialDock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable |
+                                    QDockWidget.DockWidgetFeature.DockWidgetMovable   |
+                                    QDockWidget.DockWidgetFeature.DockWidgetClosable)
+      self.tutorialDock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
+      self.tutorialDock.setFloating(True)
+      self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.tutorialDock)
+      self.comm.uiRequestTask.connect(self.tutorialManager.handle_task)
 
     # GUI
     self.setWindowTitle(f"PASTA-ELN {__version__}")

@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Any
 from ..fixedStringsJson import SORTED_KEYS, SQLiteTranslation
 from ..miscTools import isDocID
+from ..backendWorker.sqlite import SqlLiteDB
 from .stringChanges import markdownEqualizer
 
 
@@ -179,7 +180,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
   return markdown
 
 
-def expandDocID2tupleInDict(d, database):
+def expandDocID2tupleInDict(d:dict[str,Any], database:SqlLiteDB) -> None:
   """ Expand docIDs in docs to be a tuple (value, type, unit, description)
   Args:
     d (dict): doc
@@ -193,6 +194,7 @@ def expandDocID2tupleInDict(d, database):
       database.cursor.execute(f'SELECT name FROM main WHERE id=="{v[0]}"')
       name = database.cursor.fetchone()[0]
       d[k] = (v[0], '', name , '')
+  return
 
 
 def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any], onlyEssentials:bool=True) -> str:
