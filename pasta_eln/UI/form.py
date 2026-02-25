@@ -119,6 +119,7 @@ class Form(QDialog):
     self.checkThreadTimer                     = QTimer(self)
     self.tagsAllList: list[str] = []
     self.comboBoxDocTypeList:dict[str, tuple[QComboBox,str]] = {}# dict of docType:.. for links to other items
+    self.projectTableData:pd.DataFrame|None = None
 
     # Request data
     if not self.flagNewDoc:
@@ -195,6 +196,19 @@ class Form(QDialog):
       self.paint()
 
 
+  def _fillProjectComboBox(self, data: pd.DataFrame) -> None:
+    self.projectComboBox.clear()
+    if self.groupEdit:
+      self.projectComboBox.addItem('- no change -',    userData='')
+    elif self.allowProjectUnassign:
+      self.projectComboBox.addItem('- not assigned -', userData='NONE')
+    for iDocID, iName in data[['id','name']].values.tolist():           # add all projects incl. the present
+      self.projectComboBox.addItem(iName, userData=iDocID)
+      stack = self.doc.get('branch',[{}])[0].get('stack', [])
+      proj  = stack[0] if stack else ''
+      if iDocID in (self.doc.get('_projectID',''), proj):
+        self.projectComboBox.setCurrentIndex(self.projectComboBox.count()-1)
+
 
   @Slot(pd.DataFrame, str)
   def onGetTable(self, data:pd.DataFrame, docType:str) -> None:
@@ -210,17 +224,8 @@ class Form(QDialog):
       self.tagsAllList = data['tag'].unique()
       self.updateTagsBar()
     elif docType == 'x0':
-      self.projectComboBox.clear()
-      if self.groupEdit:
-        self.projectComboBox.addItem('- no change -',    userData='')
-      elif self.allowProjectUnassign:
-        self.projectComboBox.addItem('- not assigned -', userData='NONE')
-      for iDocID, iName in data[['id','name']].values.tolist():           # add all projects incl. the present
-        self.projectComboBox.addItem(iName, userData=iDocID)
-        stack = self.doc.get('branch',[{}])[0].get('stack', [])
-        proj  = stack[0] if stack else ''
-        if iDocID in (self.doc.get('_projectID',''), proj):
-          self.projectComboBox.setCurrentIndex(self.projectComboBox.count()-1)
+      self.projectTableData = data
+      self._fillProjectComboBox(data)
     elif docType in self.comboBoxDocTypeList:
       iComboBox, value = self.comboBoxDocTypeList[docType]
       iComboBox.clear()
@@ -241,11 +246,14 @@ class Form(QDialog):
       del self.doc['_attachments']
     for i in reversed(range(self.splitter.count())):                        # remove all widgets from splitter
       widget = self.splitter.widget(i)
-      if widget is not None and widget is not self.projectComboBox:
+      if widget is not None:
         widget.setParent(None)
     self.comboBoxDocTypeList = {}                                                  # reset comboBoxDocTypeList
     self.allUserElements     = []
     self.doc = copy.deepcopy(minimalDocInForm) | self.doc
+    self.projectComboBox = QComboBox()
+    if self.projectTableData is not None:
+      self._fillProjectComboBox(self.projectTableData)
     if self.flagNewDoc:
       self.doc['name'] = ''
     if 'branch' in self.doc:
@@ -527,14 +535,9 @@ class Form(QDialog):
     """
     if isinstance(command[0], CommandMenu):
       if executeContextMenu(self, command) and self.imageL is not None:
-        item = self.imageL.itemAt(0)
-        if item is not None: item.widget().setParent(None)
-        width=self.comm.configuration['GUI']['imageSizeDetails'] if hasattr(self.comm,'configuration') else 300
-        if 'image' in self.doc:
-          Image(self.doc['image'], self.imageL, anyDimension=width)
-        if 'branch' in self.doc:
-          visibilityIcon = all(all(branch['show']) for branch in self.doc['branch'])
-          self.visibilityText.setText('' if visibilityIcon else 'HIDDEN     \U0001F441')
+        self.allDocIDs = list(self.allDocIDsCopy)
+        self.doc = {'id':self.allDocIDs[0]}
+        self.comm.uiRequestDoc.emit(self.doc['id'])
 
     elif command[0] is Command.BUTTON_BAR:
       if command[1]=='bold':
