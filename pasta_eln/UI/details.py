@@ -17,6 +17,7 @@ from .guiCommunicate import Communicate
 from .guiStyle import IconButton, Image, Label, TextButton, widgetAndLayout
 from .messageDialog import showMessage
 
+MAX_LENGTH_STR = 200
 
 class Details(QScrollArea):
   """ widget that shows the details of the items """
@@ -298,6 +299,7 @@ class Details(QScrollArea):
           else:
             newValue[k] = v
         labelStr = f'{cssStyleHtmlEditors}{key}: {dict2ul(newValue)}'
+      labelStr = labelStr[:MAX_LENGTH_STR]+'...' if len(labelStr)>MAX_LENGTH_STR else labelStr
       if layout is not None:
         label = Label(labelStr, function=lambda x,y: self.clickLink(x,y) if link else None, docID=docID)
         label.setOpenExternalLinks(True)
