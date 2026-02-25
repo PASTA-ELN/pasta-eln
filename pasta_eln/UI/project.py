@@ -262,7 +262,7 @@ class Project(QWidget):
                                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                  QMessageBox.StandardButton.No)
       if ret==QMessageBox.StandardButton.Yes:
-        self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':self.projID})
+        self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':self.projID, 'stack':self.projID})
         #update sidebar, show projects
         self.comm.changeTable.emit('x0','')
     elif command[0] is Command.SCAN:

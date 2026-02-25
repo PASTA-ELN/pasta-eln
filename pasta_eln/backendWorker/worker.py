@@ -35,7 +35,7 @@ class Task(Enum):
   DROP_EXTERNAL  = (4 , 'Including drag&drop files and folders:')  #keys: docID, items, addToExisting
   HIDE_SHOW      = (5 , '')                                        #keys: docID
   SET_GUI        = (6 , '')                                        #keys: docID, gui
-  DELETE_DOC     = (7 , '')                                        #keys: docID
+  DELETE_DOC     = (7 , '')                                        #keys: docID, stack
   SCAN           = (8 , 'Scanning disk for new data:')             #keys: docID
   SEND_TBL_COLUMN= (9 , '')                                        #keys: docType, newList
   EXTRACTOR_TEST = (10, 'Testing extractor:')                      #keys: fileName, style, recipe, saveFig
@@ -318,12 +318,23 @@ class BackendWorker(QObject):
         msg += f' <p style="color:red;">{reply}</p>'
       self.beSendTaskReport.emit(task, msg, '', '')
 
-    elif task is Task.DELETE_DOC   and  set(data.keys())=={'docID'}:
+    elif task is Task.DELETE_DOC   and  set(data.keys())=={'docID','stack'}:
       # delete doc: possibly a folder or a project or a measurement
       # delete database and rename folder
-      doc = self.backend.db.remove(data['docID'])
-      if 'branch' in doc and len(doc['branch'])>0 and 'path' in doc['branch'][0]:
-        oldPath = self.backend.basePath/doc['branch'][0]['path']
+      # - stack (str) includes the docID itself
+      doc = self.backend.db.getDoc(data['docID'])
+      if len(doc['branch'])>1 and not data['stack']:
+        self.beSendTaskReport.emit(task, 'Cannot delete an item with multiple locations.', '', '')
+        return
+      if len(doc['branch'])==1:
+        doc = self.backend.db.remove(data['docID'])
+        branch = doc['branch'][0]
+      else:
+        branch = [i for i in doc['branch'] if '/'.join(i['stack']+[data['docID']])==data['stack']][0]
+        self.backend.db.cursor.execute(f'DELETE FROM branches WHERE stack="{data["stack"]}"')
+      # rename on disk
+      if 'path' in branch:
+        oldPath = self.backend.basePath/branch['path']
         newPath = oldPath.parent/f'trash_{oldPath.name}'
         nextIteration = 1
         while newPath.is_dir():
@@ -332,7 +343,7 @@ class BackendWorker(QObject):
         if oldPath != newPath:
           oldPath.rename(newPath)
       # go through children, remove from DB
-      children = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(doc['branch'][0]['stack']+[data['docID']]))
+      children = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(branch['stack']+[data['docID']]))
       for docID in {line['id'] for line in children if line['id']!=data['docID']}:
         self.backend.db.remove(docID)
       # finish it

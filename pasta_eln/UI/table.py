@@ -355,7 +355,7 @@ class Table(QWidget):
             ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete the data?',
                 QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
           if ret==QMessageBox.StandardButton.Yes:
-            self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':docID})
+            self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':docID, 'stack':''})
       self.comm.changeTable.emit(self.docType, self.comm.projectID)
 
     elif command[0] is Command.CHANGE_COLUMNS:
