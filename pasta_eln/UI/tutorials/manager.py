@@ -38,7 +38,6 @@ class TutorialManager(QObject):
   def __init__(self, questName:str) -> None:
     super().__init__()
     self.questDir = Path(__file__).resolve().parent.parent.parent / 'Resources' / 'Tutorials' / questName
-    self.completedSteps: list[bool] = []
 
     # Parse a quest definition
     data = json.load((self.questDir / 'main.json').open(encoding='utf-8'))
@@ -54,40 +53,27 @@ class TutorialManager(QObject):
                               instruction=str(step.get('instruction', '')), image=str(step.get('image', '')),
                               trigger=step.get('trigger', {})))
     self.quest = Quest(title=title, description=description, steps=steps)
-
-
-  def current_step_index(self) -> int:
-    """Return the index of the next incomplete step."""
-    for idx, done in enumerate(self.completedSteps):
-      if not done:
-        return idx
-    return -1
+    self.completedSteps = [False] * len(self.quest.steps)
 
 
   @Slot(Task, dict)
   def handle_task(self, task: Task, data: dict[str, Any]) -> None:
     """Handle task events emitted by the UI."""
-    step_index = self.current_step_index()
-    if self.active_quest is None or step_index is None:
-      return
-    step = self.active_quest.steps[step_index]
+    stepIndex = -1
+    for idx, done in enumerate(self.completedSteps):
+      if not done:
+        stepIndex = idx
+        break
+    step = self.quest.steps[stepIndex]
     if self._match_trigger(step.trigger, task, data):
-      self.completed_steps[step_index] = True
+      self.completedSteps[stepIndex] = True
       self.progressChanged.emit()
 
 
   def _match_trigger(self, trigger: dict[str, Any], task: Task, data: dict[str, Any]) -> bool:
     """Return True when a task matches the trigger definition."""
-    event_name = trigger.get('event')
-    if not event_name:
-      return False
-    if isinstance(event_name, str):
-      normalized = event_name.replace('Task.', '').strip()
-      if normalized not in Task.__members__:
-        return False
-      if Task[normalized] is not task:
-        return False
-    else:
+    eventName = trigger.get('event')
+    if Task[eventName.replace('Task.', '').strip()] is not task:
       return False
     if 'docType' in trigger and data.get('docType') != trigger.get('docType'):
       return False
@@ -99,6 +85,7 @@ class TutorialManager(QObject):
       if not self._match_file_trigger(str(trigger.get('file')), data):
         return False
     return True
+
 
   def _match_file_trigger(self, target_file: str, data: dict[str, Any]) -> bool:
     """Check whether a task references a target filename."""

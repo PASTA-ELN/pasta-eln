@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QEvent, Qt, QUrl, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QPixmap, QShortcut
-from PySide6.QtWidgets import QFileDialog, QLabel, QDockWidget, QMainWindow
+from PySide6.QtWidgets import QFileDialog, QLabel, QDialog, QMainWindow, QVBoxLayout
 from pasta_eln import __version__
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
@@ -55,14 +55,14 @@ class MainWindow(QMainWindow):
     if self.comm.configuration['GUI'].get('tutorial',''):
       self.tutorialManager = TutorialManager(self.comm.configuration['GUI']['tutorial'])
       self.tutorialPanel = TutorialPanel(self.tutorialManager)
-      self.tutorialDock = QDockWidget('Tutorials', self)
-      self.tutorialDock.setWidget(self.tutorialPanel)
-      self.tutorialDock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable |
-                                    QDockWidget.DockWidgetFeature.DockWidgetMovable   |
-                                    QDockWidget.DockWidgetFeature.DockWidgetClosable)
-      self.tutorialDock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
-      self.tutorialDock.setFloating(True)
-      self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.tutorialDock)
+      self.tutorialDialog = QDialog(self)
+      self.tutorialDialog.setWindowTitle('Tutorial')
+      dialogLayout = QVBoxLayout()
+      dialogLayout.setContentsMargins(0, 0, 0, 0)
+      dialogLayout.addWidget(self.tutorialPanel)
+      self.tutorialDialog.setLayout(dialogLayout)
+      self.tutorialDialog.setWindowFlag(Qt.WindowType.Window, True)
+      self.tutorialDialog.show()
       self.comm.uiRequestTask.connect(self.tutorialManager.handle_task)
 
     # GUI
