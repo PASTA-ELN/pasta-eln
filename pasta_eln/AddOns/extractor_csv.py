@@ -60,7 +60,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
     plt.plot(data.iloc[:,0], data.iloc[:,1],'-')                             # plot data using matplotlib: check the differences in plotting
   elif style['main'] == 'measurement/csv/dots':     #: draw curve with dots
     plt.plot(data.iloc[:,0], data.iloc[:,1],'o')
-  elif True or style['main'] == 'measurement/csv/linesAndDots': #: Default | uncropped
+  elif True or style['main'] == 'measurement/csv/linesAndDots':              #: Default | lines and dots
     style['main'] = 'measurement/csv/linesAndDots'                           # for the default case: set the main-style
     try:
       plt.plot(data.iloc[:,0], data.iloc[:,1],'o-')
