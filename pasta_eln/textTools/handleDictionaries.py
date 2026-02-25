@@ -148,21 +148,17 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
         dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
         if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
             not isinstance(dataHierarchyItems[0]['list'], list):                         #choice among docType
-          #TODO: for now just specify that there is a link to an item
-          #  better solution: already replace the value with the name of the item before calling this
-          #table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
-          # names= list(table[table.id==value[0]]['name'])
-          # if len(names)==1:                                            # default find one item that we link to
-          #   value = '\u260D '+names[0]
-          # elif not names:        # likely empty link because the value was not yet defined: just print to show
-          #   value = value[0] if isinstance(value,tuple) else value
-          # else:
-          #   raise ValueError(f'list target exists multiple times. Key: {key}')
+          if not isinstance(value, tuple):
+            logging.critical('Value is not a tuple: %s', value)
+            continue
           if not isDocID(value[0]):
-            value = value[0] if isinstance(value,tuple) else value
+            value = value[0]
+          elif value[2]:
+            value = value[2]
           else:
-            markdown += f'{key.capitalize()}: {value[0] if isinstance(value, tuple) and len(value)==4 else value}\n\n'
-            value = '\u260D link to entry'
+            logging.warning('Value[2] not given for %s', value)
+            value = '\u260D link to entry'                                                          #safeguard
+          markdown += f'{key.capitalize()}: {value}\n\n'
         elif isinstance(value, list):
           value = ', '.join([str(i) for i in value])
           markdown += f'{key.capitalize()}: {value}\n\n'
@@ -181,6 +177,22 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
       doc.pop('image','')
       logging.error('Could not convert to markdown value: %s\n  doc: %s',value, doc, exc_info=True, stack_info=True)
   return markdown
+
+
+def expandDocID2tupleInDict(d, database):
+  """ Expand docIDs in docs to be a tuple (value, type, unit, description)
+  Args:
+    d (dict): doc
+    database (sqlite): database for expanding
+  """
+  pattern = re.compile(r'^[a-z\-]-[a-z0-9]{32}$')
+  for k, v in d.items():
+    if isinstance(v, dict):
+      expandDocID2tupleInDict(v, database)
+    elif isinstance(v, tuple) and pattern.match(v[0]) and k!='id':
+      database.cursor.execute(f'SELECT name FROM main WHERE id=="{v[0]}"')
+      name = database.cursor.fetchone()[0]
+      d[k] = (v[0], '', name , '')
 
 
 def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any], onlyEssentials:bool=True) -> str:

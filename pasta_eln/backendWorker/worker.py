@@ -17,6 +17,7 @@ from anytree import Node
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QMessageBox
 from ..miscTools import flatten
+from ..textTools.handleDictionaries import expandDocID2tupleInDict
 from ..textTools.stringChanges import createDirName
 from .backend import Backend
 from .dataverse import DataverseClient
@@ -147,7 +148,9 @@ class BackendWorker(QObject):
       docID (str): ID of the document to return
       """
     if self.backend is not None:
-      self.beSendDoc.emit(self.backend.db.getDoc(docID))
+      doc = self.backend.db.getDoc(docID)
+      expandDocID2tupleInDict(doc, self.backend.db)
+      self.beSendDoc.emit(doc)
 
 
   @Slot(Task, dict)
