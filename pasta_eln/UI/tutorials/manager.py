@@ -1,4 +1,6 @@
-"""Tutorial quest loader and state manager."""
+"""Tutorial quest loader and state manager.
+- remember to use "yq .  main.yml > main.json" in each folder (automatically done in release script)
+"""
 from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
@@ -33,7 +35,6 @@ class Quest:
 
 class TutorialManager(QObject):
   """Load quests from JSON files and track progress in memory."""
-  activeQuestChanged = Signal()
   progressChanged = Signal()
   def __init__(self, questName:str) -> None:
     super().__init__()
@@ -50,14 +51,14 @@ class TutorialManager(QObject):
     steps: list[QuestStep] = []
     for step in stepsRaw:
       steps.append( QuestStep(stepID=str(step.get('id', '')), title=str(step.get('title', '')),
-                              instruction=str(step.get('instruction', '')), image=str(step.get('image', '')),
-                              trigger=step.get('trigger', {})))
-    self.quest = Quest(title=title, description=description, steps=steps)
+                              instruction=str(step.get('instruction', '')), image=step.get('image', ''),
+                              trigger=step.get('trigger', {}), help=step.get('help', '')))
+    self.quest = Quest(title=title, description=description, steps=steps, image=data.get('image', ''))
     self.completedSteps = [False] * len(self.quest.steps)
 
 
   @Slot(Task, dict)
-  def handle_task(self, task: Task, data: dict[str, Any]) -> None:
+  def handleTask(self, task: Task, data: dict[str, Any]) -> None:
     """Handle task events emitted by the UI."""
     stepIndex = self.completedSteps.index(False)
     step = self.quest.steps[stepIndex]
@@ -68,42 +69,22 @@ class TutorialManager(QObject):
 
   def _match_trigger(self, trigger: dict[str, str], task: Task, data: dict[str, Any]) -> bool:
     """Return True when a task matches the trigger definition."""
-    eventName = trigger.get('event','')
-    if Task[eventName.replace('Task.', '').strip()] is not task:
-      return False
-    if 'docType' in trigger and data.get('docType') != trigger.get('docType'):
-      return False
-    if 'name' in trigger:
-      doc = data.get('doc', {})
-      if not isinstance(doc, dict) or doc.get('name') != trigger.get('name'):
-        return False
-    if 'file' in trigger:
-      if not self._match_file_trigger(str(trigger.get('file')), data):
-        return False
+    for triggerK, triggerV in trigger.items():
+      if triggerK == 'event':
+        if Task[triggerV] is not task:
+          return False
+      elif triggerK=='docType' and 'docType' in data:
+        if data.get('docType') != triggerV:
+          return False
+      elif triggerK=='_count_':
+        if len(data['items'])!=int(triggerV):
+          return False
+      else:
+        doc = data.get('doc', {})
+        if triggerV=='_non_empty_':
+          if not doc.get(triggerK):
+            return False
+        else:
+          if triggerV.lower() not in str(doc.get(triggerK, '')).lower():
+            return False
     return True
-
-
-  def _match_file_trigger(self, target_file: str, data: dict[str, Any]) -> bool:
-    """Check whether a task references a target filename."""
-    file_name = data.get('fileName')
-    if isinstance(file_name, str) and Path(file_name).name == target_file:
-      return True
-    items = data.get('items', [])
-    if isinstance(items, (list, tuple)):
-      for item in items:
-        candidate = self._normalize_item_path(item)
-        if candidate and Path(candidate).name == target_file:
-          return True
-    return False
-
-  @staticmethod
-  def _normalize_item_path(item: Any) -> str | None:
-    """Normalize dropped items into a filesystem path."""
-    if hasattr(item, 'toLocalFile'):
-      return item.toLocalFile()
-    if not item:
-      return None
-    item_str = str(item)
-    if item_str.startswith('file://'):
-      return urlparse(item_str).path
-    return item_str

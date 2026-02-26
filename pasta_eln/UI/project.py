@@ -312,6 +312,7 @@ class Project(QWidget):
       self.comm.changeTable.emit(command[1], self.projID)
     elif command[0] is Command.ADD_ON:
       callAddOn(command[1], self.comm, self.projID, self)
+      self.comm.uiRequestTask.emit(Task.TUTORIAL, {'doc':{'task':'callAddOnInProject'}})
     else:
       logging.error('Project menu unknown: %s',command, exc_info=True)
     return

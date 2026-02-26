@@ -1,12 +1,13 @@
 """Tutorial panel for quest guidance."""
 from __future__ import annotations
+import base64
 from datetime import datetime
-from PySide6.QtCore import Qt, Slot
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QWidget
 from .manager import TutorialManager
 from ..guiStyle import widgetAndLayout, TextButton, Label, Image
 
-START_WIDTH = 320
+START_WIDTH = 480
 
 class TutorialPanel(QWidget):
   """Display tutorial quests and progress."""
@@ -14,12 +15,16 @@ class TutorialPanel(QWidget):
     super().__init__()
     self.manager = manager
     self.comm = comm
-    self.setMinimumWidth(START_WIDTH)
+    self.setFixedWidth(START_WIDTH)
     self.layout = QVBoxLayout(self)
     # General quest details
     self.introW, self.introL = widgetAndLayout('V', self.layout, 's',  's','s', 's','s')
-    test = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAIAAAAErfB6AAAB/klEQVR4nOzTsUncARyG4ZD8i6tC0qTIAmmSFQLp0igOYCUiTiC2N4SChWChjVxvfaUjXOEI9hYKbuEPXp5nga94+Zb/X39/mnD493Jk9+zoeGR3b3U1svt5ZJUPI3CcwHECxwkcJ3CcwHECxwkcJ3CcwHECxwkcJ3CcwHECxwkcJ3CcwHECxwkcJ3CcwHECxwkcJ3CcwHECxwkcJ3CcwHECxwkcJ3CcwHECxwkcJ3CcwHHLj823keE/Px9Gdm9225HdzbIb2fXgOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI5bDp5eRoYfn7+P7K7v90d2T09eR3Y9OE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjli/n/0aGt9d3I7u3b79Gdlfri5FdD44TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7gOIHjBI4TOE7guPcAAAD//0PwF4w6gQUpAAAAAElFTkSuQmCC'
-    self.image = Image(test, self.introL, width=START_WIDTH)
+    imgData = ''
+    if self.manager.quest.image:
+      with open(self.manager.questDir / self.manager.quest.image, 'rb') as image_file:
+        imgData = base64.b64encode(image_file.read()).decode('ascii')
+      imgData = f"data:image/jpg;base64,{imgData}"
+    self.image = Image(imgData, self.introL, width=START_WIDTH)
     self.label = Label(f'Quest: {self.manager.quest.title}','h1', self.introL)
     self.description = Label(self.manager.quest.description, 'h2', self.introL)
     self.description.setWordWrap(True)
@@ -50,7 +55,15 @@ class TutorialPanel(QWidget):
   @Slot()
   def refreshSteps(self) -> None:
     """Refresh step list with progress."""
-    stepIndex =  self.manager.completedSteps.index(False)
+    try:
+      stepIndex =  self.manager.completedSteps.index(False)
+    except ValueError:
+      self.introW.show()
+      self.stepsW.hide()
+      self.startBtn.hide()
+      stepIndex = len(self.manager.quest.steps)
+      self.description.setText(f'🎉 Quest complete! 🎉\n⏱️ You took {round((datetime.now() - self.manager.started).total_seconds())} seconds.')
+      return
     for i in reversed(range(self.stepsL.count())):
       self.stepsL.itemAt(i).widget().setParent(None)
     for idx, step in enumerate(self.manager.quest.steps):
@@ -64,7 +77,5 @@ class TutorialPanel(QWidget):
         self.helpBtn = TextButton('Help', self, ['help'], self.stepsL)
 
     if self.manager.started is not None:
-      level = (stepIndex+1) / ((datetime.now() - self.manager.started).total_seconds()/60.+1)
-      print(level, stepIndex, (datetime.now() - self.manager.started).total_seconds()/60.)
+      level = 1 if stepIndex==0 else (stepIndex+1)**2/((datetime.now()-self.manager.started).total_seconds()/60.+1)
       self.rating.setText(f'Level {round(level)}')
-

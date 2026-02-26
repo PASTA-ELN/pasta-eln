@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
       self.tutorialDialog.setLayout(dialogLayout)
       self.tutorialDialog.setWindowFlag(Qt.WindowType.Window, True)
       self.tutorialDialog.show()
-      self.comm.uiRequestTask.connect(self.tutorialManager.handle_task)
+      self.comm.uiRequestTask.connect(self.tutorialManager.handleTask)
 
     # GUI
     self.setWindowTitle(f"PASTA-ELN {__version__}")

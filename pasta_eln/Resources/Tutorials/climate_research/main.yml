@@ -1,35 +1,55 @@
-title: Rising Temperature & CO₂
+title: The Last Climate Report
 description: |
-  Learn to import and interpret global temperature and CO₂ trends.
-  - Download data from https://github.com/owid/co2-data?utm_source=chatgpt.com
+  It is 2030. A government directive halted official climate monitoring four years earlier, leaving a critical gap in temperature records. You are Clark Kent, the scientific advisor to the country’s last independent newspaper, charged with one urgent mission: collect, validate and assemble all available climate data up to 2026 before it vanishes from public reach. Work quickly. This may be the last report on recent climate trends.
+
+  Note: Although the setting is fictional, all data comes is sourced (https://www.jkclimate.fr).  The data was not altered, expect that the metadata was removed for this introductory tutorial, given that a custom extractor was out-the-scope.
+image: title.jpg
 steps:
   - id: create_project
     title: Create a project
-    instruction: Create a project named "Climate Watch".
+    instruction: Create a project with a name that includes "climate" and a clear objective.
+    help: On the home screen 'Project list', select add and create a new project with the given name and objective.
     trigger:
       event: ADD_DOC
       docType: x0
-      name: Climate Watch
+      name: climate
+      .objective: _non_empty_
+  - id: create_task
+    title: Create a task in the project
+    instruction: Create a folder, aka task, and rename it to something with 'temperature'
+    help: Open project by clicking on it. Afterwards create a folder by "Add folder". Double click it to rename it.
+    trigger:
+      event: EDIT_DOC
+      type: x1
+      name: temperature
   - id: import_temperature
     title: Import temperature data
-    instruction: Drag-and-drop `global_temp.csv` from `Resources/Tutorials/data` into the project.
+    instruction: Go to https://fz-juelich.sciebo.de/s/gCN7QEiqBQrA2Hp, download data, and drag-and-drop all files into new folder.
+    help: |
+      1. Go to website, download to downloads folder.
+      2. Drag and drop all files onto the folder.
     trigger:
       event: DROP_EXTERNAL
-      file: global_temp.csv
-  - id: plot_temperature
-    title: Plot temperature trend
-    instruction: Use Table Plot on the temperature CSV to visualize the trend.
+      _count_: 6
+  - id: inspect_data1
+    title: Inspect data in detail and edit it to annotate faulty data. Give it one star and comment on observation
+    help: |
+      1. Data "ERA5" has very high values. Measurement failure.
+      2. Double click it in the table and give it one star. Write a comment.
     trigger:
-      event: EXTRACTOR_TEST
-  - id: import_co2
-    title: Import CO₂ data
-    instruction: Drag-and-drop `global_co2.csv` from `Resources/Tutorials/data` into the project.
+      event: EDIT_DOC
+      tags: _1
+      comment: _non_empty_
+  - id: inspect_data2
+    title: Hide faulty data, but never delete it.
+    help: |
+      1. Select it in the table view and click "Selection->Invert hidden status of selected"
     trigger:
-      event: DROP_EXTERNAL
-      file: global_co2.csv
-  - id: write_summary
-    title: Write a short interpretation
-    instruction: Add a text entry summarizing the relationship.
+      event: HIDE_SHOW
+  - id: write_report
+    title: Export your findings to a report
+    instruction: Create a html-report of the current project.
+    help: Go back to the project view, at the top right corner "More", you can create a html-report.
     trigger:
-      event: ADD_DOC
-      docType: x1
+      event: TUTORIAL
+      task: callAddOnInProject

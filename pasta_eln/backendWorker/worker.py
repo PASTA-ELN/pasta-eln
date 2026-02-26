@@ -49,6 +49,7 @@ class Task(Enum):
   SEND_REPOSITORY= (17, 'Sending data to repository:')             #keys: projID, docTypes,repositories,metadata,uploadZenodo
   CHECK_DB       = (18, 'Checking database integrity:')            #keys: style
   OPEN_EXTERNAL  = (19, '')                                        #keys: docID
+  TUTORIAL       = (20, '')                                        #keys: --none-- for use only in tutorialPanel.py
 
   def __init__(self, num:int, msgWaitDialog:str='') -> None:
     """Initialize the task with a number and an optional message for the wait dialog
@@ -451,7 +452,7 @@ class BackendWorker(QObject):
     elif task is Task.HIDE_SHOW    and set(data.keys())=={'docID'}:
       self.backend.db.hideShow(data['docID'])
 
-    else:
+    elif task is not Task.TUTORIAL:
       logging.error('Got task, which I do not understand %s %s', task, data.keys(), exc_info=True)
 
 
