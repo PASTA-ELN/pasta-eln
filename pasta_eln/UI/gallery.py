@@ -91,9 +91,7 @@ class ImageGallery(QWidget):
     if not self.model or docID not in self.docRows:
       return False
     item = self.model.item(self.docRows[docID], 0)
-    if item is None:
-      return False
-    return item.checkState() == Qt.CheckState.Checked
+    return False if item is None else item.checkState() == Qt.CheckState.Checked
 
 
   def toggleSelection(self) -> None:

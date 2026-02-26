@@ -269,7 +269,7 @@ class Details(QScrollArea):
       if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
           ',' not in dataHierarchyItems[0]['list'] and ' ' not  in dataHierarchyItems[0]['list']:#choice among docType
         if not isinstance(value, tuple):
-          pass
+          logging.info('Not a tuple: %s : %s', key,value)
         if not isDocID(value[0]):
           value = value[0]
         elif value[2]:
@@ -298,7 +298,7 @@ class Details(QScrollArea):
           else:
             newValue[k] = v
         labelStr = f'{cssStyleHtmlEditors}{key}: {dict2ul(newValue)}'
-      labelStr = labelStr[:MAX_LENGTH_STR]+'...' if len(labelStr)>MAX_LENGTH_STR else labelStr
+      labelStr = f'{labelStr[:MAX_LENGTH_STR]}...' if len(labelStr)>MAX_LENGTH_STR else labelStr
       if layout is not None:
         label = Label(labelStr, function=lambda x,y: self.clickLink(x,y) if link else None, docID=docID)
         label.setOpenExternalLinks(True)

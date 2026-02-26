@@ -1,8 +1,8 @@
 """ Custom tree view on data model """
 import logging
 from enum import Enum
-from typing import Any
 from pathlib import Path
+from typing import Any
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QDropEvent, QEventPoint, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget
@@ -211,7 +211,7 @@ class TreeView(QTreeView):
         return
       docID = item.data()['hierStack'].split('/')[-1]
       self.comm.uiRequestTask.emit(Task.DROP_EXTERNAL, {'docID':docID, 'items':items,
-                                                        'addToExisting':item.data()['fPath']=='*'}) # if true, add to existing; if false, create new
+                                                        'addToExisting':item.data()['fPath']=='*'})# if true, add to existing; if false, create new
       event.ignore()
     elif 'application/x-qstandarditemmodeldatalist' in event.mimeData().formats():
       sourceIndex = event.source().selectionModel().selectedIndexes()[0]          # type: ignore[attr-defined]

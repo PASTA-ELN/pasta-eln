@@ -11,9 +11,9 @@ from typing import Any
 import pandas as pd
 from PySide6.QtCore import QSize, Qt, QTimer, Slot
 from PySide6.QtGui import QRegularExpressionValidator
-from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLayout, QLineEdit, QMessageBox,
-                               QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget,
-                               QInputDialog)
+from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QInputDialog, QLabel, QLayout, QLineEdit,
+                               QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout,
+                               QWidget)
 from ..backendWorker.sqlite import MAIN_ORDER
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
@@ -202,7 +202,7 @@ class Form(QDialog):
       self.projectComboBox.addItem('- no change -',    userData='')
     elif self.allowProjectUnassign:
       self.projectComboBox.addItem('- not assigned -', userData='NONE')
-    for iDocID, iName in data[['id','name']].values.tolist():           # add all projects incl. the present
+    for iDocID, iName in data[['id','name']].values.tolist():             # add all projects incl. the present
       self.projectComboBox.addItem(iName, userData=iDocID)
       stack = self.doc.get('branch',[{}])[0].get('stack', [])
       proj  = stack[0] if stack else ''
@@ -486,7 +486,7 @@ class Form(QDialog):
     """
     if len(self.allDocIDsCopy)==1:
       warning = 'Enter new key: <br>IF YOU CONTINUE<ol><li>THE FORM WILL CLOSE AND HAS TO REOPENED. <li>ALL CHANGES WILL BE LOST)</ol>'
-      res, ok = QInputDialog.getText(self, "Edit key", warning)
+      res, ok = QInputDialog.getText(self, 'Edit key', warning)
       if ok:
         keyNew = f"{key.split('.')[0]}.{res.strip()}"
         cmd = f"UPDATE properties SET key='{keyNew}' WHERE key='{key}' AND id='{self.allDocIDsCopy[0]}'"
@@ -846,8 +846,14 @@ class Form(QDialog):
     """ Reject the dialog, stop the thread and disconnect signals """
     warnings.filterwarnings('ignore', category=RuntimeWarning)
     if hasattr(self.comm, 'backendThread') and self.comm.backendThread.worker is not None:
-      self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
-      self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
+      try:
+        self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
+      except RuntimeError:
+        pass
+      try:
+        self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
+      except RuntimeError:
+        pass
     self.checkThreadTimer.stop()
     super().reject()
 
@@ -856,8 +862,14 @@ class Form(QDialog):
     """ Accept the dialog, stop the thread and disconnect signals """
     warnings.filterwarnings('ignore', category=RuntimeWarning)
     if hasattr(self.comm, 'backendThread') and self.comm.backendThread.worker is not None:
-      self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
-      self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
+      try:
+        self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
+      except RuntimeError:
+        pass
+      try:
+        self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
+      except RuntimeError:
+        pass
     self.checkThreadTimer.stop()
     super().accept()
 

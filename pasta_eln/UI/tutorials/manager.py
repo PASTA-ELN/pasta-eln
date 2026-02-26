@@ -2,10 +2,10 @@
 - remember to use "yq .  main.yml > main.json" in each folder (automatically done in release script)
 """
 from __future__ import annotations
+import json
+import logging
 from dataclasses import dataclass
 from datetime import datetime
-import logging
-import json
 from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot
@@ -49,9 +49,10 @@ class TutorialManager(QObject):
       stepsRaw = data.get('steps', [])
       steps: list[QuestStep] = []
       for step in stepsRaw:
-        steps.append( QuestStep(stepID=str(step.get('id', '')), title=str(step.get('title', '')),
+        stepNew = QuestStep(stepID=str(step.get('id', '')), title=str(step.get('title', '')),
                                 instruction=str(step.get('instruction', '')), image=step.get('image', ''),
-                                trigger=step.get('trigger', {}), help=step.get('help', '')))
+                                trigger=step.get('trigger', {}), help=step.get('help', ''))
+        steps.append(stepNew)
       self.quest = Quest(title=title, description=description, steps=steps, image=data.get('image', ''))
       self.completedSteps = [False] * len(self.quest.steps)
 
@@ -83,7 +84,6 @@ class TutorialManager(QObject):
         if triggerV=='_non_empty_':
           if not doc.get(triggerK):
             return False
-        else:
-          if triggerV.lower() not in str(doc.get(triggerK, '')).lower():
-            return False
+        elif triggerV.lower() not in str(doc.get(triggerK, '')).lower():
+          return False
     return True

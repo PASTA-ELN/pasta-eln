@@ -6,9 +6,9 @@ import re
 import uuid
 from datetime import datetime
 from typing import Any
+from ..backendWorker.sqlite import SqlLiteDB
 from ..fixedStringsJson import SORTED_KEYS, SQLiteTranslation
 from ..miscTools import isDocID
-from ..backendWorker.sqlite import SqlLiteDB
 from .stringChanges import markdownEqualizer
 
 
@@ -190,9 +190,13 @@ def expandDocID2tupleInDict(d:dict[str,Any], database:SqlLiteDB) -> None:
   for k, v in d.items():
     if isinstance(v, dict):
       expandDocID2tupleInDict(v, database)
-    elif isinstance(v, tuple) and pattern.match(v[0]) and k!='id':
+    elif isinstance(v, tuple) and pattern.match(v[0]) and k not in ('id','oldIdentifier'):
       database.cursor.execute(f'SELECT name FROM main WHERE id=="{v[0]}"')
-      name = database.cursor.fetchone()[0]
+      names = database.cursor.fetchall()
+      if len(names)==0:
+        logging.warning('Could not get name for docID %s : %s in %s', k, v[0], d)
+        names = ['Could not find name']
+      name = names[0]
       d[k] = (v[0], '', name , '')
   return
 

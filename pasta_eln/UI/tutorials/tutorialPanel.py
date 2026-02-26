@@ -4,10 +4,9 @@ import base64
 from datetime import datetime
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QWidget
-from .manager import TutorialManager
-from ..guiStyle import widgetAndLayout, TextButton, Label, Image
 from ..guiCommunicate import Communicate
-
+from ..guiStyle import Image, Label, TextButton, widgetAndLayout
+from .manager import TutorialManager
 
 START_WIDTH = 480
 

@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QEvent, Qt, QUrl, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QPixmap, QShortcut
-from PySide6.QtWidgets import QFileDialog, QLabel, QDialog, QMainWindow, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QMainWindow, QVBoxLayout
 from pasta_eln import __version__
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import CONF_FILE_NAME, AboutMessage, shortcuts
