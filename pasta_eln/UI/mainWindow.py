@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
 
     if self.comm.configuration['GUI'].get('tutorial',''):
       self.tutorialManager = TutorialManager(self.comm.configuration['GUI']['tutorial'])
-      self.tutorialPanel = TutorialPanel(self.tutorialManager)
+      self.tutorialPanel = TutorialPanel(self.comm, self.tutorialManager)
       self.tutorialDialog = QDialog(self)
       self.tutorialDialog.setWindowTitle('Tutorial')
       dialogLayout = QVBoxLayout()

@@ -2,7 +2,6 @@ title: Rising Temperature & CO₂
 description: |
   Learn to import and interpret global temperature and CO₂ trends.
   - Download data from https://github.com/owid/co2-data?utm_source=chatgpt.com
-prerequisites: []
 steps:
   - id: create_project
     title: Create a project

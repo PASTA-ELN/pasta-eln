@@ -1,7 +1,7 @@
 """Tutorial quest loader and state manager."""
 from __future__ import annotations
-
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 import json
 from pathlib import Path
@@ -18,6 +18,7 @@ class QuestStep:
   title: str
   instruction: str
   trigger: dict[str, Any]
+  help:str = 'No help information provided.'
   image: str = ''
 
 
@@ -27,18 +28,17 @@ class Quest:
   title: str
   description: str
   steps: list[QuestStep]
+  image: str = ''
 
 
 class TutorialManager(QObject):
   """Load quests from JSON files and track progress in memory."""
   activeQuestChanged = Signal()
   progressChanged = Signal()
-
-
   def __init__(self, questName:str) -> None:
     super().__init__()
     self.questDir = Path(__file__).resolve().parent.parent.parent / 'Resources' / 'Tutorials' / questName
-
+    self.started: datetime | None = None
     # Parse a quest definition
     data = json.load((self.questDir / 'main.json').open(encoding='utf-8'))
     if not isinstance(data, dict):
@@ -59,11 +59,7 @@ class TutorialManager(QObject):
   @Slot(Task, dict)
   def handle_task(self, task: Task, data: dict[str, Any]) -> None:
     """Handle task events emitted by the UI."""
-    stepIndex = -1
-    for idx, done in enumerate(self.completedSteps):
-      if not done:
-        stepIndex = idx
-        break
+    stepIndex = self.completedSteps.index(False)
     step = self.quest.steps[stepIndex]
     if self._match_trigger(step.trigger, task, data):
       self.completedSteps[stepIndex] = True
