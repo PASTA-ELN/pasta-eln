@@ -55,6 +55,15 @@ class TutorialManager(QObject):
         steps.append(stepNew)
       self.quest = Quest(title=title, description=description, steps=steps, image=data.get('image', ''))
       self.completedSteps = [False] * len(self.quest.steps)
+      self.level = 1
+      self.durationSec = 0
+
+
+  def start(self) -> None:
+    """Start the quest."""
+    self.started = datetime.now()
+    self.completedSteps = [False] * len(self.quest.steps)
+    return
 
 
   @Slot(Task, dict)
@@ -64,6 +73,8 @@ class TutorialManager(QObject):
     step = self.quest.steps[stepIndex]
     if self._match_trigger(step.trigger, task, data):
       self.completedSteps[stepIndex] = True
+      self.durationSec = round((datetime.now()-self.started).total_seconds())
+      self.level = 1 if stepIndex==0 else round((stepIndex+1)**2/(self.durationSec/60.+1))
       self.progressChanged.emit()
 
 

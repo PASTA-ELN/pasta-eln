@@ -47,7 +47,7 @@ class TutorialPanel(QWidget):
       command (list): list of commands
    """
     if command[0] == 'start':
-      self.manager.started = datetime.now()
+      self.manager.start()
       self.introW.hide()
       self.stepsW.show()
       self.refreshSteps()
@@ -67,11 +67,7 @@ class TutorialPanel(QWidget):
       self.stepsW.hide()
       self.startBtn.hide()
       stepIndex = len(self.manager.quest.steps)
-      if self.manager.started is None:
-        duration = -1.0
-      else:
-        duration = (datetime.now() - self.manager.started).total_seconds()
-      self.description.setText(f'🎉 Quest complete! 🎉\n⏱️ You took {round(duration)} sec.')
+      self.description.setText(f'🎉 Quest complete! 🎉\n⏱️ You took {self.manager.durationSec} sec.')
       return
     for i in reversed(range(self.stepsL.count())):
       self.stepsL.itemAt(i).widget().setParent(None)
@@ -84,7 +80,4 @@ class TutorialPanel(QWidget):
         instructions = Label(step.instruction, 'h3', self.stepsL)
         instructions.setWordWrap(True)
         self.helpBtn = TextButton('Help', self, ['help'], self.stepsL)
-
-    if self.manager.started is not None:
-      level = 1 if stepIndex==0 else (stepIndex+1)**2/((datetime.now()-self.manager.started).total_seconds()/60.+1)
-      self.rating.setText(f'Level {round(level)}')
+    self.rating.setText(f'Level {self.manager.level}')

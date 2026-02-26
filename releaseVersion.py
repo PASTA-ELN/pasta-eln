@@ -296,6 +296,17 @@ def runSourceVerification() -> None:
   return
 
 
+def updateTutorialJson() -> None:
+  """ Update all yml -> json """
+  for root, _, files in os.walk('pasta_eln/Resources/Tutorials'):
+    for file in files:
+      if file.endswith('.yml'):
+        inPath = Path(root) / file
+        outPath = inPath.with_suffix('.json')
+        os.system(f'yq . {inPath} > {outPath}')
+  return
+
+
 def getArtifacts() -> None:
   """ Get artifacts from action """
   if not os.path.exists('artifacts'):
@@ -337,6 +348,8 @@ if __name__=='__main__':
   successTests = runTests()
   if not successTests:
     sys.exit(1)
+  #create files automatically
+  updateTutorialJson()
   createContributors()
   runSourceVerification()
   createRequirementsFile()
