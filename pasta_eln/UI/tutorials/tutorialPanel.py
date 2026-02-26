@@ -1,7 +1,6 @@
 """Tutorial panel for quest guidance."""
 from __future__ import annotations
 import base64
-from datetime import datetime
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QWidget
 from ..guiCommunicate import Communicate

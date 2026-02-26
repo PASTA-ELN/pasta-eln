@@ -73,7 +73,10 @@ class TutorialManager(QObject):
     step = self.quest.steps[stepIndex]
     if self._match_trigger(step.trigger, task, data):
       self.completedSteps[stepIndex] = True
-      self.durationSec = round((datetime.now()-self.started).total_seconds())
+      if self.started is None:
+        self.durationSec = 0
+      else:
+        self.durationSec = round((datetime.now()-self.started).total_seconds())
       self.level = 1 if stepIndex==0 else round((stepIndex+1)**2/(self.durationSec/60.+1))
       self.progressChanged.emit()
 
