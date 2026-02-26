@@ -70,9 +70,9 @@ class TutorialManager(QObject):
       self.progressChanged.emit()
 
 
-  def _match_trigger(self, trigger: dict[str, Any], task: Task, data: dict[str, Any]) -> bool:
+  def _match_trigger(self, trigger: dict[str, str], task: Task, data: dict[str, Any]) -> bool:
     """Return True when a task matches the trigger definition."""
-    eventName = trigger.get('event')
+    eventName = trigger.get('event','')
     if Task[eventName.replace('Task.', '').strip()] is not task:
       return False
     if 'docType' in trigger and data.get('docType') != trigger.get('docType'):
