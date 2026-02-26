@@ -7,10 +7,10 @@ import time
 import warnings
 from enum import Enum
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 import pandas as pd
 from PySide6.QtCore import QSize, Qt, QTimer, Slot
-from PySide6.QtGui import QRegularExpressionValidator, QMouseEvent
+from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLayout, QLineEdit, QMessageBox,
                                QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget,
                                QInputDialog)
@@ -440,9 +440,10 @@ class Form(QDialog):
           else:
             setattr(self, elementName, QLineEdit(value))
             self.allUserElements.append((key,'LineEdit'))
-          formLabelW = QLabel(label)
           if key not in [f"{i['class']}.{i['name']}" for i in self.dataHierarchyNodeRaw]:
-            formLabelW.mousePressEvent = lambda event, label=formLabelW, labelKey=key: self.formLabelClicked(label, labelKey, event)
+            formLabelW = Label(label, 'h3', None, self.formLabelClicked, key)
+          else:
+            formLabelW = Label(label, 'h3', None)
           formLabelW.setOpenExternalLinks(True)
           formLabelW.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse)
           formL.addRow(formLabelW, getattr(self, elementName))
@@ -478,14 +479,12 @@ class Form(QDialog):
       logging.error('There should not be "_" in a doc: %s', str(self.doc), exc_info=True)
 
 
-  def formLabelClicked(self, label: QLabel, key: str, event:QMouseEvent) -> None:
+  def formLabelClicked(self, key: str, _:str='') -> None:
     """ Form label clicked to allow to edit the key
     Args:
-      label (QLabel): label that was clicked
       key (str): key that was clicked
-      event (QMouseEvent): mouse event
     """
-    if event.button() == Qt.MouseButton.LeftButton and len(self.allDocIDsCopy)==1:
+    if len(self.allDocIDsCopy)==1:
       warning = 'Enter new key: <br>IF YOU CONTINUE<ol><li>THE FORM WILL CLOSE AND HAS TO REOPENED. <li>ALL CHANGES WILL BE LOST)</ol>'
       res, ok = QInputDialog.getText(self, "Edit key", warning)
       if ok:
@@ -494,7 +493,7 @@ class Form(QDialog):
         self.comm.uiSendSQL.emit([{'type':'one', 'cmd':cmd}])
         self.accept()                                                                                   #close
         self.close()
-    QLabel.mousePressEvent(label, event)
+    return
 
 
   def autosave(self) -> None:
@@ -786,7 +785,7 @@ class Form(QDialog):
     self.updateTagsBar()
     return
 
-  def addTag(self, tag:Union[str,int]) -> None:
+  def addTag(self, tag:str|int) -> None:
     """
     Clicked to add tag. Since one needs to use indexChanged to allow the user to enter text, that delivers a int. To allow to differentiate
     between both comboboxes, they cannot be the same (both int), hence grades has to be textChanged

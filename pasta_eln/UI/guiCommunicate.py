@@ -127,7 +127,6 @@ class Communicate(QObject):
       if self.backendThread.isRunning():
         self.backendThread.quit()
       self.backendThread.deleteLater()
-      self.backendThread = None
     self.waitDialog.close()
 
 

@@ -214,7 +214,7 @@ class TreeView(QTreeView):
                                                         'addToExisting':item.data()['fPath']=='*'}) # if true, add to existing; if false, create new
       event.ignore()
     elif 'application/x-qstandarditemmodeldatalist' in event.mimeData().formats():
-      sourceIndex = event.source().selectionModel().selectedIndexes()[0]
+      sourceIndex = event.source().selectionModel().selectedIndexes()[0]          # type: ignore[attr-defined]
       sourceDocID = sourceIndex.data(Qt.ItemDataRole.UserRole + 1)['hierStack'].split('/')[-1]
       targetIndex = self.indexAt(event.position().toPoint())
       if self.dropIndicatorPosition() == QAbstractItemView.DropIndicatorPosition.OnItem and \

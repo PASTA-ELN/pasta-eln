@@ -8,7 +8,6 @@ import logging
 import json
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 from PySide6.QtCore import QObject, Signal, Slot
 from ...backendWorker.worker import Task
 
@@ -44,17 +43,17 @@ class TutorialManager(QObject):
     data = json.load((self.questDir / 'main.json').open(encoding='utf-8'))
     if not isinstance(data, dict):
       logging.error('Tutorial file %s is invalid', self.questDir)
-      return None
-    title = str(data.get('title', self.questDir.name))
-    description = str(data.get('description', ''))
-    stepsRaw = data.get('steps', [])
-    steps: list[QuestStep] = []
-    for step in stepsRaw:
-      steps.append( QuestStep(stepID=str(step.get('id', '')), title=str(step.get('title', '')),
-                              instruction=str(step.get('instruction', '')), image=step.get('image', ''),
-                              trigger=step.get('trigger', {}), help=step.get('help', '')))
-    self.quest = Quest(title=title, description=description, steps=steps, image=data.get('image', ''))
-    self.completedSteps = [False] * len(self.quest.steps)
+    else:
+      title = str(data.get('title', self.questDir.name))
+      description = str(data.get('description', ''))
+      stepsRaw = data.get('steps', [])
+      steps: list[QuestStep] = []
+      for step in stepsRaw:
+        steps.append( QuestStep(stepID=str(step.get('id', '')), title=str(step.get('title', '')),
+                                instruction=str(step.get('instruction', '')), image=step.get('image', ''),
+                                trigger=step.get('trigger', {}), help=step.get('help', '')))
+      self.quest = Quest(title=title, description=description, steps=steps, image=data.get('image', ''))
+      self.completedSteps = [False] * len(self.quest.steps)
 
 
   @Slot(Task, dict)

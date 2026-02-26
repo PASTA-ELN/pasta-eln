@@ -6,19 +6,21 @@ from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QWidget
 from .manager import TutorialManager
 from ..guiStyle import widgetAndLayout, TextButton, Label, Image
+from ..guiCommunicate import Communicate
+
 
 START_WIDTH = 480
 
 class TutorialPanel(QWidget):
   """Display tutorial quests and progress."""
-  def __init__(self, comm, manager: TutorialManager) -> None:
+  def __init__(self, comm:Communicate, manager: TutorialManager) -> None:
     super().__init__()
     self.manager = manager
     self.comm = comm
     self.setFixedWidth(START_WIDTH)
-    self.layout = QVBoxLayout(self)
+    self.mainL = QVBoxLayout(self)
     # General quest details
-    self.introW, self.introL = widgetAndLayout('V', self.layout, 's',  's','s', 's','s')
+    self.introW, self.introL = widgetAndLayout('V', self.mainL, 's',  's','s', 's','s')
     imgData = ''
     if self.manager.quest.image:
       with open(self.manager.questDir / self.manager.quest.image, 'rb') as image_file:
@@ -30,17 +32,21 @@ class TutorialPanel(QWidget):
     self.description.setWordWrap(True)
     self.startBtn = TextButton('Start quest', self, ['start'], self.introL)
     # Progress
-    self.stepsW, self.stepsL = widgetAndLayout('V', self.layout, '0',  's','s', 's','s')
+    self.stepsW, self.stepsL = widgetAndLayout('V', self.mainL, '0',  's','s', 's','s')
     self.stepsW.hide()
     self.manager.progressChanged.connect(self.refreshSteps)
     self.helpBtn: TextButton | None = None
     # Rating
-    self.layout.addStretch(1)
-    self.rating = Label('Level: 1', 'h2', self.layout)
+    self.mainL.addStretch(1)
+    self.rating = Label('Level: 1', 'h2', self.mainL)
     self.rating.hide()
 
 
-  def execute(self, command: list[str]):
+  def execute(self, command: list[str]) -> None:
+    """ execute commands
+    Args:
+      command (list): list of commands
+   """
     if command[0] == 'start':
       self.manager.started = datetime.now()
       self.introW.hide()
@@ -62,7 +68,11 @@ class TutorialPanel(QWidget):
       self.stepsW.hide()
       self.startBtn.hide()
       stepIndex = len(self.manager.quest.steps)
-      self.description.setText(f'🎉 Quest complete! 🎉\n⏱️ You took {round((datetime.now() - self.manager.started).total_seconds())} seconds.')
+      if self.manager.started is None:
+        duration = -1.0
+      else:
+        duration = (datetime.now() - self.manager.started).total_seconds()
+      self.description.setText(f'🎉 Quest complete! 🎉\n⏱️ You took {round(duration)} sec.')
       return
     for i in reversed(range(self.stepsL.count())):
       self.stepsL.itemAt(i).widget().setParent(None)
