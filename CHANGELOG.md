@@ -2,7 +2,32 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.2b2...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.2...HEAD)
+
+**Fixed bugs:**
+
+- Linking of items shows the internal ID but not the name [\#636](https://github.com/PASTA-ELN/pasta-eln/issues/636)
+- Error while rerunning extractors [\#631](https://github.com/PASTA-ELN/pasta-eln/issues/631)
+
+**Closed issues:**
+
+- Links do not apply for already created items? [\#635](https://github.com/PASTA-ELN/pasta-eln/issues/635)
+- Change of style for csv-extractor? [\#632](https://github.com/PASTA-ELN/pasta-eln/issues/632)
+- Removing one copy of measurement causes removal of all its copies [\#629](https://github.com/PASTA-ELN/pasta-eln/issues/629)
+- Get test\_03 working again [\#628](https://github.com/PASTA-ELN/pasta-eln/issues/628)
+- Feature Request: Linking files in hindsight [\#624](https://github.com/PASTA-ELN/pasta-eln/issues/624)
+- A once added key cant be changed afterwards [\#621](https://github.com/PASTA-ELN/pasta-eln/issues/621)
+- Double occurance of keys [\#620](https://github.com/PASTA-ELN/pasta-eln/issues/620)
+- Feature Request: K-V- pairs as metadata and vice versa [\#617](https://github.com/PASTA-ELN/pasta-eln/issues/617)
+- Form-Editor: sort tags in alphabetical order [\#607](https://github.com/PASTA-ELN/pasta-eln/issues/607)
+- Same file name - misrecognition of doublettes? [\#606](https://github.com/PASTA-ELN/pasta-eln/issues/606)
+- Feature request: Checking for double SHASUM//file doublettes [\#604](https://github.com/PASTA-ELN/pasta-eln/issues/604)
+- 3.2.1b2 - overlap of item type and ID [\#580](https://github.com/PASTA-ELN/pasta-eln/issues/580)
+- Feature request: Checkboxes for the gallery view [\#523](https://github.com/PASTA-ELN/pasta-eln/issues/523)
+
+## [v3.2.2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.2) (2026-01-20)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.2b2...v3.2.2)
 
 **Closed issues:**
 
@@ -38,7 +63,7 @@
 - Drag+Drop of a folder - Adding only files? [\#601](https://github.com/PASTA-ELN/pasta-eln/issues/601)
 - Sorting children? [\#600](https://github.com/PASTA-ELN/pasta-eln/issues/600)
 - Default data plot yields error [\#599](https://github.com/PASTA-ELN/pasta-eln/issues/599)
-- When switching to hidden items only in table view, make sure that the details of hidden items do not remain open [\#597](https://github.com/PASTA-ELN/pasta-eln/issues/597)
+- When swithing to hidden items only in table view, make sure that the details of hidden items do not remain open [\#597](https://github.com/PASTA-ELN/pasta-eln/issues/597)
 - Assigning of non-assigned item to project is not working [\#596](https://github.com/PASTA-ELN/pasta-eln/issues/596)
 - Add-On folder in a new project group [\#594](https://github.com/PASTA-ELN/pasta-eln/issues/594)
 - Visibility of project status in project view [\#593](https://github.com/PASTA-ELN/pasta-eln/issues/593)
