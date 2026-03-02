@@ -1,8 +1,8 @@
 """Tutorial panel for quest guidance."""
 from __future__ import annotations
 import base64
-from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QWidget
+from PySide6.QtCore import Slot, QTimer, Qt
+from PySide6.QtWidgets import QAbstractScrollArea, QMessageBox, QVBoxLayout, QWidget, QTextBrowser
 from ..guiCommunicate import Communicate
 from ..guiStyle import Image, Label, TextButton, widgetAndLayout
 from .manager import TutorialManager
@@ -25,9 +25,12 @@ class TutorialPanel(QWidget):
         imgData = base64.b64encode(image_file.read()).decode('ascii')
       imgData = f"data:image/jpg;base64,{imgData}"
     self.image = Image(imgData, self.introL, width=START_WIDTH)
-    self.label = Label(f'Quest: {self.manager.quest.title}','h1', self.introL)
-    self.description = Label(self.manager.quest.description, 'h2', self.introL)
-    self.description.setWordWrap(True)
+    self.textBrowser = QTextBrowser(self)
+    text = f'## {self.manager.quest.title}\n\n{self.manager.quest.description}'
+    self.textBrowser.setMarkdown(text)
+    self.textBrowser.setOpenExternalLinks(True)
+    self.textBrowser.setMinimumHeight(int(START_WIDTH*0.8))
+    self.introL.addWidget(self.textBrowser)
     self.startBtn = TextButton('Start quest', self, ['start'], self.introL)
     # Progress
     self.stepsW, self.stepsL = widgetAndLayout('V', self.mainL, '0',  's','s', 's','s')
@@ -66,7 +69,8 @@ class TutorialPanel(QWidget):
       self.stepsW.hide()
       self.startBtn.hide()
       stepIndex = len(self.manager.quest.steps)
-      self.description.setText(f'🎉 Quest complete! 🎉\n⏱️ You took {self.manager.durationSec} sec.')
+      text = f'## {self.manager.quest.title}\n\n🎉 Quest complete! 🎉\n⏱️ You took {self.manager.durationSec} sec.'
+      self.textBrowser.setMarkdown(text)
       return
     for i in reversed(range(self.stepsL.count())):
       self.stepsL.itemAt(i).widget().setParent(None)
@@ -76,7 +80,22 @@ class TutorialPanel(QWidget):
       if idx == stepIndex:
         if step.image:
           Image(step.image, self.stepsL)
-        instructions = Label(step.instruction, 'h3', self.stepsL)
-        instructions.setWordWrap(True)
-        self.helpBtn = TextButton('Help', self, ['help'], self.stepsL)
+        self.instructions = QTextBrowser(self)
+        self.instructions.setMarkdown(step.instruction)
+        self.instructions.setOpenExternalLinks(True)
+        self.instructions.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self._updateInstructionHeight()
+        QTimer.singleShot(0, self._updateInstructionHeight)
+        self.stepsL.addWidget(self.instructions)
+        self.helpBtn = TextButton('Help', self, ['help'], self.stepsL, style='margin-bottom: 20px; ')
     self.rating.setText(f'Level {self.manager.level}')
+
+
+  def _updateInstructionHeight(self) -> None:
+    """ Update instructions height to text content """
+    document = self.instructions.document()
+    document.setTextWidth(START_WIDTH-20)
+    document.adjustSize()
+    height = document.size().height() - 20
+    self.instructions.setFixedHeight(height)
+    self.instructions.setMaximumHeight(height)
