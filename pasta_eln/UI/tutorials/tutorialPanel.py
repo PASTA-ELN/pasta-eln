@@ -1,8 +1,8 @@
 """Tutorial panel for quest guidance."""
 from __future__ import annotations
 import base64
-from PySide6.QtCore import Slot, QTimer, Qt
-from PySide6.QtWidgets import QAbstractScrollArea, QMessageBox, QVBoxLayout, QWidget, QTextBrowser
+from PySide6.QtCore import Qt, QTimer, Slot
+from PySide6.QtWidgets import QAbstractScrollArea, QMessageBox, QTextBrowser, QVBoxLayout, QWidget
 from ..guiCommunicate import Communicate
 from ..guiStyle import Image, Label, TextButton, widgetAndLayout
 from .manager import TutorialManager
@@ -96,6 +96,6 @@ class TutorialPanel(QWidget):
     document = self.instructions.document()
     document.setTextWidth(START_WIDTH-20)
     document.adjustSize()
-    height = document.size().height() - 20
+    height = int(document.size().height() - 20)
     self.instructions.setFixedHeight(height)
     self.instructions.setMaximumHeight(height)
