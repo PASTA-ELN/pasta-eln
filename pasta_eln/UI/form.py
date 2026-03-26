@@ -734,7 +734,7 @@ class Form(QDialog):
       self.keyLabels.append(QLineEdit(''))
       self.keyLabels[-1].setPlaceholderText('key')
       self.keyLabels[-1].setToolTip('Key (leave empty to delete key-value pair)')
-      self.keyLabels[-1].setValidator(QRegularExpressionValidator('[a-zA-Z0-9]\\S+'))
+      self.keyLabels[-1].setValidator(QRegularExpressionValidator('[a-zA-Z0-9_]+'))
       self.values.append(QLineEdit(''))
       self.values[-1].setPlaceholderText('value')
       self.keyValueListL.addRow(self.keyLabels[-1], self.values[-1])

@@ -200,7 +200,7 @@ class SqlLiteDB:
     res = cursor.fetchone()
     if res is None:
       if not noError:
-        logging.error('sqlite: could not get docID: %s | %s', docID, tracebackString(True, docID))
+        logging.error('sqlite: could not get docID: %s | %s', docID, tracebackString(False, docID))
       return {}
     doc = dict(res)
     self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")
