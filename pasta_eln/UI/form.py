@@ -50,8 +50,8 @@ class Form(QDialog):
     if len(self.allDocIDs)>1:                                                                   #if group edit
       self.allowDocTypeChange = all(docID[0] != 'x' for docID in self.allDocIDs)
     self.allowDocTypeChange = self.allowDocTypeChange and not self.flagNewDoc
-    self.allowProjectChange = True
-    self.allowProjectUnassign = True
+    self.allowProjectChange = doc['type'][0]!='x0' if self.flagNewDoc else True  # allow to change
+    self.allowProjectUnassign = True    # samples can get unassigned, folders can change but cannot be unassigned
 
     # GUI elements
     if self.flagNewDoc:

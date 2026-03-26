@@ -69,6 +69,8 @@ class TutorialManager(QObject):
   @Slot(Task, dict)
   def handleTask(self, task: Task, data: dict[str, Any]) -> None:
     """Handle task events emitted by the UI."""
+    if False not in self.completedSteps:
+      return
     stepIndex = self.completedSteps.index(False)
     step = self.quest.steps[stepIndex]
     if self._match_trigger(step.trigger, task, data):
