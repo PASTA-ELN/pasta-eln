@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.3b2...HEAD)
+
+**Closed issues:**
+
+- Extractor item type does not work on Linux [\#642](https://github.com/PASTA-ELN/pasta-eln/issues/642)
+- Links in tutorial do not work out-of-the-box [\#639](https://github.com/PASTA-ELN/pasta-eln/issues/639)
+
+## [v3.2.3b2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.3b2) (2026-03-10)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.3b1...v3.2.3b2)
+
 ## [v3.2.3b1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.3b1) (2026-02-27)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.2...v3.2.3b1)
