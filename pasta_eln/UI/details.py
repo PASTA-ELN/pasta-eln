@@ -120,7 +120,7 @@ class Details(QScrollArea):
       dataHierarchyNode = defaultDataHierarchyNode
     else:
       dataHierarchyNode = self.comm.dataHierarchyNodes[self.doc['type'][0]]
-    self.labelW.setText(self.doc['name'] if len(self.doc['name'])<32 else self.doc['name'][:30]+'...')
+    self.labelW.setText(self.doc['name'] if len(self.doc['name'])<32 else '...'+self.doc['name'][-30:])
     if 'metaVendor' not in self.doc:
       self.btnVendor.hide()
     if 'metaUser' not in self.doc:
