@@ -1,5 +1,6 @@
 """ Misc functions that do not require instances """
 import importlib
+import inspect
 import json
 import logging
 import os
@@ -229,7 +230,35 @@ def callDataExtractor(docID:str, comm:Any) -> Any:
     # import module and use to get data
     try:
       module = importlib.import_module(pyFile[:-3])
-      return module.data(absFilePath, {})
+      dataFunc = getattr(module, 'data', None)
+      if dataFunc is None:
+        return None
+
+      # Check if data function explicitly accepts extractor_parameters
+      takesExtractorParams = False
+      try:
+        sig = inspect.signature(dataFunc)
+        takesExtractorParams = 'extractor_parameters' in sig.parameters
+      except (ValueError, TypeError):
+        takesExtractorParams = False
+
+      # Only work with extractor_parameters if the function declares it
+      extractor_params_clean:dict[str,Any] = {}
+      if takesExtractorParams and 'extractor_parameters' in doc:
+        extractor_params = doc.get('extractor_parameters', {})
+        if isinstance(extractor_params, dict):
+          for key, value in extractor_params.items():
+            if isinstance(value, tuple) and value:
+              extractor_params_clean[key] = value[0]
+            else:
+              extractor_params_clean[key] = value
+          # Update doc with normalized values for persistence
+          doc['extractor_parameters'] = extractor_params_clean
+
+      # Call data extractor: pass extractor_parameters only if the function declares it
+      if takesExtractorParams and extractor_params_clean:
+        return dataFunc(absFilePath, {}, extractor_parameters=extractor_params_clean)
+      return dataFunc(absFilePath, {})
     except Exception as e:
       logging.warning('CallDataExtractor: %s',e)
   return None
