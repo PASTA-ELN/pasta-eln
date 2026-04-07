@@ -27,7 +27,7 @@ class TableHeader(QDialog):
     super().__init__()
     self.comm    = comm
     self.docType = docType
-    self.allSet  = set(MAIN_ORDER)
+    self.allSet  = set(MAIN_ORDER+['tags','qrCodes'])
     self.allSet  = {i[1:] if i[0]=='.' else i for i in self.allSet}
     self.selectedList:list[str] = []
     self.otherDict:dict[str, list[str]] = {}
@@ -80,7 +80,7 @@ class TableHeader(QDialog):
       data (pd.DataFrame): DataFrame containing table
     """
     if cmd == self.sqlCmd1:
-      self.selectedList = data.values[0][0].split(',')
+      self.selectedList = data.values[0][0].split(',') if data.values[0][0] else ['name']
       self.selectedList = [i[1:] if i[0]=='.' else i for i in self.selectedList]
       self.allSet       = self.allSet.union(self.selectedList)
       self.paint()

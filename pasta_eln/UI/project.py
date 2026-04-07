@@ -262,7 +262,7 @@ class Project(QWidget):
                                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                  QMessageBox.StandardButton.No)
       if ret==QMessageBox.StandardButton.Yes:
-        self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':self.projID})
+        self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':self.projID, 'stack':self.projID})
         #update sidebar, show projects
         self.comm.changeTable.emit('x0','')
     elif command[0] is Command.SCAN:
@@ -312,6 +312,7 @@ class Project(QWidget):
       self.comm.changeTable.emit(command[1], self.projID)
     elif command[0] is Command.ADD_ON:
       callAddOn(command[1], self.comm, self.projID, self)
+      self.comm.uiRequestTask.emit(Task.TUTORIAL, {'doc':{'task':'callAddOnInProject'}})
     else:
       logging.error('Project menu unknown: %s',command, exc_info=True)
     return
@@ -351,6 +352,7 @@ class Project(QWidget):
     item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID]), 'childNum':childNew})
     return
 
+
   def iterateTree(self, nodeHier:Node) -> QStandardItem:
     """
     Recursive function to translate the hierarchical node into a tree-node
@@ -365,8 +367,9 @@ class Project(QWidget):
     hierStack = '/'.join([i.id for i in nodeHier.ancestors]+[nodeHier.id])
     gui = nodeHier.gui
     nodeTree = QStandardItem(nodeHier.name)
-    nodeTree.setData({'hierStack':hierStack, 'docType':nodeHier.docType, 'gui':gui, 'childNum':nodeHier.childNum}, self.META_ROLE)
-    if nodeHier.id[0]=='x':
+    nodeTree.setData({'hierStack':hierStack, 'docType':nodeHier.docType, 'gui':gui, 'childNum':nodeHier.childNum,
+                      'fPath':nodeHier.fPath}, self.META_ROLE)
+    if nodeHier.id[0]=='x' or nodeHier.fPath == '*':
       nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)# type: ignore
     else:
       nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled)          # type: ignore

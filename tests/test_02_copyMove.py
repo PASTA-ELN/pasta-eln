@@ -90,7 +90,7 @@ class TestStringMethods(unittest.TestCase):
     self.be.scanProject(None, projID)
     self.verify()
     self.be.changeHierarchy(projID)
-    print(self.be.outputHierarchy(False))
+    print(self.be.outputHierarchy(False,True))
     print(f'{"*"*40}\nEND TEST 02 \n{"*"*40}')
 
     logging.getLogger().removeHandler(handler)

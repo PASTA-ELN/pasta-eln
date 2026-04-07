@@ -2,7 +2,53 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.2b1...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.3b2...HEAD)
+
+**Closed issues:**
+
+- Extractor item type does not work on Linux [\#642](https://github.com/PASTA-ELN/pasta-eln/issues/642)
+- Links in tutorial do not work out-of-the-box [\#639](https://github.com/PASTA-ELN/pasta-eln/issues/639)
+
+## [v3.2.3b2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.3b2) (2026-03-10)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.3b1...v3.2.3b2)
+
+## [v3.2.3b1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.3b1) (2026-02-27)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.2...v3.2.3b1)
+
+**Fixed bugs:**
+
+- Linking of items shows the internal ID but not the name [\#636](https://github.com/PASTA-ELN/pasta-eln/issues/636)
+- Error while rerunning extractors [\#631](https://github.com/PASTA-ELN/pasta-eln/issues/631)
+
+**Closed issues:**
+
+- Links do not apply for already created items? [\#635](https://github.com/PASTA-ELN/pasta-eln/issues/635)
+- Change of style for csv-extractor? [\#632](https://github.com/PASTA-ELN/pasta-eln/issues/632)
+- Removing one copy of measurement causes removal of all its copies [\#629](https://github.com/PASTA-ELN/pasta-eln/issues/629)
+- Get test\_03 working again [\#628](https://github.com/PASTA-ELN/pasta-eln/issues/628)
+- Feature Request: Linking files in hindsight [\#624](https://github.com/PASTA-ELN/pasta-eln/issues/624)
+- A once added key cant be changed afterwards [\#621](https://github.com/PASTA-ELN/pasta-eln/issues/621)
+- Double occurance of keys [\#620](https://github.com/PASTA-ELN/pasta-eln/issues/620)
+- Feature Request: K-V- pairs as metadata and vice versa [\#617](https://github.com/PASTA-ELN/pasta-eln/issues/617)
+- Form-Editor: sort tags in alphabetical order [\#607](https://github.com/PASTA-ELN/pasta-eln/issues/607)
+- Same file name - misrecognition of doublettes? [\#606](https://github.com/PASTA-ELN/pasta-eln/issues/606)
+- Feature request: Checking for double SHASUM//file doublettes [\#604](https://github.com/PASTA-ELN/pasta-eln/issues/604)
+- 3.2.1b2 - overlap of item type and ID [\#580](https://github.com/PASTA-ELN/pasta-eln/issues/580)
+- Feature request: Checkboxes for the gallery view [\#523](https://github.com/PASTA-ELN/pasta-eln/issues/523)
+
+## [v3.2.2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.2) (2026-01-20)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.2b2...v3.2.2)
+
+**Closed issues:**
+
+- Question/Feature request: Extractor arguments [\#633](https://github.com/PASTA-ELN/pasta-eln/issues/633)
+
+## [v3.2.2b2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.2b2) (2025-12-27)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.2b1...v3.2.2b2)
 
 **Closed issues:**
 

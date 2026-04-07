@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+type: article
+authors:
+  - family-names: Brinckmann
+    given-names: S.
+  - family-names: Winkens
+    given-names: G.
+  - family-names: Schwaiger
+    given-names: R.
+title: "PASTA-ELN: Simplifying Research Data Management for Experimental Materials Science"
+journal: Advanced Engineering Materials
+year: 2026
+volume: 0
+article-number: e202503181
+doi: 10.1002/adem.202503181
+url: https://doi.org/10.1002/adem.202503181

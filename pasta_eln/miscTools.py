@@ -73,7 +73,8 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   # Add-Ons
   verboseDebug = False
   extractorsAll= {}
-  otherAddOns:dict[str,dict[str,str]]  = {'project':{}, 'table':{} ,'definition':{} ,'form':{}, '_ERRORS_':{}}
+  otherAddOns:dict[str,dict[str,str]]  = {'project':{}, 'table':{} ,'definition':{} ,'form':{}}
+  errors:dict[str,str] = {}
   for fileName in os.listdir(directory):
     # Extractor
     if fileName.endswith('.py') and fileName.startswith('extractor_'):
@@ -98,7 +99,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
             extractorsThis[specialType] = line.split('#:')[1].strip()
             ifInFile = True
           elif 'else:' in line and '#:' in line:
-            otherAddOns['_ERRORS_'][fileName] = 'ERROR there should not be an else in the code'
+            errors[fileName] = 'ERROR there should not be an else in the code'
           elif 'return' in line and 'recipe' in line and not ifInFile:
             if verboseDebug: print('line', line)
             if line.count('recipe')==1:
@@ -112,11 +113,15 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
                 logging.warning('Could not decipher %s. Take shortest!', fileName)
                 linePart=sorted(possLines)[0].split('=')[1].strip(" '"+'"')
               else:
-                otherAddOns['_ERRORS_'][fileName] = 'ERROR could not decipher code'
+                errors[fileName] = 'ERROR could not decipher code'
                 linePart=''
             extractorsThis[linePart]='Default'
             if verboseDebug:
               print('  return', linePart)
+        linesWithUse = [i for i in lines if 'use(' in i]
+        if len(linesWithUse)>1:
+          extractorsThis = {}
+          errors[fileName] = 'ERROR two use( in the code'
         if verboseDebug:
           print('Extractors', extractorsThis)
         ending = fileName.split('_')[1].split('.')[0]
@@ -131,14 +136,13 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
         _ = module.reqParameter                                                 # check if reqParameter exists
         otherAddOns[fileName.split('_')[0]][name] = description
       except Exception as e:
-        description = f'** SYNTAX ERROR in add-on **: {e}'
-        otherAddOns['_ERRORS_'][name] = description
+        errors[name] = f'** SYNTAX ERROR in add-on **: {e}'
   #update configuration file
   configuration['projectGroups'][projectGroup]['addOns']['extractors'] = extractorsAll
   configuration['projectGroups'][projectGroup]['addOns'] |= otherAddOns
   with open(Path.home()/CONF_FILE_NAME,'w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
-  return {'addon directory':directory} | extractorsAll | otherAddOns
+  return {'addon directory':directory} | errors | extractorsAll | otherAddOns
 
 
 def installPythonPackages(directory:str) -> None:

@@ -200,7 +200,7 @@ class SqlLiteDB:
     res = cursor.fetchone()
     if res is None:
       if not noError:
-        logging.error('sqlite: could not get docID: %s | %s', docID, tracebackString(True, docID))
+        logging.error('sqlite: could not get docID: %s | %s', docID, tracebackString(False, docID))
       return {}
     doc = dict(res)
     self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")
@@ -321,6 +321,8 @@ class SqlLiteDB:
       cmdDef = 'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);'
       for key,value in data.items():
         key = str(key) if isinstance(key, int) else key
+        if not value:
+          continue
         if isinstance(value, dict):
           insertMetadata(value, f'{parentKeys}{key}')
         elif key.endswith(']') and ('[') in key:
@@ -516,8 +518,8 @@ class SqlLiteDB:
         changesDict[key] = mainOld[key]
     # save change content in database: main and changes are updated
     if set(changesDict.keys()).difference(('dateModified','client','user')):
-      changeString = ', '.join([f"{k}='{v}'" for k,v in changesDB['main'].items()])
-      self.cursor.execute(f"UPDATE main SET {changeString} WHERE id = '{docID}'")
+      if changeString:= ', '.join([f"{k}='{v}'" for k,v in changesDB['main'].items()]):
+        self.cursor.execute(f"UPDATE main SET {changeString} WHERE id = '{docID}'")
       if 'name' not in changesDict or changesDict['name']!='new item':#don't save initial change from new item
         self.cursor.execute('INSERT INTO changes VALUES (?,?,?)', [docID, datetime.now().isoformat(), json.dumps(changesDict)])
       self.connection.commit()
@@ -784,7 +786,7 @@ class SqlLiteDB:
       df = df.astype('str').fillna('')
       return df
     elif thePath=='viewHierarchy/viewHierarchy':
-      cmd = 'SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui, branches.idx '\
+      cmd = 'SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui, branches.idx, branches.path '\
             f"FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '{startKey}%'"
       if not allFlag:
         cmd += r" and NOT branches.show LIKE '%F%'"
@@ -793,7 +795,7 @@ class SqlLiteDB:
       results = self.cursor.fetchall()
       # value: [child, doc['type'], doc['name'], doc['gui'], branches.idx]
       results = [{'id':i[0], 'key':i[1],
-                  'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]], i[6]]} for i in results]
+                  'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]], i[6], i[7]]} for i in results]
     elif thePath=='viewHierarchy/viewPaths':
       cmd = 'SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum, branches.idx '\
             'FROM branches INNER JOIN main USING(id)'
@@ -873,7 +875,7 @@ class SqlLiteDB:
         nonFolders.append(item)
         continue
       _id     = item['id']
-      childNum, docType, name, gui, _ = item['value']
+      childNum, docType, name, gui, _childNum, path = item['value']
       if dataTree is None:
         dataTree = Node(id=_id, docType=docType, name=name, gui=gui, childNum=childNum)
         id2Node[_id] = dataTree
@@ -884,20 +886,20 @@ class SqlLiteDB:
         else:
           parentNode, error = (dataTree, True)
           logging.error('Error in the hierarchy tree with parent %s missing', parent, exc_info=True)
-        subNode = Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum)
+        subNode = Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum, fPath=path)
         id2Node[_id] = subNode
     # add non-folders into tree
     # print(len(nonFolders),'length: crop if too long')
     for item in nonFolders:
       _id     = item['id']
-      childNum, docType, name, gui, _ = item['value']
+      childNum, docType, name, gui, _childNum, path = item['value']
       parentId = item['key'].split('/')[-2]
       if parentId in id2Node:
         parentNode = id2Node[parentId]
       else:
         outputString('print','error',f'repair branch table as parentID {parentId} is missing')
         parentNode, error = (dataTree,True)
-      Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum)
+      Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui, childNum=childNum, fPath=path)
     # sort children
     for parentNode in id2Node.values():
       children = parentNode.children

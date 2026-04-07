@@ -134,9 +134,9 @@ class Communicate(QObject):
     Shutdown backend thread
     """
     if self.backendThread is not None:
-      self.backendThread.quit()
-      self.backendThread.wait()
-      del self.backendThread
+      if self.backendThread.isRunning():
+        self.backendThread.quit()
+      self.backendThread.deleteLater()
     self.waitDialog.close()
 
 

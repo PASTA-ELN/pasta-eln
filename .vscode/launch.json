@@ -41,7 +41,9 @@
       "module": "pytest",
       "args": [
         "-s",
-        "tests/test_01_DefaultExample.py"
+        "tests/test_01_DefaultExample.py",
+        "tests/test_02_copyMove.py",
+        "tests/test_03_dragDrop.py"
       ],
       "console": "integratedTerminal"
     }

@@ -128,6 +128,9 @@ configurationGUI: dict[str, Any] = {
     'widthContent': ['Width of procedures in project view', 600, [400, 500, 600, 700]],
     'docTypeOffset': ['Offset of document type in project view', 500, [400, 500, 600, 700]],
     'frameSize': ['Frame width around items in project view', 6, [4, 6, 8, 10]],
+  },
+  'tutorial': {
+      'tutorial': ['Story (leave empty to choose none)','', ['','climate_research']]
   }
 }
 

@@ -280,7 +280,7 @@ class Backend(CLI_Mixin):
     return
 
 
-  def scanProject(self, progressBar:Callable[...,None]|None, projID:str, projPath:Path|None=None) -> None:
+  def scanProject(self, progressBar:Callable[...,None]|None, projID:str, projPath:Path|None=None) -> str:
     """ Scan directory tree recursively from project/... or project/task/...
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
@@ -294,10 +294,14 @@ class Backend(CLI_Mixin):
       projID (str): project's docID
       projPath (str): project's path from basePath; if not given, will be determined
 
+    Returns:
+      str: statement if item was found in database and link was created. Default new item added
+
     Raises:
       ValueError: could not add new measurement to database
     """
     rerunScanTree = False
+    reply = ''
     self.hierStack = [projID]
     if projPath is None:
       pathPosix:str = self.db.getDoc(projID)['branch'][0]['path']
@@ -390,6 +394,7 @@ class Backend(CLI_Mixin):
             self.addData('', {'name':path}, hierStack)
           else:
             self.db.updateBranch(view[0]['id'], -1, 9999, hierStack, path)
+            reply = 'Create a link to existing entry instead of new entry.'
     #finish method
     self.cwd = self.basePath/projPath
     orphans = [
@@ -410,8 +415,8 @@ class Backend(CLI_Mixin):
     self.hierStack = []
     self.cwd = Path(self.basePath)
     if rerunScanTree:
-      self.scanProject(progressBar, projID, projPath)
-    return
+      reply += self.scanProject(progressBar, projID, projPath)
+    return reply
 
 
   def useExtractors(self, filePath:Path, shasum:str, doc:dict[str,Any]) -> None:

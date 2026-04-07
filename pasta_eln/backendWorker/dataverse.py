@@ -496,6 +496,9 @@ class DataverseClient(RepositoryClient):
         dict: The prepared metadata
     """
     author = metadata['author']
+    additional = metadata.get('additional') or []
+    if isinstance(additional, dict):
+      additional = [additional]
     fields = [{'typeName': 'title', 'value': metadata['title'], 'typeClass': 'primitive'},
               {'typeName': 'author', 'value': [{'authorName': {'value': f"{author['last']}, {author['first']}"},
                 'authorIdentifier': {'value': author['orcid']},
@@ -507,5 +510,5 @@ class DataverseClient(RepositoryClient):
               {'typeName': 'dsDescription', 'value': [{'dsDescriptionValue': {'value': metadata['description']}}],
                 'typeClass': 'compound'},
               {'typeName': 'subject', 'value': [metadata['category']], 'typeClass': 'controlledVocabulary'}
-            ] + metadata['additional']
+            ] + additional
     return {'metadata': {'datasetVersion': {'metadataBlocks': {'citation': {'fields': fields}}}}}

@@ -273,7 +273,10 @@ class SchemeEditor(QDialog):
         df.at[lastRow, 'idx']     = str(row)
         for col in range(6):
           item = widget.item(row,col)
-          df.at[lastRow, COLUMN_NAMES[col]] = '' if item is None else item.text()
+          value = '' if item is None else item.text()
+          if COLUMN_NAMES[col]=='item list' and value:
+            value = [k for k,v in self.comm.docTypesTitles.items() if v['title']==value][0]
+          df.at[lastRow, COLUMN_NAMES[col]] = value
         lastRow += 1
     df['list'] = df['item list']+df['free list']
     df.drop(['item list','free list'], axis=1, inplace=True)

@@ -7,9 +7,9 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QEvent, QUrl, Slot
+from PySide6.QtCore import QEvent, Qt, QUrl, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QPixmap, QShortcut
-from PySide6.QtWidgets import QFileDialog, QLabel, QMainWindow
+from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QMainWindow, QVBoxLayout
 from pasta_eln import __version__
 from .workplanCreator.workplanCreatorDialog import WorkplanCreatorDialog
 from ..backendWorker.worker import Task
@@ -26,6 +26,8 @@ from .messageDialog import showMessage
 from .palette import Palette
 from .repositories.uploadGUI import UploadGUI
 from .sidebar import Sidebar
+from .tutorials.manager import TutorialManager
+from .tutorials.tutorialPanel import TutorialPanel
 
 
 class MainWindow(QMainWindow):
@@ -50,6 +52,19 @@ class MainWindow(QMainWindow):
     self.comm.formDoc.connect(self.formDoc)
     self.comm.changeSidebar.connect(self.paint)
     self.comm.backendThread.worker.beSendTaskReport.connect(self.showReport)
+
+    if self.comm.configuration['GUI'].get('tutorial',''):
+      self.tutorialManager = TutorialManager(self.comm.configuration['GUI']['tutorial'])
+      self.tutorialPanel = TutorialPanel(self.comm, self.tutorialManager)
+      self.tutorialDialog = QDialog(self)
+      self.tutorialDialog.setWindowTitle('Tutorial')
+      dialogLayout = QVBoxLayout()
+      dialogLayout.setContentsMargins(0, 0, 0, 0)
+      dialogLayout.addWidget(self.tutorialPanel)
+      self.tutorialDialog.setLayout(dialogLayout)
+      self.tutorialDialog.setWindowFlag(Qt.WindowType.Window, True)
+      self.tutorialDialog.show()
+      self.comm.uiRequestTask.connect(self.tutorialManager.handleTask)
 
     # GUI
     self.setWindowTitle(f"PASTA-ELN {__version__}")

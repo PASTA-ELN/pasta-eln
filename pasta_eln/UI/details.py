@@ -4,7 +4,6 @@ import re
 from enum import Enum
 from pathlib import Path
 from typing import Any
-import pandas as pd
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QLabel, QLayout, QScrollArea, QTextEdit
 from ..backendWorker.worker import Task
@@ -17,6 +16,7 @@ from .guiCommunicate import Communicate
 from .guiStyle import IconButton, Image, Label, TextButton, widgetAndLayout
 from .messageDialog import showMessage
 
+MAX_LENGTH_STR = 200
 
 class Details(QScrollArea):
   """ widget that shows the details of the items """
@@ -25,11 +25,9 @@ class Details(QScrollArea):
     self.comm = comm
     self.comm.changeDetails.connect(self.change)
     self.comm.backendThread.worker.beSendDoc.connect(self.onGetData)
-    self.comm.backendThread.worker.beSendTable.connect(self.onGetTable)
     self.comm.testExtractor.connect(self.testExtractor)
     self.doc:dict[str,Any]  = {}
     self.docID= ''
-    self.idsTypesNames = pd.DataFrame(columns=['id','type','name'])
     self.textEditors:list[QTextEdit] = []
 
     # GUI elements
@@ -88,26 +86,6 @@ class Details(QScrollArea):
       self.paint()
 
 
-  @Slot(pd.DataFrame, str)
-  def onGetTable(self, data:pd.DataFrame, docType:str) -> None:
-    """
-    Callback function to handle the received data
-
-    Args:
-      data (pd.DataFrame): DataFrame containing table
-      docType (str): document type
-    """
-    data = data[['id','name']]
-    data['type']= docType
-    for _, row in data.iterrows():
-      id_ = row['id']
-      if id_ in self.idsTypesNames['id'].values:                            # Replace the row with matching id
-        self.idsTypesNames.loc[self.idsTypesNames['id']==id_, ['name','type']] = row[['name', 'type']].values
-      else:                                                                              # Concatenate new row
-        self.idsTypesNames = pd.concat([self.idsTypesNames, pd.DataFrame([row])], ignore_index=True)
-    self.paint()
-
-
   @Slot()
   def paint(self) -> None:
     """ What happens when details should change """
@@ -142,7 +120,7 @@ class Details(QScrollArea):
       dataHierarchyNode = defaultDataHierarchyNode
     else:
       dataHierarchyNode = self.comm.dataHierarchyNodes[self.doc['type'][0]]
-    self.labelW.setText(self.doc['name'] if len(self.doc['name'])<80 else self.doc['name'][:77]+'...')
+    self.labelW.setText(self.doc['name'] if len(self.doc['name'])<32 else '...'+self.doc['name'][-30:])
     if 'metaVendor' not in self.doc:
       self.btnVendor.hide()
     if 'metaUser' not in self.doc:
@@ -287,21 +265,20 @@ class Details(QScrollArea):
       labelL.addWidget(text, stretch=1)
     else:
       dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
-      docID = ''
+      docID = ''                                      # required for clicking a label and that becoming a link
       if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
           ',' not in dataHierarchyItems[0]['list'] and ' ' not  in dataHierarchyItems[0]['list']:#choice among docType
-        if dataHierarchyItems[0]['list'] not in self.idsTypesNames['type'].values:
-          self.comm.uiRequestTable.emit(dataHierarchyItems[0]['list'], '', True)
+        if not isinstance(value, tuple):
+          logging.info('Not a tuple: %s : %s', key,value)
+        if not isDocID(value[0]):
+          value = value[0]
+        elif value[2]:
+          docID = value[0]
+          value = value[2]
+          link = True
         else:
-          names= list(self.idsTypesNames[self.idsTypesNames.id==value[0]]['name'])
-          if len(names)==1:                                            # default find one item that we link to
-            docID = value[0]
-            value = '\u260D '+names[0]
-            link = True
-          elif not names:
-            value = value[0] if isinstance(value,tuple) else value
-          else:
-            raise ValueError(f'list target exists multiple times. Key: {key}')
+          logging.warning('Value[2] not given for %s', value)
+          value = '\u260D link to entry'                                                 #INFORMAITON NOT USED
       elif isinstance(value, list):
         value = ', '.join([str(i) for i in value])
       if isinstance(value, tuple) and len(value)==4 and isDocID(value[0]):
@@ -321,6 +298,7 @@ class Details(QScrollArea):
           else:
             newValue[k] = v
         labelStr = f'{cssStyleHtmlEditors}{key}: {dict2ul(newValue)}'
+      labelStr = f'{labelStr[:MAX_LENGTH_STR]}...' if len(labelStr)>MAX_LENGTH_STR else labelStr
       if layout is not None:
         label = Label(labelStr, function=lambda x,y: self.clickLink(x,y) if link else None, docID=docID)
         label.setOpenExternalLinks(True)

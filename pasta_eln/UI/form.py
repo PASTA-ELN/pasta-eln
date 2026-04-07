@@ -7,12 +7,13 @@ import time
 import warnings
 from enum import Enum
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 import pandas as pd
 from PySide6.QtCore import QSize, Qt, QTimer, Slot
 from PySide6.QtGui import QRegularExpressionValidator
-from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLayout, QLineEdit, QMessageBox,
-                               QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QInputDialog, QLabel, QLayout, QLineEdit,
+                               QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout,
+                               QWidget)
 from ..backendWorker.sqlite import MAIN_ORDER
 from ..backendWorker.worker import Task
 from ..fixedStringsJson import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
@@ -49,8 +50,8 @@ class Form(QDialog):
     if len(self.allDocIDs)>1:                                                                   #if group edit
       self.allowDocTypeChange = all(docID[0] != 'x' for docID in self.allDocIDs)
     self.allowDocTypeChange = self.allowDocTypeChange and not self.flagNewDoc
-    self.allowProjectChange = True
-    self.allowProjectUnassign = True
+    self.allowProjectChange = doc['type'][0]!='x0' if self.flagNewDoc else True  # allow to change
+    self.allowProjectUnassign = True    # samples can get unassigned, folders can change but cannot be unassigned
 
     # GUI elements
     if self.flagNewDoc:
@@ -118,6 +119,7 @@ class Form(QDialog):
     self.checkThreadTimer                     = QTimer(self)
     self.tagsAllList: list[str] = []
     self.comboBoxDocTypeList:dict[str, tuple[QComboBox,str]] = {}# dict of docType:.. for links to other items
+    self.projectTableData:pd.DataFrame|None = None
 
     # Request data
     if not self.flagNewDoc:
@@ -194,6 +196,19 @@ class Form(QDialog):
       self.paint()
 
 
+  def _fillProjectComboBox(self, data: pd.DataFrame) -> None:
+    self.projectComboBox.clear()
+    if self.groupEdit:
+      self.projectComboBox.addItem('- no change -',    userData='')
+    elif self.allowProjectUnassign:
+      self.projectComboBox.addItem('- not assigned -', userData='NONE')
+    for iDocID, iName in data[['id','name']].values.tolist():             # add all projects incl. the present
+      self.projectComboBox.addItem(iName, userData=iDocID)
+      stack = self.doc.get('branch',[{}])[0].get('stack', [])
+      proj  = stack[0] if stack else ''
+      if iDocID in (self.doc.get('_projectID',''), proj):
+        self.projectComboBox.setCurrentIndex(self.projectComboBox.count()-1)
+
 
   @Slot(pd.DataFrame, str)
   def onGetTable(self, data:pd.DataFrame, docType:str) -> None:
@@ -209,17 +224,8 @@ class Form(QDialog):
       self.tagsAllList = data['tag'].unique()
       self.updateTagsBar()
     elif docType == 'x0':
-      self.projectComboBox.clear()
-      if self.groupEdit:
-        self.projectComboBox.addItem('- no change -',    userData='')
-      elif self.allowProjectUnassign:
-        self.projectComboBox.addItem('- not assigned -', userData='NONE')
-      for iDocID, iName in data[['id','name']].values.tolist():           # add all projects incl. the present
-        self.projectComboBox.addItem(iName, userData=iDocID)
-        stack = self.doc.get('branch',[{}])[0].get('stack', [])
-        proj  = stack[0] if stack else ''
-        if iDocID in (self.doc.get('_projectID',''), proj):
-          self.projectComboBox.setCurrentIndex(self.projectComboBox.count()-1)
+      self.projectTableData = data
+      self._fillProjectComboBox(data)
     elif docType in self.comboBoxDocTypeList:
       iComboBox, value = self.comboBoxDocTypeList[docType]
       iComboBox.clear()
@@ -240,11 +246,14 @@ class Form(QDialog):
       del self.doc['_attachments']
     for i in reversed(range(self.splitter.count())):                        # remove all widgets from splitter
       widget = self.splitter.widget(i)
-      if widget is not None and widget is not self.projectComboBox:
+      if widget is not None:
         widget.setParent(None)
     self.comboBoxDocTypeList = {}                                                  # reset comboBoxDocTypeList
     self.allUserElements     = []
     self.doc = copy.deepcopy(minimalDocInForm) | self.doc
+    self.projectComboBox = QComboBox()
+    if self.projectTableData is not None:
+      self._fillProjectComboBox(self.projectTableData)
     if self.flagNewDoc:
       self.doc['name'] = ''
     if 'branch' in self.doc:
@@ -271,9 +280,10 @@ class Form(QDialog):
 
     # create data hierarchy node: data structure
     if self.doc['type'][0] in self.comm.docTypesTitles:
-      rawData = self.comm.dataHierarchyNodes[self.doc['type'][0]]
-      self.dataHierarchyNode = copy.deepcopy([dict(i) for i in rawData])
+      self.dataHierarchyNodeRaw = self.comm.dataHierarchyNodes[self.doc['type'][0]]
+      self.dataHierarchyNode = copy.deepcopy([dict(i) for i in self.dataHierarchyNodeRaw])
     else:
+      self.dataHierarchyNodeRaw = copy.deepcopy(defaultDataHierarchyNode)
       self.dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
     keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in self.dataHierarchyNode]
     keysDocOrg = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k])] if isinstance(self.doc[k], dict) else [f'.{k}']
@@ -430,7 +440,10 @@ class Form(QDialog):
           else:
             setattr(self, elementName, QLineEdit(value))
             self.allUserElements.append((key,'LineEdit'))
-          formLabelW = QLabel(label)
+          if key not in [f"{i['class']}.{i['name']}" for i in self.dataHierarchyNodeRaw]:
+            formLabelW = Label(label, 'h3', None, self.formLabelClicked, key)
+          else:
+            formLabelW = Label(label, 'h3', None)
           formLabelW.setOpenExternalLinks(True)
           formLabelW.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse)
           formL.addRow(formLabelW, getattr(self, elementName))
@@ -464,6 +477,23 @@ class Form(QDialog):
           formL.addRow(QLabel('Item type'), self.docTypeComboBox)
     if [i for i in self.doc if i.startswith('_') and i not in ['_projectID']]:
       logging.error('There should not be "_" in a doc: %s', str(self.doc), exc_info=True)
+
+
+  def formLabelClicked(self, key: str, _:str='') -> None:
+    """ Form label clicked to allow to edit the key
+    Args:
+      key (str): key that was clicked
+    """
+    if len(self.allDocIDsCopy)==1:
+      warning = 'Enter new key: <br>IF YOU CONTINUE<ol><li>THE FORM WILL CLOSE AND HAS TO REOPENED. <li>ALL CHANGES WILL BE LOST)</ol>'
+      res, ok = QInputDialog.getText(self, 'Edit key', warning)
+      if ok:
+        keyNew = f"{key.split('.')[0]}.{res.strip()}"
+        cmd = f"UPDATE properties SET key='{keyNew}' WHERE key='{key}' AND id='{self.allDocIDsCopy[0]}'"
+        self.comm.uiSendSQL.emit([{'type':'one', 'cmd':cmd}])
+        self.accept()                                                                                   #close
+        self.close()
+    return
 
 
   def autosave(self) -> None:
@@ -510,14 +540,9 @@ class Form(QDialog):
     """
     if isinstance(command[0], CommandMenu):
       if executeContextMenu(self, command) and self.imageL is not None:
-        item = self.imageL.itemAt(0)
-        if item is not None: item.widget().setParent(None)
-        width=self.comm.configuration['GUI']['imageSizeDetails'] if hasattr(self.comm,'configuration') else 300
-        if 'image' in self.doc:
-          Image(self.doc['image'], self.imageL, anyDimension=width)
-        if 'branch' in self.doc:
-          visibilityIcon = all(all(branch['show']) for branch in self.doc['branch'])
-          self.visibilityText.setText('' if visibilityIcon else 'HIDDEN     \U0001F441')
+        self.allDocIDs = list(self.allDocIDsCopy)
+        self.doc = {'id':self.allDocIDs[0]}
+        self.comm.uiRequestDoc.emit(self.doc['id'])
 
     elif command[0] is Command.BUTTON_BAR:
       if command[1]=='bold':
@@ -667,7 +692,7 @@ class Form(QDialog):
       # new key-value pairs
       keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]# type: ignore[union-attr]
       keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
-      keyValueDict = {f'.{k}':v for k,v in keyValueDict.items() if k}
+      keyValueDict = {f'.{k}':v for k,v in keyValueDict.items() if k and v and f'.{k}' not in self.doc}
       self.doc = keyValueDict | self.doc
       # ---- if project changed: only branch save; remaining data still needs saving
       newProjID = [self.projectComboBox.currentData()] if self.projectComboBox.currentData() else []
@@ -709,7 +734,7 @@ class Form(QDialog):
       self.keyLabels.append(QLineEdit(''))
       self.keyLabels[-1].setPlaceholderText('key')
       self.keyLabels[-1].setToolTip('Key (leave empty to delete key-value pair)')
-      self.keyLabels[-1].setValidator(QRegularExpressionValidator('[a-zA-Z0-9]\\S+'))
+      self.keyLabels[-1].setValidator(QRegularExpressionValidator('[a-zA-Z0-9_]+'))
       self.values.append(QLineEdit(''))
       self.values[-1].setPlaceholderText('value')
       self.keyValueListL.addRow(self.keyLabels[-1], self.values[-1])
@@ -760,7 +785,7 @@ class Form(QDialog):
     self.updateTagsBar()
     return
 
-  def addTag(self, tag:Union[str,int]) -> None:
+  def addTag(self, tag:str|int) -> None:
     """
     Clicked to add tag. Since one needs to use indexChanged to allow the user to enter text, that delivers a int. To allow to differentiate
     between both comboboxes, they cannot be the same (both int), hence grades has to be textChanged
@@ -793,14 +818,14 @@ class Form(QDialog):
     for i in reversed(range(self.tagsBarSubL.count())):
       item = self.tagsBarSubL.itemAt(i)
       if item is not None: item.widget().setParent(None)
-    for tag in (self.doc['tags'] if 'tags' in self.doc else []):
+    for tag in sorted(self.doc['tags'] if 'tags' in self.doc else []):
       if not re.match(r'^_\d$', tag):
         Label(tag, 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
     #update choices in combobox
     tagsSet = {i for i in self.tagsAllList if i[0]!='_'}
     newChoicesList = ['']+list(tagsSet.difference([i for i in self.doc['tags'] if i[0]!='_']))
     self.otherChoices.clear()
-    self.otherChoices.addItems(newChoicesList)
+    self.otherChoices.addItems(sorted(newChoicesList))
     return
 
 
@@ -821,8 +846,14 @@ class Form(QDialog):
     """ Reject the dialog, stop the thread and disconnect signals """
     warnings.filterwarnings('ignore', category=RuntimeWarning)
     if hasattr(self.comm, 'backendThread') and self.comm.backendThread.worker is not None:
-      self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
-      self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
+      try:
+        self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
+      except RuntimeError:
+        pass
+      try:
+        self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
+      except RuntimeError:
+        pass
     self.checkThreadTimer.stop()
     super().reject()
 
@@ -831,8 +862,14 @@ class Form(QDialog):
     """ Accept the dialog, stop the thread and disconnect signals """
     warnings.filterwarnings('ignore', category=RuntimeWarning)
     if hasattr(self.comm, 'backendThread') and self.comm.backendThread.worker is not None:
-      self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
-      self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
+      try:
+        self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
+      except RuntimeError:
+        pass
+      try:
+        self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
+      except RuntimeError:
+        pass
     self.checkThreadTimer.stop()
     super().accept()
 
