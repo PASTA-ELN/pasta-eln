@@ -114,20 +114,20 @@ class CenterMainWidget(QWidget):
       # Disconnect Sample Changes from previous WorkplanItem
       try:
         self.sampleBox.currentTextChanged.disconnect(self.activeListItem.updateSample)
-      except RuntimeError:  # self.activeListItem could already be deleted by the user
+      except (RuntimeError, SystemError):  # self.activeListItem could already be deleted by the user
         pass
       if not workplanListItem:
         # If the new active Procedure is not a Procedure from the Workplan on the right
         try:
           self.activeListItem.lowlight()
-        except RuntimeError:  # self.activeListItem could already be deleted by the user
+        except (RuntimeError, SystemError):  # self.activeListItem could already be deleted by the user
           pass
 
     # Fill Layout with active Procedure
     self.activeProcedureID = toProcedure
     self.activeListItem = workplanListItem
     self.sample = sample
-    if self.parameters is None:
+    if parameters is None:
       self.parameters = {}
     else:
       self.parameters = parameters
