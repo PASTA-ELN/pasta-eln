@@ -192,11 +192,11 @@ def expandDocID2tupleInDict(d:dict[str,Any], database:SqlLiteDB) -> None:
       expandDocID2tupleInDict(v, database)
     elif isinstance(v, tuple) and pattern.match(v[0]) and k not in ('id','oldIdentifier'):
       database.cursor.execute(f'SELECT name FROM main WHERE id=="{v[0]}"')
-      names = database.cursor.fetchall()
+      names = database.cursor.fetchone()
       if len(names)==0:
         logging.warning('Could not get name for docID %s : %s in %s', k, v[0], d)
         names = ['Could not find name']
-      name = names[0]
+      name = f'\u260D {names[0]}'
       d[k] = (v[0], '', name , '')
   return
 
