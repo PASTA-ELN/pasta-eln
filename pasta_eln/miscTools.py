@@ -438,9 +438,12 @@ def testNewPastaVersion(update:bool=False) -> bool:
   if update:
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pasta-eln'])
     hardRestart()
-  url = 'https://pypi.org/pypi/pasta-eln/json'
-  with request.urlopen(url) as response:
-    data = json.loads(response.read())
+  try:
+    url = 'https://pypi.org/pypi/pasta-eln/json'
+    with request.urlopen(url) as response:
+      data = json.loads(response.read())
+  except Exception:
+    return True
   releases = [i for i in list(data['releases'].keys()) if 'b' not in i]                 # remove beta versions
   largestVersionOnPypi = sorted(releases, key=parse_version)[-1]
   return largestVersionOnPypi == pasta_eln.__version__ or 'b' in pasta_eln.__version__

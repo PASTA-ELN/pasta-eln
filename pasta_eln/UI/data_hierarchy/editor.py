@@ -126,7 +126,8 @@ class SchemeEditor(QDialog):
   def paint(self) -> None:
     """ Paint the dialog with the data """
     df = self.df.rename(columns={'long':'description'})
-    df['item list'] = df['list'].apply(lambda x: '' if ',' in x else x)
+    df['item list'] = df['list'].apply(lambda x: '' if ',' in x or not x else self.comm.docTypesTitles[x]['title']
+                                       if x in self.comm.docTypesTitles else 'Unknown docType')
     df['free list'] = df['list'].apply(lambda x: x  if ',' in x else '')
     df = df.drop('list', axis=1)
     df['idx'] = df['idx'].astype('int')
