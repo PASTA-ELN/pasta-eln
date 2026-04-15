@@ -1,6 +1,7 @@
 """ Color palette allows easy color access and manages Theme"""
 
 import qdarktheme
+import darkdetect
 from PySide6.QtGui import QColor
 
 from ..fixedStringsJson import THEME_COLOR_VALUES
@@ -12,12 +13,17 @@ class Palette:
   def __init__(self, theme: str) -> None:
     """ Initialize the color palette
     Args:
-      theme (str): 'light' or 'dark'
+      theme (str): 'light' or 'dark' or 'automatic'
     """
     if theme in ['light', 'dark']:
       self.qtheme = theme
     else:
-      self.qtheme = "light"
+      auto_theme = darkdetect.theme().lower()
+      if auto_theme in ['light', 'dark']:
+        self.qtheme = auto_theme
+      else:
+        print(f"DEBUG: darkdetect.theme().lower()={auto_theme} is not recognized")
+        self.qtheme = 'light'
     self.primary = self.getThemeColor("primary", "base")
     self.text = self.getThemeColor("background", "base")
     self.leafX = "green"  # self.getThemeColor("foreground", "base")
@@ -28,7 +34,7 @@ class Palette:
     """
     Update the theme of the whole App.
     Args:
-      theme: 'dark'/'light' for the dark/light theme. Empty String ('') for update without changing the theme.
+      theme: 'automatic'/'dark'/'light' for the dark/light theme. Empty String ('') for update without changing the theme.
       saveTheme: Whether the theme should be changed permanently or just until theme is updated again.
     """
     cornershape = "sharp" # rounded or sharp
@@ -47,6 +53,8 @@ class Palette:
     font-size: 10pt;
     }
     """
+    if theme == "automatic":
+      theme = darkdetect.theme().lower()
     if theme not in ["dark", "light", ""]:
       print("Could not find Theme:", theme)
       return

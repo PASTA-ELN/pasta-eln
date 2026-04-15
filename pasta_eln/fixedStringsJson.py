@@ -118,7 +118,7 @@ configurationGUI: dict[str, Any] = {
     'checkForUpdates': ['Check for updates on startup', 'Yes', ['Yes', 'No']]
   },
   'appearance': {
-    'theme': ['Color style', 'light', ['dark', 'light']],
+    'theme': ['Color style', 'automatic', ['automatic', 'dark', 'light']],
     'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']],
     'sidebarWidth': ['Sidebar width', 280, [220, 280, 340]],
     'maxTableColumnWidth': ['Maximum column width in tables', 400, [300, 400, 500, 600]],
