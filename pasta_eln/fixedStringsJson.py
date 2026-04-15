@@ -1,5 +1,5 @@
 """ Long strings and dictionaries/JSON that would obfuscate code """
-from typing import Any
+from typing import Any, Union
 
 defaultDocTypes: list[list[str]] = [
   #docType,               PURL,                                              title,          icon,                   shortcut, view
@@ -16,7 +16,7 @@ defaultDocTypes: list[list[str]] = [
 ]
 
 
-defaultSchema: list[list[str|int]] = [
+defaultSchema: list[list[Union[str, int]]] = [
   #docType,            group,index,key,        unit, mandatory, list
   ['x0',                  '', 0,   'name',      '',   'T',       ''],
   ['x0',                  '', 1,   'tags',      '',   '',        ''],

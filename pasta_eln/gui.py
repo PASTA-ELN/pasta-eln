@@ -14,7 +14,7 @@ from .UI.guiCommunicate import Communicate
 from .UI.mainWindow import MainWindow
 
 
-def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
+def mainGUI(projectGroup:str=''):
   """  Main method and entry point for commands
 
   Args:

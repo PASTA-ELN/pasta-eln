@@ -77,12 +77,12 @@ class FilterManager:
       self.modelChain.append(filterItem.model)
 
 
-  def getFinalModel(self) -> QStandardItemModel | QSortFilterProxyModel:
+  def getFinalModel(self):
     """Get the final model in the chain (for table display)"""
     return self.modelChain[-1]
 
 
-  def getFilter(self, filterID: int) -> FilterItem | None:
+  def getFilter(self, filterID: int):
     """Get a specific filter by ID"""
     return self.filters.get(filterID)
 

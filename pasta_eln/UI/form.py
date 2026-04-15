@@ -785,7 +785,7 @@ class Form(QDialog):
     self.updateTagsBar()
     return
 
-  def addTag(self, tag:str|int) -> None:
+  def addTag(self, tag) -> None:
     """
     Clicked to add tag. Since one needs to use indexChanged to allow the user to enter text, that delivers a int. To allow to differentiate
     between both comboboxes, they cannot be the same (both int), hence grades has to be textChanged

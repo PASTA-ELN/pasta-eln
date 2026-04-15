@@ -20,7 +20,7 @@ class ListItemDelegate(QStyledItemDelegate):
   def createEditor(self,
                    parent: QWidget,
                    option: QStyleOptionViewItem,
-                   index:  QModelIndex | QPersistentModelIndex) -> QWidget:
+                   index) -> QWidget:
     """
     Disable the editor for the whole column by simply returning None
     Args:
@@ -44,7 +44,7 @@ class ListItemDelegate(QStyledItemDelegate):
 
   def setEditorData(self,
                     editor: QWidget,
-                    index: QModelIndex | QPersistentModelIndex) -> None:
+                    index) -> None:
     """
     Set the data in the editor
 
@@ -60,7 +60,7 @@ class ListItemDelegate(QStyledItemDelegate):
   def setModelData(self,
                    editor: QWidget,
                    model: QAbstractItemModel,
-                   index: QModelIndex | QPersistentModelIndex) -> None:
+                   index) -> None:
     """
     Change data in model accordingly
 
@@ -76,7 +76,7 @@ class ListItemDelegate(QStyledItemDelegate):
   def updateEditorGeometry(self,
                            editor: QWidget,
                            option: QStyleOptionViewItem,
-                           index: QModelIndex | QPersistentModelIndex) -> None:
+                           index) -> None:
     """
     Change size of field
 

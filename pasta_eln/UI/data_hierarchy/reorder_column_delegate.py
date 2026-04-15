@@ -20,7 +20,7 @@ class ReorderColumnDelegate(QStyledItemDelegate):
   """
   Delegate for creating the icons for the re-order column in the data hierarchy editor tables
   """
-  def __init__(self, parent:QObject|None = None):
+  def __init__(self, parent = None):
     super().__init__(parent)
     self.button = QPushButton()
 

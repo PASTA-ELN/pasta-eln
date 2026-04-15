@@ -280,7 +280,7 @@ class Backend(CLI_Mixin):
     return
 
 
-  def scanProject(self, progressBar:Callable[...,None]|None, projID:str, projPath:Path|None=None) -> str:
+  def scanProject(self, progressBar, projID:str, projPath) -> str:
     """ Scan directory tree recursively from project/... or project/task/...
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks

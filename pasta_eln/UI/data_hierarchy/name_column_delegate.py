@@ -11,7 +11,7 @@ class NameColumnDelegate(QStyledItemDelegate):
   def createEditor(self,
                    parent: QWidget,
                    option: QStyleOptionViewItem,
-                   index:  QModelIndex | QPersistentModelIndex) -> QWidget:
+                   index) -> QWidget:
     """
     Creates the line edit
 
@@ -29,7 +29,7 @@ class NameColumnDelegate(QStyledItemDelegate):
     return editor
 
 
-  def destroyEditor(self, editor:QWidget, index:QModelIndex | QPersistentModelIndex) -> None:
+  def destroyEditor(self, editor:QWidget, index) -> None:
     """ destroy the line editor
 
     Args:

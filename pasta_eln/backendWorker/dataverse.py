@@ -31,7 +31,7 @@ class DataverseClient(RepositoryClient):
     self.headers = {'Accept': 'application/json', 'X-Dataverse-key': self.api_token}
 
 
-  def recreateAPIKey(self) -> str | Any:
+  def recreateAPIKey(self):
     """
     Recreates the API token using existing token
 
@@ -97,7 +97,7 @@ class DataverseClient(RepositoryClient):
 
   ################ DATAVERSE #######################
   def createDataverse(self, dv_parent: str, dv_name: str, dv_description: str, dv_alias: str,
-                      dv_contact_email_list: list[dict[str, str]], dv_affiliation: str, dv_type: str) -> dict[Any, Any] | Any:
+                      dv_contact_email_list: list[dict[str, str]], dv_affiliation: str, dv_type: str):
     """
     Creates and publishes a dataverse
     Args:
@@ -143,7 +143,7 @@ class DataverseClient(RepositoryClient):
     return f"Error creating dataverse, Status: {resp.status_code}, Info: {resp.text}"
 
 
-  def getDataverseList(self) -> dict[Any, Any] | Any:
+  def getDataverseList(self):
     """
     Gets the list of data verses
     Returns:
@@ -168,7 +168,7 @@ class DataverseClient(RepositoryClient):
     return f"Error get dataverse list, Server:{self.server_url},  Status:{resp.status_code}"
 
 
-  def getDataverseContent(self) -> dict[Any, Any] | Any:
+  def getDataverseContent(self):
     """
     Retrieves the contents of a dataverse
 
@@ -181,7 +181,7 @@ class DataverseClient(RepositoryClient):
       f"Error retrieving the contents of dataverse, Id: {self.identifier}, Info: {resp.json()}"
 
 
-  def getDataverseSize(self) -> str | Any:
+  def getDataverseSize(self):
     """
     Retrieves the size of a dataverse
     Returns (str):
@@ -194,7 +194,7 @@ class DataverseClient(RepositoryClient):
     return f"Error retrieving the size for data verse, Id: {self.identifier}, Info: {resp.json()}"
 
 
-  def getDataverseInfo(self) -> str | Any:
+  def getDataverseInfo(self):
     """
     Retrieves information about a dataverse
 
@@ -210,7 +210,7 @@ class DataverseClient(RepositoryClient):
 
   ################ DATASET #######################
   def createDataset(self, ds_metadata: dict[str, Any], ds_validate_metadata: bool = False
-                                       ) -> dict[Any, Any] | Any:
+                                       ):
     """
     Creates and publishes a dataset to the parent dataverse
     Args:
@@ -250,7 +250,7 @@ class DataverseClient(RepositoryClient):
     return f"Error creating dataset, Info: {resp.text}"
 
 
-  def uploadFile(self, ds_pid: str, df_file_path: str, df_description: str, df_categories: list[str]) -> dict[Any, Any] | Any:
+  def uploadFile(self, ds_pid: str, df_file_path: str, df_description: str, df_categories: list[str]):
     """
     Uploads a file to a dataset
     Args:
@@ -312,7 +312,7 @@ class DataverseClient(RepositoryClient):
     return True, f'Published: {doi}, {res["persistentUrl"]}'
 
 
-  def getDatasetInfo(self, ds_persistent_id: str, version: str = ':latest-published') -> dict[Any, Any] | Any:
+  def getDatasetInfo(self, ds_persistent_id: str, version: str = ':latest-published'):
     """
     Fetch JSON representation of a dataset
     Args:
@@ -337,7 +337,7 @@ class DataverseClient(RepositoryClient):
     return f"Error fetching JSON representation of dataset: {ds_persistent_id} Info: {resp.json()}"
 
 
-  def getDatasetVersions(self, ds_persistent_id: str) -> dict[Any, Any] | Any:
+  def getDatasetVersions(self, ds_persistent_id: str):
     """
     Fetch the version list for dataset
     Args:
@@ -355,7 +355,7 @@ class DataverseClient(RepositoryClient):
     return f"Error fetching version list for dataset: {ds_persistent_id} Info: {resp.json()}"
 
 
-  def getDatasetLocks(self, ds_persistent_id: str) -> dict[Any, Any] | Any:
+  def getDatasetLocks(self, ds_persistent_id: str):
     """
     Fetches locks for a dataset
 
@@ -378,7 +378,7 @@ class DataverseClient(RepositoryClient):
     return f"Error fetching locks for dataset: {ds_persistent_id}  Info: {resp.json()}"
 
 
-  def getDatasetFiles(self, ds_persistent_id: str, version: str = ':latest-published') -> dict[Any, Any] | Any:
+  def getDatasetFiles(self, ds_persistent_id: str, version: str = ':latest-published'):
     """
     Fetch the file list for dataset
     Args:
@@ -403,7 +403,7 @@ class DataverseClient(RepositoryClient):
     return f"Error fetching file list for dataset: {ds_persistent_id}  Info: {resp.json()}"
 
 
-  def getDatasetMetadata(self, ds_persistent_id: str, version: str = ':latest-published') -> dict[Any, Any] | Any:
+  def getDatasetMetadata(self, ds_persistent_id: str, version: str = ':latest-published'):
     """
     Fetch the metadata block for dataset
     Args:
@@ -428,7 +428,7 @@ class DataverseClient(RepositoryClient):
     return f"Error fetching metadata block for dataset: {ds_persistent_id}  Info: {resp.json()}"
 
 
-  def deleteEmptyDataverse(self) -> str | Any:
+  def deleteEmptyDataverse(self):
     """
     Deletes an empty dataverse
 
@@ -441,7 +441,7 @@ class DataverseClient(RepositoryClient):
     return f"Error deleting dataverse,  Info: {resp.json()}"
 
 
-  def deletePublishedDataset(self, ds_persistent_id: str) -> str | Any:
+  def deletePublishedDataset(self, ds_persistent_id: str):
     """
     Deletes a published dataset
     Note: The method fails presently due to a bug in dataverse API
@@ -461,7 +461,7 @@ class DataverseClient(RepositoryClient):
     return f"Error deleting dataset, Id: {ds_persistent_id}, Info: {resp.json()}"
 
 
-  def deleteNonEmptyDataverse(self) -> str | Any:
+  def deleteNonEmptyDataverse(self):
     """
     Deletes a non-empty dataverse
 

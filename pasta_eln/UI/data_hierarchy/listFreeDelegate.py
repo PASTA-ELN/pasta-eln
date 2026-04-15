@@ -10,7 +10,7 @@ class ListFreeDelegate(QStyledItemDelegate):
   def createEditor(self,
                    parent: QWidget,
                    option: QStyleOptionViewItem,
-                   index:  QModelIndex | QPersistentModelIndex) -> QWidget:
+                   index) -> QWidget:
     """
     Creates the line edit
 

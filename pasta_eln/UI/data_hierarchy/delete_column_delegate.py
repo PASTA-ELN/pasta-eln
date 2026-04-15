@@ -20,7 +20,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
   """
   Delegate for creating the delete icon for the delete column in the data hierarchy table views
   """
-  def __init__(self, parent:QObject|None = None):
+  def __init__(self, parent= None):
     super().__init__(parent)
     self.button = QPushButton()
 

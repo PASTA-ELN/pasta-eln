@@ -21,7 +21,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
   """ Terminology Lookup Dialog class which handles the IRI lookup online """
 
   def __init__(self,
-               default_lookup_term: str | None = None,
+               default_lookup_term = None,
                accepted_callback: Callable[[list[str]], None] = None) -> None:      # type: ignore[assignment]
     """
     Initializes the dialog

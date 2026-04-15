@@ -15,7 +15,7 @@ space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                 
 
 class TextButton(QPushButton):
   """ Button that has only text"""
-  def __init__(self, label:str, widget:QWidget, command:list[Any]|None=[], layout:Optional[QLayout]=None,
+  def __init__(self, label:str, widget:QWidget, command=[], layout:Optional[QLayout]=None,
                tooltip:str='', checkable:bool=False, style:str='', hide:bool=False, iconName:str=''):
     """
     Args:
@@ -381,7 +381,7 @@ class FlowLayout(QLayout):
       """
     return len(self.itemList)
 
-  def itemAt(self, index:int) -> QLayoutItem|None:
+  def itemAt(self, index:int):
     """ Return the item at the given index.
     Args:
       index (int): index of the item

@@ -87,7 +87,7 @@ class Pasta2Elab:
 
 
   def sync(self, mode:str='', callback:Callable[[ElabFTWApi,str,int],str]=cliCallback,
-           progressCallback:Callable[...,None]|None=None) -> list[tuple[str,int]]:
+           progressCallback=None) -> list[tuple[str,int]]:
     """ Main function
 
     Args:
@@ -350,7 +350,7 @@ class Pasta2Elab:
 
 
   def syncMissingEntries(self, mode:str='', callback:Callable[[ElabFTWApi,str,int],str]=cliCallback,
-                         progressCallback:Callable[...,None]|None=None) -> list[tuple[str,int]]:
+                         progressCallback=None) -> list[tuple[str,int]]:
     """
     Compare information on server and client and delete those on server, that are not on client (because they were deleted there)
 

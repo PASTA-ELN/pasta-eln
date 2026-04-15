@@ -496,7 +496,7 @@ class BackendThread(QThread):
   """
   Thread that manages the backend worker
   """
-  def __init__(self, parent:QObject|None=None) -> None:
+  def __init__(self, parent=None) -> None:
     """Initialize the backend thread with a parent QObject
     Args:
       parent (QObject): Parent QObject for the thread
