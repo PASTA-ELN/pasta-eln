@@ -577,3 +577,11 @@ def makeStringWrappable(text: str, string: str = "\u200B", nChars: int = 25):
       result = string.join([result[:i+nChars], result[i+nChars:]])
       i += nChars+len(string)
   return result
+
+def rgba_to_argb(hex_color: str) -> str:
+  """
+  Converts #RRGGBBAA to #AARRGGBB in a hexcolor-string
+  """
+  hex_color = hex_color.lstrip('#')
+  r, g, b, a = hex_color[:2], hex_color[2:4], hex_color[4:6], hex_color[6:8]
+  return f"#{a}{r}{g}{b}"

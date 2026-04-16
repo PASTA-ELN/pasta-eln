@@ -5,6 +5,7 @@ import darkdetect
 from PySide6.QtGui import QColor
 
 from ..fixedStringsJson import THEME_COLOR_VALUES
+from ..miscTools import rgba_to_argb
 
 
 class Palette:
@@ -25,10 +26,10 @@ class Palette:
         print(f"DEBUG: darkdetect.theme().lower()={auto_theme} is not recognized")
         self.qtheme = 'light'
     self.primary = self.getThemeColor("primary", "base")
-    self.text = self.getThemeColor("background", "base")
-    self.leafX = "green"  # self.getThemeColor("foreground", "base")
-    self.leafO = self.getThemeColor("background", "panel")
-    self.leafShadow = self.getThemeColor("background", "panel")
+    self.text = self.getThemeColor("foreground", "base")
+    self.leafX = self.getThemeColor("border", "base")
+    self.leafO = self.getThemeColor("background", "popup")
+    self.leafShadow = "#55000000" # Transparent Black
 
   def setTheme(self, theme: str = "", saveTheme: bool = True) -> None:
     """
@@ -53,6 +54,7 @@ class Palette:
     font-size: 10pt;
     }
     """
+    custom_colors={}#{"background":"#1E3057"}
     if theme == "automatic":
       theme = darkdetect.theme().lower()
     if theme not in ["dark", "light", ""]:
@@ -61,9 +63,9 @@ class Palette:
     if theme != "" and saveTheme:
       self.qtheme = theme
     if theme != "" and not saveTheme:
-      qdarktheme.setup_theme(theme, additional_qss=css, corner_shape=cornershape)
+      qdarktheme.setup_theme(theme, additional_qss=css, corner_shape=cornershape, custom_colors=custom_colors)
     else:
-      qdarktheme.setup_theme(self.qtheme, additional_qss=css, corner_shape=cornershape)
+      qdarktheme.setup_theme(self.qtheme, additional_qss=css, corner_shape=cornershape, custom_colors=custom_colors)
 
   def get(self, color: str, prefix: str) -> str:
     """
@@ -80,8 +82,8 @@ class Palette:
       "primary": self.getThemeColor("primary", "base"),
       "primaryLight": "",
       "secondary": "",
-      "secondaryLight": "",
-      "secondaryDark": "",
+      "secondaryLight": self.getThemeColor("background", "popup"),
+      "secondaryDark": self.getThemeColor("background", "table"),
       "primaryText": "",
       "secondaryText": "",
     }
@@ -105,6 +107,10 @@ class Palette:
     # 1. Determine base color
     theme_dict = THEME_COLOR_VALUES[self.qtheme]
     cat = theme_dict.get(category, {})
+    if isinstance(cat, str):
+      if len(cat) > 7: # Colors in THEME_COLOR_VALUES are #RGBA, not #ARGB like QColor wants.
+        cat = rgba_to_argb(cat)
+      return QColor(cat).name(format=QColor.NameFormat.HexArgb)
     base_hex = cat.get("base", "#000000")
     color = QColor(base_hex)
 

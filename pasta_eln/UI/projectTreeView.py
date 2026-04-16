@@ -22,7 +22,10 @@ class TreeView(QTreeView):
     self.comm = comm
     self.setModel(model)
     self.setHeaderHidden(True)
-    self.setStyleSheet('QTreeView::branch {border-image: none;}')
+    self.setStyleSheet(f'''
+    QTreeView::branch {{border-image: none;}}
+    TreeView {{background-color:{self.comm.palette.getThemeColor("background", "panel")};}}
+    ''')
     self.setIndentation(40)
     self.renderer = ProjectLeafRenderer(self.comm)
     self.setItemDelegate(self.renderer)
