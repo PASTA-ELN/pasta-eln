@@ -156,13 +156,15 @@ class DataAnalyse(QDialog):
        self.yAxisCB.currentText() not in self.df.columns or \
        self.cAxisCB.currentText() not in self.df.columns:
       return
-    x = self.df[self.xAxisCB.currentText()]
-    y = self.df[self.yAxisCB.currentText()]
-    c = self.df[self.cAxisCB.currentText()]
-    try:
-      fit = np.polyfit(x, y, 1)
-    except np.linalg.LinAlgError:
-      fit = [np.nan, np.nan]
+    xCol = self.xAxisCB.currentText()
+    yCol = self.yAxisCB.currentText()
+    cCol = self.cAxisCB.currentText()
+    dfPlot = self.df[[xCol, yCol, cCol]].dropna()
+    if dfPlot.empty:
+      return
+    x = dfPlot[xCol]
+    y = dfPlot[yCol]
+    c = dfPlot[cCol]
     xMin = None if self.xAxisMin.text()=='' or not isFloat(self.xAxisMin.text()) else float(self.xAxisMin.text())
     xMax = None if self.xAxisMax.text()=='' or not isFloat(self.xAxisMax.text()) else float(self.xAxisMax.text())
     yMin = None if self.yAxisMin.text()=='' or not isFloat(self.yAxisMin.text()) else float(self.yAxisMin.text())
@@ -173,6 +175,10 @@ class DataAnalyse(QDialog):
     self.graph.axes.cla()
     #SCATTER PLOT
     if self.typeCB.currentText()=='x-y plot':
+      try:
+        fit = np.polyfit(x, y, 1) if len(x) >= 2 else [np.nan, np.nan]
+      except np.linalg.LinAlgError:
+        fit = [np.nan, np.nan]
       # fit
       self.graph.axes.plot(x, np.polyval(fit, x), 'k--')
       text = f'y={fit[0]:.3f}*x+{fit[1]:.3f}' # : $R^2$={round(r2_score(y, np.polyval(fit, x)), 2)}' #Comment in and install sklearn
@@ -190,6 +196,8 @@ class DataAnalyse(QDialog):
     if self.typeCB.currentText()=='histogram':
       for ci in np.unique(c):
         mask = c==ci
+        if not np.any(mask):
+          continue
         label = f'{ci} {np.mean(x[mask]):.2e}$\pm${np.std(x[mask]):.2e}'
         if self.subtypeCB.currentText()=='histogram':
           self.graph.axes.hist(x[mask], 20, label=label, alpha=0.5)
@@ -205,8 +213,9 @@ class DataAnalyse(QDialog):
           color = next(self.colors)
           self.graph.axes.bar(x_, y_, width=w_, label=label, facecolor='none', linestyle='-', linewidth=1, edgecolor=color)
           self.graph.axes.set_ylabel('relative distribution')
-      ksStats = stats.ks_2samp(x[mask], x[~mask])
-      infoText = f'p-value={ksStats.pvalue:.3f}'
+      if len(x) > 0 and np.any(mask) and np.any(~mask):
+        ksStats = stats.ks_2samp(x[mask], x[~mask])
+        infoText = f'p-value={ksStats.pvalue:.3f}'
 
     # for all plots
     self.graph.axes.legend(title = self.cAxisLabel.text() or self.cAxisCB.currentText())
