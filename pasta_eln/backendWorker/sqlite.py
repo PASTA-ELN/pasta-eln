@@ -107,6 +107,77 @@ class SqlLiteDB:
     return
 
 
+  def _flatten_metadata(self, data:dict[str,Any], parentKeys:str='', skip_empty:bool=True
+                        ) -> dict[str, tuple[Any, str, str, str]]:
+    """Flatten nested metadata into a key -> (value, unit, label, purl) map."""
+    flat: dict[str, tuple[Any, str, str, str]] = {}
+    prefix = f'{parentKeys}.' if parentKeys else ''
+    for key, value in data.items():
+      key = str(key) if isinstance(key, int) else key
+      if skip_empty and not value:
+        continue
+      if isinstance(value, dict):
+        flat |= self._flatten_metadata(value, f'{prefix}{key}' if prefix else key, skip_empty)
+        continue
+      if isinstance(value, list) and not value:
+        continue
+      if key.endswith(']') and ('[') in key:
+        unit = re.findall(r'\[\S+\]', key)[-1][1:-1]
+        label = key[:-len(unit)-2].strip()
+        key = camelCase(label)
+        key = key[0].lower()+key[1:]
+        flat[f'{prefix}{key}'] = (str(value), unit, label, '')
+        continue
+      if isinstance(value, list) and isinstance(value[0], dict) and value[0].keys() >= {'key', 'value', 'unit'}:
+        for item in value:
+          item_key = f'{prefix}{key}.{item["key"]}'
+          flat[item_key] = (item['value'], item.get('unit', ''), item.get('label', ''), item.get('PURL', ''))
+        continue
+      if isinstance(value, tuple) and len(value)==4:
+        flat[f'{prefix}{key}'] = (value[0], value[1], value[2], value[3])
+        continue
+      if str(value)!='':
+        flat[f'{prefix}{key}'] = (str(value), '', '', '')
+    return flat
+
+
+  def _insert_metadata(self, docID:str, flat:dict[str, tuple[Any, str, str, str]]) -> None:
+    if not flat:
+      return
+    cmd = 'INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);'
+    self.cursor.executemany(cmd, [(docID, k, v, u) for k, (v, u, _, _) in flat.items()])
+    cmdDef = 'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);'
+    self.cursor.executemany(cmdDef, [(k, l, p) for k, (_, _, l, p) in flat.items()])
+    self.connection.commit()
+    return
+
+
+  def _update_metadata(self, docID:str, flat:dict[str, tuple[Any, str, str, str]],
+                       changesDict:dict[str,Any]) -> None:
+    self.cursor.execute(f"SELECT key, value, unit FROM properties WHERE id == '{docID}'")
+    dataOld = {i[0]:(i[1], '' if i[2] is None else i[2]) for i in self.cursor.fetchall()}
+    if not flat and not dataOld:
+      return
+    cmd_insert = 'INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);'
+    cmd_def = 'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);'
+    for key, (value, unit, label, purl) in flat.items():
+      if key in dataOld:
+        old_value, old_unit = dataOld[key]
+        if value != old_value or unit != old_unit:
+          self.cursor.execute(f"UPDATE properties SET value='{value}', unit='{unit}' WHERE id = '{docID}' and key = '{key}'")
+          changesDict[key] = old_value
+      else:
+        self.cursor.execute(cmd_insert, [docID, key, value, unit])
+      self.cursor.execute(cmd_def, [key, label, purl])
+      if key in dataOld:
+        del dataOld[key]
+    if dataOld:
+      cmd = f"DELETE FROM properties WHERE id == '{docID}' and key == ?"
+      self.cursor.executemany(cmd, [(i,) for i in dataOld.keys()])
+      changesDict |= {k:v for k,(v,_) in dataOld.items()}
+    return
+
+
   def createSQLTable(self, name:str, columns:list[str], primary:str, colTypes:Optional[list[Any]]=None) -> list[str]:
     """
     Create a table in the sqlite system
@@ -315,43 +386,10 @@ class SqlLiteDB:
     self.cursor.execute(f"INSERT INTO main VALUES ({', '.join(['?']*len(docList))})", docList)
     doc = {k:v for k,v in doc.items() if (k not in MAIN_ORDER and k[1:] not in MAIN_ORDER) or k == 'id'}
 
-    def insertMetadata(data:dict[str,Any], parentKeys:str) -> None:
-      parentKeys = f'{parentKeys}.' if parentKeys else ''
-      cmd    = 'INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);'
-      cmdDef = 'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);'
-      for key,value in data.items():
-        key = str(key) if isinstance(key, int) else key
-        if not value:
-          continue
-        if isinstance(value, dict):
-          insertMetadata(value, f'{parentKeys}{key}')
-        elif key.endswith(']') and ('[') in key:
-          unit   = re.findall(r'\[\S+\]', key)[-1][1:-1]
-          label  = key[:-len(unit)-2].strip()
-          key    = camelCase(label)
-          key    = key[0].lower()+key[1:]
-          self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), unit])
-          self.cursor.execute(cmdDef, [parentKeys+key, label, ''])
-        elif isinstance(value, list) and isinstance(value[0], dict) and value[0].keys() >= {'key', 'value', 'unit'}:
-          self.cursor.executemany(cmd, zip([doc['id']]*len(value),      [parentKeys+key+'.'+i['key'] for i in value],
-                                            [i['value'] for i in value], [i['unit'] for i in value]  ))
-          self.cursor.executemany(cmdDef, zip([parentKeys+key+'.'+i['key'] for i in value],
-                                            [i['label'] for i in value], [i['PURL'] for i in value]  ))
-        elif isinstance(value, tuple) and len(value)==4:
-          self.cursor.execute(cmd,    [doc['id'], parentKeys+key, value[0], value[1]])
-          self.cursor.execute(cmdDef, [parentKeys+key, value[2], value[3]])
-        elif str(value)!='':
-          try:
-            self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), ''])
-            self.cursor.execute(cmdDef, [parentKeys+key, '', ''])
-          except Exception:
-            logging.error('SQL command %s did not succeed %s', cmd, [doc['id'], parentKeys+key, str(value), ''],
-                          exc_info=True)
-      self.connection.commit()
-      return
     # properties
     metaDoc = {k:v for k,v in doc.items() if k not in MAIN_ORDER}
-    insertMetadata(metaDoc, '')
+    flat = self._flatten_metadata(metaDoc, skip_empty=True)
+    self._insert_metadata(doc['id'], flat)
     # save changes
     self.connection.commit()
     branch = copy.deepcopy(docOrg['branch'])
@@ -469,44 +507,8 @@ class SqlLiteDB:
           raise ValueError(f'sqlite.1: unknown branch op: {mainNew["id"]} {mainNew["name"]}: {branchNew} of doc {dataNew}')
 
     # read properties and identify changes
-    self.cursor.execute(f"SELECT key, value FROM properties WHERE id == '{docID}'")
-    dataOld = {i[0]:i[1] for i in self.cursor.fetchall()}
-    for key,value in dataNew.items():
-      if isinstance(value, dict):
-        for subKey, subValue in value.items():
-          longKey = f'{key}.{subKey}'
-          if isinstance(subValue, tuple):
-            subValue = subValue[0]
-          if longKey in dataOld and subValue!=dataOld[longKey]:
-            self.cursor.execute(f"UPDATE properties SET value='{subValue}' WHERE id = '{docID}' and key = '{longKey}'")
-            changesDict[longKey] = dataOld[longKey]
-          elif longKey not in dataOld:
-            cmd = 'INSERT INTO properties VALUES (?, ?, ?, ?);'
-            self.cursor.execute(cmd ,[docID, longKey, subValue, ''])
-          if longKey in dataOld:
-            del dataOld[longKey]
-      elif isinstance(value, (str,int,float)) and '.' in key:
-        if key in dataOld and value!=dataOld[key]:
-          self.cursor.execute(f"UPDATE properties SET value='{value}' WHERE id = '{docID}' and key = '{key}'")
-          changesDict[key] = dataOld[key]
-        elif key not in dataOld:
-          cmd = 'INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);'
-          self.cursor.execute(cmd ,[docID, key, value, ''])
-          changesDict[key] = value
-      elif isinstance(value, tuple) and len(value)==4:
-        if key in dataOld and value[0]!=dataOld[key]:
-          self.cursor.execute(f"UPDATE properties SET value='{value[0]}' WHERE id = '{docID}' and key = '{key}'")
-          changesDict[key] = dataOld[key]
-        elif key not in dataOld:
-          cmd = 'INSERT INTO properties VALUES (?, ?, ?, ?);'
-          self.cursor.execute(cmd ,[docID, key, value[0], value[1]])
-      else:
-        logging.error('Property is not a dict, ERROR %s %s %s',key, value, type(value), exc_info=True)
-    if set(dataOld.keys()).difference(dataNew.keys()):
-      cmd = f"DELETE FROM properties WHERE id == '{docID}' and key == ?"
-      properties = [(i,) for i in set(dataOld.keys()).difference(dataNew.keys())]
-      self.cursor.executemany(cmd, properties)
-      changesDict |= dataOld
+    flat = self._flatten_metadata(dataNew, skip_empty=False)
+    self._update_metadata(docID, flat, changesDict)
     # read main and identify if something changed
     cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
     mainOld = dict(cursor.fetchone())
