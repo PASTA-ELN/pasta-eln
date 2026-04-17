@@ -619,6 +619,8 @@ class SqlLiteDB:
     if pathOld!='*' and ':/' not in pathOld and path!='*' and path is not None:
       if not (self.basePath/pathOld).exists() and (self.basePath/path).exists():
         logging.debug('sqlite:updateBranch: dont move since already good')
+      elif not (self.basePath/pathOld).exists():
+        logging.critical('sqlite:updateBranch: pathOld does not exist')
       else:
         shutil.move(self.basePath/pathOld, self.basePath/path)
     if docID[0]=='x' and path is not None:

@@ -54,6 +54,8 @@ class Communicate(QObject):
       return
     self.basePath = Path(self.configuration['projectGroups'][self.projectGroup]['local']['path'])
     self.addOnPath = self.configuration['projectGroups'][self.projectGroup]['addOnDir']
+    if self.addOnPath not in sys.path:
+      sys.path.insert(0, self.addOnPath)                                                # for frontend process
     logging.info('Initial python path: %s', sys.path)
     logging.info('Backend initialized with basePath %s and prepend addOnPath %s', self.basePath, self.addOnPath)
 

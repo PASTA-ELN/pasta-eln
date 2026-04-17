@@ -1,10 +1,10 @@
 """ Main class of config tab on parameters (e.g. API keys) for add-ons """
-import importlib
 import json
 from enum import Enum
 from pathlib import Path
 from typing import Callable
 from PySide6.QtWidgets import QApplication, QDialog, QGroupBox, QLineEdit, QVBoxLayout
+from ...misc_tools import loadNamedModule
 from ...fixed_strings_json import confFileName
 from ..gui_communicate import Communicate
 from ..gui_style import Label, TextButton, widgetAndLayout
@@ -79,7 +79,7 @@ class ConfigurationAddOnParameter(QDialog):
       for addonType, name, groupbox, groupLayout in self.allGroupBoxes:
         QApplication.processEvents()                                                        # Force GUI update
         try:
-          module      = importlib.import_module(name)         # ISSUE: slow since imports all dependencies,...
+          module      = loadNamedModule(Path(self.comm.addOnPath), name)
           requiredParam = module.reqParameter
           try:
             helpText = module.helpText
