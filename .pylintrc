@@ -14,9 +14,9 @@ ignore=CVS
 # regex matches against base names, not paths.
 ignore-patterns=dialog_base.py,
                 html2markdown.py,
-                html2mdConfig.py,
-                html2mdElements.py,
-                html2mdUtils.py,
+                html2md_config.py,
+                html2md_elements.py,
+                html2md_utils.py,
                 markdown2html.py,
                 extractor_[a-z]+.py,
                 project_html_report.py,
@@ -80,7 +80,6 @@ disable=raw-checker-failed,
         len-as-condition,
         multiple-statements,
         multiple-imports,
-        invalid-name,
         too-few-public-methods,
         useless-return,
         no-member,
@@ -304,14 +303,14 @@ redefining-builtins-modules=six.moves,past.builtins,future.builtins
 [BASIC]
 
 # Naming style matching correct argument names
-argument-naming-style=snake_case
+argument-naming-style=camelCase
 
 # Regular expression matching correct argument names. Overrides argument-
 # naming-style
 #argument-rgx=
 
 # Naming style matching correct attribute names
-attr-naming-style=snake_case
+attr-naming-style=camelCase
 
 # Regular expression matching correct attribute names. Overrides attr-naming-
 # style
@@ -350,7 +349,7 @@ const-naming-style=camelCase
 docstring-min-length=-1
 
 # Naming style matching correct function names
-function-naming-style=snake_case
+function-naming-style=camelCase
 
 # Regular expression matching correct function names. Overrides function-
 # naming-style
@@ -375,7 +374,7 @@ inlinevar-naming-style=any
 #inlinevar-rgx=
 
 # Naming style matching correct method names
-method-naming-style=snake_case
+method-naming-style=camelCase
 
 # Regular expression matching correct method names. Overrides method-naming-
 # style
@@ -401,7 +400,7 @@ no-docstring-rgx=^_
 property-classes=abc.abstractproperty
 
 # Naming style matching correct variable names
-variable-naming-style=snake_case
+variable-naming-style=camelCase
 
 # Regular expression matching correct variable names. Overrides variable-
 # naming-style

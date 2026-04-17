@@ -4,9 +4,9 @@ import logging, warnings, random
 from pathlib import Path
 from anytree import PreOrderIter
 from PySide6.QtCore import QModelIndex, QEventLoop                         # pylint: disable=no-name-in-module
-from pasta_eln.UI.project import Project
-from pasta_eln.UI.guiCommunicate import Communicate
-from pasta_eln.backendWorker.worker import Task
+from pasta_eln.ui.project import Project
+from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.backend_worker.worker import Task
 
 
 def test_simple(qtbot, caplog):

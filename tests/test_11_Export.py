@@ -3,9 +3,9 @@
 import logging, warnings, unittest, tempfile, os
 from pathlib import Path
 from zipfile import ZipFile
-from pasta_eln.backendWorker.backend import Backend
-from pasta_eln.backendWorker.inputOutput import exportELN
-from pasta_eln.miscTools import getConfiguration
+from pasta_eln.backend_worker.backend import Backend
+from pasta_eln.backend_worker.input_output import exportELN
+from pasta_eln.misc_tools import getConfiguration
 
 
 class TestStringMethods(unittest.TestCase):

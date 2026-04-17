@@ -9,11 +9,11 @@ import sys
 import traceback
 from sqlite3 import IntegrityError
 from typing import Any, Callable, Union
-from pasta_eln.backendWorker.backend import Backend
-from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
-from pasta_eln.fixedStringsJson import defaultDocTypes, defaultSchema
-from pasta_eln.miscTools import getConfiguration
-from pasta_eln.textTools.stringChanges import outputString
+from pasta_eln.backend_worker.backend import Backend
+from pasta_eln.backend_worker.elab_ftw_sync import Pasta2Elab
+from pasta_eln.fixed_strings_json import defaultDocTypes, defaultSchema
+from pasta_eln.misc_tools import getConfiguration
+from pasta_eln.text_tools.string_changes import outputString
 
 
 class Tools:
@@ -225,7 +225,7 @@ class Tools:
     Returns:
       dict: output document
     """
-    from .textTools.handleDictionaries import fillDocBeforeCreate
+    from .text_tools.handle_dictionaries import fillDocBeforeCreate
     defaultValues = {'gui':[True,True], 'user':''}
     try:
       doc['id'] = doc.pop('_id')
