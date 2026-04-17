@@ -188,7 +188,7 @@ class ImageGallery(QWidget):
         svgWidth = svgWidget.renderer().defaultSize().width()
         svgHeight = svgWidget.renderer().defaultSize().height()
 
-        if svgWidth == 0 or svgHeight == 0:                                         # Avoid division by zero
+        if svgWidth == 0 or svgHeight == 0:                                           # Avoid division by zero
           newWidth, newHeight = imgSize -4, imgSize -4
         elif svgHeight > svgWidth:
           newWidth = int(float(svgWidth) / float(svgHeight) * (imgSize - 4))

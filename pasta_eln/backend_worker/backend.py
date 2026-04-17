@@ -312,7 +312,7 @@ class Backend(CliMixin):
       self.cwd = self.basePath/projPath
     #prepare lists and start iterating
     inDbAll = self.db.getView('viewHierarchy/viewPathsAll', startKey=projPath.as_posix())
-    pathsInDbX    = [i['key'] for i in inDbAll if i['value'][1][0][0]=='x'] #all structure elements: folders
+    pathsInDbX    = [i['key'] for i in inDbAll if i['value'][1][0][0]=='x']   #all structure elements: folders
     pathsInDbData = [i['key'] for i in inDbAll if i['value'][1][0][0]!='x']
     filesCountSum = sum(len(files) for (_, _, files) in os.walk(self.cwd))
     filesCount = 0
@@ -323,7 +323,7 @@ class Backend(CliMixin):
         del dirs
         del files
         continue
-      parentIDs = [i for i in inDbAll if i['key']==self.cwd.as_posix()]                #parent of this folder
+      parentIDs = [i for i in inDbAll if i['key']==self.cwd.as_posix()]                 #parent of this folder
       if not parentIDs:                             #skip newly moved folder, will be scanned upon re-scanning
         continue
       parentID = parentIDs[0]['id']
@@ -334,7 +334,7 @@ class Backend(CliMixin):
                  and not (Path(root)/i/'pyvenv.cfg').is_file()]
       for dirName in dirs[::-1]:                                                     # sorted forward in Linux
         path = (Path(root)/dirName).relative_to(self.basePath).as_posix()
-        if path in pathsInDbX:                                                     # path already in database
+        if path in pathsInDbX:                                                      # path already in database
           pathsInDbX.remove(path)
           continue
         if (self.basePath/path/'.id_pastaELN.json').is_file():                 # update branch: path and stack

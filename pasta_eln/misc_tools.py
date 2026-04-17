@@ -51,6 +51,7 @@ class Bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+
 def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   """
   Rules:
@@ -72,7 +73,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
     projectGroup = configuration['defaultProjectGroup']
   directory = Path(configuration['projectGroups'][projectGroup]['addOnDir'])
   if str(directory) not in sys.path:
-    sys.path.insert(0, str(directory))                                                          # allow add-ons
+    sys.path.insert(0, str(directory))                                                         # allow add-ons
   # Add-Ons
   verboseDebug = False
   extractorsAll= {}

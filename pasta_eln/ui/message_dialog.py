@@ -5,7 +5,7 @@ from PySide6.QtGui import QTextDocument
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QWidget
 from .gui_style import Image, Label, TextButton, widgetAndLayout
 
-iconSize = 40                                                               # size of the icon at top of dialog
+iconSize = 40                                                              # size of the icon at top of dialog
 
 class MessageDialog(QDialog):
   """ Dialog that shows a message and the progress-bar """

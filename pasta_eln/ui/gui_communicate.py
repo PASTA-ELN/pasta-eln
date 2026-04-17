@@ -22,13 +22,13 @@ class Communicate(QObject):
 
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES
   # signals request a change within the UI elements:
-  changeSidebar      = Signal(str)       # redraw sidebar after hide/show of project in table, focus on this projectID
-  changeTable        = Signal(str, str)    # send doctype,projectID from sidebar to main-table
-                                           #      can also be used for hiding the details on right side if nothing to show
-  changeDetails      = Signal(str)       # send docID from main-table to details
-                                         #      docID (str): document-id; ''=draw nothing; 'redraw' implies redraw
-  changeProject      = Signal(str, str)  # send docID,projectID from sidebar or main-table to projects
-  stopSequentialEdit = Signal()          # in sequential edit, stop if there is a cancel
+  changeSidebar      = Signal(str)              # redraw sidebar after hide/show of project in table, focus on this projectID
+  changeTable        = Signal(str, str)         # send doctype,projectID from sidebar to main-table
+                                                #      can also be used for hiding the details on right side if nothing to show
+  changeDetails      = Signal(str)              # send docID from main-table to details
+                                                #      docID (str): document-id; ''=draw nothing; 'redraw' implies redraw
+  changeProject      = Signal(str, str)         # send docID,projectID from sidebar or main-table to projects
+  stopSequentialEdit = Signal()                 # in sequential edit, stop if there is a cancel
   # send data or data-request to backend
   commSendConfiguration = Signal(dict, str)     # send configuration and project-group-name to backend
   uiRequestDataHierarchy= Signal(str)           # get all entries in the data hierarchy for this docType
@@ -38,11 +38,11 @@ class Communicate(QObject):
   uiRequestTask         = Signal(Task, dict)    # request to execute a task
   uiSendSQL             = Signal(list)          # request to execute SQL commands directly
   # signals that are emitted from this comm that data changed
-  docTypesChanged    = Signal()          # redraw main window, e.g. after change of docType titles
+  docTypesChanged    = Signal()                 # redraw main window, e.g. after change of docType titles
 
   # unclear
-  formDoc            = Signal(dict)      # send doc from details to new/edit dialog: dialogForm
-  testExtractor      = Signal()          # execute extractorTest in widgetDetails
+  formDoc            = Signal(dict)             # send doc from details to new/edit dialog: dialogForm
+  testExtractor      = Signal()                 # execute extractorTest in widgetDetails
 
   def __init__(self, projectGroup:str=''):
     super().__init__()

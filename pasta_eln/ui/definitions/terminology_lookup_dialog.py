@@ -13,16 +13,15 @@ from typing import Callable
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QMessageBox, QWidget
-from pasta_eln.ui.definitions.dialog_base import Ui_TerminologyLookupDialogBase  # type: ignore[attr-defined]
+from pasta_eln.ui.definitions.dialog_base import Ui_TerminologyLookupDialogBase   # type: ignore[attr-defined]
 from pasta_eln.ui.definitions.terminology_lookup_service import TerminologyLookupService
 
 
 class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
   """ Terminology Lookup Dialog class which handles the IRI lookup online """
 
-  def __init__(self,
-               defaultLookupTerm: str | None = None,
-               acceptedCallback: Callable[[list[str]], None] = None) -> None:      # type: ignore[assignment]
+  def __init__(self, defaultLookupTerm: str | None = None,
+               acceptedCallback: Callable[[list[str]], None] = None) -> None:       # type: ignore[assignment]
     """
     Initializes the dialog
     Args:
