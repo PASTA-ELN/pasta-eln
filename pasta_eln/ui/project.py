@@ -35,7 +35,7 @@ class Project(QWidget):
     self.setLayout(self.mainL)
     self.tree :Optional[TreeView]            = None
     self.model:Optional[QStandardItemModel]  = None
-    self.allDetails                          = QTextEdit()
+    self.allDetails:Optional[QTextEdit]      = None
     self.actHideDetail                       = QAction()
     self.actionFoldAll                       = QAction()
     self.showDetailsAll = False
@@ -78,10 +78,6 @@ class Project(QWidget):
     """
     Initialize / Create header of page
     """
-    # remove if still there
-    for i in reversed(range(self.mainL.count())):                                                  #remove old
-      self.mainL.itemAt(i).widget().setParent(None)
-    logging.debug('ProjectView elements at 2: %i',self.mainL.count())
     if not self.docProj:
       return
     # TOP LINE includes name on left, buttons on right
@@ -126,6 +122,7 @@ class Project(QWidget):
     # self.infoW = QScrollArea()
     # self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     # self.infoW.setWidgetResizable(True)
+    self.allDetails = QTextEdit(self)
     self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, self.comm.dataHierarchyNodes['x0'],
                                              self))
     if not self.docProj['gui'][0]:
@@ -161,9 +158,7 @@ class Project(QWidget):
     """
     if self.isHidden() and 'PYTEST_CURRENT_TEST' not in os.environ:
       return
-    #initialize
-    for i in reversed(range(self.mainL.count())):                                                  #remove old
-      self.mainL.itemAt(i).widget().setParent(None)
+    self._clearProjectWidgets()
     logging.debug('ProjectView elements at 1: %i',self.mainL.count())
     selectedIndex = None
     self.model = QStandardItemModel()
@@ -183,7 +178,8 @@ class Project(QWidget):
         else:
           rootItem.appendRow(self.iterateTree(node))
     except AttributeError:
-      self.tree = TreeView(self, self.comm, QStandardItemModel())    # if hierarchy is None, create empty tree
+      self.model = QStandardItemModel()
+      self.tree = TreeView(self, self.comm, self.model)              # if hierarchy is None, create empty tree
     # collapse / expand depending on stored value
     # by iterating each leaf, and converting item and index
     root = self.model.invisibleRootItem()
@@ -195,12 +191,50 @@ class Project(QWidget):
     logging.debug('ProjectView elements at 4: %i',self.mainL.count())
     if self.hierarchy is not None and len(self.hierarchy.children)>0 and self.btnAddSubfolder is not None:
       self.btnAddSubfolder.setVisible(False)
-    self.tree.expanded.connect(lambda index: self.actionExpandCollapse(index, True))
-    self.tree.collapsed.connect(lambda index: self.actionExpandCollapse(index, False))
+    self.tree.expanded.connect(self.onTreeExpanded)
+    self.tree.collapsed.connect(self.onTreeCollapsed)
     if self.docIDHighlight:
       self.tree.scrollToDoc(self.docIDHighlight)
       self.docIDHighlight = ''                                                         # reset after scrolling
     return
+
+
+  def _clearProjectWidgets(self) -> None:
+    """Disconnect and delete old project widgets on the GUI thread."""
+    if self.tree is not None:
+      try:
+        self.tree.expanded.disconnect(self.onTreeExpanded)
+      except (RuntimeError, TypeError):
+        pass
+      try:
+        self.tree.collapsed.disconnect(self.onTreeCollapsed)
+      except (RuntimeError, TypeError):
+        pass
+    if self.model is not None:
+      try:
+        self.model.itemChanged.disconnect(self.modelChanged)
+      except (RuntimeError, TypeError):
+        pass
+    while self.mainL.count():
+      item = self.mainL.takeAt(0)
+      widget = item.widget()
+      if widget is not None:
+        widget.deleteLater()
+    self.tree = None
+    self.model = None
+    self.allDetails = None
+
+
+  @Slot(QModelIndex)
+  def onTreeExpanded(self, index:QModelIndex) -> None:
+    """Persist the expanded state of a folder item."""
+    self.actionExpandCollapse(index, True)
+
+
+  @Slot(QModelIndex)
+  def onTreeCollapsed(self, index:QModelIndex) -> None:
+    """Persist the collapsed state of a folder item."""
+    self.actionExpandCollapse(index, False)
 
 
   def setExpandedState(self, node:QStandardItem) -> None:
