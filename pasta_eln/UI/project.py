@@ -44,7 +44,7 @@ class Project(QWidget):
     self.btnMore:Optional[TextButton]         = None
     self.btnVisibility:Optional[TextButton]   = None
     self.lineSep = 20
-    self.META_ROLE = Qt.ItemDataRole.UserRole + 1
+    self.metaRole = Qt.ItemDataRole.UserRole + 1
 
 
   @Slot(Node, dict)
@@ -213,7 +213,7 @@ class Project(QWidget):
       return
     for iRow in range(node.rowCount()):
       item = node.child(iRow)
-      data = item.data(self.META_ROLE)
+      data = item.data(self.metaRole)
       if data['hierStack'].split('/')[-1][0]=='x':
         index = self.model.indexFromItem(item)
         self.tree.setExpanded(index, data['gui'][1])
@@ -230,12 +230,12 @@ class Project(QWidget):
     """
     if self.model is None:
       return
-    meta = index.data(self.META_ROLE)
+    meta = index.data(self.metaRole)
     if not isinstance(meta, dict):
       return
     gui  = [meta['gui'][0]]+[flag]
     docID = meta['hierStack'].split('/')[-1]
-    self.model.itemFromIndex(index).setData({ **meta, **{'gui':gui}}, self.META_ROLE)
+    self.model.itemFromIndex(index).setData({ **meta, **{'gui':gui}}, self.metaRole)
     self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
     return
 
@@ -286,13 +286,13 @@ class Project(QWidget):
         for subRow in range(self.tree.model().rowCount(index)):                     # type: ignore[union-attr]
           subIndex = self.tree.model().index(subRow,0, index)                       # type: ignore[union-attr]
           subItem  = self.tree.model().itemFromIndex(subIndex)                      # type: ignore[union-attr]
-          meta = subItem.data(self.META_ROLE)
+          meta = subItem.data(self.metaRole)
           if not isinstance(meta, dict):
             continue
           docID    = meta['hierStack'].split('/')[-1]
           gui      = meta['gui']
           gui[0]   = self.showDetailsAll
-          subItem.setData({ **meta, **{'gui':gui}}, self.META_ROLE)
+          subItem.setData({ **meta, **{'gui':gui}}, self.metaRole)
           self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
           recursiveRowIteration(subIndex)
       recursiveRowIteration(self.tree.model().index(-1,0))
@@ -325,7 +325,7 @@ class Project(QWidget):
     Args:
       item (QStandardItem): item changed, new location
     """
-    meta = item.data(self.META_ROLE)
+    meta = item.data(self.metaRole)
     if not isinstance(meta, dict):
       return
     # gather old information
@@ -337,7 +337,7 @@ class Project(QWidget):
     currentItem = item
     while currentItem.parent() is not None:
       currentItem = currentItem.parent()
-      metaParent = currentItem.data(self.META_ROLE)
+      metaParent = currentItem.data(self.metaRole)
       docIDj = metaParent['hierStack'].split('/')[-1]
       stackNew.append(docIDj)
     stackNew = [self.projID] + stackNew[::-1]                                      #add project id and reverse
@@ -368,7 +368,7 @@ class Project(QWidget):
     gui = nodeHier.gui
     nodeTree = QStandardItem(nodeHier.name)
     nodeTree.setData({'hierStack':hierStack, 'docType':nodeHier.docType, 'gui':gui, 'childNum':nodeHier.childNum,
-                      'fPath':nodeHier.fPath}, self.META_ROLE)
+                      'fPath':nodeHier.fPath}, self.metaRole)
     if nodeHier.id[0]=='x' or nodeHier.fPath == '*':
       nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)# type: ignore
     else:

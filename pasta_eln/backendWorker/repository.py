@@ -4,16 +4,16 @@ from typing import Any
 
 class RepositoryClient:
   """Parent class to repository classes"""
-  def __init__(self, server_url: str, api_token: str) -> None:
+  def __init__(self, serverUrl: str, apiToken: str) -> None:
     """
     Initializes the client
 
     Args:
-        server_url (str): The URL of the server
-        api_token (str): The API token for authentication
+        serverUrl (str): The URL of the server
+        apiToken (str): The API token for authentication
     """
-    self.api_token = api_token
-    self.server_url = server_url
+    self.apiToken = apiToken
+    self.serverUrl = serverUrl
 
 
   def checkServer(self) -> tuple[bool, str]:
@@ -44,18 +44,18 @@ class RepositoryClient:
     return False
 
 
-  def uploadRepository(self, metadata:dict[str,Any], file_path:str) -> tuple[bool, str]:
+  def uploadRepository(self, metadata:dict[str,Any], filePath:str) -> tuple[bool, str]:
     """
     Uploads a file and metadata to become a dataset
 
     Args:
       metadata (dict): metadata to this file according to its standard
-      file_path (str): The absolute path to the file to be uploaded
+      filePath (str): The absolute path to the file to be uploaded
 
     Returns:
       tuple: success of function, message
     """
-    return False, f"Mock output of metadata {metadata} and file_path {file_path}"
+    return False, f"Mock output of metadata {metadata} and filePath {filePath}"
 
 
   def prepareMetadata(self, metadata:dict[str,Any]) -> dict[str,Any]:

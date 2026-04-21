@@ -28,7 +28,7 @@ class DataverseClient(RepositoryClient):
     """
     super().__init__(server_url, api_token)
     self.identifier = identifier
-    self.headers = {'Accept': 'application/json', 'X-Dataverse-key': self.api_token}
+    self.headers = {'Accept': 'application/json', 'X-Dataverse-key': self.apiToken}
 
 
   def recreateAPIKey(self) -> str | Any:
@@ -38,7 +38,7 @@ class DataverseClient(RepositoryClient):
     Returns:
         str | Any: The new API token or any error message if the token recreation fails
     """
-    resp = requests.post(f"{self.server_url}/api/users/token/recreate", headers=self.headers, timeout=10)
+    resp = requests.post(f"{self.serverUrl}/api/users/token/recreate", headers=self.headers, timeout=10)
     if resp.status_code == 200:
       token_message = resp.json().get('data').get('message')
       return token_message.replace('New token for dataverseAdmin is ', '')
@@ -52,11 +52,11 @@ class DataverseClient(RepositoryClient):
     Returns (tuple(bool, Any)):
       A tuple of (success, a message) is returned
     """
-    resp = requests.get(f"{self.server_url}/api/info/version", headers={'Accept': 'application/json'}, timeout=10)
+    resp = requests.get(f"{self.serverUrl}/api/info/version", headers={'Accept': 'application/json'}, timeout=10)
     success = (resp.status_code == 200 and resp.json().get('data').get('version') is not None)
     return (success, 'Dataverse is reachable') \
       if success \
-      else (success, f"Cannot reach server: {self.server_url}, Status: {resp.status_code}, json: {resp.json()}")
+      else (success, f"Cannot reach server: {self.serverUrl}, Status: {resp.status_code}, json: {resp.json()}")
 
 
   def checkAPIKey(self) -> bool:
@@ -74,7 +74,7 @@ class DataverseClient(RepositoryClient):
     Returns:
         bool: True if the API token is valid, False otherwise
     """
-    resp = requests.get(f"{self.server_url}/api/users/token", headers=self.headers, timeout=10)
+    resp = requests.get(f"{self.serverUrl}/api/users/token", headers=self.headers, timeout=10)
     return (bool(resp) and resp.status_code is not None
             and resp.status_code not in [401, 403, 500])
 
@@ -85,10 +85,10 @@ class DataverseClient(RepositoryClient):
     Returns:
       True if the token has expired, False otherwise
     """
-    resp = requests.get(f"{self.server_url}/api/users/token", headers=self.headers, timeout=10)
+    resp = requests.get(f"{self.serverUrl}/api/users/token", headers=self.headers, timeout=10)
     if resp.status_code == 200:
       expiry_message = resp.json().get('data').get('message')
-      expiry_time_string = expiry_message.replace(f"Token {self.api_token} expires on ", '')
+      expiry_time_string = expiry_message.replace(f"Token {self.apiToken} expires on ", '')
       expiry_time = datetime.strptime(expiry_time_string, '%Y-%m-%d %H:%M:%S.%f')
       return expiry_time < datetime.now()
     print(f"Error checking token expiration, Info: {resp.text}")
@@ -131,12 +131,12 @@ class DataverseClient(RepositoryClient):
       'dataverseType': dv_type
     }
     # Create the data-verse
-    resp = requests.post(f"{self.server_url}/api/dataverses/{dv_parent}",
-      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token},
+    resp = requests.post(f"{self.serverUrl}/api/dataverses/{dv_parent}",
+      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken},
       data=dumps(dv_json), timeout=10)
     if resp.status_code == 201:                                                                      # Success
-      pub_resp = requests.post(f"{self.server_url}/api/dataverses/{resp.json().get('data').get('alias')}/actions/:publish",
-        headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token}, timeout=10)
+      pub_resp = requests.post(f"{self.serverUrl}/api/dataverses/{resp.json().get('data').get('alias')}/actions/:publish",
+        headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken}, timeout=10)
       if pub_resp.status_code == 200:
         return pub_resp.json().get('data')
       return f"Error publishing dataverse, Status: {pub_resp.status_code}, Info: {pub_resp.text}"
@@ -150,9 +150,9 @@ class DataverseClient(RepositoryClient):
       A dictionary of dataverses (identifier & title) for successful request,
       otherwise the error message is returned
     """
-    resp = requests.get(f"{self.server_url}/dvn/api/data-deposit/v1.1/swordv2/service-document",
-      headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token},
-      auth=HTTPBasicAuth(self.api_token, ''), timeout=10)
+    resp = requests.get(f"{self.serverUrl}/dvn/api/data-deposit/v1.1/swordv2/service-document",
+      headers={'Accept': 'application/json', 'X-Dataverse-key': self.apiToken},
+      auth=HTTPBasicAuth(self.apiToken, ''), timeout=10)
     if resp.status_code == 200:
       element_tree: ElementTree = ElementTree(fromstring(resp.text))
       root = element_tree.getroot()
@@ -165,7 +165,7 @@ class DataverseClient(RepositoryClient):
             dataverse_list.append({'id': element.attrib['href'].split('/')[-1],'title': title_val})
         dataverse_list.sort(key=lambda x: x['title'])
         return dataverse_list
-    return f"Error get dataverse list, Server:{self.server_url},  Status:{resp.status_code}"
+    return f"Error get dataverse list, Server:{self.serverUrl},  Status:{resp.status_code}"
 
 
   def getDataverseContent(self) -> dict[Any, Any] | Any:
@@ -175,7 +175,7 @@ class DataverseClient(RepositoryClient):
     Returns (dict[Any, Any] | Any):
       A dictionary of dataverse contents for successful request, otherwise the error message is returned
     """
-    resp = requests.get(f"{self.server_url}/api/dataverses/{self.identifier}/contents", headers=self.headers,
+    resp = requests.get(f"{self.serverUrl}/api/dataverses/{self.identifier}/contents", headers=self.headers,
                         timeout=10)
     return resp.json() if resp.status_code == 200 else \
       f"Error retrieving the contents of dataverse, Id: {self.identifier}, Info: {resp.json()}"
@@ -187,7 +187,7 @@ class DataverseClient(RepositoryClient):
     Returns (str):
       Dataverse size in bytes for successful request, otherwise the error message is returned
     """
-    resp = requests.get(f"{self.server_url}/api/dataverses/{self.identifier}/storagesize", headers=self.headers,
+    resp = requests.get(f"{self.serverUrl}/api/dataverses/{self.identifier}/storagesize", headers=self.headers,
                         timeout=10)
     if resp.status_code == 200:
       return (resp.json().get('data').get('message').replace('Total size of the files stored in this dataverse: ', ''))
@@ -201,7 +201,7 @@ class DataverseClient(RepositoryClient):
     Returns:
         str | Any: The data associated with the dataverse if the request is successful, otherwise an error message
     """
-    resp = requests.get(f"{self.server_url}/api/dataverses/{self.identifier}", headers=self.headers,
+    resp = requests.get(f"{self.serverUrl}/api/dataverses/{self.identifier}", headers=self.headers,
                         timeout=10)
     if resp.status_code:
       return resp.json().get('data')
@@ -236,14 +236,14 @@ class DataverseClient(RepositoryClient):
           field['value'] = ds_metadata[field['typeName']]
           metablock['fields'].append(field)
     # Request to create the dataset
-    resp = requests.post(f"{self.server_url}/api/dataverses/{self.identifier}/datasets",
+    resp = requests.post(f"{self.serverUrl}/api/dataverses/{self.identifier}/datasets",
       params={'doNotValidate': str(not ds_validate_metadata)}, timeout=10,
-      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token}, json=metadata)
+      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken}, json=metadata)
     if resp.status_code == 201:
       # Request to publish the dataset
-      resp = requests.post(f"{self.server_url}/api/datasets/:persistentId/actions/:publish",
+      resp = requests.post(f"{self.serverUrl}/api/datasets/:persistentId/actions/:publish",
         params={'persistentId': resp.json().get('data').get('persistentId'), 'type': 'major'},
-        headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token}, timeout=10)
+        headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken}, timeout=10)
       if resp.status_code == 200:
         return resp.json().get('data')
       return f"Error publishing dataset, Info: {resp.text}"
@@ -272,32 +272,32 @@ class DataverseClient(RepositoryClient):
       data['jsonData'] = (None, metadata, 'application/json')
       # Request to add the file to dataset
       resp = requests.post(
-        f"{self.server_url}/api/datasets/:persistentId/add",
+        f"{self.serverUrl}/api/datasets/:persistentId/add",
         params={'persistentId': ds_pid},
-        headers={'X-Dataverse-key': self.api_token},
+        headers={'X-Dataverse-key': self.apiToken},
         files=data,
         timeout=5)
       if resp.status_code == 200:
         # Request to publish the dataset
         pub_resp = requests.post(
-          f"{self.server_url}/api/datasets/:persistentId/actions/:publish",
+          f"{self.serverUrl}/api/datasets/:persistentId/actions/:publish",
           params={'persistentId': ds_pid, 'type': 'major'}, timeout=10,
-          headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
+          headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken})
         if pub_resp.status_code == 200:
           return {'file_upload_result': resp.json().get('data'),
                   'dataset_publish_result': pub_resp.json().get('data')}
         return f"Error publishing dataset: {ds_pid} as part of file ({df_file_path}) upload on server: "\
-               f"{self.server_url}, Info: {pub_resp.json()}"
+               f"{self.serverUrl}, Info: {pub_resp.json()}"
       return f"Error uploading file: {df_file_path} to dataset: {ds_pid} Info: {resp.json()}"
 
 
-  def uploadRepository(self, metadata:dict[str,Any], file_path:str) -> tuple[bool, str]:
+  def uploadRepository(self, metadata:dict[str,Any], filePath:str) -> tuple[bool, str]:
     """
     Uploads a file and metadata to become a dataset
 
     Args:
       metadata (dict): metadata to this file according to dataverse standard
-      file_path (str): The absolute path to the file to be uploaded
+      filePath (str): The absolute path to the file to be uploaded
 
     Returns:
       tuple: success of function, message
@@ -306,7 +306,7 @@ class DataverseClient(RepositoryClient):
     if isinstance(res, str):
       return False, f'Error publishing the dataset: {res}'
     doi = f"{res['protocol']}:{res['authority']}/{res['identifier']}"
-    reply = self.uploadFile(doi, file_path, '.eln file', ['file'])
+    reply = self.uploadFile(doi, filePath, '.eln file', ['file'])
     if isinstance(reply, str):
       return False, 'Error publishing the file'
     return True, f'Published: {doi}, {res["persistentUrl"]}'
@@ -329,9 +329,9 @@ class DataverseClient(RepositoryClient):
       JSON representation of the dataset for successful request, otherwise the error message is returned
     """
     resp = requests.get(
-      f"{self.server_url}/api/datasets/:persistentId/versions/{version}?persistentId={ds_persistent_id}",
+      f"{self.serverUrl}/api/datasets/:persistentId/versions/{version}?persistentId={ds_persistent_id}",
       params={'Accept': 'application/json'}, timeout=10,
-      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
+      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken})
     if resp.status_code == 200:
       return resp.json().get('data')
     return f"Error fetching JSON representation of dataset: {ds_persistent_id} Info: {resp.json()}"
@@ -347,9 +347,9 @@ class DataverseClient(RepositoryClient):
       Version list for the dataset for successful request, otherwise the error message is returned
     """
     resp = requests.get(
-      f"{self.server_url}/api/datasets/:persistentId/versions?persistentId={ds_persistent_id}",
+      f"{self.serverUrl}/api/datasets/:persistentId/versions?persistentId={ds_persistent_id}",
       params={'Accept': 'application/json'}, timeout=10,
-      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
+      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken})
     if resp.status_code == 200:
       return resp.json().get('data')
     return f"Error fetching version list for dataset: {ds_persistent_id} Info: {resp.json()}"
@@ -370,9 +370,9 @@ class DataverseClient(RepositoryClient):
         dict[Any, Any] | Any: A dictionary containing the locks information if successful, or an error message
     """
     resp = requests.get(
-      f"{self.server_url}/api/datasets/:persistentId/locks?persistentId={ds_persistent_id}",
+      f"{self.serverUrl}/api/datasets/:persistentId/locks?persistentId={ds_persistent_id}",
       params={'Accept': 'application/json'}, timeout=10,
-      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
+      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken})
     if resp.status_code == 200:
       return {'locks': resp.json().get('data')}
     return f"Error fetching locks for dataset: {ds_persistent_id}  Info: {resp.json()}"
@@ -395,9 +395,9 @@ class DataverseClient(RepositoryClient):
       File list for the dataset for successful request, otherwise the error message is returned
     """
     resp = requests.get(
-      f"{self.server_url}/api/datasets/:persistentId/versions/{version}/files?persistentId={ds_persistent_id}",
+      f"{self.serverUrl}/api/datasets/:persistentId/versions/{version}/files?persistentId={ds_persistent_id}",
       params={'Accept': 'application/json'}, timeout=10,
-      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
+      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken})
     if resp.status_code == 200:
       return resp.json().get('data')
     return f"Error fetching file list for dataset: {ds_persistent_id}  Info: {resp.json()}"
@@ -420,9 +420,9 @@ class DataverseClient(RepositoryClient):
       Metadata block for the dataset for successful request, otherwise the error message is returned
     """
     resp = requests.get(
-      f"{self.server_url}/api/datasets/:persistentId/versions/{version}/metadata?persistentId={ds_persistent_id}",
+      f"{self.serverUrl}/api/datasets/:persistentId/versions/{version}/metadata?persistentId={ds_persistent_id}",
       params={'Accept': 'application/json'}, timeout=10,
-      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
+      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken})
     if resp.status_code == 200:
       return resp.json().get('data')
     return f"Error fetching metadata block for dataset: {ds_persistent_id}  Info: {resp.json()}"
@@ -435,7 +435,7 @@ class DataverseClient(RepositoryClient):
     Returns:
       Message for successful request, otherwise the error message is returned
     """
-    resp = requests.delete(f"{self.server_url}/api/dataverses/{self.identifier}", headers=self.headers, timeout=10)
+    resp = requests.delete(f"{self.serverUrl}/api/dataverses/{self.identifier}", headers=self.headers, timeout=10)
     if resp.status_code == 200:
       return resp.json().get('data').get('message')
     return f"Error deleting dataverse,  Info: {resp.json()}"
@@ -453,7 +453,7 @@ class DataverseClient(RepositoryClient):
       Message for successful request, otherwise the error message is returned
     """
     resp = requests.delete(
-      f"{self.server_url}/api/datasets/:persistentId/destroy/",
+      f"{self.serverUrl}/api/datasets/:persistentId/destroy/",
       params={'persistentId': ds_persistent_id},
       headers=self.headers, timeout=10)
     if resp.status_code == 200:
@@ -478,8 +478,8 @@ class DataverseClient(RepositoryClient):
         self.deleteNonEmptyDataverse()
       else:
         logging.error('Unknown content type: %s while deleting dataverse: %s on server: %s ', content.type,
-                      self.identifier, self.server_url, exc_info=True)
-    resp = requests.delete(f"{self.server_url}/api/dataverses/{self.identifier}", headers=self.headers, timeout=10)
+                      self.identifier, self.serverUrl, exc_info=True)
+    resp = requests.delete(f"{self.serverUrl}/api/dataverses/{self.identifier}", headers=self.headers, timeout=10)
     if resp.status_code == 200:
       return resp.json().get('data').get('message')
     return f"Error deleting dataverse, Id: {self.identifier}, Info: {resp.json()}"

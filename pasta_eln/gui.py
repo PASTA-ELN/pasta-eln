@@ -22,9 +22,9 @@ def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
     MainWindow: main window
   """
   # logging has to be started first
-  log_path = Path.home() / 'pastaELN.log'
+  logPath = Path.home() / 'pastaELN.log'
   #  old versions of basicConfig do not know "encoding='utf-8'"
-  logging.basicConfig(filename=log_path, level=logging.INFO, format='%(asctime)s|%(levelname)s|%(filename)s:%(lineno)d:%(message)s',
+  logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s|%(filename)s:%(lineno)d:%(message)s',
                       datefmt='%m-%d %H:%M:%S')
   for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib','pudb']:
     logging.getLogger(package).setLevel(logging.WARNING)

@@ -59,16 +59,16 @@ class Editor(QDialog):
     mainL.addWidget(self.table)
     ### final button box
     _, buttonLineL = widgetAndLayout('H', mainL, 'm')
-    TextButton('Import', self, [Command.Import], buttonLineL, 'Import from Excel')
-    TextButton('Export', self, [Command.Export], buttonLineL, 'Export to Excel')
+    TextButton('Import', self, [Command.IMPORT], buttonLineL, 'Import from Excel')
+    TextButton('Export', self, [Command.EXPORT], buttonLineL, 'Export to Excel')
     buttonLineL.addStretch(1)
     projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if 'definition' in projectGroup.get('addOns',{}) and projectGroup['addOns']['definition']:
-      TextButton('Autofill PURL',  self, [Command.AddOn], buttonLineL, 'Autofill by using add-on')
+      TextButton('Autofill PURL',  self, [Command.ADDON], buttonLineL, 'Autofill by using add-on')
       buttonLineL.addStretch(1)
-    self.saveBtn = TextButton('Save', self, [Command.Save], buttonLineL, 'Save changes')
+    self.saveBtn = TextButton('Save', self, [Command.SAVE], buttonLineL, 'Save changes')
     self.saveBtn.setShortcut('Ctrl+Return')
-    TextButton('Cancel', self, [Command.Cancel],   buttonLineL, 'Discard changes')
+    TextButton('Cancel', self, [Command.CANCEL],   buttonLineL, 'Discard changes')
     ### Data
     self.comm.uiSendSQL.emit([{'type':'get_df','cmd':'SELECT docType, PURL, title FROM docTypes'},
                               {'type':'get_df','cmd':'SELECT * FROM definitions'}])
@@ -101,24 +101,24 @@ class Editor(QDialog):
     Args:
       command (list): list of commands
     """
-    if command[0] is Command.Export:
+    if command[0] is Command.EXPORT:
       fileName = QFileDialog.getSaveFileName(self, 'Save table to .csv file', str(Path.home()), '*.csv')[0]
       if fileName != '':
         self.getDataframe().to_csv(fileName, index=False)
-    elif command[0] is Command.Import:
+    elif command[0] is Command.IMPORT:
       fileName = QFileDialog.getOpenFileName(self, 'Read table from .csv file', str(Path.home()), '*.csv')[0]
       if fileName != '':
         self.data = pd.read_csv(fileName).fillna('')
         self.paint()
-    elif command[0] is Command.AddOn:
+    elif command[0] is Command.ADDON:
       try:
         self.data = callAddOn('definition_autofill', self.comm, self.data, self)
         self.paint()
       except Exception:
         pass
-    elif command[0] is Command.Cancel:
+    elif command[0] is Command.CANCEL:
       self.reject()
-    elif command[0] is Command.Save:
+    elif command[0] is Command.SAVE:
       tasks:list[dict[str,Any]] = []
       for _, row in self.getDataframe().iterrows():
         key, description, purl, dType = row.values
@@ -178,8 +178,8 @@ class Editor(QDialog):
 
 class Command(Enum):
   """ Commands used in this file """
-  Save   = 1
-  Cancel = 2
-  Import = 3
-  Export = 4
-  AddOn  = 5
+  SAVE   = 1
+  CANCEL = 2
+  IMPORT = 3
+  EXPORT = 4
+  ADDON  = 5

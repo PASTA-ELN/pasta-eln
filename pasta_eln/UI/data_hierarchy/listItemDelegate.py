@@ -52,8 +52,8 @@ class ListItemDelegate(QStyledItemDelegate):
       editor (QWidget): widget to set data in
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index
     """
-    current_text = index.data(Qt. EditRole)                                       # type: ignore[attr-defined]
-    editor.setCurrentText(current_text)                                           # type: ignore[attr-defined]
+    currentText = index.data(Qt. EditRole)                                        # type: ignore[attr-defined]
+    editor.setCurrentText(currentText)                                            # type: ignore[attr-defined]
     return
 
 

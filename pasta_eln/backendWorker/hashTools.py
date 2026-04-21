@@ -6,7 +6,7 @@ from pathlib import Path
 from urllib import request
 
 
-def generic_hash(path:Path, forceFile:bool=False) -> str:
+def genericHash(path:Path, forceFile:bool=False) -> str:
   """
   Hash an object based on its mode
 
@@ -33,7 +33,7 @@ def generic_hash(path:Path, forceFile:bool=False) -> str:
       with request.urlopen(req, timeout=60) as site:
         meta = site.headers
         size = int(meta.get_all('Content-Length')[0])
-        return blob_hash(site, size)
+        return blobHash(site, size)
     except Exception:
       logging.error('Could not download content / hashing issue %s',path.as_posix().replace(':/','://'), exc_info=True)
       return ''
@@ -43,14 +43,14 @@ def generic_hash(path:Path, forceFile:bool=False) -> str:
     path = path.resolve()
   shasum = ''
   if path.is_symlink():                                                                #if link, hash the link
-    shasum = symlink_hash(path)
+    shasum = symlinkHash(path)
   elif path.is_file():                                                                             #Local file
     with open(path, 'rb') as stream:
-      shasum = blob_hash(stream, path.stat().st_size)
+      shasum = blobHash(stream, path.stat().st_size)
   return shasum
 
 
-def symlink_hash(path:Path) -> str:
+def symlinkHash(path:Path) -> str:
   """
   Return (as hash instance) the hash of a symlink
   Caller must use hexdigest() or digest() as needed on
@@ -70,7 +70,7 @@ def symlink_hash(path:Path) -> str:
   return hasher.hexdigest()
 
 
-def blob_hash(stream:BufferedReader, size:int) -> str:
+def blobHash(stream:BufferedReader, size:int) -> str:
   """
   Return (as hash instance) the hash of a blob,
   as read from the given stream

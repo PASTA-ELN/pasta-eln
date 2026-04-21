@@ -185,18 +185,18 @@ class ImageGallery(QWidget):
         svgWidget = QSvgWidget()
         svgWidget.renderer().load(bytearray(image, encoding='utf-8'))
         # Calculate aspect ratio for SVG
-        svg_width = svgWidget.renderer().defaultSize().width()
-        svg_height = svgWidget.renderer().defaultSize().height()
+        svgWidth = svgWidget.renderer().defaultSize().width()
+        svgHeight = svgWidget.renderer().defaultSize().height()
 
-        if svg_width == 0 or svg_height == 0:                                         # Avoid division by zero
-          new_width, new_height = IMG_SIZE -4, IMG_SIZE -4
-        elif svg_height > svg_width:
-          new_width = int(float(svg_width) / float(svg_height) * (IMG_SIZE - 4))
-          new_height = IMG_SIZE - 4
+        if svgWidth == 0 or svgHeight == 0:                                         # Avoid division by zero
+          newWidth, newHeight = IMG_SIZE -4, IMG_SIZE -4
+        elif svgHeight > svgWidth:
+          newWidth = int(float(svgWidth) / float(svgHeight) * (IMG_SIZE - 4))
+          newHeight = IMG_SIZE - 4
         else:
-          new_width = IMG_SIZE - 4
-          new_height = int(float(svg_height) / float(svg_width) * (IMG_SIZE - 4))
-        svgWidget.setMaximumSize(new_width, new_height)
+          newWidth = IMG_SIZE - 4
+          newHeight = int(float(svgHeight) / float(svgWidth) * (IMG_SIZE - 4))
+        svgWidget.setMaximumSize(newWidth, newHeight)
 
         layout = QVBoxLayout(button)
         layout.addWidget(svgWidget)
@@ -207,12 +207,12 @@ class ImageGallery(QWidget):
         self.gridL.addWidget(button, row, col)
       elif 'base64,' in image:                                               # Basic check for base64 data URI
         try:
-          header, base64_data = image.split(',', 1)
+          header, base64Data = image.split(',', 1)
           # Extract image type from header (e.g., "data:image/png;base64")
-          img_type_part = header.split(';')[0].split('/')[-1]
-          imageType = img_type_part.upper()
+          imgTypePart = header.split(';')[0].split('/')[-1]
+          imageType = imgTypePart.upper()
 
-          byteArr = QByteArray.fromBase64(bytearray(base64_data, encoding='utf-8'))
+          byteArr = QByteArray.fromBase64(bytearray(base64Data, encoding='utf-8'))
           imageW = QImage()
           # Ensure format string is clean (e.g. PNG, JPEG)
           fmt = imageType.replace(';', '')

@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from ..textTools.handleDictionaries import diffDicts, fillDocBeforeCreate
 from ..textTools.stringChanges import camelCase, createDirName, outputString
-from .hashTools import generic_hash
+from .hashTools import genericHash
 from .mixin_cli import CLI_Mixin
 from .sqlite import SqlLiteDB
 
@@ -182,7 +182,7 @@ class Backend(CLI_Mixin):
           else:
             path = Path(doc['name'])
             try:
-              shasum  = generic_hash(path)
+              shasum  = genericHash(path)
             except Exception:
               logging.error('bad01: fetch remote content failed. Data not added', exc_info=True)
               return {'id':''}
@@ -202,7 +202,7 @@ class Backend(CLI_Mixin):
           shasum  = '-'
         if shasum!='-' and path is not None:
           if shasum == '':
-            shasum = generic_hash(path, forceFile=True)
+            shasum = genericHash(path, forceFile=True)
           view = self.db.getView('viewIdentify/viewSHAsum',shasum)
           if len(view)==0 or forceNewImage:                           #measurement not in database: create doc
             self.useExtractors(path,shasum,doc)                                          #create image/content
@@ -310,9 +310,9 @@ class Backend(CLI_Mixin):
     else:
       self.cwd = self.basePath/projPath
     #prepare lists and start iterating
-    inDB_all = self.db.getView('viewHierarchy/viewPathsAll', startKey=projPath.as_posix())
-    pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x'] #all structure elements: folders
-    pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
+    inSqliteAll = self.db.getView('viewHierarchy/viewPathsAll', startKey=projPath.as_posix())
+    pathsInSqliteX    = [i['key'] for i in inSqliteAll if i['value'][1][0][0]=='x']#all structure elements: folders
+    pathsInSqliteData = [i['key'] for i in inSqliteAll if i['value'][1][0][0]!='x']
     filesCountSum = sum(len(files) for (_, _, files) in os.walk(self.cwd))
     filesCount = 0
     for root, dirs, files in os.walk(self.cwd, topdown=True):
@@ -322,7 +322,7 @@ class Backend(CLI_Mixin):
         del dirs
         del files
         continue
-      parentIDs = [i for i in inDB_all if i['key']==self.cwd.as_posix()]                #parent of this folder
+      parentIDs = [i for i in inSqliteAll if i['key']==self.cwd.as_posix()]             #parent of this folder
       if not parentIDs:                             #skip newly moved folder, will be scanned upon re-scanning
         continue
       parentID = parentIDs[0]['id']
@@ -333,8 +333,8 @@ class Backend(CLI_Mixin):
                  and not (Path(root)/i/'pyvenv.cfg').is_file()]
       for dirName in dirs[::-1]:                                                     # sorted forward in Linux
         path = (Path(root)/dirName).relative_to(self.basePath).as_posix()
-        if path in pathsInDB_x:                                                     # path already in database
-          pathsInDB_x.remove(path)
+        if path in pathsInSqliteX:                                                  # path already in database
+          pathsInSqliteX.remove(path)
           continue
         if (self.basePath/path/'.id_pastaELN.json').is_file():                 # update branch: path and stack
           with open(self.basePath/path/'.id_pastaELN.json', encoding='utf-8') as fIn:
@@ -381,12 +381,12 @@ class Backend(CLI_Mixin):
         if fileName.startswith(('.', 'trash_')) or '_PastaExport' in fileName:                   #ignore files
           continue
         path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
-        if path in pathsInDB_data:
+        if path in pathsInSqliteData:
           logging.info('Scan: file already in DB: %s',path)
-          pathsInDB_data.remove(path)
+          pathsInSqliteData.remove(path)
         else:
           logging.info('Scan: add file to DB: %s',path)
-          shasum = generic_hash(self.basePath/path, forceFile=True)
+          shasum = genericHash(self.basePath/path, forceFile=True)
           if not shasum:
             raise NameError(f'Filepath does not exist {self.basePath/path}')
           view = self.db.getView('viewIdentify/viewSHAsum',shasum)
@@ -398,18 +398,18 @@ class Backend(CLI_Mixin):
     #finish method
     self.cwd = self.basePath/projPath
     orphans = [
-        i for i in pathsInDB_data
+        i for i in pathsInSqliteData
         if i.startswith(f'{self.cwd.relative_to(self.basePath).as_posix()}/')
     ]
     logging.info('Scan: these files are on DB but not hard disk\n%s','\n  '.join(orphans))
     orphanDirs = [
-        i for i in pathsInDB_x
+        i for i in pathsInSqliteX
         if i.startswith(f'{self.cwd.relative_to(self.basePath).as_posix()}/')
         and i != projPath
     ]
     logging.info('Scan: these directories are on DB but not hard disk\n%s','\n  '.join(orphanDirs))
     for orphan in orphans+orphanDirs:
-      docID = [i for i in inDB_all if i['key']==orphan][0]['id']
+      docID = [i for i in inSqliteAll if i['key']==orphan][0]['id']
       self.db.updateBranch(docID, -2, 9999, [], orphan)
     #reset to initial values
     self.hierStack = []
@@ -651,9 +651,9 @@ class Backend(CLI_Mixin):
     if not minimal:
       output += outputString(outputStyle,'h2','File status')
     viewProjects   = self.db.getView('viewDocType/x0All')
-    inDB_all = self.db.getView('viewHierarchy/viewPathsAll')
-    pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
-    pathsInDB_folder = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']
+    inSqliteAll = self.db.getView('viewHierarchy/viewPathsAll')
+    pathsInSqliteData = [i['key'] for i in inSqliteAll if i['value'][1][0][0]!='x']
+    pathsInSqliteFolder = [i['key'] for i in inSqliteAll if i['value'][1][0][0]=='x']
     count = 0
     for projI in viewProjects['id']:
       projDoc = self.db.getDoc(projI)
@@ -668,20 +668,20 @@ class Backend(CLI_Mixin):
           if fileName.startswith('.') or fileName.startswith('trash_') or '_PastaExport' in fileName:
             continue
           path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
-          if path not in pathsInDB_data:
+          if path not in pathsInSqliteData:
             output += outputString(outputStyle, 'error', f'File   on disk but not DB (2): {path}')
             count += 1
           else:
-            pathsInDB_data.remove(path)
+            pathsInSqliteData.remove(path)
         dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i not in ('__pycache__')
                   and not (Path(root)/i/'pyvenv.cfg').is_file()]
         for dirName in dirs:
           path = (Path(root).relative_to(self.basePath) /dirName).as_posix()
-          if path not in pathsInDB_folder:
+          if path not in pathsInSqliteFolder:
             output += outputString(outputStyle, 'error', f'Folder on disk but not DB    : {path}')
             count += 1
           else:
-            pathsInDB_folder.remove(path)
+            pathsInSqliteFolder.remove(path)
             listDocs = self.db.getView('viewHierarchy/viewPathsAll', preciseKey=path)
             if len(listDocs)!=1:
               output += outputString(outputStyle, 'error', f'Path of folder is non-unique (1): {path} in '\
@@ -707,8 +707,8 @@ class Backend(CLI_Mixin):
               elif repair(errorStr):
                 with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
                   json.dump({'id':docDB['id']}, fOut)
-    orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ':/' not in i and i!='*']#paths can be files or directories
-    orphans+= [i for i in pathsInDB_folder if not (self.basePath/i).exists() ]
+    orphans = [i for i in pathsInSqliteData   if not (self.basePath/i).exists() and ':/' not in i and i!='*']#paths can be files or directories
+    orphans+= [i for i in pathsInSqliteFolder if not (self.basePath/i).exists() ]
     if orphans:
       if repair is None:
         output += outputString(outputStyle,'error','bch01: These paths of database not on filesystem(3):\n  - '+'\n  - '.join(orphans))

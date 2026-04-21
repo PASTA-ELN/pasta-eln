@@ -107,17 +107,17 @@ class SqlLiteDB:
     return
 
 
-  def _flatten_metadata(self, data:dict[str,Any], parentKeys:str='', skip_empty:bool=True
+  def _flattenMetadata(self, data:dict[str,Any], parentKeys:str='', skipEmpty:bool=True
                         ) -> dict[str, tuple[Any, str, str, str]]:
     """Flatten nested metadata into a key -> (value, unit, label, purl) map."""
     flat: dict[str, tuple[Any, str, str, str]] = {}
     prefix = f'{parentKeys}.' if parentKeys else ''
     for key, value in data.items():
       key = str(key) if isinstance(key, int) else key
-      if skip_empty and not value:
+      if skipEmpty and not value:
         continue
       if isinstance(value, dict):
-        flat |= self._flatten_metadata(value, f'{prefix}{key}' if prefix else key, skip_empty)
+        flat |= self._flattenMetadata(value, f'{prefix}{key}' if prefix else key, skipEmpty)
         continue
       if isinstance(value, list) and not value:
         continue
@@ -130,8 +130,8 @@ class SqlLiteDB:
         continue
       if isinstance(value, list) and isinstance(value[0], dict) and value[0].keys() >= {'key', 'value', 'unit'}:
         for item in value:
-          item_key = f'{prefix}{key}.{item["key"]}'
-          flat[item_key] = (item['value'], item.get('unit', ''), item.get('label', ''), item.get('PURL', ''))
+          itemKey = f'{prefix}{key}.{item["key"]}'
+          flat[itemKey] = (item['value'], item.get('unit', ''), item.get('label', ''), item.get('PURL', ''))
         continue
       if isinstance(value, tuple) and len(value)==4:
         flat[f'{prefix}{key}'] = (value[0], value[1], value[2], value[3])
@@ -141,7 +141,7 @@ class SqlLiteDB:
     return flat
 
 
-  def _insert_metadata(self, docID:str, flat:dict[str, tuple[Any, str, str, str]]) -> None:
+  def _insertMetadata(self, docID:str, flat:dict[str, tuple[Any, str, str, str]]) -> None:
     if not flat:
       return
     cmd = 'INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);'
@@ -152,23 +152,23 @@ class SqlLiteDB:
     return
 
 
-  def _update_metadata(self, docID:str, flat:dict[str, tuple[Any, str, str, str]],
+  def _updateMetadata(self, docID:str, flat:dict[str, tuple[Any, str, str, str]],
                        changesDict:dict[str,Any]) -> None:
     self.cursor.execute(f"SELECT key, value, unit FROM properties WHERE id == '{docID}'")
     dataOld = {i[0]:(i[1], '' if i[2] is None else i[2]) for i in self.cursor.fetchall()}
     if not flat and not dataOld:
       return
-    cmd_insert = 'INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);'
-    cmd_def = 'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);'
+    cmdInsert = 'INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);'
+    cmdDef = 'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);'
     for key, (value, unit, label, purl) in flat.items():
       if key in dataOld:
-        old_value, old_unit = dataOld[key]
-        if value != old_value or unit != old_unit:
+        oldValue, oldUnit = dataOld[key]
+        if value != oldValue or unit != oldUnit:
           self.cursor.execute(f"UPDATE properties SET value='{value}', unit='{unit}' WHERE id = '{docID}' and key = '{key}'")
-          changesDict[key] = old_value
+          changesDict[key] = oldValue
       else:
-        self.cursor.execute(cmd_insert, [docID, key, value, unit])
-      self.cursor.execute(cmd_def, [key, label, purl])
+        self.cursor.execute(cmdInsert, [docID, key, value, unit])
+      self.cursor.execute(cmdDef, [key, label, purl])
       if key in dataOld:
         del dataOld[key]
     if dataOld:
@@ -388,8 +388,8 @@ class SqlLiteDB:
 
     # properties
     metaDoc = {k:v for k,v in doc.items() if k not in MAIN_ORDER}
-    flat = self._flatten_metadata(metaDoc, skip_empty=True)
-    self._insert_metadata(doc['id'], flat)
+    flat = self._flattenMetadata(metaDoc, skipEmpty=True)
+    self._insertMetadata(doc['id'], flat)
     # save changes
     self.connection.commit()
     branch = copy.deepcopy(docOrg['branch'])
@@ -507,8 +507,8 @@ class SqlLiteDB:
           raise ValueError(f'sqlite.1: unknown branch op: {mainNew["id"]} {mainNew["name"]}: {branchNew} of doc {dataNew}')
 
     # read properties and identify changes
-    flat = self._flatten_metadata(dataNew, skip_empty=False)
-    self._update_metadata(docID, flat, changesDict)
+    flat = self._flattenMetadata(dataNew, skipEmpty=False)
+    self._updateMetadata(docID, flat, changesDict)
     # read main and identify if something changed
     cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
     mainOld = dict(cursor.fetchone())
@@ -1145,9 +1145,9 @@ class SqlLiteDB:
           reply+= outputString(outputStyle,'error',f"dch12: jpg-image not valid {docID}")
       elif image.startswith('<?xml'):
         #from https://stackoverflow.com/questions/63419010/check-if-an-image-file-is-a-valid-svg-file-in-python
-        SVG_R = r'(?:<\?xml\b[^>]*>[^<]*)?(?:<!--.*?-->[^<]*)*(?:<svg|<!DOCTYPE svg)\b'
-        SVG_RE = re.compile(SVG_R, re.DOTALL)
-        if SVG_RE.match(image) is None:
+        svgR = r'(?:<\?xml\b[^>]*>[^<]*)?(?:<!--.*?-->[^<]*)*(?:<svg|<!DOCTYPE svg)\b'
+        svgRe = re.compile(svgR, re.DOTALL)
+        if svgRe.match(image) is None:
           reply+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
       # elif image in ('', None):
         # No more warnings if images are not present: happens often in propriatary binary files,... users see it

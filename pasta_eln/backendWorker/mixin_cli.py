@@ -2,7 +2,7 @@
 # mypy: ignore-errors
 
 
-class CLI_Mixin:
+class CLI_Mixin:  # pylint: disable=invalid-name
   """ Python Mixin for backend containing all the functions that output to CLI """
 
 

@@ -22,9 +22,9 @@ def getOS() -> str:
   '''
   operatingSys = platform.system()
   # Get base/real prefix, or sys.prefix if there is none
-  get_base_prefix_compat = getattr(sys, 'base_prefix', None) or getattr(sys, 'real_prefix', None) or sys.prefix
-  in_virtualenv = get_base_prefix_compat != sys.prefix
-  environment = sys.prefix if in_virtualenv else '_system_'
+  basePrefix = getattr(sys, 'base_prefix', None) or getattr(sys, 'real_prefix', None) or sys.prefix
+  inVirtualenv = basePrefix != sys.prefix
+  environment = sys.prefix if inVirtualenv else '_system_'
   return f'{operatingSys} {environment}'
 
 

@@ -55,10 +55,10 @@ class ConfigurationRepositories(QDialog):
     self.zenodoToggle = QToolButton()
     self.zenodoToggle.setCheckable(True)
     self.zenodoToggle.setIcon(qta.icon('fa5s.eye-slash'))                                  # hidden by default
-    def _toggle_zenodo(checked: bool) -> None:
+    def _toggleZenodo(checked: bool) -> None:
       self.apiZenodo.setEchoMode(QLineEdit.EchoMode.Normal if checked else QLineEdit.EchoMode.Password)
       self.zenodoToggle.setIcon(qta.icon('fa5s.eye' if checked else 'fa5s.eye-slash'))
-    self.zenodoToggle.toggled.connect(_toggle_zenodo)
+    self.zenodoToggle.toggled.connect(_toggleZenodo)
     leftSide.addWidget(self.zenodoToggle, 2, 2)
     self.zenodoButton = TextButton('Check',   self, [Command.CHECK_ZENODO], tooltip='Check Zenodo login details')
     leftSide.addWidget(self.zenodoButton, 3, 1)
@@ -78,10 +78,10 @@ class ConfigurationRepositories(QDialog):
     self.dataverseToggle = QToolButton()
     self.dataverseToggle.setCheckable(True)
     self.dataverseToggle.setIcon(qta.icon('fa5s.eye-slash'))
-    def _toggle_dataverse(checked: bool) -> None:
+    def _toggleDataverse(checked: bool) -> None:
       self.apiDataverse.setEchoMode(QLineEdit.EchoMode.Normal if checked else QLineEdit.EchoMode.Password)
       self.dataverseToggle.setIcon(qta.icon('fa5s.eye' if checked else 'fa5s.eye-slash'))
-    self.dataverseToggle.toggled.connect(_toggle_dataverse)
+    self.dataverseToggle.toggled.connect(_toggleDataverse)
     rightSide.addWidget(self.dataverseToggle, 2, 2)
     rightSide.addWidget(self.apiDataverse, 2, 1)
     self.dataverseButton2 = TextButton('Check',   self, [Command.CHECK_DV2], tooltip='Check Dataverse API-key')

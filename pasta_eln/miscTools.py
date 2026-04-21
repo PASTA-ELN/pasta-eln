@@ -464,38 +464,38 @@ def flatten(d:dict[Any,Any], keepPastaStruct:bool=False) -> dict[object, Any]:
   Returns:
     flat_dict : dict
   """
-  enumerate_types=(list,)
-  flatten_types = (Mapping,) + enumerate_types
-  flat_dict = {}
+  enumerateTypes=(list,)
+  flattenTypes = (Mapping,) + enumerateTypes
+  flatDict = {}
 
-  def dot_reducer(k1:object, k2:object) -> Union[str, object]:
+  def dotReducer(k1:object, k2:object) -> Union[str, object]:
     """ Reducer function """
     return k2 if k1 is None else f"{k1}.{k2}"
 
   def _flatten(_d:Union[Mapping[Any, Any], list[Any]], depth:int, parent:object=None) -> bool:
     """ Recursive function """
-    key_value_iterable = enumerate(_d) if isinstance(_d, enumerate_types) else _d.items()
-    has_item = False
-    for key, value in key_value_iterable:
-      has_item = True
-      flat_key = dot_reducer(parent, key)
-      if isinstance(value, flatten_types):
+    keyValueIterable = enumerate(_d) if isinstance(_d, enumerateTypes) else _d.items()
+    hasItem = False
+    for key, value in keyValueIterable:
+      hasItem = True
+      flatKey = dotReducer(parent, key)
+      if isinstance(value, flattenTypes):
         # recursively build the result
-        has_child = _flatten(value, depth=depth + 1, parent=flat_key)
-        if has_child or not isinstance(value, ()):# ignore key in this level because it already has child key or its value is empty
+        hasChild = _flatten(value, depth=depth + 1, parent=flatKey)
+        if hasChild or not isinstance(value, ()):# ignore key in this level because it already has child key or its value is empty
           continue
-      if flat_key in flat_dict and parent is not None:
+      if flatKey in flatDict and parent is not None:
         continue  # skip if key already exists and if data comes from database after merging with changed data
       # add an item to the result
-      flat_dict[flat_key] = value
-    return has_item
+      flatDict[flatKey] = value
+    return hasItem
 
   # start recursive calling
   backup = {'type':d.pop('type',None), 'branch':d.pop('branch',None),   'tags':d.pop('tags',None),
             'gui':d.pop('gui',None),   'qrCodes':d.pop('qrCodes',None), '_ids':d.pop('_ids',None)} \
            if keepPastaStruct else {}
   _flatten(d, depth=1)
-  return flat_dict | {k:v for k,v in backup.items() if v is not None}
+  return flatDict | {k:v for k,v in backup.items() if v is not None}
 
 
 def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
@@ -508,12 +508,12 @@ def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
   Returns
     normalDict : dict
   """
-  def dot_splitter(flat_key:str) -> tuple[str, ...]:
+  def dotSplitter(flatKey:str) -> tuple[str, ...]:
     """ split using the . symbol """
-    keys = tuple(flat_key.split('.'))
+    keys = tuple(flatKey.split('.'))
     return keys
 
-  def nested_set_dict(d:dict[str,Any], keys:tuple[str, ...], value:Any) -> None:
+  def nestedSetDict(d:dict[str,Any], keys:tuple[str, ...], value:Any) -> None:
     """Set a value to a sequence of nested keys
 
     Args:
@@ -532,7 +532,7 @@ def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
         raise e
       return
     d = d.setdefault(key, {})
-    nested_set_dict(d, keys[1:], value)
+    nestedSetDict(d, keys[1:], value)
     return
 
   def dict2list(d:dict[str,Any]) -> Union[list[dict[str,Any]], dict[str,Any]]:
@@ -546,8 +546,8 @@ def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
 
   # start recursion
   normalDict:dict[str,Any] = {}
-  for flat_key, value in d.items():
-    key_tuple = dot_splitter(flat_key)
-    nested_set_dict(normalDict, key_tuple, value)
+  for flatKey, value in d.items():
+    keyTuple = dotSplitter(flatKey)
+    nestedSetDict(normalDict, keyTuple, value)
   normalDict =  dict2list(normalDict)                                               # type: ignore[assignment]
   return normalDict

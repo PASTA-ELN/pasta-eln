@@ -172,9 +172,9 @@ class Table(QWidget):
     # Clear existing filters and GUI elements
     self.filterManager.clearAll()
     for i in reversed(range(self.filterL.count())):
-      item_1 = self.filterL.itemAt(i)
-      if item_1 is not None:
-        item_1.widget().setParent(None)
+      itemI = self.filterL.itemAt(i)
+      if itemI is not None:
+        itemI.widget().setParent(None)
     allDocTypes:list[str] = []
     if '/' not in self.docType:
       # get list of all subDocTypes
@@ -478,8 +478,8 @@ class Table(QWidget):
             # Check if this is the right filter by looking at delete button's command
             itemJ = layout.itemAt(3)
             if itemJ is not None:
-              delete_btn = itemJ.widget()
-              if hasattr(delete_btn, 'command') and delete_btn.command[1] == filterID:
+              deleteBtn = itemJ.widget()
+              if hasattr(deleteBtn, 'command') and deleteBtn.command[1] == filterID:
                 widget.setParent(None)
                 break
 
@@ -526,11 +526,11 @@ class Table(QWidget):
       if modifiers == Qt.ShiftModifier and self.lastClickedRow > -1:              # type: ignore[attr-defined]
         start = min(self.lastClickedRow, row)
         end = max(self.lastClickedRow, row)
-        target_state = Qt.CheckState.Checked if self.itemFromRow(row)[0].checkState() == Qt.CheckState.Checked \
+        targetState = Qt.CheckState.Checked if self.itemFromRow(row)[0].checkState() == Qt.CheckState.Checked \
                         else Qt.CheckState.Unchecked
         for r in range(start, end + 1):
           item, _ = self.itemFromRow(r)
-          item.setCheckState(target_state)
+          item.setCheckState(targetState)
       else:                                           # No need to toggle only the clicked row, just record it
         self.lastClickedRow = row
 

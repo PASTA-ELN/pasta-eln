@@ -60,7 +60,7 @@ class ConfigurationAuthors(QDialog):
     mainL.addWidget(buttonBox)
 
     #initialize
-    self.orgaCB_previousIndex = 0
+    self.orgaCBprevIndex = 0
     self.lockSelfAuthor = False
     self.orgaCB.currentIndexChanged.connect(lambda: self.execute([Command.CHANGE]))#connect to slot only after all painting is done
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
@@ -162,14 +162,14 @@ class ConfigurationAuthors(QDialog):
         self.userOrg.setEnabled(False)
       self.lockSelfAuthor = False
     elif command[0] is Command.CHANGE and self.author['organizations']:
-      j = self.orgaCB_previousIndex
+      j = self.orgaCBprevIndex
       if j<len(self.author['organizations']) and not self.lockSelfAuthor:
         self.author['organizations'][j]['organization'] = self.userOrg.text().strip()
         self.author['organizations'][j]['rorid']        = self.userRorid.text().strip()
       k = self.orgaCB.currentIndex()
       self.userRorid.setText(self.author['organizations'][k]['rorid'])
       self.userOrg.setText(self.author['organizations'][k]['organization'])
-    self.orgaCB_previousIndex = self.orgaCB.currentIndex()
+    self.orgaCBprevIndex = self.orgaCB.currentIndex()
     return
 
 

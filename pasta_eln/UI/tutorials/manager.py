@@ -73,7 +73,7 @@ class TutorialManager(QObject):
       return
     stepIndex = self.completedSteps.index(False)
     step = self.quest.steps[stepIndex]
-    if self._match_trigger(step.trigger, task, data):
+    if self._matchTrigger(step.trigger, task, data):
       self.completedSteps[stepIndex] = True
       if self.started is None:
         self.durationSec = 0
@@ -83,7 +83,7 @@ class TutorialManager(QObject):
       self.progressChanged.emit()
 
 
-  def _match_trigger(self, trigger: dict[str, str], task: Task, data: dict[str, Any]) -> bool:
+  def _matchTrigger(self, trigger: dict[str, str], task: Task, data: dict[str, Any]) -> bool:
     """Return True when a task matches the trigger definition."""
     for triggerK, triggerV in trigger.items():
       if triggerK == 'event':

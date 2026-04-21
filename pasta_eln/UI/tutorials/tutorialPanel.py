@@ -1,7 +1,7 @@
 """Tutorial panel for quest guidance."""
 from __future__ import annotations
 import base64
-from PySide6.QtCore import Qt, QTimer, Slot
+from PySide6.QtCore import QTimer, Slot
 from PySide6.QtWidgets import QAbstractScrollArea, QMessageBox, QTextBrowser, QVBoxLayout, QWidget
 from ..guiCommunicate import Communicate
 from ..guiStyle import Image, Label, TextButton, widgetAndLayout
@@ -21,11 +21,12 @@ class TutorialPanel(QWidget):
     self.introW, self.introL = widgetAndLayout('V', self.mainL, 's',  's','s', 's','s')
     imgData = ''
     if self.manager.quest.image:
-      with open(self.manager.questDir / self.manager.quest.image, 'rb') as image_file:
-        imgData = base64.b64encode(image_file.read()).decode('ascii')
+      with open(self.manager.questDir / self.manager.quest.image, 'rb') as imageFile:
+        imgData = base64.b64encode(imageFile.read()).decode('ascii')
       imgData = f"data:image/jpg;base64,{imgData}"
     self.image = Image(imgData, self.introL, width=START_WIDTH)
     self.textBrowser = QTextBrowser(self)
+    self.instructions = QTextBrowser(self)
     text = f'## {self.manager.quest.title}\n\n{self.manager.quest.description}'
     self.textBrowser.setMarkdown(text)
     self.textBrowser.setOpenExternalLinks(True)

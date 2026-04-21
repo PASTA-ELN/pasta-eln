@@ -8,15 +8,15 @@ from .repository import RepositoryClient
 
 class ZenodoClient(RepositoryClient):
   """ Interactions with Zenodo repository """
-  def __init__(self, server_url: str, api_token: str) -> None:
+  def __init__(self, serverUrl: str, api_token: str) -> None:
     """
     Initializes the client
 
     Args:
-        server_url (str): The URL of the server
+        serverUrl (str): The URL of the server
         api_token (str): The API token for authentication
     """
-    super().__init__(server_url, api_token)
+    super().__init__(serverUrl, api_token)
     self.headers1 = {'Content-Type': 'application/json', 'Authorization': f"Bearer {api_token}"}
     self.headers2 = {'Authorization': f"Bearer {api_token}"}
 
@@ -29,11 +29,11 @@ class ZenodoClient(RepositoryClient):
       A tuple of (success, a message) is returned
     """
     return True, 'VOID TEST'
-    # resp = requests.get(f"{self.server_url}/api/info/version", headers=self.headers1)
+    # resp = requests.get(f"{self.serverUrl}/api/info/version", headers=self.headers1)
     # success = (resp.status_code == 200 and resp.json().get('data').get('version') is not None)
     # return (success, 'Dataverse is reachable') \
     #   if success \
-    #   else (success, f"Cannot reach server: {self.server_url}, Status: {resp.status_code}, json: {resp.json()}")
+    #   else (success, f"Cannot reach server: {self.serverUrl}, Status: {resp.status_code}, json: {resp.json()}")
 
 
   def checkAPIKey(self) -> bool:
@@ -51,26 +51,26 @@ class ZenodoClient(RepositoryClient):
     Returns:
         bool: True if the API token is valid, False otherwise
     """
-    resp = requests.get(f"{self.server_url}", headers=self.headers1, timeout=10)
+    resp = requests.get(f"{self.serverUrl}", headers=self.headers1, timeout=10)
     return (bool(resp) and resp.status_code is not None
             and resp.status_code not in [401, 403, 500])
 
 
-  def uploadRepository(self, metadata:dict[str,Any], file_path:str) -> tuple[bool, str]:
+  def uploadRepository(self, metadata:dict[str,Any], filePath:str) -> tuple[bool, str]:
     """
     Uploads a file and metadata to become a dataset
 
     Args:
       metadata (dict): metadata to this file according to Zenodo standard
-      file_path (str): The absolute path to the file to be uploaded
+      filePath (str): The absolute path to the file to be uploaded
 
     Returns:
       tuple: success of function, message
     """
-    server_url = f"{self.server_url}/api/deposit/depositions"
+    serverUrl = f"{self.serverUrl}/api/deposit/depositions"
     # Define the API URLs and headers based on the repository kind
     # Step 1: Create the deposition with metadata
-    resp = requests.post(server_url, json=metadata, headers=self.headers1, timeout=10)
+    resp = requests.post(serverUrl, json=metadata, headers=self.headers1, timeout=10)
     if resp.status_code != 201:
       logging.error('Creating deposition/dataset: %s %s %s', resp.json(), resp.status_code, resp.text, exc_info=True)
       return False, 'Error creating the dataset'
@@ -79,20 +79,20 @@ class ZenodoClient(RepositoryClient):
     # print(f"Deposition created: {persistentID}")
 
     # Define the API URLs and headers based on the repository kind
-    with open(file_path, 'rb') as f:
+    with open(filePath, 'rb') as f:
       files = {'file': f}
-      file_upload_url = f"{server_url}/{persistentID}/files"
-      publish_url = f"{server_url}/{persistentID}/actions/publish"
+      fileUploadUrl = f"{serverUrl}/{persistentID}/files"
+      publishUrl = f"{serverUrl}/{persistentID}/actions/publish"
 
       # Step 2: Upload a file
-      resp = requests.post(file_upload_url, files=files, headers=self.headers2, timeout=10)
+      resp = requests.post(fileUploadUrl, files=files, headers=self.headers2, timeout=10)
     if resp.status_code != 201:
       logging.error('Uploading file: %s', resp.json(), exc_info=True)
       return False, 'Error uploading the file'
     # print("File uploaded successfully:")
 
     # Step 3: Publish the deposition
-    resp = requests.post(publish_url, headers=self.headers1, timeout=10)
+    resp = requests.post(publishUrl, headers=self.headers1, timeout=10)
     if resp.status_code != 202:
       logging.error('Publishing: %s', resp.json(), exc_info=True)
       return False, 'Error publishing the dataset'
