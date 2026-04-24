@@ -393,11 +393,11 @@ class BackendWorker(QObject):
       res0 = exportELN(self.backend, [data['projID']], tempELN, data['docTypes'])
       print('Export eln',res0)
       repositories = data['repositories']
-      if data['uploadZenodo']:                                                                       #Zenodo
+      if data['uploadZenodo']:                                                                         #Zenodo
         clientZ = ZenodoClient(repositories['zenodo']['url'], repositories['zenodo']['key'])
         metadataZ = clientZ.prepareMetadata(data['metadata'])
         res = clientZ.uploadRepository(metadataZ, tempELN)
-      else:                                                                                       #Dataverse
+      else:                                                                                         #Dataverse
         clientD = DataverseClient(repositories['dataverse']['url'], repositories['dataverse']['key'],
                                 repositories['dataverse']['dataverse'])
         metadataD = clientD.prepareMetadata(data['metadata'])
@@ -422,14 +422,14 @@ class BackendWorker(QObject):
           if data['recipe']:
             doc['type'] = data['recipe'].split('/')
           oldDocType = doc['type']
-          # doc['type'] = [''] TODO WHY IS THIS HERE???
+          doc['type'] = ['']                                        # Allow extractor to determine new docType
           if doc['branch'][0]['path'].startswith('http'):
             path = Path(doc['branch'][0]['path'])
           else:
             path = self.backend.basePath/doc['branch'][0]['path']
           self.backend.useExtractors(path, doc.get('shasum',''), doc)
           if doc['type'][0] == oldDocType[0]:
-            del doc['branch']                                                                  #don't update
+            del doc['branch']                                                                    #don't update
             self.backend.db.updateDoc(doc, docID)
           else:
             self.backend.db.remove( docID )

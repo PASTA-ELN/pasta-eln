@@ -36,19 +36,19 @@ class TextEditor(QPlainTextEdit):
     # Move the cursor to the start of the first selected line
     cursor.setPosition(start)
     cursor.movePosition(QTextCursor.StartOfBlock)                                 # type: ignore[attr-defined]
-    startBlockPos = cursor.position()                           # Store the start of the first selected line
+    startBlockPos = cursor.position()                             # Store the start of the first selected line
 
     # Move the cursor to the end of the last selected line
     cursor.setPosition(end)
     if cursor.atBlockStart() and start != end:                    # Adjust selection if it ends at a new block
       cursor.movePosition(QTextCursor.PreviousBlock)                              # type: ignore[attr-defined]
     cursor.movePosition(QTextCursor.EndOfBlock)                                   # type: ignore[attr-defined]
-    endBlockPos = cursor.position()                                # Store the end of the last selected line
+    endBlockPos = cursor.position()                                  # Store the end of the last selected line
 
     # Select the entire block of selected lines
     cursor.setPosition(startBlockPos)
-    cursor.setPosition(endBlockPos+1, QTextCursor.KeepAnchor)                   # type: ignore[attr-defined]
-    selectedText = cursor.selection().toPlainText()                                   # Get the selected text
+    cursor.setPosition(endBlockPos+1, QTextCursor.KeepAnchor)                     # type: ignore[attr-defined]
+    selectedText = cursor.selection().toPlainText()                                    # Get the selected text
     cursor.removeSelectedText()
 
     # Move to the previous / next block (line above/below the selected text)
@@ -56,5 +56,5 @@ class TextEditor(QPlainTextEdit):
     if cursor.atStart():                                 # If we are at the very first line, we cannot move up
       return
     cursor.movePosition(QTextCursor.PreviousBlock if moveUp else QTextCursor.NextBlock)# type: ignore[attr-defined]
-    cursor.insertText(selectedText)                            # Replace the previous line with selected text
+    cursor.insertText(selectedText)                             # Replace the previous line with selected text
     return

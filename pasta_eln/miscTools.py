@@ -163,7 +163,8 @@ def _moduleKey(modulePath:Path) -> str:
 def loadNamedModule(directory:Path, moduleName:str) -> ModuleType:
   """Load a Python module directly from the configured file path.
   Args:
-    modulePath (Path): path to the module
+    directory (Path): path to the add-on folder
+    moduleName (str): name of the module
   Returns:
     Module Type: module
   """

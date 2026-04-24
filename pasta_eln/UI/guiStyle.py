@@ -17,7 +17,7 @@ class TextButton(QPushButton):
   """ Button that has only text"""
   def __init__(self, label:str, widget:QWidget, command:list[Any]|None=[], layout:Optional[QLayout]=None,
                tooltip:str='', checkable:bool=False, style:str='', hide:bool=False, iconName:str='',
-               shortcut:Optional[str]=None):
+               shortCut:Optional[str]=None):
     """
     Args:
       label (str): label printed on button
@@ -39,9 +39,9 @@ class TextButton(QPushButton):
     self.setDefault(False)
     if command is not None:
       self.clicked.connect(lambda: widget.execute(command))                       # type: ignore[attr-defined]
-    if shortcut is not None:
-      self.setShortcut(QKeySequence(shortcut))
-      shortcutText = QKeySequence(shortcut).toString(QKeySequence.SequenceFormat.NativeText)
+    if shortCut is not None:
+      self.setShortcut(QKeySequence(shortCut))
+      shortcutText = QKeySequence(shortCut).toString(QKeySequence.SequenceFormat.NativeText)
       tooltip = f'{tooltip} ({shortcutText})' if tooltip else shortcutText
     if tooltip:
       self.setToolTip(tooltip)
