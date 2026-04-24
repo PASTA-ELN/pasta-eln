@@ -96,8 +96,7 @@ class ConfigurationRepositories(QDialog):
     _, buttonLineL = widgetAndLayout('H', mainL, 'm')
     TextButton('Help',                self, [Command.HELP],   buttonLineL, 'Help for this dialog')
     buttonLineL.addStretch(1)
-    self.saveBtn = TextButton('Save', self, [Command.SAVE],   buttonLineL, 'Save changes')
-    self.saveBtn.setShortcut('Ctrl+Return')
+    self.saveBtn = TextButton('Save', self, [Command.SAVE],   buttonLineL, 'Save changes', shortCut='Ctrl+Return')
     TextButton('Cancel',              self, [Command.CANCEL], buttonLineL, 'Discard changes')
 
 

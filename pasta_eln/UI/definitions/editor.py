@@ -66,8 +66,7 @@ class Editor(QDialog):
     if 'definition' in projectGroup.get('addOns',{}) and projectGroup['addOns']['definition']:
       TextButton('Autofill PURL',  self, [Command.ADDON], buttonLineL, 'Autofill by using add-on')
       buttonLineL.addStretch(1)
-    self.saveBtn = TextButton('Save', self, [Command.SAVE], buttonLineL, 'Save changes')
-    self.saveBtn.setShortcut('Ctrl+Return')
+    self.saveBtn = TextButton('Save', self, [Command.SAVE], buttonLineL, 'Save changes', shortCut='Ctrl+Return')
     TextButton('Cancel', self, [Command.CANCEL],   buttonLineL, 'Discard changes')
     ### Data
     self.comm.uiSendSQL.emit([{'type':'get_df','cmd':'SELECT docType, PURL, title FROM docTypes'},

@@ -84,8 +84,7 @@ class Form(QDialog):
                                      'Duplicate data set', style='border-width:1')
       self.btnDuplicate.setFocusPolicy(Qt.FocusPolicy.NoFocus)
       self.btnDuplicate.setAutoDefault(False)
-    self.saveBtn = TextButton('Save',             self, [Command.FORM_SAVE],     buttonLineL, 'Save changes')
-    self.saveBtn.setShortcut('Ctrl+Return')
+    self.saveBtn = TextButton('Save', self, [Command.FORM_SAVE], buttonLineL, 'Save changes', shortCut='Ctrl+Return')
     self.saveBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
     self.saveBtn.setAutoDefault(False)
     self.cancelBtn = TextButton('Cancel',           self, [Command.FORM_CANCEL],   buttonLineL, 'Discard changes')
@@ -386,13 +385,18 @@ class Form(QDialog):
             IconButton(icon, self, [Command.BUTTON_BAR, f'heading{str(i)}', key], buttonBarL, f'Heading {str(i)}')
           rightSideL.addWidget(getattr(self, f'buttonBarW_{key}'))
           textStr = self.doc.get(key, '')
+          if key == 'content' and 'branch' in self.doc:
+            for branch in self.doc['branch']:
+              if branch['path'] is not None and branch['path'].endswith('.md'):
+                with open(self.comm.basePath/branch['path'], 'r', encoding='utf-8') as fIn:
+                  textStr = fIn.read()
           for k,v in SQLiteTranslationDict.items():
             textStr = textStr.replace(v,k)
           setattr(self, f'textEdit_{key}', TextEditor(textStr))
           getattr(self, f'textEdit_{key}').setAccessibleName(key)
           getattr(self, f'textEdit_{key}').textChanged.connect(self.textChanged)
           setattr(self, f'textShow_{key}', QTextEdit())
-          getattr(self, f'textShow_{key}').setMarkdown(markdownEqualizer(self.doc.get(key, '')))
+          getattr(self, f'textShow_{key}').setMarkdown(markdownEqualizer(textStr))
           getattr(self, f'textShow_{key}').setReadOnly(True)
           getattr(self, f'textShow_{key}').hide()
           splittedEditor = QSplitter()
@@ -422,7 +426,9 @@ class Form(QDialog):
             value = defaultValue
           else:                                                                                         #tuple
             value = defaultValue[0]
-            label += '' if defaultValue[1] is None or defaultValue[1]=='' else f' [{defaultValue[1]}]'
+            label += f' [{defaultValue[1]}]' if defaultValue[1] is not None and defaultValue[1]!='' else \
+                     f' [{dataHierarchyItem[0]["unit"]}]' if dataHierarchyItem[0]["unit"]!='' else \
+                     ''
             label += '' if defaultValue[3] is None or defaultValue[3]=='' else f'&nbsp;<b><a href="{defaultValue[3]}">&uArr;</a></b>'
           if dataHierarchyItem[0]['list'] or isDocID(value):                                  #choice dropdown
             setattr(self, elementName, QComboBox())

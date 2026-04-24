@@ -1,5 +1,4 @@
 """ Python Backend: all operations with the filesystem are here """
-import importlib
 import json
 import logging
 import os
@@ -14,6 +13,7 @@ import matplotlib
 import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
 from PIL import Image
+from ..miscTools import loadNamedModule
 from ..textTools.handleDictionaries import diffDicts, fillDocBeforeCreate
 from ..textTools.stringChanges import camelCase, createDirName, outputString
 from .hashTools import genericHash
@@ -59,7 +59,8 @@ class Backend(CLI_Mixin):
     self.basePath   = Path(confProjectGroup['local']['path'])
     self.cwd        = Path(confProjectGroup['local']['path'])
     self.addOnPath  = Path(confProjectGroup['addOnDir'])
-    sys.path.insert(0, str(self.addOnPath))                                                     #allow add-ons
+    if str(self.addOnPath) not in sys.path:
+      sys.path.insert(0, str(self.addOnPath))                                       # allow add-ons to backend
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database
@@ -453,7 +454,7 @@ class Backend(CLI_Mixin):
     if pyPath.is_file():
       plt.clf()
       try:
-        module  = importlib.import_module(pyFile[:-3])
+        module  = loadNamedModule(self.addOnPath, pyFile[:-3])
         content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
         general = content.get('general',[])
         for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','style']]:#only allow accepted keys
@@ -541,7 +542,7 @@ class Backend(CLI_Mixin):
       report += outputString(outputStyle, 'error', f'No fitting extractor found:{pyFile}')
     if success:
       try:
-        module  = importlib.import_module(pyFile[:-3])
+        module  = loadNamedModule(self.addOnPath, pyFile[:-3])
         plt.clf()
         content = module.use(filePath, style, saveFig or None )
         if saveFig:

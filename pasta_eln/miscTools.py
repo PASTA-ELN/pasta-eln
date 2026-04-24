@@ -1,4 +1,5 @@
 """ Misc functions that do not require instances """
+import hashlib
 import importlib
 import json
 import logging
@@ -12,6 +13,7 @@ import tempfile
 import time
 from collections.abc import Mapping
 from pathlib import Path
+from types import ModuleType
 from typing import Any, Union
 from urllib import request
 import pandas as pd
@@ -69,7 +71,8 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   if not projectGroup:
     projectGroup = configuration['defaultProjectGroup']
   directory = Path(configuration['projectGroups'][projectGroup]['addOnDir'])
-  sys.path.append(str(directory))                                                               #allow add-ons
+  if str(directory) not in sys.path:
+    sys.path.insert(0, str(directory))                                                         # allow add-ons
   # Add-Ons
   verboseDebug = False
   extractorsAll= {}
@@ -131,7 +134,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
     if fileName.endswith('.py') and '_' in fileName and fileName.split('_')[0] in ['project','table','definition','form']:
       name        = fileName[:-3]
       try:
-        module      = importlib.import_module(name)
+        module      = loadNamedModule(directory, name)
         description = module.description
         _ = module.reqParameter                                                 # check if reqParameter exists
         otherAddOns[fileName.split('_')[0]][name] = description
@@ -145,11 +148,48 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   return {'addon directory':directory} | errors | extractorsAll | otherAddOns
 
 
-def installPythonPackages(directory:str) -> None:
+def _moduleKey(modulePath:Path) -> str:
+  """Create a deterministic private module name for a file path.
+  Args:
+    modulePath (Path): path to the module
+  Returns:
+    str: module name for this file path
+  """
+  resolved = modulePath.resolve()
+  digest = hashlib.sha256(str(resolved).encode('utf-8')).hexdigest()[:16]
+  return f'_pasta_add_on_{resolved.stem}_{digest}'
+
+
+def loadNamedModule(directory:Path, moduleName:str) -> ModuleType:
+  """Load a Python module directly from the configured file path.
+  Args:
+    modulePath (Path): path to the module
+  Returns:
+    Module Type: module
+  """
+  modulePath = directory/f'{moduleName}.py'
+  resolved = modulePath.resolve()
+  if not resolved.is_file():
+    raise FileNotFoundError(resolved)
+  moduleName = _moduleKey(resolved)
+  spec = importlib.util.spec_from_file_location(moduleName, resolved)
+  if spec is None or spec.loader is None:
+    raise ImportError(f'Could not create loader for {resolved}')
+  module = importlib.util.module_from_spec(spec)
+  sys.modules[moduleName] = module
+  spec.loader.exec_module(module)
+  return module
+
+
+def installPythonPackages(directory:str) -> dict[str, Any]:
   """Install a Python packages using pip depending on files in add-on folder
   Args:
     directory (str): path to the add-on folder
+  Returns:
+    dict: errors of each package
   """
+  packages = {'sklearn': 'scikit-learn',
+              'fitz':'PyMuPDF'}
   allLibs = set()
   for fileName in os.listdir(directory):
     if fileName.endswith('.py'):
@@ -165,14 +205,16 @@ def installPythonPackages(directory:str) -> None:
   allLibs = allLibs.difference(sys.stdlib_module_names)        # all libs that are not in the standard library
   allLibs = allLibs.difference([i[:-3] for i in os.listdir(directory) if i.endswith('.py')])#remove all libs that are in the directory
   allLibs = allLibs.difference({i.split('.')[0] for i in sys.modules})# remove libs used by pasta, already in use
+  errors:dict[str,Any] = {}
   for lib in allLibs:
     try:
       importlib.import_module(lib)                                 # check if the package is already installed
     except ImportError:
-      if lib == 'sklearn':
-        lib = 'scikit-learn'
-      subprocess.check_call([sys.executable, '-m', 'pip', 'install', lib])
-  return
+      lib = packages.get(lib, lib)
+      result = subprocess.run([sys.executable, '-m', 'pip', 'install', lib], capture_output=True, text=True, check=False)
+      if result.returncode != 0:
+        errors[lib] = result.stderr.strip() + '\n' + result.stdout.strip()
+  return errors
 
 
 def callAddOn(name:str, comm:Any, content:Any, widget:QWidget) -> Any:
@@ -186,7 +228,7 @@ def callAddOn(name:str, comm:Any, content:Any, widget:QWidget) -> Any:
   Returns:
     Any: result of the add-on
   """
-  module      = importlib.import_module(name)
+  module      = loadNamedModule(Path(comm.addOnPath), name)
   parameter   = comm.configuration.get('addOnParameter', {})
   try:
     subParameter = parameter[name]
@@ -228,7 +270,7 @@ def callDataExtractor(docID:str, comm:Any) -> Any:
   if pyPath.is_file():
     # import module and use to get data
     try:
-      module = importlib.import_module(pyFile[:-3])
+      module = loadNamedModule(Path(comm.addOnPath), pyFile[:-3])
       return module.data(absFilePath, {})
     except Exception as e:
       logging.warning('CallDataExtractor: %s',e)

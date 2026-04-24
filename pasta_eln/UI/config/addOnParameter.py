@@ -1,11 +1,11 @@
 """ Main class of config tab on parameters (e.g. API keys) for add-ons """
-import importlib
 import json
 from enum import Enum
 from pathlib import Path
 from typing import Callable
 from PySide6.QtWidgets import QApplication, QDialog, QGroupBox, QLineEdit, QVBoxLayout
 from ...fixedStringsJson import CONF_FILE_NAME
+from ...miscTools import loadNamedModule
 from ..guiCommunicate import Communicate
 from ..guiStyle import Label, TextButton, widgetAndLayout
 from ..messageDialog import showMessage
@@ -48,8 +48,7 @@ class ConfigurationAddOnParameter(QDialog):
     self.scanBtn = TextButton('Scan',                self, [Command.SCAN],   buttonLineL, tooltip)
     self.scanBtn.setStyleSheet('background: orange; color: black;')
     buttonLineL.addStretch(1)
-    self.saveBtn = TextButton('Save', self, [Command.SAVE],   buttonLineL, 'Save changes')
-    self.saveBtn.setShortcut('Ctrl+Return')
+    self.saveBtn = TextButton('Save', self, [Command.SAVE],   buttonLineL, 'Save changes', shortCut='Ctrl+Return')
     self.cancelBtn = TextButton('Cancel',              self, [Command.CANCEL], buttonLineL, 'Discard changes')
 
 
@@ -79,7 +78,7 @@ class ConfigurationAddOnParameter(QDialog):
       for addonType, name, groupbox, groupLayout in self.allGroupBoxes:
         QApplication.processEvents()                                                        # Force GUI update
         try:
-          module      = importlib.import_module(name)         # ISSUE: slow since imports all dependencies,...
+          module        = loadNamedModule(Path(self.comm.addOnPath), name)
           requiredParam = module.reqParameter
           try:
             helpText = module.helpText

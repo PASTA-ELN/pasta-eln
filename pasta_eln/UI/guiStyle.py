@@ -16,7 +16,8 @@ space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                 
 class TextButton(QPushButton):
   """ Button that has only text"""
   def __init__(self, label:str, widget:QWidget, command:list[Any]|None=[], layout:Optional[QLayout]=None,
-               tooltip:str='', checkable:bool=False, style:str='', hide:bool=False, iconName:str=''):
+               tooltip:str='', checkable:bool=False, style:str='', hide:bool=False, iconName:str='',
+               shortcut:Optional[str]=None):
     """
     Args:
       label (str): label printed on button
@@ -27,6 +28,8 @@ class TextButton(QPushButton):
       checkable (bool): can the button change its background color
       style (str): css style
       hide (bool): hidden or shown initially
+      iconName (str): icon name
+      shortcut (str): shortcut (e.g. Ctrl+K), automatically set as tooltip
     """
     super().__init__()
     self.setText(label)
@@ -36,6 +39,10 @@ class TextButton(QPushButton):
     self.setDefault(False)
     if command is not None:
       self.clicked.connect(lambda: widget.execute(command))                       # type: ignore[attr-defined]
+    if shortcut is not None:
+      self.setShortcut(QKeySequence(shortcut))
+      shortcutText = QKeySequence(shortcut).toString(QKeySequence.SequenceFormat.NativeText)
+      tooltip = f'{tooltip} ({shortcutText})' if tooltip else shortcutText
     if tooltip:
       self.setToolTip(tooltip)
     if style:
@@ -140,10 +147,12 @@ class Image():
         if width>0:
           pixmap = pixmap.scaledToWidth(width)
         if anyDimension>0:
-          if pixmap.size().height()>pixmap.size().width():
-            pixmap = pixmap.scaledToHeight(anyDimension)
+          width0 = max(1, pixmap.size().width())
+          height0 = max(1, pixmap.size().height())
+          if height0 > width0:
+            pixmap = pixmap.scaledToHeight(min(anyDimension, height0*2))
           else:
-            pixmap = pixmap.scaledToWidth(anyDimension)
+            pixmap = pixmap.scaledToWidth(min(anyDimension, width0*2))
         label = QLabel()
         label.setPixmap(pixmap)
         label.setAlignment(Qt.AlignCenter)                                                      # type: ignore

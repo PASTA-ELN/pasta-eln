@@ -225,9 +225,9 @@ class MainWindow(QMainWindow):
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
       configProjecGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
-      installPythonPackages(configProjecGroup['addOnDir'])
+      installDict = installPythonPackages(configProjecGroup['addOnDir'])
       reportDict = updateAddOnList(self.comm.projectGroup)
-      messageWindow = ScrollMessageBox('Add-on list updated', {'main':reportDict},
+      messageWindow = ScrollMessageBox('Add-on list updated', {'main':installDict | reportDict},
                                        style='QScrollArea{min-width:600 px; min-height:400px}')
       messageWindow.exec()
       hardRestart()
