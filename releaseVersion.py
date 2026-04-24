@@ -233,16 +233,16 @@ def rightAlignComments() -> None:
       if file.endswith('.py') and \
           file not in ['markdown2html.py','html2markdown.py','html2mdConfig.py','html2mdUtils.py','htmlString.py',
                        'guiCommunicate.py','worker.py'] and 'Resources/' not in root and '/AddOns' not in root:
-        file_path = os.path.join(root, file)
-        with open(file_path, encoding='utf-8') as f:
+        filePath = os.path.join(root, file)
+        with open(filePath, encoding='utf-8') as f:
           content = f.read()
         output = ''                                                                  # sourcery skip: use-join
         for number, line in enumerate(content.splitlines()):
           if pattern1.search(line) and not line.strip().startswith('#') and len(line)!=110 and \
              pattern2.search(line) and 'background' not in line and 'import' not in line:
             output += f'{number+1}: {line.strip()}\n'
-        if output and 'Resources/' not in file_path:
-          print('Processing file:', file_path)
+        if output and 'Resources/' not in filePath:
+          print('Processing file:', filePath)
           print(output)
   print('================ END RIGHT-ALIGNMENT CHECK ================')
   return

@@ -298,6 +298,8 @@ class Details(QScrollArea):
           else:
             newValue[k] = v
         labelStr = f'{cssStyleHtmlEditors}{key}: {dict2ul(newValue)}'
+      if not labelStr:
+        labelStr = f'{key}: {value}'
       if layout is not None:
         label = Label(labelStr, function=lambda x,y: self.clickLink(x,y) if link else None, docID=docID)
         label.setOpenExternalLinks(True)
