@@ -173,7 +173,7 @@ class SqlLiteDB:
         del dataOld[key]
     if dataOld:
       cmd = f"DELETE FROM properties WHERE id == '{docID}' and key == ?"
-      self.cursor.executemany(cmd, [(i,) for i in dataOld.keys()])
+      self.cursor.executemany(cmd, [(i,) for i in dataOld])
       changesDict |= {k:v for k,(v,_) in dataOld.items()}
     return
 
@@ -382,7 +382,7 @@ class SqlLiteDB:
     doc['type'] = '/'.join(doc['type'])
     doc['gui']  = ''.join(['T' if i else 'F' for i in doc['gui']])
     doc['client'] = tracebackString(False, 'save:'+doc['id'])
-    docList = [doc[x] if x in doc else doc.get(f'.{x}','') for x in MAIN_ORDER]
+    docList = [doc.get(x, doc.get(f'.{x}','')) for x in MAIN_ORDER]
     self.cursor.execute(f"INSERT INTO main VALUES ({', '.join(['?']*len(docList))})", docList)
     doc = {k:v for k,v in doc.items() if (k not in MAIN_ORDER and k[1:] not in MAIN_ORDER) or k == 'id'}
 

@@ -388,7 +388,7 @@ class Form(QDialog):
           if key == 'content' and 'branch' in self.doc:
             for branch in self.doc['branch']:
               if branch['path'] is not None and branch['path'].endswith('.md'):
-                with open(self.comm.basePath/branch['path'], 'r', encoding='utf-8') as fIn:
+                with open(self.comm.basePath/branch['path'], encoding='utf-8') as fIn:
                   textStr = fIn.read()
           for k,v in SQLiteTranslationDict.items():
             textStr = textStr.replace(v,k)
@@ -427,7 +427,7 @@ class Form(QDialog):
           else:                                                                                         #tuple
             value = defaultValue[0]
             label += f' [{defaultValue[1]}]' if defaultValue[1] is not None and defaultValue[1]!='' else \
-                     f' [{dataHierarchyItem[0]["unit"]}]' if dataHierarchyItem[0]["unit"]!='' else \
+                     f' [{dataHierarchyItem[0]["unit"]}]' if dataHierarchyItem[0]['unit']!='' else \
                      ''
             label += '' if defaultValue[3] is None or defaultValue[3]=='' else f'&nbsp;<b><a href="{defaultValue[3]}">&uArr;</a></b>'
           if dataHierarchyItem[0]['list'] or isDocID(value):                                  #choice dropdown
