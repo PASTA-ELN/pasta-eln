@@ -164,7 +164,8 @@ class SqlLiteDB:
       if key in dataOld:
         oldValue, oldUnit = dataOld[key]
         if value != oldValue or unit != oldUnit:
-          self.cursor.execute(f"UPDATE properties SET value='{value}', unit='{unit}' WHERE id = '{docID}' and key = '{key}'")
+          self.cursor.execute('UPDATE properties SET value=?, unit=? WHERE id = ? and key = ?',
+                              [value, unit, docID, key])
           changesDict[key] = oldValue
       else:
         self.cursor.execute(cmdInsert, [docID, key, value, unit])

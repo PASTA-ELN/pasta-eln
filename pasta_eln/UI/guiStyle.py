@@ -8,6 +8,7 @@ from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (QBoxLayout, QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLayout, QLayoutItem, QMenu,
                                QMessageBox, QPushButton, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QVBoxLayout,
                                QWidget)
+# from shiboken6 import isValid #possible code, delete if no crashes reapprear in July 2026
 from ..textTools.handleDictionaries import dict2ul
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                   # spaces: padding and margin
@@ -112,7 +113,15 @@ class Action(QAction):
     super().__init__()
     self.setParent(widget)
     self.setText(label)
-    self.triggered.connect(lambda : widget.execute(command))                      # type: ignore[attr-defined]
+    def _triggered() -> None:
+      """Wrapper around calling the execute function, checking that widget still exists"""
+      try:
+        # if widget is None or not isValid(widget):
+        #   return
+        widget.execute(command)                                                   # type: ignore[attr-defined]
+      except Exception:
+        return
+    self.triggered.connect(_triggered)
     if icon:
       color = 'black' if widget is None else widget.comm.palette.text             # type: ignore[attr-defined]
       self.setIcon(qta.icon(icon, color=color, scale_factor=1))
