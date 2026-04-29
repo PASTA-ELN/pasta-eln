@@ -337,7 +337,7 @@ class BackendWorker(QObject):
         branch = [i for i in doc['branch'] if '/'.join(i['stack']+[data['docID']])==data['stack']][0]
         self.backend.db.cursor.execute(f'DELETE FROM branches WHERE stack="{data["stack"]}"')
       # rename on disk
-      if 'path' in branch:
+      if branch.get('path', None) is not None:
         oldPath = self.backend.basePath/branch['path']
         newPath = oldPath.parent/f'trash_{oldPath.name}'
         nextIteration = 1

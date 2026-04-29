@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import traceback
 from collections.abc import Mapping
 from pathlib import Path
 from types import ModuleType
@@ -236,7 +237,12 @@ def callAddOn(name:str, comm:Any, content:Any, widget:QWidget) -> Any:
   except KeyError:
     print('**Info: No parameter for this add-on')
     subParameter = {}
-  return module.main(comm, content, widget, subParameter)
+  try:
+    content = module.main(comm, content, widget, subParameter)
+  except Exception:
+    traceback.print_exc()
+    content = {}
+  return content
 
 
 def callDataExtractor(docID:str, comm:Any) -> Any:
