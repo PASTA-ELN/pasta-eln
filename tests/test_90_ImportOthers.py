@@ -1,14 +1,14 @@
 #!/usr/bin/python3
-from pasta_eln.UI.guiCommunicate import Communicate
-from pasta_eln.UI.project import Project
+from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.ui.project import Project
 from .test_34_GUI_Form import getTable
 
 import logging, os, shutil, tempfile
 from urllib import request
-from pasta_eln.backendWorker.backend import Backend
-from pasta_eln.backendWorker.worker import Task
-from pasta_eln.backendWorker.inputOutput import importELN
-from pasta_eln.miscTools import getConfiguration
+from pasta_eln.backend_worker.backend import Backend
+from pasta_eln.backend_worker.worker import Task
+from pasta_eln.backend_worker.input_output import importELN
+from pasta_eln.misc_tools import getConfiguration
 
 
 def test_simple(qtbot, caplog):

@@ -3,13 +3,13 @@
 import logging, warnings, shutil
 from pathlib import Path
 from PySide6.QtCore import QEventLoop, Slot
-from pasta_eln.backendWorker.backend import Backend
-from pasta_eln.backendWorker.worker import Task
-from pasta_eln.installationTools import exampleData
-from pasta_eln.miscTools import getConfiguration
-from pasta_eln.UI.form import Form
-from pasta_eln.UI.guiCommunicate import Communicate
-from pasta_eln.UI.palette import Palette
+from pasta_eln.backend_worker.backend import Backend
+from pasta_eln.backend_worker.worker import Task
+from pasta_eln.installation_tools import exampleData
+from pasta_eln.misc_tools import getConfiguration
+from pasta_eln.ui.form import Form
+from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.ui.palette import Palette
 from .test_03_dragDrop import verify
 
 def test_simple(qtbot, caplog):

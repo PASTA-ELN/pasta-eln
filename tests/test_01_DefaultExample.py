@@ -4,9 +4,9 @@ import logging
 import warnings
 import unittest
 from pathlib import Path
-from pasta_eln.backendWorker.backend import Backend
-from pasta_eln.miscTools import getConfiguration
-from pasta_eln.installationTools import exampleData
+from pasta_eln.backend_worker.backend import Backend
+from pasta_eln.misc_tools import getConfiguration
+from pasta_eln.installation_tools import exampleData
 
 class TestStringMethods(unittest.TestCase):
   """

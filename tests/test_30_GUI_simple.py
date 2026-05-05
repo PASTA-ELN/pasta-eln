@@ -1,6 +1,6 @@
 import logging
-from pasta_eln.UI.mainWindow import MainWindow
-from pasta_eln.UI.guiCommunicate import Communicate
+from pasta_eln.ui.main_window import MainWindow
+from pasta_eln.ui.gui_communicate import Communicate
 
 def test_simple(qtbot, caplog):
 
