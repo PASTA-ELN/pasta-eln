@@ -6,8 +6,8 @@ from pathlib import Path
 import pandas as pd
 from PySide6.QtCore import Qt
 
-from pasta_eln.UI.guiCommunicate import Communicate
-from pasta_eln.backendWorker.worker import Task
+from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.backend_worker.worker import Task
 
 
 def generateAndSaveWorkplan(comm: Communicate, workplan: dict, filename: str) -> None:

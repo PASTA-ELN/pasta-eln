@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QHeaderView
                                QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
 from ..backend_worker.worker import Task
 from ..misc_tools import callAddOn, isDocID
-from .workplanCreator.workplanCreatorDialog import WorkplanCreatorDialog
+from .workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
 from .gallery import ImageGallery
 from .gui_communicate import Communicate
 from .gui_style import Action, Label, TextButton, space, widgetAndLayout, widgetAndLayoutGrid

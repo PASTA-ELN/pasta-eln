@@ -5,7 +5,7 @@ import darkdetect
 from PySide6.QtGui import QColor
 
 from ..fixed_strings_json import THEME_COLOR_VALUES
-from ..miscTools import rgba_to_argb
+from ..misc_tools import rgba_to_argb
 
 
 class Palette:
@@ -19,11 +19,11 @@ class Palette:
     if theme in ['light', 'dark']:
       self.qtheme = theme
     else:
-      auto_theme = darkdetect.theme().lower()
-      if auto_theme in ['light', 'dark']:
-        self.qtheme = auto_theme
+      autoTheme = darkdetect.theme().lower()
+      if autoTheme in ['light', 'dark']:
+        self.qtheme = autoTheme
       else:
-        print(f"DEBUG: darkdetect.theme().lower()={auto_theme} is not recognized")
+        print(f"DEBUG: darkdetect.theme().lower()={autoTheme} is not recognized")
         self.qtheme = 'light'
     self.primary = self.getThemeColor("primary", "base")
     self.text = self.getThemeColor("foreground", "base")
@@ -54,7 +54,7 @@ class Palette:
     font-size: 10pt;
     }
     """
-    custom_colors={}#{"background":"#1E3057"}
+    customColors={}#{"background":"#1E3057"}
     if theme == "automatic":
       theme = darkdetect.theme().lower()
     if theme not in ["dark", "light", ""]:
@@ -63,9 +63,9 @@ class Palette:
     if theme != "" and saveTheme:
       self.qtheme = theme
     if theme != "" and not saveTheme:
-      qdarktheme.setup_theme(theme, additional_qss=css, corner_shape=cornershape, custom_colors=custom_colors)
+      qdarktheme.setup_theme(theme, additional_qss=css, corner_shape=cornershape, custom_colors=customColors)
     else:
-      qdarktheme.setup_theme(self.qtheme, additional_qss=css, corner_shape=cornershape, custom_colors=custom_colors)
+      qdarktheme.setup_theme(self.qtheme, additional_qss=css, corner_shape=cornershape, custom_colors=customColors)
 
   def get(self, color: str, prefix: str) -> str:
     """
@@ -78,7 +78,7 @@ class Palette:
     Returns:
         str: CSS string, e.g., 'background-color: #333421;'. Returns an empty string if the theme is 'none'
     """
-    COLORS = {
+    colors = {
       "primary": self.getThemeColor("primary", "base"),
       "primaryLight": "",
       "secondary": "",
@@ -89,9 +89,9 @@ class Palette:
     }
     if color == 'buttonText':
       return f'{prefix}: {self.text}; '
-    if COLORS[color] == "":
+    if colors[color] == "":
       return ""
-    return f'{prefix}: {COLORS[color]}; '
+    return f'{prefix}: {colors[color]}; '
 
   def getThemeColor(self, category: str, subcategory: str) -> str:
     """
@@ -105,14 +105,14 @@ class Palette:
         QColor: the computed color
     """
     # 1. Determine base color
-    theme_dict = THEME_COLOR_VALUES[self.qtheme]
-    cat = theme_dict.get(category, {})
+    themeDict = THEME_COLOR_VALUES[self.qtheme]
+    cat = themeDict.get(category, {})
     if isinstance(cat, str):
       if len(cat) > 7: # Colors in THEME_COLOR_VALUES are #RGBA, not #ARGB like QColor wants.
         cat = rgba_to_argb(cat)
       return QColor(cat).name(format=QColor.NameFormat.HexArgb)
-    base_hex = cat.get("base", "#000000")
-    color = QColor(base_hex)
+    baseHex = cat.get("base", "#000000")
+    color = QColor(baseHex)
 
     # 2. Get the specific key
     rule = cat.get(subcategory, {})

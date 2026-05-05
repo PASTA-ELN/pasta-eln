@@ -11,7 +11,7 @@ from PySide6.QtCore import QEvent, Qt, QUrl, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QPixmap, QShortcut
 from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QMainWindow, QVBoxLayout
 from pasta_eln import __version__
-from .workplanCreator.workplanCreatorDialog import WorkplanCreatorDialog
+from .workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
 from ..backend_worker.worker import Task
 from ..fixed_strings_json import confFileName, aboutMessage, shortcuts
 from ..misc_tools import hardRestart, installPythonPackages, updateAddOnList

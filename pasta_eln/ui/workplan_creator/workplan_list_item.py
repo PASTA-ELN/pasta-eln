@@ -4,9 +4,9 @@ from PySide6.QtCore import QMimeData, QPoint, Qt, Signal
 from PySide6.QtGui import QDrag, QPixmap
 from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout
 
-from pasta_eln.UI.guiCommunicate import Communicate
-from pasta_eln.UI.guiStyle import Label
-from pasta_eln.miscTools import makeStringWrappable
+from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.ui.gui_style import Label
+from pasta_eln.misc_tools import makeStringWrappable
 
 
 class WorkplanListItem(QFrame):

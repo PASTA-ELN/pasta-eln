@@ -4,9 +4,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QComboBox, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, \
   QScrollArea, QSizePolicy, QTextEdit, QWidget
 
-from pasta_eln.UI.guiCommunicate import Communicate
-from pasta_eln.UI.guiStyle import HSeparator, Label
-from pasta_eln.UI.workplanCreator.workplanListItem import WorkplanListItem
+from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.ui.gui_style import HSeparator, Label
+from pasta_eln.ui.workplan_creator.workplan_list_item import WorkplanListItem
 
 
 class CenterMainWidget(QWidget):

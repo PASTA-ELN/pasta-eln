@@ -1,10 +1,10 @@
 """Widget on the left side of the WorkplanCreator-Dialog. Contains a Searchbar and a list of Procedures to choose from"""
 from PySide6.QtWidgets import QLineEdit, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
-from pasta_eln.UI.guiCommunicate import Communicate
-from pasta_eln.UI.guiStyle import HSeparator, Label
-from pasta_eln.UI.workplanCreator.procedureListItem import ProcedureListItem
-from pasta_eln.UI.workplanCreator.workplanFunctions import Storage
+from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.ui.gui_style import HSeparator, Label
+from pasta_eln.ui.workplan_creator.procedure_list_item import ProcedureListItem
+from pasta_eln.ui.workplan_creator.workplan_functions import Storage
 
 
 class LeftMainWidget(QWidget):
