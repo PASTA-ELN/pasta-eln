@@ -21,7 +21,7 @@ class ProcedureListItem(QFrame):
     self.title = self.storage.getProcedureTitle(self.procedureID)
     self.tags = self.storage.getProcedureTags(self.procedureID)
     self.titleLabel = Label("", "h3")
-    self.tagLabel = Label("", style="color: grey;")
+    self.tagLabel = Label("", style=f"color: {self.comm.palette.getThemeColor("foreground", "disabled")};")
 
     self.clicked.connect(lambda: self.comm.activeProcedureChangedOnlyProcID.emit(self.procedureID))
 

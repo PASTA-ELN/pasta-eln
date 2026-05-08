@@ -45,7 +45,8 @@ class CenterMainWidget(QWidget):
     # layout
     self.layout = QGridLayout()
     self.layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-    self.layout.addWidget(Label('Choose a Procedure on the left side to begin.', 'h1', style="color: grey;"), 0, 0)
+    color = self.comm.palette.getThemeColor("foreground", "disabled")
+    self.layout.addWidget(Label('Choose a Procedure on the left side to begin.', 'h1', style=f"color: {color};"), 0, 0)
     self.setLayout(self.layout)
 
   def changeActiveProcedure(self, toProcedure: str, sample: str = None, parameters: dict[str, str] = None,
@@ -73,13 +74,13 @@ class CenterMainWidget(QWidget):
       # Short Description
       self.shortDesc.setWordWrap(True)
       self.shortDesc.setMaximumHeight(100)
-      self.shortDesc.setProperty("inactive", True)
+      self.shortDesc.setStyleSheet(f"color: {self.comm.palette.getThemeColor("foreground", "disabled")}; font-size: 10pt;")
       self.layout.addWidget(self.shortDesc, 2, 0)
       # Short Separator (Between short and long description)
       self.layout.addWidget(HSeparator(), 3, 0)
       # Long Description
       self.description.setStyleSheet(f"""
-      background-color: {self.palette().window().color().name()};
+      background-color: {self.comm.palette.getThemeColor("background", "base")};
       border: none;
       padding: 0px;
       """)

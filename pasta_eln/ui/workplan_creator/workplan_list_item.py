@@ -95,7 +95,7 @@ class WorkplanListItem(QFrame):
           border-width: 2px;
         }}
         QFrame[highlight="true"] {{
-          background-color:{self.comm.palette.getThemeColor("primary", "selection.background")};
+          background-color:{self.comm.palette.getThemeColor("primary", "base")};
         }}
         QFrame[highlight="true"] QLabel{{
           color: {self.comm.palette.getThemeColor("background", "base")};

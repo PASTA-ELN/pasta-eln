@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 from pasta_eln import __version__
 from .misc_tools import testNewPastaVersion
 from .ui.gui_communicate import Communicate
-from .ui.main_window import MainWindow
+from .ui_new.main_window import MainWindow
 
 
 def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:

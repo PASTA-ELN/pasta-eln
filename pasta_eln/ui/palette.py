@@ -48,11 +48,6 @@ class Palette:
     min-height: 30px;
     padding-bottom: 25px;
     }
-    
-    QLabel[inactive="true"] {
-    color: grey;
-    font-size: 10pt;
-    }
     """
     customColors={}#{"background":"#1E3057"}
     if theme == "automatic":
@@ -143,6 +138,8 @@ class Palette:
       if "transparent" in rule:
         alpha = int((1 - rule["transparent"]) * 255)
         color.setAlpha(alpha)
+        r, g, b, a = color.getRgb()
+        return f"rgba({r}, {g}, {b}, {a})"
       return color.name()
 
     # 5. Fallback: return base color
