@@ -40,6 +40,7 @@ class Communicate(QObject):
   uiSendSQL             = Signal(list)          # request to execute SQL commands directly
   # signals that are emitted from this comm that data changed
   docTypesChanged    = Signal()                 # redraw main window, e.g. after change of docType titles
+  themeUpdated       = Signal()                 # emitted when color-theme is changed (palette) for updating without restarting
 
   # unclear
   formDoc            = Signal(dict)             # send doc from details to new/edit dialog: dialogForm
@@ -56,7 +57,7 @@ class Communicate(QObject):
     super().__init__()
     self.waitDialog            = WaitDialog()
     self.worker:Worker|None    = None
-    self.palette                                = Palette('')               #reset to real one later
+    self.palette                                = Palette(self, '')               #reset to real one later
     self.configuration, self.projectGroup = getConfiguration(projectGroup)
     if not self.configuration:
       return

@@ -2,8 +2,9 @@
 from typing import override
 
 import pandas as pd
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QFrame, QVBoxLayout
+from PySide6.QtCore import QPointF, Qt, Signal
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QVBoxLayout
 
 from pasta_eln.misc_tools import makeStringWrappable
 from pasta_eln.ui.gui_communicate import Communicate
@@ -29,16 +30,18 @@ class ProjectCard(QFrame):
     self.infoLabel = Label(makeStringWrappable(self.project["status"]))
     self.infoLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     self.infoLabel.setWordWrap(True)
-    color = self.comm.palette.getThemeColor("foreground", "disabled")
-    self.infoLabel.setStyleSheet(f"color: {color}; border: none;")
 
     # Style
     self.setFrameShape(QFrame.Shape.Panel)
+    shadow = QGraphicsDropShadowEffect(self, offset=QPointF(0,1), blurRadius=8, color=QColor(0, 0, 0, 25))
+    self.setGraphicsEffect(shadow)
     self.setCursor(Qt.CursorShape.PointingHandCursor)
     color = self.comm.palette.getThemeColor("background", "table")
+    borderColor = self.comm.palette.getThemeColor("border", "base")
     self.defaultCSS = f"""
     ProjectCard {{
       background-color: {color};
+      border: 1px solid {borderColor};
     }}
     ProjectCard[highlight="true"] {{
       background-color:{self.comm.palette.getThemeColor("primary", "base")};

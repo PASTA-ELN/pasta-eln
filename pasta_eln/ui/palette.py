@@ -11,11 +11,12 @@ from ..misc_tools import rgba_to_argb
 class Palette:
   """ Color palette allows easy color access and manages Theme"""
 
-  def __init__(self, theme: str) -> None:
+  def __init__(self, comm, theme: str) -> None:
     """ Initialize the color palette
     Args:
       theme (str): 'light' or 'dark' or 'automatic'
     """
+    self.comm = comm
     if theme in ['light', 'dark']:
       self.qtheme = theme
     else:
@@ -61,6 +62,7 @@ class Palette:
       qdarktheme.setup_theme(theme, additional_qss=css, corner_shape=cornershape, custom_colors=customColors)
     else:
       qdarktheme.setup_theme(self.qtheme, additional_qss=css, corner_shape=cornershape, custom_colors=customColors)
+    self.comm.themeUpdated.emit()
 
   def get(self, color: str, prefix: str) -> str:
     """

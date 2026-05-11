@@ -26,7 +26,7 @@ class ProcedureListItem(QFrame):
     self.clicked.connect(lambda: self.comm.activeProcedureChangedOnlyProcID.emit(self.procedureID))
 
     # titleLabel
-    self.titleLabel.setText(makeStringWrappable(self.title))
+    self.titleLabel.setText(makeStringWrappable(self.title, nChars=20))
     self.titleLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     self.titleLabel.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
     self.titleLabel.setWordWrap(True)
@@ -34,7 +34,7 @@ class ProcedureListItem(QFrame):
     # tagLabel
     tagString = ""
     for tag in self.tags:
-      tag = makeStringWrappable(tag)
+      tag = makeStringWrappable(tag, nChars=20)
       tagString += tag + ", "
     self.tagLabel.setText(tagString[:-2])
     self.tagLabel.setWordWrap(True)

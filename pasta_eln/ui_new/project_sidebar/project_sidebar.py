@@ -31,7 +31,8 @@ class ProjectSidebar(QWidget):
     self.newProjectButton.setStyleSheet("border: none;")
     self.newProjectButton.setToolTip("Create new Project")
     self.newProjectButton.setFixedSize(40, 40)
-    self.newProjectButton.setIcon(qtawesome.icon("ri.add-circle-line"))
+    iconColor = self.comm.palette.getThemeColor("foreground", "base")
+    self.newProjectButton.setIcon(qtawesome.icon("ri.add-circle-line", color=iconColor))
     self.newProjectButton.setIconSize(self.newProjectButton.size())
     self.newProjectButton.clicked.connect(self.createNewProject)
 
@@ -51,7 +52,7 @@ class ProjectSidebar(QWidget):
     # Projectlist
     self.projectList = QWidget()
     self.projectListLayout = QVBoxLayout()
-    self.projectListLayout.setContentsMargins(0, 0, 0, 0)
+    self.projectListLayout.setContentsMargins(3, 0, 3, 0)
     self.projectListLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
     self.projectList.setLayout(self.projectListLayout)
 
@@ -67,7 +68,7 @@ class ProjectSidebar(QWidget):
     self.settingsButton.setStyleSheet("border: none;")
     self.settingsButton.setToolTip("Open Configuration/Settings")
     self.settingsButton.setFixedSize(40, 40)
-    self.settingsButton.setIcon(qtawesome.icon("ri.settings-2-line"))
+    self.settingsButton.setIcon(qtawesome.icon("ri.settings-2-line", color=iconColor))
     self.settingsButton.setIconSize(self.newProjectButton.size())
     self.settingsButton.clicked.connect(lambda: Configuration(self.comm).exec())
 
@@ -102,6 +103,7 @@ class ProjectSidebar(QWidget):
     self.comm.changeSidebar.connect(self.paint)
     self.comm.changeProject.connect(self.highlightActiveProject)
     self.comm.backendThread.worker.beSendTable.connect(self.onGetData)
+    self.comm.themeUpdated.connect(self.reloadStyle)
 
     # CODE
     self.comm.changeTable.emit('x0', '')
@@ -201,3 +203,13 @@ class ProjectSidebar(QWidget):
         else:
           item.hide()
           break
+
+  @Slot()
+  def reloadStyle(self) -> None:
+    """
+    Update the color of buttons after the theme is changed, because they don't change automatically.
+    """
+    iconColor = self.comm.palette.getThemeColor("foreground", "base")
+
+    self.newProjectButton.setIcon(qtawesome.icon("ri.add-circle-line", color=iconColor))
+    self.settingsButton.setIcon(qtawesome.icon("ri.settings-2-line", color=iconColor))
