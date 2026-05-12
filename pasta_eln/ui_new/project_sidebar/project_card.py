@@ -37,7 +37,7 @@ class ProjectCard(QFrame):
     self.setGraphicsEffect(shadow)
     self.setCursor(Qt.CursorShape.PointingHandCursor)
     color = self.comm.palette.getThemeColor("background", "table")
-    borderColor = self.comm.palette.getThemeColor("border", "base")
+    borderColor = self.comm.palette.alterColor(self.comm.palette.getThemeColor("border", "base"), 125)
     self.defaultCSS = f"""
     ProjectCard {{
       background-color: {color};

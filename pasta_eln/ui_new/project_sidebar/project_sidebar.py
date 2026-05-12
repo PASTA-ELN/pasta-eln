@@ -210,6 +210,5 @@ class ProjectSidebar(QWidget):
     Update the color of buttons after the theme is changed, because they don't change automatically.
     """
     iconColor = self.comm.palette.getThemeColor("foreground", "base")
-
     self.newProjectButton.setIcon(qtawesome.icon("ri.add-circle-line", color=iconColor))
     self.settingsButton.setIcon(qtawesome.icon("ri.settings-2-line", color=iconColor))

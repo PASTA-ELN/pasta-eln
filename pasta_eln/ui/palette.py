@@ -146,3 +146,17 @@ class Palette:
 
     # 5. Fallback: return base color
     return color.name()
+
+  def alterColor(self, colorHex:str, newAlpha:int=255) -> str:
+    """
+
+    Args:
+      colorHex:
+      newAlpha:
+
+    Returns:
+
+    """
+    newColor = QColor(colorHex)
+    r, g, b, a= newColor.getRgb()
+    return f"rgba({r}, {g}, {b}, {newAlpha})"
