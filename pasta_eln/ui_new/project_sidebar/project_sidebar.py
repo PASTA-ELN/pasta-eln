@@ -106,7 +106,7 @@ class ProjectSidebar(QWidget):
     self.comm.themeUpdated.connect(self.reloadStyle)
 
     # CODE
-    self.comm.changeTable.emit('x0', '')
+    self.comm.uiRequestTable.emit('x0', '', self.comm.configuration['GUI']['showHidden'] == 'Yes')
 
   @Slot(str)
   def paint(self, projectChoice: str = '') -> None:

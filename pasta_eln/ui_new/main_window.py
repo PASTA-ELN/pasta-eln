@@ -16,7 +16,6 @@ from pasta_eln import __version__
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.fixed_strings_json import aboutMessage, confFileName, shortcuts
 from pasta_eln.misc_tools import hardRestart, installPythonPackages, updateAddOnList
-from pasta_eln.ui.body import Body
 from pasta_eln.ui.config.main import Configuration
 from pasta_eln.ui.data_hierarchy.editor import SchemeEditor
 from pasta_eln.ui.definitions.editor import Editor as DefinitionsEditor
@@ -29,6 +28,7 @@ from pasta_eln.ui.repositories.upload_gui import UploadGUI
 from pasta_eln.ui.tutorials.manager import TutorialManager
 from pasta_eln.ui.tutorials.tutorial_panel import TutorialPanel
 from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
+from pasta_eln.ui_new.body import Body
 from pasta_eln.ui_new.project_sidebar.project_sidebar import ProjectSidebar
 
 
@@ -121,7 +121,7 @@ class MainWindow(QMainWindow):
     self.splitter.addWidget(self.sidebar)
     self.splitter.setStretchFactor(0, 1)
     self.splitter.addWidget(self.body)
-    self.splitter.setStretchFactor(1, 3)
+    self.splitter.setStretchFactor(1, 6)
     self.paint()
 
   @Slot(str)

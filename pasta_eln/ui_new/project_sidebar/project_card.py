@@ -33,7 +33,7 @@ class ProjectCard(QFrame):
 
     # Style
     self.setFrameShape(QFrame.Shape.Panel)
-    shadow = QGraphicsDropShadowEffect(self, offset=QPointF(0,1), blurRadius=8, color=QColor(0, 0, 0, 25))
+    shadow = QGraphicsDropShadowEffect(self, offset=QPointF(0, 1), blurRadius=8, color=QColor(0, 0, 0, 25))
     self.setGraphicsEffect(shadow)
     self.setCursor(Qt.CursorShape.PointingHandCursor)
     color = self.comm.palette.getThemeColor("background", "table")
