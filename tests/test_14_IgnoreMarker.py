@@ -9,7 +9,7 @@ from pasta_eln.backendWorker.backend import Backend
 
 class TestIgnoreMarker(unittest.TestCase):
   """
-  Tests for folders containing ._pastaELN_ignore.
+  Tests for folders containing .pastaELN_ignore.
   """
 
   def setUp(self):
@@ -41,7 +41,7 @@ class TestIgnoreMarker(unittest.TestCase):
   def test_ignored_untracked_folder_is_not_added_or_reported(self):
     ignoredPath = self.projectPath/'raw'
     ignoredPath.mkdir()
-    (ignoredPath/'._pastaELN_ignore').touch()
+    (ignoredPath/'.pastaELN_ignore').touch()
     (ignoredPath/'data.txt').write_text('ignored data', encoding='utf-8')
 
     self.backend.scanProject(None, self.projectID)
@@ -63,7 +63,7 @@ class TestIgnoreMarker(unittest.TestCase):
     dataDoc = self.backend.addData('', {'name': 'data.txt'})
     dataID = dataDoc['id']
 
-    (ignoredPath/'._pastaELN_ignore').touch()
+    (ignoredPath/'.pastaELN_ignore').touch()
     dataPath.unlink()
 
     self.backend.scanProject(None, self.projectID)

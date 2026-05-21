@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable, Optional
 from .backendWorker.backend import Backend
-from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
+from .fixedStringsJson import CONF_FILE_NAME, DEFAULT_MAX_UPLOAD_SIZE_MB, configurationGUI, defaultConfiguration
 from .textTools.stringChanges import outputString
 
 
@@ -52,7 +52,7 @@ def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
       'projectGroups': {
           'research': {
               'local': {'database': 'research', 'path': str(pathPasta)},
-              'remote': {},
+              'remote': {'maxUploadSizeMB': DEFAULT_MAX_UPLOAD_SIZE_MB},
               'addOnDir': str(addOnDir),
               'addOns': {'project': {}, 'extractors':{}, 'table':{}}
           }},
@@ -115,6 +115,10 @@ def configuration(command:str, pathData:str) -> str:
           conf['GUI'][k] = v[1]
         else:
           output += outputString('text','error', f'No {k} in GUI part of config file')
+  for projectGroup in conf.get('projectGroups', {}).values():
+    if command == 'repair':
+      projectGroup.setdefault('remote', {})
+      projectGroup['remote'].setdefault('maxUploadSizeMB', DEFAULT_MAX_UPLOAD_SIZE_MB)
   if command == 'repair':
     with open(Path.home()/CONF_FILE_NAME,'w', encoding='utf-8') as f:
       f.write(json.dumps(conf,indent=2))

@@ -12,9 +12,9 @@ import requests
 from PIL.ImageQt import ImageQt
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator, Qt
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QLabel, QLineEdit, QMessageBox,
-                               QSizePolicy, QSpacerItem, QTextEdit, QVBoxLayout)
+                               QSizePolicy, QSpacerItem, QSpinBox, QTextEdit, QVBoxLayout)
 from ...backendWorker.elabFTWapi import ElabFTWApi
-from ...fixedStringsJson import CONF_FILE_NAME
+from ...fixedStringsJson import CONF_FILE_NAME, DEFAULT_MAX_UPLOAD_SIZE_MB
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, TextButton, widgetAndLayoutGrid
 from ..messageDialog import showMessage
@@ -35,7 +35,8 @@ class ProjectGroup(QDialog):
     self.projectGroupTested = False
     self.callbackFinished = callbackFinished
     self.configuration = copy.deepcopy(self.comm.configuration)
-    self.emptyConfig:dict[str,Any] = {'local':{'path':''}, 'remote':{}, 'addOnDir':''}
+    self.emptyConfig:dict[str,Any] = {'local':{'path':''}, 'remote':{'maxUploadSizeMB': DEFAULT_MAX_UPLOAD_SIZE_MB},
+                                      'addOnDir':''}
     self.elabApi: ElabFTWApi|None = None
     self.serverPG: set[tuple[str,Any,Any,Any]] = set()
     self.requireHardRestart = False
@@ -101,12 +102,18 @@ class ProjectGroup(QDialog):
 
     self.formL.addItem(QSpacerItem(0, 25, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed), 8, 0, 1,
                        self.formL.columnCount())
-    self.formL.addWidget(QLabel('Folder for common files:'),9, 0)
+
+    self.formL.addWidget(QLabel('\tMaximum upload size (MB):'), 9, 0)
+    self.maxUploadSize = QSpinBox()
+    self.maxUploadSize.setRange(10, 1024)
+    self.formL.addWidget(self.maxUploadSize,               9, 1)
+
+    self.formL.addWidget(QLabel('Folder for common files:'),10, 0)
     self.commonFolder = QLineEdit('commonFiles')
     self.commonFolder.setPlaceholderText('Enter folder for common files in project group. Leave empty to disable.')
-    self.formL.addWidget(self.commonFolder,                9, 1)
+    self.formL.addWidget(self.commonFolder,                10, 1)
     self.row4Button = TextButton('Create',   self, [Command.CREATE_FOLDER], tooltip='Create folder')
-    self.formL.addWidget(self.row4Button,                  9, 3)
+    self.formL.addWidget(self.row4Button,                  10, 3)
 
     # RIGHT SIDE: button and image
     self.qrButton = TextButton('Create QR code', self, [Command.CREATE_QRCODE])
@@ -159,6 +166,7 @@ class ProjectGroup(QDialog):
                                       'id':choices[0][1],
                                       'canRead':choices[0][2],
                                       'canWrite':choices[0][3]}
+      config['remote']['maxUploadSizeMB'] = self.maxUploadSize.value()
       defaultProjectGroup = self.configuration['defaultProjectGroup']
       if defaultProjectGroup not in self.configuration['projectGroups']:
         self.configuration['defaultProjectGroup'] = list(self.configuration['projectGroups'].keys())[0]
@@ -184,7 +192,7 @@ class ProjectGroup(QDialog):
       newKey = self.groupTextField.text()
       self.selectGroup.addItem(newKey)
       self.selectGroup.setCurrentText(newKey)
-      self.configuration['projectGroups'][newKey] = self.emptyConfig
+      self.configuration['projectGroups'][newKey] = copy.deepcopy(self.emptyConfig)
       self.formL.removeWidget(self.groupTextField)
       self.formL.addWidget(self.selectGroup, 0,0)
       self.groupTextField.hide()
@@ -317,6 +325,7 @@ class ProjectGroup(QDialog):
       self.addOnLabel.setText('Add-on directory: ')
       self.serverLabel.setText('')
       self.apiKeyLabel.setText('')
+      self.maxUploadSize.setValue(DEFAULT_MAX_UPLOAD_SIZE_MB)
       self.image.setPixmap(QPixmap())
       self.comboboxActive = False
 
@@ -345,6 +354,8 @@ class ProjectGroup(QDialog):
     self.directoryLabel.setText('Data directory: ' + config['local'].get('path',''))
     self.addOnLabel.setText('Add-on directory: ' + config.get('addOnDir',''))
     self.serverLabel.setText(config['remote'].get('url', ''))
+    maxUploadSize = config['remote'].get('maxUploadSizeMB', DEFAULT_MAX_UPLOAD_SIZE_MB)
+    self.maxUploadSize.setValue(maxUploadSize)
     if config['remote'].get('key', ''):
       self.apiKeyLabel.setText('--- API key hidden ---')
     else:

@@ -7,6 +7,7 @@ from collections import Counter
 from datetime import datetime
 from typing import Any, Callable
 from anytree import Node, PreOrderIter
+from ..fixedStringsJson import DEFAULT_MAX_UPLOAD_SIZE_MB
 from ..miscTools import flatten
 from ..textTools.handleDictionaries import squashTupleIntoValue
 from ..textTools.html2markdown import html2markdown
@@ -84,6 +85,27 @@ class Pasta2Elab:
     self.readWriteAccess:dict[str,str] = {}
     self.verbose         = False
     return
+
+
+  def rawDataUploadAllowed(self, rawDataPath:Any, docID:str) -> bool:
+    """
+    Check whether a raw data file is within the configured upload size limit.
+
+    Args:
+      rawDataPath (Path): raw data path
+      docID (str): PASTA document id, used for logging
+
+    Returns:
+      bool: true when upload should proceed
+    """
+    remoteConfig = self.backend.configuration['projectGroups'][self.projectGroup].get('remote', {})
+    maxRawUploadSizeMB = remoteConfig.get('maxUploadSizeMB', DEFAULT_MAX_UPLOAD_SIZE_MB)
+    fileSize = rawDataPath.stat().st_size
+    if fileSize//1024//1024 <= maxRawUploadSizeMB:
+      return True
+    logging.warning('Skip data upload for %s: %s is %.1f MB, above the %d MB limit',
+                    docID, rawDataPath, fileSize//1024//1024, maxRawUploadSizeMB)
+    return False
 
 
   def sync(self, mode:str='', callback:Callable[[ElabFTWApi,str,int],str]=cliCallback,
@@ -345,7 +367,9 @@ class Pasta2Elab:
       if docMerged['branch'][0]['path'] is not None and docMerged['type'][0][0]!='x' \
             and not docMerged['branch'][0]['path'].startswith('http') and \
             (self.backend.basePath/docMerged['branch'][0]['path']).name not in {i['real_name'] for i in existingUploads}:
-        self.api.upload(entryType, elabID, fileName=self.backend.basePath/docMerged['branch'][0]['path'], comment='raw data')
+        rawDataPath = self.backend.basePath/docMerged['branch'][0]['path']
+        if self.rawDataUploadAllowed(rawDataPath, node.id):
+          self.api.upload(entryType, elabID, fileName=rawDataPath, comment='raw data')
     return node.id, mergeCase
 
 

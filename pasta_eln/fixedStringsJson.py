@@ -93,6 +93,7 @@ defaultDataHierarchyNode: list[dict[str, str]] = [
 
 
 CONF_FILE_NAME = '.pastaELN.json'
+DEFAULT_MAX_UPLOAD_SIZE_MB = 100
 
 defaultConfiguration: dict[str, Any] = {
   'defaultProjectGroup': 'research',
