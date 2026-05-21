@@ -10,10 +10,10 @@ repos:
     -   id: name-tests-test
         args: [--pytest-test-first]
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.1
+    rev: v3.21.2
     hooks:
     -   id: pyupgrade
-        args: [--py39-plus]
+        args: [--py310-plus]
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 # -   repo: https://github.com/asottile/reorder-python-imports

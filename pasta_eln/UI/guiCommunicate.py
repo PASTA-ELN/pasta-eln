@@ -83,6 +83,7 @@ class Communicate(QObject):
 
       # connect waiting dialog
       self.uiRequestTask.connect(self.progressWindow)
+      self.backendThread.worker.beSendProgress.connect(self.waitDialog.updateProgressBar)
       self.backendThread.worker.beSendTaskReport.connect(self.waitDialog.hide)
 
       # start thread now that everything is linked up
@@ -139,8 +140,16 @@ class Communicate(QObject):
     """
     if task.msgWaitDialog == '' or 'PYTEST_CURRENT_TEST' in os.environ:
       return
+    self.waitDialog.count = 0
+    self.waitDialog.buttonBox.hide()
     self.waitDialog.text.setMarkdown(task.msgWaitDialog)
-    self.waitDialog.text.setFixedHeight(30)
-    self.waitDialog.setFixedHeight(100)
-    self.waitDialog.progressBar.setRange(0, 0)  # Indeterminate
+    if task in (Task.SEND_ELAB, Task.GET_ELAB, Task.SMART_ELAB):
+      self.waitDialog.text.setFixedHeight(450)
+      self.waitDialog.setFixedHeight(500)
+      self.waitDialog.progressBar.setRange(0, 100)
+      self.waitDialog.progressBar.setValue(0)
+    else:
+      self.waitDialog.text.setFixedHeight(30)
+      self.waitDialog.setFixedHeight(100)
+      self.waitDialog.progressBar.setRange(0, 0)  # Indeterminate
     self.waitDialog.show()

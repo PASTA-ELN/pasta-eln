@@ -71,6 +71,7 @@ class BackendWorker(QObject):
   beSendHierarchy         = Signal(Node, dict)
   beSendDoc               = Signal(dict)
   beSendTaskReport        = Signal(Task, str, str, str)       # task, report, image, path
+  beSendProgress          = Signal(str, str)
   beSendSQL               = Signal(str, pd.DataFrame)
 
   def __init__(self) -> None:
@@ -370,11 +371,11 @@ class BackendWorker(QObject):
           sync = Pasta2Elab(self.backend, data['projGroup'])
           if hasattr(sync, 'api') and sync.api.url:                             #if hostname and api-key given
             if task is Task.SEND_ELAB:
-              stats = sync.sync('sA')
+              stats = sync.sync('sA', progressCallback=self.beSendProgress.emit)
             elif task is Task.GET_ELAB:
-              stats = sync.sync('gA')
+              stats = sync.sync('gA', progressCallback=self.beSendProgress.emit)
             else:
-              stats = sync.sync('')
+              stats = sync.sync('', progressCallback=self.beSendProgress.emit)
             logging.debug('elabFTW sync stats: %s', stats)
             statsCount = Counter([i[1] for i in stats])
             msg = ', '.join([f'{MERGE_LABELS[k]}: {v}' for k,v in statsCount.items()])

@@ -123,7 +123,7 @@ class Pasta2Elab:
     def updateEntryLocal(i:Node, mode:str, callback:Callable[[ElabFTWApi,str,int],str]=cliCallback,
                          idx:int=-1, count:int=-1) -> tuple[str,int]:
       """Intermediate function used in list comprehension"""
-      res = self.updateEntry(i, mode, callback)
+      res = self.updateEntry(i, mode, callback, progressCallback)
       if progressCallback is not None:
         progressCallback('count', str(int(idx/count*100)))
       return res
@@ -202,7 +202,8 @@ class Pasta2Elab:
     return
 
 
-  def updateEntry(self, node:Node, mode:str, callback:Callable[[ElabFTWApi,str,int],str]=cliCallback) -> tuple[str,int]:
+  def updateEntry(self, node:Node, mode:str, callback:Callable[[ElabFTWApi,str,int],str]=cliCallback,
+                  progressCallback:Callable[...,None]|None=None) -> tuple[str,int]:
     """ update an entry in elabFTW: all the logic goes here
         - myDesktop: sends content and the date when upload is made; if there is a change in modified time; the change is for real
         - server: gets document; if there is a difference between metadata.json and content: it was changed for real
@@ -213,6 +214,7 @@ class Pasta2Elab:
       node (Node): node to process
       mode (str): sync mode g=get, gA=get-all, s=send, sA=send-all
       callback (func): callback function if non-all mode is given
+      progressCallback (func): callback function to implement progress-bar
 
     Returns:
       tuple: node.id; merge case
@@ -369,6 +371,16 @@ class Pasta2Elab:
             (self.backend.basePath/docMerged['branch'][0]['path']).name not in {i['real_name'] for i in existingUploads}:
         rawDataPath = self.backend.basePath/docMerged['branch'][0]['path']
         if self.rawDataUploadAllowed(rawDataPath, node.id):
+          if progressCallback is not None:
+            sizeLabel = f'{rawDataPath.stat().st_size} B'
+            size = float(rawDataPath.stat().st_size)
+            for unit in ('B', 'KB', 'MB', 'GB'):
+              if size < 1024 or unit == 'GB':
+                sizeLabel = f'{size:.1f} {unit}' if unit != 'B' else f'{int(size)} {unit}'
+                break
+              size /= 1024
+            message = f'\nUploading: {rawDataPath.name} ({sizeLabel})'
+            progressCallback('append', message)
           self.api.upload(entryType, elabID, fileName=rawDataPath, comment='raw data')
     return node.id, mergeCase
 
