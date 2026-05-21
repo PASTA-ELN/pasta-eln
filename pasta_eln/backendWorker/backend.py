@@ -316,12 +316,14 @@ class Backend(CLI_Mixin):
     pathsInSqliteData = [i['key'] for i in inSqliteAll if i['value'][1][0][0]!='x']
     filesCountSum = sum(len(files) for (_, _, files) in os.walk(self.cwd))
     filesCount = 0
+    ignoredFolders = []
     for root, dirs, files in os.walk(self.cwd, topdown=True):
       #find parent-document
       self.cwd = Path(root).relative_to(self.basePath)
-      if self.cwd.name.startswith('trash_'):
-        del dirs
-        del files
+      if self.cwd.name.startswith('trash_') or (Path(root)/'.pastaELN_ignore').is_file():
+        if (Path(root)/'.pastaELN_ignore').is_file():
+          ignoredFolders.append(self.cwd.as_posix())
+        dirs[:] = []
         continue
       parentIDs = [i for i in inSqliteAll if i['key']==self.cwd.as_posix()]             #parent of this folder
       if not parentIDs:                             #skip newly moved folder, will be scanned upon re-scanning
@@ -329,9 +331,12 @@ class Backend(CLI_Mixin):
       parentID = parentIDs[0]['id']
       parentDoc = self.db.getDoc(parentID)
       hierStack = parentDoc['branch'][0]['stack']+[parentID]
-      # handle directories
+      # handle directories and prevent going into them if they should be ignored.
+      ignoredFolders += [(Path(root)/i).relative_to(self.basePath).as_posix()
+                         for i in dirs if (Path(root)/i/'.pastaELN_ignore').is_file()]
       dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i not in ('__pycache__')
-                 and not (Path(root)/i/'pyvenv.cfg').is_file()]
+                 and not (Path(root)/i/'pyvenv.cfg').is_file()
+                 and not (Path(root)/i/'.pastaELN_ignore').is_file()]
       for dirName in dirs[::-1]:                                                     # sorted forward in Linux
         path = (Path(root)/dirName).relative_to(self.basePath).as_posix()
         if path in pathsInSqliteX:                                                  # path already in database
@@ -398,6 +403,10 @@ class Backend(CLI_Mixin):
             reply = 'Create a link to existing entry instead of new entry.'
     #finish method
     self.cwd = self.basePath/projPath
+    pathsInSqliteData = [i for i in pathsInSqliteData
+                         if not any(i == j or i.startswith(f'{j}/') for j in ignoredFolders)]
+    pathsInSqliteX = [i for i in pathsInSqliteX
+                      if not any(i == j or i.startswith(f'{j}/') for j in ignoredFolders)]
     orphans = [
         i for i in pathsInSqliteData
         if i.startswith(f'{self.cwd.relative_to(self.basePath).as_posix()}/')
@@ -656,14 +665,18 @@ class Backend(CLI_Mixin):
     pathsInSqliteData = [i['key'] for i in inSqliteAll if i['value'][1][0][0]!='x']
     pathsInSqliteFolder = [i['key'] for i in inSqliteAll if i['value'][1][0][0]=='x']
     count = 0
+    ignoredFolders:list[str] = []
     for projI in viewProjects['id']:
       projDoc = self.db.getDoc(projI)
       if len(projDoc['branch'])==0:
         output += outputString(outputStyle,'error','project view got screwed up')
         continue
       for root, dirs, files in os.walk(self.basePath/projDoc['branch'][0]['path']):
-        if Path(root).name[0]=='.' or Path(root).name.startswith('trash_'):
-          del dirs
+        ignoreFolder = (Path(root)/'.pastaELN_ignore').is_file()
+        if Path(root).name[0]=='.' or Path(root).name.startswith('trash_') or ignoreFolder:
+          if ignoreFolder:
+            ignoredFolders.append(Path(root).relative_to(self.basePath).as_posix())
+          dirs[:] = []
           continue
         for fileName in files:
           if fileName.startswith('.') or fileName.startswith('trash_') or '_PastaExport' in fileName:
@@ -674,8 +687,11 @@ class Backend(CLI_Mixin):
             count += 1
           else:
             pathsInSqliteData.remove(path)
+        ignoredFolders += [(Path(root)/i).relative_to(self.basePath).as_posix()
+                           for i in dirs if (Path(root)/i/'.pastaELN_ignore').is_file()]
         dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i not in ('__pycache__')
-                  and not (Path(root)/i/'pyvenv.cfg').is_file()]
+                  and not (Path(root)/i/'pyvenv.cfg').is_file()
+                  and not (Path(root)/i/'.pastaELN_ignore').is_file()]
         for dirName in dirs:
           path = (Path(root).relative_to(self.basePath) /dirName).as_posix()
           if path not in pathsInSqliteFolder:
@@ -708,6 +724,10 @@ class Backend(CLI_Mixin):
               elif repair(errorStr):
                 with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
                   json.dump({'id':docDB['id']}, fOut)
+    pathsInSqliteData = [i for i in pathsInSqliteData
+                         if not any(i == j or i.startswith(f'{j}/') for j in ignoredFolders)]
+    pathsInSqliteFolder = [i for i in pathsInSqliteFolder
+                           if not any(i == j or i.startswith(f'{j}/') for j in ignoredFolders)]
     orphans = [i for i in pathsInSqliteData   if not (self.basePath/i).exists() and ':/' not in i and i!='*']#paths can be files or directories
     orphans+= [i for i in pathsInSqliteFolder if not (self.basePath/i).exists() ]
     if orphans:
