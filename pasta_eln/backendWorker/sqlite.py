@@ -746,9 +746,9 @@ class SqlLiteDB:
         cmd += f" and branches.stack LIKE '{startKey}%'"
       df      = pd.read_sql_query(cmd, self.connection, index_col='id', ).fillna('')
       #clean main df
-      df      = df[~df.index.duplicated(keep='first')]
+      df      = df.loc[~df.index.duplicated(keep='first')].copy()
       if 'image' in viewColumns:
-        df['image'] = df['image'].apply(lambda x: 'Y' if len(str(x)) > 1 else 'N')
+        df.loc[:, 'image'] = df['image'].apply(lambda x: 'Y' if len(str(x)) > 1 else 'N')
       # add: tags, qrCodes, parameters
       if 'tags' in viewColumns:
         cmd = 'SELECT main.id, tags.tag FROM main INNER JOIN tags USING(id) INNER JOIN branches USING(id) '\
