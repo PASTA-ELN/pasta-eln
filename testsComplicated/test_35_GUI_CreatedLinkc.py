@@ -1,10 +1,6 @@
 import logging
 from pathlib import Path
 from pasta_eln.UI.guiCommunicate import Communicate
-from pasta_eln.UI.details import Details
-from pasta_eln.backendWorker.worker import Task
-from .test_34_GUI_Form import getTable
-from .test_35_GUI_CreatedLinka import LINE
 
 def test_simple(qtbot, caplog):
 

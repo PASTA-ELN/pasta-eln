@@ -7,8 +7,6 @@ import logging, os, shutil, tempfile
 from urllib import request
 from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.backendWorker.worker import Task
-from pasta_eln.backendWorker.inputOutput import importELN
-from pasta_eln.miscTools import getConfiguration
 
 
 def test_simple(qtbot, caplog):

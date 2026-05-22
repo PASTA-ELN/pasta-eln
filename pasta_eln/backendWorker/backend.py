@@ -5,7 +5,7 @@ import os
 import sys
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 from urllib import request
 from ..miscTools import getConfiguration
 from ..textTools.handleDictionaries import diffDicts, fillDocBeforeCreate
@@ -38,7 +38,7 @@ class Backend(CLI_Mixin):
     self.userID              = ''
     self.db: SqlLiteDB|None  = None
     if projectGroupName is not None:
-      configuration, projectGroupName = getConfiguration(projectGroupName) # get default configuration from file
+      configuration, projectGroupName = getConfiguration(projectGroupName)       # get configuration from file
       self.initialize(configuration, projectGroupName)
 
 

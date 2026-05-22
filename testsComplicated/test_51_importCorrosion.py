@@ -8,7 +8,6 @@ import numpy as np
 from pathlib import Path
 from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.textTools.stringChanges import outputString
-from pasta_eln.miscTools import getConfiguration
 
 fastTesting = [140211,240037,440182,540113,840047,940160,940372,1240182,1940004,2040113,2040353,2040561,2040768,2040970,2041178,2041400,2240058,2240276,2440166,3440008,4640004,6840020,8340039,8640153,8940012,9140206,9440033,9540062,9740103,9840032,10240079,48240105,48240317,48240521,48240733,48840006,48840221,49740035,49840099,51740129,]
 flagfastTesting = True  #test only some entries with those sample numbers; False=test all

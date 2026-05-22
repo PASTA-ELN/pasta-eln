@@ -1,11 +1,8 @@
 #!/usr/bin/python3
 """TEST elabFTW server: do things that should be possible """
-import logging, warnings, unittest, random, os, shutil
-from datetime import datetime
+import logging, warnings, unittest, os, shutil
 from pathlib import Path
-import requests
 from PySide6.QtWidgets import QApplication
-from anytree import PreOrderIter
 from pasta_eln.backend import Backend
 from pasta_eln.elabFTWsync import Pasta2Elab
 from .misc import verify, handleReports

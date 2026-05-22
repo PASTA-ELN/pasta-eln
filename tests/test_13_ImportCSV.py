@@ -1,4 +1,4 @@
-import logging, tempfile
+import logging
 from pasta_eln.UI.guiCommunicate import Communicate
 from pasta_eln.UI.project import Project
 from pasta_eln.AddOns.project_importCSV import main

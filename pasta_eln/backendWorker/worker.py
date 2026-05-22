@@ -11,7 +11,7 @@ from collections import Counter
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 import pandas as pd
 from anytree import Node
 from PySide6.QtCore import QObject, QThread, Signal, Slot

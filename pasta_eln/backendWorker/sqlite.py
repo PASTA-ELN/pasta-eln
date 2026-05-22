@@ -11,7 +11,7 @@ import sqlite3
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 import pandas as pd
 from anytree import Node
 from PIL import Image

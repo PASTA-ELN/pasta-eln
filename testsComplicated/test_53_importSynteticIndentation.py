@@ -7,7 +7,6 @@ import re
 from pathlib import Path
 from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.textTools.stringChanges import outputString
-from pasta_eln.miscTools import getConfiguration
 
 
 class TestStringMethods(unittest.TestCase):

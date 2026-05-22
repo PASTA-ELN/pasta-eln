@@ -16,7 +16,7 @@ import traceback
 from collections.abc import Mapping
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Union
+from typing import Any
 from urllib import request
 import pandas as pd
 import requests

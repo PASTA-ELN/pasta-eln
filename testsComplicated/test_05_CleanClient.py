@@ -5,7 +5,6 @@ import logging, warnings
 from pathlib import Path
 from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
-from pasta_eln.miscTools import getConfiguration
 from .misc import verify
 
 

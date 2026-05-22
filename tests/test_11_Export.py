@@ -5,7 +5,6 @@ from pathlib import Path
 from zipfile import ZipFile
 from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.backendWorker.inputOutput import exportELN
-from pasta_eln.miscTools import getConfiguration
 
 
 class TestStringMethods(unittest.TestCase):

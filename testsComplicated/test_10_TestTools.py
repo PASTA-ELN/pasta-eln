@@ -4,7 +4,6 @@ import logging, warnings
 from pathlib import Path
 from pasta_eln.installationTools import exampleData
 from pasta_eln.tools import Tools
-from .misc import verify, handleReport
 
 
 def test_simple(caplog):

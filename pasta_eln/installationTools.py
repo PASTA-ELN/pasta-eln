@@ -8,7 +8,7 @@ import sys
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 from .backendWorker.backend import Backend
 from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
 from .textTools.stringChanges import outputString

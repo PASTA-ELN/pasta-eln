@@ -5,7 +5,6 @@ import warnings
 import unittest
 from pathlib import Path
 from pasta_eln.backendWorker.backend import Backend
-from pasta_eln.miscTools import getConfiguration
 
 class TestStringMethods(unittest.TestCase):
   """

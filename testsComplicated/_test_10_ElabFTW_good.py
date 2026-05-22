@@ -3,7 +3,6 @@
 import logging, warnings, unittest, random, os, shutil
 from datetime import datetime
 from pathlib import Path
-import requests
 from PySide6.QtWidgets import QApplication
 from anytree import PreOrderIter
 from pasta_eln.backend import Backend

@@ -9,7 +9,7 @@ import traceback
 from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 from urllib import request
 import matplotlib
 import matplotlib.axes as mpaxes
@@ -127,7 +127,7 @@ class ExtractorManager:
           for meta in ['metaVendor','metaUser']:
             if meta not in doc:
               doc[meta] = {}
-            if isinstance(doc[meta], dict):                                                     #convenient type
+            if isinstance(doc[meta], dict):                                                   #convenient type
               for item in doc[meta]:
                 if isinstance(doc[meta][item], tuple):
                   doc[meta][item] = list(doc[meta][item])
@@ -253,8 +253,7 @@ class ExtractorManager:
       try:
         job['doc'] = doc
         job['shasum'] = shasum
-        results = self.runJobs([job])
-        if results:
+        if results := self.runJobs([job]):
           self.applyResults(results, [job])
       except Exception:
         logging.warning('Issue with extractor %s\n %s', job['pyFile'], traceback.format_exc())
