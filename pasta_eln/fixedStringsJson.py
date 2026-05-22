@@ -93,7 +93,6 @@ defaultDataHierarchyNode: list[dict[str, str]] = [
 
 
 CONF_FILE_NAME = '.pastaELN.json'
-DEFAULT_MAX_UPLOAD_SIZE_MB = 100
 
 defaultConfiguration: dict[str, Any] = {
   'defaultProjectGroup': 'research',
@@ -113,9 +112,11 @@ defaultConfiguration: dict[str, Any] = {
 #   within each: array of 3: description, default, all_choices
 configurationGUI: dict[str, Any] = {
   'general': {
-    'loggingLevel': ['Logging level (more->less)', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR']],
-    'autosave': ['Autosave entries in form', 'No', ['Yes', 'No']],
     'showHidden': ['Show hidden items by default', 'Yes', ['Yes','No']],
+    'autosave': ['Autosave entries in form', 'No', ['Yes', 'No']],
+    'loggingLevel': ['Logging level (more->less)', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR']],
+    'maxUploadSize': ['Maximum upload size', '100 MB', ['50 MB', '100 MB', '500 MB', '1 GB']],
+    'maxExtractionDuration': ['Maximum duration of extractor', '1 min', ['10 sec', '1 min', '10 min']],
     'checkForUpdates': ['Check for updates on startup', 'Yes', ['Yes', 'No']]
   },
   'appearance': {

@@ -40,9 +40,8 @@ class TestStringMethods(unittest.TestCase):
     logging.getLogger().addHandler(handler)
 
     projectGroup = 'research'
-    configuration, _ = getConfiguration(projectGroup)
     path = 'Data_SynteticNiAl_Indentation'
-    self.be = Backend(configuration, projectGroup)
+    self.be = Backend(projectGroup)
 
     self.dirName = self.be.basePath
     addOnePath = self.be.addOnPath
@@ -50,7 +49,7 @@ class TestStringMethods(unittest.TestCase):
     shutil.rmtree(self.dirName)
     os.makedirs(self.dirName)
     shutil.copy(Path(__file__).parent/path/'extractor_hdf5.py', addOnePath/'extractor_hdf5.py')
-    self.be = Backend(configuration, projectGroup)
+    self.be = Backend(projectGroup)
     print()
 
     # adopt measurements view

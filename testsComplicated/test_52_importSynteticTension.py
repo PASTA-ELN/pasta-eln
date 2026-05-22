@@ -40,15 +40,14 @@ class TestStringMethods(unittest.TestCase):
     logging.getLogger().addHandler(handler)
 
     projectGroup = 'research'
-    configuration, _ = getConfiguration(projectGroup)
     path = 'Data_SynteticALMTensile'
-    self.be = Backend(configuration, projectGroup)
+    self.be = Backend(projectGroup)
 
     self.dirName = self.be.basePath
     self.be.exit()
     shutil.rmtree(self.dirName)
     os.makedirs(self.dirName)
-    self.be = Backend(configuration, projectGroup)
+    self.be = Backend(projectGroup)
     print()
 
     # adopt measurements view

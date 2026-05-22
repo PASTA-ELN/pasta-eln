@@ -14,8 +14,7 @@ from pasta_eln.miscTools import getConfiguration
 def test_simple(qtbot, caplog):
 
   # remove old data
-  configuration, _ = getConfiguration('research')
-  backend = Backend(configuration, 'research')
+  backend = Backend('research')
   dirName = backend.basePath
   backend.exit()
   try:

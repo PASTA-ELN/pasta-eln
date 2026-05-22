@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable, Optional
 from .backendWorker.backend import Backend
-from .fixedStringsJson import CONF_FILE_NAME, DEFAULT_MAX_UPLOAD_SIZE_MB, configurationGUI, defaultConfiguration
+from .fixedStringsJson import (CONF_FILE_NAME, configurationGUI, defaultConfiguration)
 from .textTools.stringChanges import outputString
 
 
@@ -52,11 +52,12 @@ def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
       'projectGroups': {
           'research': {
               'local': {'database': 'research', 'path': str(pathPasta)},
-              'remote': {'maxUploadSizeMB': DEFAULT_MAX_UPLOAD_SIZE_MB},
+              'remote': {},
               'addOnDir': str(addOnDir),
               'addOns': {'project': {}, 'extractors':{}, 'table':{}}
           }},
-      'version': 3}
+      'version': 3,
+      'GUI': configurationGUI}
   try:
     conf['userID']      = os.getlogin()
   except Exception:                                                                             #github action
@@ -115,10 +116,6 @@ def configuration(command:str, pathData:str) -> str:
           conf['GUI'][k] = v[1]
         else:
           output += outputString('text','error', f'No {k} in GUI part of config file')
-  for projectGroup in conf.get('projectGroups', {}).values():
-    if command == 'repair':
-      projectGroup.setdefault('remote', {})
-      projectGroup['remote'].setdefault('maxUploadSizeMB', DEFAULT_MAX_UPLOAD_SIZE_MB)
   if command == 'repair':
     with open(Path.home()/CONF_FILE_NAME,'w', encoding='utf-8') as f:
       f.write(json.dumps(conf,indent=2))
@@ -140,10 +137,8 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   logging.info('Start example data creation')
   if callbackPercent is not None:
     callbackPercent(0)
-  with open(Path.home()/CONF_FILE_NAME, encoding='utf-8') as fConf:
-    conf = json.load(fConf)
   if force:
-    backend = Backend(conf, projectGroup)
+    backend = Backend(projectGroup)
     dirName = backend.basePath
     backend.exit()
     try:
@@ -155,7 +150,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
       logging.error('recreate example data: remove folder impossible possible', exc_info=True)
   if callbackPercent is not None:
     callbackPercent(1)
-  backend = Backend(conf, projectGroup)
+  backend = Backend(projectGroup)
   if callbackPercent is not None:
     callbackPercent(2)
   ### CREATE PROJECTS AND SHOW

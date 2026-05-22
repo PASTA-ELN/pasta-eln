@@ -7,7 +7,6 @@ from collections import Counter
 from datetime import datetime
 from typing import Any, Callable
 from anytree import Node, PreOrderIter
-from ..fixedStringsJson import DEFAULT_MAX_UPLOAD_SIZE_MB
 from ..miscTools import flatten
 from ..textTools.handleDictionaries import squashTupleIntoValue
 from ..textTools.html2markdown import html2markdown
@@ -98,13 +97,19 @@ class Pasta2Elab:
     Returns:
       bool: true when upload should proceed
     """
-    remoteConfig = self.backend.configuration['projectGroups'][self.projectGroup].get('remote', {})
-    maxRawUploadSizeMB = remoteConfig.get('maxUploadSizeMB', DEFAULT_MAX_UPLOAD_SIZE_MB)
+    maxUploadSize = self.backend.configuration['GUI']['maxUploadSize']
+    if maxUploadSize.endswith('MB'):
+      maxUploadSizeMB = int(maxUploadSize[:-2])
+    elif maxUploadSize.endswith('GB'):
+      maxUploadSizeMB = int(maxUploadSize[:-2])*1024
+    else:
+      logging.critical('Upload size is invalid')
+      return False
     fileSize = rawDataPath.stat().st_size
-    if fileSize//1024//1024 <= maxRawUploadSizeMB:
+    if fileSize//1024//1024 <= maxUploadSizeMB:
       return True
     logging.warning('Skip data upload for %s: %s is %.1f MB, above the %d MB limit',
-                    docID, rawDataPath, fileSize//1024//1024, maxRawUploadSizeMB)
+                    docID, rawDataPath, fileSize//1024//1024, maxUploadSizeMB)
     return False
 
 

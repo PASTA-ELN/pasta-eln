@@ -41,9 +41,8 @@ class TestStringMethods(unittest.TestCase):
     handler = ErrorHandler()
     logging.getLogger().addHandler(handler)
 
-    configuration, _ = getConfiguration('research')
     exampleData(True, None, 'research', '')
-    self.be = Backend(configuration, 'research')
+    self.be = Backend('research')
     output = self.be.output('x0')
     self.assertEqual(output.split('\n')[0][:129],
                       'name                   | tags      | status | objective                                | comment                             | id')

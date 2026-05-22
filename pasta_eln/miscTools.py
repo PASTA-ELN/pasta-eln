@@ -1,4 +1,5 @@
 """ Misc functions that do not require instances """
+import copy
 import hashlib
 import importlib
 import json
@@ -399,7 +400,7 @@ def getConfiguration(defaultProjectGroup:str='') -> tuple[dict[str, Any],str]:
   Returns:
     tuple: configuration dict and default project group
   """
-  configuration = defaultConfiguration
+  configuration = copy.deepcopy(defaultConfiguration)
   configFileName = Path.home() / CONF_FILE_NAME
   if configFileName.is_file():
     with open(configFileName, encoding='utf-8') as confFile:

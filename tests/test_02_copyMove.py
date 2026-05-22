@@ -40,8 +40,7 @@ class TestStringMethods(unittest.TestCase):
     handler = ErrorHandler()
     logging.getLogger().addHandler(handler)
 
-    configuration, _ = getConfiguration('research')
-    self.be = Backend(configuration, 'research')
+    self.be = Backend('research')
     projID = self.be.output('x0').split('|')[-2].strip()
     self.be.changeHierarchy(projID)
 

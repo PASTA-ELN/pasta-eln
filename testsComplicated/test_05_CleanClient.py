@@ -25,8 +25,7 @@ def test_simple(qtbot, caplog):
     logging.getLogger(package).setLevel(logging.WARNING)
 
   # start app and load project
-  configuration, _ = getConfiguration('research')
-  backend = Backend(configuration, 'research')
+  backend = Backend('research')
   dirName = backend.basePath
   backend.exit()
   try:
@@ -36,7 +35,7 @@ def test_simple(qtbot, caplog):
       print('Try-Except unnecessary')
   except Exception:
     pass
-  backend = Backend(configuration, 'research')
+  backend = Backend('research')
   Pasta2Elab(backend, 'research', purge=False)
 
   # verify

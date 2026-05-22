@@ -41,8 +41,7 @@ class TestStringMethods(unittest.TestCase):
     logging.getLogger().addHandler(handler)
 
     # setup and sync to server
-    configuration, _ = getConfiguration('research')
-    self.be = Backend(configuration, 'research')
+    self.be = Backend('research')
     sync = Pasta2Elab(self.be, 'research', True)
     sync.verbose = False
     report = sync.sync('sA')

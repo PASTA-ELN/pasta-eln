@@ -25,9 +25,8 @@ def test_simple(qtbot, caplog):
     logging.getLogger(package).setLevel(logging.WARNING)
 
   # start app and load project
-  configuration, _ = getConfiguration('research')
   exampleData(True, None, 'research', '')
-  backend = Backend(configuration, 'research')
+  backend = Backend('research')
 
   _ = Pasta2Elab(backend, 'research', purge=True)
   verify(backend)

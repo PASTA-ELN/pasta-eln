@@ -77,7 +77,7 @@ class BackendWorker(QObject):
   def __init__(self) -> None:
     """ Initialize the backend worker """
     super().__init__()
-    self.backend: Optional[Backend] = None
+    self.backend = Backend(None)
 
 
   @Slot(dict,str)
@@ -87,7 +87,7 @@ class BackendWorker(QObject):
       configuration (dict): Configuration dictionary with database and other settings
       projectGroupName (str): Name of the project group to initialize
     """
-    self.backend = Backend(configuration, projectGroupName)
+    self.backend.initialize(configuration, projectGroupName)
     docTypesTitlesIcons = {k:{'title':v} for k,v in self.backend.db.dataHierarchy('','title')}
     for k,v in self.backend.db.dataHierarchy('','icon'):
       docTypesTitlesIcons[k]['icon'] = v
@@ -165,8 +165,8 @@ class BackendWorker(QObject):
     if self.backend is None:
       return
     if task is Task.EXTRACTOR_TEST and set(data.keys())=={'fileName','style','recipe','saveFig'}:
-      report, image = self.backend.testExtractor(data['fileName'], style={'main':data['recipe']},
-                                                 outputStyle=data['style'], saveFig=data['saveFig'])
+      report, image = self.backend.extractors.test(data['fileName'], style={'main':data['recipe']},
+                                                   outputStyle=data['style'], saveFig=data['saveFig'])
       self.beSendTaskReport.emit(task, report, image, '')
 
     elif task is Task.CHECK_DB and set(data.keys())=={'style'}:
@@ -305,7 +305,7 @@ class BackendWorker(QObject):
         self.backend.db.connection.commit()
         #rerun extractors
         oldDocType = doc['type']
-        self.backend.useExtractors(targetName, '', doc)
+        self.backend.extractors.use(targetName, '', doc)
         if doc['type'][0] == oldDocType[0]:
           del doc['branch']                                                                      #don't update
           self.backend.db.updateDoc(doc, docID)
@@ -416,6 +416,7 @@ class BackendWorker(QObject):
       self.beSendTaskReport.emit(task, msg, '', '')
 
     elif task is Task.EXTRACTOR_RERUN and set(data.keys())=={'docIDs','recipe'}:
+      extractorJobs = []
       for docID in data['docIDs']:
         doc = self.backend.db.getDoc(docID)
         #any path is good since the file is the same everywhere; data-changed by reference
@@ -428,15 +429,21 @@ class BackendWorker(QObject):
             path = Path(doc['branch'][0]['path'])
           else:
             path = self.backend.basePath/doc['branch'][0]['path']
-          self.backend.useExtractors(path, doc.get('shasum',''), doc)
-          if doc['type'][0] == oldDocType[0]:
-            del doc['branch']                                                                    #don't update
-            self.backend.db.updateDoc(doc, docID)
-          else:
-            self.backend.db.remove( docID )
-            del doc['id']
-            doc['name'] = doc['branch'][0]['path']
-            self.backend.addData('/'.join(doc['type']), doc, doc['branch'][0]['stack'])
+          job = self.backend.extractors.prepareJob(path, doc['type'], len(extractorJobs))
+          if job is None:
+            continue
+          job |= {'doc':doc, 'docID':docID, 'oldDocType':oldDocType, 'shasum':doc.get('shasum','')}
+          extractorJobs.append(job)
+      for job, doc in self.backend.extractors.applyResults(self.backend.extractors.runJobs(extractorJobs), extractorJobs):
+        if doc['type'][0] == job['oldDocType'][0]:
+          del doc['branch']                                                                      #don't update
+          self.backend.db.updateDoc(doc, job['docID'])
+        else:
+          branch = doc['branch'][0]
+          self.backend.db.remove( job['docID'] )
+          del doc['id']
+          doc['name'] = branch['path']
+          self.backend.addData('/'.join(doc['type']), doc, branch['stack'], runExtractors=False)
       self.beSendTaskReport.emit(task, 'Extractors re-ran successfully', '', '')
 
     elif task is Task.OPEN_EXTERNAL and set(data.keys())=={'docID'}:

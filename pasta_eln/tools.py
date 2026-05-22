@@ -105,7 +105,7 @@ class Tools:
         self.projectGroup = projectGroup
       else:
         projectGroup = ''
-    self.backend = Backend(self.configuration, self.projectGroup)
+    self.backend = Backend(self.projectGroup)
     return
 
 

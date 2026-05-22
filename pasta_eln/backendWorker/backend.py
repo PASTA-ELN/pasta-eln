@@ -3,24 +3,16 @@ import json
 import logging
 import os
 import sys
-import tempfile
-import traceback
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Optional, Union
 from urllib import request
-import matplotlib
-import matplotlib.axes as mpaxes
-import matplotlib.pyplot as plt
-from PIL import Image
-from ..miscTools import loadNamedModule
+from ..miscTools import getConfiguration
 from ..textTools.handleDictionaries import diffDicts, fillDocBeforeCreate
 from ..textTools.stringChanges import camelCase, createDirName, outputString
+from .extractor import ExtractorManager
 from .hashTools import genericHash
 from .mixin_cli import CLI_Mixin
 from .sqlite import SqlLiteDB
-
-matplotlib.use('Agg')
 
 
 class Backend(CLI_Mixin):
@@ -28,7 +20,7 @@ class Backend(CLI_Mixin):
   PYTHON BACKEND
   """
 
-  def __init__(self, configuration:dict[str,Any]={}, projectGroupName:str='') -> None:
+  def __init__(self, projectGroupName:str|None='') -> None:
     """
     open server and define database
 
@@ -39,7 +31,9 @@ class Backend(CLI_Mixin):
     self.configuration: dict[str, Any] = {}
     self.hierStack:list[str] = []
     self.cwd:Optional[Path]  = Path('.')
-    self.initialize(configuration, projectGroupName)
+    if projectGroupName is not None:
+      configuration, projectGroupName = getConfiguration(projectGroupName) # get default configuration from file
+      self.initialize(configuration, projectGroupName)
 
 
   def initialize(self, configuration:dict[str,Any]={}, projectGroupName:str='') -> None:
@@ -65,6 +59,8 @@ class Backend(CLI_Mixin):
     self.userID   = self.configuration['userID']
     # start database
     self.db = SqlLiteDB(basePath=self.basePath)
+    self.extractors = ExtractorManager(self.basePath, self.addOnPath, self.configuration['GUI']['maxExtractionDuration'],
+                                       self.db.dataHierarchy)
     # internal hierarchy structure
     self.hierStack = []
     return
@@ -105,7 +101,7 @@ class Backend(CLI_Mixin):
 
 
   def addData(self, docType:str, doc:dict[str,Any], hierStack:list[str]=[], localCopy:bool=False,
-              forceNewImage:bool=False) -> dict[str,Any]:
+              forceNewImage:bool=False, runExtractors:bool=True) -> dict[str,Any]:
     """
     Save doc to database, also after edit
 
@@ -115,6 +111,7 @@ class Backend(CLI_Mixin):
         hierStack (list): hierStack from external functions
         localCopy (bool): copy a remote file to local version
         forceNewImage (bool): create new image in any case
+        runExtractors (bool): run extractor unless doc already contains extractor output
 
     Returns:
         str: docID, empty string if failure
@@ -205,11 +202,13 @@ class Backend(CLI_Mixin):
           if shasum == '':
             shasum = genericHash(path, forceFile=True)
           view = self.db.getView('viewIdentify/viewSHAsum',shasum)
-          if len(view)==0 or forceNewImage:                           #measurement not in database: create doc
-            self.useExtractors(path,shasum,doc)                                          #create image/content
+          if (len(view)==0 or forceNewImage) and runExtractors:       #measurement not in database: create doc
+            self.extractors.use(path,shasum,doc)                                         #create image/content
             # All files should appear in database
             # if not 'image' in doc and not 'content' in doc and not 'otherELNName' in doc:  #did not get valuable data: extractor does not exit
             #   return ''
+          else:
+            doc['shasum'] = shasum
           if len(view)==1:                                                 #measurement is already in database
             doc['id'] = view[0]['id']
             doc['shasum'] = shasum
@@ -317,6 +316,7 @@ class Backend(CLI_Mixin):
     filesCountSum = sum(len(files) for (_, _, files) in os.walk(self.cwd))
     filesCount = 0
     ignoredFolders = []
+    extractorJobs:list[dict[str,Any]] = []
     for root, dirs, files in os.walk(self.cwd, topdown=True):
       #find parent-document
       self.cwd = Path(root).relative_to(self.basePath)
@@ -397,10 +397,22 @@ class Backend(CLI_Mixin):
             raise NameError(f'Filepath does not exist {self.basePath/path}')
           view = self.db.getView('viewIdentify/viewSHAsum',shasum)
           if len(view)==0:                                                        #not in database: create doc
-            self.addData('', {'name':path}, hierStack)
+            job = self.extractors.prepareJob(self.basePath/path, jobID=len(extractorJobs))
+            if job is None:                                                # if no suitable extractor is there
+              self.addData('', {'name':path, 'type':['']}, hierStack, runExtractors=False)
+            else:
+              job |= {'path':path, 'hierStack':hierStack, 'shasum':shasum}
+              extractorJobs.append(job)
           else:
             self.db.updateBranch(view[0]['id'], -1, 9999, hierStack, path)
             reply = 'Create a link to existing entry instead of new entry.'
+    for job, doc in self.extractors.applyResults(self.extractors.runJobs(extractorJobs), extractorJobs):
+      view = self.db.getView('viewIdentify/viewSHAsum', job['shasum'])
+      if len(view)==0:
+        self.addData('/'.join(doc['type']), doc, job['hierStack'], runExtractors=False)
+      else:
+        self.db.updateBranch(view[0]['id'], -1, 9999, job['hierStack'], job['path'])
+        reply = 'Create a link to existing entry instead of new entry.'
     #finish method
     self.cwd = self.basePath/projPath
     pathsInSqliteData = [i for i in pathsInSqliteData
@@ -427,216 +439,6 @@ class Backend(CLI_Mixin):
     if rerunScanTree:
       reply += self.scanProject(progressBar, projID, projPath)
     return reply
-
-
-  def useExtractors(self, filePath:Path, shasum:str, doc:dict[str,Any]) -> None:
-    """
-    get measurements from datafile: central distribution point
-    - max image size defined here
-
-    Args:
-        filePath (Path): path to file
-        shasum (string): shasum (git-style hash) to store in database (not used here)
-        doc (dict): pass known data/measurement type, can be used to create image; This doc is altered
-    """
-    extension = filePath.suffix[1:]                                                 #cut off initial . of .jpg
-    if str(filePath).startswith('http'):
-      absFilePath = Path(tempfile.gettempdir())/filePath.name
-      try:
-        req = request.Request(filePath.as_posix().replace(':/','://'), headers={'User-Agent': 'Mozilla/5.0'})
-        with request.urlopen(req, timeout=60) as urlRequest:
-          with open(absFilePath, 'wb') as f:
-            try:
-              f.write(urlRequest.read())
-            except Exception:
-              logging.error('Saving downloaded file to temporary disk', exc_info=True)
-              return
-      except Exception:
-        logging.error('Could not download file from internet %s', filePath.as_posix())
-        return
-    else:
-      if filePath.is_absolute():
-        filePath = filePath.relative_to(self.basePath)
-      absFilePath = self.basePath/filePath
-    pyFile = f'extractor_{extension.lower()}.py'
-    pyPath = self.addOnPath/pyFile
-    if pyPath.is_file():
-      plt.clf()
-      try:
-        module  = loadNamedModule(self.addOnPath, pyFile[:-3])
-        content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
-        general = content.get('general',[])
-        for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','style']]:#only allow accepted keys
-          del content[key]
-        doc |= content
-        for item in general:
-          doc[item[0]] = item[1]
-        for meta in ['metaVendor','metaUser']:
-          if meta not in doc:
-            doc[meta] = {}
-          if isinstance(doc[meta], dict):                                                     #convenient type
-            for item in doc[meta]:
-              if isinstance(doc[meta][item], tuple):
-                doc[meta][item] = list(doc[meta][item])
-              try:
-                _ = json.dumps(doc[meta][item])
-              except (ValueError, TypeError):
-                doc[meta][item] = str(doc[meta][item])
-                logging.warning('stringified  %s %s',meta, item)
-          else:
-            for item in doc[meta]:
-              if not (isinstance(item, dict) and 'key' in item and 'value' in item and 'unit' in item):
-                logging.error('Complicated extractor return wrong', exc_info=True)
-        if doc['style']['main'].startswith(doc['type'][0]):
-          doc['type']     = doc['style']['main'].split('/')
-        else:
-          #user has strange wish: trust him/her
-          logging.info('user has strange wish: trust him/her: %s  %s','/'.join(doc['type']),'  '+doc['style']['main'])
-        del doc['style']
-        if 'fileExtension' not in doc['metaVendor']:
-          doc['metaVendor']['fileExtension'] = extension.lower()
-        if 'links' in doc and len(doc['links'])==0:
-          del doc['links']
-      except Exception:
-        logging.warning('Issue with extractor %s\n %s', pyFile, traceback.format_exc())
-        doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
-          'filesize':absFilePath.stat().st_size,
-          'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
-          'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
-      plt.close('all')
-    #combine into document
-    doc['shasum']=shasum                                       #essential for logic, always save, unlike image
-    return
-
-
-  def testExtractor(self, filePath:Union[Path,str], extractorPath:Optional[Path]=None, style:dict[str,Any]={'main':''},
-                    outputStyle:str='text', saveFig:str='') -> tuple[str, str]:
-    """
-    Args:
-      filePath (Path, str): path to the file to be tested
-      extractorPath (Path, None): path to the directory with extractors
-      style (dict): style with a main-key that is / separated
-      outputStyle (str): report in ['print','text','html'] including show images
-      saveFig (str): save figure to...; if given stop testing after generating image
-
-    Returns:
-      str, str: short summary or long report and image (as svg or base64 string)
-    """
-    content = {}
-    report = outputString(outputStyle, 'h2', 'Report on extractor test')
-    htmlStr= 'Please visit <a href="https://pasta-eln.github.io/pasta-eln/extractors.html#'
-    success = True
-    if isinstance(filePath, str):
-      filePath = Path(filePath)
-    if filePath.as_posix().startswith('http'):
-      tempFilePath = Path(tempfile.gettempdir())/filePath.name
-      try:
-        request.urlretrieve(filePath.as_posix().replace(':/','://'), tempFilePath)
-      except Exception:
-        success = False
-        report += outputString(outputStyle, 'error', 'Could not download file from internet')
-        report += outputString(outputStyle, 'error', f'{htmlStr}download-error">website</a>')
-        return report, ''
-      filePath = tempFilePath
-    report += outputString(outputStyle, 'info', f'check file: {str(filePath)}')
-    extension = filePath.suffix[1:]
-    pyFile = f'extractor_{extension.lower()}.py'
-    if extractorPath is None:
-      extractorPath = self.addOnPath
-    #start testing
-    if (extractorPath/pyFile).is_file():
-      report += outputString(outputStyle, 'info', f'use extractor: {str(extractorPath / pyFile)}')
-    else:
-      success = False
-      report += outputString(outputStyle, 'error', f'No fitting extractor found:{pyFile}')
-    if success:
-      try:
-        module  = loadNamedModule(self.addOnPath, pyFile[:-3])
-        plt.clf()
-        content = module.use(filePath, style, saveFig or None )
-        if saveFig:
-          return report, content.get('image','')
-      except Exception:
-        success = False
-        report += outputString(outputStyle, 'error', 'Python error in extractor')
-        report += outputString(outputStyle, 'error', f'{htmlStr}python-error">website</a>')
-        report += outputString(outputStyle, 'error', traceback.format_exc(limit=3))
-    if success:
-      if 'style' in content:
-        possibleDocTypes = [i for i in self.db.dataHierarchy('', '') if i[0]!='x']
-        matches = [i for i in possibleDocTypes if content['style']['main'].startswith(i)]
-        if matches or content['style']['main'] in {'', '-'}:
-          report += outputString(outputStyle, 'info', 'Style is good: '+content['style']['main'])
-          size = len(str(content))
-          report += outputString(outputStyle, 'info', f'Entire extracted size: {size // 1024}kB')
-        else:
-          report += outputString(outputStyle, 'error', 'Style does not follow doctype in dataHierarchy.')
-      else:
-        report += outputString(outputStyle,'error','Style not included in extractor.')
-    if success:
-      try:
-        _ = json.dumps(content)
-      except Exception:
-        report += outputString(outputStyle,'error','Extractor reply not json dumpable.')
-    if success:
-      try:
-        _ = json.dumps(content['metaVendor'])
-        if not isinstance(content['metaVendor'], (dict,list)):
-          raise TypeError(' Meta vendor: wrong type')
-        report += outputString(outputStyle,'info','Number of vendor entries: '+str(len(content['metaVendor'])))
-      except Exception:
-        # possible cause of failure: make sure that no int64 but normal int
-        success = False
-        report += outputString(outputStyle,'error', 'Some json format does not fit in metaVendor')
-        report += outputString(outputStyle, 'error', f'{htmlStr}metadata-error">website</a>')
-        #iterate keys
-        for key in content['metaVendor']:
-          try:
-            _ = json.dumps(content['metaVendor'][key])
-          except Exception:
-            report += outputString(outputStyle,'error',f'FAIL {key}:'+str(content['metaVendor'][key])+' type:')+str(type(content['metaVendor'][key]))
-    if success:
-      try:
-        _ = json.dumps(content['metaUser'])
-        if not isinstance(content['metaUser'], (dict,list)):
-          raise TypeError(' Meta user: wrong type')
-        report += 'Number of user entries: '+str(len(content['metaUser']))+'<br>'
-      except Exception:
-        report += outputString(outputStyle,'error', 'Some json format does not fit in metaUser')
-        report += outputString(outputStyle, 'error', f'{htmlStr}metadata-error">website</a>')
-        #iterate keys
-        for key in content['metaUser']:
-          try:
-            _ = json.dumps(content['metaUser'][key])
-          except Exception:
-            report += outputString(outputStyle,'error',f'FAIL {key}:'+str(content['metaUser'][key])+' type:') + str(type(content['metaUser'][key]))
-      if 'image' not in content:
-        success = False
-        report += outputString(outputStyle,'error','Image does not exist')
-    if success and isinstance(content.get('image',''),Image.Image):
-      success = False
-      report += outputString(outputStyle,'error','Image is a PIL image: not a base64 string')
-      report += outputString(outputStyle, 'error', f'{htmlStr}pillow-image">website</a>')
-      # print('Encode image via the following: pay attention to jpg/png which is encoded twice\n```')
-      # print('from io import BytesIO')
-      # print('figfile = BytesIO()')
-      # print('image.save(figfile, format="PNG")')
-      # print('imageData = base64.b64encode(figfile.getvalue()).decode()')
-      # print('image = "data:image/jpg;base64," + imageData')
-    if success and isinstance(content.get('image',''), mpaxes._axes.Axes):  # pylint: disable=protected-access
-      success = False
-      report += outputString(outputStyle,'error','Image is a matplotlib axis: not a base64 string')
-      report += outputString(outputStyle, 'error', f'{htmlStr}matplotlib">website</a>')
-      # print('**Warning: image is a matplotlib axis: not a svg string')
-      # print('  figfile = StringIO()')
-      # print('plt.savefig(figfile, format="svg")')
-      # print('image = figfile.getvalue()')
-    if success and isinstance(content.get('image',''), str):#show content
-      size = len(content['image'])
-      report += outputString(outputStyle, 'info', f'Image size {str(size // 1024)}kB')
-    if outputStyle=='print':
-      logging.info('Identified metadata %s',content)
-    return report, content.get('image','')
 
 
   ######################################################
@@ -729,7 +531,7 @@ class Backend(CLI_Mixin):
     pathsInSqliteFolder = [i for i in pathsInSqliteFolder
                            if not any(i == j or i.startswith(f'{j}/') for j in ignoredFolders)]
     orphans = [i for i in pathsInSqliteData   if not (self.basePath/i).exists() and ':/' not in i and i!='*']#paths can be files or directories
-    orphans+= [i for i in pathsInSqliteFolder if not (self.basePath/i).exists() ]
+    orphans+= [i for i in pathsInSqliteFolder if not (self.basePath/i).exists()]
     if orphans:
       if repair is None:
         output += outputString(outputStyle,'error','bch01: These paths of database not on filesystem(3):\n  - '+'\n  - '.join(orphans))

@@ -24,8 +24,7 @@ def test_simple(qtbot, caplog):
     logging.getLogger(package).setLevel(logging.WARNING)
 
   # start app and load project
-  configuration, _ = getConfiguration('research')
-  backend = Backend(configuration, 'research')
+  backend = Backend('research')
   sync = Pasta2Elab(backend, 'research', purge=False)
   if not sync.api.url:
     return
