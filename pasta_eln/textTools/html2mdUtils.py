@@ -59,7 +59,7 @@ def dumb_css_parser(data: str) -> dict[str, dict[str, str]]:
 
 
 def element_style(
-    attrs: dict[str, Optional[str]],
+    attrs: dict[str, str | None],
     style_def: dict[str, dict[str, str]],
     parent_style: dict[str, str],
 ) -> dict[str, str]:
@@ -145,7 +145,7 @@ def google_fixed_width_font(style: dict[str, str]) -> bool:
     return 'courier new' == font_family or 'consolas' == font_family
 
 
-def list_numbering_start(attrs: dict[str, Optional[str]]) -> int:
+def list_numbering_start(attrs: dict[str, str | None]) -> int:
     """
     Extract numbering from list element attributes
 

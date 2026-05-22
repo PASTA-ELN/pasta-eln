@@ -5,11 +5,12 @@ import os
 import platform
 import shutil
 import sys
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 from .backendWorker.backend import Backend
-from .fixedStringsJson import (CONF_FILE_NAME, configurationGUI, defaultConfiguration)
+from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
 from .textTools.stringChanges import outputString
 
 
@@ -28,7 +29,7 @@ def getOS() -> str:
   return f'{operatingSys} {environment}'
 
 
-def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
+def createDefaultConfiguration(pathPasta:Path | None=None) -> dict[str,Any]:
   '''
   Create base of configuration file
   - basic project group
@@ -123,7 +124,7 @@ def configuration(command:str, pathData:str) -> str:
   return output
 
 
-def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]=None, projectGroup:str='research',
+def exampleData(force:bool=False, callbackPercent:Callable[[int],None] | None=None, projectGroup:str='research',
                 outputFormat:str='print') -> str:
   '''
   Create example data after installation

@@ -518,11 +518,11 @@ def flatten(d:dict[Any,Any], keepPastaStruct:bool=False) -> dict[object, Any]:
   flattenTypes = (Mapping,) + enumerateTypes
   flatDict = {}
 
-  def dotReducer(k1:object, k2:object) -> Union[str, object]:
+  def dotReducer(k1:object, k2:object) -> str | object:
     """ Reducer function """
     return k2 if k1 is None else f"{k1}.{k2}"
 
-  def _flatten(_d:Union[Mapping[Any, Any], list[Any]], depth:int, parent:object=None) -> bool:
+  def _flatten(_d:Mapping[Any, Any] | list[Any], depth:int, parent:object=None) -> bool:
     """ Recursive function """
     keyValueIterable = enumerate(_d) if isinstance(_d, enumerateTypes) else _d.items()
     hasItem = False
@@ -585,7 +585,7 @@ def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
     nestedSetDict(d, keys[1:], value)
     return
 
-  def dict2list(d:dict[str,Any]) -> Union[list[dict[str,Any]], dict[str,Any]]:
+  def dict2list(d:dict[str,Any]) -> list[dict[str,Any]] | dict[str,Any]:
     """ convert a dictionary to list if all keys are numbers """
     for key in d:
       if isinstance(d[key], dict):

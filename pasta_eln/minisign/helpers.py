@@ -23,7 +23,7 @@ class Reader:
         return data
 
 
-def read_data(data: Union[bytes, BinaryIO], prehash: bool) -> bytes:
+def read_data(data: bytes | BinaryIO, prehash: bool) -> bytes:
     if prehash:
         if isinstance(data, io.BufferedIOBase):
             hasher = hashlib.blake2b()

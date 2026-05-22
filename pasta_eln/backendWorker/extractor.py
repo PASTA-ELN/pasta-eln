@@ -6,9 +6,10 @@ import os
 import tempfile
 import time
 import traceback
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Optional, Union
+from typing import Any, Optional, Union
 from urllib import request
 import matplotlib
 import matplotlib.axes as mpaxes
@@ -57,7 +58,7 @@ class ExtractorManager:
     self.dataHierarchy = dataHierarchy
 
 
-  def prepareJob(self, filePath:Path, docType:None | list[str]=None, jobID:Any=None) -> Optional[dict[str,Any]]:
+  def prepareJob(self, filePath:Path, docType:None | list[str]=None, jobID:Any=None) -> dict[str,Any] | None:
     """Resolve paths/downloads and build one extractor job.
 
     Args:
@@ -265,7 +266,7 @@ class ExtractorManager:
     doc['shasum']=shasum                                       #essential for logic, always save, unlike image
 
 
-  def test(self, filePath:Union[Path,str], extractorPath:Optional[Path]=None, style:dict[str,Any]={'main':''},
+  def test(self, filePath:Path |str, extractorPath:Path | None=None, style:dict[str,Any]={'main':''},
            outputStyle:str='text', saveFig:str='') -> tuple[str, str]:
     """Test one extractor and return a human-readable report.
 

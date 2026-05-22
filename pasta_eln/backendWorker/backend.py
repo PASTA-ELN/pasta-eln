@@ -3,8 +3,9 @@ import json
 import logging
 import os
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional, Union
+from typing import Any, Optional, Union
 from urllib import request
 from ..miscTools import getConfiguration
 from ..textTools.handleDictionaries import diffDicts, fillDocBeforeCreate
@@ -32,7 +33,7 @@ class Backend(CLI_Mixin):
     self.projectGroup        = ''
     self.hierStack:list[str] = []
     self.basePath            = Path()
-    self.cwd:Optional[Path]  = Path('.')
+    self.cwd:Path | None  = Path('.')
     self.addOnPath           = Path()
     self.userID              = ''
     self.db: SqlLiteDB|None  = None
@@ -260,7 +261,7 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Disk directory/folder methods
   ######################################################
-  def changeHierarchy(self, docID:Optional[str], dirName:Optional[Path]=None) -> None:
+  def changeHierarchy(self, docID:str | None, dirName:Path | None=None) -> None:
     """
     Change through text hierarchy structure
     change hierarchyStack, change directory, change stored cwd
@@ -449,7 +450,7 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Wrapper for database functions
   ######################################################
-  def checkDB(self, outputStyle:str='text', repair:Union[None,Callable[[str],bool]]=None,
+  def checkDB(self, outputStyle:str='text', repair:None |Callable[[str],bool]=None,
               minimal:bool=False) -> str:
     """
     Wrapper of check database for consistencies by iterating through all documents

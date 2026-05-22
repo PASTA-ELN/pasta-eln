@@ -8,9 +8,10 @@ import os
 import re
 import shutil
 import sqlite3
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Optional, Union
+from typing import Any, Optional, Union
 import pandas as pd
 from anytree import Node
 from PIL import Image
@@ -179,7 +180,7 @@ class SqlLiteDB:
     return
 
 
-  def createSQLTable(self, name:str, columns:list[str], primary:str, colTypes:Optional[list[Any]]=None) -> list[str]:
+  def createSQLTable(self, name:str, columns:list[str], primary:str, colTypes:list[Any] | None=None) -> list[str]:
     """
     Create a table in the sqlite system
 
@@ -530,7 +531,7 @@ class SqlLiteDB:
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:list[str]=[],
-                   path:Optional[str]='', **kwargs:str) -> tuple[Optional[str], Optional[str]]:
+                   path:str | None='', **kwargs:str) -> tuple[str | None, str | None]:
     """
     Update document by updating the branch
 
@@ -716,7 +717,7 @@ class SqlLiteDB:
     return
 
 
-  def getView(self, thePath:str, startKey:Optional[str]=None, preciseKey:Optional[str]=None) -> pd.DataFrame:
+  def getView(self, thePath:str, startKey:str | None=None, preciseKey:str | None=None) -> pd.DataFrame:
     """
     Wrapper for getting view function
 
@@ -965,7 +966,7 @@ class SqlLiteDB:
 
 
   def checkDB(self, outputStyle:str='text', minimal:bool=False,
-              repair:Union[None,Callable[[str],bool]]=None) -> str:
+              repair:None |Callable[[str],bool]=None) -> str:
     """
     Check database for consistencies by iterating through all documents
     - only reporting, no repair

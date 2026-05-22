@@ -7,8 +7,9 @@ import re
 import shutil
 import sys
 import traceback
+from collections.abc import Callable
 from sqlite3 import IntegrityError
-from typing import Any, Callable, Union
+from typing import Any, Union
 from pasta_eln.backendWorker.backend import Backend
 from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
 from pasta_eln.fixedStringsJson import defaultDocTypes, defaultSchema
@@ -302,7 +303,7 @@ class Tools:
     return
 
 
-  def verifyPasta(self, projectGroup:str='', repair:Union[None,Callable[[str],bool]]=None) -> None:
+  def verifyPasta(self, projectGroup:str='', repair:None |Callable[[str],bool]=None) -> None:
     """ Do the default verification of PastaELN. Adopted to CLI
       Args:
       projectGroup (str): name of project group

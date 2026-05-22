@@ -4,8 +4,9 @@ import json
 import logging
 import re
 from collections import Counter
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable
+from typing import Any
 from anytree import Node, PreOrderIter
 from ..miscTools import flatten
 from ..textTools.handleDictionaries import squashTupleIntoValue

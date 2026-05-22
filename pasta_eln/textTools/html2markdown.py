@@ -91,8 +91,8 @@ class HTML2Text(html.parser.HTMLParser):
         self.start = True
         self.space = False
         self.a: list[AnchorElement] = []
-        self.astack: list[Optional[dict[str, Optional[str]]]] = []
-        self.maybe_automatic_link: Optional[str] = None
+        self.astack: list[dict[str, str | None] | None] = []
+        self.maybe_automatic_link: str | None = None
         self.empty_link = False
         self.absolute_url_matcher = re.compile(r'^[a-zA-Z+]+://')
         self.account = 0
@@ -107,14 +107,14 @@ class HTML2Text(html.parser.HTMLParser):
         self.lastWasList = False
         self.style = 0
         self.style_def: dict[str, dict[str, str]] = {}
-        self.tag_stack: list[tuple[str, dict[str, Optional[str]], dict[str, str]]] = []
+        self.tag_stack: list[tuple[str, dict[str, str | None], dict[str, str]]] = []
         self.emphasis = 0
         self.drop_white_space = 0
         self.inheader = False
         # Current abbreviation definition
-        self.abbr_title: Optional[str] = None
+        self.abbr_title: str | None = None
         # Last inner HTML (for abbr being defined)
-        self.abbr_data: Optional[str] = None
+        self.abbr_data: str | None = None
         # Stack of abbreviations to write later
         self.abbr_list: dict[str, str] = {}
         self.baseurl = baseurl
@@ -181,13 +181,13 @@ class HTML2Text(html.parser.HTMLParser):
         if ref:
             self.handle_data(ref, True)
 
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, Optional[str]]]) -> None:
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         self.handle_tag(tag, dict(attrs), start=True)
 
     def handle_endtag(self, tag: str) -> None:
         self.handle_tag(tag, {}, start=False)
 
-    def previousIndex(self, attrs: dict[str, Optional[str]]) -> Optional[int]:
+    def previousIndex(self, attrs: dict[str, str | None]) -> int | None:
         """
         :type attrs: dict
 
@@ -289,7 +289,7 @@ class HTML2Text(html.parser.HTMLParser):
                 self.quiet -= 1
 
     def handle_tag(
-        self, tag: str, attrs: dict[str, Optional[str]], start: bool
+        self, tag: str, attrs: dict[str, str | None], start: bool
     ) -> None:
         self.current_tag = tag
 
@@ -734,7 +734,7 @@ class HTML2Text(html.parser.HTMLParser):
         self.br_toggle = '  '
 
     def o(
-        self, data: str, puredata: bool = False, force: Union[bool, str] = False
+        self, data: str, puredata: bool = False, force: bool | str = False
     ) -> None:
         """
         Deal with indentation and whitespace
@@ -988,7 +988,7 @@ class HTML2Text(html.parser.HTMLParser):
         return result
 
 
-def html2markdown(html: str, baseurl: str = '', bodywidth: Optional[int] = None) -> str:
+def html2markdown(html: str, baseurl: str = '', bodywidth: int | None = None) -> str:
     if bodywidth is None:
         bodywidth = BODY_WIDTH
     h = HTML2Text(baseurl=baseurl, bodywidth=bodywidth)

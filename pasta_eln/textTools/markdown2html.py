@@ -117,12 +117,12 @@ import re
 import sys
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
-from collections.abc import Collection, Iterable
+from collections.abc import Callable, Collection, Iterable
 from enum import IntEnum, auto
 from hashlib import sha256
 from os import urandom
 from random import random
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type, TypedDict, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Type, TypedDict, Union
 
 # ---- type defs
 _safe_mode = Literal['replace', 'escape']
@@ -165,11 +165,11 @@ def markdown_path(
     encoding: str = 'utf-8',
     html4tags: bool = False,
     tab_width: int = DEFAULT_TAB_WIDTH,
-    safe_mode: Optional[_safe_mode] = None,
-    extras: Optional[_extras_param] = None,
-    link_patterns: Optional[_link_patterns] = None,
-    footnote_title: Optional[str] = None,
-    footnote_return_symbol: Optional[str] = None,
+    safe_mode: _safe_mode | None = None,
+    extras: _extras_param | None = None,
+    link_patterns: _link_patterns | None = None,
+    footnote_title: str | None = None,
+    footnote_return_symbol: str | None = None,
     use_file_vars: bool = False
 ) -> 'UnicodeWithAttrs':
     fp = codecs.open(path, 'r', encoding)
@@ -187,11 +187,11 @@ def markdown2html(
     text: str,
     html4tags: bool = False,
     tab_width: int = DEFAULT_TAB_WIDTH,
-    safe_mode: Optional[_safe_mode] = None,
-    extras: Optional[_extras_param] = None,
-    link_patterns: Optional[_link_patterns] = None,
-    footnote_title: Optional[str] = None,
-    footnote_return_symbol: Optional[str] =None,
+    safe_mode: _safe_mode | None = None,
+    extras: _extras_param | None = None,
+    link_patterns: _link_patterns | None = None,
+    footnote_title: str | None = None,
+    footnote_return_symbol: str | None =None,
     use_file_vars: bool = False,
     cli: bool = False
 ) -> 'UnicodeWithAttrs':
@@ -280,7 +280,7 @@ class Markdown:
     html_spans: dict[str, str]
     html_removed_text: str = '{(#HTML#)}'  # placeholder removed text that does not trigger bold
     html_removed_text_compat: str = '[HTML_REMOVED]'  # for compat with markdown.py
-    safe_mode: Optional[_safe_mode]
+    safe_mode: _safe_mode | None
 
     _toc: list[tuple[int, str, str]]
 
@@ -303,11 +303,11 @@ class Markdown:
         self,
         html4tags: bool = False,
         tab_width: int = DEFAULT_TAB_WIDTH,
-        safe_mode: Optional[_safe_mode] = None,
-        extras: Optional[_extras_param] = None,
-        link_patterns: Optional[_link_patterns] = None,
-        footnote_title: Optional[str] = None,
-        footnote_return_symbol: Optional[str] = None,
+        safe_mode: _safe_mode | None = None,
+        extras: _extras_param | None = None,
+        link_patterns: _link_patterns | None = None,
+        footnote_title: str | None = None,
+        footnote_return_symbol: str | None = None,
         use_file_vars: bool = False,
         cli: bool = False
     ):
@@ -633,7 +633,7 @@ class Markdown:
         if not match:
             return text
 
-        def parse_structured_value(value: str) -> Union[list[Any], dict[str, Any]]:
+        def parse_structured_value(value: str) -> list[Any] | dict[str, Any]:
             vs = value.lstrip()
             vs = value.replace(v[: len(value) - len(vs)], '\n')[1:]
 
@@ -897,7 +897,7 @@ class Markdown:
         r'''\s+markdown=("1"|'1')''')
     def _hash_html_block_sub(
         self,
-        match: Union[re.Match, str],
+        match: re.Match | str,
         raw: bool = False
     ) -> str:
         if isinstance(match, str):
@@ -1508,7 +1508,7 @@ class Markdown:
     def header_id_from_text(self,
         text: str,
         prefix: str,
-        n: Optional[int] = None
+        n: int | None = None
     ) -> str:
         """Generate a header id attribute value from the given header
         HTML content.
@@ -2247,8 +2247,8 @@ class Markdown:
     @staticmethod
     def _uniform_outdent(
         text: str,
-        min_outdent: Optional[str] = None,
-        max_outdent: Optional[str] = None
+        min_outdent: str | None = None,
+        max_outdent: str | None = None
     ) -> tuple[str, str]:
         '''
         Removes the smallest common leading indentation from each (non empty)
@@ -2260,7 +2260,7 @@ class Markdown:
         '''
 
         # find the leading whitespace for every line
-        whitespace: list[Union[str, None]] = [
+        whitespace: list[str | None] = [
             re.findall(r'^[ \t]*', line)[0] if line else None
             for line in text.splitlines()
         ]
@@ -2362,13 +2362,13 @@ class Extra(ABC):
     An identifiable name that users can use to invoke the extra
     in the Markdown class
     '''
-    order: tuple[Collection[Union[Stage, type['Extra']]], Collection[Union[Stage, type['Extra']]]]
+    order: tuple[Collection[Stage | type['Extra']], Collection[Stage | type['Extra']]]
     '''
     Tuple of two iterables containing the stages/extras this extra will run before and
     after, respectively
     '''
 
-    def __init__(self, md: Markdown, options: Optional[dict]):
+    def __init__(self, md: Markdown, options: dict | None):
         '''
         Args:
             md: An instance of `Markdown`
@@ -2505,11 +2505,11 @@ class LinkProcessor(Extra):
     order = (Stage.ITALIC_AND_BOLD,), (Stage.ESCAPE_SPECIAL,)
     options: _LinkProcessorExtraOpts
 
-    def __init__(self, md: Markdown, options: Optional[dict]):
+    def __init__(self, md: Markdown, options: dict | None):
         options = options or {}
         super().__init__(md, options)
 
-    def parse_inline_anchor_or_image(self, text: str, _link_text: str, start_idx: int) -> Optional[tuple[str, str, Optional[str], int]]:
+    def parse_inline_anchor_or_image(self, text: str, _link_text: str, start_idx: int) -> tuple[str, str, str | None, int] | None:
         '''
         Parse a string and extract a link from it. This can be an inline anchor or an image.
 
@@ -2543,7 +2543,7 @@ class LinkProcessor(Extra):
             url = self.md._strip_anglebrackets.sub(r'\1', url)
         return text, url, title, end_idx
 
-    def process_link_shortrefs(self, text: str, link_text: str, start_idx: int) -> tuple[Optional[re.Match], str]:
+    def process_link_shortrefs(self, text: str, link_text: str, start_idx: int) -> tuple[re.Match | None, str]:
         '''
         Detects shortref links within a string and converts them to normal references
 
@@ -2575,7 +2575,7 @@ class LinkProcessor(Extra):
 
         return match, text
 
-    def parse_ref_anchor_or_ref_image(self, text: str, link_text: str, start_idx: int) -> Optional[tuple[str, Optional[str], Optional[str], int]]:
+    def parse_ref_anchor_or_ref_image(self, text: str, link_text: str, start_idx: int) -> tuple[str, str | None, str | None, int] | None:
         '''
         Parse a string and extract a link from it. This can be a reference anchor or image.
 
@@ -3192,7 +3192,7 @@ class MarkdownFileLinks(LinkProcessor):
     order = (Stage.LINKS,), (Stage.LINK_DEFS,)
     options: _MarkdownFileLinksExtraOpts
 
-    def __init__(self, md: Markdown, options: Optional[dict]):
+    def __init__(self, md: Markdown, options: dict | None):
         # override LinkProcessor defaults
         options = {'tags': ['a'], 'ref': False, **(options or {})}
         super().__init__(md, options)
@@ -3684,7 +3684,7 @@ WikiTables.register()
 # ---- internal support functions
 
 
-def calculate_toc_html(toc: Union[list[tuple[int, str, str]], None]) -> Optional[str]:
+def calculate_toc_html(toc: list[tuple[int, str, str]] | None) -> str | None:
     """Return the HTML for the current TOC.
 
     This expects the `_toc` attribute to have been set on this instance.
@@ -3723,8 +3723,8 @@ class UnicodeWithAttrs(str):
     possibly attach some attributes. E.g. the "toc_html" attribute when
     the "toc" extra is used.
     """
-    metadata: Optional[dict[str, str]] = None
-    toc_html: Optional[str] = None
+    metadata: dict[str, str] | None = None
+    toc_html: str | None = None
 
 ## {{{ http://code.activestate.com/recipes/577257/ (r1)
 _slugify_strip_re = re.compile(r'[^\w\s-]')
@@ -3976,8 +3976,8 @@ def _xml_encode_email_char_at_random(ch: str) -> str:
 
 def _html_escape_url(
     attr: str,
-    safe_mode: Union[_safe_mode, bool, None] = False,
-    charset: Optional[str] = None
+    safe_mode: _safe_mode | bool | None = False,
+    charset: str | None = None
 ):
     """
     Replace special characters that are potentially malicious in url string.
