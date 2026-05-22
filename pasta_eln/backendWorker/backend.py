@@ -29,8 +29,13 @@ class Backend(CLI_Mixin):
     """
     #initialize basic values
     self.configuration: dict[str, Any] = {}
+    self.projectGroup        = ''
     self.hierStack:list[str] = []
+    self.basePath            = Path()
     self.cwd:Optional[Path]  = Path('.')
+    self.addOnPath           = Path()
+    self.userID              = ''
+    self.db: SqlLiteDB|None  = None
     if projectGroupName is not None:
       configuration, projectGroupName = getConfiguration(projectGroupName) # get default configuration from file
       self.initialize(configuration, projectGroupName)

@@ -17,7 +17,7 @@ def getTable(qtbot, comm, docType):
 def test_simple(qtbot, caplog):
 
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None:
+  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.db is None:
     qtbot.wait(100)
 
   table = getTable(qtbot, comm, 'measurement')

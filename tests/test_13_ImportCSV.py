@@ -16,7 +16,7 @@ def verify(self):
 def test_simple(qtbot, caplog):
   # start and wait to be up
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None:
+  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.db is None:
     qtbot.wait(100)
   window = Project(comm)
   window.show()

@@ -34,7 +34,7 @@ def test_simple(qtbot, caplog):
   comm = Communicate('research')
   window = Form(comm, {'_projectID': '', 'type': ['x0']})
   qtbot.addWidget(window)
-  while comm.backendThread.worker.backend is None:
+  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.db is None:
     qtbot.wait(100)
   for idx, (key, _) in enumerate(window.allUserElements):
     elementName = f"key_{idx}"

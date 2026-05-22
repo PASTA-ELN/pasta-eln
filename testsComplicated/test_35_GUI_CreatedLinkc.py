@@ -9,7 +9,7 @@ from .test_35_GUI_CreatedLinka import LINE
 def test_simple(qtbot, caplog):
 
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None:
+  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.db is None:
     qtbot.wait(100)
 
   # change file back
