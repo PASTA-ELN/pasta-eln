@@ -9,7 +9,7 @@ from .test_34_GUI_Form import getTable
 def test_simple(qtbot, caplog):
 
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.db is None:
+  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
     qtbot.wait(100)
 
   # identify items that change

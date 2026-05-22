@@ -29,7 +29,7 @@ def test_simple(qtbot, caplog):
   comm = Communicate('research')
   window = Project(comm)
   qtbot.addWidget(window)
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.db is None:
+  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
     qtbot.wait(100)
   projID = comm.backendThread.worker.backend.output('x0').split('|')[-2].strip()  #for testing purposes
   window.change(projID,'')

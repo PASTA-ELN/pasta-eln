@@ -22,7 +22,7 @@ def test_simple(qtbot, caplog):
     pass
 
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.db is None:
+  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
     qtbot.wait(100)
   window = Project(comm)
   window.setMinimumSize(1024,800)

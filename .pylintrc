@@ -447,7 +447,7 @@ max-attributes=42 #Steffen's change
 max-bool-expr=6 #SB change
 
 # Maximum number of branch for function / method body
-max-branches=85 #Steffen's change
+max-branches=90 #Steffen's change
 
 # Maximum number of locals for function / method body
 max-locals=55 #Steffen's change

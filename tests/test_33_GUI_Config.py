@@ -5,7 +5,7 @@ from pasta_eln.UI.config.main import Configuration
 def test_simple(qtbot, caplog):
 
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.db is None:
+  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
     qtbot.wait(100)
 
   dialog = Configuration(comm)

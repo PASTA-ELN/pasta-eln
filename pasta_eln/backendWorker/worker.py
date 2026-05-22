@@ -416,7 +416,7 @@ class BackendWorker(QObject):
       self.beSendTaskReport.emit(task, msg, '', '')
 
     elif task is Task.EXTRACTOR_RERUN and set(data.keys())=={'docIDs','recipe'}:
-      extractorJobs = []
+      extractorJobs:list[dict[str,Any]] = []
       for docID in data['docIDs']:
         doc = self.backend.db.getDoc(docID)
         #any path is good since the file is the same everywhere; data-changed by reference

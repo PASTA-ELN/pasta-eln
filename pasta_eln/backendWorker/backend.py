@@ -30,16 +30,24 @@ class Backend(CLI_Mixin):
     """
     #initialize basic values
     self.configuration: dict[str, Any] = {}
-    self.projectGroup        = ''
-    self.hierStack:list[str] = []
-    self.basePath            = Path()
-    self.cwd:Path | None  = Path('.')
-    self.addOnPath           = Path()
-    self.userID              = ''
-    self.db: SqlLiteDB|None  = None
+    self.projectGroup           = ''
+    self.hierStack:list[str]    = []
+    self.basePath               = Path()
+    self.cwd:Path | None        = Path('.')
+    self.addOnPath              = Path()
+    self.userID                 = ''
+    self.dbRaw: SqlLiteDB|None  = None
     if projectGroupName is not None:
       configuration, projectGroupName = getConfiguration(projectGroupName)       # get configuration from file
       self.initialize(configuration, projectGroupName)
+
+
+  @property
+  def db(self) -> SqlLiteDB:
+    """ Allow default access while allowing for dbRaw = None """
+    if self.dbRaw is None:
+      raise RuntimeError('Backend is not initialized')
+    return self.dbRaw
 
 
   def initialize(self, configuration:dict[str,Any]={}, projectGroupName:str='') -> None:
@@ -64,7 +72,7 @@ class Backend(CLI_Mixin):
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database
-    self.db = SqlLiteDB(basePath=self.basePath)
+    self.dbRaw = SqlLiteDB(basePath=self.basePath)
     self.extractors = ExtractorManager(self.basePath, self.addOnPath, self.configuration['GUI']['maxExtractionDuration'],
                                        self.db.dataHierarchy)
     # internal hierarchy structure
@@ -77,6 +85,7 @@ class Backend(CLI_Mixin):
     Shutting down things
     """
     self.db.exit()
+    self.dbRaw = None
     return
 
 
