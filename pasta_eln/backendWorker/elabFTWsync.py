@@ -385,7 +385,7 @@ class Pasta2Elab:
                 sizeLabel = f'{size:.1f} {unit}' if unit != 'B' else f'{int(size)} {unit}'
                 break
               size /= 1024
-            message = f'\nUploading: {rawDataPath.name} ({sizeLabel})'
+            message = f'<br>Uploading: {rawDataPath.name} ({sizeLabel})'
             progressCallback('append', message)
           self.api.upload(entryType, elabID, fileName=rawDataPath, comment='raw data')
     return node.id, mergeCase

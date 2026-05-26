@@ -112,7 +112,7 @@ class Project(QWidget):
     moreMenu.addSeparator()
     projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
-      for label, description in projectAddOns.items():
+      for label, description in sorted(projectAddOns.items(), key=lambda item: item[1].casefold()):
         Action(description, self, [Command.ADD_ON, label], moreMenu)
       moreMenu.addSeparator()
     Action('Delete project',            self, [Command.DELETE], moreMenu)
