@@ -37,6 +37,7 @@ def cliCallback(api:ElabFTWApi , entry:str, idx:int) -> str:
 
 
 MERGE_LABELS = {
+     -2:'-2: Non-existante elabFTW entry',
      -1:'-1: ERROR',
       1:'1: client -> server',
       2:'2: other client -> client',
@@ -234,7 +235,14 @@ class Pasta2Elab:
       print(f'\n{node.id}\n>>>DOC_CLIENT sync&modified', docClient['dateSync'], docClient['dateModified'])
     # pull from server: content and other's client content
     entryType = 'experiments' if self.docID2elabID[node.id][1] else 'items'
-    docServer, uploads = self.elab2doc(self.api.readEntry(entryType, elabID)[0])
+    dataFromElab = self.api.readEntry(entryType, elabID)[0]
+    if not dataFromElab:
+      logging.error('Empty server document for %s %s/%s', node.id, entryType, elabID, exc_info=True)
+      self.backend.db.cursor.execute('UPDATE main SET externalId=? WHERE id=?', ['', node.id])
+      self.backend.db.connection.commit()
+      self.docID2elabID.pop(node.id)
+      return node.id, -2
+    docServer, uploads = self.elab2doc(dataFromElab)
     if self.verbose:
       print('>>>DOC_SERVER', docServer)
     if listDoNotChange :=[i for i in uploads if i['real_name']=='do_not_change.json']:
@@ -353,6 +361,7 @@ class Pasta2Elab:
       content, image = self.doc2elab(copy.deepcopy(docMerged))
       success = self.api.updateEntry(entryType, elabID, content|self.readWriteAccess)
       if not success:
+        content.pop('metadata')
         logging.error('Could not sync data %s, %s  %s',entryType, elabID, json.dumps(content|self.readWriteAccess,
                                                                                      indent=2), exc_info=True)
         return node.id, -1
@@ -385,7 +394,7 @@ class Pasta2Elab:
                 sizeLabel = f'{size:.1f} {unit}' if unit != 'B' else f'{int(size)} {unit}'
                 break
               size /= 1024
-            message = f'<br>Uploading: {rawDataPath.name} ({sizeLabel})'
+            message = f'\n\nUploading: {rawDataPath.name} ({sizeLabel})'
             progressCallback('append', message)
           self.api.upload(entryType, elabID, fileName=rawDataPath, comment='raw data')
     return node.id, mergeCase
@@ -407,6 +416,7 @@ class Pasta2Elab:
     report = []
     self.backend.db.cursor.execute('SELECT type, externalId FROM main')
     dataLocal = self.backend.db.cursor.fetchall()
+    dataLocal = [i for i in dataLocal if i[1]]               # filter out those that do not have an externalID
     inPasta = {'experiments': {int(i[1]) for i in dataLocal if i[0].startswith('measurement')},
                'items':       {int(i[1]) for i in dataLocal if not i[0].startswith('measurement')} }
     data = self.api.readEntry('items', self.elabProjGroupID)[0]

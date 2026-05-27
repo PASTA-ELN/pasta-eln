@@ -378,8 +378,12 @@ class BackendWorker(QObject):
               stats = sync.sync('', progressCallback=self.beSendProgress.emit)
             logging.debug('elabFTW sync stats: %s', stats)
             statsCount = Counter([i[1] for i in stats])
-            msg = ', '.join([f'{MERGE_LABELS[k]}: {v}' for k,v in statsCount.items()])
-            self.beSendTaskReport.emit(task, f'Success: Synchronized with server. Items per action: {msg}', '', '')
+            if errorCount:= sum(count for code, count in statsCount.items() if code < 0):
+              headline = f'<b>Partial success:</b> Synchronized with server, but {errorCount} item(s) failed.'
+            else:
+              headline = '<b>Success:</b> Synchronized with server.'
+            msg = '<br>'.join(f'{MERGE_LABELS[k]}: {statsCount[k]}' for k in MERGE_LABELS if statsCount.get(k, 0))
+            self.beSendTaskReport.emit(task, f'<p>{headline}<br><br><b>Items per action:</b><br>{msg}</p>', '', '')
           else:                                                                                  #if not given
             self.beSendTaskReport.emit(task, 'ERROR: Please specify a server address and API-key in the Configuration', '', '')
         except ConnectionError as e:

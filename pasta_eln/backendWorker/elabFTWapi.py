@@ -136,12 +136,18 @@ class ElabFTWApi:
     tags = content.pop('tags',[])
     response = requests.patch(f'{self.url}{entryType}/{identifier}', data=json.dumps(content), **self.param)
     if response.status_code != 200:
+      logging.error('Update failed for %s/%s: HTTP %s: %s. Content: %s', entryType, identifier,
+                    response.status_code, response.text, {k: len(json.dumps(v)) for k, v in content.items()},)
       return False
     # separate tags handling
     # response = requests.get(f'{self.url}{entryType}/{identifier}/tags', **self.param) #allow to check existing tags
     for tag in tags:
       response = requests.post(f'{self.url}{entryType}/{identifier}/tags', data=json.dumps({'tag':tag}), **self.param)
-    return response.status_code == 201 if tags else True
+      if response.status_code != 201:
+        logging.error('Tag update failed for %s/%s tag=%s: HTTP %s: %s', entryType, identifier, tag,
+                      response.status_code, response.text)
+        return False
+    return True
 
 
   def deleteEntry(self, entryType:str, identifier:int) -> bool:
