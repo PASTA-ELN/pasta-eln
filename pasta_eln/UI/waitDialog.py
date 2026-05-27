@@ -1,4 +1,4 @@
-""" Dialog that shows a message and the progress-bar """
+""" Dialog that shows a message and the progress-bar. The content is markdown! """
 import logging
 import re
 from typing import Any, Callable
@@ -7,15 +7,15 @@ from PySide6.QtWidgets import QDialogButtonBox, QProgressBar, QTextBrowser, QVBo
 
 
 class WaitDialog(QWidget):
-  """ Dialog that shows a message and the progress-bar """
+  """ Dialog that shows a message and the progress-bar. The content is markdown! """
   def __init__(self) -> None:
     """ Initialization """
     super().__init__()
     self.count  = 0
     self.mainL = QVBoxLayout()
-    self.setMinimumWidth(400)
-    self.setMinimumHeight(500)
-    self.setWindowTitle('Wait for processes to finish')
+    self.setMinimumWidth(500)
+    self.setMinimumHeight(600)
+    self.setWindowTitle('Wait for processes...')
     self.setLayout(self.mainL)
 
     self.text = QTextBrowser()

@@ -283,3 +283,35 @@ def squashTupleIntoValue(doc:dict[str,Any]) -> None:
         if isinstance(value1, (tuple,list)) and len(value1)==4:
           doc[key0][key1] = value1[0]
   return
+
+
+def truncateDictForElabFTW(data:dict[str,Any], maxChars:int=900) -> dict[str,Any]:
+  """Truncate a dictionary to complete JSON key/value pairs within a character limit. Goal is to fit into the elabFTW size limit
+  Args:
+    data (dict): dictionary to be truncated
+    maxChars (int): maximum number of characters
+
+  Returns:
+    dict: truncated dictionary
+  """
+  marker = {'WARNING':'TRUNCATED'}
+  result:dict[str,Any] = {}
+
+  def fits(candidate:dict[str,Any]) -> bool:
+    return len(json.dumps(candidate)) <= maxChars
+
+  for key, value in data.items():
+    if fits(result | {key:value} | marker):
+      result[key] = value
+      continue
+    if isinstance(value, dict):
+      nested:dict[str,Any] = {}
+      for nestedKey, nestedValue in value.items():
+        if fits(result | {key:(nested | {nestedKey:nestedValue})} | marker):
+          nested[nestedKey] = nestedValue
+          continue
+        break
+      if nested:
+        result[key] = nested
+    break
+  return result | marker

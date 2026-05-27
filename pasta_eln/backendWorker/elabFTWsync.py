@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Any
 from anytree import Node, PreOrderIter
 from ..miscTools import flatten
-from ..textTools.handleDictionaries import squashTupleIntoValue
+from ..textTools.handleDictionaries import squashTupleIntoValue, truncateDictForElabFTW
 from ..textTools.html2markdown import html2markdown
 from ..textTools.markdown2html import markdown2html  # type: ignore[attr-defined]
 from .backend import Backend
@@ -45,7 +45,6 @@ MERGE_LABELS = {
       4:'4: no change',
       5:'5: BOTH CHANGE / Merge'
     }
-
 
 
 class Pasta2Elab:
@@ -394,7 +393,7 @@ class Pasta2Elab:
                 sizeLabel = f'{size:.1f} {unit}' if unit != 'B' else f'{int(size)} {unit}'
                 break
               size /= 1024
-            message = f'\n\nUploading: {rawDataPath.name} ({sizeLabel})'
+            message = f'\n\n- Uploading: {rawDataPath.name} ({sizeLabel})'
             progressCallback('append', message)
           self.api.upload(entryType, elabID, fileName=rawDataPath, comment='raw data')
     return node.id, mergeCase
@@ -424,8 +423,18 @@ class Pasta2Elab:
                'items':       {i['entityid'] for i in data['related_items_links']} }
     for count0, entryType in enumerate(['experiments','items']):
       if diff := inPasta[entryType].difference(inELAB[entryType]):
-        logging.error('There is a difference in %s between CLIENT and SERVER. Ids on server: %s.', entryType,
-                      diff, exc_info=True)
+        for idx in diff:
+          dataFromElab = self.api.readEntry(entryType, idx)[0]
+          if dataFromElab:
+            if self.api.createLink(entryType, idx, 'items', self.elabProjGroupID):
+              logging.warning('Re-linked %s/%s to project group %s.', entryType, idx, self.elabProjGroupID)
+            else:
+              logging.error('Could not re-link %s/%s to project group %s.', entryType, idx, self.elabProjGroupID,
+                            exc_info=True)
+          else:
+            logging.error('Local reference missing in elabFTW %s/%s. Clearing local externalId.', entryType, idx)
+            self.backend.db.cursor.execute('UPDATE main SET externalId=? WHERE externalId=?', ['', str(idx)])
+            self.backend.db.connection.commit()
       if diff := inELAB[entryType].difference(inPasta[entryType]):
         if self.verbose:
           print(f'**INFO** There is a difference in {entryType} between SERVER and CLIENT. Ids on server: {diff}.')
@@ -524,6 +533,7 @@ class Pasta2Elab:
     if doc:
       doc.pop('dateSync')
       metadata |= {'__':doc}
+    metadata = truncateDictForElabFTW(metadata)
     elab = {'body':body, 'title':title, 'metadata':json.dumps(metadata), 'tags':tags,
             # 'created_at':created_at, 'modified_at':modified_at,
             'rating': ratings[0] if ratings else '0'}

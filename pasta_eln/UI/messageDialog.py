@@ -29,6 +29,8 @@ class MessageDialog(QDialog):
     self.setWindowTitle(title)
     if minWidth > 0:
       self.setMinimumWidth(minWidth)
+    else:
+      self.setMinimumWidth(800)
     mainL = QVBoxLayout(self)
     if icon:
       iconLabel = QLabel('')
@@ -53,7 +55,6 @@ class MessageDialog(QDialog):
     buttonLineL.addStretch(2)
     self.okButton   = TextButton('OK',   parent, None, buttonLineL, 'Accept')
     self.okButton.clicked.connect(self.accept)
-    self.setMinimumWidth(800)
 
 
   def copyToClipboard(self, text:str) -> None:
