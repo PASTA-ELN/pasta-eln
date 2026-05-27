@@ -362,7 +362,9 @@ class BackendWorker(QObject):
       self.beSendTaskReport.emit(task, f'{report}\n{json.dumps(statistics,indent=2)}', '', '')
 
     elif task is Task.SYNC_ELAB and set(data.keys())=={'projGroup','subtask'}:
-      if 'ERROR' in self.backend.checkDB(minimal=True):
+      errorState = self.backend.checkDB(minimal=True)
+      errorState = errorState.replace('**ERROR  bch01: These paths of database not on filesystem(3):','')# ignore because large files not copied
+      if 'ERROR' in errorState:
         self.beSendTaskReport.emit(task, 'ERRORs are present in your database. Fix them before uploading', '', '')
       else:
         try:
