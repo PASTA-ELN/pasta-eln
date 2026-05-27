@@ -368,6 +368,7 @@ class BackendWorker(QObject):
         try:
           sync = Pasta2Elab(self.backend, data['projGroup'])
           if hasattr(sync, 'api') and sync.api.url:                             #if hostname and api-key given
+            timeStart = time.perf_counter()
             stats = sync.sync(data['subtask'], progressCallback=self.beSendProgress.emit)
             logging.debug('elabFTW sync stats: %s', stats)
             statsCount = Counter([i[1] for i in stats])
@@ -375,6 +376,9 @@ class BackendWorker(QObject):
               headline = f'<b>Partial success:</b> Synchronized with server, but {errorCount} item(s) failed.'
             else:
               headline = '<b>Success:</b> Synchronized with server.'
+            runtime = time.perf_counter() - timeStart
+            runtimeText = f'{runtime:.1f} s' if runtime < 60 else f'{runtime//60:.0f} min {runtime%60:.1f} s'
+            headline += f'<br>Runtime: {runtimeText}'
             msg = '<br>'.join(f'{MERGE_LABELS[k]}: {statsCount[k]}' for k in MERGE_LABELS if statsCount.get(k, 0))
             self.beSendTaskReport.emit(task, f'<p>{headline}<br><br><b>Items per action:</b><br>{msg}</p>', '', '')
           else:                                                                                  #if not given

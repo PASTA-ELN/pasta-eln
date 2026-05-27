@@ -570,9 +570,10 @@ class Backend(CLI_Mixin):
     if nonUsedFolders := set(projLevelFolders).difference([i[0] for i in projFolders]+['pastaELN.db']):
       output += outputString(outputStyle,'warning','These files/folders in data folder are not used for projects:'+
                             '\n  - '.join(['']+list(nonUsedFolders)) )
+    numTrash = 0
     for projFolder in projFolders:
-      numTrash = sum(len([i for i in dirs + files if i.startswith('trash_')])
-                     for _, dirs, files in os.walk(self.basePath/projFolder[0]))
+      numTrash += sum(len([i for i in dirs + files if i.startswith('trash_')])
+                      for _, dirs, files in os.walk(self.basePath/projFolder[0]))
     if numTrash>0:
       output += outputString(outputStyle,'warning',f'There are {numTrash} trash_files and trash_folders')
     # final summary
