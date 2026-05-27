@@ -369,11 +369,10 @@ class Pasta2Elab:
                                'experiments' if self.docID2elabID[i.id][1] else 'items', self.docID2elabID[i.id][0])
                                for i in node.children]
     # uploads| clean first, then upload: PASTAs document, thumbnail, data-file
-    existingUploads = self.api.readEntry(entryType, elabID)[0]['uploads']
     uploadsToDelete = {'do_not_change.json', 'metadata.json'}
     if flagUpdateServer:
       uploadsToDelete |= {'thumbnail.svg', 'thumbnail.png', 'thumbnail.jpg'}
-    for upload in existingUploads:
+    for upload in uploads:
       if upload['real_name'] in uploadsToDelete:
         self.api.uploadDelete(entryType, elabID, upload['id'])
     self.api.upload(entryType, elabID, jsonContent=json.dumps(docMerged))
@@ -382,7 +381,7 @@ class Pasta2Elab:
         self.api.upload(entryType, elabID, image)
       if docMerged['branch'][0]['path'] is not None and docMerged['type'][0][0]!='x' \
             and not docMerged['branch'][0]['path'].startswith('http') and \
-            (self.backend.basePath/docMerged['branch'][0]['path']).name not in {i['real_name'] for i in existingUploads}:
+            (self.backend.basePath/docMerged['branch'][0]['path']).name not in {i['real_name'] for i in uploads}:
         rawDataPath = self.backend.basePath/docMerged['branch'][0]['path']
         if self.rawDataUploadAllowed(rawDataPath, node.id):
           if progressCallback is not None:

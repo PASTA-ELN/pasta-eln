@@ -41,8 +41,9 @@ class ElabFTWApi:
     self.url = ''                                          #initialize: indicator if initialization successful
     self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
     self.param:Param = {'headers':self.headers, 'verify':verifySSL, 'timeout':10}
+    self.session = requests.Session()
     try:
-      response = requests.get(f'{url}info', **self.param)
+      response = self.session.get(f'{url}info', **self.param)
       if response.status_code == 200:
         elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
         if elabVersion<5:
@@ -71,7 +72,7 @@ class ElabFTWApi:
     Returns:
       int: elabFTW id
     """
-    response = requests.post(self.url+entryType, data=json.dumps(content), **self.param)
+    response = self.session.post(self.url+entryType, data=json.dumps(content), **self.param)
     if response.status_code == 201:
       return int(response.headers['Location'].split('/')[-1])
     if response.status_code == 400:
@@ -113,7 +114,7 @@ class ElabFTWApi:
       dict: content read
     """
     url = f'{self.url}{entryType}' if identifier==-1 else f'{self.url}{entryType}/{identifier}'
-    response = requests.get(url, **self.param)
+    response = self.session.get(url, **self.param)
     if response.status_code == 200:
       res = json.loads(response.content.decode('utf-8'))
       return res if identifier == -1 else [res]
@@ -134,7 +135,7 @@ class ElabFTWApi:
       bool: success of operation
     """
     tags = content.pop('tags',[])
-    response = requests.patch(f'{self.url}{entryType}/{identifier}', data=json.dumps(content), **self.param)
+    response = self.session.patch(f'{self.url}{entryType}/{identifier}', data=json.dumps(content), **self.param)
     if response.status_code != 200:
       logging.error('Update failed for %s/%s: HTTP %s: %s. Content: %s', entryType, identifier,
                     response.status_code, response.text, {k: len(json.dumps(v)) for k, v in content.items()},)
@@ -142,7 +143,8 @@ class ElabFTWApi:
     # separate tags handling
     # response = requests.get(f'{self.url}{entryType}/{identifier}/tags', **self.param) #allow to check existing tags
     for tag in tags:
-      response = requests.post(f'{self.url}{entryType}/{identifier}/tags', data=json.dumps({'tag':tag}), **self.param)
+      response = self.session.post(f'{self.url}{entryType}/{identifier}/tags', data=json.dumps({'tag':tag}),
+                                   **self.param)
       if response.status_code != 201:
         logging.error('Tag update failed for %s/%s tag=%s: HTTP %s: %s', entryType, identifier, tag,
                       response.status_code, response.text)
@@ -161,7 +163,7 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
-    response = requests.delete(f'{self.url}{entryType}/{identifier}', **self.param)
+    response = self.session.delete(f'{self.url}{entryType}/{identifier}', **self.param)
     if response.status_code == 204:
       return True
     logging.error('Occurred in delete of url %s', entryType, exc_info=True)
@@ -178,9 +180,9 @@ class ElabFTWApi:
     if not areYouSure:
       return
     for entryType in ['experiments','items']:
-      response = requests.get(f'{self.url}{entryType}?archived=on', **self.param)
+      response = self.session.get(f'{self.url}{entryType}?archived=on', **self.param)
       for identifier in [i['id'] for i in json.loads(response.content.decode('utf-8'))]:
-        response = requests.delete(f'{self.url}{entryType}/{identifier}', **self.param)
+        response = self.session.delete(f'{self.url}{entryType}/{identifier}', **self.param)
         if response.status_code != 204:
           logging.error('Purge delete %s : %s',entryType, identifier, exc_info=True)
     return
@@ -202,7 +204,7 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
-    response = requests.post(f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}', **self.param)
+    response = self.session.post(f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}', **self.param)
     if response.status_code == 201:
       return True
     logging.error('Occurred in create of url %s%s/%s/%s_links/%s : %s',self.url,entryType,identifier,targetType,
@@ -251,8 +253,8 @@ class ElabFTWApi:
     # upload that data
     headers = copy.deepcopy(self.headers)
     del headers['Content-type']                               #will automatically become 'multipart/form-data'
-    response = requests.post(f'{self.url}{entryType}/{identifier}/uploads', headers=headers,
-                             files=data, verify=self.param['verify'], timeout=60)
+    response = self.session.post(f'{self.url}{entryType}/{identifier}/uploads', headers=headers,
+                                 files=data, verify=self.param['verify'], timeout=60)
     if response.status_code == 201:
       return int(response.headers['Location'].split('/')[-1])
     logging.error('occurred in upload of url %s/%s : %s',entryType,identifier,
@@ -274,7 +276,7 @@ class ElabFTWApi:
       bool: success of operation
     """
     url = f'{self.url}{entryType}/{identifier}/uploads/{uploadID}'
-    response = requests.patch(url, data=json.dumps(content), **self.param)
+    response = self.session.patch(url, data=json.dumps(content), **self.param)
     return response.status_code == 200
 
 
@@ -290,7 +292,7 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
-    response = requests.delete(f'{self.url}{entryType}/{identifier}/uploads/{uploadID}', **self.param)
+    response = self.session.delete(f'{self.url}{entryType}/{identifier}/uploads/{uploadID}', **self.param)
     if response.status_code == 204:
       return True
     logging.error('occurred in upload delete of url %s/%s/uploads/%s',entryType,identifier,uploadID, exc_info=True)
@@ -309,7 +311,7 @@ class ElabFTWApi:
       str: downloaded content str or byte-array
     """
     url = f"{self.url}{entryType}/{identifier}/uploads/{elabData['id']}?format='binary'"
-    response = requests.get(url, **self.param)
+    response = self.session.get(url, **self.param)
     if response.status_code == 200:
       if elabData['real_name']== 'do_not_change.json':
         return json.loads(response.content.decode('utf-8'))
@@ -331,7 +333,7 @@ class ElabFTWApi:
       list: list of reply
     """
     url = f"{self.url}teams/{teamID}/teamgroups" if groupID==-1 else f"{self.url}teams/{teamID}/teamgroups/{groupID}"
-    response = requests.get(url, **self.param)
+    response = self.session.get(url, **self.param)
     if response.status_code == 200:
       res = json.loads(response.content.decode('utf-8'))
       return res if groupID == -1 else [res]

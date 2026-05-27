@@ -145,7 +145,7 @@ class Communicate(QObject):
     self.waitDialog.count = 0
     self.waitDialog.buttonBox.hide()
     self.waitDialog.text.setMarkdown(task.msgWaitDialog)
-    if task in (Task.SEND_ELAB, Task.GET_ELAB, Task.SMART_ELAB):
+    if task is Task.SYNC_ELAB:
       self.waitDialog.text.setFixedHeight(450)
       self.waitDialog.setFixedHeight(500)
       self.waitDialog.progressBar.setRange(0, 100)

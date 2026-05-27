@@ -41,15 +41,13 @@ class Task(Enum):
   SEND_TBL_COLUMN= (9 , '')                                        #keys: docType, newList
   EXTRACTOR_TEST = (10, 'Testing extractor:')                      #keys: fileName, style, recipe, saveFig
   EXTRACTOR_RERUN= (11, 'Rerun extractors:')                       #keys: docIDs, recipe
-  SEND_ELAB      = (12, 'Sending data to elabFTW server:')         #keys: projGroup
-  GET_ELAB       = (13, 'Getting data from elabFTW server:')       #keys: projGroup
-  SMART_ELAB     = (14, 'Syncing with elabFTW server:')            #keys: projGroup
-  EXPORT_ELN     = (15, 'Exporting to .eln:')                      #keys: fileName, projID, docTypes
-  IMPORT_ELN     = (16, 'Importing an .eln file:')                 #keys: fileName, projID
-  SEND_REPOSITORY= (17, 'Sending data to repository:')             #keys: projID, docTypes,repositories,metadata,uploadZenodo
-  CHECK_DB       = (18, 'Checking database integrity:')            #keys: style
-  OPEN_EXTERNAL  = (19, '')                                        #keys: docID
-  TUTORIAL       = (20, '')                                        #keys: --none-- for use only in tutorialPanel.py
+  SYNC_ELAB      = (12, 'Sync data to elabFTW server:')            #keys: projGroup, subtask
+  EXPORT_ELN     = (13, 'Exporting to .eln:')                      #keys: fileName, projID, docTypes
+  IMPORT_ELN     = (14, 'Importing an .eln file:')                 #keys: fileName, projID
+  SEND_REPOSITORY= (15, 'Sending data to repository:')             #keys: projID, docTypes,repositories,metadata,uploadZenodo
+  CHECK_DB       = (16, 'Checking database integrity:')            #keys: style
+  OPEN_EXTERNAL  = (17, '')                                        #keys: docID
+  TUTORIAL       = (18, '')                                        #keys: --none-- for use only in tutorialPanel.py
 
   def __init__(self, num:int, msgWaitDialog:str='') -> None:
     """Initialize the task with a number and an optional message for the wait dialog
@@ -363,19 +361,14 @@ class BackendWorker(QObject):
       report, statistics = importELN(self.backend, data['fileName'], data['projID'])
       self.beSendTaskReport.emit(task, f'{report}\n{json.dumps(statistics,indent=2)}', '', '')
 
-    elif task in (Task.SEND_ELAB, Task.GET_ELAB, Task.SMART_ELAB) and set(data.keys())=={'projGroup'}:
+    elif task is Task.SYNC_ELAB and set(data.keys())=={'projGroup','subtask'}:
       if 'ERROR' in self.backend.checkDB(minimal=True):
         self.beSendTaskReport.emit(task, 'ERRORs are present in your database. Fix them before uploading', '', '')
       else:
         try:
           sync = Pasta2Elab(self.backend, data['projGroup'])
           if hasattr(sync, 'api') and sync.api.url:                             #if hostname and api-key given
-            if task is Task.SEND_ELAB:
-              stats = sync.sync('sA', progressCallback=self.beSendProgress.emit)
-            elif task is Task.GET_ELAB:
-              stats = sync.sync('gA', progressCallback=self.beSendProgress.emit)
-            else:
-              stats = sync.sync('', progressCallback=self.beSendProgress.emit)
+            stats = sync.sync(data['subtask'], progressCallback=self.beSendProgress.emit)
             logging.debug('elabFTW sync stats: %s', stats)
             statsCount = Counter([i[1] for i in stats])
             if errorCount:= sum(count for code, count in statsCount.items() if code < 0):

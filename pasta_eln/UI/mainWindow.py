@@ -83,10 +83,12 @@ class MainWindow(QMainWindow):
     systemMenu = menu.addMenu('Project &group')
     self.changeProjectGroups = systemMenu.addMenu('&Change project group')
     syncMenu = systemMenu.addMenu('&Synchronize')
-    Action('Send',                         self, [Command.SYNC_SEND],        syncMenu, shortcut='F5')
+    Action('Send all',                       self, [Command.SYNC_ELABFTW, 'sA'], syncMenu)
+    Action('Send',                           self, [Command.SYNC_ELABFTW, 's' ], syncMenu, shortcut='F5')
     if 'develop' in self.comm.configuration:
-      Action('Get',                          self, [Command.SYNC_GET],       syncMenu, shortcut='F4')
-      # Action('Smart synce',                  self, [Command.SYNC_SMART],       syncMenu)
+      Action('Get all',                      self, [Command.SYNC_ELABFTW, 'gA'], syncMenu)
+      Action('Get',                          self, [Command.SYNC_ELABFTW, 'g' ], syncMenu, shortcut='F4')
+      Action('Smart synce',                  self, [Command.SYNC_ELABFTW, ''  ], syncMenu)
     Action('&Item type editor',              self, [Command.SCHEMA],         systemMenu, shortcut='F8')
     Action('&Definitions editor',            self, [Command.DEFINITIONS],    systemMenu)
     systemMenu.addSeparator()
@@ -204,12 +206,8 @@ class MainWindow(QMainWindow):
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.configuration, indent=2))
       hardRestart()  # hard restart to link to correct addons
-    elif command[0] is Command.SYNC_SEND:
-      self.comm.uiRequestTask.emit(Task.SEND_ELAB,  {'projGroup':self.comm.projectGroup})
-    elif command[0] is Command.SYNC_GET:
-      self.comm.uiRequestTask.emit(Task.GET_ELAB,   {'projGroup':self.comm.projectGroup})
-    elif command[0] is Command.SYNC_SMART:
-      self.comm.uiRequestTask.emit(Task.SMART_ELAB, {'projGroup':self.comm.projectGroup})
+    elif command[0] is Command.SYNC_ELABFTW:
+      self.comm.uiRequestTask.emit(Task.SYNC_ELAB,  {'projGroup':self.comm.projectGroup, 'subtask':command[1]})
     elif command[0] is Command.SCHEMA:
       dialogS = SchemeEditor(self.comm)
       dialogS.exec()
@@ -269,31 +267,28 @@ class MainWindow(QMainWindow):
       if myCount>5:
         reportText = re.sub(regexStr, '', reportText, count=myCount-5)
         reportText += r'<font color="magenta">image does not exist ...:<\/font><br>'
-    elif task not in (Task.EXTRACTOR_TEST, Task.EXTRACTOR_RERUN, Task.DELETE_DOC, Task.EXPORT_ELN, Task.IMPORT_ELN, Task.SEND_ELAB,
-                      Task.GET_ELAB, Task.SMART_ELAB):               #e.g. extractor tests work out of the box
+    elif task not in (Task.EXTRACTOR_TEST, Task.EXTRACTOR_RERUN, Task.DELETE_DOC, Task.EXPORT_ELN, Task.IMPORT_ELN, Task.SYNC_ELAB):               #e.g. extractor tests work out of the box
       logging.error('Unknown task in showReport: %s', task, exc_info=True)
     showMessage(self, 'Report', reportText, image=image)
 
 
 class Command(Enum):
   """ Commands used in this file """
-  EXPORT     = 1
-  IMPORT     = 2
-  EXIT       = 3
-  VIEW       = 4
-  CHANGE_PG  = 6
-  SYNC_SEND  = 7
-  SYNC_GET   = 8
-  SYNC_SMART = 9
-  SCHEMA     = 10
-  TEST1      = 11
-  TEST2      = 12
-  UPDATE     = 13
-  CONFIG     = 14
-  WEBSITE    = 15
-  CHECK_DB   = 16
-  SHORTCUTS  = 17
-  RESTART    = 18
-  ABOUT      = 19
-  DEFINITIONS= 20
-  REPOSITORY = 21
+  EXPORT       = 1
+  IMPORT       = 2
+  EXIT         = 3
+  VIEW         = 4
+  CHANGE_PG    = 6
+  SYNC_ELABFTW = 7
+  SCHEMA       = 8
+  TEST1        = 9
+  TEST2        = 10
+  UPDATE       = 11
+  CONFIG       = 12
+  WEBSITE      = 13
+  CHECK_DB     = 14
+  SHORTCUTS    = 15
+  RESTART      = 16
+  ABOUT        = 17
+  DEFINITIONS  = 18
+  REPOSITORY   = 19
