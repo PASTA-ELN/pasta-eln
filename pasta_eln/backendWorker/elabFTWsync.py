@@ -83,6 +83,7 @@ class Pasta2Elab:
       _ = [self.api.deleteEntry('items',       i['entityid']) for i in data['related_items_links']]
     self.docID2elabID:dict[str,tuple[int,bool]] = {}      # e.g. x-15343154th54325243, (4, bool if experiment)
     self.readWriteAccess:dict[str,str] = {}
+    self.elabProjectGroupData:dict[str,Any] = {}           # data of project group on elab-server, cached data
     self.verbose         = False
     return
 
@@ -168,10 +169,12 @@ class Pasta2Elab:
     docTypesElab  = {i['title']:i['id'] for i in self.api.readEntry('items_types')}
     docTypesPasta = {i.capitalize() for i in self.backend.db.dataHierarchy('','') if not i.startswith('x')} | \
                     {'Default','Folder','Project','ProjectGroup'}
-    for docType in docTypesPasta.difference({'Measurement'}|docTypesElab.keys()):# do not create measurements, use 'experiments'
+    missingDocTypes = docTypesPasta.difference({'Measurement'}|docTypesElab.keys())
+    for docType in missingDocTypes:                                      # do not create measurements, use 'experiments'
       self.api.touchEntry('items_types', {'title': docType})
     #verify nothing extraneous
-    docTypesElab  = {i['title']:i['id'] for i in self.api.readEntry('items_types')}
+    if missingDocTypes:
+      docTypesElab  = {i['title']:i['id'] for i in self.api.readEntry('items_types')}
     if set(docTypesElab.keys()).difference(docTypesPasta|{'Default','ProjectGroup'}) and self.verbose:
       print('**Info: some items exist that should not:', set(docTypesElab.keys()).difference(docTypesPasta|{'Default'}),
             'You can remove manually, but should not interfere since not used.')
@@ -179,7 +182,11 @@ class Pasta2Elab:
     dataHierarchy = []
     for docType in self.backend.db.dataHierarchy('',''):
       dataHierarchy += copy.deepcopy([dict(i) for i in self.backend.db.dataHierarchy(docType,'meta')])
-    self.api.updateEntry('items', self.elabProjGroupID, {'metadata':json.dumps(dataHierarchy)})
+    self.elabProjectGroupData = self.api.readEntry('items', self.elabProjGroupID)[0]
+    metadata = json.dumps(dataHierarchy)
+    if self.elabProjectGroupData.get('metadata', '') != metadata:
+      self.api.updateEntry('items', self.elabProjGroupID, {'metadata':metadata})
+      self.elabProjectGroupData['metadata'] = metadata
     return
 
 
@@ -195,6 +202,7 @@ class Pasta2Elab:
       content   = {'category_id':elabType} | self.readWriteAccess
       elabID    = self.api.touchEntry(urlSuffix, content)
       self.api.createLink(urlSuffix, elabID, 'items', self.elabProjGroupID)
+      self.elabProjectGroupData = {}
       return elabID
     self.backend.db.cursor.execute('SELECT id, type, externalId FROM main')
     self.docID2elabID = {i[0]:((i[2],i[1].split('/')[0]=='measurement') if i[2] else (getNewEntry(elabTypes[i[1].split('/')[0]]),i[1].split('/')[0]=='measurement'))
@@ -244,6 +252,38 @@ class Pasta2Elab:
     docServer, uploads = self.elab2doc(dataFromElab)
     if self.verbose:
       print('>>>DOC_SERVER', docServer)
+    # Check if nothing changed by comparing data that is already present, without download
+    flagNothingChanged = False
+    pattern = '%Y-%m-%dT%H:%M:%S.%f'
+    dateSync = datetime.strptime(docClient['dateSync'], pattern)
+    if not mode.endswith('A') and datetime.strptime(docClient['dateModified'], pattern) <= dateSync and \
+       'dateModified' in docServer and datetime.strptime(docServer['dateModified'], pattern) <= dateSync:
+      flagNothingChanged = True
+      for k,v in docServer.items():
+        if k not in docClient:
+          flagNothingChanged = False
+          break
+        if isinstance(v, str):
+          if v != html2markdown(markdown2html(docClient[k])):
+            flagNothingChanged = False
+            break
+        elif isinstance(v, dict):
+          if v != docClient[k]:
+            flagNothingChanged = False
+            break
+        elif isinstance(v, list):
+          if set(v) != {i for i in docClient[k] if not re.match(r'^_\d$', i)}:
+            flagNothingChanged = False
+            break
+        elif v != docClient[k]:
+          flagNothingChanged = False
+          break
+    if flagNothingChanged:
+      mergeCase = 4
+      if self.verbose:
+        print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
+      return node.id, mergeCase
+    # Collect data from server
     if listDoNotChange :=[i for i in uploads if i['real_name']=='do_not_change.json']:
       docOther = self.api.download(entryType, elabID, listDoNotChange[0])
     else:
@@ -417,7 +457,7 @@ class Pasta2Elab:
     dataLocal = [i for i in dataLocal if i[1]]               # filter out those that do not have an externalID
     inPasta = {'experiments': {int(i[1]) for i in dataLocal if i[0].startswith('measurement')},
                'items':       {int(i[1]) for i in dataLocal if not i[0].startswith('measurement')} }
-    data = self.api.readEntry('items', self.elabProjGroupID)[0]
+    data = self.elabProjectGroupData or self.api.readEntry('items', self.elabProjGroupID)[0]
     inELAB  = {'experiments': {i['entityid'] for i in data['related_experiments_links']},
                'items':       {i['entityid'] for i in data['related_items_links']} }
     for count0, entryType in enumerate(['experiments','items']):
