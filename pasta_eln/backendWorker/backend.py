@@ -424,6 +424,7 @@ class Backend(CLI_Mixin):
     for job, doc in self.extractors.applyResults(self.extractors.runJobs(extractorJobs), extractorJobs):
       view = self.db.getView('viewIdentify/viewSHAsum', job['shasum'])
       if len(view)==0:
+        doc['branch'] = [{'stack':job['hierStack'], 'child':9999, 'path':job['path'], 'show':[True]*(len(job['hierStack'])+1)}]
         self.addData('/'.join(doc['type']), doc, job['hierStack'], runExtractors=False)
       else:
         self.db.updateBranch(view[0]['id'], -1, 9999, job['hierStack'], job['path'])
