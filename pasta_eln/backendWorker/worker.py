@@ -326,27 +326,37 @@ class BackendWorker(QObject):
       # delete database and rename folder
       # - stack (str) includes the docID itself
       doc = self.backend.db.getDoc(data['docID'])
-      if len(doc['branch'])>1 and not data['stack']:
-        self.beSendTaskReport.emit(task, 'Cannot delete an item with multiple locations.', '', '')
-        return
-      if len(doc['branch'])==1:
+      if len(doc['branch'])==1 or not data['stack']:
+        branches = doc['branch']
         doc = self.backend.db.remove(data['docID'])
-        branch = doc['branch'][0]
       else:
-        branch = [i for i in doc['branch'] if '/'.join(i['stack']+[data['docID']])==data['stack']][0]
+        branches = [i for i in doc['branch'] if '/'.join(i['stack']+[data['docID']])==data['stack']]
+        if len(branches)!=1:
+          self.beSendTaskReport.emit(task, f'Cannot find location {data["stack"]} for item.', '', '')
+          return
         self.backend.db.cursor.execute(f'DELETE FROM branches WHERE stack="{data["stack"]}"')
+        self.backend.db.connection.commit()
       # rename on disk
-      if branch.get('path', None) is not None:
+      renamedPaths = set()
+      for branch in branches:
+        if branch.get('path', None) is None or branch['path'] in renamedPaths:
+          continue
         oldPath = self.backend.basePath/branch['path']
+        if not oldPath.exists():
+          continue
         newPath = oldPath.parent/f'trash_{oldPath.name}'
         nextIteration = 1
-        while newPath.is_dir():
+        while newPath.exists():
           newPath = oldPath.parent/f'trash_{oldPath.name}_{nextIteration}'
           nextIteration += 1
         if oldPath != newPath:
           oldPath.rename(newPath)
+          renamedPaths.add(branch['path'])
       # go through children, remove from DB: include hidden children
-      children = self.backend.db.getView('viewHierarchy/viewHierarchyAll', startKey='/'.join(branch['stack']+[data['docID']]))
+      children = []
+      for branch in branches:
+        children.extend(self.backend.db.getView('viewHierarchy/viewHierarchyAll',
+                                                startKey='/'.join(branch['stack']+[data['docID']])))
       for docID in {line['id'] for line in children if line['id']!=data['docID']}:
         self.backend.db.remove(docID)
       # finish it
