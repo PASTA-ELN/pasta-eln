@@ -36,6 +36,9 @@ class Tools:
                 'Commands - general:\n'\
                 '  [h]elp: long help\n'\
                 '  [q]uit\n'
+    helpString += '  [ha] print hierarchy of all projects\n'
+    if command == 'ha':
+      self.printAllProjectHierarchies()
     helpString += '  [p]rint a document\n'
     if command == 'p':
       self.printOrDelete()
@@ -213,6 +216,27 @@ class Tools:
     projectGroups = self.backend.db.getView('viewDocType/x0')['id'].values
     for projID in projectGroups:
       self.backend.scanProject(lambda i: self.__updateProgressBar__('count',i), projID)
+    return
+
+
+  def printAllProjectHierarchies(self, projectGroup:str='', outputFormat:str='print') -> None:
+    """ Print the hierarchy of all projects.
+
+      Args:
+        projectGroup (str): name of project group
+        outputFormat (str): format for outputString
+    """
+    if not self.projectGroup:
+      self.__setBackend__(projectGroup)
+    if self.backend is None:
+      return
+    projectGroups = self.backend.db.getView('viewDocType/x0')['id'].values
+    print('\n=== Hierarchy of all projects ===')
+    for projID in projectGroups:
+      self.backend.changeHierarchy(projID)
+      outputString(outputFormat,'info',self.backend.outputHierarchy(False, True))
+      self.backend.changeHierarchy(None)
+    print()
     return
 
 
