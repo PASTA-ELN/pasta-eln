@@ -463,8 +463,7 @@ class Pasta2Elab:
     for count0, entryType in enumerate(['experiments','items']):
       if diff := inPasta[entryType].difference(inELAB[entryType]):
         for idx in diff:
-          dataFromElab = self.api.readEntry(entryType, idx)[0]
-          if dataFromElab:
+          if self.api.readEntry(entryType, idx)[0]:
             if self.api.createLink(entryType, idx, 'items', self.elabProjGroupID):
               logging.warning('Re-linked %s/%s to project group %s.', entryType, idx, self.elabProjGroupID)
             else:

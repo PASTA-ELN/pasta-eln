@@ -573,7 +573,7 @@ class Backend(CLI_Mixin):
                             '\n  - '.join(['']+list(nonUsedFolders)) )
     numTrash = 0
     for projFolder in projFolders:
-      numTrash += sum(len([i for i in dirs + files if i.startswith('trash_')])
+      numTrash += sum(sum(1 for i in dirs + files if i.startswith('trash_'))
                       for _, dirs, files in os.walk(self.basePath/projFolder[0]))
     if numTrash>0:
       output += outputString(outputStyle,'warning',f'There are {numTrash} trash_files and trash_folders')
