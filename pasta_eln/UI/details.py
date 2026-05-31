@@ -293,7 +293,7 @@ class Details(QScrollArea):
           link = True
         else:
           logging.warning('Value[2] not given for %s', value)
-          value = '\u260D link to entry'                                                 #INFORMAITON NOT USED
+          value = '\u260D link to entry'                                                 #INFORMATION NOT USED
       elif isinstance(value, list):
         value = ', '.join([str(i) for i in value])
       if isinstance(value, tuple) and len(value)==4 and isDocID(value[0]):
