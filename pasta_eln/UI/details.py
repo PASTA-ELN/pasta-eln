@@ -93,15 +93,30 @@ class Details(QScrollArea):
       return
     # Delete old widgets from layout
     for i in reversed(range(self.metaDetailsL.count())):
-      self.metaDetailsL.itemAt(i).widget().setParent(None)
+      item = self.metaDetailsL.itemAt(i)
+      widget = None if item is None else item.widget()
+      if widget is not None:
+        widget.setParent(None)
     for i in reversed(range(self.metaVendorL.count())):
-      self.metaVendorL.itemAt(i).widget().setParent(None)
+      item = self.metaVendorL.itemAt(i)
+      widget = None if item is None else item.widget()
+      if widget is not None:
+        widget.setParent(None)
     for i in reversed(range(self.metaUserL.count())):
-      self.metaUserL.itemAt(i).widget().setParent(None)
+      item = self.metaUserL.itemAt(i)
+      widget = None if item is None else item.widget()
+      if widget is not None:
+        widget.setParent(None)
     for i in reversed(range(self.metaDatabaseL.count())):
-      self.metaDatabaseL.itemAt(i).widget().setParent(None)
+      item = self.metaDatabaseL.itemAt(i)
+      widget = None if item is None else item.widget()
+      if widget is not None:
+        widget.setParent(None)
     for i in reversed(range(self.specialL.count())):
-      self.specialL.itemAt(i).widget().setParent(None)
+      item = self.specialL.itemAt(i)
+      widget = None if item is None else item.widget()
+      if widget is not None:
+        widget.setParent(None)
     self.specialW.hide()
     self.metaDetailsW.hide()
     self.metaVendorW.hide()
@@ -211,7 +226,7 @@ class Details(QScrollArea):
     self.metaDetailsW.setFixedWidth(width)
     for text in self.textEditors:
       text.document().setTextWidth(width-80)
-      height:int = text.document().size().toTuple()[1]                                    # type:ignore[index]
+      height = int(text.document().size().toTuple()[1])
       text.setFixedHeight(height)
     return
 
@@ -258,7 +273,7 @@ class Details(QScrollArea):
         logging.error('text.document is something erroneous: %s, %s', type(text), type(text.document()))
       if hasattr(self, 'rescaleTexts'):
         self.textEditors.append(text)
-      height:int = text.document().size().toTuple()[1]                                    # type:ignore[index]
+      height = int(text.document().size().toTuple()[1])
       text.setFixedHeight(height)
       text.setReadOnly(True)
       self.textEditors.append(text)

@@ -66,7 +66,10 @@ class Sidebar(QWidget):
     """
     # Delete old widgets from layout and create storage
     for i in reversed(range(self.projectsListL.count())):
-      self.projectsListL.itemAt(i).widget().setParent(None)
+      item = self.projectsListL.itemAt(i)
+      widget = None if item is None else item.widget()
+      if widget is not None:
+        widget.setParent(None)
     if projectChoice != 'redraw':
       self.comm.projectID = projectChoice
     self.widgetsAction = {}

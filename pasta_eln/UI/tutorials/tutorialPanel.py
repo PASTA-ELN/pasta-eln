@@ -74,7 +74,10 @@ class TutorialPanel(QWidget):
       self.textBrowser.setMarkdown(text)
       return
     for i in reversed(range(self.stepsL.count())):
-      self.stepsL.itemAt(i).widget().setParent(None)
+      item = self.stepsL.itemAt(i)
+      widget = None if item is None else item.widget()
+      if widget is not None:
+        widget.setParent(None)
     for idx, step in enumerate(self.manager.quest.steps):
       status = '✓' if self.manager.completedSteps[idx] else '•'
       Label(f'{status} {step.title}', 'h2', self.stepsL, style='margin-top: 5px; ')

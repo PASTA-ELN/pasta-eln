@@ -154,8 +154,9 @@ class ImageGallery(QWidget):
     # Clear existing widgets from the grid
     while self.gridL.count():
       child = self.gridL.takeAt(0)
-      if child.widget():
-        child.widget().deleteLater()
+      widget = None if child is None else child.widget()
+      if widget is not None:
+        widget.deleteLater()
     return
 
 

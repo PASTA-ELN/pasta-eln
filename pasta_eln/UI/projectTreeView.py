@@ -18,7 +18,7 @@ class TreeView(QTreeView):
   """ Custom tree view on data model """
   def __init__(self, parent:QWidget, comm:Communicate, model:QStandardItemModel):
     super().__init__(parent)
-    self.aParentWidget = parent
+    self.aParentWidget: Any = parent
     self.comm = comm
     self.setModel(model)
     self.setHeaderHidden(True)
@@ -89,7 +89,7 @@ class TreeView(QTreeView):
       if ret==QMessageBox.StandardButton.Yes:
         docID = hierStack[-1]
         self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':docID, 'stack':item.data()['hierStack']})
-        self.comm.changeProject.emit(self.parent().projID, '')                    # type: ignore[attr-defined]
+        self.comm.changeProject.emit(self.aParentWidget.projID, '')
         return
 
     elif command[0] is Command.SHOW_DETAILS:
@@ -131,7 +131,7 @@ class TreeView(QTreeView):
       callAddOn(command[1], self.comm, item.data()['hierStack'], self)
     else:
       logging.error('Unknown context menu %s', command, exc_info=True)
-    self.comm.uiRequestHierarchy.emit(self.parent().projID, self.parent().showAll)# type: ignore[attr-defined]
+    self.comm.uiRequestHierarchy.emit(self.aParentWidget.projID, self.aParentWidget.showAll)
     return
 
 

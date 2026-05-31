@@ -51,8 +51,9 @@ class ListItemDelegate(QStyledItemDelegate):
       editor (QWidget): widget to set data in
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index
     """
-    currentText = index.data(Qt. EditRole)                                        # type: ignore[attr-defined]
-    editor.setCurrentText(currentText)                                            # type: ignore[attr-defined]
+    currentText = index.data(Qt.ItemDataRole.EditRole)
+    if isinstance(editor, QComboBox):
+      editor.setCurrentText(currentText)
     return
 
 
@@ -68,7 +69,8 @@ class ListItemDelegate(QStyledItemDelegate):
       model (QAbstractItemModel): model to change
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index
     """
-    model.setData(index, editor.currentText(), Qt.EditRole)                       # type: ignore[attr-defined]
+    if isinstance(editor, QComboBox):
+      model.setData(index, editor.currentText(), Qt.ItemDataRole.EditRole)
     return
 
 
@@ -84,5 +86,5 @@ class ListItemDelegate(QStyledItemDelegate):
       option (QStyledOptionViewItem): information on the geometry, same as paint
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index
     """
-    editor.setGeometry(option.rect)                                               # type: ignore[attr-defined]
+    editor.setGeometry(option.rect)
     return

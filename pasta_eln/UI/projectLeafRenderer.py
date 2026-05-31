@@ -2,7 +2,7 @@
 import base64
 import logging
 from typing import Any
-from PySide6.QtCore import QMargins, QModelIndex, QPoint, QRectF, QSize, Qt, Slot
+from PySide6.QtCore import QMargins, QModelIndex, QPoint, QPersistentModelIndex, QRectF, QSize, Qt, Slot
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap, QStaticText, QTextDocument
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem
@@ -50,19 +50,19 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     name = self.docs.get(docID, {}).get('name','') or index.data(Qt.ItemDataRole.DisplayRole)
     docType = self.docs.get(docID, {}).get('type',[]) or data['docType']
     painter.setPen(self.penDefault)
-    x0, y0 = option.rect.topLeft().toTuple()                                      # type: ignore[attr-defined]
+    x0, y0 = option.rect.topLeft().toTuple()
     widthContent = min(self.widthContent,  \
-                       int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )# type: ignore[attr-defined]
+                       int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )
     docTypeOffset = min(self.docTypeOffset, \
-                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/3.5) )# type: ignore[attr-defined]
-    bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)# type: ignore[attr-defined]
-    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.comm.palette.leafShadow)# type: ignore[attr-defined]
+                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/3.5) )
+    bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)
+    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.comm.palette.leafShadow)
     if docType=='x':
-      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafX)# type: ignore[attr-defined]
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafX)
     else:
-      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafO)# type: ignore[attr-defined]
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafO)
     # header
-    y = self.lineSep/2
+    y = self.lineSep//2
     docTypeText= '/'.join(docType)
     if docType[0][0]=='x':
       docTypeText = self.comm.docTypesTitles['x1']['title'].lower()[:-1]
@@ -92,26 +92,26 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       textDoc = QTextDocument()
       textDoc.setMarkdown(self.docs.get(docID, {}).get('content',''))
       textDoc.setTextWidth(widthContent)
-      width:int = textDoc.size().toTuple()[0]                                                   # type: ignore
-      topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)# type: ignore[attr-defined]
+      width = int(textDoc.size().toTuple()[0])
+      topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)
       painter.translate(topLeftContent)
       self.drawTextDocument(painter, textDoc, int(self.maxHeight-3*self.frameSize))
-      topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)# type: ignore[attr-defined]
+      topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)
       painter.translate(-topLeftContent)
     if self.docs.get(docID, {}).get('image',''):
       if self.docs.get(docID, {}).get('image','').startswith('data:image/'):
         pixmap = self.imageFromDoc({'image':self.docs.get(docID, {}).get('image','')})
         width2nd = min(self.widthImage, pixmap.width()+self.frameSize)
-        topLeft2nd     = option.rect.topRight()   - QPoint(width2nd+self.frameSize+1,-self.frameSize)# type: ignore[attr-defined]
+        topLeft2nd     = option.rect.topRight()   - QPoint(width2nd+self.frameSize+1,-self.frameSize)
         painter.drawPixmap(topLeft2nd, pixmap)
       elif self.docs.get(docID, {}).get('image','').startswith('<?xml'):
-        topLeft2nd     = option.rect.topRight()   - QPoint(self.widthImage+self.frameSize+1,-self.frameSize)# type: ignore[attr-defined]
+        topLeft2nd     = option.rect.topRight()   - QPoint(self.widthImage+self.frameSize+1,-self.frameSize)
         image = QSvgRenderer(bytearray(self.docs.get(docID, {}).get('image',''), encoding='utf-8'))
         image.render(painter,    QRectF(topLeft2nd, bottomRight2nd))
     return
 
 
-  def sizeHint(self, option:QStyleOptionViewItem, index:QModelIndex) -> QSize:                  # type: ignore
+  def sizeHint(self, option:QStyleOptionViewItem, index:QModelIndex | QPersistentModelIndex) -> QSize:
     """
     determine size of this leaf
     """
@@ -125,7 +125,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     docID   = hierStack.split('/')[-1]
     if docID not in self.docs:
       self.leafWidth = min(self.widthContent,
-                           int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )# type: ignore[attr-defined]
+                           int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )
       self.docs[docID] = {'size':QSize(400, 30), 'markdown':'', 'hidden':False, 'index':index}
       self.comm.uiRequestDoc.emit(docID)
     return self.docs[docID].get('size', QSize(400,self.maxHeight))
@@ -150,11 +150,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     markdownStr = doc2markdown(doc, DO_NOT_RENDER, dataHierarchyNode, self)
     textDoc.setMarkdown(markdownStr)
     textDoc.setTextWidth(self.leafWidth)
-    heightDetails = int(textDoc.size().toTuple()[1])+guiStyle['frameSize']+20# type: ignore
+    heightDetails = int(textDoc.size().toTuple()[1])+guiStyle['frameSize']+20
     heightRightSide = -1
     if 'content' in doc:
       textDoc.setMarkdown(doc['content'])
-      heightRightSide = int(textDoc.size().toTuple()[1])                                        # type: ignore
+      heightRightSide = int(textDoc.size().toTuple()[1])
     elif 'image' in doc and doc['image']:
       if doc['image'].startswith('data:image/'):
         pixmap = self.imageFromDoc(doc)

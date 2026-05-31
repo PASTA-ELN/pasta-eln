@@ -578,14 +578,22 @@ class Form(QDialog):
         self.tagsBarMainW.show()
         if command[1]=='content' and len(unknownWidget)==5:#show / hide label and right-side of non-content and non-comment
           item = self.formsL[idx].itemAt(unknownWidget[0])
-          if item is not None: item.widget().show()
+          widget = None if item is None else item.widget()
+          if widget is not None:
+            widget.show()
           item = self.formsL[idx].itemAt(unknownWidget[1])
-          if item is not None: item.widget().show()
+          widget = None if item is None else item.widget()
+          if widget is not None:
+            widget.show()
         if command[1]=='comment' and len(unknownWidget)==5:
           item = self.formsL[idx].itemAt(unknownWidget[2])
-          if item is not None: item.widget().show()
+          widget = None if item is None else item.widget()
+          if widget is not None:
+            widget.show()
           item = self.formsL[idx].itemAt(unknownWidget[3])
-          if item is not None:  item.widget().show()
+          widget = None if item is None else item.widget()
+          if widget is not None:
+            widget.show()
         if self.keyValueListL is not None and self.keyValueListL.count() == 0:
           self.keyValueLabel.hide()
           self.keyValueListW.hide()
@@ -602,14 +610,22 @@ class Form(QDialog):
         self.tagsBarMainW.hide()
         if command[1]=='content' and len(unknownWidget)==5:
           item = self.formsL[idx].itemAt(unknownWidget[0])
-          if item is not None: item.widget().hide()
+          widget = None if item is None else item.widget()
+          if widget is not None:
+            widget.hide()
           item = self.formsL[idx].itemAt(unknownWidget[1])
-          if item is not None: item.widget().hide()
+          widget = None if item is None else item.widget()
+          if widget is not None:
+            widget.hide()
         if command[1]=='comment' and len(unknownWidget)==5:
           item = self.formsL[idx].itemAt(unknownWidget[2])
-          if item is not None: item.widget().hide()
+          widget = None if item is None else item.widget()
+          if widget is not None:
+            widget.hide()
           item = self.formsL[idx].itemAt(unknownWidget[3])
-          if item is not None: item.widget().hide()
+          widget = None if item is None else item.widget()
+          if widget is not None:
+            widget.hide()
       self.allHidden = not self.allHidden
 
     elif command[0] is Command.AUTO_COMMENT:
@@ -823,7 +839,9 @@ class Form(QDialog):
     #update tags
     for i in reversed(range(self.tagsBarSubL.count())):
       item = self.tagsBarSubL.itemAt(i)
-      if item is not None: item.widget().setParent(None)
+      widget = None if item is None else item.widget()
+      if widget is not None:
+        widget.setParent(None)
     for tag in sorted(self.doc['tags'] if 'tags' in self.doc else []):
       if not re.match(r'^_\d$', tag):
         Label(tag, 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')

@@ -146,7 +146,7 @@ class Project(QWidget):
     if self.allDetails is None:
       return
     self.allDetails.document().setTextWidth(self.width()-20)
-    height:int = self.allDetails.document().size().toTuple()[1]                          # type: ignore[index]
+    height = int(self.allDetails.document().size().toTuple()[1])
     self.allDetails.setMaximumHeight(height+12)
     self.allDetails.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     return
@@ -217,7 +217,7 @@ class Project(QWidget):
         pass
     while self.mainL.count():
       item = self.mainL.takeAt(0)
-      widget = item.widget()
+      widget = None if item is None else item.widget()
       if widget is not None:
         widget.deleteLater()
     self.tree = None

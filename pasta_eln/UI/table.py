@@ -173,8 +173,9 @@ class Table(QWidget):
     self.filterManager.clearAll()
     for i in reversed(range(self.filterL.count())):
       itemI = self.filterL.itemAt(i)
-      if itemI is not None:
-        itemI.widget().setParent(None)
+      widget = None if itemI is None else itemI.widget()
+      if widget is not None:
+        widget.setParent(None)
     allDocTypes:list[str] = []
     if '/' not in self.docType:
       # get list of all subDocTypes
@@ -471,15 +472,15 @@ class Table(QWidget):
       # Find and remove GUI elements for this filter
       for i in range(self.filterL.count()):
         itemI = self.filterL.itemAt(i)
-        if itemI and itemI.widget():
-          widget = itemI.widget()
+        widget = None if itemI is None else itemI.widget()
+        if widget is not None:
           layout = widget.layout()
-          if layout and layout.count() >= 4:
+          if layout is not None and layout.count() >= 4:
             # Check if this is the right filter by looking at delete button's command
             itemJ = layout.itemAt(3)
             if itemJ is not None:
               deleteBtn = itemJ.widget()
-              if hasattr(deleteBtn, 'command') and deleteBtn.command[1] == filterID:
+              if deleteBtn is not None and hasattr(deleteBtn, 'command') and deleteBtn.command[1] == filterID:
                 widget.setParent(None)
                 break
 
