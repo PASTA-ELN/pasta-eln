@@ -6,7 +6,6 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
-from pasta_eln.fixedStringsJson import configurationGUI
 from pasta_eln.installationTools import createDefaultConfiguration
 
 
@@ -31,7 +30,6 @@ class TestElabFTWUploadLimit(unittest.TestCase):
   def test_default_configuration_sets_upload_limit(self):
     with tempfile.TemporaryDirectory() as tempDir:
       configuration = createDefaultConfiguration(Path(tempDir))
-    configuration['GUI'] = {k:v[1] for items in configurationGUI.values() for k,v in items.items()}
     self.assertEqual(configuration['GUI']['maxUploadSize'], '100 MB')
 
 

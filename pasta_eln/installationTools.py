@@ -48,6 +48,7 @@ def createDefaultConfiguration(pathPasta:Path | None=None) -> dict[str,Any]:
     else:
       pathPasta = Path.home()/'PASTA_ELN'
   addOnDir = Path(__file__).parent/'AddOns'
+  guiConfiguration = {k: v[1] for items in configurationGUI.values() for k, v in items.items()}
   conf: dict[str, Any] = {
       'defaultProjectGroup': 'research',
       'projectGroups': {
@@ -58,7 +59,7 @@ def createDefaultConfiguration(pathPasta:Path | None=None) -> dict[str,Any]:
               'addOns': {'project': {}, 'extractors':{}, 'table':{}}
           }},
       'version': 3,
-      'GUI': configurationGUI}
+      'GUI': guiConfiguration}
   try:
     conf['userID']      = os.getlogin()
   except Exception:                                                                             #github action
