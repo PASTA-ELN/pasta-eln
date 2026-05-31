@@ -2,6 +2,7 @@
 import copy
 import hashlib
 import importlib
+import importlib.util
 import json
 import logging
 import os
