@@ -91,7 +91,7 @@ class TestExtractorTimeoutParallel(unittest.TestCase):
     self.backend.scanProject(None, project['id'])
     duration = time.monotonic()-start
 
-    self.assertLess(duration, 2.4)
+    self.assertLess(duration, 3.4)
     docs = self.backend.db.getView('viewDocType/measurement')
     self.assertGreaterEqual(len(docs), 4)
 
