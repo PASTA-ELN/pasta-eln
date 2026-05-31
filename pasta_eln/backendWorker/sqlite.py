@@ -789,7 +789,7 @@ class SqlLiteDB:
       columnOrder = [i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]+['show']
       df = df.reset_index().reindex(columnOrder, axis=1)
       df = df.rename(columns={i:i[1:] for i in columnOrder if i.startswith('.') })
-      df = df.astype('str').fillna('')
+      df = df.fillna('').astype('str')
       return df
     elif thePath=='viewHierarchy/viewHierarchy':
       cmd = 'SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui, branches.idx, branches.path '\
