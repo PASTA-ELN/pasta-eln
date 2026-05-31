@@ -170,7 +170,7 @@ class Pasta2Elab:
     docTypesPasta = {i.capitalize() for i in self.backend.db.dataHierarchy('','') if not i.startswith('x')} | \
                     {'Default','Folder','Project','ProjectGroup'}
     missingDocTypes = docTypesPasta.difference({'Measurement'}|docTypesElab.keys())
-    for docType in missingDocTypes:                                      # do not create measurements, use 'experiments'
+    for docType in missingDocTypes:                            # do not create measurements, use 'experiments'
       self.api.touchEntry('items_types', {'title': docType})
     #verify nothing extraneous
     if missingDocTypes:

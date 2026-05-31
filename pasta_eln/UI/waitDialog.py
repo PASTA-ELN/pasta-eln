@@ -1,7 +1,8 @@
 """ Dialog that shows a message and the progress-bar. The content is markdown! """
 import logging
 import re
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import QDialogButtonBox, QProgressBar, QTextBrowser, QVBoxLayout, QWidget
 

@@ -1,6 +1,6 @@
 """ Edit properties of a docType """
 import string
-from typing import Callable, Optional
+from collections.abc import Callable
 import pandas as pd
 import qtawesome as qta
 from PySide6.QtCore import Slot
@@ -14,7 +14,7 @@ from ..messageDialog import showMessage
 
 class DocTypeEditor(QDialog):
   """ Edit properties of a docType """
-  def __init__(self, comm:Communicate, docType:str, callback:Optional[Callable[[str,str],None]]=None):
+  def __init__(self, comm:Communicate, docType:str, callback:Callable[[str,str],None] | None=None):
     """
     Initialization
 

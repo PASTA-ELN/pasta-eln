@@ -73,25 +73,25 @@ class TestStringMethods(unittest.TestCase):
 
     output = self.be.output('workflow')
     self.assertIn('name           | tags | comment | id', output)
-    self.assertIn('Example_SOP.md |  v1  |         |'   , output)
-    self.assertIn('procedure.md | nan  |', output)
-    self.assertIn('workplan.py | nan  |', output)
-    self.assertIn('worklog.log | nan  |', output)
+    self.assertIn('Example_SOP.md | v1   |         |'   , output)
+    self.assertIn('procedure.md |      |         |', output)
+    self.assertIn('workplan.py |      |         |', output)
+    self.assertIn('worklog.log |      |         |', output)
 
     output = self.be.output('sample')
     self.assertEqual(output.split('\n')[0][:102], 'name           | tags | chemistry | comment                                  | qrCodes            | id')
-    self.assertEqual(output.split('\n')[2][:102], 'Example sample | nan  | A2B2C3    | this sample has multiple groups of me... | 13214124, 99698708 | s-')
+    self.assertEqual(output.split('\n')[2][:102], 'Example sample |      | A2B2C3    | this sample has multiple groups of me... | 13214124, 99698708 | s-')
 
     output = self.be.output('device')
     self.assertEqual(output.split('\n')[0][:82], 'name           | tags | comment                                  | vendor    | id ')
-    self.assertIn('Big instrument | nan  | Instrument onto which attachments can... | Company A | d-', output)
-    self.assertIn('        Sensor | nan  | Attachment that increases functionali... | Company B | d-', output)
+    self.assertIn('Big instrument |      | Instrument onto which attachments can... | Company A | d-', output)
+    self.assertIn('        Sensor |      | Attachment that increases functionali... | Company B | d-', output)
 
     output = self.be.output('measurement')
-    self.assertIn('https://download.samplelib.com/jpeg/s... |  _3  | - Remote image from samplelib. Used f... |            measurement/image | Y     | nan    ', output)
-    self.assertIn('simple.csv | nan  | # These .csv files use the simple con... | measurement/csv/linesAndDots | Y     | nan    |                                nan | m-', output)
-    self.assertIn('simple.png | nan  | # File with two locations', output)
-    self.assertIn('- The sam... |            measurement/image | Y     | nan    |                                nan | m-', output)
+    self.assertIn('https://download.samplelib.com/jpeg/s... | _3   | - Remote image from samplelib. Used f... |            measurement/image | Y     |        ', output)
+    self.assertIn('simple.csv |      | # These .csv files use the simple con... | measurement/csv/linesAndDots | Y     |        |                                    | m-', output)
+    self.assertIn('simple.png |      | # File with two locations', output)
+    self.assertIn('- The sam... |            measurement/image | Y     |        |                                    | m-', output)
 
     #Verify DB
     output = self.be.checkDB(outputStyle='text')

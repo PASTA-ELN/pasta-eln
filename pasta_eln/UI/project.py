@@ -2,7 +2,7 @@
 import logging
 import os
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot
 from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel
@@ -33,16 +33,16 @@ class Project(QWidget):
 
     self.mainL = QVBoxLayout()
     self.setLayout(self.mainL)
-    self.tree :Optional[TreeView]            = None
-    self.model:Optional[QStandardItemModel]  = None
-    self.allDetails:Optional[QTextEdit]      = None
+    self.tree :TreeView | None            = None
+    self.model:QStandardItemModel | None  = None
+    self.allDetails:QTextEdit | None      = None
     self.actHideDetail                       = QAction()
     self.actionFoldAll                       = QAction()
     self.showDetailsAll = False
-    self.btnAddSubfolder:Optional[TextButton] = None
-    self.btnEditProject:Optional[TextButton]  = None
-    self.btnMore:Optional[TextButton]         = None
-    self.btnVisibility:Optional[TextButton]   = None
+    self.btnAddSubfolder:TextButton | None = None
+    self.btnEditProject:TextButton | None  = None
+    self.btnMore:TextButton | None         = None
+    self.btnVisibility:TextButton | None   = None
     self.lineSep = 20
     self.metaRole = Qt.ItemDataRole.UserRole + 1
 

@@ -1,7 +1,7 @@
 """ config tab on GUI / Appearance / Interface elements """
 import json
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFormLayout, QGroupBox, QLabel, QVBoxLayout
 from ...fixedStringsJson import CONF_FILE_NAME, configurationGUI
 from ..guiCommunicate import Communicate

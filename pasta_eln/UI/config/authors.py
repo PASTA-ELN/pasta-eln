@@ -2,9 +2,10 @@
 import json
 import logging
 import re
+from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout
 from ...fixedStringsJson import CONF_FILE_NAME
 from ...miscTools import getORCIDName, getRORIDLabel

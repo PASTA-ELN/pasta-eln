@@ -8,7 +8,6 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information
 import webbrowser
-from typing import Union
 import qtawesome as qta
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize
 from PySide6.QtGui import QPainter
@@ -28,7 +27,7 @@ class LinkOnlineDelegate(QStyledItemDelegate):
   def paint(self,
             painter: QPainter,
             option: QStyleOptionViewItem,
-            index: Union[QModelIndex, QPersistentModelIndex]) -> None:
+            index: QModelIndex | QPersistentModelIndex) -> None:
     """
     Draws the re-order button within the cell represented by index
     Args:
@@ -51,7 +50,7 @@ class LinkOnlineDelegate(QStyledItemDelegate):
   def createEditor(self,
                    parent: QWidget,
                    option: QStyleOptionViewItem,
-                   index: Union[QModelIndex, QPersistentModelIndex]) -> QWidget:
+                   index: QModelIndex | QPersistentModelIndex) -> QWidget:
     """
     Disable the editor for the whole re-order column by simply returning None
     Args:
@@ -66,7 +65,7 @@ class LinkOnlineDelegate(QStyledItemDelegate):
                   event: QEvent,
                   model: QAbstractItemModel,
                   option: QStyleOptionViewItem,
-                  index: Union[QModelIndex, QPersistentModelIndex]) -> bool:
+                  index: QModelIndex | QPersistentModelIndex) -> bool:
     """
     In case of mouse click event, the re_order_signal is emitted for the respective table cell position
     Args:

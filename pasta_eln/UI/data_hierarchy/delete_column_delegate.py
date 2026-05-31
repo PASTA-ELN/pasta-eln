@@ -7,7 +7,6 @@
 #  Filename: delete_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information
-from typing import Union
 import qtawesome as qta
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QObject, QPersistentModelIndex, QSize
 from PySide6.QtGui import QPainter
@@ -27,7 +26,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
   def paint(self,
             painter: QPainter,
             option: QStyleOption,
-            index: Union[QModelIndex, QPersistentModelIndex]) -> None:
+            index: QModelIndex | QPersistentModelIndex) -> None:
     """
     Draws the delete button within the cell represented by index
     Args:
@@ -50,7 +49,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
   def createEditor(self,
                    parent: QWidget,
                    option: QStyleOptionViewItem,
-                   index: Union[QModelIndex, QPersistentModelIndex]) -> QWidget:
+                   index: QModelIndex | QPersistentModelIndex) -> QWidget:
     """
     Disable the editor for the delete column by simply returning None
     Args:
@@ -65,7 +64,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
                   event: QEvent,
                   model: QAbstractItemModel,
                   option: QStyleOptionViewItem,
-                  index: Union[QModelIndex, QPersistentModelIndex]) -> bool:
+                  index: QModelIndex | QPersistentModelIndex) -> bool:
     """
     In case of click detected within the cell represented by index, the respective delete signal is emitted
     Args:

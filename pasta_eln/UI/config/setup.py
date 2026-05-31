@@ -1,8 +1,9 @@
 """ Widget: setup tab inside the configuration dialog window """
 import logging
+from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFileDialog, QLabel, QMessageBox, QProgressBar, QVBoxLayout, QWidget
 from ...fixedStringsJson import exampleDataString, setupText

@@ -1,5 +1,4 @@
 """ ListItemDelegate module used for the table views """
-from typing import Optional
 from PySide6.QtCore import QAbstractItemModel, QModelIndex, QPersistentModelIndex, Qt
 from PySide6.QtWidgets import QComboBox, QStyledItemDelegate, QStyleOptionViewItem, QWidget
 
@@ -15,7 +14,7 @@ class ListItemDelegate(QStyledItemDelegate):
     """
     super().__init__()
     self.docTypesLabels = docTypesLabels
-    self.comboBox:Optional[QComboBox] = None
+    self.comboBox:QComboBox | None = None
 
   def createEditor(self,
                    parent: QWidget,

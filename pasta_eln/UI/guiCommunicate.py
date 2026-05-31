@@ -130,7 +130,7 @@ class Communicate(QObject):
       if self.backendThread.isRunning():
         self.backendThread.quit()
       if not self.backendThread.wait(5000):
-          pass
+        pass
       self.backendThread.deleteLater()
     self.waitDialog.close()
 

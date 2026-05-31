@@ -19,7 +19,7 @@ from ..miscTools import loadNamedModule
 from ..textTools.stringChanges import outputString
 
 matplotlib.use('Agg')
-matplotlib.rcParams["svg.fonttype"] = "none"
+matplotlib.rcParams['svg.fonttype'] = 'none'
 
 
 def runExtractorInSubprocess(job:dict[str,Any], connection:Any) -> None:

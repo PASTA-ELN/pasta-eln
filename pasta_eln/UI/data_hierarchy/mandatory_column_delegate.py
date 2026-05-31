@@ -8,7 +8,6 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information
 
-from typing import Union
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QRect
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (QApplication, QRadioButton, QStyle, QStyledItemDelegate, QStyleOptionButton,
@@ -22,7 +21,7 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
   def paint(self,
             painter: QPainter,
             option: QStyleOptionViewItem,
-            index: Union[QModelIndex, QPersistentModelIndex]) -> None:
+            index: QModelIndex | QPersistentModelIndex) -> None:
     """
     Draws the mandatory radio button within the cell represented by index
     Args:
@@ -55,7 +54,7 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
                   event: QEvent,
                   model: QAbstractItemModel,
                   option: QStyleOptionViewItem,
-                  index: Union[QModelIndex, QPersistentModelIndex]) -> bool:
+                  index: QModelIndex | QPersistentModelIndex) -> bool:
     """
     In case of mouse click event, the model data is toggled for the respective table cell index
     Args:
@@ -77,7 +76,7 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
   def createEditor(self,
                    parent: QWidget,
                    option: QStyleOptionViewItem,
-                   index: Union[QModelIndex, QPersistentModelIndex]) -> QWidget:
+                   index: QModelIndex | QPersistentModelIndex) -> QWidget:
     """
     Disable the editor for the whole mandatory column by simply returning None
     Args:

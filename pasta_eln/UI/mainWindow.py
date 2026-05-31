@@ -205,7 +205,7 @@ class MainWindow(QMainWindow):
       self.comm.configuration['defaultProjectGroup'] = command[1]
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.configuration, indent=2))
-      hardRestart()  # hard restart to link to correct addons
+      hardRestart()                                                   # hard restart to link to correct addons
     elif command[0] is Command.SYNC_ELABFTW:
       self.comm.uiRequestTask.emit(Task.SYNC_ELAB,  {'projGroup':self.comm.projectGroup, 'subtask':command[1]})
     elif command[0] is Command.SCHEMA:
@@ -267,7 +267,8 @@ class MainWindow(QMainWindow):
       if myCount>5:
         reportText = re.sub(regexStr, '', reportText, count=myCount-5)
         reportText += r'<font color="magenta">image does not exist ...:<\/font><br>'
-    elif task not in (Task.EXTRACTOR_TEST, Task.EXTRACTOR_RERUN, Task.DELETE_DOC, Task.EXPORT_ELN, Task.IMPORT_ELN, Task.SYNC_ELAB):               #e.g. extractor tests work out of the box
+    elif task not in (Task.EXTRACTOR_TEST, Task.EXTRACTOR_RERUN, Task.DELETE_DOC, Task.EXPORT_ELN,
+                      Task.IMPORT_ELN, Task.SYNC_ELAB):              #e.g. extractor tests work out of the box
       logging.error('Unknown task in showReport: %s', task, exc_info=True)
     showMessage(self, 'Report', reportText, image=image)
 

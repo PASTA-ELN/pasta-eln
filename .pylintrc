@@ -50,10 +50,6 @@ persistent=yes
 # Specify a configuration file.
 #rcfile=
 
-# When enabled, pylint would attempt to guess common misconfiguration and emit
-# user-friendly hints instead of false-positive error messages
-suggestion-mode=yes
-
 # Allow loading of arbitrary C extensions. Extensions are imported into the
 # active Python interpreter and may run arbitrary code.
 unsafe-load-any-extension=no
@@ -450,7 +446,7 @@ max-bool-expr=6 #SB change
 max-branches=90 #Steffen's change
 
 # Maximum number of locals for function / method body
-max-locals=55 #Steffen's change
+max-locals=60 #Steffen's change
 
 # Maximum number of parents for a class (see R0901).
 max-parents=7

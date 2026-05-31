@@ -391,7 +391,8 @@ class BackendWorker(QObject):
             runtime = time.perf_counter() - timeStart
             runtimeText = f'{runtime:.1f} s' if runtime < 60 else f'{runtime//60:.0f} min {runtime%60:.1f} s'
             headline += f'<br>Runtime: {runtimeText}'
-            msg = '<br>'.join(f'{MERGE_LABELS[k]}: {statsCount[k]}' for k in MERGE_LABELS if statsCount.get(k, 0))
+            msg = '<br>'.join(f'{label}: {statsCount[k]}' for k, label in MERGE_LABELS.items()
+                              if statsCount.get(k, 0))
             self.beSendTaskReport.emit(task, f'<p>{headline}<br><br><b>Items per action:</b><br>{msg}</p>', '', '')
           else:                                                                                  #if not given
             self.beSendTaskReport.emit(task, 'ERROR: Please specify a server address and API-key in the Configuration', '', '')

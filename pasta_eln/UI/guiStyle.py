@@ -1,6 +1,7 @@
 """ all styling of buttons and other general widgets, some defined colors... """
 import logging
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable
+from typing import Any
 import qtawesome as qta
 from PySide6.QtCore import QByteArray, QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap
@@ -16,9 +17,9 @@ space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                 
 
 class TextButton(QPushButton):
   """ Button that has only text"""
-  def __init__(self, label:str, widget:QWidget, command:list[Any]|None=[], layout:Optional[QLayout]=None,
+  def __init__(self, label:str, widget:QWidget, command:list[Any]|None=[], layout:QLayout | None=None,
                tooltip:str='', checkable:bool=False, style:str='', hide:bool=False, iconName:str='',
-               shortCut:Optional[str]=None):
+               shortCut:str | None=None):
     """
     Args:
       label (str): label printed on button
@@ -63,7 +64,7 @@ class TextButton(QPushButton):
 
 class IconButton(QPushButton):
   """ Button that has only an icon"""
-  def __init__(self, iconName:str, widget:QWidget, command:list[Any]=[], layout:Optional[QLayout]=None,
+  def __init__(self, iconName:str, widget:QWidget, command:list[Any]=[], layout:QLayout | None=None,
                tooltip:str='', style:str='', hide:bool=False, checkable:bool=False):
     """
     Args:
@@ -100,7 +101,7 @@ class IconButton(QPushButton):
 class Action(QAction):
   """ QAction and assign function to menu"""
   def __init__(self, label:str, widget:QWidget, command:list[Any],
-               menu:QMenu, shortcut:Optional[str]=None, icon:str=''):
+               menu:QMenu, shortcut:str | None=None, icon:str=''):
     """
     Args:
       label (str): label printed on submenu
@@ -132,7 +133,7 @@ class Action(QAction):
 
 class Image():
   """ Image widget depending on type of data """
-  def __init__(self, data:str, layout:Optional[QLayout], width:int=-1, height:int=-1, anyDimension:int=-1):
+  def __init__(self, data:str, layout:QLayout | None, width:int=-1, height:int=-1, anyDimension:int=-1):
     """
     Args:
       data (str): image data in byte64-encoding or svg-encoding
@@ -194,8 +195,8 @@ class Image():
 
 class Label(QLabel):
   """ Label widget: headline, ... """
-  def __init__(self, text:str='', size:str='', layout:Optional[QLayout]=None,
-               function:Optional[Callable[[str, str],None]]=None, docID:str='', tooltip:str='', style:str=''):
+  def __init__(self, text:str='', size:str='', layout:QLayout | None=None,
+               function:Callable[[str, str],None] | None=None, docID:str='', tooltip:str='', style:str=''):
     """ Label widget with given font-size and functions:
     - text selection: if only character, easy selection
       - if formatted text: right-mouse-button to select all (There is no other way, apparently)
@@ -276,7 +277,7 @@ class ScrollMessageBox(QMessageBox):
       self.layout().addWidget(self.tabW, 0, 0, 1, self.layout().columnCount())                  # type: ignore
 
 
-def widgetAndLayout(direction:str='V', parentLayout:Optional[Union[QLayout,QSplitter]]=None, spacing:str='0', left:str='0',
+def widgetAndLayout(direction:str='V', parentLayout:QLayout |QSplitter | None=None, spacing:str='0', left:str='0',
                     top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QBoxLayout]:
   """
   Convenient function for widget and a boxLayout
@@ -311,7 +312,7 @@ def widgetAndLayout(direction:str='V', parentLayout:Optional[Union[QLayout,QSpli
   return widget, layout
 
 
-def widgetAndLayoutForm(parentLayout:Optional[Union[QLayout,QSplitter]]=None, spacing:str='0', left:str='0',
+def widgetAndLayoutForm(parentLayout:QLayout |QSplitter | None=None, spacing:str='0', left:str='0',
                     top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QFormLayout]:
   """
   Convenient function for widget and a form layout
@@ -334,7 +335,7 @@ def widgetAndLayoutForm(parentLayout:Optional[Union[QLayout,QSplitter]]=None, sp
   return widget, layout
 
 
-def widgetAndLayoutGrid(parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0',
+def widgetAndLayoutGrid(parentLayout:QLayout | None=None, spacing:str='0', left:str='0',
                     top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QGridLayout]:
   """
   Convenient function for widget and a grid layout

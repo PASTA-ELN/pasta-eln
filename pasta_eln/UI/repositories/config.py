@@ -2,9 +2,10 @@
 import json
 import re
 import webbrowser
+from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 import qtawesome as qta
 from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit, QToolButton, QVBoxLayout
 from ...backendWorker.dataverse import DataverseClient

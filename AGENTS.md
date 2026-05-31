@@ -6,7 +6,7 @@
 ### Basic Development
 - **Start the application**: `python -m pasta_eln.gui` or `python pastaMain.py`
 - **Start research version**: `python pastaResearch.py`
-- **Run tests**: `python -m pytest tests/` or `python -m pytest` (specific test: `python -m tests.test_01_3Projects`)
+- **Run tests**: `python -m pytest tests/` or `python -m pytest` (specific test: `python -m pytest tests/test_01_DefaultExample.py`)
 
 ### Code Quality
 - **Linting**: `pylint pasta_eln/` or `pylint $(git ls-files 'pasta_eln/*.py')`
@@ -16,7 +16,7 @@
 
 ### Documentation
 - **Build docs**: `make -C docs html`
-- **View docs**: Open `docs/build/index.html` after building
+- **View docs**: Open `docs/build/html/index.html` after building
 
 ### Installation & Dependencies
 - **Install development requirements**: `pip install -r requirements-devel.txt`
@@ -29,7 +29,7 @@ PASTA-ELN is a Qt-based Electronic Lab Notebook (ELN) application built with Pyt
 
 ### Core Components
 
-**Backend (`pasta_eln/backend.py`)**
+**Backend (`pasta_eln/backendWorker/backend.py`)**
 - Main data access layer using SQLite database
 - Handles all filesystem operations
 - Manages document hierarchy and project structure
@@ -40,16 +40,16 @@ PASTA-ELN is a Qt-based Electronic Lab Notebook (ELN) application built with Pyt
 - Orchestrates all GUI components
 - Handles application lifecycle and window management
 
-**Database (`pasta_eln/sqlite.py`)**
+**Database (`pasta_eln/backendWorker/sqlite.py`)**
 - SQLite database abstraction layer
 - Document storage and retrieval
 - Database schema management
 
-**Communication (`pasta_eln/guiCommunicate.py`)**
+**Communication (`pasta_eln/UI/guiCommunicate.py`)**
 - Qt signal-slot communication between GUI components
 - Centralized event handling system
 
-### GUI Components (`pasta_eln/GUI/`)
+### GUI Components (`pasta_eln/UI/`)
 
 **Main Interface**
 - `body.py`: Main content area
@@ -59,10 +59,10 @@ PASTA-ELN is a Qt-based Electronic Lab Notebook (ELN) application built with Pyt
 - `table.py`: Tabular data display
 
 **Configuration**
-- `config.py`: Main configuration dialog
-- `configGUI.py`: GUI-specific settings
-- `configProjectGroup.py`: Project group management
-- `configSetup.py`: Initial setup configuration
+- `config/main.py`: Main configuration dialog
+- `config/gui.py`: GUI-specific settings
+- `config/projectGroup.py`: Project group management
+- `config/setup.py`: Initial setup configuration
 
 **Data Management**
 - `data_hierarchy/`: Document type hierarchy editor
@@ -84,9 +84,9 @@ PASTA-ELN is a Qt-based Electronic Lab Notebook (ELN) application built with Pyt
 - Data visualization tools
 
 **External Integrations**
-- `elabFTWapi.py`: eLabFTW API integration
-- `elabFTWsync.py`: eLabFTW synchronization
-- `inputOutput.py`: Import/export functionality
+- `backendWorker/elabFTWapi.py`: eLabFTW API integration
+- `backendWorker/elabFTWsync.py`: eLabFTW synchronization
+- `backendWorker/inputOutput.py`: Import/export functionality
 
 ## Development Patterns
 

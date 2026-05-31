@@ -62,3 +62,4 @@ pygments==2.19.2
 pytest==8.4.1
 
 # pytest-qt
+pytest-qt==4.5.0

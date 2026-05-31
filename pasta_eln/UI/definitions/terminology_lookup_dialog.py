@@ -9,7 +9,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information
 import asyncio
 import textwrap
-from typing import Callable
+from collections.abc import Callable
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QMessageBox, QWidget

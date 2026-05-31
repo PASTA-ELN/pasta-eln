@@ -1,8 +1,8 @@
 """ Main class of config tab on parameters (e.g. API keys) for add-ons """
 import json
+from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
-from typing import Callable
 from PySide6.QtWidgets import QApplication, QDialog, QGroupBox, QLineEdit, QVBoxLayout
 from ...fixedStringsJson import CONF_FILE_NAME
 from ...miscTools import loadNamedModule
