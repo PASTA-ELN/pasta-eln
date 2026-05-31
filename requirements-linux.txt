@@ -7,7 +7,7 @@ cryptography==46.0.7
 cycler==0.12.1
 darkdetect==0.8.0
 fonttools==4.62.1
-idna==3.11
+idna==3.15
 kiwisolver==1.5.0
 matplotlib==3.10.8
 numpy==2.2.6
@@ -29,4 +29,4 @@ requests==2.33.1
 shiboken6==6.10.3
 six==1.17.0
 tzdata==2026.1
-urllib3==2.6.3
+urllib3==2.7.0
