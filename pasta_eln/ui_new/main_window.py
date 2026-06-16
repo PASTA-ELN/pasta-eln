@@ -8,7 +8,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import QEvent, QUrl, Qt, Slot
+from PySide6.QtCore import QEvent, QTimer, QUrl, Qt, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QPixmap, QShortcut
 from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QMainWindow, QSplitter, QVBoxLayout
 
@@ -119,10 +119,14 @@ class MainWindow(QMainWindow):
     self.body = Body(self.comm)  # body with information
     self.sidebar = ProjectSidebar(self.comm)  # sidebar with buttons
     self.splitter.addWidget(self.sidebar)
-    self.splitter.setStretchFactor(0, 1)
     self.splitter.addWidget(self.body)
-    self.splitter.setStretchFactor(1, 6)
+
+    def _resizeSplitter():
+      sidebarWidth = max(200, self.splitter.width() // 5)
+      self.splitter.setSizes([sidebarWidth, self.splitter.width() - sidebarWidth])
+
     self.paint()
+    QTimer.singleShot(0, _resizeSplitter)
 
   @Slot(str)
   def paint(self, _: str = '') -> None:

@@ -3,7 +3,8 @@ import logging
 from typing import Any, Callable, Optional, Union
 import qtawesome as qta
 from PySide6.QtCore import QByteArray, QPoint, QRect, QSize, Qt
-from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap
+from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPainter, QPixmap, QResizeEvent
+from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (QBoxLayout, QFormLayout,QFrame, QGridLayout, QHBoxLayout, QLabel, QLayout, QLayoutItem, QMenu,
                                QMessageBox, QPushButton, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QVBoxLayout,
@@ -477,3 +478,91 @@ class FlowLayout(QLayout):
       x = nextX
       lineHeight = max(lineHeight, itemSize.height())
     return y + lineHeight + margins[3] - rect.y()
+
+class ResizeImage(QLabel):
+  """QLabel that displays a base64 image and automatically rescales it."""
+
+  def __init__(self, data: str, layout: Optional[QLayout] = None):
+    super().__init__()
+    self._sourcePixmap = QPixmap()
+    self._isSvg = False
+    self._svgRenderer = None
+
+    self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    self.setSizePolicy(
+      QSizePolicy.Policy.Expanding,
+      QSizePolicy.Policy.Expanding,
+    )
+    self.setMinimumSize(50, 50)
+
+    if data.startswith("data:image/"):
+      try:
+        byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21] == ',' else data[23:], encoding='utf-8'))
+        imageW = QImage()
+        imageType = data[11:15].upper()
+        success = imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType)  # type: ignore[arg-type]
+        if not success:
+          logging.warning('Could not load image data with format %s', imageType)
+          return
+        self._sourcePixmap = QPixmap.fromImage(imageW)
+        if layout is not None:
+          layout.addWidget(self)
+        self._updatePixmap()
+      except Exception as e:
+        logging.warning('Error processing base64-image %s', e)
+
+    elif data.startswith('<?xml'):
+      self._isSvg = True
+      byteData = QByteArray(data.encode("utf-8"))
+      self._svgRenderer = QSvgRenderer(byteData, self)
+      if layout is not None:
+        layout.addWidget(self)
+      self._updatePixmap()
+    elif len(data) > 2:
+      logging.error('guiStyle.Image: %s', data[:50], exc_info=True)
+
+  def resizeEvent(self, event: QResizeEvent):
+    super().resizeEvent(event)
+    self._updatePixmap()
+
+  def _updatePixmap(self):
+    if self._isSvg:
+      self._renderSvg()
+      return
+    if self._sourcePixmap.isNull():
+      return
+    scaled = self._sourcePixmap.scaled(
+      self.size(),
+      Qt.AspectRatioMode.KeepAspectRatio,
+      Qt.TransformationMode.SmoothTransformation,
+    )
+    super().setPixmap(scaled)
+
+  def _renderSvg(self):
+    if self._svgRenderer is None or not self._svgRenderer.isValid():
+      return
+
+    size = self.size()
+    if size.width() <= 0 or size.height() <= 0:
+      return
+    intrinsic = self._svgRenderer.defaultSize()
+    scaled = intrinsic.scaled(size, Qt.AspectRatioMode.KeepAspectRatio)
+    x = (size.width() - scaled.width()) // 2
+    y = (size.height() - scaled.height()) // 2
+    pixmap = QPixmap(size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    renderRect = QRect(x, y, scaled.width(), scaled.height())
+    self._svgRenderer.render(painter, renderRect)
+    painter.end()
+
+    super().setPixmap(pixmap)
+
+  def setSourcePixmap(self, pixmap: QPixmap):
+    """Replace the source image."""
+    self._sourcePixmap = pixmap
+    self._updatePixmap()
+
+  def sourcePixmap(self) -> QPixmap:
+    """Return the original image."""
+    return self._sourcePixmap

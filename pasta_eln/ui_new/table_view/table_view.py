@@ -140,7 +140,7 @@ class TableView(QWidget):
   @Slot()
   def onCellDoubleClicked(self, index: QModelIndex) -> None:
     """
-    What happens when the user double clicks on a cell in the table
+    What happens when the user double-clicks on a cell in the table
       -> Nothing yet.
     Args:
       index (QModelIndex): Index of the cell clicked

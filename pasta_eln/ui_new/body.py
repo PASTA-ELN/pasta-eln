@@ -3,12 +3,13 @@ Central widget: The big toplevel Widget on the righthand side of the sidebar:
 Manages the TabBar to switch between Project-Tree-View and DocType-Tables
 """
 import qtawesome
-from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QPushButton, QSplitter, QStackedWidget, QTabWidget, QWidget
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtWidgets import QPushButton, QSizePolicy, QSplitter, QStackedWidget, QTabWidget
 
-from pasta_eln.ui.details import Details
 from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.ui.gui_style import Label
 from pasta_eln.ui.project import Project
+from pasta_eln.ui_new.details.details import Details
 from pasta_eln.ui_new.table_view.table_view import TableView
 
 
@@ -27,7 +28,10 @@ class Body(QStackedWidget):
 
     ### STACK #0
     # Start Page (Before a project is chosen)
-    self.startPage = QWidget()
+    color = self.comm.palette.getThemeColor("foreground", "disabled")
+    self.startPage = Label("Please Select a Project on the left.", 'h1', style=f"color: {color};")
+    self.startPage.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+    self.startPage.setAlignment(Qt.AlignmentFlag.AlignCenter)
     self.addWidget(self.startPage)
 
     ### STACK #1
@@ -52,7 +56,7 @@ class Body(QStackedWidget):
     self.detailsWidget = Details(self.comm)
 
     # Splitter (for Tabwidget and Details)
-    self.splitter = QSplitter()
+    self.splitter = QSplitter(handleWidth=3)
     self.splitter.addWidget(self.tabWidget)
     self.splitter.setStretchFactor(0, 3)
     self.splitter.addWidget(self.detailsWidget)
@@ -75,7 +79,7 @@ class Body(QStackedWidget):
     """
     # Add Project View - Tab
     projectView = Project(self.comm)
-    self.tabWidget.addTab(projectView, qtawesome.icon("ri.home-2-line"), "Project")
+    self.tabWidget.addTab(projectView, qtawesome.icon("ri.home-2-line"), "Home")
     # Add Table Views - Tabs
     for doctype, docTypeDetails in self.comm.docTypesTitles.items():
       if doctype[0] == 'x' or '/' in doctype:

@@ -23,7 +23,7 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from packaging.version import parse as parse_version
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QLayout, QWidget
 import pasta_eln
 from .fixed_strings_json import confFileName, configurationGUI, defaultConfiguration
 
@@ -625,3 +625,16 @@ def rgba_to_argb(hex_color: str) -> str:
   hex_color = hex_color.lstrip('#')
   r, g, b, a = hex_color[:2], hex_color[2:4], hex_color[4:6], hex_color[6:8]
   return f"#{a}{r}{g}{b}"
+
+def clearLayout(layout: QLayout, start:int = 0) -> None:
+  """
+  removes all widgets from the given layout
+  Args:
+    layout: QLayout that should be emptied
+    start: number of items in layout that should be skipped in front
+  """
+  while layout.count()-start:
+    item = layout.takeAt(start)
+    widget = item.widget()
+    if widget:
+      widget.deleteLater()

@@ -3,9 +3,10 @@ import pandas as pd
 import qtawesome
 from PySide6.QtCore import Slot
 from PySide6.QtGui import Qt
-from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QPushButton, QScrollArea, QSizePolicy, QVBoxLayout, \
+from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QPushButton, QScrollArea, QVBoxLayout, \
   QWidget
 
+from pasta_eln.misc_tools import clearLayout
 from pasta_eln.ui.config.main import Configuration
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import HSeparator, Label
@@ -86,8 +87,8 @@ class ProjectSidebar(QWidget):
     self.footer.setLayout(self.footerLayout)
 
     # Style
-    self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-    self.setMinimumWidth(200)
+    # self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+    # self.setMinimumWidth(200)
 
     # Layout
     self.layout = QVBoxLayout()
@@ -117,11 +118,7 @@ class ProjectSidebar(QWidget):
       projectChoice (str): projectID on which to focus: '' string=draw default=none; 'redraw' implies redraw; id implies id
     """
     # 1. Empty/Clear the Layout
-    while self.projectListLayout.count():
-      item = self.projectListLayout.takeAt(0)
-      widget = item.widget()
-      if widget:
-        widget.deleteLater()
+    clearLayout(self.projectListLayout)
 
     # 2. Update Project in comm if necessary
     if projectChoice != 'redraw':
