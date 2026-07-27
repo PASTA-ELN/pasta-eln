@@ -1,17 +1,36 @@
-""" Color palette allows easy color access and manages Theme"""
+"""Color palette allows easy colour access and manages the application theme."""
 
-import qdarktheme
+from typing import TYPE_CHECKING, TypedDict, TypeAlias, cast
+
 import darkdetect
+import qdarktheme
 from PySide6.QtGui import QColor
 
 from ..fixed_strings_json import THEME_COLOR_VALUES
 from ..misc_tools import rgba2argb
 
+if TYPE_CHECKING:
+  from .gui_communicate import Communicate
+
+
+class ColorModifiers(TypedDict, total=False):
+  """Transformations applied to a category's base colour."""
+
+  darken: float
+  lighten: float
+  transparent: float
+
+
+ColorRule: TypeAlias = str | ColorModifiers
+ColorCategory: TypeAlias = dict[str, ColorRule]
+ThemeColorValues: TypeAlias = dict[str, dict[str, str | ColorCategory]]
+ColorChannels: TypeAlias = tuple[int, int, int, int]
+
 
 class Palette:
   """ Color palette allows easy color access and manages Theme"""
 
-  def __init__(self, comm, theme: str) -> None:
+  def __init__(self, comm: Communicate, theme: str) -> None:
     """ Initialize the color palette
     Args:
       theme (str): 'light' or 'dark' or 'automatic'
@@ -50,7 +69,7 @@ class Palette:
     padding-bottom: 25px;
     }
     """
-    customColors={}#{"background":"#1E3057"}
+    customColors: dict[str, str] = {}
     if theme == "automatic":
       theme = darkdetect.theme().lower()
     if theme not in ["dark", "light", ""]:
@@ -102,8 +121,8 @@ class Palette:
         QColor: the computed color
     """
     # 1. Determine base color
-    themeDict = THEME_COLOR_VALUES[self.qtheme]
-    cat = themeDict.get(category, {})
+    themeDict = cast(ThemeColorValues, THEME_COLOR_VALUES)[self.qtheme]
+    cat: str | ColorCategory = themeDict.get(category, {})
     if isinstance(cat, str):
       if len(cat) > 7: # Colors in THEME_COLOR_VALUES are #RGBA, not #ARGB like QColor wants.
         cat = rgba2argb(cat)
@@ -120,12 +139,12 @@ class Palette:
 
     # Helper functions
     def _darken(color: QColor, amount: float) -> QColor:
-      h, s, v, a = color.getHsv()
+      h, s, v, a = cast(ColorChannels, color.getHsv())
       v = max(0, int(v * (1 - amount)))
       return QColor.fromHsv(h, s, v, a)
 
     def _lighten(color: QColor, amount: float) -> QColor:
-      h, s, v, a = color.getHsv()
+      h, s, v, a = cast(ColorChannels, color.getHsv())
       v = min(255, int(v * (1 + amount)))
       return QColor.fromHsv(h, s, v, a)
 
@@ -140,7 +159,7 @@ class Palette:
       if "transparent" in rule:
         alpha = int((1 - rule["transparent"]) * 255)
         color.setAlpha(alpha)
-        r, g, b, a = color.getRgb()
+        r, g, b, a = cast(ColorChannels, color.getRgb())
         return f"rgba({r}, {g}, {b}, {a})"
       return color.name()
 
@@ -158,5 +177,5 @@ class Palette:
 
     """
     newColor = QColor(colorHex)
-    r, g, b, _ = newColor.getRgb()
+    r, g, b, _ = cast(ColorChannels, newColor.getRgb())
     return f"rgba({r}, {g}, {b}, {newAlpha})"
