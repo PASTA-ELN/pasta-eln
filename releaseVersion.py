@@ -232,7 +232,7 @@ def rightAlignComments() -> None:
     for file in files:
       if file.endswith('.py') and \
           file not in ['markdown2html.py','html2markdown.py','html2mdConfig.py','html2mdUtils.py','htmlString.py',
-                       'guiCommunicate.py','worker.py'] and 'Resources/' not in root and '/AddOns' not in root:
+                       'gui_communicate.py','worker.py'] and 'Resources/' not in root and '/add_ons' not in root:
         filePath = os.path.join(root, file)
         with open(filePath, encoding='utf-8') as f:
           content = f.read()

@@ -39,6 +39,8 @@ pre-commit run --all-files
 make -C docs html
 ```
 
+`releaseVersion.py` performs broader release-maintenance checks, including tests, static analysis, Sourcery, and documentation. Invoke it manually only; do not run it as routine agent verification because it regenerates files and can prompt for release actions.
+
 Before editing, run `git status --short`. Do not overwrite, reset, or remove unrelated user changes. Run the smallest relevant test first, then the standard suite when practical. The standard test suite is intentionally stateful: keep numbered `test_XX_` modules in their required execution order; `tests/conftest.py` enforces that order. Run pytest and pylint outside the execution sandbox: extractor tests use multiprocessing and the sandbox prevents its forkserver from starting; pylint writes its cache under the user home directory. GUI tests must use Qt's offscreen platform in headless environments.
 
 ## Engineering conventions

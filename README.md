@@ -34,6 +34,8 @@ python -m pylint pasta_eln
 
 Build the documentation with `make -C docs html`.
 
+For maintainer release work, `releaseVersion.py` provides a broader verification run; invoke it manually only.
+
 ## Open issues
 
 Open issues are the union of:
