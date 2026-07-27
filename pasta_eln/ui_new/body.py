@@ -23,9 +23,6 @@ class Body(QStackedWidget):
     super().__init__()
     self.comm = comm
 
-    self.comm.docTypesChanged.connect(self.paint)
-    self.comm.changeProject.connect(self.onChangeProject)
-
     ### STACK #0
     # Start Page (Before a project is chosen)
     color = self.comm.palette.getThemeColor("foreground", "disabled")
@@ -67,6 +64,8 @@ class Body(QStackedWidget):
     # Style
 
     # Signals
+    self.comm.docTypesChanged.connect(self.paint)
+    self.comm.changeProject.connect(self.onChangeProject)
     self.tabWidget.currentChanged.connect(self.onTabChanged)
 
     # CODE
