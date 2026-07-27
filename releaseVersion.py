@@ -239,7 +239,7 @@ def rightAlignComments() -> None:
         output = ''                                                                  # sourcery skip: use-join
         for number, line in enumerate(content.splitlines()):
           if pattern1.search(line) and not line.strip().startswith('#') and len(line)!=110 and \
-             pattern2.search(line) and 'background' not in line and 'import' not in line:
+             pattern2.search(line) and 'background' not in line and 'import' not in line and 'tag' not in line and 'border' not in line:
             output += f'{number+1}: {line.strip()}\n'
         if output and 'Resources/' not in filePath:
           print('Processing file:', filePath)

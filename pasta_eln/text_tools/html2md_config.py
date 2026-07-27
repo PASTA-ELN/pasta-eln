@@ -77,10 +77,10 @@ RE_TABLE = re.compile(r' \| ')
 
 RE_MD_DOT_MATCHER = re.compile(
     r"""
-    ^             # start of line
-    (\s*\d+)      # optional whitespace and a number
-    (\.)          # dot
-    (?=\s)        # lookahead assert whitespace
+    ^                                                                                          # start of line
+    (\s*\d+)                                                                # optional whitespace and a number
+    (\.)                                                                                                 # dot
+    (?=\s)                                                                       # lookahead assert whitespace
     """,
     re.MULTILINE | re.VERBOSE,
 )
@@ -98,16 +98,16 @@ RE_MD_DASH_MATCHER = re.compile(
     ^
     (\s*)
     (-)
-    (?=\s|\-)     # followed by whitespace (bullet list, or spaced out hr)
-                  # or another dash (header or hr)
+    (?=\s|\-)                                         # followed by whitespace (bullet list, or spaced out hr)
+                                                                              # or another dash (header or hr)
     """,
     flags=re.MULTILINE | re.VERBOSE,
 )
 RE_SLASH_CHARS = r'\`*_{}[]()#+-.!'
 RE_MD_BACKSLASH_MATCHER = re.compile(
     r"""
-    (\\)          # match one slash
-    (?=[%s])      # followed by a char that requires escaping
+    (\\)                                                                                     # match one slash
+    (?=[%s])                                                       # followed by a char that requires escaping
     """
     % re.escape(RE_SLASH_CHARS),
     flags=re.VERBOSE,
