@@ -213,11 +213,11 @@ class MainWindow(QMainWindow):
       self.comm.projectGroup = command[1]
       self.comm.start(command[1])
     elif command[0] is Command.SYNC_SEND:
-      self.comm.uiRequestTask.emit(Task.SEND_ELAB, {'projGroup': self.comm.projectGroup})
+      self.comm.uiRequestTask.emit(Task.SYNC_ELAB, {'projGroup': self.comm.projectGroup, 'subtask': 's'})
     elif command[0] is Command.SYNC_GET:
-      self.comm.uiRequestTask.emit(Task.GET_ELAB, {'projGroup': self.comm.projectGroup})
+      self.comm.uiRequestTask.emit(Task.SYNC_ELAB, {'projGroup': self.comm.projectGroup, 'subtask': 'g'})
     elif command[0] is Command.SYNC_SMART:
-      self.comm.uiRequestTask.emit(Task.SMART_ELAB, {'projGroup': self.comm.projectGroup})
+      self.comm.uiRequestTask.emit(Task.SYNC_ELAB, {'projGroup': self.comm.projectGroup, 'subtask': ''})
     elif command[0] is Command.SCHEMA:
       dialogS = SchemeEditor(self.comm)
       dialogS.exec()
@@ -281,8 +281,7 @@ class MainWindow(QMainWindow):
         reportText = re.sub(regexStr, '', reportText, count=myCount - 5)
         reportText += r'<font color="magenta">image does not exist ...:<\/font><br>'
     elif task not in (Task.EXTRACTOR_TEST, Task.EXTRACTOR_RERUN, Task.DELETE_DOC, Task.EXPORT_ELN, Task.IMPORT_ELN,
-                      Task.SEND_ELAB,
-                      Task.GET_ELAB, Task.SMART_ELAB):  # e.g. extractor tests work out of the box
+                      Task.SYNC_ELAB):  # e.g. extractor tests work out of the box
       logging.error('Unknown task in showReport: %s', task, exc_info=True)
     showMessage(self, 'Report', reportText, image=image)
 
