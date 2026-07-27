@@ -1,129 +1,59 @@
-# Guidance for LLMs
+# Guidance for contributors and agents
 
+## Repository map
 
-## Development Commands
+- `pasta_eln/`: application package.
+  - `backend_worker/`: SQLite storage, import/export, repository clients, and worker tasks.
+  - `ui/`: shared and established Qt widgets, configuration dialogs, and communication.
+  - `ui_new/`: current UI implementation, including project sidebar, details, table view, and workplan creator.
+  - `add_ons/`: extractors and optional project/table extensions.
+  - `text_tools/`: Markdown/HTML and string helpers.
+- `tests/`: standard pytest suite.
+- `testsComplicated/`: environment-dependent or integration-style tests; do not add these to the default test run without a clear isolation strategy.
+- `docs/`: Sphinx documentation.
 
-### Basic Development
-- **Start the application**: `python -m pasta_eln.gui` or `python pastaMain.py`
-- **Start research version**: `python pastaResearch.py`
-- **Run tests**: `python -m pytest tests/` or `python -m pytest` (specific test: `python -m pytest tests/test_01_DefaultExample.py`)
+The GUI entry point is `python -m pasta_eln.gui`. Its startup module creates `ui_new.main_window.MainWindow`; keep old and new UI imports explicit while the migration is in progress.
 
-### Code Quality
-- **Linting**: `pylint pasta_eln/` or `pylint $(git ls-files 'pasta_eln/*.py')`
-- **Type checking**: `mypy pasta_eln/`
-- **Code spell check**: `codespell`
-- **Pre-commit hooks**: `pre-commit run --all-files`
+## Development commands
 
-### Documentation
-- **Build docs**: `make -C docs html`
-- **View docs**: Open `docs/build/html/index.html` after building
+Run commands from the repository root. Python 3.10 or later is required.
 
-### Installation & Dependencies
-- **Install development requirements**: `pip install -r requirements-devel.txt`
-- **Install runtime requirements**: `pip install -r requirements-linux.txt` (Linux) or `pip install -r requirements-windows.txt` (Windows)
-- **Install package**: `pip install -e .`
+```bash
+# Install
+pip install -r requirements-linux.txt       # Linux
+pip install -r requirements-windows.txt     # Windows
+pip install -r requirements-devel.txt       # development tools
+pip install -e .
 
-## Architecture Overview
+# Run
+python -m pasta_eln.gui
 
-PASTA-ELN is a Qt-based Electronic Lab Notebook (ELN) application built with Python and PySide6.
+# Verify
+QT_QPA_PLATFORM=offscreen python -m pytest tests/
+python -m mypy pasta_eln
+python -m pylint pasta_eln
+codespell
+pre-commit run --all-files
 
-### Core Components
+# Documentation
+make -C docs html
+```
 
-**Backend (`pasta_eln/backendWorker/backend.py`)**
-- Main data access layer using SQLite database
-- Handles all filesystem operations
-- Manages document hierarchy and project structure
-- Inherits from `CLI_Mixin` for command-line functionality
+Before editing, run `git status --short`. Do not overwrite, reset, or remove unrelated user changes. Run the smallest relevant test first, then the standard suite when practical. GUI tests must use Qt's offscreen platform in headless environments.
 
-**GUI (`pasta_eln/gui.py`)**
-- Main application window (`MainWindow` class)
-- Orchestrates all GUI components
-- Handles application lifecycle and window management
+## Engineering conventions
 
-**Database (`pasta_eln/backendWorker/sqlite.py`)**
-- SQLite database abstraction layer
-- Document storage and retrieval
-- Database schema management
+- Use Python type hints for new and changed public code; maintain the configured mypy and pylint standards.
+- Prefer clear, descriptive names over abbreviated names. Split large widgets into focused functions, classes, or modules.
+- Keep related subwidgets in the same directory and create a dedicated custom widget when a subwidget becomes substantial.
+- Use parameterized SQL for values; never build SQL from user- or document-provided strings.
+- Treat SQLite data, user files, configuration, and external repository uploads as durable user data. Avoid destructive operations unless explicitly requested and validated.
+- Keep README concise and user-facing; put detailed documentation in `docs/`. Update this file when commands, package structure, or safety constraints change.
 
-**Communication (`pasta_eln/UI/guiCommunicate.py`)**
-- Qt signal-slot communication between GUI components
-- Centralized event handling system
+## UI development guidelines
 
-### GUI Components (`pasta_eln/UI/`)
+Follow [`pasta_eln/ui_new/development_guidelines.md`](pasta_eln/ui_new/development_guidelines.md) for UI-specific design and implementation rules. In short: use standard PySide6 widgets and theme colours; test light and dark themes with empty, short, and long content; keep the user’s current context and important actions visible; and organize widgets into clear, typed, focused components.
 
-**Main Interface**
-- `body.py`: Main content area
-- `sidebar.py`: Navigation sidebar
-- `details.py`: Document details view
-- `form.py`: Document editing forms
-- `table.py`: Tabular data display
+## Open issues
 
-**Configuration**
-- `config/main.py`: Main configuration dialog
-- `config/gui.py`: GUI-specific settings
-- `config/projectGroup.py`: Project group management
-- `config/setup.py`: Initial setup configuration
-
-**Data Management**
-- `data_hierarchy/`: Document type hierarchy editor
-- `definitions/`: Terminology and definitions management
-- `repositories/`: External repository integrations (Dataverse, Zenodo)
-
-**Specialized Components**
-- `gallery.py`: Image and media gallery
-- `palette.py`: Color scheme management
-- `textEditor.py`: Rich text editing
-- `projectTreeView.py`: Project tree navigation
-
-### Key Modules
-
-**Add-ons (`pasta_eln/AddOns/`)**
-- Extensible plugin system
-- File extractors for different formats
-- Custom form generators
-- Data visualization tools
-
-**External Integrations**
-- `backendWorker/elabFTWapi.py`: eLabFTW API integration
-- `backendWorker/elabFTWsync.py`: eLabFTW synchronization
-- `backendWorker/inputOutput.py`: Import/export functionality
-
-## Development Patterns
-
-### Testing
-- Tests are located in `tests/` directory
-- Use pytest for running tests
-- GUI tests use `QT_QPA_PLATFORM=offscreen` environment variable
-- Complex integration tests are in `testsComplicated/`
-
-### Configuration
-- Main config file: `~/.pastaELN.json`
-- Configuration structure defined in `fixedStringsJson.py`
-- Project groups allow multiple configurations
-
-### Database
-- SQLite database with document-based storage
-- Documents have hierarchical structure
-- Views for different document types
-- Metadata and file attachments stored together
-
-### GUI Development
-- PySide6 (Qt6) framework
-- Signal-slot architecture for component communication
-- Material design theming (`qt-material`)
-- Custom delegates for table editing
-
-### Code Quality Standards
-- Python 3.10+ required
-- Type hints enforced via mypy
-- Code style enforced via pylint
-- Pre-commit hooks for code quality
-- Comprehensive docstrings required
-
-## Important Notes
-
-- The application uses a document-based database approach where each entry is a document with metadata
-- All GUI components communicate through the central `Communicate` class
-- The backend handles all data operations and filesystem interactions
-- File extractors in AddOns/ automatically process different file types
-- The application supports both standalone and research project group configurations
+The authoritative open-issues set is the union of [GitHub Issues](https://github.com/PASTA-ELN/pasta-eln/issues) and the **Repository maintenance items** section of `README.md`. Create or update the appropriate record when discovering an actionable defect, improvement, or repository-wide maintenance concern.
