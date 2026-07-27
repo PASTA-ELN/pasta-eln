@@ -363,7 +363,7 @@ class HSeparator(QFrame):
   Horizontal Separator
   """
 
-  def __init__(self):
+  def __init__(self) -> None:
     super().__init__()
     self.setFrameShape(QFrame.Shape.HLine)
     self.setFrameShadow(QFrame.Shadow.Sunken)
@@ -500,7 +500,7 @@ class FlowLayout(QLayout):
 class ResizeImage(QLabel):
   """QLabel that displays a base64 image and automatically rescales it."""
 
-  def __init__(self, data: str, layout: QLayout|None = None):
+  def __init__(self, data: str, layout: QLayout|None = None) -> None:
     super().__init__()
     self._sourcePixmap = QPixmap()
     self._isSvg = False
@@ -539,11 +539,11 @@ class ResizeImage(QLabel):
     elif len(data) > 2:
       logging.error('guiStyle.Image: %s', data[:50], exc_info=True)
 
-  def resizeEvent(self, event: QResizeEvent):
+  def resizeEvent(self, event: QResizeEvent) -> None:
     super().resizeEvent(event)
     self._updatePixmap()
 
-  def _updatePixmap(self):
+  def _updatePixmap(self) -> None:
     if self._isSvg:
       self._renderSvg()
       return
@@ -556,7 +556,7 @@ class ResizeImage(QLabel):
     )
     super().setPixmap(scaled)
 
-  def _renderSvg(self):
+  def _renderSvg(self) -> None:
     if self._svgRenderer is None or not self._svgRenderer.isValid():
       return
 
@@ -576,7 +576,7 @@ class ResizeImage(QLabel):
 
     super().setPixmap(pixmap)
 
-  def setSourcePixmap(self, pixmap: QPixmap):
+  def setSourcePixmap(self, pixmap: QPixmap) -> None:
     """Replace the source image."""
     self._sourcePixmap = pixmap
     self._updatePixmap()

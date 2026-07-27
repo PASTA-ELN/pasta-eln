@@ -4,6 +4,8 @@ The Top level Widget of the Workplan Creator Dialog. Containing the 3 Main Widge
   - CenterMainWidget: Displays information and fill in Sample+Parameters for chosen procedure
   - RightMainWidget: Displays Workplan and export-button
 """
+from typing import Any
+
 from PySide6.QtWidgets import QApplication, QDialog, QGridLayout, QSplitter
 
 from pasta_eln.ui.gui_communicate import Communicate
@@ -60,7 +62,7 @@ class WorkplanCreatorDialog(QDialog):
     self.mainLayout.setContentsMargins(0, 0, 0, 0)
     self.setLayout(self.mainLayout)
 
-  def _onGetProjectDoc(self, doc: dict) -> None:
+  def _onGetProjectDoc(self, doc: dict[str, Any]) -> None:
     """
     Callback function to set the window Title
     Args:

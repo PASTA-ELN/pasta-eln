@@ -1,4 +1,5 @@
 """Widget in the middle of the WorkplanCreator-Dialog. Displays selected procedure and choices for Sample/Procedure"""
+import pandas as pd
 import qtawesome as qta
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QComboBox, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, \
@@ -213,7 +214,7 @@ class CenterMainWidget(QWidget):
       if parameter in self.parameters:
         lineEdit.setText(self.parameters[parameter])
 
-  def _addSampleBoxItems(self, table: dict, docType: str) -> None:
+  def _addSampleBoxItems(self, table: pd.DataFrame, docType: str) -> None:
     """
     Callback after request for the sample table, to fill the ComboBox with Samples from the Storage.
     This Function as a lambda causes weird C++ Storage access problems.
