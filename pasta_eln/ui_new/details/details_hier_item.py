@@ -19,7 +19,7 @@ class DetailsHierItem(QWidget):
   """
 
   def __init__(self, comm: Communicate, categoryName: str, dataHierarchyNode: list[dict[str, Any]],
-               initialContent: str = "", startCollapsed: bool = False):
+               initialContent: str = "", startCollapsed: bool = False) -> None:
     super().__init__()
     self.comm = comm
     self.categoryName = categoryName
@@ -67,12 +67,12 @@ class DetailsHierItem(QWidget):
     else:
       self.collapse()
 
-  def collapse(self):
+  def collapse(self) -> None:
     """Hide the content of this widget"""
     self.contentLabel.hide()
     self.button.setIcon(qtawesome.icon("ri.arrow-drop-right-line"))
 
-  def expand(self):
+  def expand(self) -> None:
     """Show the content of this widget"""
     self.contentLabel.show()
     self.button.setIcon(qtawesome.icon("ri.arrow-drop-down-line"))
@@ -130,7 +130,7 @@ class DetailsHierItem(QWidget):
       # labelStr = f'{cssStyleHtmlEditors}<b>{key}:</b><br>{dict2ul(newValue)}<br><br>'
     return makeStringWrappable(labelStr)  # makeStringsWrappable could force wrap in html-statement in rare cases
 
-  def addContent(self, key: str, value: Any):
+  def addContent(self, key: str, value: Any) -> None:
     """Appends formatted Content to the Label of this Widget, see self.formatContent for details"""
     self.content += self.formatContent(key, value)
     self.contentLabel.setText(self.content.removesuffix("<br><br>"))

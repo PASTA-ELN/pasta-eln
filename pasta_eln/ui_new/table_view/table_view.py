@@ -5,7 +5,7 @@ from typing import Any
 
 import pandas as pd
 import qtawesome
-from PySide6.QtCore import QItemSelectionModel, QModelIndex, QSize, Slot
+from PySide6.QtCore import QItemSelection, QItemSelectionModel, QModelIndex, QSize, Slot
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QMenu, QPushButton, QTableView, QVBoxLayout, QWidget
 
 from pasta_eln.misc_tools import isDocID
@@ -255,7 +255,7 @@ class TableView(QWidget):
     finally:
       self.table.selectionModel().blockSignals(False)
 
-  def synchronizeSelectionAndCheckbox(self, selected, deselected):
+  def synchronizeSelectionAndCheckbox(self, selected: QItemSelection, deselected: QItemSelection) -> None:
     """
     When a row is selected, the Checkbox should be selected, too
     """

@@ -1,9 +1,9 @@
 """ Widget for displaying a project in the ProjectSidebar"""
-from typing import override
+from typing import Any, override
 
 import pandas as pd
 from PySide6.QtCore import QPointF, Qt, Signal
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QMouseEvent
 from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QVBoxLayout
 
 from pasta_eln.misc_tools import makeStringWrappable
@@ -15,7 +15,7 @@ class ProjectCard(QFrame):
   """ Widget for displaying a project in the ProjectSidebar"""
   clicked = Signal()
 
-  def __init__(self, comm: Communicate, project: pd.DataFrame):
+  def __init__(self, comm: Communicate, project: pd.Series[Any]) -> None:
     super().__init__()
     self.comm = comm
     self.project = project
@@ -64,7 +64,7 @@ class ProjectCard(QFrame):
     self.clicked.connect(self.onClick)
 
   @override
-  def mousePressEvent(self, event):
+  def mousePressEvent(self, event: QMouseEvent) -> None:
     """
     Override Event to simulate click and Position of potential drag start.
     """
@@ -72,21 +72,21 @@ class ProjectCard(QFrame):
       self.clicked.emit()
     super().mousePressEvent(event)
 
-  def onClick(self):
+  def onClick(self) -> None:
     """
     What happens when clicking on this widget
     """
     self.comm.projectID = self.project["id"]
     self.comm.changeProject.emit(self.project["id"], "")
 
-  def highlight(self):
+  def highlight(self) -> None:
     """
     Updates the Style of this Item to highlight it
     """
     self.setProperty("highlight", True)
     self.setStyleSheet(self.defaultCSS)
 
-  def lowlight(self):
+  def lowlight(self) -> None:
     """
     Updates the Style of this Item to reset the highlight
     """

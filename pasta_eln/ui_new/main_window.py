@@ -121,7 +121,7 @@ class MainWindow(QMainWindow):
     self.splitter.addWidget(self.sidebar)
     self.splitter.addWidget(self.body)
 
-    def _resizeSplitter():
+    def _resizeSplitter() -> None:
       sidebarWidth = max(200, self.splitter.width() // 5)
       self.splitter.setSizes([sidebarWidth, self.splitter.width() - sidebarWidth])
 
