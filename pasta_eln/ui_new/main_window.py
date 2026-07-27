@@ -68,7 +68,7 @@ class MainWindow(QMainWindow):
 
     # GUI
     self.setWindowTitle(f"PASTA-ELN {__version__}")
-    self.resize(self.screen().size())  # self.setWindowState(Qt.WindowMaximized)
+    self.resize(self.screen().size())                                # self.setWindowState(Qt.WindowMaximized)
     # TODO https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
@@ -113,9 +113,9 @@ class MainWindow(QMainWindow):
 
     # GUI elements
     self.splitter = QSplitter(handleWidth=3)
-    self.setCentralWidget(self.splitter)  # Set the central widget of the Window
-    self.body = Body(self.comm)  # body with information
-    self.sidebar = ProjectSidebar(self.comm)  # sidebar with buttons
+    self.setCentralWidget(self.splitter)                                # Set the central widget of the Window
+    self.body = Body(self.comm)                                                        # body with information
+    self.sidebar = ProjectSidebar(self.comm)                                            # sidebar with buttons
     self.splitter.addWidget(self.sidebar)
     self.splitter.addWidget(self.body)
 
@@ -279,7 +279,7 @@ class MainWindow(QMainWindow):
         reportText = re.sub(regexStr, '', reportText, count=myCount - 5)
         reportText += r'<font color="magenta">image does not exist ...:<\/font><br>'
     elif task not in (Task.EXTRACTOR_TEST, Task.EXTRACTOR_RERUN, Task.DELETE_DOC, Task.EXPORT_ELN, Task.IMPORT_ELN,
-                      Task.SYNC_ELAB):  # e.g. extractor tests work out of the box
+                      Task.SYNC_ELAB):                              # e.g. extractor tests work out of the box
       logging.error('Unknown task in showReport: %s', task, exc_info=True)
     showMessage(self, 'Report', reportText, image=image)
 

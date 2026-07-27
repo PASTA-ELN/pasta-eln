@@ -194,7 +194,7 @@ class TableView(QWidget):
     tableData.fillna('-', inplace=True)
     tableData.replace(['None', '', 'nan'], '-', inplace=True)
     tableData.replace('True', 'Y', inplace=True)
-    tableData.mask(tableData.map(isDocID), 'oo', inplace=True)  # TODO WHY?
+    tableData.mask(tableData.map(isDocID), 'oo', inplace=True)                                     # TODO WHY?
     return tableData
 
   @Slot()

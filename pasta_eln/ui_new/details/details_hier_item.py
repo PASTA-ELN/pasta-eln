@@ -85,7 +85,7 @@ class DetailsHierItem(QWidget):
     Returns:
       The formatted String that can be displayed in the Label of this Widget or appended using self.addContent
     """
-    if isinstance(value, dict):  # Original, : if not key and isinstance(value, dict):
+    if isinstance(value, dict):                          # Original, : if not key and isinstance(value, dict):
       return '\n'.join([self.formatContent(k, v) for k, v in value.items()])
     if not value:
       return ''
@@ -95,12 +95,12 @@ class DetailsHierItem(QWidget):
       tags = [i for i in value if not re.match(r'^_\d$', i)]
       labelStr = f'<b>Rating:</b><br>{rating[0]}<br><br>' if rating else ''
       labelStr = f'{labelStr}   <b>Tags:</b><br>' + ', '.join(tags) + '<br><br>'
-    elif (isinstance(value, str) and '\n' in value) or key == 'comment':  # long values with /s or comments
+    elif (isinstance(value, str) and '\n' in value) or key == 'comment':     # long values with /s or comments
       labelStr = f'<b>{key.capitalize()}:</b><br>{value}<br><br>'
     else:
       dataHierarchyItems = [dict(i) for i in self.dataHierarchyNode if i['name'] == key]
       if len(dataHierarchyItems) == 1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
-        ',' not in dataHierarchyItems[0]['list'] and ' ' not in dataHierarchyItems[0]['list']:  # choice among docType
+        ',' not in dataHierarchyItems[0]['list'] and ' ' not in dataHierarchyItems[0]['list']:# A single-choice docType is represented as a tuple.
         if not isinstance(value, tuple):
           logging.info('Not a tuple: %s : %s', key, value)
         if not isDocID(value[0]):
@@ -126,7 +126,7 @@ class DetailsHierItem(QWidget):
       #   else:
       #     newValue[k] = v
       # labelStr = f'{cssStyleHtmlEditors}<b>{key}:</b><br>{dict2ul(newValue)}<br><br>'
-    return makeStringWrappable(labelStr)  # makeStringsWrappable could force wrap in html-statement in rare cases
+    return makeStringWrappable(labelStr)             # Wrapping can force an HTML-statement wrap in rare cases
 
   def addContent(self, key: str, value: Any) -> None:
     """Appends formatted Content to the Label of this Widget, see self.formatContent for details"""

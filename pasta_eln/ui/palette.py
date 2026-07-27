@@ -47,7 +47,7 @@ class Palette:
     self.text = self.getThemeColor('foreground', 'base')
     self.leafX = self.getThemeColor('border', 'base')
     self.leafO = self.getThemeColor('background', 'popup')
-    self.leafShadow = '#55000000' # Transparent Black
+    self.leafShadow = '#55000000'                                                          # Transparent Black
 
   def setTheme(self, theme: str = '', saveTheme: bool = True) -> None:
     """
@@ -56,7 +56,7 @@ class Palette:
       theme: 'automatic'/'dark'/'light' for the dark/light theme. Empty String ('') for update without changing the theme.
       saveTheme: Whether the theme should be changed permanently or just until theme is updated again.
     """
-    cornershape = 'sharp' # rounded or sharp
+    cornershape = 'sharp'                                                                   # rounded or sharp
     css = """
     QWidget {
     border-radius: 3px;
@@ -122,7 +122,7 @@ class Palette:
     themeDict = cast(ThemeColorValues, THEME_COLOR_VALUES)[self.qtheme]
     cat: str | ColorCategory = themeDict.get(category, {})
     if isinstance(cat, str):
-      if len(cat) > 7: # Colors in THEME_COLOR_VALUES are #RGBA, not #ARGB like QColor wants.
+      if len(cat) > 7:                   # Colors in THEME_COLOR_VALUES are #RGBA, not #ARGB like QColor wants
         cat = rgba2argb(cat)
       return QColor(cat).name(format=QColor.NameFormat.HexArgb)
     baseHex = cat.get('base', '#000000')

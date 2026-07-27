@@ -518,7 +518,7 @@ class ResizeImage(QLabel):
         byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21] == ',' else data[23:], encoding='utf-8'))
         imageW = QImage()
         imageType = data[11:15].upper()
-        success = imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType)  # type: ignore[arg-type]
+        success = imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType)# type: ignore[arg-type]
         if not success:
           logging.warning('Could not load image data with format %s', imageType)
           return

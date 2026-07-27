@@ -41,8 +41,8 @@ class CenterMainWidget(QWidget):
     self.comm.activeProcedureChangedOnlyProcID.connect(self.changeActiveProcedure)
 
     # Style
-    self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)  # Causes whole Widget to be fully
-    # squishable
+    # Keep the whole widget from becoming fully squishable
+    self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
 
     # layout
     self.mainLayout = QGridLayout()
@@ -120,13 +120,13 @@ class CenterMainWidget(QWidget):
       # Disconnect Sample Changes from previous WorkplanItem
       try:
         self.sampleBox.currentTextChanged.disconnect(self.activeListItem.updateSample)
-      except (RuntimeError, SystemError):  # self.activeListItem could already be deleted by the user
+      except (RuntimeError, SystemError):           # self.activeListItem could already be deleted by the user
         pass
       if not workplanListItem:
         # If the new active Procedure is not a Procedure from the Workplan on the right
         try:
           self.activeListItem.lowlight()
-        except (RuntimeError, SystemError):  # self.activeListItem could already be deleted by the user
+        except (RuntimeError, SystemError):         # self.activeListItem could already be deleted by the user
           pass
 
     # Fill Layout with active Procedure
@@ -154,7 +154,7 @@ class CenterMainWidget(QWidget):
     for tag in self.storage.getProcedureTags(self.activeProcedureID):
       if len(tag) > 20:
         tag = tag[:20] + '...'
-      tagButton = QPushButton(tag)  # pylint: disable=qt-local-widget
+      tagButton = QPushButton(tag)                                           # pylint: disable=qt-local-widget
       tagButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
       self.tagLayout.addWidget(tagButton)
     self.tagLayout.addStretch(1)
@@ -168,7 +168,7 @@ class CenterMainWidget(QWidget):
     Returns: dictionary of only the filled-in parameter-value pairs from the QFormLayout
     """
     filledParameters = {}
-    for i in range(3, self.parameterForm.rowCount()):  # 3 because the sample part is skipped
+    for i in range(3, self.parameterForm.rowCount()):                   # 3 because the sample part is skipped
       labelItem = self.parameterForm.itemAt(i, QFormLayout.ItemRole.LabelRole)
       fieldItem = self.parameterForm.itemAt(i, QFormLayout.ItemRole.FieldRole)
       labelWidget = labelItem.widget() if labelItem is not None else None
@@ -192,7 +192,8 @@ class CenterMainWidget(QWidget):
     self.description.setMarkdown(self.storage.getProcedureText(self.activeProcedureID))
     # Sample and Parameter Form
     for _ in range(self.parameterForm.rowCount() - 3):
-      self.parameterForm.removeRow(3)  # Remove the old parameters from the layout (everything after row 3 of the Form)
+      # Remove old parameter rows after the sample row.
+      self.parameterForm.removeRow(3)
     if self.activeListItem:
       # Connect Sample Changes to WorkplanItem (For Saving edits on selected Procedure in Workplan)
       self.sampleBox.currentTextChanged.connect(self.activeListItem.updateSample)
@@ -202,7 +203,7 @@ class CenterMainWidget(QWidget):
     if not defaultParameters:
       self.parameterForm.addWidget(Label('This Procedure has no Parameters', 'h3'))
     for parameter in defaultParameters:
-      lineEdit = QLineEdit(placeholderText=defaultParameters[parameter])  # pylint: disable=qt-local-widget
+      lineEdit = QLineEdit(placeholderText=defaultParameters[parameter])     # pylint: disable=qt-local-widget
       lineEdit.setToolTip('Default: ' + defaultParameters[parameter])
       if self.activeListItem:
         # Connect Parameter Changes to WorkplanItem (For Saving edits on selected Procedure in Workplan)

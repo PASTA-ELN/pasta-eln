@@ -273,7 +273,7 @@ def pad_tables_in_text(text: str, right_margin: int = 1) -> str:
     Provide padding for tables in the text
     """
     lines = text.split('\n')
-    table_buffer = []  # type: List[str]
+    table_buffer = []                                                                        # type: List[str]
     table_started = False
     new_lines = []
     for line in lines:

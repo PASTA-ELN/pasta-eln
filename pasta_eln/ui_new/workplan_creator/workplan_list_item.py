@@ -37,8 +37,7 @@ class WorkplanListItem(QFrame):
     self.titleLabel = Label('', 'h3')
     self.deleteButton = QPushButton('')
     self.header = QHBoxLayout()
-    self.tagLabel = Label(
-      '')  # ,style=f"color: {self.comm.palette.getThemeColor('foreground', 'disabled')};")  # self.comm.palette.get('secondaryText', 'color')
+    self.tagLabel = Label('')
     self.sampleLabel = Label('')
     self.frame = QFrame()
 
@@ -226,5 +225,5 @@ class WorkplanListItem(QFrame):
     else:
       self.rightMainWidget.addProcedure(droppedItem.procedureID, droppedItem.sample, droppedItem.parameters,
                                         selfidx + 1)
-    droppedItem._onDeleteClicked()  # pylint: disable=protected-access
+    droppedItem._onDeleteClicked()                                          # pylint: disable=protected-access
     event.acceptProposedAction()

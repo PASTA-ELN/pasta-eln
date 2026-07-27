@@ -29,7 +29,7 @@ class PandasTableModel(QAbstractTableModel):
 
   def columnCount(self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()) -> int:
     del parent
-    return self._df.shape[1] + 1  # +1 for checkbox-column
+    return self._df.shape[1] + 1                                                      # +1 for checkbox-column
 
   def data(self, index: QModelIndex | QPersistentModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
     if not index.isValid():
