@@ -39,14 +39,14 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
     style = widget.style() if widget else QApplication.style()
     opt = QStyleOptionButton()
     radioButton = QRadioButton()
-    optionRect = option.rect                                                      # type: ignore[attr-defined]
-    opt.rect = QRect(optionRect.left() + optionRect.width() / 2 - 10,             # type: ignore[attr-defined]
+    optionRect = option.rect
+    opt.rect = QRect(int(optionRect.left() + optionRect.width() / 2 - 10),
                      optionRect.top(),
                      optionRect.width(),
                      optionRect.height())
     indexName = index.model().index(index.row(), 0)
     isMandatory = index.data()=='T' and indexName.data()
-    opt.state = QStyle.StateFlag.State_On if isMandatory else QStyle.StateFlag.State_Off# type: ignore[attr-defined]
+    opt.state = QStyle.StateFlag.State_On if isMandatory else QStyle.StateFlag.State_Off
     style.drawControl(QStyle.ControlElement.CE_RadioButton, opt, painter, radioButton)
 
 

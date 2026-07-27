@@ -54,11 +54,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     widthContent = min(self.widthContent,  \
                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )
     docTypeOffset = min(self.docTypeOffset, \
-                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/3.5) )# type: ignore[attr-defined]
-    bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)# type: ignore[attr-defined]
-    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.comm.palette.leafShadow)# type: ignore[attr-defined]
+                       int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/3.5) )
+    bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)
+    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.comm.palette.leafShadow)
     if docType[0][0]=='x':
-      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafX)# type: ignore[attr-defined]
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafX)
     else:
       painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafO)
     # header
