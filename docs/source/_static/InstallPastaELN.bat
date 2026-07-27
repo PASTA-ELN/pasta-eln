@@ -4,9 +4,9 @@ echo Download success
 %UserProfile%\Downloads\python-3.13.3-amd64.exe /passive PrependPath=1
 CALL :RESTART
 pip install pasta-eln
-python -m pasta_eln.installationTools install "%UserProfile%\Documents\PASTA_ELN_DATA"
-python -m pasta_eln.installationTools shortcut
-python -m pasta_eln.installationTools example
+python -m pasta_eln.installation_tools install "%UserProfile%\Documents\PASTA_ELN_DATA"
+python -m pasta_eln.installation_tools shortcut
+python -m pasta_eln.installation_tools example
 python -m pasta_eln.gui
 pause
 

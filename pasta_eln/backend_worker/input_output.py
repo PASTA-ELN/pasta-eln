@@ -57,7 +57,6 @@ json2pasta:dict[str,Any] = {v:k for k,v in pasta2json.items() if v is not None}
 
 metadataFile = 'ro-crate-metadata.json'
 
-
 ##########################################
 ###               IMPORT               ###
 ##########################################
@@ -77,6 +76,10 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
   elnName = ''
   statistics:dict[str,Any] = {}
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
+    archiveError = _checkImportArchive(elnFile)
+    if archiveError:
+      logging.error(archiveError)
+      return archiveError, {}
     files = elnFile.namelist()
     baseFolderSet = {Path(i).parts[0] for i in files}
     if len(baseFolderSet) != 1:
@@ -656,3 +659,17 @@ def validateSignature(fileName:str) -> bool:
     except minisign.VerifyError:
       logging.error('VERIFICATION', exc_info=True)
     return False
+
+
+def _checkImportArchive(elnFile: ZipFile) -> str | None:
+  """Return an error when an import archive exceeds safe resource limits."""
+  maxArchiveMembers = 10_000
+  maxArchiveBytes = 4 * 1024**3
+  archiveInfo = elnFile.infolist()
+  if len(archiveInfo) > maxArchiveMembers:
+    return f'ERROR: eln file contains more than {maxArchiveMembers} archive members. Cannot process'
+  archiveBytes = sum(info.file_size for info in archiveInfo)
+  if archiveBytes > maxArchiveBytes:
+    return f'ERROR: eln file expands beyond {maxArchiveBytes} bytes. Cannot process'
+  return None
+

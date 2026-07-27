@@ -44,9 +44,9 @@ Manual Installation
 .. code-block:: bash
 
    pip install pasta-eln
-   python -m pasta_eln.installationTools install "%UserProfile%\Documents\PASTA_ELN_DATA"
-   python -m pasta_eln.installationTools shortcut
-   python -m pasta_eln.installationTools example
+   python -m pasta_eln.installation_tools install "%UserProfile%\Documents\PASTA_ELN_DATA"
+   python -m pasta_eln.installation_tools shortcut
+   python -m pasta_eln.installation_tools example
    python -m pasta_eln.gui
 
 **Recommendation**: Install additional packages for enhanced functionality and test python installation:
@@ -85,9 +85,9 @@ Open terminal and copy-paste following content:
         python3 -m venv ~/PASTA_ELN/venv
         source ~/PASTA_ELN/venv/bin/activate
         pip install pasta-eln
-        python3 -m pasta_eln.installationTools install ~/PASTA_ELN/data
-        python3 -m pasta_eln.installationTools shortcut
-        python3 -m pasta_eln.installationTools example
+        python3 -m pasta_eln.installation_tools install ~/PASTA_ELN/data
+        python3 -m pasta_eln.installation_tools shortcut
+        python3 -m pasta_eln.installation_tools example
         python3 -m pasta_eln.gui
 
 .. raw:: html
@@ -132,9 +132,9 @@ Open terminal and copy-paste following content:
         python3 -m venv ~/PASTA_ELN/venv
         source ~/PASTA_ELN/venv/bin/activate
         pip install pasta-eln
-        python3 -m pasta_eln.installationTools install ~/PASTA_ELN/data
-        python3 -m pasta_eln.installationTools shortcut
-        python3 -m pasta_eln.installationTools example
+        python3 -m pasta_eln.installation_tools install ~/PASTA_ELN/data
+        python3 -m pasta_eln.installation_tools shortcut
+        python3 -m pasta_eln.installation_tools example
         python3 -m pasta_eln.gui
 
 .. raw:: html

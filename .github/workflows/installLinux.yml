@@ -32,20 +32,20 @@ jobs:
         pip install coverage pytest pytest-qt pytest-qt-app pytest-mock pytest-timeout coverage typing-extensions qt_material
     - name: Check installation
       run: |
-        coverage run -m pasta_eln.installationTools
+        coverage run -m pasta_eln.installation_tools
     - name: Installation
       run: |
-        coverage run -a -m pasta_eln.installationTools install pasta_data
+        coverage run -a -m pasta_eln.installation_tools install pasta_data
         ls ~
         echo '----------'
         ls ~/pasta_data
         more ~/.pastaELN_v3.json
     - name: Check installation
       run: |
-        coverage run -a -m pasta_eln.installationTools
+        coverage run -a -m pasta_eln.installation_tools
     - name: Create example data
       run: |
-        coverage run -a -m pasta_eln.installationTools example
+        coverage run -a -m pasta_eln.installation_tools example
         tree ~/pasta_data
     - name: Run tests
       run: |

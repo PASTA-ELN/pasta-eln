@@ -2,7 +2,7 @@
 """TEST the form """
 import logging, warnings
 from pathlib import Path
-from pasta_eln.installationTools import exampleData
+from pasta_eln.installation_tools import exampleData
 from pasta_eln.tools import Tools
 
 
