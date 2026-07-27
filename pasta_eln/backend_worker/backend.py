@@ -721,6 +721,8 @@ class Backend(CliMixin):
             count += 1
           else:
             pathsInDbData.remove(path)
+        ignoredFolders.extend((Path(root)/i).relative_to(self.basePath).as_posix()
+                              for i in dirs if (Path(root)/i/'.pastaELN_ignore').is_file())
         dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i not in ('__pycache__')
                   and not (Path(root)/i/'pyvenv.cfg').is_file()
                   and not (Path(root)/i/'.pastaELN_ignore').is_file()]
@@ -756,6 +758,10 @@ class Backend(CliMixin):
               elif repair(errorStr):
                 with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
                   json.dump({'id':docDB['id']}, fOut)
+    pathsInDbData =   [path for path in pathsInDbData if not any(path == folder or path.startswith(f'{folder}/')
+                                                                for folder in ignoredFolders)]
+    pathsInDbFolder = [path for path in pathsInDbFolder if not any(path == folder or path.startswith(f'{folder}/')
+                                                                    for folder in ignoredFolders)]
     orphans = [i for i in pathsInDbData   if not (self.basePath/i).exists() and ':/' not in i and i!='*']#paths can be files or directories
     orphans+= [i for i in pathsInDbFolder if not (self.basePath/i).exists() ]
     if orphans:

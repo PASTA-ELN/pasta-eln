@@ -50,6 +50,7 @@ def createDefaultConfiguration(pathPasta:Path | None=None) -> dict[str,Any]:
   addOnDir = Path(__file__).parent/'add_ons'
   conf: dict[str, Any] = {
       'defaultProjectGroup': 'research',
+      'GUI': {key: value[1] for section in configurationGUI.values() for key, value in section.items()},
       'projectGroups': {
           'research': {
               'local': {'database': 'research', 'path': str(pathPasta)},
@@ -137,6 +138,8 @@ def exampleData(force:bool=False, callbackPercent:Callable[[int],None] | None=No
   logging.info('Start example data creation')
   if callbackPercent is not None:
     callbackPercent(0)
+  # WARNING: force=True recursively deletes the configured project group's storage
+  # This destructive reset is intentional for creating a fresh example data set
   if force:
     backend = Backend(projectGroup)
     dirName = backend.basePath

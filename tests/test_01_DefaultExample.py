@@ -41,6 +41,8 @@ class TestStringMethods(unittest.TestCase):
     handler = ErrorHandler()
     logging.getLogger().addHandler(handler)
 
+    # WARNING: force=True intentionally deletes the configured research storage
+    # This test requires the dedicated test project group configured for this checkout
     exampleData(True, None, 'research', '')
     self.be = Backend('research')
     output = self.be.output('x0')

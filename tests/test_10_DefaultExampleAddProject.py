@@ -28,6 +28,8 @@ def test_simple(qtbot, caplog):
 
   # start app and create project
   configuration, _ = getConfiguration('research')
+  # WARNING: force=True intentionally deletes the configured research storage.
+  # This test requires the dedicated test project group configured for this checkout.
   exampleData(True, None, 'research', '')
   comm = Communicate('research')
   window = Form(comm, {'_projectID': '', 'type': ['x0']})
