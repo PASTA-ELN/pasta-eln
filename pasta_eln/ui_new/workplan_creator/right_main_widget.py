@@ -102,7 +102,8 @@ class RightMainWidget(QWidget):
       "procedures": []
     }
     for i in range(self.workplanLayout.count()):
-      item = self.workplanLayout.itemAt(i).widget()
+      layoutItem = self.workplanLayout.itemAt(i)
+      item = layoutItem.widget() if layoutItem is not None else None
       if isinstance(item, WorkplanListItem):
         procedureID = item.procedureID
         sample = item.sample
@@ -125,7 +126,8 @@ class RightMainWidget(QWidget):
       listItem: The WorkplanListItem to highlight
     """
     for i in range(self.workplanLayout.count()):
-      item = self.workplanLayout.itemAt(i).widget()
+      layoutItem = self.workplanLayout.itemAt(i)
+      item = layoutItem.widget() if layoutItem is not None else None
       if isinstance(item, WorkplanListItem):
         item.lowlight()
     if listItem:

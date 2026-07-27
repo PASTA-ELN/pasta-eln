@@ -64,7 +64,10 @@ class CenterMainWidget(QWidget):
     """
     # Create empty Layout if layout is not created yet (FIRST SETUP)
     if not self.activeProcedureID:
-      self.mainLayout.takeAt(0).widget().deleteLater()
+      emptyLayoutItem = self.mainLayout.takeAt(0)
+      emptyWidget = emptyLayoutItem.widget() if emptyLayoutItem is not None else None
+      if emptyWidget is not None:
+        emptyWidget.deleteLater()
       self.mainLayout.setColumnStretch(0, 1)
       self.mainLayout.setColumnStretch(1, 1)
       # Procedure Name / Header Label
@@ -141,6 +144,8 @@ class CenterMainWidget(QWidget):
     # remove old tags
     while self.tagLayout.count():
       item = self.tagLayout.takeAt(0)
+      if item is None:
+        continue
       w = item.widget()
       if w:
         w.setParent(None)
@@ -165,9 +170,11 @@ class CenterMainWidget(QWidget):
     for i in range(3, self.parameterForm.rowCount()):  # 3 because the sample part is skipped
       labelItem = self.parameterForm.itemAt(i, QFormLayout.ItemRole.LabelRole)
       fieldItem = self.parameterForm.itemAt(i, QFormLayout.ItemRole.FieldRole)
-      if labelItem and fieldItem:
-        labelItemText = labelItem.widget().text()
-        fieldItemText = fieldItem.widget().text()
+      labelWidget = labelItem.widget() if labelItem is not None else None
+      fieldWidget = fieldItem.widget() if fieldItem is not None else None
+      if isinstance(labelWidget, QLabel) and isinstance(fieldWidget, QLineEdit):
+        labelItemText = labelWidget.text()
+        fieldItemText = fieldWidget.text()
         filledParameters[labelItemText] = fieldItemText
     return filledParameters
 

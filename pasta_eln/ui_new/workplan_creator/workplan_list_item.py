@@ -207,7 +207,11 @@ class WorkplanListItem(QFrame):
     else:
       return
     self.setStyleSheet("")
-    parentLayout = self.parentWidget().layout()
+    parentWidget = self.parentWidget()
+    parentLayout = parentWidget.layout() if parentWidget is not None else None
+    if parentLayout is None:
+      event.ignore()
+      return
     selfidx = parentLayout.indexOf(self)
     midheight = self.height() // 2
     if event.position().y() < midheight:

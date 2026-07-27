@@ -164,7 +164,8 @@ class ProjectSidebar(QWidget):
       docID (str): document ID in Signal that is not used here
     """
     for i in range(self.projectListLayout.count()):
-      item = self.projectListLayout.itemAt(i).widget()
+      layoutItem = self.projectListLayout.itemAt(i)
+      item = layoutItem.widget() if layoutItem is not None else None
       if isinstance(item, ProjectCard):
         item.lowlight()
         if item.project["id"] == projectID:
@@ -180,7 +181,8 @@ class ProjectSidebar(QWidget):
     filterText = filterText.lower().split(",")
     filterText = [word.strip() for word in filterText]
     for i in range(self.projectListLayout.count()):
-      item = self.projectListLayout.itemAt(i).widget()
+      layoutItem = self.projectListLayout.itemAt(i)
+      item = layoutItem.widget() if layoutItem is not None else None
       if not isinstance(item, ProjectCard):
         continue
       name = item.project["name"].lower()

@@ -66,6 +66,8 @@ class LeftMainWidget(QWidget):
     # empty Layout
     while self.procedureListLayout.count():
       item = self.procedureListLayout.takeAt(0)
+      if item is None:
+        continue
       widget = item.widget()
       if widget:
         widget.deleteLater()
@@ -93,8 +95,12 @@ class LeftMainWidget(QWidget):
     filterText = filterText.lower().split(",")
     filterText = [word.strip() for word in filterText]
     for i in range(1, self.procedureListLayout.count() - 1, 2):
-      widget = self.procedureListLayout.itemAt(i).widget()
-      separator = self.procedureListLayout.itemAt(i + 1).widget()
+      widgetItem    = self.procedureListLayout.itemAt(i)
+      separatorItem = self.procedureListLayout.itemAt(i + 1)
+      widget    = widgetItem.widget()    if widgetItem    is not None else None
+      separator = separatorItem.widget() if separatorItem is not None else None
+      if widget is None or separator is None:
+        continue
       widget.show()
       separator.show()
       if not isinstance(widget, ProcedureListItem):
