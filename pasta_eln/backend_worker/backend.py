@@ -3,16 +3,11 @@ import json
 import logging
 import os
 import sys
-import tempfile
-import traceback
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 from urllib import request
-import matplotlib.axes as mpaxes
-import matplotlib.pyplot as plt
-from PIL import Image
-from ..misc_tools import getConfiguration, loadNamedModule
+from ..misc_tools import getConfiguration
 from ..text_tools.handle_dictionaries import diffDicts, fillDocBeforeCreate
 from ..text_tools.string_changes import camelCase, createDirName, outputString
 from .extractor import ExtractorManager
