@@ -72,7 +72,7 @@ class Communicate(QObject):
     self.docTypesTitles:dict[str,dict[str,str]] = {}# docType: {'title':title,'icon':icon,'shortcut':shortcut}
     self.dataHierarchyNodes:dict[str,list[Any]] = {}
     self.projectID                              = ''
-    self.storage                                = None
+    self.storage: Any                           = None
 
     if self.configuration:
       # Backend worker thread

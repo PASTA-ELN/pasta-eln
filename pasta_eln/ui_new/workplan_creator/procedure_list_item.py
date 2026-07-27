@@ -1,5 +1,6 @@
 """Widgets inside the leftMainWidget List. Displays Procedure Name and Tags and is clickable"""
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
 from pasta_eln.misc_tools import makeStringWrappable
@@ -13,7 +14,7 @@ class ProcedureListItem(QFrame):
   """
   clicked = Signal()
 
-  def __init__(self, comm: Communicate, procedureID: str):
+  def __init__(self, comm: Communicate, procedureID: str) -> None:
     super().__init__()
     self.comm = comm
     self.storage = self.comm.storage
@@ -51,7 +52,7 @@ class ProcedureListItem(QFrame):
     self.mainLayout.addWidget(self.tagLabel)
     self.setLayout(self.mainLayout)
 
-  def mousePressEvent(self, event):
+  def mousePressEvent(self, event: QMouseEvent) -> None:
     """
     Override Event to register clicks
     """

@@ -1,12 +1,20 @@
 """Item inside the list of the rightMainWidget."""
+from typing import Protocol
+
 import qtawesome
 from PySide6.QtCore import QMimeData, QPoint, Qt, Signal
-from PySide6.QtGui import QDrag, QPixmap
+from PySide6.QtGui import QDrag, QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent, QMouseEvent, QPixmap
 from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout
 
 from pasta_eln.misc_tools import makeStringWrappable
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Label
+
+
+class WorkplanContainer(Protocol):
+  """Operations a list item needs from its containing workplan widget."""
+
+  def addProcedure(self, procedureID: str, sample: str, parameters: dict[str, str], at: int | None = None) -> None: ...
 
 
 class WorkplanListItem(QFrame):
@@ -16,7 +24,8 @@ class WorkplanListItem(QFrame):
   clicked = Signal()
   dragStartPos = QPoint()
 
-  def __init__(self, comm: Communicate, procedureID: str, sample: str, parameters: dict[str, str], rightMainWidget):
+  def __init__(self, comm: Communicate, procedureID: str, sample: str, parameters: dict[str, str],
+               rightMainWidget: WorkplanContainer) -> None:
     super().__init__()
     self.comm = comm
     self.storage = self.comm.storage
@@ -111,7 +120,7 @@ class WorkplanListItem(QFrame):
     self.mainLayout.setContentsMargins(0, 0, 0, 0)
     self.setLayout(self.mainLayout)
 
-  def mousePressEvent(self, event):
+  def mousePressEvent(self, event: QMouseEvent) -> None:
     """
     Override Event to simulate click and Position of potential drag start.
     """
@@ -120,41 +129,41 @@ class WorkplanListItem(QFrame):
       self.clicked.emit()
     super().mousePressEvent(event)
 
-  def updateParameter(self, text, parameter) -> None:
+  def updateParameter(self, text: str, parameter: str) -> None:
     """
     Setter of the value (text) for the given parameter
     """
     self.parameters[parameter] = text
 
-  def updateSample(self, text) -> None:
+  def updateSample(self, text: str) -> None:
     """
     Setter for the Sample. updates sampleLabel, too.
     """
     self.sample = text
     self.sampleLabel.setText("Sample: " + makeStringWrappable(self.sample))
 
-  def highlight(self):
+  def highlight(self) -> None:
     """
     Updates the Style of this Item to highlight it
     """
     self.frame.setProperty("highlight", True)
     self.setStyleSheet(self.defaultCSS)
 
-  def lowlight(self):
+  def lowlight(self) -> None:
     """
     Updates the Style of this Item to reset the highlight
     """
     self.frame.setProperty("highlight", False)
     self.setStyleSheet(self.defaultCSS)
 
-  def _onDeleteClicked(self):
+  def _onDeleteClicked(self) -> None:
     """
     Deletes this widget.
     """
     self.hide()
     self.deleteLater()
 
-  def mouseMoveEvent(self, event):
+  def mouseMoveEvent(self, event: QMouseEvent) -> None:
     """
     Override event to implement drag and drop
     """
@@ -172,13 +181,13 @@ class WorkplanListItem(QFrame):
     drag.setHotSpot(event.pos())
     drag.exec(Qt.DropAction.MoveAction)
 
-  def dragEnterEvent(self, event):
+  def dragEnterEvent(self, event: QDragEnterEvent) -> None:
     """
     Override event to accept drops
     """
     event.acceptProposedAction()
 
-  def dragMoveEvent(self, event):
+  def dragMoveEvent(self, event: QDragMoveEvent) -> None:
     """
     Override event to visualize drag and drop indicators
     """
@@ -192,19 +201,18 @@ class WorkplanListItem(QFrame):
         WorkplanListItem{{
         border-bottom-color: {self.comm.palette.getThemeColor("primary", "base")};}}""")
 
-  def dragLeaveEvent(self, event):
+  def dragLeaveEvent(self, event: QDragLeaveEvent) -> None:
     """
     Override event to remove drag and drop indicators
     """
     self.setStyleSheet(self.defaultCSS)
 
-  def dropEvent(self, event):
+  def dropEvent(self, event: QDropEvent) -> None:
     """
     Override event to implement drag and drop
     """
-    if isinstance(event.source(), WorkplanListItem):
-      droppedItem: WorkplanListItem = event.source()
-    else:
+    droppedItem = event.source()
+    if not isinstance(droppedItem, WorkplanListItem):
       return
     self.setStyleSheet("")
     parentWidget = self.parentWidget()

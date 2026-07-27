@@ -1,6 +1,4 @@
 """Widget in the middle of the WorkplanCreator-Dialog. Displays selected procedure and choices for Sample/Procedure"""
-from typing import TYPE_CHECKING, cast
-
 import qtawesome as qta
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QComboBox, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, \
@@ -9,9 +7,6 @@ from PySide6.QtWidgets import QComboBox, QFormLayout, QFrame, QGridLayout, QHBox
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import HSeparator, Label
 from pasta_eln.ui_new.workplan_creator.workplan_list_item import WorkplanListItem
-
-if TYPE_CHECKING:
-  from pasta_eln.ui_new.workplan_creator.workplan_functions import Storage
 
 
 class CenterMainWidget(QWidget):
@@ -24,7 +19,7 @@ class CenterMainWidget(QWidget):
     self.comm = comm
     if self.comm.storage is None:
       raise RuntimeError('Workplan storage must be initialized before the center widget')
-    self.storage = cast('Storage', self.comm.storage)
+    self.storage = self.comm.storage
     self.activeProcedureID: str | None = None
     self.activeListItem: WorkplanListItem | None = None
     self.sample: str | None = None

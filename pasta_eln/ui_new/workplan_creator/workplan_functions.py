@@ -2,7 +2,7 @@
 import json
 import re
 from pathlib import Path
-from typing import TypedDict
+from typing import Any, TypedDict
 
 import pandas as pd
 from PySide6.QtCore import Qt
@@ -114,7 +114,7 @@ class Storage:
     Args:
       procedureID: docID for the procedure
     """
-    def onGetDoc(doc: dict[str, object]) -> None:
+    def onGetDoc(doc: dict[str, Any]) -> None:
       if procedureID == doc["id"]:
         docPath = doc['branch'][0]['path']
         if docPath:
