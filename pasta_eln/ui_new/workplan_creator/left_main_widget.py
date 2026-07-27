@@ -66,8 +66,7 @@ class LeftMainWidget(QWidget):
       item = self.procedureListLayout.takeAt(0)
       if item is None:
         continue
-      widget = item.widget()
-      if widget:
+      if widget := item.widget():
         widget.deleteLater()
     firstSeparator = HSeparator()
     self.procedureListLayout.addWidget(firstSeparator)

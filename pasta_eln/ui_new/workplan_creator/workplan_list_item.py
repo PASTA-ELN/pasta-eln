@@ -70,14 +70,14 @@ class WorkplanListItem(QFrame):
     for tag in self.storage.getProcedureTags(procedureID):
       # add an invisible char every 25 chars for Wordwrapping
       tag = makeStringWrappable(tag)
-      tagString += tag + ', '
+      tagString += f'{tag}, '
     self.tagLabel.setText(tagString[:-2])
     self.tagLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     self.tagLabel.setWordWrap(True)
 
     # sampleLabel
     # add an invisible char every 25 chars for Wordwrapping
-    self.sampleLabel.setText('Sample: ' + makeStringWrappable(self.sample))
+    self.sampleLabel.setText(f'Sample: {makeStringWrappable(self.sample)}')
     self.sampleLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     self.sampleLabel.setWordWrap(True)
 
@@ -138,7 +138,7 @@ class WorkplanListItem(QFrame):
     Setter for the Sample. updates sampleLabel, too.
     """
     self.sample = text
-    self.sampleLabel.setText('Sample: ' + makeStringWrappable(self.sample))
+    self.sampleLabel.setText(f'Sample: {makeStringWrappable(self.sample)}')
 
   def highlight(self) -> None:
     """
@@ -165,7 +165,7 @@ class WorkplanListItem(QFrame):
     """
     Override event to implement drag and drop
     """
-    if not event.buttons() == Qt.MouseButton.LeftButton:
+    if event.buttons() != Qt.MouseButton.LeftButton:
       return
     if (event.pos() - self.dragStartPos).manhattanLength() < QApplication.startDragDistance():
       return
@@ -191,11 +191,11 @@ class WorkplanListItem(QFrame):
     """
     midheight = self.height() // 2
     if event.position().y() < midheight:
-      self.setStyleSheet(self.defaultCSS + f"""
+      self.setStyleSheet(f"""{self.defaultCSS}
         WorkplanListItem{{
         border-top-color: {self.comm.palette.getThemeColor("primary", "base")};}}""")
     else:
-      self.setStyleSheet(self.defaultCSS + f"""
+      self.setStyleSheet(f"""{self.defaultCSS}
         WorkplanListItem{{
         border-bottom-color: {self.comm.palette.getThemeColor("primary", "base")};}}""")
 

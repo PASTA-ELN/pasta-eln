@@ -35,7 +35,7 @@ class ProcedureListItem(QFrame):
     tagString = ''
     for tag in self.tags:
       tag = makeStringWrappable(tag, nChars=20)
-      tagString += tag + ', '
+      tagString += f'{tag}, '
     self.tagLabel.setText(tagString[:-2])
     self.tagLabel.setWordWrap(True)
     self.tagLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)

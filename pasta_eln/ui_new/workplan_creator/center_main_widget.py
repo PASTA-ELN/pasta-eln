@@ -133,10 +133,7 @@ class CenterMainWidget(QWidget):
     self.activeProcedureID = toProcedure
     self.activeListItem = workplanListItem
     self.sample = sample
-    if parameters is None:
-      self.parameters = {}
-    else:
-      self.parameters = parameters
+    self.parameters = {} if parameters is None else parameters
     # Long Description, content gets cut-off --> need to wait for Thread and reading of file
     self.storage.requestProcedureText(self.activeProcedureID)
     # Procedure Name
@@ -147,10 +144,9 @@ class CenterMainWidget(QWidget):
       item = self.tagLayout.takeAt(0)
       if item is None:
         continue
-      w = item.widget()
-      if w:
+      if w := item.widget():
         w.setParent(None)
-      # add new tags
+        # add new tags
     for tag in self.storage.getProcedureTags(self.activeProcedureID):
       if len(tag) > 20:
         tag = tag[:20] + '...'

@@ -77,10 +77,7 @@ class RightMainWidget(QWidget):
       sample,
       parameters,
       self)
-    if at is not None:
-      insertAt = at
-    else:
-      insertAt = self.workplanLayout.count() - 1
+    insertAt = at if at is not None else self.workplanLayout.count() - 1
     self.workplanLayout.insertWidget(insertAt, listItem)
     listItem.clicked.connect(lambda: self.highlightActiveItem(listItem))
     self.highlightActiveItem(listItem)

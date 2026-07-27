@@ -34,7 +34,7 @@ class Palette:
       theme (str): 'light' or 'dark' or 'automatic'
     """
     self.comm = comm
-    if theme in ['light', 'dark']:
+    if theme in {'light', 'dark'}:
       self.qtheme = theme
     else:
       autoTheme = darkdetect.theme().lower()
@@ -103,9 +103,7 @@ class Palette:
     }
     if color == 'buttonText':
       return f'{prefix}: {self.text}; '
-    if colors[color] == '':
-      return ''
-    return f'{prefix}: {colors[color]}; '
+    return '' if colors[color] == '' else f'{prefix}: {colors[color]}; '
 
   def getThemeColor(self, category: str, subcategory: str) -> str:
     """
