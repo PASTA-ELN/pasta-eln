@@ -9,7 +9,7 @@ import sys
 import traceback
 from collections.abc import Callable
 from sqlite3 import IntegrityError
-from typing import Any, Callable, Union
+from typing import Any
 from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.backend_worker.elab_ftw_sync import Pasta2Elab
 from pasta_eln.fixed_strings_json import defaultDocTypes, defaultSchema

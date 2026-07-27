@@ -1,4 +1,4 @@
-""""""
+""" This Widget is the right sidebar that shows the details of the currently selected item """
 from typing import Any
 
 import qtawesome
@@ -16,7 +16,7 @@ from pasta_eln.ui_new.details.details_hier_item import DetailsHierItem
 
 
 class Details(QWidget):
-  """"""
+  """The right sidebar that shows the details of the currently selected item"""
 
   def __init__(self, comm: Communicate):
     super().__init__()
@@ -65,6 +65,9 @@ class Details(QWidget):
     self.scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     self.scrollarea.setContentsMargins(0, 0, 0, 0)
     self.scrollarea.setWidget(self.body)
+    self.textEdit = QTextEdit()
+    self.textEdit.setMarkdown(self.data['content'])
+    self.textEdit.setReadOnly(True)
 
     # Vertical Splitter to resize contentPreview
     self.splitter = QSplitter(Qt.Orientation.Vertical, handleWidth=3)
@@ -138,15 +141,12 @@ class Details(QWidget):
       if key == "name":
         continue
       if key == "image":
-        image = ResizeImage(self.data['image'], self.contentPreviewLayout)
+        ResizeImage(self.data['image'], self.contentPreviewLayout)
         self.contentPreviewWidget.show()
       elif key == "content":
-        textEdit = QTextEdit()
-        textEdit.setMarkdown(self.data['content'])
-        textEdit.setReadOnly(True)
-        self.contentPreviewLayout.addWidget(textEdit)
+        self.contentPreviewLayout.addWidget(self.textEdit)
         self.contentPreviewWidget.show()
-        size = min([int(textEdit.document().size().height()), self.splitter.size().height() // 2])
+        size = min([int(self.textEdit.document().size().height()), self.splitter.size().height() // 2])
         self.splitter.setSizes([size, self.splitter.size().height() - size])
       elif key == "metaVendor":
         vendorItem.addContent("metaVendor", self.data["metaVendor"])

@@ -437,9 +437,9 @@ class Backend(CliMixin):
         reply = 'Create a link to existing entry instead of new entry.'
     #finish method
     self.cwd = self.basePath/projPath
-    pathsInSqliteData = [i for i in pathsInSqliteData
+    pathsInDbData = [i for i in pathsInDbData
                          if not any(i == j or i.startswith(f'{j}/') for j in ignoredFolders)]
-    pathsInSqliteX = [i for i in pathsInSqliteX
+    pathsInDbX = [i for i in pathsInDbX
                       if not any(i == j or i.startswith(f'{j}/') for j in ignoredFolders)]
     orphans = [
         i for i in pathsInDbData

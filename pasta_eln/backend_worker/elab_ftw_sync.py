@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Any
 from anytree import Node, PreOrderIter
 from ..misc_tools import flatten
-from ..text_tools.handle_dictionaries import squashTupleIntoValue
+from ..text_tools.handle_dictionaries import squashTupleIntoValue, truncateDictForElabFTW
 from ..text_tools.html2markdown import html2markdown
 from ..text_tools.markdown2html import markdown2html  # type: ignore[attr-defined]
 from .backend import Backend

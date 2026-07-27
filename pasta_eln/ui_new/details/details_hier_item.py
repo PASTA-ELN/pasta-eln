@@ -1,3 +1,5 @@
+""" Widgets inside the details-sidebar that consist of a button and a collapsible area that shows info.
+"""
 import logging
 import re
 from typing import Any
@@ -89,7 +91,6 @@ class DetailsHierItem(QWidget):
       return '\n'.join([self.formatContent(k, v) for k, v in value.items()])
     if not value:
       return ''
-    link = False
     labelStr = ''
     if key == 'tags':
       rating = ['\u2605' * int(i[1]) for i in value if re.match(r'^_\d$', i)]
@@ -100,7 +101,6 @@ class DetailsHierItem(QWidget):
       labelStr = f'<b>{key.capitalize()}:</b><br>{value}<br><br>'
     else:
       dataHierarchyItems = [dict(i) for i in self.dataHierarchyNode if i['name'] == key]
-      docID = ''  # required for clicking a label and that becoming a link
       if len(dataHierarchyItems) == 1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
         ',' not in dataHierarchyItems[0]['list'] and ' ' not in dataHierarchyItems[0]['list']:  # choice among docType
         if not isinstance(value, tuple):
@@ -108,12 +108,7 @@ class DetailsHierItem(QWidget):
         if not isDocID(value[0]):
           value = value[0]
         elif value[2]:
-          docID = value[0]
           value = value[2]
-          link = True
-        else:
-          logging.warning('Value[2] not given for %s', value)
-          value = '\u260D link to entry'  # INFORMAITON NOT USED
       elif isinstance(value, list):
         value = ', '.join([str(i) for i in value])
       if isinstance(value, tuple) and len(value) == 4 and isDocID(value[0]):

@@ -500,7 +500,7 @@ class FlowLayout(QLayout):
 class ResizeImage(QLabel):
   """QLabel that displays a base64 image and automatically rescales it."""
 
-  def __init__(self, data: str, layout: Optional[QLayout] = None):
+  def __init__(self, data: str, layout: QLayout|None = None):
     super().__init__()
     self._sourcePixmap = QPixmap()
     self._isSvg = False

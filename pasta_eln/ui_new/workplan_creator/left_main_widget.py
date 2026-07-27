@@ -3,8 +3,8 @@ from PySide6.QtWidgets import QLineEdit, QScrollArea, QSizePolicy, QVBoxLayout, 
 
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import HSeparator, Label
-from pasta_eln.ui.workplan_creator.procedure_list_item import ProcedureListItem
-from pasta_eln.ui.workplan_creator.workplan_functions import Storage
+from pasta_eln.ui_new.workplan_creator.procedure_list_item import ProcedureListItem
+from pasta_eln.ui_new.workplan_creator.workplan_functions import Storage
 
 
 class LeftMainWidget(QWidget):

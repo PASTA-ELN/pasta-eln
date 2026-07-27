@@ -220,7 +220,8 @@ class TableView(QWidget):
     Args:
       index (QModelIndex): Index of the cell clicked
     """
-    pass
+    return
+
 
   @Slot()
   def onSubTypeChanged(self, title: str) -> None:

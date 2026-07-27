@@ -5,7 +5,7 @@ import darkdetect
 from PySide6.QtGui import QColor
 
 from ..fixed_strings_json import THEME_COLOR_VALUES
-from ..misc_tools import rgba_to_argb
+from ..misc_tools import rgba2argb
 
 
 class Palette:
@@ -44,7 +44,7 @@ class Palette:
     QWidget {
     border-radius: 3px;
     }
-    
+
     QDialogButtonBox {
     min-height: 30px;
     padding-bottom: 25px;
@@ -106,7 +106,7 @@ class Palette:
     cat = themeDict.get(category, {})
     if isinstance(cat, str):
       if len(cat) > 7: # Colors in THEME_COLOR_VALUES are #RGBA, not #ARGB like QColor wants.
-        cat = rgba_to_argb(cat)
+        cat = rgba2argb(cat)
       return QColor(cat).name(format=QColor.NameFormat.HexArgb)
     baseHex = cat.get("base", "#000000")
     color = QColor(baseHex)
@@ -158,5 +158,5 @@ class Palette:
 
     """
     newColor = QColor(colorHex)
-    r, g, b, a= newColor.getRgb()
+    r, g, b, _ = newColor.getRgb()
     return f"rgba({r}, {g}, {b}, {newAlpha})"

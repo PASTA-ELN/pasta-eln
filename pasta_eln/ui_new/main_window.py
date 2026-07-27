@@ -27,7 +27,7 @@ from pasta_eln.ui.palette import Palette
 from pasta_eln.ui.repositories.upload_gui import UploadGUI
 from pasta_eln.ui.tutorials.manager import TutorialManager
 from pasta_eln.ui.tutorials.tutorial_panel import TutorialPanel
-from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
+from pasta_eln.ui_new.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
 from pasta_eln.ui_new.body import Body
 from pasta_eln.ui_new.project_sidebar.project_sidebar import ProjectSidebar
 

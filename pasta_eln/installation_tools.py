@@ -8,7 +8,7 @@ import sys
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 from .backend_worker.backend import Backend
 from .fixed_strings_json import confFileName, configurationGUI, defaultConfiguration
 from .text_tools.string_changes import outputString
@@ -137,8 +137,6 @@ def exampleData(force:bool=False, callbackPercent:Callable[[int],None] | None=No
   logging.info('Start example data creation')
   if callbackPercent is not None:
     callbackPercent(0)
-  with open(Path.home()/confFileName, encoding='utf-8') as fConf:
-    conf = json.load(fConf)
   if force:
     backend = Backend(projectGroup)
     dirName = backend.basePath

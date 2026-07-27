@@ -149,44 +149,6 @@ class SqlLiteDB:
     return flat
 
 
-  def _insertMetadata(self, docID:str, flat:dict[str, tuple[Any, str, str, str]]) -> None:
-    if not flat:
-      return
-    cmd = 'INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);'
-    self.cursor.executemany(cmd, [(docID, k, v, u) for k, (v, u, _, _) in flat.items()])
-    cmdDef = 'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);'
-    self.cursor.executemany(cmdDef, [(k, l, p) for k, (_, _, l, p) in flat.items()])
-    self.connection.commit()
-    return
-
-
-  def _updateMetadata(self, docID:str, flat:dict[str, tuple[Any, str, str, str]],
-                       changesDict:dict[str,Any]) -> None:
-    self.cursor.execute(f"SELECT key, value, unit FROM properties WHERE id == '{docID}'")
-    dataOld = {i[0]:(i[1], '' if i[2] is None else i[2]) for i in self.cursor.fetchall()}
-    if not flat and not dataOld:
-      return
-    cmdInsert = 'INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);'
-    cmdDef = 'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);'
-    for key, (value, unit, label, purl) in flat.items():
-      if key in dataOld:
-        oldValue, oldUnit = dataOld[key]
-        if value != oldValue or unit != oldUnit:
-          self.cursor.execute('UPDATE properties SET value=?, unit=? WHERE id = ? and key = ?',
-                              [value, unit, docID, key])
-          changesDict[key] = oldValue
-      else:
-        self.cursor.execute(cmdInsert, [docID, key, value, unit])
-      self.cursor.execute(cmdDef, [key, label, purl])
-      if key in dataOld:
-        del dataOld[key]
-    if dataOld:
-      cmd = f"DELETE FROM properties WHERE id == '{docID}' and key == ?"
-      self.cursor.executemany(cmd, [(i,) for i in dataOld])
-      changesDict |= {k:v for k,(v,_) in dataOld.items()}
-    return
-
-
   def createSQLTable(self, name:str, columns:list[str], primary:str, colTypes:list[Any] | None=None) -> list[str]:
     """
     Create a table in the sqlite system
@@ -533,7 +495,7 @@ class SqlLiteDB:
 
     # read properties and identify changes
     flat = self._flattenMetadata(dataNew, skipEmpty=False)
-    self._updateMetadata(docID, flat, changesDict)
+    changesDict |= self._updateMetadata(docID, flat)
     # read main and identify if something changed
     cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
     mainOld = dict(cursor.fetchone())
