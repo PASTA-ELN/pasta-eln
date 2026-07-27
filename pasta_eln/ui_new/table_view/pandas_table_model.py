@@ -92,7 +92,7 @@ class PandasTableModel(QAbstractTableModel):
     self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
 
   @override
-  def sort(self, column:int, order:Qt.SortOrder) -> None:
+  def sort(self, column: int, order: Qt.SortOrder) -> None:
     if column == 0:
       # ignore the first column (checkboxes) maybe implement later
       return

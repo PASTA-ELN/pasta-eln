@@ -45,6 +45,8 @@ class Details(QWidget):
 
     # Tags TODO
 
+    # Linked Items TODO
+
     # INFOS like doctype, status and hierarchy
 
     ### BODY WIDGETS
