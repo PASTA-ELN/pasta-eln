@@ -87,6 +87,7 @@ class TestStringMethods(unittest.TestCase):
     outputString(outputFormat,'h2','read c-source_address.json  = SOURCES = AUTHORS')
     tr = {'rn1':'id', 'pi1':'name'}
     authors = json.load(open(path+'Json/C-source_address.json', errors='replace'))
+    print('Number of projects:',len(authors['results'][0]['items']))
     for item in authors['results'][0]['items']:
       itemsCopy = {}
       for k,v in item.items():
@@ -116,6 +117,7 @@ class TestStringMethods(unittest.TestCase):
     trDesigna = {'mn4':'name'}
     majorDesigna=['mn4']
     delDesigna= ['rn4','cu']
+    print('Number of samples:',len(pro['results'][0]['items']))
     for idx0, item in enumerate(pro['results'][0]['items']):
       doc = {}
       #pro
@@ -197,6 +199,9 @@ class TestStringMethods(unittest.TestCase):
     delTCor  = ['rn5','cu']
 
     numMeasurements= len(rel['results'][0]['items'])
+    print('Number of measurements:',numMeasurements)
+    print('Number of conditions:',len(condition['results'][0]['items']))
+    print('Number of dimensions:',len(dimension['results'][0]['items']))
     for idx, item in enumerate(rel['results'][0]['items']):
       doc = {}
       #relation.json
