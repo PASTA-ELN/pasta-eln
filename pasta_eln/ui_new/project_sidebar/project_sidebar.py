@@ -18,8 +18,8 @@ class ProjectSidebar(QWidget):
   The Toplevel Sidebar on the left that displays the projects to choose.
   """
 
-  def __init__(self, comm: Communicate, parent=None):
-    super().__init__()
+  def __init__(self, comm: Communicate, parent: QWidget | None = None) -> None:
+    super().__init__(parent)
     self.comm = comm
     self.projects = pd.DataFrame()
     self.sideBarWidth = self.comm.configuration['GUI']['sidebarWidth']
@@ -148,7 +148,7 @@ class ProjectSidebar(QWidget):
       self.paint('redraw')
 
   @Slot()
-  def createNewProject(self):
+  def createNewProject(self) -> None:
     """ Opens the form to create a new Project and redraws sidebar"""
     self.comm.formDoc.emit({'type': ["x0"], '_projectID': self.comm.projectID})
     self.comm.changeTable.emit("x0", self.comm.projectID)
@@ -178,8 +178,7 @@ class ProjectSidebar(QWidget):
     Args:
       filterText: text that is used to filter the procedures in the list (e.g. Content of the Searchbar)
     """
-    filterText = filterText.lower().split(",")
-    filterText = [word.strip() for word in filterText]
+    filterWords = [word.strip() for word in filterText.lower().split(",")]
     for i in range(self.projectListLayout.count()):
       layoutItem = self.projectListLayout.itemAt(i)
       item = layoutItem.widget() if layoutItem is not None else None
@@ -189,7 +188,7 @@ class ProjectSidebar(QWidget):
       tags = item.project["tags"].lower().split(",")
       tags = [tag.lower().strip() for tag in tags]
       item.show()
-      for word in filterText:
+      for word in filterWords:
         if word.startswith("#"):
           word = word[1:]
           item.hide()
@@ -197,7 +196,7 @@ class ProjectSidebar(QWidget):
             if word in tag:
               item.show()
               break
-        elif word in name or filterText == [""]:
+        elif word in name or filterWords == [""]:
           continue
         else:
           item.hide()

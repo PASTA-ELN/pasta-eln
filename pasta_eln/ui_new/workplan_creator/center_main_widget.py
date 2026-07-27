@@ -1,4 +1,6 @@
 """Widget in the middle of the WorkplanCreator-Dialog. Displays selected procedure and choices for Sample/Procedure"""
+from typing import TYPE_CHECKING, cast
+
 import qtawesome as qta
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QComboBox, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, \
@@ -8,20 +10,25 @@ from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import HSeparator, Label
 from pasta_eln.ui_new.workplan_creator.workplan_list_item import WorkplanListItem
 
+if TYPE_CHECKING:
+  from pasta_eln.ui_new.workplan_creator.workplan_functions import Storage
+
 
 class CenterMainWidget(QWidget):
   """
   Widget in the middle of the WorkplanCreator-Dialog. Displays selected procedure and choices for Sample/Procedure
   """
 
-  def __init__(self, comm: Communicate):
+  def __init__(self, comm: Communicate) -> None:
     super().__init__()
     self.comm = comm
-    self.storage = self.comm.storage
-    self.activeProcedureID = None
-    self.activeListItem = None
-    self.sample = None
-    self.parameters = None
+    if self.comm.storage is None:
+      raise RuntimeError('Workplan storage must be initialized before the center widget')
+    self.storage = cast('Storage', self.comm.storage)
+    self.activeProcedureID: str | None = None
+    self.activeListItem: WorkplanListItem | None = None
+    self.sample: str | None = None
+    self.parameters: dict[str, str] = {}
 
     # GUI Elements init; setup in changeActiveProcedure()
     self.headerLabel = Label("", "h1")
@@ -49,9 +56,8 @@ class CenterMainWidget(QWidget):
     self.mainLayout.addWidget(Label('Choose a Procedure on the left side to begin.', 'h1', style=f"color: {color};"), 0, 0)
     self.setLayout(self.mainLayout)
 
-  def changeActiveProcedure(self, toProcedure: str, sample: str = None, parameters: dict[str, str] = None,
-                            # pylint: disable=missing-param-doc
-                            workplanListItem: WorkplanListItem = None):
+  def changeActiveProcedure(self, toProcedure: str, sample: str | None = None, parameters: dict[str, str] | None = None,# pylint: disable=missing-param-doc
+                            workplanListItem: WorkplanListItem | None = None) -> None:
     """
     Change the current displayed Procedure of the Widget
 

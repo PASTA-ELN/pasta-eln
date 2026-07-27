@@ -2,6 +2,7 @@
 import json
 import re
 from pathlib import Path
+from typing import TypedDict
 
 import pandas as pd
 from PySide6.QtCore import Qt
@@ -10,7 +11,22 @@ from pasta_eln.backend_worker.worker import Task
 from pasta_eln.ui.gui_communicate import Communicate
 
 
-def generateAndSaveWorkplan(comm: Communicate, workplan: dict, filename: str) -> None:
+class WorkplanProcedure(TypedDict):
+  """A procedure entry stored in a serialized workplan."""
+
+  procedure: str
+  sample: str
+  parameters: dict[str, str]
+
+
+class Workplan(TypedDict):
+  """The JSON-compatible workplan format saved by the Workplan Creator."""
+
+  name: str
+  procedures: list[WorkplanProcedure]
+
+
+def generateAndSaveWorkplan(comm: Communicate, workplan: Workplan, filename: str) -> None:
   """
   Write the given parameters of a workplan in a file with the format of the common workplan description.
   Args:
@@ -50,7 +66,7 @@ class Storage:
 
     """
 
-    def onGetTable(table: pd.DataFrame, docType: str):
+    def onGetTable(table: pd.DataFrame, docType: str) -> None:
       if docType == "workflow/procedure":
         self.procedureTable = table
         self.comm.storageUpdated.emit(projectID)
@@ -89,6 +105,7 @@ class Storage:
     tags = ['#' + tag for tag in tags.split(", ")]
     return tags
 
+
   def requestProcedureText(self, procedureID: str) -> None:
     """
     Reads the file where the procedure is stored and replaces content in Storage with complete content
@@ -97,8 +114,7 @@ class Storage:
     Args:
       procedureID: docID for the procedure
     """
-
-    def onGetDoc(doc: dict):
+    def onGetDoc(doc: dict[str, object]) -> None:
       if procedureID == doc["id"]:
         docPath = doc['branch'][0]['path']
         if docPath:
@@ -110,9 +126,9 @@ class Storage:
             text = file.read()
           self.procedureTable.loc[self.procedureTable["id"] == procedureID, "content"] = text
         self.comm.storageUpdated.emit(procedureID)
-
     self.comm.backendThread.worker.beSendDoc.connect(onGetDoc, type=Qt.ConnectionType.SingleShotConnection)
     self.comm.uiRequestDoc.emit(procedureID)
+
 
   def getProcedureText(self, procedureID: str) -> str:
     """
@@ -129,6 +145,7 @@ class Storage:
       text = row["content"].iloc[0]
     return text
 
+
   def getProcedureDefaultParameters(self, procedureID: str) -> dict[str, str]:
     """
     Args:
@@ -136,7 +153,7 @@ class Storage:
 
     Returns: The default tags of the procedure with the given procedureID
     """
-    parameters = {}
+    parameters: dict[str, str] = {}
     text = self.getProcedureText(procedureID)
     params = re.findall(r"\|[^|]+\|[^|]+\|", text)
     try:

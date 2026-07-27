@@ -12,12 +12,13 @@ class LeftMainWidget(QWidget):
   Widget on the left side of the WorkplanCreator-Dialog. Contains a Searchbar and a list of Procedures to choose from
   """
 
-  def __init__(self, comm: Communicate):
+  def __init__(self, comm: Communicate) -> None:
     super().__init__()
     self.comm = comm
-    self.storage = None
+    self.storage: Storage = Storage(self.comm, self.comm.projectID)
+    self.comm.storage = self.storage
     self.currentProjectID = self.comm.projectID
-    self.procedures = []
+    self.procedures: list[str] = []
 
     # headerLabel
     self.headerLabel = Label("Choose Procedures", "h1")
@@ -51,8 +52,6 @@ class LeftMainWidget(QWidget):
 
     # misc
     self.comm.storageUpdated.connect(self.updateProcedures)
-    self.comm.storage = Storage(self.comm, self.currentProjectID)
-    self.storage = self.comm.storage
 
   def updateProcedures(self, projID: str) -> None:
     """
@@ -86,14 +85,13 @@ class LeftMainWidget(QWidget):
               style=f"color: {self.comm.palette.getThemeColor("foreground", "disabled")};"))
     self.procedureListLayout.addStretch(1)
 
-  def filterItems(self, filterText: str):
+  def filterItems(self, filterText: str) -> None:
     """
     hides/shows the procedures that match the phrase in the searchbar
     Args:
       filterText: text that is used to filter the procedures in the list (e.g. Content of the Searchbar)
     """
-    filterText = filterText.lower().split(",")
-    filterText = [word.strip() for word in filterText]
+    filterWords = [word.strip() for word in filterText.lower().split(",")]
     for i in range(1, self.procedureListLayout.count() - 1, 2):
       widgetItem    = self.procedureListLayout.itemAt(i)
       separatorItem = self.procedureListLayout.itemAt(i + 1)
@@ -107,7 +105,7 @@ class LeftMainWidget(QWidget):
         continue
       procedureID = widget.procedureID
       procedureName = self.storage.getProcedureTitle(procedureID).lower()
-      for word in filterText:
+      for word in filterWords:
         if word.startswith("#"):
           tags = self.storage.getProcedureTags(procedureID)
           widget.hide()
@@ -117,7 +115,7 @@ class LeftMainWidget(QWidget):
               widget.show()
               separator.show()
               break
-        elif word in procedureName or filterText == [""]:
+        elif word in procedureName or filterWords == [""]:
           continue
         else:
           widget.hide()

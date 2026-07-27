@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QInputDialog, QPushButton, QScrollArea, QSizePolic
 
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Label
-from pasta_eln.ui_new.workplan_creator.workplan_functions import generateAndSaveWorkplan
+from pasta_eln.ui_new.workplan_creator.workplan_functions import Storage, Workplan, WorkplanProcedure, generateAndSaveWorkplan
 from pasta_eln.ui_new.workplan_creator.workplan_list_item import WorkplanListItem
 
 
@@ -15,10 +15,12 @@ class RightMainWidget(QWidget):
   Widget on the right of the WorkplanCreator-Dialog. Contains a list of workplanListItems that represents the Workplan
   """
 
-  def __init__(self, comm: Communicate, displayWorkplan: dict = None):
+  def __init__(self, comm: Communicate, displayWorkplan: Workplan | None = None) -> None:
     super().__init__()
     self.comm = comm
-    self.storage = self.comm.storage
+    if self.comm.storage is None:
+      raise RuntimeError('Workplan storage must be initialized before the right widget')
+    self.storage: Storage = self.comm.storage
     self.headerLabel = Label("Current Workplan", 'h1')
     self.workplanWidget = QWidget()
     self.workplanLayout = QVBoxLayout()
@@ -57,11 +59,11 @@ class RightMainWidget(QWidget):
     self.mainLayout.addWidget(scrollarea)
     self.mainLayout.addWidget(self.saveButton)
     self.setLayout(self.mainLayout)
-
     if displayWorkplan:
       self.displayWorkplan(displayWorkplan)
 
-  def addProcedure(self, procedureID: str, sample: str, parameters: dict[str, str], at: int = None) -> None:
+
+  def addProcedure(self, procedureID: str, sample: str, parameters: dict[str, str], at: int | None = None) -> None:
     """
     Add a new workPlanListItem to the list
     Args:
@@ -97,10 +99,7 @@ class RightMainWidget(QWidget):
       return
     elif not filename:
       filename = "unnamed_workplan"
-    workplan = {
-      "name": filename,
-      "procedures": []
-    }
+    workplan: Workplan = {"name": filename, "procedures": []}
     for i in range(self.workplanLayout.count()):
       layoutItem = self.workplanLayout.itemAt(i)
       item = layoutItem.widget() if layoutItem is not None else None
@@ -112,12 +111,10 @@ class RightMainWidget(QWidget):
         for param in defaultParameters:
           if param in filledParameters:
             defaultParameters[param] = filledParameters[param]
-        workplan["procedures"].append({
-          "procedure": procedureID,
-          "sample": sample,
-          "parameters": defaultParameters
-        })
+        workplanProcedure: WorkplanProcedure = {"procedure": procedureID, "sample": sample, "parameters": defaultParameters}
+        workplan["procedures"].append(workplanProcedure)
     generateAndSaveWorkplan(self.comm, workplan, filename)
+
 
   def highlightActiveItem(self, listItem: WorkplanListItem) -> None:
     """
@@ -133,7 +130,8 @@ class RightMainWidget(QWidget):
     if listItem:
       listItem.highlight()
 
-  def displayWorkplan(self, workplan: dict) -> None:
+
+  def displayWorkplan(self, workplan: Workplan) -> None:
     """
     Adds all the procedures from a given workplan-dict to the Workplan in the Creator.
     What happens when the procedure, sample or parameters are not in Pasta? -Currently not handled
@@ -143,5 +141,5 @@ class RightMainWidget(QWidget):
     for procedure in workplan["procedures"]:
       procedureID: str = procedure["procedure"]
       sample: str = procedure["sample"]
-      parameters: dict = procedure["parameters"]
+      parameters = procedure["parameters"]
       self.addProcedure(procedureID, sample, parameters)

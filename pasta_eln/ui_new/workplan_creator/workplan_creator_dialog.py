@@ -10,6 +10,7 @@ from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui_new.workplan_creator.center_main_widget import CenterMainWidget
 from pasta_eln.ui_new.workplan_creator.left_main_widget import LeftMainWidget
 from pasta_eln.ui_new.workplan_creator.right_main_widget import RightMainWidget
+from pasta_eln.ui_new.workplan_creator.workplan_functions import Workplan
 
 
 class WorkplanCreatorDialog(QDialog):
@@ -20,7 +21,7 @@ class WorkplanCreatorDialog(QDialog):
   - RightMainWidget: Displays Workplan and export-button
   """
 
-  def __init__(self, comm: Communicate, displayWorkplan: dict = None):
+  def __init__(self, comm: Communicate, displayWorkplan: Workplan | None = None):
     super().__init__()
 
     # Configure Backend / Storage

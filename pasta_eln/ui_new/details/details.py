@@ -22,7 +22,7 @@ class Details(QWidget):
     super().__init__()
     self.comm = comm
     self.docID = ""
-    self.data = {}
+    self.data: dict[str, Any] = {'content': ''}
 
     ### HEADER WIDGETS
     # Title Label

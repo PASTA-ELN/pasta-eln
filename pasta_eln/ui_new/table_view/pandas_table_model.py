@@ -1,6 +1,7 @@
 """A Qt table model that exposes a pandas DataFrame to a QTableView."""
+from typing import Any
 import pandas as pd
-from PySide6.QtCore import QAbstractTableModel, Qt, Signal
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt, Signal
 from typing_extensions import override
 
 
@@ -17,18 +18,20 @@ class PandasTableModel(QAbstractTableModel):
   """
   rowCheckChanged = Signal(int, bool)
 
-  def __init__(self, df: pd.DataFrame):
+  def __init__(self, df: pd.DataFrame) -> None:
     super().__init__()
     self._df = df
     self._checkedRows = [False] * len(self._df)
 
-  def rowCount(self, parent=None):
+  def rowCount(self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()) -> int:
+    del parent
     return self._df.shape[0]
 
-  def columnCount(self, parent=None):
+  def columnCount(self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()) -> int:
+    del parent
     return self._df.shape[1] + 1  # +1 for checkbox-column
 
-  def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+  def data(self, index: QModelIndex | QPersistentModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
     if not index.isValid():
       return None
 
@@ -45,7 +48,7 @@ class PandasTableModel(QAbstractTableModel):
 
     return None
 
-  def flags(self, index):
+  def flags(self, index: QModelIndex | QPersistentModelIndex) -> Qt.ItemFlag:
     if not index.isValid():
       return Qt.ItemFlag.NoItemFlags
 
@@ -56,7 +59,8 @@ class PandasTableModel(QAbstractTableModel):
       return baseFlags | Qt.ItemFlag.ItemIsUserCheckable
     return baseFlags
 
-  def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
+  def setData(self, index: QModelIndex | QPersistentModelIndex, value: Any,
+              role: int = Qt.ItemDataRole.EditRole) -> bool:
     # When a row is checked, this method is called and updates the object.
     if index.column() == 0 and role == Qt.ItemDataRole.CheckStateRole:
       checked = value == Qt.CheckState.Checked.value
@@ -66,7 +70,8 @@ class PandasTableModel(QAbstractTableModel):
       return True
     return False
 
-  def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+  def headerData(self, section: int, orientation: Qt.Orientation,
+                 role: int = Qt.ItemDataRole.DisplayRole) -> Any:
     if role != Qt.ItemDataRole.DisplayRole:
       return None
 
@@ -77,13 +82,13 @@ class PandasTableModel(QAbstractTableModel):
 
     return str(self._df.index[section])
 
-  def checkedRows(self):
+  def checkedRows(self) -> list[bool]:
     """
     Returns: self._checkedRows
     """
     return self._checkedRows
 
-  def checkRow(self, row, checked):
+  def checkRow(self, row: int, checked: bool) -> None:
     """
     Setter for self._checkedRows
     """
@@ -92,7 +97,7 @@ class PandasTableModel(QAbstractTableModel):
     self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
 
   @override
-  def sort(self, column: int, order: Qt.SortOrder) -> None:
+  def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
     if column == 0:
       # ignore the first column (checkboxes) maybe implement later
       return
