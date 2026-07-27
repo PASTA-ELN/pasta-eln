@@ -2,12 +2,13 @@
 """ Script to run when releasing a new version to pypi """
 from __future__ import annotations
 import datetime
+import io
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
+import tokenize
 from pathlib import Path
 from urllib.request import urlopen
 
@@ -225,8 +226,6 @@ def rightAlignComments() -> None:
   """
   Check if comments are right-aligned to column 110
   """
-  pattern1 = re.compile(r'\S+.+#')  # Line has non-whitespace, then whitespace, then #
-  pattern2 = re.compile(r'\s#')
   print('================ START RIGHT-ALIGNMENT CHECK ================')
   for root, _, files in os.walk('pasta_eln'):
     for file in files:
@@ -236,11 +235,15 @@ def rightAlignComments() -> None:
         filePath = os.path.join(root, file)
         with open(filePath, encoding='utf-8') as f:
           content = f.read()
+        commentColumns = {token.start[0]: token.start[1]
+          for token in tokenize.generate_tokens(io.StringIO(content).readline) if token.type == tokenize.COMMENT}
         output = ''                                                                  # sourcery skip: use-join
-        for number, line in enumerate(content.splitlines()):
-          if pattern1.search(line) and not line.strip().startswith('#') and len(line)!=110 and \
-             pattern2.search(line) and 'background' not in line and 'import' not in line and 'tag' not in line and 'border' not in line:
-            output += f'{number+1}: {line.strip()}\n'
+        for number, line in enumerate(content.splitlines(), start=1):
+          commentColumn = commentColumns.get(number)
+          hasInlineComment = commentColumn is not None and bool(line[:commentColumn].strip()) and \
+            line[commentColumn-1].isspace() and 'import' not in line
+          if hasInlineComment and len(line)!=110:
+            output += f'{number}: {line.strip()}\n'
         if output and 'Resources/' not in filePath:
           print('Processing file:', filePath)
           print(output)

@@ -53,7 +53,7 @@ def dumb_css_parser(data: str) -> dict[str, dict[str, str]]:
     try:
         elements = {a.strip(): dumb_property_dict(b) for a, b in pairs}
     except ValueError:
-        elements = {}  # not that important
+        elements = {}                                                                     # not that important
 
     return elements
 
