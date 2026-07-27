@@ -43,11 +43,11 @@ class CenterMainWidget(QWidget):
     # squishable
 
     # layout
-    self.layout = QGridLayout()
-    self.layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+    self.mainLayout = QGridLayout()
+    self.mainLayout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
     color = self.comm.palette.getThemeColor("foreground", "disabled")
-    self.layout.addWidget(Label('Choose a Procedure on the left side to begin.', 'h1', style=f"color: {color};"), 0, 0)
-    self.setLayout(self.layout)
+    self.mainLayout.addWidget(Label('Choose a Procedure on the left side to begin.', 'h1', style=f"color: {color};"), 0, 0)
+    self.setLayout(self.mainLayout)
 
   def changeActiveProcedure(self, toProcedure: str, sample: str = None, parameters: dict[str, str] = None,
                             # pylint: disable=missing-param-doc
@@ -64,21 +64,21 @@ class CenterMainWidget(QWidget):
     """
     # Create empty Layout if layout is not created yet (FIRST SETUP)
     if not self.activeProcedureID:
-      self.layout.takeAt(0).widget().deleteLater()
-      self.layout.setColumnStretch(0, 1)
-      self.layout.setColumnStretch(1, 1)
+      self.mainLayout.takeAt(0).widget().deleteLater()
+      self.mainLayout.setColumnStretch(0, 1)
+      self.mainLayout.setColumnStretch(1, 1)
       # Procedure Name / Header Label
-      self.layout.addWidget(self.headerLabel, 0, 0, 1, -1)
+      self.mainLayout.addWidget(self.headerLabel, 0, 0, 1, -1)
       # Tags
-      self.layout.addLayout(self.tagLayout, 1, 0, 1, -1)
+      self.mainLayout.addLayout(self.tagLayout, 1, 0, 1, -1)
       # Short Description
       self.shortDesc.setWordWrap(True)
       self.shortDesc.setMaximumHeight(100)
       self.shortDesc.setStyleSheet(
         f"color: {self.comm.palette.getThemeColor("foreground", "disabled")}; font-size: 10pt;")
-      self.layout.addWidget(self.shortDesc, 2, 0)
+      self.mainLayout.addWidget(self.shortDesc, 2, 0)
       # Short Separator (Between short and long description)
-      self.layout.addWidget(HSeparator(), 3, 0)
+      self.mainLayout.addWidget(HSeparator(), 3, 0)
       # Long Description
       self.description.setStyleSheet(f"""
       background-color: {self.comm.palette.getThemeColor("background", "base")};
@@ -87,7 +87,7 @@ class CenterMainWidget(QWidget):
       """)
       self.description.setFocusPolicy(Qt.FocusPolicy.NoFocus)
       self.description.document().setDocumentMargin(0)
-      self.layout.addWidget(self.description, 4, 0)
+      self.mainLayout.addWidget(self.description, 4, 0)
       # Sample and Parameter field
       self.comm.backendThread.worker.beSendTable.connect(self._addSampleBoxItems)
       self.comm.uiRequestTable.emit('sample', self.comm.projectID, False)
@@ -102,12 +102,12 @@ class CenterMainWidget(QWidget):
       self.parameterForm.addRow(Label("Choose Sample:", "h2"))
       self.parameterForm.addRow(self.sampleBox)
       self.parameterForm.addRow(Label("Choose Parameters:", "h2"))
-      self.layout.addWidget(self.formScrollArea, 2, 1, 3, 1)
+      self.mainLayout.addWidget(self.formScrollArea, 2, 1, 3, 1)
       self.comm.storageUpdated.connect(self._onProcedureTextUpdated)
       # Add-Button
       self.addToWorkplanButton.setIcon(qta.icon("ei.plus", scale_factor=1))
       self.addToWorkplanButton.setDefault(True)
-      self.layout.addWidget(self.addToWorkplanButton, 6, 1)
+      self.mainLayout.addWidget(self.addToWorkplanButton, 6, 1)
       self.addToWorkplanButton.clicked.connect(lambda: self.comm.addProcedure.emit(
         self.activeProcedureID, self.sampleBox.currentText(), self.getFilledParameters()))
     # END OF FIRST SETUP

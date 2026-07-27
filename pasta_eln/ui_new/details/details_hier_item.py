@@ -40,11 +40,11 @@ class DetailsHierItem(QWidget):
     self.contentLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
     # Main Layout
-    self.layout = QVBoxLayout()
-    self.layout.setContentsMargins(0, 0, 0, 0)
-    self.layout.addWidget(self.button)
-    self.layout.addWidget(self.contentLabel)
-    self.setLayout(self.layout)
+    self.mainLayout = QVBoxLayout()
+    self.mainLayout.setContentsMargins(0, 0, 0, 0)
+    self.mainLayout.addWidget(self.button)
+    self.mainLayout.addWidget(self.contentLabel)
+    self.setLayout(self.mainLayout)
 
     #
     self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)

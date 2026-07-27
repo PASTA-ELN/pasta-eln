@@ -46,10 +46,10 @@ class ProcedureListItem(QFrame):
     self.setToolTip(self.titleLabel.text() + "\n" + self.tagLabel.text())
 
     # layout
-    self.layout = QVBoxLayout()
-    self.layout.addWidget(self.titleLabel)
-    self.layout.addWidget(self.tagLabel)
-    self.setLayout(self.layout)
+    self.mainLayout = QVBoxLayout()
+    self.mainLayout.addWidget(self.titleLabel)
+    self.mainLayout.addWidget(self.tagLabel)
+    self.setLayout(self.mainLayout)
 
   def mousePressEvent(self, event):
     """

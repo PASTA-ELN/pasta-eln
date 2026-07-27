@@ -91,14 +91,14 @@ class ProjectSidebar(QWidget):
     # self.setMinimumWidth(200)
 
     # Layout
-    self.layout = QVBoxLayout()
-    self.layout.addWidget(self.header)
-    self.layout.addWidget(self.searchbar)
-    self.layout.addWidget(HSeparator())
-    self.layout.addWidget(self.scrollarea, stretch=1)
-    self.layout.addWidget(self.footer)
-    self.layout.setSpacing(10)
-    self.setLayout(self.layout)
+    self.mainLayout = QVBoxLayout()
+    self.mainLayout.addWidget(self.header)
+    self.mainLayout.addWidget(self.searchbar)
+    self.mainLayout.addWidget(HSeparator())
+    self.mainLayout.addWidget(self.scrollarea, stretch=1)
+    self.mainLayout.addWidget(self.footer)
+    self.mainLayout.setSpacing(10)
+    self.setLayout(self.mainLayout)
 
     # Signals
     self.comm.changeSidebar.connect(self.paint)

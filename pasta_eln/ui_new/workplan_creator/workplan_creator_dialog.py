@@ -54,10 +54,10 @@ class WorkplanCreatorDialog(QDialog):
     self.resize(int(screen.width() * 0.75), int(screen.height() * 0.75))
 
     # layout
-    self.layout = QGridLayout()
-    self.layout.addWidget(self.splitter, 0, 0)
-    self.layout.setContentsMargins(0, 0, 0, 0)
-    self.setLayout(self.layout)
+    self.mainLayout = QGridLayout()
+    self.mainLayout.addWidget(self.splitter, 0, 0)
+    self.mainLayout.setContentsMargins(0, 0, 0, 0)
+    self.setLayout(self.mainLayout)
 
   def _onGetProjectDoc(self, doc: dict) -> None:
     """

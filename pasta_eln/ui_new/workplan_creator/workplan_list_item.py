@@ -104,12 +104,12 @@ class WorkplanListItem(QFrame):
     self.setStyleSheet(self.defaultCSS)
 
     # layout
-    self.layout = QVBoxLayout()
-    self.layout.addWidget(self.frame)
-    self.layout.addWidget(self.arrow, alignment=Qt.AlignmentFlag.AlignHCenter)
-    self.layout.setSpacing(0)
-    self.layout.setContentsMargins(0, 0, 0, 0)
-    self.setLayout(self.layout)
+    self.mainLayout = QVBoxLayout()
+    self.mainLayout.addWidget(self.frame)
+    self.mainLayout.addWidget(self.arrow, alignment=Qt.AlignmentFlag.AlignHCenter)
+    self.mainLayout.setSpacing(0)
+    self.mainLayout.setContentsMargins(0, 0, 0, 0)
+    self.setLayout(self.mainLayout)
 
   def mousePressEvent(self, event):
     """

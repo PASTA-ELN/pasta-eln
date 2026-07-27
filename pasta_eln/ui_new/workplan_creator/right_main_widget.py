@@ -50,13 +50,13 @@ class RightMainWidget(QWidget):
     self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
 
     # layout
-    self.layout = QVBoxLayout()
-    # self.layout.setContentsMargins(0,0,0,0)
-    self.layout.addWidget(self.headerLabel)
-    # self.layout.addWidget(HSeperator())
-    self.layout.addWidget(scrollarea)
-    self.layout.addWidget(self.saveButton)
-    self.setLayout(self.layout)
+    self.mainLayout = QVBoxLayout()
+    # self.mainLayout.setContentsMargins(0,0,0,0)
+    self.mainLayout.addWidget(self.headerLabel)
+    # self.mainLayout.addWidget(HSeperator())
+    self.mainLayout.addWidget(scrollarea)
+    self.mainLayout.addWidget(self.saveButton)
+    self.setLayout(self.mainLayout)
 
     if displayWorkplan:
       self.displayWorkplan(displayWorkplan)

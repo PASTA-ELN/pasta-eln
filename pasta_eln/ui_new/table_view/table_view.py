@@ -84,12 +84,12 @@ class TableView(QWidget):
     self.table.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
 
     # Layout
-    self.layout = QVBoxLayout()
-    self.layout.setContentsMargins(0, 0, 0, 0)
-    self.layout.setSpacing(0)
-    self.layout.addWidget(self.buttonbar)
-    self.layout.addWidget(self.table)
-    self.setLayout(self.layout)
+    self.mainLayout = QVBoxLayout()
+    self.mainLayout.setContentsMargins(0, 0, 0, 0)
+    self.mainLayout.setSpacing(0)
+    self.mainLayout.addWidget(self.buttonbar)
+    self.mainLayout.addWidget(self.table)
+    self.setLayout(self.mainLayout)
 
     # Style
 

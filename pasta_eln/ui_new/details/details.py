@@ -81,11 +81,11 @@ class Details(QWidget):
     self.splitter.setSizes([firstHeight, self.splitter.size().height() - firstHeight])
 
     # Main Layout
-    self.layout = QVBoxLayout()
-    self.layout.setContentsMargins(0, 0, 0, 0)
-    self.layout.addWidget(self.header)
-    self.layout.addWidget(self.splitter, stretch=0)
-    self.setLayout(self.layout)
+    self.mainLayout = QVBoxLayout()
+    self.mainLayout.setContentsMargins(0, 0, 0, 0)
+    self.mainLayout.addWidget(self.header)
+    self.mainLayout.addWidget(self.splitter, stretch=0)
+    self.setLayout(self.mainLayout)
 
     # Signals
     self.comm.changeDetails.connect(self.onDetailsChanged)

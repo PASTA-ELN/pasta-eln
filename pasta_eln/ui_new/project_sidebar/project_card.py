@@ -53,12 +53,12 @@ class ProjectCard(QFrame):
     self.setStyleSheet(self.defaultCSS)
 
     # Layout
-    self.layout = QVBoxLayout()
-    self.layout.addWidget(self.titleLabel)
-    self.layout.addWidget(self.infoLabel)
-    # self.layout.setContentsMargins(0,0,0,0)
-    # self.layout.setSpacing(0)
-    self.setLayout(self.layout)
+    self.mainLayout = QVBoxLayout()
+    self.mainLayout.addWidget(self.titleLabel)
+    self.mainLayout.addWidget(self.infoLabel)
+    # self.mainLayout.setContentsMargins(0,0,0,0)
+    # self.mainLayout.setSpacing(0)
+    self.setLayout(self.mainLayout)
 
     # Signals
     self.clicked.connect(self.onClick)

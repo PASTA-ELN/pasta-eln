@@ -43,11 +43,11 @@ class LeftMainWidget(QWidget):
     self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
 
     # layout
-    self.layout = QVBoxLayout()
-    self.layout.addWidget(self.headerLabel)
-    self.layout.addWidget(self.searchbar)
-    self.layout.addWidget(scrollarea)
-    self.setLayout(self.layout)
+    self.mainLayout = QVBoxLayout()
+    self.mainLayout.addWidget(self.headerLabel)
+    self.mainLayout.addWidget(self.searchbar)
+    self.mainLayout.addWidget(scrollarea)
+    self.setLayout(self.mainLayout)
 
     # misc
     self.comm.storageUpdated.connect(self.updateProcedures)
