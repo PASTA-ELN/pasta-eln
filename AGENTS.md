@@ -39,7 +39,7 @@ pre-commit run --all-files
 make -C docs html
 ```
 
-Before editing, run `git status --short`. Do not overwrite, reset, or remove unrelated user changes. Run the smallest relevant test first, then the standard suite when practical. GUI tests must use Qt's offscreen platform in headless environments.
+Before editing, run `git status --short`. Do not overwrite, reset, or remove unrelated user changes. Run the smallest relevant test first, then the standard suite when practical. Run pytest outside the execution sandbox: extractor tests use multiprocessing and the sandbox prevents its forkserver from starting. GUI tests must use Qt's offscreen platform in headless environments.
 
 ## Engineering conventions
 

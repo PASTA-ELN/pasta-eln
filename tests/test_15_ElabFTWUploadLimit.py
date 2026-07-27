@@ -5,8 +5,8 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
-from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
-from pasta_eln.installationTools import createDefaultConfiguration
+from pasta_eln.backend_worker.elab_ftw_sync import Pasta2Elab
+from pasta_eln.installation_tools import createDefaultConfiguration
 
 
 class TestElabFTWUploadLimit(unittest.TestCase):
