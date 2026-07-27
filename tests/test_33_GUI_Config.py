@@ -1,6 +1,6 @@
 import logging
-from pasta_eln.UI.guiCommunicate import Communicate
-from pasta_eln.UI.config.main import Configuration
+from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.ui.config.main import Configuration
 
 def test_simple(qtbot, caplog):
 

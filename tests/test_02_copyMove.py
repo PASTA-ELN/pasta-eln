@@ -4,7 +4,7 @@ import os, shutil, logging, random
 import warnings
 import unittest
 from pathlib import Path
-from pasta_eln.backendWorker.backend import Backend
+from pasta_eln.backend_worker.backend import Backend
 
 class TestStringMethods(unittest.TestCase):
   """

@@ -1,6 +1,6 @@
 import logging, tempfile
-from pasta_eln.UI.guiCommunicate import Communicate
-from pasta_eln.AddOns.project_html_report import main
+from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.add_ons.project_html_report import main
 from .test_34_GUI_Form import getTable
 
 def test_simple(qtbot, caplog):
