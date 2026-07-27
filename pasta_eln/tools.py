@@ -9,7 +9,6 @@ import sys
 import traceback
 from collections.abc import Callable
 from sqlite3 import IntegrityError
-from typing import Any
 from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.backend_worker.elab_ftw_sync import Pasta2Elab
 from pasta_eln.fixed_strings_json import defaultDocTypes, defaultSchema
@@ -238,40 +237,6 @@ class Tools:
       self.backend.changeHierarchy(None)
     print()
     return
-
-
-  def translateDoc(self, doc:dict[str,Any], comment:str='') -> tuple[dict[str,Any],list[Any]]:
-    """ translate to new style
-
-    Args:
-      doc (dict): input document
-      comment (str): comment to add to the output, e.g. offending doc-id
-
-    Returns:
-      dict: output document
-    """
-    from .text_tools.handle_dictionaries import fillDocBeforeCreate
-    defaultValues = {'gui':[True,True], 'user':''}
-    try:
-      doc['id'] = doc.pop('_id')
-      for key in ('name','user','type','gui','tags','client','branch','date'):
-        if key in doc:                                               #skip if key is already in correct format
-          continue
-        if key in defaultValues and f'-{key}' not in doc:
-          doc[key] = defaultValues[key]
-          continue
-        doc[key] = doc.pop(f'-{key}')
-      doc['dateCreated']  = doc['date']
-      doc['dateModified'] = doc.pop('date')
-      doc['branch'] = doc['branch'][0] | {'op':'c'} if doc['branch'] else \
-                      {'stack':[], 'child':9999, 'path':None, 'show':[True], 'op':'c'}
-      del doc['_rev']
-      attachments = doc.pop('_attachments',[])
-      doc = fillDocBeforeCreate(doc, doc['type'])
-    except Exception:
-      print('Input document has mistakes in: ',comment,'\n',json.dumps(doc, indent=2))
-      raise
-    return doc, attachments
 
 
   def update3Workflow(self, projectGroup:str='') -> None:

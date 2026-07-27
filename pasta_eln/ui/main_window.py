@@ -12,7 +12,7 @@ from PySide6.QtGui import QDesktopServices, QIcon, QPixmap, QShortcut
 from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QMainWindow, QVBoxLayout
 from pasta_eln import __version__
 from ..backend_worker.worker import Task
-from ..fixed_strings_json import confFileName, aboutMessage, shortcuts
+from ..fixed_strings_json import aboutMessage, confFileName, shortcuts
 from ..misc_tools import hardRestart, installPythonPackages, updateAddOnList
 from .body import Body
 from .config.main import Configuration

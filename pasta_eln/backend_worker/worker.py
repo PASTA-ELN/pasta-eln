@@ -97,16 +97,6 @@ class BackendWorker(QObject):
       self.beSendDataHierarchyNode.emit(docType, self.backend.db.dataHierarchy(docType, 'meta'))
 
 
-  @Slot(str)
-  def returnDataHierarchyRow(self, docType:str) -> None:
-    """ Return a data hierarchy row for the given docType
-    Args:
-      docType (str): Document type to return data hierarchy for
-    """
-    if self.backend is not None:
-      self.beSendDataHierarchyAll.emit(self.backend.db.dataHierarchy(docType, '*'))
-
-
   @Slot(str, str, bool)
   def returnTable(self, docType:str, projID:str, showAll:bool) -> None:
     """ Return a view from the database

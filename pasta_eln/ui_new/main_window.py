@@ -7,11 +7,9 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any
-
-from PySide6.QtCore import QEvent, QTimer, QUrl, Qt, Slot
+from PySide6.QtCore import QEvent, Qt, QTimer, QUrl, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QPixmap, QShortcut
 from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QMainWindow, QSplitter, QVBoxLayout
-
 from pasta_eln import __version__
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.fixed_strings_json import aboutMessage, confFileName, shortcuts
@@ -27,9 +25,9 @@ from pasta_eln.ui.palette import Palette
 from pasta_eln.ui.repositories.upload_gui import UploadGUI
 from pasta_eln.ui.tutorials.manager import TutorialManager
 from pasta_eln.ui.tutorials.tutorial_panel import TutorialPanel
-from pasta_eln.ui_new.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
 from pasta_eln.ui_new.body import Body
 from pasta_eln.ui_new.project_sidebar.project_sidebar import ProjectSidebar
+from pasta_eln.ui_new.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
 
 
 class MainWindow(QMainWindow):

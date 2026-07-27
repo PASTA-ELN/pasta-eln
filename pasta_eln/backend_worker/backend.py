@@ -6,20 +6,19 @@ import sys
 import tempfile
 import traceback
 from collections.abc import Callable
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib import request
 import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
 from PIL import Image
-from ..misc_tools import loadNamedModule, getConfiguration
+from ..misc_tools import getConfiguration, loadNamedModule
 from ..text_tools.handle_dictionaries import diffDicts, fillDocBeforeCreate
 from ..text_tools.string_changes import camelCase, createDirName, outputString
+from .extractor import ExtractorManager
 from .hash_tools import genericHash
 from .mixin_cli import CliMixin
 from .sqlite import SqlLiteDB
-from .extractor import ExtractorManager
 
 
 class Backend(CliMixin):
@@ -158,7 +157,7 @@ class Backend(CliMixin):
     else:                                                                                             #new doc
       edit = False
       doc['type'] = docType.split('/')
-      if len(hierStack) == 0 or any(s == "" for s in hierStack):
+      if len(hierStack) == 0 or any(s == '' for s in hierStack):
         hierStack = self.hierStack
     logging.debug('Add/edit data in cwd:%s with stack:%s and name: %s and type: %s and edit: %s',self.cwd, hierStack, doc['name'], doc['type'], edit)
     # collect structure-doc and prepare
@@ -461,86 +460,6 @@ class Backend(CliMixin):
     if rerunScanTree:
       reply += self.scanProject(progressBar, projID, projPath)
     return reply
-
-
-  def useExtractors(self, filePath:Path, shasum:str, doc:dict[str,Any]) -> None:
-    """
-    get measurements from datafile: central distribution point
-    - max image size defined here
-
-    Args:
-        filePath (Path): path to file
-        shasum (string): shasum (git-style hash) to store in database (not used here)
-        doc (dict): pass known data/measurement type, can be used to create image; This doc is altered
-    """
-    extension = filePath.suffix[1:]                                                 #cut off initial . of .jpg
-    if str(filePath).startswith('http'):
-      absFilePath = Path(tempfile.gettempdir())/filePath.name
-      try:
-        req = request.Request(filePath.as_posix().replace(':/','://'), headers={'User-Agent': 'Mozilla/5.0'})
-        with request.urlopen(req, timeout=60) as urlRequest:
-          with open(absFilePath, 'wb') as f:
-            try:
-              f.write(urlRequest.read())
-            except Exception:
-              logging.error('Saving downloaded file to temporary disk', exc_info=True)
-              return
-      except Exception:
-        logging.error('Could not download file from internet %s', filePath.as_posix())
-        return
-    else:
-      if filePath.is_absolute():
-        filePath = filePath.relative_to(self.basePath)
-      absFilePath = self.basePath/filePath
-    pyFile = f'extractor_{extension.lower()}.py'
-    pyPath = self.addOnPath/pyFile
-    if pyPath.is_file():
-      plt.clf()
-      try:
-        module  = loadNamedModule(self.addOnPath, pyFile[:-3])
-        content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
-        general = content.get('general',[])
-        for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','style']]:#only allow accepted keys
-          del content[key]
-        doc |= content
-        for item in general:
-          doc[item[0]] = item[1]
-        for meta in ['metaVendor','metaUser']:
-          if meta not in doc:
-            doc[meta] = {}
-          if isinstance(doc[meta], dict):                                                     #convenient type
-            for item in doc[meta]:
-              if isinstance(doc[meta][item], tuple):
-                doc[meta][item] = list(doc[meta][item])
-              try:
-                _ = json.dumps(doc[meta][item])
-              except (ValueError, TypeError):
-                doc[meta][item] = str(doc[meta][item])
-                logging.warning('stringified  %s %s',meta, item)
-          else:
-            for item in doc[meta]:
-              if not (isinstance(item, dict) and 'key' in item and 'value' in item and 'unit' in item):
-                logging.error('Complicated extractor return wrong', exc_info=True)
-        if doc['style']['main'].startswith(doc['type'][0]):
-          doc['type']     = doc['style']['main'].split('/')
-        else:
-          #user has strange wish: trust him/her
-          logging.info('user has strange wish: trust him/her: %s  %s','/'.join(doc['type']),'  '+doc['style']['main'])
-        del doc['style']
-        if 'fileExtension' not in doc['metaVendor']:
-          doc['metaVendor']['fileExtension'] = extension.lower()
-        if 'links' in doc and len(doc['links'])==0:
-          del doc['links']
-      except Exception:
-        logging.warning('Issue with extractor %s\n %s', pyFile, traceback.format_exc())
-        doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
-          'filesize':absFilePath.stat().st_size,
-          'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
-          'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
-      plt.close('all')
-    #combine into document
-    doc['shasum']=shasum                                       #essential for logic, always save, unlike image
-    return
 
 
   def testExtractor(self, filePath:Path | str, extractorPath:Path | None=None, style:dict[str,Any]={'main':''},

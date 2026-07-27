@@ -1,11 +1,9 @@
 """Item inside the list of the rightMainWidget."""
 from typing import Protocol
-
 import qtawesome
 from PySide6.QtCore import QMimeData, QPoint, Qt, Signal
 from PySide6.QtGui import QDrag, QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent, QMouseEvent, QPixmap
 from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout
-
 from pasta_eln.misc_tools import makeStringWrappable
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Label
@@ -14,7 +12,8 @@ from pasta_eln.ui.gui_style import Label
 class WorkplanContainer(Protocol):
   """Operations a list item needs from its containing workplan widget."""
 
-  def addProcedure(self, procedureID: str, sample: str, parameters: dict[str, str], at: int | None = None) -> None: ...
+  def addProcedure(self, procedureID: str, sample: str, parameters: dict[str, str], at: int | None = None) -> None:
+    """Add a procedure to the workplan at an optional position."""
 
 
 class WorkplanListItem(QFrame):
@@ -35,12 +34,12 @@ class WorkplanListItem(QFrame):
     self.sample = sample
     self.parameters = parameters
     # Widgets
-    self.titleLabel = Label("", "h3")
-    self.deleteButton = QPushButton("")
+    self.titleLabel = Label('', 'h3')
+    self.deleteButton = QPushButton('')
     self.header = QHBoxLayout()
     self.tagLabel = Label(
-      "")  # ,style=f"color: {self.comm.palette.getThemeColor('foreground', 'disabled')};")  # self.comm.palette.get('secondaryText', 'color')
-    self.sampleLabel = Label("")
+      '')  # ,style=f"color: {self.comm.palette.getThemeColor('foreground', 'disabled')};")  # self.comm.palette.get('secondaryText', 'color')
+    self.sampleLabel = Label('')
     self.frame = QFrame()
 
     self.clicked.connect(
@@ -49,11 +48,11 @@ class WorkplanListItem(QFrame):
     self.setAcceptDrops(True)
 
     # deleteButton
-    self.deleteButton.setIcon(qtawesome.icon("ei.remove"))
+    self.deleteButton.setIcon(qtawesome.icon('ei.remove'))
     self.deleteButton.setFixedSize(16, 16)
     self.deleteButton.setContentsMargins(0, 0, 0, 0)
     self.deleteButton.clicked.connect(self._onDeleteClicked)
-    self.deleteButton.setStyleSheet("border:none;")
+    self.deleteButton.setStyleSheet('border:none;')
 
     # titleLabel
     # add an invisible char every 25 chars for Wordwrapping
@@ -68,18 +67,18 @@ class WorkplanListItem(QFrame):
     self.header.addWidget(self.deleteButton, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
     # tagLabel
-    tagString = ""
+    tagString = ''
     for tag in self.storage.getProcedureTags(procedureID):
       # add an invisible char every 25 chars for Wordwrapping
       tag = makeStringWrappable(tag)
-      tagString += tag + ", "
+      tagString += tag + ', '
     self.tagLabel.setText(tagString[:-2])
     self.tagLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     self.tagLabel.setWordWrap(True)
 
     # sampleLabel
     # add an invisible char every 25 chars for Wordwrapping
-    self.sampleLabel.setText("Sample: " + makeStringWrappable(self.sample))
+    self.sampleLabel.setText('Sample: ' + makeStringWrappable(self.sample))
     self.sampleLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     self.sampleLabel.setWordWrap(True)
 
@@ -95,7 +94,7 @@ class WorkplanListItem(QFrame):
     self.frame.setLayout(self.frameLayout)
 
     # arrow
-    icon = qtawesome.icon("ph.arrow-down").pixmap(30, 30)
+    icon = qtawesome.icon('ph.arrow-down').pixmap(30, 30)
     self.arrow = QLabel(pixmap=icon)
 
     # style
@@ -140,20 +139,20 @@ class WorkplanListItem(QFrame):
     Setter for the Sample. updates sampleLabel, too.
     """
     self.sample = text
-    self.sampleLabel.setText("Sample: " + makeStringWrappable(self.sample))
+    self.sampleLabel.setText('Sample: ' + makeStringWrappable(self.sample))
 
   def highlight(self) -> None:
     """
     Updates the Style of this Item to highlight it
     """
-    self.frame.setProperty("highlight", True)
+    self.frame.setProperty('highlight', True)
     self.setStyleSheet(self.defaultCSS)
 
   def lowlight(self) -> None:
     """
     Updates the Style of this Item to reset the highlight
     """
-    self.frame.setProperty("highlight", False)
+    self.frame.setProperty('highlight', False)
     self.setStyleSheet(self.defaultCSS)
 
   def _onDeleteClicked(self) -> None:
@@ -214,7 +213,7 @@ class WorkplanListItem(QFrame):
     droppedItem = event.source()
     if not isinstance(droppedItem, WorkplanListItem):
       return
-    self.setStyleSheet("")
+    self.setStyleSheet('')
     parentWidget = self.parentWidget()
     parentLayout = parentWidget.layout() if parentWidget is not None else None
     if parentLayout is None:

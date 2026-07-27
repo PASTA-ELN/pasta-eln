@@ -5,7 +5,6 @@ Manages the TabBar to switch between Project-Tree-View and DocType-Tables
 import qtawesome
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QPushButton, QSizePolicy, QSplitter, QStackedWidget, QTabWidget
-
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Label
 from pasta_eln.ui.project import Project
@@ -25,8 +24,8 @@ class Body(QStackedWidget):
 
     ### STACK #0
     # Start Page (Before a project is chosen)
-    color = self.comm.palette.getThemeColor("foreground", "disabled")
-    self.startPage = Label("Please Select a Project on the left.", 'h1', style=f"color: {color};")
+    color = self.comm.palette.getThemeColor('foreground', 'disabled')
+    self.startPage = Label('Please Select a Project on the left.', 'h1', style=f"color: {color};")
     self.startPage.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
     self.startPage.setAlignment(Qt.AlignmentFlag.AlignCenter)
     self.addWidget(self.startPage)
@@ -36,7 +35,7 @@ class Body(QStackedWidget):
     self.tabWidget = QTabWidget()
     self.tabWidget.setContentsMargins(0, 0, 0, 0)
     self.tabWidget.setMovable(True)
-    borderColor = self.comm.palette.getThemeColor("border", "base")
+    borderColor = self.comm.palette.getThemeColor('border', 'base')
     self.tabWidget.setStyleSheet(f"""
     QTabWidget::pane {{
       border: none;
@@ -46,7 +45,7 @@ class Body(QStackedWidget):
     """)
     # tabMenuButton for actions like add new tab
     self.tabMenuButton = QPushButton()
-    self.tabMenuButton.setIcon(qtawesome.icon("ri.menu-fill"))
+    self.tabMenuButton.setIcon(qtawesome.icon('ri.menu-fill'))
     self.tabWidget.setCornerWidget(self.tabMenuButton)
 
     # Details-Widget (right sidebar, displaying the details of a single entry)
@@ -78,15 +77,15 @@ class Body(QStackedWidget):
     """
     # Add Project View - Tab
     projectView = Project(self.comm)
-    self.tabWidget.addTab(projectView, qtawesome.icon("ri.home-2-line"), "Home")
+    self.tabWidget.addTab(projectView, qtawesome.icon('ri.home-2-line'), 'Home')
     # Add Table Views - Tabs
     for doctype, docTypeDetails in self.comm.docTypesTitles.items():
       if doctype[0] == 'x' or '/' in doctype:
         continue
       tableView = TableView(self.comm, doctype)
-      icon = 'ri.asterisk' if docTypeDetails['icon'] == '' else docTypeDetails["icon"]
+      icon = 'ri.asterisk' if docTypeDetails['icon'] == '' else docTypeDetails['icon']
       icon = qtawesome.icon(icon)
-      label = docTypeDetails["title"]
+      label = docTypeDetails['title']
       self.tabWidget.addTab(tableView, icon, label)
 
   @Slot(str, str)

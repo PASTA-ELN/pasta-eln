@@ -1,13 +1,9 @@
 """ This Widget is the right sidebar that shows the details of the currently selected item """
 from typing import Any
-
 import qtawesome
 from PySide6.QtCore import QSize, Slot
 from PySide6.QtGui import Qt
-from PySide6.QtWidgets import QHBoxLayout, QPushButton, QScrollArea, QSplitter, QTextEdit, \
-  QVBoxLayout, \
-  QWidget
-
+from PySide6.QtWidgets import QHBoxLayout, QPushButton, QScrollArea, QSplitter, QTextEdit, QVBoxLayout, QWidget
 from pasta_eln.fixed_strings_json import SORTED_DB_KEYS
 from pasta_eln.misc_tools import clearLayout, makeStringWrappable
 from pasta_eln.ui.gui_communicate import Communicate
@@ -21,18 +17,18 @@ class Details(QWidget):
   def __init__(self, comm: Communicate):
     super().__init__()
     self.comm = comm
-    self.docID = ""
+    self.docID = ''
     self.data: dict[str, Any] = {'content': ''}
 
     ### HEADER WIDGETS
     # Title Label
-    self.titleLabel = Label("", "h1")
+    self.titleLabel = Label('', 'h1')
     self.titleLabel.setWordWrap(True)
 
     # Edit Button
-    self.editButton = QPushButton("Edit", default=True)
-    iconColor = self.comm.palette.getThemeColor("background", "base")
-    self.editButton.setIcon(qtawesome.icon("ri.edit-2-fill", color=iconColor))
+    self.editButton = QPushButton('Edit', default=True)
+    iconColor = self.comm.palette.getThemeColor('background', 'base')
+    self.editButton.setIcon(qtawesome.icon('ri.edit-2-fill', color=iconColor))
     self.editButton.setIconSize(QSize(18, 18))
     self.editButton.clicked.connect(self.onEditButtonClicked)
 
@@ -133,27 +129,27 @@ class Details(QWidget):
     self.contentPreviewWidget.hide()
 
     # Init the collapsible Items that contain all the details
-    detailsItem = DetailsHierItem(self.comm, "Details", dataHierarchyNode)
-    vendorItem = DetailsHierItem(self.comm, "Vendor Metadata", dataHierarchyNode)
-    userItem = DetailsHierItem(self.comm, "User Metadata", dataHierarchyNode)
-    elnItem = DetailsHierItem(self.comm, "ELN Details", dataHierarchyNode, startCollapsed=True)
+    detailsItem = DetailsHierItem(self.comm, 'Details', dataHierarchyNode)
+    vendorItem = DetailsHierItem(self.comm, 'Vendor Metadata', dataHierarchyNode)
+    userItem = DetailsHierItem(self.comm, 'User Metadata', dataHierarchyNode)
+    elnItem = DetailsHierItem(self.comm, 'ELN Details', dataHierarchyNode, startCollapsed=True)
 
     # Populate the Content/Image
     for key in self.data:
-      if key == "name":
+      if key == 'name':
         continue
-      if key == "image":
+      if key == 'image':
         ResizeImage(self.data['image'], self.contentPreviewLayout)
         self.contentPreviewWidget.show()
-      elif key == "content":
+      elif key == 'content':
         self.contentPreviewLayout.addWidget(self.textEdit)
         self.contentPreviewWidget.show()
         size = min([int(self.textEdit.document().size().height()), self.splitter.size().height() // 2])
         self.splitter.setSizes([size, self.splitter.size().height() - size])
-      elif key == "metaVendor":
-        vendorItem.addContent("metaVendor", self.data["metaVendor"])
-      elif key == "metaUser":
-        userItem.addContent("metaUser", self.data["metaUser"])
+      elif key == 'metaVendor':
+        vendorItem.addContent('metaVendor', self.data['metaVendor'])
+      elif key == 'metaUser':
+        userItem.addContent('metaUser', self.data['metaUser'])
       elif key in SORTED_DB_KEYS:
         elnItem.addContent(key, self.data[key])
       else:
@@ -176,6 +172,6 @@ class Details(QWidget):
     What happens, when the edit Button in the Top-right is clicked
     TODO: The Edit Form is not working as Raphael expects it to. (It's buggy when I use it this way...)
     """
-    print("Edit Button Clicked, FormDoc still buggy")
+    print('Edit Button Clicked, FormDoc still buggy')
     # Open the edit Form
     self.comm.formDoc.emit(self.data)

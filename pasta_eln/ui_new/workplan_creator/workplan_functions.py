@@ -3,10 +3,8 @@ import json
 import re
 from pathlib import Path
 from typing import Any, TypedDict
-
 import pandas as pd
 from PySide6.QtCore import Qt
-
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.ui.gui_communicate import Communicate
 
@@ -40,7 +38,7 @@ def generateAndSaveWorkplan(comm: Communicate, workplan: Workplan, filename: str
   jsonWorkplan = json.dumps(workplan, indent=2)
   comm.uiRequestTask.emit(Task.ADD_DOC, {
     'hierStack': [comm.projectID],
-    'docType': "workflow/workplan",
+    'docType': 'workflow/workplan',
     'doc': {'name': filename, 'content': jsonWorkplan}})
 
 
@@ -67,19 +65,19 @@ class Storage:
     """
 
     def onGetTable(table: pd.DataFrame, docType: str) -> None:
-      if docType == "workflow/procedure":
+      if docType == 'workflow/procedure':
         self.procedureTable = table
         self.comm.storageUpdated.emit(projectID)
 
     self.comm.backendThread.worker.beSendTable.connect(onGetTable, type=Qt.ConnectionType.SingleShotConnection)
-    self.comm.uiRequestTable.emit("workflow/procedure", projectID, True)
+    self.comm.uiRequestTable.emit('workflow/procedure', projectID, True)
 
   def getProcedureIDs(self) -> list[str]:
     """
     Returns: IDs of all the Procedures of the current Project
 
     """
-    return self.procedureTable["id"].to_list()
+    return self.procedureTable['id'].to_list()
 
   def getProcedureTitle(self, procedureID: str) -> str:
     """
@@ -88,10 +86,10 @@ class Storage:
 
     Returns: The title or name of the procedure with the given procedureID
     """
-    title = ""
-    row = self.procedureTable.loc[self.procedureTable["id"] == procedureID]
+    title = ''
+    row = self.procedureTable.loc[self.procedureTable['id'] == procedureID]
     if not row.empty:
-      title = row["name"].iloc[0]
+      title = row['name'].iloc[0]
     return title
 
   def getProcedureTags(self, procedureID: str) -> list[str]:
@@ -101,8 +99,8 @@ class Storage:
 
     Returns: The tags of the procedure with the given procedureID
     """
-    tags = self.procedureTable[self.procedureTable["id"] == procedureID]["tags"].iloc[0]
-    tags = ['#' + tag for tag in tags.split(", ")]
+    tags = self.procedureTable[self.procedureTable['id'] == procedureID]['tags'].iloc[0]
+    tags = ['#' + tag for tag in tags.split(', ')]
     return tags
 
 
@@ -115,16 +113,16 @@ class Storage:
       procedureID: docID for the procedure
     """
     def onGetDoc(doc: dict[str, Any]) -> None:
-      if procedureID == doc["id"]:
+      if procedureID == doc['id']:
         docPath = doc['branch'][0]['path']
         if docPath:
           path = self.comm.basePath / docPath
         else:
           path = Path()
         if path.is_file():
-          with open(path, "r", encoding="utf-8") as file:
+          with open(path, encoding='utf-8') as file:
             text = file.read()
-          self.procedureTable.loc[self.procedureTable["id"] == procedureID, "content"] = text
+          self.procedureTable.loc[self.procedureTable['id'] == procedureID, 'content'] = text
         self.comm.storageUpdated.emit(procedureID)
     self.comm.backendThread.worker.beSendDoc.connect(onGetDoc, type=Qt.ConnectionType.SingleShotConnection)
     self.comm.uiRequestDoc.emit(procedureID)
@@ -139,10 +137,10 @@ class Storage:
 
     Returns: Currently stored text of procedure with the procedureID.
     """
-    text = ""
-    row = self.procedureTable.loc[self.procedureTable["id"] == procedureID]
+    text = ''
+    row = self.procedureTable.loc[self.procedureTable['id'] == procedureID]
     if not row.empty:
-      text = row["content"].iloc[0]
+      text = row['content'].iloc[0]
     return text
 
 
@@ -155,9 +153,9 @@ class Storage:
     """
     parameters: dict[str, str] = {}
     text = self.getProcedureText(procedureID)
-    params = re.findall(r"\|[^|]+\|[^|]+\|", text)
+    params = re.findall(r'\|[^|]+\|[^|]+\|', text)
     try:
-      parameters = {s.split("|")[1]: s.split("|")[2] for s in params}
+      parameters = {s.split('|')[1]: s.split('|')[2] for s in params}
     except Exception as e:
       print(e)
     return parameters
@@ -170,8 +168,8 @@ class Storage:
     Returns: short description / comment of the procedure with the given procedureID
 
     """
-    comment = ""
-    row = self.procedureTable.loc[self.procedureTable["id"] == procedureID]
+    comment = ''
+    row = self.procedureTable.loc[self.procedureTable['id'] == procedureID]
     if not row.empty:
-      comment = row["comment"].iloc[0]
+      comment = row['comment'].iloc[0]
     return comment

@@ -606,7 +606,7 @@ def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
   normalDict =  dict2list(normalDict)                                               # type: ignore[assignment]
   return normalDict
 
-def makeStringWrappable(text: str, string: str = "\u200B", nChars: int = 25) -> str:
+def makeStringWrappable(text: str, string: str = '\u200B', nChars: int = 25) -> str:
   """
   Inserts string into a text so that no nChar-long sequence of unwrappable chars may exist in text.
   Inserts string behind all "-._"-characters for additional wrapping.
@@ -619,7 +619,7 @@ def makeStringWrappable(text: str, string: str = "\u200B", nChars: int = 25) -> 
   """
   result = text
   wrappableChars = [' ', '\t', '\n', '\r', '\u00AD','\u200B']
-  altWrappableChars = list("-._")
+  altWrappableChars = list('-._')
   for char in altWrappableChars:
     result = result.replace(char, char+string)
   i = 0
@@ -654,6 +654,5 @@ def clearLayout(layout: QLayout, start:int = 0) -> None:
     item = layout.takeAt(start)
     if item is None:
       break
-    widget = item.widget()
-    if widget:
+    if widget:= item.widget():
       widget.deleteLater()

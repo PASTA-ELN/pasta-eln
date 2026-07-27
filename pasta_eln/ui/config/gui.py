@@ -53,7 +53,7 @@ class ConfigurationGUI(QDialog):
             self.comm.configuration['GUI'][k] = int(getattr(self, k).currentText())
           except Exception:
             self.comm.configuration['GUI'][k] = getattr(self, k).currentText()
-          if k == "theme":
+          if k == 'theme':
             self.comm.palette.setTheme(getattr(self, k).currentText())
       with open(Path.home()/confFileName, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.configuration,indent=2))

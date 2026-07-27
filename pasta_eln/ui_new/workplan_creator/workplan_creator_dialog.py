@@ -5,9 +5,7 @@ The Top level Widget of the Workplan Creator Dialog. Containing the 3 Main Widge
   - RightMainWidget: Displays Workplan and export-button
 """
 from typing import Any
-
 from PySide6.QtWidgets import QApplication, QDialog, QGridLayout, QSplitter
-
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui_new.workplan_creator.center_main_widget import CenterMainWidget
 from pasta_eln.ui_new.workplan_creator.left_main_widget import LeftMainWidget
@@ -52,7 +50,7 @@ class WorkplanCreatorDialog(QDialog):
       self.comm.backendThread.worker.beSendDoc.connect(self._onGetProjectDoc)
       self.comm.uiRequestDoc.emit(self.comm.projectID)
     else:
-      self.setWindowTitle("Workplan Creator")
+      self.setWindowTitle('Workplan Creator')
     screen = QApplication.primaryScreen().availableGeometry()
     self.resize(int(screen.width() * 0.75), int(screen.height() * 0.75))
 
@@ -68,5 +66,5 @@ class WorkplanCreatorDialog(QDialog):
     Args:
       doc: Document of the current project (contains name)
     """
-    if doc["id"] == self.comm.projectID:
-      self.setWindowTitle("Workplan Creator - Current Project: " + doc["name"])
+    if doc['id'] == self.comm.projectID:
+      self.setWindowTitle('Workplan Creator - Current Project: ' + doc['name'])

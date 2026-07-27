@@ -22,7 +22,7 @@ from ..text_tools.string_changes import markdownEqualizer
 from ._context_menu import CommandMenu, executeContextMenu, initContextMenu
 from .gui_communicate import Communicate
 from .gui_style import (FlowLayout, IconButton, Image, Label, ScrollMessageBox, TextButton, widgetAndLayout,
-                       widgetAndLayoutForm)
+                        widgetAndLayoutForm)
 from .message_dialog import showMessage
 from .text_editor import TextEditor
 

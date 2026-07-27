@@ -13,7 +13,7 @@ from collections.abc import Callable
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QMessageBox, QWidget
-from pasta_eln.ui.definitions.dialog_base import Ui_TerminologyLookupDialogBase   # type: ignore[attr-defined]
+from pasta_eln.ui.definitions.dialog_base import Ui_TerminologyLookupDialogBase  # type: ignore[attr-defined]
 from pasta_eln.ui.definitions.terminology_lookup_service import TerminologyLookupService
 
 

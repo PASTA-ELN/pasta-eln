@@ -1,11 +1,9 @@
 """ Widget for displaying a project in the ProjectSidebar"""
 from typing import Any, override
-
 import pandas as pd
 from PySide6.QtCore import QPointF, Qt, Signal
 from PySide6.QtGui import QColor, QMouseEvent
 from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QVBoxLayout
-
 from pasta_eln.misc_tools import makeStringWrappable
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Label
@@ -21,13 +19,13 @@ class ProjectCard(QFrame):
     self.project = project
 
     # Title-Label
-    self.titleLabel = Label(makeStringWrappable(self.project["name"]), "h3")
+    self.titleLabel = Label(makeStringWrappable(self.project['name']), 'h3')
     self.titleLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     self.titleLabel.setWordWrap(True)
 
     # Info-Label (smaller text below name of project)-
     # currently only shows status, could display more or other info like tags and Last edited
-    self.infoLabel = Label(makeStringWrappable(self.project["status"]))
+    self.infoLabel = Label(makeStringWrappable(self.project['status']))
     self.infoLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     self.infoLabel.setWordWrap(True)
 
@@ -36,8 +34,8 @@ class ProjectCard(QFrame):
     shadow = QGraphicsDropShadowEffect(self, offset=QPointF(0, 1), blurRadius=8, color=QColor(0, 0, 0, 25))
     self.setGraphicsEffect(shadow)
     self.setCursor(Qt.CursorShape.PointingHandCursor)
-    color = self.comm.palette.getThemeColor("background", "table")
-    borderColor = self.comm.palette.alterColor(self.comm.palette.getThemeColor("border", "base"), 125)
+    color = self.comm.palette.getThemeColor('background', 'table')
+    borderColor = self.comm.palette.alterColor(self.comm.palette.getThemeColor('border', 'base'), 125)
     self.defaultCSS = f"""
     ProjectCard {{
       background-color: {color};
@@ -76,19 +74,19 @@ class ProjectCard(QFrame):
     """
     What happens when clicking on this widget
     """
-    self.comm.projectID = self.project["id"]
-    self.comm.changeProject.emit(self.project["id"], "")
+    self.comm.projectID = self.project['id']
+    self.comm.changeProject.emit(self.project['id'], '')
 
   def highlight(self) -> None:
     """
     Updates the Style of this Item to highlight it
     """
-    self.setProperty("highlight", True)
+    self.setProperty('highlight', True)
     self.setStyleSheet(self.defaultCSS)
 
   def lowlight(self) -> None:
     """
     Updates the Style of this Item to reset the highlight
     """
-    self.setProperty("highlight", False)
+    self.setProperty('highlight', False)
     self.setStyleSheet(self.defaultCSS)

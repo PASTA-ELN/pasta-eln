@@ -17,8 +17,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from .html2md_config import *
 from .html2md_elements import AnchorElement, ListElement
 from .html2md_utils import (dumb_css_parser, element_style, escape_md, escape_md_section, google_fixed_width_font,
-                           google_has_height, google_list_style, google_text_emphasis, hn, list_numbering_start,
-                           pad_tables_in_text, skipwrap, unifiable_n)
+                            google_has_height, google_list_style, google_text_emphasis, hn, list_numbering_start,
+                            pad_tables_in_text, skipwrap, unifiable_n)
 
 __version__ = (2024, 2, 26)
 

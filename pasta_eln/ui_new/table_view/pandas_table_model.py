@@ -40,7 +40,7 @@ class PandasTableModel(QAbstractTableModel):
       if role == Qt.ItemDataRole.CheckStateRole:
         return Qt.CheckState.Checked if self._checkedRows[index.row()] else Qt.CheckState.Unchecked
       if role == Qt.ItemDataRole.DisplayRole:
-        return ""
+        return ''
       return None
 
     if role == Qt.ItemDataRole.DisplayRole:
@@ -77,7 +77,7 @@ class PandasTableModel(QAbstractTableModel):
 
     if orientation == Qt.Orientation.Horizontal:
       if section == 0:
-        return ""
+        return ''
       return str(self._df.columns[section - 1])
 
     return str(self._df.index[section])

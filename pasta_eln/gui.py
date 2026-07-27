@@ -3,7 +3,6 @@ import logging
 import sys
 import traceback
 from pathlib import Path
-
 import qdarktheme
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QIcon

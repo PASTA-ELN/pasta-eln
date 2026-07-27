@@ -2,7 +2,6 @@
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
-
 from pasta_eln.misc_tools import makeStringWrappable
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Label
@@ -21,8 +20,8 @@ class ProcedureListItem(QFrame):
     self.procedureID = procedureID
     self.title = self.storage.getProcedureTitle(self.procedureID)
     self.tags = self.storage.getProcedureTags(self.procedureID)
-    self.titleLabel = Label("", "h3")
-    self.tagLabel = Label("", style=f"color: {self.comm.palette.getThemeColor("foreground", "disabled")};")
+    self.titleLabel = Label('', 'h3')
+    self.tagLabel = Label('', style=f"color: {self.comm.palette.getThemeColor("foreground", "disabled")};")
 
     self.clicked.connect(lambda: self.comm.activeProcedureChangedOnlyProcID.emit(self.procedureID))
 
@@ -33,18 +32,18 @@ class ProcedureListItem(QFrame):
     self.titleLabel.setWordWrap(True)
 
     # tagLabel
-    tagString = ""
+    tagString = ''
     for tag in self.tags:
       tag = makeStringWrappable(tag, nChars=20)
-      tagString += tag + ", "
+      tagString += tag + ', '
     self.tagLabel.setText(tagString[:-2])
     self.tagLabel.setWordWrap(True)
     self.tagLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
     # style
     self.setCursor(Qt.CursorShape.PointingHandCursor)
-    self.setStyleSheet("border: none")
-    self.setToolTip(self.titleLabel.text() + "\n" + self.tagLabel.text())
+    self.setStyleSheet('border: none')
+    self.setToolTip(self.titleLabel.text() + '\n' + self.tagLabel.text())
 
     # layout
     self.mainLayout = QVBoxLayout()

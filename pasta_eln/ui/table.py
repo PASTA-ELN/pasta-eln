@@ -317,7 +317,7 @@ class Table(QWidget):
       command (list): list of commands
     """
     if command[0] is Command.ADD_ITEM:
-      if self.docType == "workflow/workplan":
+      if self.docType == 'workflow/workplan':
         workplanCreatorDialog = WorkplanCreatorDialog(self.comm)
         workplanCreatorDialog.exec()
       else:

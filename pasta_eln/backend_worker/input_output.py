@@ -672,4 +672,3 @@ def _checkImportArchive(elnFile: ZipFile) -> str | None:
   if archiveBytes > maxArchiveBytes:
     return f'ERROR: eln file expands beyond {maxArchiveBytes} bytes. Cannot process'
   return None
-

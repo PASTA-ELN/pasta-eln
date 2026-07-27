@@ -4,7 +4,6 @@ import os
 import sys
 from pathlib import Path
 from typing import Any
-
 from PySide6.QtCore import QObject, Signal, Slot
 from ..backend_worker.worker import BackendThread, Task
 from ..misc_tools import getConfiguration

@@ -2,7 +2,7 @@
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from pasta_eln.backend_worker.input_output import _checkImportArchive
@@ -21,20 +21,20 @@ class TestImportArchiveSafety(unittest.TestCase):
     return archivePath
 
   def test_rejects_too_many_members(self):
-    archivePath = self._createArchive(['one', 'two', 'three'])
+    archivePath = self._createArchive(['one'])
     self.addCleanup(archivePath.unlink)
     with ZipFile(archivePath) as archive, \
-         patch('pasta_eln.backend_worker.input_output.MAX_IMPORT_ARCHIVE_MEMBERS', 2):
+         patch.object(archive, 'infolist', return_value=[Mock(file_size=0)]*10_001):
       error = _checkImportArchive(archive)
-    self.assertEqual(error, 'ERROR: eln file contains more than 2 archive members. Cannot process')
+    self.assertEqual(error, 'ERROR: eln file contains more than 10000 archive members. Cannot process')
 
   def test_rejects_excessive_uncompressed_data(self):
-    archivePath = self._createArchive(['content'], b'abc')
+    archivePath = self._createArchive(['content'])
     self.addCleanup(archivePath.unlink)
     with ZipFile(archivePath) as archive, \
-         patch('pasta_eln.backend_worker.input_output.MAX_IMPORT_ARCHIVE_BYTES', 2):
+         patch.object(archive, 'infolist', return_value=[Mock(file_size=4*1024**3+1)]):
       error = _checkImportArchive(archive)
-    self.assertEqual(error, 'ERROR: eln file expands beyond 2 bytes. Cannot process')
+    self.assertEqual(error, 'ERROR: eln file expands beyond 4294967296 bytes. Cannot process')
 
 
 if __name__ == '__main__':

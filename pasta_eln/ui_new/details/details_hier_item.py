@@ -3,11 +3,9 @@
 import logging
 import re
 from typing import Any
-
 import qtawesome
 from PySide6.QtCore import QSize, Qt, Slot
 from PySide6.QtWidgets import QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
-
 from pasta_eln.misc_tools import isDocID, makeStringWrappable
 from pasta_eln.text_tools.string_changes import tuple2html
 from pasta_eln.ui.gui_communicate import Communicate
@@ -19,7 +17,7 @@ class DetailsHierItem(QWidget):
   """
 
   def __init__(self, comm: Communicate, categoryName: str, dataHierarchyNode: list[dict[str, Any]],
-               initialContent: str = "", startCollapsed: bool = False) -> None:
+               initialContent: str = '', startCollapsed: bool = False) -> None:
     super().__init__()
     self.comm = comm
     self.categoryName = categoryName
@@ -31,7 +29,7 @@ class DetailsHierItem(QWidget):
     self.button.setCheckable(True)
     self.button.setFlat(True)
     self.button.setIconSize(QSize(30, 30))
-    self.button.setStyleSheet("text-align: left; border-radius:0px;")
+    self.button.setStyleSheet('text-align: left; border-radius:0px;')
     self.button.clicked.connect(self.onButtonClicked)
 
     # contentLabel
@@ -70,12 +68,12 @@ class DetailsHierItem(QWidget):
   def collapse(self) -> None:
     """Hide the content of this widget"""
     self.contentLabel.hide()
-    self.button.setIcon(qtawesome.icon("ri.arrow-drop-right-line"))
+    self.button.setIcon(qtawesome.icon('ri.arrow-drop-right-line'))
 
   def expand(self) -> None:
     """Show the content of this widget"""
     self.contentLabel.show()
-    self.button.setIcon(qtawesome.icon("ri.arrow-drop-down-line"))
+    self.button.setIcon(qtawesome.icon('ri.arrow-drop-down-line'))
 
   def formatContent(self, key: str, value: Any) -> str:
     """
@@ -96,7 +94,7 @@ class DetailsHierItem(QWidget):
       rating = ['\u2605' * int(i[1]) for i in value if re.match(r'^_\d$', i)]
       tags = [i for i in value if not re.match(r'^_\d$', i)]
       labelStr = f'<b>Rating:</b><br>{rating[0]}<br><br>' if rating else ''
-      labelStr = f'{labelStr}   <b>Tags:</b><br>' + ', '.join(tags) + "<br><br>"
+      labelStr = f'{labelStr}   <b>Tags:</b><br>' + ', '.join(tags) + '<br><br>'
     elif (isinstance(value, str) and '\n' in value) or key == 'comment':  # long values with /s or comments
       labelStr = f'<b>{key.capitalize()}:</b><br>{value}<br><br>'
     else:
@@ -133,4 +131,4 @@ class DetailsHierItem(QWidget):
   def addContent(self, key: str, value: Any) -> None:
     """Appends formatted Content to the Label of this Widget, see self.formatContent for details"""
     self.content += self.formatContent(key, value)
-    self.contentLabel.setText(self.content.removesuffix("<br><br>"))
+    self.contentLabel.setText(self.content.removesuffix('<br><br>'))

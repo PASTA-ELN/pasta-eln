@@ -7,9 +7,9 @@ from PySide6.QtCore import QByteArray, QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPainter, QPixmap, QResizeEvent
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtWidgets import (QBoxLayout, QFormLayout,QFrame, QGridLayout, QHBoxLayout, QLabel, QLayout, QLayoutItem, QMenu,
-                               QMessageBox, QPushButton, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QVBoxLayout,
-                               QWidget)
+from PySide6.QtWidgets import (QBoxLayout, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel, QLayout, QLayoutItem,
+                               QMenu, QMessageBox, QPushButton, QScrollArea, QSizePolicy, QSplitter, QTabWidget,
+                               QVBoxLayout, QWidget)
 from ..text_tools.handle_dictionaries import dict2ul
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                   # spaces: padding and margin
@@ -215,7 +215,7 @@ class Label(QLabel):
     if text.startswith('#') or text.startswith('<'):
       self.setTextFormat(Qt.TextFormat.RichText)
     self.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
-    style += "border: none;"
+    style += 'border: none;'
     if size == 'h1':
       style += 'font-size: 18pt;'
     elif size == 'h2':
@@ -513,7 +513,7 @@ class ResizeImage(QLabel):
     )
     self.setMinimumSize(50, 50)
 
-    if data.startswith("data:image/"):
+    if data.startswith('data:image/'):
       try:
         byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21] == ',' else data[23:], encoding='utf-8'))
         imageW = QImage()
@@ -531,7 +531,7 @@ class ResizeImage(QLabel):
 
     elif data.startswith('<?xml'):
       self._isSvg = True
-      byteData = QByteArray(data.encode("utf-8"))
+      byteData = QByteArray(data.encode('utf-8'))
       self._svgRenderer = QSvgRenderer(byteData, self)
       if layout is not None:
         layout.addWidget(self)

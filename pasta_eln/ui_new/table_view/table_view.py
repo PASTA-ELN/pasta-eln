@@ -2,12 +2,10 @@
 import logging
 from enum import Enum
 from typing import Any
-
 import pandas as pd
 import qtawesome
 from PySide6.QtCore import QItemSelection, QItemSelectionModel, QModelIndex, QSize, Slot
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QMenu, QPushButton, QTableView, QVBoxLayout, QWidget
-
 from pasta_eln.misc_tools import isDocID
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Action
@@ -31,20 +29,20 @@ class TableView(QWidget):
     # Subtype-Combobox
     self.subTypeCombo = QComboBox()
     self.subTypeCombo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
-    self.subTypeCombo.setPlaceholderText("Select Subtype")
+    self.subTypeCombo.setPlaceholderText('Select Subtype')
     self.subTypeCombo.currentTextChanged.connect(self.onSubTypeChanged)
 
     # NewEntry-Button
-    self.newEntryButton = QPushButton("New Entry", default=True)
-    iconColor = self.comm.palette.getThemeColor("background", "base")
-    self.newEntryButton.setIcon(qtawesome.icon("ri.add-fill", color=iconColor))
+    self.newEntryButton = QPushButton('New Entry', default=True)
+    iconColor = self.comm.palette.getThemeColor('background', 'base')
+    self.newEntryButton.setIcon(qtawesome.icon('ri.add-fill', color=iconColor))
     self.newEntryButton.setIconSize(QSize(20, 20))
     self.newEntryButton.clicked.connect(lambda: self.execute([Command.NEW_ENTRY]))
 
     # Action-Button
-    self.actionButton = QPushButton("Actions")
-    iconColor = self.comm.palette.getThemeColor("foreground", "base")
-    self.actionButton.setIcon(qtawesome.icon("ri.task-line", color=iconColor))
+    self.actionButton = QPushButton('Actions')
+    iconColor = self.comm.palette.getThemeColor('foreground', 'base')
+    self.actionButton.setIcon(qtawesome.icon('ri.task-line', color=iconColor))
     self.actionButton.setIconSize(QSize(20, 20))
     self.actionMenu = QMenu(self)
     self.actionButton.setMenu(self.actionMenu)
@@ -53,8 +51,8 @@ class TableView(QWidget):
     Action('Delete', self, [Command.DELETE], self.actionMenu)
 
     # More-Button
-    self.moreButton = QPushButton("More")
-    self.moreButton.setIcon(qtawesome.icon("ri.more-fill", color=iconColor))
+    self.moreButton = QPushButton('More')
+    self.moreButton.setIcon(qtawesome.icon('ri.more-fill', color=iconColor))
     self.moreButton.setIconSize(QSize(20, 20))
     self.moreMenu = QMenu(self)
     self.moreButton.setMenu(self.moreMenu)
@@ -102,10 +100,10 @@ class TableView(QWidget):
     Update the table
     """
     # Set up the subTypeCombobox. Is regenerated everytime, could be optimized
-    if self.reloadComboBoxFlag and "/" not in self.docType:
+    if self.reloadComboBoxFlag and '/' not in self.docType:
       self.subTypeCombo.clear()
       docTypeKeys = [i for i in self.comm.docTypesTitles if i.startswith(self.docType)]
-      currentSubTypes = [self.comm.docTypesTitles[key]["title"] for key in docTypeKeys]
+      currentSubTypes = [self.comm.docTypesTitles[key]['title'] for key in docTypeKeys]
       if len(currentSubTypes) <= 1:
         self.subTypeCombo.setDisabled(True)
       else:
@@ -130,10 +128,10 @@ class TableView(QWidget):
       command (list): list of commands
     """
     if command[0] is Command.TEST:
-      print("Test")
+      print('Test')
 
     elif command[0] is Command.NEW_ENTRY:
-      if self.docType == "workflow/workplan":
+      if self.docType == 'workflow/workplan':
         workplanCreatorDialog = WorkplanCreatorDialog(self.comm)
         workplanCreatorDialog.exec()
       else:
@@ -143,7 +141,7 @@ class TableView(QWidget):
         self.comm.changeSidebar.emit('redraw')
 
     elif command[0] is Command.GROUP_EDIT:
-      print("group edit")
+      print('group edit')
       # docIDs = []
       # finalModel = self.filterManager.getFinalModel()
       # for row in range(finalModel.rowCount()):
@@ -156,7 +154,7 @@ class TableView(QWidget):
       #   self.changeTable(self.docType, self.comm.projectID)
 
     elif command[0] is Command.DELETE:
-      print("Delete")
+      print('Delete')
 
   @Slot(str, str)
   def onTableChange(self, docType: str, projID: str) -> None:
@@ -193,10 +191,10 @@ class TableView(QWidget):
     Formats the data to create the table out of.
     """
     tableData = self.data.copy()
-    tableData.fillna("-", inplace=True)
-    tableData.replace(['None', '', 'nan'], "-", inplace=True)
-    tableData.replace("True", "Y", inplace=True)
-    tableData.mask(tableData.map(isDocID), "oo", inplace=True)  # TODO WHY?
+    tableData.fillna('-', inplace=True)
+    tableData.replace(['None', '', 'nan'], '-', inplace=True)
+    tableData.replace('True', 'Y', inplace=True)
+    tableData.mask(tableData.map(isDocID), 'oo', inplace=True)  # TODO WHY?
     return tableData
 
   @Slot()
@@ -232,7 +230,7 @@ class TableView(QWidget):
     """
     if not title:
       return
-    docType = [i for i in self.comm.docTypesTitles if self.comm.docTypesTitles[i]["title"] == title][0]
+    docType = [i for i in self.comm.docTypesTitles if self.comm.docTypesTitles[i]['title'] == title][0]
     if self.docType in docType or docType in self.docType:
       self.reloadComboBoxFlag = False
     self.docType = docType
@@ -261,7 +259,7 @@ class TableView(QWidget):
     """
     model = self.table.model()
     if not isinstance(model, PandasTableModel):
-      print("Wrong model in tableview")
+      print('Wrong model in tableview')
       return
 
     for idx in selected.indexes():

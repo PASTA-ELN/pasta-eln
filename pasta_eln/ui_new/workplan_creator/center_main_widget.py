@@ -2,9 +2,8 @@
 import pandas as pd
 import qtawesome as qta
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QComboBox, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, \
-  QScrollArea, QSizePolicy, QTextEdit, QWidget
-
+from PySide6.QtWidgets import (QComboBox, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
+                               QScrollArea, QSizePolicy, QTextEdit, QWidget)
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import HSeparator, Label
 from pasta_eln.ui_new.workplan_creator.workplan_list_item import WorkplanListItem
@@ -27,14 +26,14 @@ class CenterMainWidget(QWidget):
     self.parameters: dict[str, str] = {}
 
     # GUI Elements init; setup in changeActiveProcedure()
-    self.headerLabel = Label("", "h1")
+    self.headerLabel = Label('', 'h1')
     self.tagLayout = QHBoxLayout()
-    self.shortDesc = QLabel("")
-    self.description = QTextEdit(markdown="", readOnly=True)
+    self.shortDesc = QLabel('')
+    self.description = QTextEdit(markdown='', readOnly=True)
     self.formScrollArea = QScrollArea()
     self.formFrame = QFrame()
     self.parameterForm = QFormLayout()
-    self.addToWorkplanButton = QPushButton("Add to Workplan")
+    self.addToWorkplanButton = QPushButton('Add to Workplan')
     self.sampleBox = QComboBox()
 
     # Signal
@@ -48,7 +47,7 @@ class CenterMainWidget(QWidget):
     # layout
     self.mainLayout = QGridLayout()
     self.mainLayout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-    color = self.comm.palette.getThemeColor("foreground", "disabled")
+    color = self.comm.palette.getThemeColor('foreground', 'disabled')
     self.mainLayout.addWidget(Label('Choose a Procedure on the left side to begin.', 'h1', style=f"color: {color};"), 0, 0)
     self.setLayout(self.mainLayout)
 
@@ -98,19 +97,19 @@ class CenterMainWidget(QWidget):
       self.comm.uiRequestTable.emit('sample', self.comm.projectID, False)
       self.formScrollArea.setWidgetResizable(True)
       self.formScrollArea.setContentsMargins(0, 0, 0, 0)
-      self.formScrollArea.setStyleSheet("QScrollArea{border: none;}")
+      self.formScrollArea.setStyleSheet('QScrollArea{border: none;}')
       self.formScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
       self.formFrame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
       self.formFrame.setFrameShape(QFrame.Shape.Panel)
       self.formFrame.setLayout(self.parameterForm)
       self.formScrollArea.setWidget(self.formFrame)
-      self.parameterForm.addRow(Label("Choose Sample:", "h2"))
+      self.parameterForm.addRow(Label('Choose Sample:', 'h2'))
       self.parameterForm.addRow(self.sampleBox)
-      self.parameterForm.addRow(Label("Choose Parameters:", "h2"))
+      self.parameterForm.addRow(Label('Choose Parameters:', 'h2'))
       self.mainLayout.addWidget(self.formScrollArea, 2, 1, 3, 1)
       self.comm.storageUpdated.connect(self._onProcedureTextUpdated)
       # Add-Button
-      self.addToWorkplanButton.setIcon(qta.icon("ei.plus", scale_factor=1))
+      self.addToWorkplanButton.setIcon(qta.icon('ei.plus', scale_factor=1))
       self.addToWorkplanButton.setDefault(True)
       self.mainLayout.addWidget(self.addToWorkplanButton, 6, 1)
       self.addToWorkplanButton.clicked.connect(lambda: self.comm.addProcedure.emit(
@@ -154,7 +153,7 @@ class CenterMainWidget(QWidget):
       # add new tags
     for tag in self.storage.getProcedureTags(self.activeProcedureID):
       if len(tag) > 20:
-        tag = tag[:20] + "..."
+        tag = tag[:20] + '...'
       tagButton = QPushButton(tag)  # pylint: disable=qt-local-widget
       tagButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
       self.tagLayout.addWidget(tagButton)
@@ -201,14 +200,14 @@ class CenterMainWidget(QWidget):
       self.sampleBox.setCurrentText(self.sample)
     defaultParameters = self.storage.getProcedureDefaultParameters(self.activeProcedureID)
     if not defaultParameters:
-      self.parameterForm.addWidget(Label("This Procedure has no Parameters", "h3"))
+      self.parameterForm.addWidget(Label('This Procedure has no Parameters', 'h3'))
     for parameter in defaultParameters:
       lineEdit = QLineEdit(placeholderText=defaultParameters[parameter])  # pylint: disable=qt-local-widget
-      lineEdit.setToolTip("Default: " + defaultParameters[parameter])
+      lineEdit.setToolTip('Default: ' + defaultParameters[parameter])
       if self.activeListItem:
         # Connect Parameter Changes to WorkplanItem (For Saving edits on selected Procedure in Workplan)
         lineEdit.textChanged.connect(lambda text, param=parameter: self.activeListItem.updateParameter(text, param))
-      label = Label(parameter, "h3", style="margin-left: 1em;", tooltip=parameter)
+      label = Label(parameter, 'h3', style='margin-left: 1em;', tooltip=parameter)
       label.setMaximumWidth(200)
       self.parameterForm.addRow(label, lineEdit)
       if parameter in self.parameters:
@@ -222,5 +221,5 @@ class CenterMainWidget(QWidget):
       table: The sample table from the backend
       docType: identifier, to check if the signal is meant for this function.
     """
-    if docType == "sample":
-      self.sampleBox.addItems(table["name"])
+    if docType == 'sample':
+      self.sampleBox.addItems(table['name'])

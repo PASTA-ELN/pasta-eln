@@ -543,7 +543,7 @@ class SqlLiteDB:
         del dataOld[key]
     if dataOld:
       cmd = f"DELETE FROM properties WHERE id == '{docID}' and key == ?"
-      self.cursor.executemany(cmd, [(i,) for i in dataOld.keys()])
+      self.cursor.executemany(cmd, [(i,) for i in dataOld])
       changesDict |= {k:v for k,(v,_) in dataOld.items()}
     return changesDict
 

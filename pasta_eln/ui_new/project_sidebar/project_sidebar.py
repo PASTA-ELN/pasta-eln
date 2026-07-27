@@ -3,9 +3,7 @@ import pandas as pd
 import qtawesome
 from PySide6.QtCore import Slot
 from PySide6.QtGui import Qt
-from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QPushButton, QScrollArea, QVBoxLayout, \
-  QWidget
-
+from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QPushButton, QScrollArea, QVBoxLayout, QWidget
 from pasta_eln.misc_tools import clearLayout
 from pasta_eln.ui.config.main import Configuration
 from pasta_eln.ui.gui_communicate import Communicate
@@ -25,15 +23,15 @@ class ProjectSidebar(QWidget):
     self.sideBarWidth = self.comm.configuration['GUI']['sidebarWidth']
 
     # Header-label
-    self.headerLabel = Label("Projects", "h1")
+    self.headerLabel = Label('Projects', 'h1')
 
     # newProject-Button
-    self.newProjectButton = QPushButton("")
-    self.newProjectButton.setStyleSheet("border: none;")
-    self.newProjectButton.setToolTip("Create new Project")
+    self.newProjectButton = QPushButton('')
+    self.newProjectButton.setStyleSheet('border: none;')
+    self.newProjectButton.setToolTip('Create new Project')
     self.newProjectButton.setFixedSize(40, 40)
-    iconColor = self.comm.palette.getThemeColor("foreground", "base")
-    self.newProjectButton.setIcon(qtawesome.icon("ri.add-circle-line", color=iconColor))
+    iconColor = self.comm.palette.getThemeColor('foreground', 'base')
+    self.newProjectButton.setIcon(qtawesome.icon('ri.add-circle-line', color=iconColor))
     self.newProjectButton.setIconSize(self.newProjectButton.size())
     self.newProjectButton.clicked.connect(self.createNewProject)
 
@@ -47,7 +45,7 @@ class ProjectSidebar(QWidget):
 
     # Searchbar
     self.searchbar = QLineEdit(clearButtonEnabled=True)
-    self.searchbar.setPlaceholderText("Search Project or #tag")
+    self.searchbar.setPlaceholderText('Search Project or #tag')
     self.searchbar.textEdited.connect(self.filterItems)
 
     # Projectlist
@@ -59,22 +57,22 @@ class ProjectSidebar(QWidget):
 
     # Scrollarea for Projectlist
     self.scrollarea = QScrollArea(widgetResizable=True)
-    self.scrollarea.setStyleSheet("QScrollArea {border: none;}")
+    self.scrollarea.setStyleSheet('QScrollArea {border: none;}')
     self.scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     self.scrollarea.setContentsMargins(0, 0, 0, 0)
     self.scrollarea.setWidget(self.projectList)
 
     # Settings-Button
-    self.settingsButton = QPushButton("")
-    self.settingsButton.setStyleSheet("border: none;")
-    self.settingsButton.setToolTip("Open Configuration/Settings")
+    self.settingsButton = QPushButton('')
+    self.settingsButton.setStyleSheet('border: none;')
+    self.settingsButton.setToolTip('Open Configuration/Settings')
     self.settingsButton.setFixedSize(40, 40)
-    self.settingsButton.setIcon(qtawesome.icon("ri.settings-2-line", color=iconColor))
+    self.settingsButton.setIcon(qtawesome.icon('ri.settings-2-line', color=iconColor))
     self.settingsButton.setIconSize(self.newProjectButton.size())
     self.settingsButton.clicked.connect(lambda: Configuration(self.comm).exec())
 
     # Manage-Projects-Button
-    self.manageProjectsButton = QPushButton("Manage Projects")
+    self.manageProjectsButton = QPushButton('Manage Projects')
     self.manageProjectsButton.clicked.connect(lambda: self.comm.changeTable.emit('x0', ''))
     self.manageProjectsButton.setFixedHeight(40)
 
@@ -126,7 +124,7 @@ class ProjectSidebar(QWidget):
 
     # 3. Fill projectList with Items = ProjectCards
     if self.projects.empty:
-      emptyWarning = Label('Create a Project by clicking on the "+"-button above.', "h1",
+      emptyWarning = Label('Create a Project by clicking on the "+"-button above.', 'h1',
                            style=f"color: {self.comm.palette.getThemeColor("foreground", "disabled")};")
       emptyWarning.setWordWrap(True)
       self.projectListLayout.addWidget(emptyWarning)
@@ -150,8 +148,8 @@ class ProjectSidebar(QWidget):
   @Slot()
   def createNewProject(self) -> None:
     """ Opens the form to create a new Project and redraws sidebar"""
-    self.comm.formDoc.emit({'type': ["x0"], '_projectID': self.comm.projectID})
-    self.comm.changeTable.emit("x0", self.comm.projectID)
+    self.comm.formDoc.emit({'type': ['x0'], '_projectID': self.comm.projectID})
+    self.comm.changeTable.emit('x0', self.comm.projectID)
     self.comm.changeSidebar.emit('redraw')
 
   @Slot(str, str)
@@ -168,7 +166,7 @@ class ProjectSidebar(QWidget):
       item = layoutItem.widget() if layoutItem is not None else None
       if isinstance(item, ProjectCard):
         item.lowlight()
-        if item.project["id"] == projectID:
+        if item.project['id'] == projectID:
           item.highlight()
 
   @Slot()
@@ -178,25 +176,25 @@ class ProjectSidebar(QWidget):
     Args:
       filterText: text that is used to filter the procedures in the list (e.g. Content of the Searchbar)
     """
-    filterWords = [word.strip() for word in filterText.lower().split(",")]
+    filterWords = [word.strip() for word in filterText.lower().split(',')]
     for i in range(self.projectListLayout.count()):
       layoutItem = self.projectListLayout.itemAt(i)
       item = layoutItem.widget() if layoutItem is not None else None
       if not isinstance(item, ProjectCard):
         continue
-      name = item.project["name"].lower()
-      tags = item.project["tags"].lower().split(",")
+      name = item.project['name'].lower()
+      tags = item.project['tags'].lower().split(',')
       tags = [tag.lower().strip() for tag in tags]
       item.show()
       for word in filterWords:
-        if word.startswith("#"):
+        if word.startswith('#'):
           word = word[1:]
           item.hide()
           for tag in tags:
             if word in tag:
               item.show()
               break
-        elif word in name or filterWords == [""]:
+        elif word in name or filterWords == ['']:
           continue
         else:
           item.hide()
@@ -207,6 +205,6 @@ class ProjectSidebar(QWidget):
     """
     Update the color of buttons after the theme is changed, because they don't change automatically.
     """
-    iconColor = self.comm.palette.getThemeColor("foreground", "base")
-    self.newProjectButton.setIcon(qtawesome.icon("ri.add-circle-line", color=iconColor))
-    self.settingsButton.setIcon(qtawesome.icon("ri.settings-2-line", color=iconColor))
+    iconColor = self.comm.palette.getThemeColor('foreground', 'base')
+    self.newProjectButton.setIcon(qtawesome.icon('ri.add-circle-line', color=iconColor))
+    self.settingsButton.setIcon(qtawesome.icon('ri.settings-2-line', color=iconColor))
