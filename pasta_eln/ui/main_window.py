@@ -279,24 +279,22 @@ class MainWindow(QMainWindow):
 
 class Command(Enum):
   """ Commands used in this file """
-  EXPORT     = 1
-  IMPORT     = 2
-  EXIT       = 3
-  VIEW       = 4
-  CHANGE_PG  = 6
-  SYNC_SEND  = 7
-  SYNC_GET   = 8
-  SYNC_SMART = 9
-  SCHEMA     = 10
-  TEST1      = 11
-  TEST2      = 12
-  UPDATE     = 13
-  CONFIG     = 14
-  WEBSITE    = 15
-  CHECK_DB   = 16
-  SHORTCUTS  = 17
-  RESTART    = 18
-  ABOUT      = 19
-  DEFINITIONS= 20
-  REPOSITORY = 21
-  WORKPLANCREATOR = 22
+  EXPORT          = 1
+  IMPORT          = 2
+  EXIT            = 3
+  VIEW            = 4
+  CHANGE_PG       = 6
+  SYNC_ELABFTW    = 7
+  SCHEMA          = 8
+  TEST1           = 9
+  TEST2           = 10
+  UPDATE          = 11
+  CONFIG          = 12
+  WEBSITE         = 13
+  CHECK_DB        = 14
+  SHORTCUTS       = 15
+  RESTART         = 16
+  ABOUT           = 17
+  DEFINITIONS     = 18
+  REPOSITORY      = 19
+  WORKPLANCREATOR = 20

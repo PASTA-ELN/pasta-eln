@@ -43,10 +43,8 @@ Open issues are the union of:
 
 ### Repository maintenance items
 
-- Reconcile the ongoing `camelCase` to `snake_case` module rename across the test suite, legacy UI imports, packaging entry points, and development documentation.
-- Restore a passing, configured default test command after the rename is complete.
+- Complete the ongoing `camelCase` to `snake_case` module rename across legacy UI imports and developer documentation.
 - Details-edit is bugged
 - Table selection sometimes deselects everything or is lagging
 - new Entry - Workplan Creator Interaction → not obvious enough
-- Table-view What is the Gallery?
-
+- Table-view gallery has to be merged?
