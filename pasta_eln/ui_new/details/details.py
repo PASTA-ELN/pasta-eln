@@ -2,7 +2,7 @@
 from typing import Any
 
 import qtawesome
-from PySide6.QtCore import Slot
+from PySide6.QtCore import QSize, Slot
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QScrollArea, QSplitter, QTextEdit, \
   QVBoxLayout, \
@@ -30,8 +30,10 @@ class Details(QWidget):
     self.titleLabel.setWordWrap(True)
 
     # Edit Button
-    self.editButton = QPushButton("Edit")
-    self.editButton.setIcon(qtawesome.icon("ri.edit-2-fill"))
+    self.editButton = QPushButton("Edit", default=True)
+    iconColor = self.comm.palette.getThemeColor("background", "base")
+    self.editButton.setIcon(qtawesome.icon("ri.edit-2-fill", color=iconColor))
+    self.editButton.setIconSize(QSize(18, 18))
     self.editButton.clicked.connect(self.onEditButtonClicked)
 
     # Header Layout
@@ -129,7 +131,7 @@ class Details(QWidget):
     detailsItem = DetailsHierItem(self.comm, "Details", dataHierarchyNode)
     vendorItem = DetailsHierItem(self.comm, "Vendor Metadata", dataHierarchyNode)
     userItem = DetailsHierItem(self.comm, "User Metadata", dataHierarchyNode)
-    elnItem = DetailsHierItem(self.comm, "ELN Details", dataHierarchyNode)
+    elnItem = DetailsHierItem(self.comm, "ELN Details", dataHierarchyNode, startCollapsed=True)
 
     # Populate the Content/Image
     for key in self.data:
@@ -168,4 +170,10 @@ class Details(QWidget):
 
   @Slot()
   def onEditButtonClicked(self) -> None:
-    print("Edit Button Clicked")
+    """
+    What happens, when the edit Button in the Top-right is clicked
+    TODO: The Edit Form is not working as Raphael expects it to. (It's buggy when I use it this way...)
+    """
+    print("Edit Button Clicked, FormDoc still buggy")
+    # Open the edit Form
+    self.comm.formDoc.emit(self.data)

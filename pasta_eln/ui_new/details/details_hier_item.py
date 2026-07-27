@@ -3,12 +3,10 @@ import re
 from typing import Any
 
 import qtawesome
-from PySide6.QtCore import QSize, Slot
+from PySide6.QtCore import QSize, Qt, Slot
 from PySide6.QtWidgets import QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 
-from pasta_eln.fixed_strings_json import cssStyleHtmlEditors
 from pasta_eln.misc_tools import isDocID, makeStringWrappable
-from pasta_eln.text_tools.handle_dictionaries import dict2ul
 from pasta_eln.text_tools.string_changes import tuple2html
 from pasta_eln.ui.gui_communicate import Communicate
 
@@ -37,6 +35,7 @@ class DetailsHierItem(QWidget):
     # contentLabel
     self.contentLabel = QLabel(self.content)
     self.contentLabel.setWordWrap(True)
+    self.contentLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
     # Main Layout
     self.layout = QVBoxLayout()
@@ -86,7 +85,7 @@ class DetailsHierItem(QWidget):
     Returns:
       The formatted String that can be displayed in the Label of this Widget or appended using self.addContent
     """
-    if not key and isinstance(value, dict):
+    if isinstance(value, dict):  # Original, : if not key and isinstance(value, dict):
       return '\n'.join([self.formatContent(k, v) for k, v in value.items()])
     if not value:
       return ''
@@ -95,10 +94,10 @@ class DetailsHierItem(QWidget):
     if key == 'tags':
       rating = ['\u2605' * int(i[1]) for i in value if re.match(r'^_\d$', i)]
       tags = [i for i in value if not re.match(r'^_\d$', i)]
-      labelStr = f'<b>Rating:</b><br> {rating[0]}<br><br>' if rating else ''
+      labelStr = f'<b>Rating:</b><br>{rating[0]}<br><br>' if rating else ''
       labelStr = f'{labelStr}   <b>Tags:</b><br>' + ', '.join(tags) + "<br><br>"
     elif (isinstance(value, str) and '\n' in value) or key == 'comment':  # long values with /s or comments
-      labelStr = f'<b>{key.capitalize()}:</b><br> {value}<br><br>'
+      labelStr = f'<b>{key.capitalize()}:</b><br>{value}<br><br>'
     else:
       dataHierarchyItems = [dict(i) for i in self.dataHierarchyNode if i['name'] == key]
       docID = ''  # required for clicking a label and that becoming a link
@@ -122,21 +121,21 @@ class DetailsHierItem(QWidget):
       labelStr = f'<b>{key}:</b><br>{value}<br><br>'
       if isinstance(value, tuple) and len(value) == 4:
         k, v = tuple2html(key, value)
-        labelStr = f'<b>{k}:</b> {v}<br>'
-      if isinstance(value, dict):
-        newValue = {}
-        for k, v in value.items():
-          if isinstance(v, tuple) and len(v) == 4:
-            k2, v2 = tuple2html(k, v)
-            newValue[k2] = v2
-          elif isinstance(v, (list, tuple)):
-            newValue[k] = v[0]
-          else:
-            newValue[k] = v
-        labelStr = f'{cssStyleHtmlEditors}<b>{key}:</b><br>{dict2ul(newValue)}<br><br>'
-    return makeStringWrappable(labelStr)
+        labelStr = f'<b>{k}:</b><br>{v}<br><br>'
+      # if isinstance(value, dict):
+      # newValue = {}
+      # for k, v in value.items():
+      #   if isinstance(v, tuple) and len(v) == 4:
+      #     k2, v2 = tuple2html(k, v)
+      #     newValue[k2] = v2
+      #   elif isinstance(v, (list, tuple)):
+      #     newValue[k] = v[0]
+      #   else:
+      #     newValue[k] = v
+      # labelStr = f'{cssStyleHtmlEditors}<b>{key}:</b><br>{dict2ul(newValue)}<br><br>'
+    return makeStringWrappable(labelStr)  # makeStringsWrappable could force wrap in html-statement in rare cases
 
   def addContent(self, key: str, value: Any):
     """Appends formatted Content to the Label of this Widget, see self.formatContent for details"""
     self.content += self.formatContent(key, value)
-    self.contentLabel.setText(self.content)
+    self.contentLabel.setText(self.content.removesuffix("<br><br>"))
