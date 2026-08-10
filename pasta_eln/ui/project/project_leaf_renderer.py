@@ -6,10 +6,10 @@ from PySide6.QtCore import QMargins, QModelIndex, QPersistentModelIndex, QPoint,
 from PySide6.QtGui import QPainter, QPen, QPixmap, QStaticText, QTextDocument
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem
-from ..fixed_strings_json import DO_NOT_RENDER, defaultDataHierarchyNode
-from ..text_tools.handle_dictionaries import doc2markdown
-from ..text_tools.string_changes import markdownEqualizer
-from .gui_communicate import Communicate
+from ...fixed_strings_json import DO_NOT_RENDER, defaultDataHierarchyNode
+from ...text_tools.handle_dictionaries import doc2markdown
+from ...text_tools.string_changes import markdownEqualizer
+from ..gui_communicate import Communicate
 
 
 class ProjectLeafRenderer(QStyledItemDelegate):

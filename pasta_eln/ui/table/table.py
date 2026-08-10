@@ -9,8 +9,8 @@ from PySide6.QtWidgets import QComboBox, QHBoxLayout, QMenu, QPushButton, QTable
 from pasta_eln.misc_tools import isDocID
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Action
-from pasta_eln.ui_new.table_view.pandas_table_model import PandasTableModel
-from pasta_eln.ui_new.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
+from pasta_eln.ui.table.pandas_table_model import PandasTableModel
+from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
 
 
 class TableView(QWidget):

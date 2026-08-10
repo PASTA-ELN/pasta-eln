@@ -14,16 +14,16 @@ from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QInputDialog, QLabel, QLayout, QLineEdit,
                                QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout,
                                QWidget)
-from ..backend_worker.sqlite import MAIN_ORDER
-from ..backend_worker.worker import Task
-from ..fixed_strings_json import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
-from ..misc_tools import callAddOn, isDocID
-from ..text_tools.string_changes import markdownEqualizer
-from ._context_menu import CommandMenu, executeContextMenu, initContextMenu
-from .gui_communicate import Communicate
-from .gui_style import (FlowLayout, IconButton, Image, Label, ScrollMessageBox, TextButton, widgetAndLayout,
+from ...backend_worker.sqlite import MAIN_ORDER
+from ...backend_worker.worker import Task
+from ...fixed_strings_json import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
+from ...misc_tools import callAddOn, isDocID
+from ...text_tools.string_changes import markdownEqualizer
+from .._context_menu import CommandMenu, executeContextMenu, initContextMenu
+from ..gui_communicate import Communicate
+from ..gui_style import (FlowLayout, IconButton, Image, Label, ScrollMessageBox, TextButton, widgetAndLayout,
                         widgetAndLayoutForm)
-from .message_dialog import showMessage
+from ..message_dialog import showMessage
 from .text_editor import TextEditor
 
 

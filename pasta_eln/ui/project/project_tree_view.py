@@ -6,11 +6,11 @@ from typing import Any
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QDropEvent, QEventPoint, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget
-from ..backend_worker.worker import Task
-from ..misc_tools import callAddOn
-from .gui_communicate import Communicate
-from .gui_style import Action
-from .message_dialog import showMessage
+from ...backend_worker.worker import Task
+from ...misc_tools import callAddOn
+from ..gui_communicate import Communicate
+from ..gui_style import Action
+from ..message_dialog import showMessage
 from .project_leaf_renderer import ProjectLeafRenderer
 
 

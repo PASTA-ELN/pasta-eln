@@ -7,32 +7,33 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QEvent, Qt, QUrl, Slot
+from PySide6.QtCore import QEvent, Qt, QTimer, QUrl, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QPixmap, QShortcut
-from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QMainWindow, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QMainWindow, QSplitter, QVBoxLayout
 from pasta_eln import __version__
-from ..backend_worker.worker import Task
-from ..fixed_strings_json import aboutMessage, confFileName, shortcuts
-from ..misc_tools import hardRestart, installPythonPackages, updateAddOnList
-from .body import Body
-from .config.main import Configuration
-from .data_hierarchy.editor import SchemeEditor
-from .definitions.editor import Editor as DefinitionsEditor
-from .form import Form
-from .gui_communicate import Communicate
-from .gui_style import Action, ScrollMessageBox, widgetAndLayout
-from .message_dialog import showMessage
-from .palette import Palette
-from .repositories.upload_gui import UploadGUI
-from .sidebar import Sidebar
-from .tutorials.manager import TutorialManager
-from .tutorials.tutorial_panel import TutorialPanel
+from pasta_eln.backend_worker.worker import Task
+from pasta_eln.fixed_strings_json import aboutMessage, confFileName, shortcuts
+from pasta_eln.misc_tools import hardRestart, installPythonPackages, updateAddOnList
+from pasta_eln.ui.config.main import Configuration
+from pasta_eln.ui.data_hierarchy.editor import SchemeEditor
+from pasta_eln.ui.definitions.editor import Editor as DefinitionsEditor
+from pasta_eln.ui.form.form import Form
+from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.ui.gui_style import Action, ScrollMessageBox
+from pasta_eln.ui.message_dialog import showMessage
+from pasta_eln.ui.palette import Palette
+from pasta_eln.ui.repositories.upload_gui import UploadGUI
+from pasta_eln.ui.tutorials.manager import TutorialManager
+from pasta_eln.ui.tutorials.tutorial_panel import TutorialPanel
+from pasta_eln.ui.body import Body
+from pasta_eln.ui.sidebar.sidebar import ProjectSidebar
+from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
 
 
 class MainWindow(QMainWindow):
   """ Graphical user interface includes all widgets """
 
-  def __init__(self, comm:Communicate) -> None:
+  def __init__(self, comm: Communicate) -> None:
     """ Init main window
     Args:
       projectGroup (str): project group to load
@@ -41,7 +42,7 @@ class MainWindow(QMainWindow):
     super().__init__()
     self.comm = comm
     if self.comm.configuration:
-      self.comm.palette = Palette(self.comm, self.comm.configuration['GUI']['theme'])
+      self.comm.palette = Palette(comm, self.comm.configuration['GUI']['theme'])
       self.comm.docTypesChanged.connect(self.paint)
     else:
       configWindow = Configuration(self.comm, 'setup')
@@ -52,7 +53,7 @@ class MainWindow(QMainWindow):
     self.comm.changeSidebar.connect(self.paint)
     self.comm.backendThread.worker.beSendTaskReport.connect(self.showReport)
 
-    if self.comm.configuration['GUI'].get('tutorial',''):
+    if self.comm.configuration['GUI'].get('tutorial', ''):
       self.tutorialManager = TutorialManager(self.comm.configuration['GUI']['tutorial'])
       self.tutorialPanel = TutorialPanel(self.comm, self.tutorialManager)
       self.tutorialDialog = QDialog(self)
@@ -67,45 +68,43 @@ class MainWindow(QMainWindow):
 
     # GUI
     self.setWindowTitle(f"PASTA-ELN {__version__}")
-    self.resize(self.screen().size())                                 #self.setWindowState(Qt.WindowMaximized)
-    #TODO https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
+    self.resize(self.screen().size())                                # self.setWindowState(Qt.WindowMaximized)
+    # TODO https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
     menu = self.menuBar()
     projectMenu = menu.addMenu('&Project')
-    Action('&Export project to .eln',        self, [Command.EXPORT],         projectMenu)
-    Action('&Import .eln into project',      self, [Command.IMPORT],         projectMenu)
-    Action('&Upload to repository',          self, [Command.REPOSITORY],     projectMenu)
-    Action('&Exit',                          self, [Command.EXIT],           projectMenu)
+    Action('&Export project to .eln', self, [Command.EXPORT], projectMenu)
+    Action('&Import .eln into project', self, [Command.IMPORT], projectMenu)
+    Action('&Upload to repository', self, [Command.REPOSITORY], projectMenu)
+    Action('&Exit', self, [Command.EXIT], projectMenu)
 
     self.viewMenu = menu.addMenu('Common &Lists')
 
     systemMenu = menu.addMenu('Project &group')
     self.changeProjectGroups = systemMenu.addMenu('&Change project group')
     syncMenu = systemMenu.addMenu('&Synchronize')
-    Action('Send all',                       self, [Command.SYNC_ELABFTW, 'sA'], syncMenu)
-    Action('Send',                           self, [Command.SYNC_ELABFTW, 's' ], syncMenu, shortcut='F5')
+    Action('Send', self, [Command.SYNC_SEND], syncMenu, shortcut='F5')
     if 'develop' in self.comm.configuration:
-      Action('Get all',                      self, [Command.SYNC_ELABFTW, 'gA'], syncMenu)
-      Action('Get',                          self, [Command.SYNC_ELABFTW, 'g' ], syncMenu, shortcut='F4')
-      Action('Smart synce',                  self, [Command.SYNC_ELABFTW, ''  ], syncMenu)
-    Action('&Item type editor',              self, [Command.SCHEMA],         systemMenu, shortcut='F8')
-    Action('&Definitions editor',            self, [Command.DEFINITIONS],    systemMenu)
-    Action('Workplan Creator',               self,[Command.WORKPLANCREATOR], systemMenu)
+      Action('Get', self, [Command.SYNC_GET], syncMenu, shortcut='F4')
+      # Action('Smart synce',                  self, [Command.SYNC_SMART],       syncMenu)
+    Action('&Item type editor', self, [Command.SCHEMA], systemMenu, shortcut='F8')
+    Action('&Definitions editor', self, [Command.DEFINITIONS], systemMenu)
+    Action('Workplan Creator', self, [Command.WORKPLANCREATOR], systemMenu)
     systemMenu.addSeparator()
-    Action('&Test extraction from a file',   self, [Command.TEST1],          systemMenu)
-    Action('Test &selected item extraction', self, [Command.TEST2],          systemMenu, shortcut='F2')
-    Action('Update &Add-on list',            self, [Command.UPDATE],         systemMenu)
+    Action('&Test extraction from a file', self, [Command.TEST1], systemMenu)
+    Action('Test &selected item extraction', self, [Command.TEST2], systemMenu, shortcut='F2')
+    Action('Update &Add-on list', self, [Command.UPDATE], systemMenu)
     if 'develop' in self.comm.configuration:
       systemMenu.addSeparator()
-      Action('&Verify database',             self, [Command.CHECK_DB],       systemMenu, shortcut='Ctrl+?')
+      Action('&Verify database', self, [Command.CHECK_DB], systemMenu, shortcut='Ctrl+?')
 
     helpMenu = menu.addMenu('&Other')
-    Action('&Website',                       self, [Command.WEBSITE],        helpMenu)
-    Action('Shortcuts',                      self, [Command.SHORTCUTS],      helpMenu)
-    Action('About',                          self, [Command.ABOUT],          helpMenu)
+    Action('&Website', self, [Command.WEBSITE], helpMenu)
+    Action('Shortcuts', self, [Command.SHORTCUTS], helpMenu)
+    Action('About', self, [Command.ABOUT], helpMenu)
     systemMenu.addSeparator()
-    Action('&Configuration',                 self, [Command.CONFIG],         helpMenu, shortcut='Ctrl+0')
+    Action('&Configuration', self, [Command.CONFIG], helpMenu, shortcut='Ctrl+0')
 
     # shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda: self.execute([Command.RESTART]))
@@ -113,34 +112,38 @@ class MainWindow(QMainWindow):
       QShortcut('Ctrl+?', self, lambda: self.execute([Command.CHECK_DB]))
 
     # GUI elements
-    mainWidget, mainLayout = widgetAndLayout('H')
-    self.setCentralWidget(mainWidget)                                   # Set the central widget of the Window
-    body = Body(self.comm)                                                             # body with information
-    self.sidebar = Sidebar(self.comm)                                                   # sidebar with buttons
-    mainLayout.addWidget(self.sidebar)
-    mainLayout.addWidget(body)
-    self.paint()
+    self.splitter = QSplitter(handleWidth=3)
+    self.setCentralWidget(self.splitter)                                # Set the central widget of the Window
+    self.body = Body(self.comm)                                                        # body with information
+    self.sidebar = ProjectSidebar(self.comm)                                            # sidebar with buttons
+    self.splitter.addWidget(self.sidebar)
+    self.splitter.addWidget(self.body)
 
+    def _resizeSplitter() -> None:
+      sidebarWidth = max(200, self.splitter.width() // 5)
+      self.splitter.setSizes([sidebarWidth, self.splitter.width() - sidebarWidth])
+
+    self.paint()
+    QTimer.singleShot(0, _resizeSplitter)
 
   @Slot(str)
-  def paint(self, _:str='') -> None:
+  def paint(self, _: str = '') -> None:
     """ Process things that might change """
     # Things that are inside the List menu
     self.viewMenu.clear()
     for key, value in self.comm.docTypesTitles.items():
-      shortcut = None if value['shortcut']=='' else f"Ctrl+{value['shortcut']}"
-      Action(value['title'],            self, [Command.VIEW, key],  self.viewMenu, shortcut=shortcut)
+      shortcut = None if value['shortcut'] == '' else f"Ctrl+{value['shortcut']}"
+      Action(value['title'], self, [Command.VIEW, key], self.viewMenu, shortcut=shortcut)
     self.viewMenu.addSeparator()
-    Action('&Tags',               self, [Command.VIEW, '_tags_'], self.viewMenu, shortcut='Ctrl+T')
-    Action('&Unidentified',       self, [Command.VIEW, '-'],      self.viewMenu, shortcut='Ctrl+U')
+    Action('&Tags', self, [Command.VIEW, '_tags_'], self.viewMenu, shortcut='Ctrl+T')
+    Action('&Unidentified', self, [Command.VIEW, '-'], self.viewMenu, shortcut='Ctrl+U')
     # Things that are related to project group
     self.changeProjectGroups.clear()
     for name in self.comm.configuration['projectGroups'].keys():
-      Action(name,                         self, [Command.CHANGE_PG, name], self.changeProjectGroups)
+      Action(name, self, [Command.CHANGE_PG, name], self.changeProjectGroups)
     return
 
-
-  def closeEvent(self, event:QEvent) -> None:
+  def closeEvent(self, event: QEvent) -> None:
     """
     Handle window close event - cleanup of backend thread
 
@@ -150,7 +153,6 @@ class MainWindow(QMainWindow):
     if self.comm and hasattr(self.comm, 'backendThread') and self.comm.backendThread:
       self.comm.shutdownBackendThread()
     event.accept()
-
 
   @Slot(dict)
   def formDoc(self, doc: dict[str, Any]) -> None:
@@ -166,7 +168,6 @@ class MainWindow(QMainWindow):
       self.comm.stopSequentialEdit.emit()
     return
 
-
   def execute(self, command: list[Any]) -> None:
     """
     action after clicking menu item
@@ -178,15 +179,16 @@ class MainWindow(QMainWindow):
         return
       fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
-        docTypes = [i for i in self.comm.docTypesTitles if i[0]!='x']
-        self.comm.uiRequestTask.emit(Task.EXPORT_ELN, {'fileName':fileName, 'projID':self.comm.projectID, 'docTypes':docTypes})
+        docTypes = [i for i in self.comm.docTypesTitles if i[0] != 'x']
+        self.comm.uiRequestTask.emit(Task.EXPORT_ELN,
+                                     {'fileName': fileName, 'projID': self.comm.projectID, 'docTypes': docTypes})
     elif command[0] is Command.IMPORT:
       if self.comm.projectID == '':
         showMessage(self, 'Error', 'You have to open a project to import', 'Critical')
         return
       fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
-        self.comm.uiRequestTask.emit(Task.IMPORT_ELN, {'fileName':fileName, 'projID':self.comm.projectID})
+        self.comm.uiRequestTask.emit(Task.IMPORT_ELN, {'fileName': fileName, 'projID': self.comm.projectID})
         self.comm.changeProject.emit(self.comm.projectID, '')
     elif command[0] is Command.REPOSITORY:
       if self.comm.projectID == '':
@@ -204,11 +206,16 @@ class MainWindow(QMainWindow):
     # system menu
     elif command[0] is Command.CHANGE_PG:
       self.comm.configuration['defaultProjectGroup'] = command[1]
-      with open(Path.home()/confFileName, 'w', encoding='utf-8') as fConf:
+      with open(Path.home() / confFileName, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.configuration, indent=2))
-      hardRestart()                                                   # hard restart to link to correct addons
-    elif command[0] is Command.SYNC_ELABFTW:
-      self.comm.uiRequestTask.emit(Task.SYNC_ELAB,  {'projGroup':self.comm.projectGroup, 'subtask':command[1]})
+      self.comm.projectGroup = command[1]
+      self.comm.start(command[1])
+    elif command[0] is Command.SYNC_SEND:
+      self.comm.uiRequestTask.emit(Task.SYNC_ELAB, {'projGroup': self.comm.projectGroup, 'subtask': 's'})
+    elif command[0] is Command.SYNC_GET:
+      self.comm.uiRequestTask.emit(Task.SYNC_ELAB, {'projGroup': self.comm.projectGroup, 'subtask': 'g'})
+    elif command[0] is Command.SYNC_SMART:
+      self.comm.uiRequestTask.emit(Task.SYNC_ELAB, {'projGroup': self.comm.projectGroup, 'subtask': ''})
     elif command[0] is Command.SCHEMA:
       dialogS = SchemeEditor(self.comm)
       dialogS.exec()
@@ -218,14 +225,15 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       if fileName is not None:
-        self.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST, {'fileName':fileName, 'style':'html', 'recipe':'', 'saveFig':''})
+        self.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST,
+                                     {'fileName': fileName, 'style': 'html', 'recipe': '', 'saveFig': ''})
     elif command[0] is Command.TEST2:
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
       configProjecGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
-      installDict = installPythonPackages(configProjecGroup['addOnDir'])
+      installPythonPackages(configProjecGroup['addOnDir'])
       reportDict = updateAddOnList(self.comm.projectGroup)
-      messageWindow = ScrollMessageBox('Add-on list updated', {'main':installDict | reportDict},
+      messageWindow = ScrollMessageBox('Add-on list updated', {'main': reportDict},
                                        style='QScrollArea{min-width:600 px; min-height:400px}')
       messageWindow.exec()
       hardRestart()
@@ -236,23 +244,22 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.WEBSITE:
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
     elif command[0] is Command.CHECK_DB:
-      self.comm.uiRequestTask.emit(Task.CHECK_DB, {'style':'html'})
+      self.comm.uiRequestTask.emit(Task.CHECK_DB, {'style': 'html'})
     elif command[0] is Command.SHORTCUTS:
       showMessage(self, 'Keyboard shortcuts', shortcuts, 'Information')
     elif command[0] is Command.ABOUT:
-      showMessage(self, 'About', f'{aboutMessage}Environment: {sys.prefix}\n','Information')
-    # elif command[0] is Command.WORKPLANCREATOR:
-    #   workplanCreatorDialog = WorkplanCreatorDialog(self.comm)
-    #   workplanCreatorDialog.exec()
+      showMessage(self, 'About', f'{aboutMessage}Environment: {sys.prefix}\n', 'Information')
+    elif command[0] is Command.WORKPLANCREATOR:
+      workplanCreatorDialog = WorkplanCreatorDialog(self.comm)
+      workplanCreatorDialog.exec()
     elif command[0] is Command.RESTART:
       hardRestart()
     else:
       logging.error('Gui menu unknown: %s', command, exc_info=True)
     return
 
-
   @Slot(Task, str, str, str)
-  def showReport(self, task:Task, reportText:str, image:str, path:str) -> None:
+  def showReport(self, task: Task, reportText: str, image: str, path: str) -> None:
     """ Show a report from backend worker
     Args:
       task (Task): task name
@@ -268,33 +275,35 @@ class MainWindow(QMainWindow):
     elif task is Task.CHECK_DB:
       regexStr = r'<font color="magenta">image does not exist m-[0-9a-f]+ image: comment:<\/font><br>'
       myCount = len(re.findall(regexStr, reportText))
-      if myCount>5:
-        reportText = re.sub(regexStr, '', reportText, count=myCount-5)
+      if myCount > 5:
+        reportText = re.sub(regexStr, '', reportText, count=myCount - 5)
         reportText += r'<font color="magenta">image does not exist ...:<\/font><br>'
-    elif task not in (Task.EXTRACTOR_TEST, Task.EXTRACTOR_RERUN, Task.DELETE_DOC, Task.EXPORT_ELN,
-                      Task.IMPORT_ELN, Task.SYNC_ELAB):              #e.g. extractor tests work out of the box
+    elif task not in (Task.EXTRACTOR_TEST, Task.EXTRACTOR_RERUN, Task.DELETE_DOC, Task.EXPORT_ELN, Task.IMPORT_ELN,
+                      Task.SYNC_ELAB):                              # e.g. extractor tests work out of the box
       logging.error('Unknown task in showReport: %s', task, exc_info=True)
     showMessage(self, 'Report', reportText, image=image)
 
 
 class Command(Enum):
   """ Commands used in this file """
-  EXPORT          = 1
-  IMPORT          = 2
-  EXIT            = 3
-  VIEW            = 4
-  CHANGE_PG       = 6
-  SYNC_ELABFTW    = 7
-  SCHEMA          = 8
-  TEST1           = 9
-  TEST2           = 10
-  UPDATE          = 11
-  CONFIG          = 12
-  WEBSITE         = 13
-  CHECK_DB        = 14
-  SHORTCUTS       = 15
-  RESTART         = 16
-  ABOUT           = 17
-  DEFINITIONS     = 18
-  REPOSITORY      = 19
-  WORKPLANCREATOR = 20
+  EXPORT = 1
+  IMPORT = 2
+  EXIT = 3
+  VIEW = 4
+  CHANGE_PG = 6
+  SYNC_SEND = 7
+  SYNC_GET = 8
+  SYNC_SMART = 9
+  SCHEMA = 10
+  TEST1 = 11
+  TEST2 = 12
+  UPDATE = 13
+  CONFIG = 14
+  WEBSITE = 15
+  CHECK_DB = 16
+  SHORTCUTS = 17
+  RESTART = 18
+  ABOUT = 19
+  DEFINITIONS = 20
+  REPOSITORY = 21
+  WORKPLANCREATOR = 22

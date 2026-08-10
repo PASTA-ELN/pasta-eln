@@ -8,7 +8,7 @@ from pasta_eln.misc_tools import clearLayout
 from pasta_eln.ui.config.main import Configuration
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import HSeparator, Label
-from pasta_eln.ui_new.project_sidebar.project_card import ProjectCard
+from pasta_eln.ui.sidebar.project_card import ProjectCard
 
 
 class ProjectSidebar(QWidget):

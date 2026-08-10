@@ -7,14 +7,14 @@ from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot
 from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayout, QWidget
-from ..backend_worker.worker import Task
-from ..fixed_strings_json import DO_NOT_RENDER
-from ..misc_tools import callAddOn
-from ..text_tools.handle_dictionaries import doc2markdown
-from ..text_tools.string_changes import createDirName
-from .gui_communicate import Communicate
-from .gui_style import Action, Label, TextButton, widgetAndLayout
-from .message_dialog import showMessage
+from ...backend_worker.worker import Task
+from ...fixed_strings_json import DO_NOT_RENDER
+from ...misc_tools import callAddOn
+from ...text_tools.handle_dictionaries import doc2markdown
+from ...text_tools.string_changes import createDirName
+from ..gui_communicate import Communicate
+from ..gui_style import Action, Label, TextButton, widgetAndLayout
+from ..message_dialog import showMessage
 from .project_tree_view import TreeView
 
 

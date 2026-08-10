@@ -45,8 +45,13 @@ Open issues are the union of:
 
 ### Repository maintenance items
 
-- Complete the ongoing `camelCase` to `snake_case` module rename across legacy UI imports and developer documentation.
-- Details-edit is bugged
-- Table selection sometimes deselects everything or is lagging
-- new Entry - Workplan Creator Interaction → not obvious enough
-- Table-view gallery has to be merged?
+- Continue GUI transition
+  - Move old ui out of way and renaming ui_new -> ui
+  - Details-edit is bugged, unclear reason
+  - Table selection sometimes deselects everything or is lagging
+  - new Entry - Workplan Creator Interaction → not obvious enough
+  - Table-view gallery has to be merged?
+- Clean up
+  - rerun code quality skill once-a-while
+  - Find unused code
+  - functions that are similar in scope

@@ -8,7 +8,7 @@ from pasta_eln.fixed_strings_json import SORTED_DB_KEYS
 from pasta_eln.misc_tools import clearLayout, makeStringWrappable
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Label, ResizeImage
-from pasta_eln.ui_new.details.details_hier_item import DetailsHierItem
+from pasta_eln.ui.details.details_hier_item import DetailsHierItem
 
 
 class Details(QWidget):
