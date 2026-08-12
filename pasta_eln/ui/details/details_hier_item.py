@@ -28,14 +28,17 @@ class DetailsHierItem(QWidget):
     self.button = QPushButton(self.categoryName)
     self.button.setCheckable(True)
     self.button.setFlat(True)
-    self.button.setIconSize(QSize(30, 30))
-    self.button.setStyleSheet('text-align: left; border-radius:0px;')
+    self.button.setIconSize(QSize(16, 16))
+    self.button.setStyleSheet('text-align: left; border-radius: 0px; padding: 6px 0px;')
     self.button.clicked.connect(self.onButtonClicked)
 
     # contentLabel
     self.contentLabel = QLabel(self.content)
     self.contentLabel.setWordWrap(True)
-    self.contentLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+    self.contentLabel.setTextFormat(Qt.TextFormat.RichText)
+    self.contentLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse |
+                                              Qt.TextInteractionFlag.LinksAccessibleByMouse)
+    self.contentLabel.setOpenExternalLinks(True)
 
     # Main Layout
     self.mainLayout = QVBoxLayout()
@@ -126,6 +129,8 @@ class DetailsHierItem(QWidget):
       #   else:
       #     newValue[k] = v
       # labelStr = f'{cssStyleHtmlEditors}<b>{key}:</b><br>{dict2ul(newValue)}<br><br>'
+    if '<a href=' in labelStr:
+      return labelStr
     return makeStringWrappable(labelStr)             # Wrapping can force an HTML-statement wrap in rare cases
 
   def addContent(self, key: str, value: Any) -> None:

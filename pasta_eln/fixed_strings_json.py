@@ -212,6 +212,8 @@ shortcuts = """
 
 **F9**: Restart
 
+**F12**: Capture a UI screenshot
+
 **Ctrl+?**: Verify database integrity
 
 **Ctrl+0**: Configuration

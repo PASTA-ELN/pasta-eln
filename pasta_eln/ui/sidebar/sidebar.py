@@ -20,16 +20,16 @@ class ProjectSidebar(QWidget):
     super().__init__(parent)
     self.comm = comm
     self.projects = pd.DataFrame()
-    self.sideBarWidth = self.comm.configuration['GUI']['sidebarWidth']
+    self._initialProjectSelected = False
 
     # Header-label
-    self.headerLabel = Label('Projects', 'h1')
+    self.headerLabel = Label('Projects', 'h2')
 
     # newProject-Button
     self.newProjectButton = QPushButton('')
     self.newProjectButton.setStyleSheet('border: none;')
     self.newProjectButton.setToolTip('Create new Project')
-    self.newProjectButton.setFixedSize(40, 40)
+    self.newProjectButton.setFixedSize(32, 32)
     iconColor = self.comm.palette.getThemeColor('foreground', 'base')
     self.newProjectButton.setIcon(qtawesome.icon('ri.add-circle-line', color=iconColor))
     self.newProjectButton.setIconSize(self.newProjectButton.size())
@@ -43,10 +43,10 @@ class ProjectSidebar(QWidget):
     self.headerLayout.setContentsMargins(0, 0, 0, 0)
     self.header.setLayout(self.headerLayout)
 
-    # Searchbar
-    self.searchbar = QLineEdit(clearButtonEnabled=True)
-    self.searchbar.setPlaceholderText('Search Project or #tag')
-    self.searchbar.textEdited.connect(self.filterItems)
+    # Searchbar # SimpleGUI
+    # self.searchbar = QLineEdit(clearButtonEnabled=True)
+    # self.searchbar.setPlaceholderText('Search Project or #tag')
+    # self.searchbar.textEdited.connect(self.filterItems)
 
     # Projectlist
     self.projectList = QWidget()
@@ -76,13 +76,14 @@ class ProjectSidebar(QWidget):
     self.manageProjectsButton.clicked.connect(lambda: self.comm.changeTable.emit('x0', ''))
     self.manageProjectsButton.setFixedHeight(40)
 
-    # Footer
-    self.footerLayout = QHBoxLayout()
-    self.footerLayout.addWidget(self.settingsButton)
-    self.footerLayout.addWidget(self.manageProjectsButton)
-    self.footerLayout.setContentsMargins(0, 0, 0, 0)
-    self.footer = QWidget()
-    self.footer.setLayout(self.footerLayout)
+    # Footer:
+    # SimpleGUI
+    # self.footerLayout = QHBoxLayout()
+    # self.footerLayout.addWidget(self.settingsButton)
+    # self.footerLayout.addWidget(self.manageProjectsButton)
+    # self.footerLayout.setContentsMargins(0, 0, 0, 0)
+    # self.footer = QWidget()
+    # self.footer.setLayout(self.footerLayout)
 
     # Style
     # self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
@@ -91,10 +92,10 @@ class ProjectSidebar(QWidget):
     # Layout
     self.mainLayout = QVBoxLayout()
     self.mainLayout.addWidget(self.header)
-    self.mainLayout.addWidget(self.searchbar)
+    # self.mainLayout.addWidget(self.searchbar) # SimpleGUI
     self.mainLayout.addWidget(HSeparator())
     self.mainLayout.addWidget(self.scrollarea, stretch=1)
-    self.mainLayout.addWidget(self.footer)
+    # self.mainLayout.addWidget(self.footer) # SimpleGUI
     self.mainLayout.setSpacing(10)
     self.setLayout(self.mainLayout)
 
@@ -106,6 +107,7 @@ class ProjectSidebar(QWidget):
 
     # CODE
     self.comm.uiRequestTable.emit('x0', '', self.comm.configuration['GUI']['showHidden'] == 'Yes')
+
 
   @Slot(str)
   def paint(self, projectChoice: str = '') -> None:
@@ -132,6 +134,7 @@ class ProjectSidebar(QWidget):
     for i in range(self.projects.shape[0]):
       self.projectListLayout.addWidget(ProjectCard(self.comm, self.projects.iloc[i, :]))
 
+
   @Slot(pd.DataFrame, str)
   def onGetData(self, projects: pd.DataFrame, docType: str) -> None:
     """
@@ -144,6 +147,12 @@ class ProjectSidebar(QWidget):
     if docType == 'x0':
       self.projects = projects
       self.paint('redraw')
+      if not self._initialProjectSelected and not self.projects.empty:
+        self._initialProjectSelected = True
+        projectId = self.projects.iloc[0]['id']
+        self.comm.projectID = projectId
+        self.comm.changeProject.emit(projectId, '')
+
 
   @Slot()
   def createNewProject(self) -> None:
@@ -151,6 +160,7 @@ class ProjectSidebar(QWidget):
     self.comm.formDoc.emit({'type': ['x0'], '_projectID': self.comm.projectID})
     self.comm.changeTable.emit('x0', self.comm.projectID)
     self.comm.changeSidebar.emit('redraw')
+
 
   @Slot(str, str)
   def highlightActiveProject(self, projectID: str, docID: str) -> None:
@@ -168,6 +178,7 @@ class ProjectSidebar(QWidget):
         item.lowlight()
         if item.project['id'] == projectID:
           item.highlight()
+
 
   @Slot()
   def filterItems(self, filterText: str) -> None:

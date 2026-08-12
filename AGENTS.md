@@ -43,6 +43,8 @@ make -C docs html
 
 Before editing, run `git status --short`. Do not overwrite, reset, or remove unrelated user changes. Run the smallest relevant test first, then the standard suite when practical. The standard test suite is intentionally stateful: keep numbered `test_XX_` modules in their required execution order; `tests/conftest.py` enforces that order. Run pytest and pylint outside the execution sandbox: extractor tests use multiprocessing and the sandbox prevents its forkserver from starting; pylint writes its cache under the user home directory. GUI tests must use Qt's offscreen platform in headless environments.
 
+For visual review of the user's actual desktop layout, ask them to press `F12` in PASTA-ELN. It overwrites `/tmp/pasta-eln-current-window.png` with a direct capture of the live main window; inspect that image instead of relying only on offscreen test screenshots, which can differ in theme, scaling, and font rendering.
+
 ## Engineering conventions
 
 - Use Python type hints for new and changed public code; maintain the configured mypy and pylint standards.

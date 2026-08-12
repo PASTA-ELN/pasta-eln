@@ -25,7 +25,7 @@ from pasta_eln.ui.palette import Palette
 from pasta_eln.ui.repositories.upload_gui import UploadGUI
 from pasta_eln.ui.tutorials.manager import TutorialManager
 from pasta_eln.ui.tutorials.tutorial_panel import TutorialPanel
-from pasta_eln.ui.body import Body
+from pasta_eln.ui.body.body import Body
 from pasta_eln.ui.sidebar.sidebar import ProjectSidebar
 from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
 
@@ -108,6 +108,8 @@ class MainWindow(QMainWindow):
 
     # shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda: self.execute([Command.RESTART]))
+    self.uiScreenshotShortcut = QShortcut('F12', self)
+    self.uiScreenshotShortcut.activated.connect(self.captureScreenshot)
     if 'develop' not in self.comm.configuration:
       QShortcut('Ctrl+?', self, lambda: self.execute([Command.CHECK_DB]))
 
@@ -120,11 +122,12 @@ class MainWindow(QMainWindow):
     self.splitter.addWidget(self.body)
 
     def _resizeSplitter() -> None:
-      sidebarWidth = max(200, self.splitter.width() // 5)
+      sidebarWidth = self.comm.configuration['GUI']['sidebarWidth']
       self.splitter.setSizes([sidebarWidth, self.splitter.width() - sidebarWidth])
 
     self.paint()
     QTimer.singleShot(0, _resizeSplitter)
+
 
   @Slot(str)
   def paint(self, _: str = '') -> None:
@@ -143,6 +146,7 @@ class MainWindow(QMainWindow):
       Action(name, self, [Command.CHANGE_PG, name], self.changeProjectGroups)
     return
 
+
   def closeEvent(self, event: QEvent) -> None:
     """
     Handle window close event - cleanup of backend thread
@@ -153,6 +157,15 @@ class MainWindow(QMainWindow):
     if self.comm and hasattr(self.comm, 'backendThread') and self.comm.backendThread:
       self.comm.shutdownBackendThread()
     event.accept()
+
+
+  @Slot()
+  def captureScreenshot(self) -> None:
+    """Save the current window as a screenshot for visual UI review."""
+    screenshotPath = Path('/tmp/pasta-eln-current-window.png')
+    if not self.grab().save(str(screenshotPath), 'PNG'):
+      logging.error('Could not save UI screenshot to %s', screenshotPath)
+
 
   @Slot(dict)
   def formDoc(self, doc: dict[str, Any]) -> None:
@@ -167,6 +180,7 @@ class MainWindow(QMainWindow):
     if ret == 0:
       self.comm.stopSequentialEdit.emit()
     return
+
 
   def execute(self, command: list[Any]) -> None:
     """
@@ -257,6 +271,7 @@ class MainWindow(QMainWindow):
     else:
       logging.error('Gui menu unknown: %s', command, exc_info=True)
     return
+
 
   @Slot(Task, str, str, str)
   def showReport(self, task: Task, reportText: str, image: str, path: str) -> None:

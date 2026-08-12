@@ -41,8 +41,8 @@ class TableView(QWidget):
 
     # Action-Button
     self.actionButton = QPushButton('Actions')
-    iconColor = self.comm.palette.getThemeColor('foreground', 'base')
-    self.actionButton.setIcon(qtawesome.icon('ri.task-line', color=iconColor))
+    actionIconColor = self.comm.palette.getThemeColor('primary', 'base')
+    self.actionButton.setIcon(qtawesome.icon('ri.task-line', color=actionIconColor))
     self.actionButton.setIconSize(QSize(20, 20))
     self.actionMenu = QMenu(self)
     self.actionButton.setMenu(self.actionMenu)
@@ -52,7 +52,7 @@ class TableView(QWidget):
 
     # More-Button
     self.moreButton = QPushButton('More')
-    self.moreButton.setIcon(qtawesome.icon('ri.more-fill', color=iconColor))
+    self.moreButton.setIcon(qtawesome.icon('ri.more-fill', color=actionIconColor))
     self.moreButton.setIconSize(QSize(20, 20))
     self.moreMenu = QMenu(self)
     self.moreButton.setMenu(self.moreMenu)

@@ -36,16 +36,15 @@ class ProjectCard(QFrame):
     self.setCursor(Qt.CursorShape.PointingHandCursor)
     color = self.comm.palette.getThemeColor('background', 'table')
     borderColor = self.comm.palette.alterColor(self.comm.palette.getThemeColor('border', 'base'), 125)
+    selectionColor = self.comm.palette.getThemeColor('primary', 'base')
     self.defaultCSS = f"""
     ProjectCard {{
       background-color: {color};
       border: 1px solid {borderColor};
+      border-left: 4px solid transparent;
     }}
     ProjectCard[highlight="true"] {{
-      background-color:{self.comm.palette.getThemeColor("primary", "base")};
-    }}
-    ProjectCard[highlight="true"] QLabel{{
-      color:{self.comm.palette.getThemeColor("background", "base")};
+      border-left-color: {selectionColor};
     }}
     """
     self.setStyleSheet(self.defaultCSS)

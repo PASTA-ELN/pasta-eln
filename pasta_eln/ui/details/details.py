@@ -1,9 +1,10 @@
 """ This Widget is the right sidebar that shows the details of the currently selected item """
 from typing import Any
 import qtawesome
-from PySide6.QtCore import QSize, Slot
-from PySide6.QtGui import Qt
-from PySide6.QtWidgets import QHBoxLayout, QPushButton, QScrollArea, QSplitter, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtCore import QSize, Signal, Slot
+from PySide6.QtGui import QShowEvent, Qt
+from PySide6.QtWidgets import (QApplication, QHBoxLayout, QMenu, QPushButton, QScrollArea, QSplitter, QTextEdit,
+                               QVBoxLayout, QWidget)
 from pasta_eln.fixed_strings_json import SORTED_DB_KEYS
 from pasta_eln.misc_tools import clearLayout, makeStringWrappable
 from pasta_eln.ui.gui_communicate import Communicate
@@ -13,6 +14,8 @@ from pasta_eln.ui.details.details_hier_item import DetailsHierItem
 
 class Details(QWidget):
   """The right sidebar that shows the details of the currently selected item"""
+
+  becameVisible = Signal()
 
   def __init__(self, comm: Communicate):
     super().__init__()
@@ -32,10 +35,20 @@ class Details(QWidget):
     self.editButton.setIconSize(QSize(18, 18))
     self.editButton.clicked.connect(self.onEditButtonClicked)
 
+    # More-Button
+    self.moreButton = QPushButton('More')
+    actionIconColor = self.comm.palette.getThemeColor('primary', 'base')
+    self.moreButton.setIcon(qtawesome.icon('ri.more-fill', color=actionIconColor))
+    self.moreButton.setIconSize(QSize(20, 20))
+    self.moreMenu = QMenu(self)
+    self.moreMenu.addAction('Copy document ID', self.copyDocumentId)
+    self.moreButton.setMenu(self.moreMenu)
+
     # Header Layout
     self.headerLayout = QHBoxLayout()
     self.headerLayout.addWidget(self.titleLabel, stretch=1)
     self.headerLayout.addWidget(self.editButton)
+    self.headerLayout.addWidget(self.moreButton)
     self.header = QWidget()
     self.header.setLayout(self.headerLayout)
 
@@ -165,6 +178,16 @@ class Details(QWidget):
       self.bodyLayout.addWidget(elnItem)
 
     self.bodyLayout.addStretch(0)
+
+  def showEvent(self, event: QShowEvent) -> None:
+    """Notify the containing splitter when the details panel first becomes visible."""
+    super().showEvent(event)
+    self.becameVisible.emit()
+
+  @Slot()
+  def copyDocumentId(self) -> None:
+    """Copy the selected document identifier from this details panel."""
+    QApplication.clipboard().setText(self.docID)
 
   @Slot()
   def onEditButtonClicked(self) -> None:
