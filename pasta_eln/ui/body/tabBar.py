@@ -5,29 +5,32 @@ from PySide6.QtWidgets import QTabBar
 
 class ProjectTabBar(QTabBar):
   """A tab bar which keeps the project overview tab visually separate."""
-
   _HOME_TAB_DATA = 'project-home'
   _HOME_TAB_GAP = 12
 
   def __init__(self, separatorColor: str) -> None:
+    """ Create a tab bar at the top of the screen
+
+    Args:
+      separatorColor (str): The color of the separator
+    """
     super().__init__()
     self._draggingHomeTab = False                                   # if the dragging action uses the home-tab
     self._separatorColor = QColor(separatorColor)
     self.setStyleSheet(f"QTabBar::tab:first {{ margin-right: {self._HOME_TAB_GAP}px; }}")
     self.tabMoved.connect(self.keepHomeTabFirst)
 
-  def markHomeTab(self, index: int) -> None:
-    """Mark the tab which must remain first in the tab bar."""
-    self.setTabData(index, self._HOME_TAB_DATA)
-
 
   def paintEvent(self, event: QPaintEvent) -> None:
-    """Draw a separator in the gap following the Home tab."""
+    """Draw a separator in the gap following the Home tab.
+
+    Args:
+      event (QPaintEvent): The paint event
+    """
     super().paintEvent(event)
     for index in range(self.count()):
       if self.tabData(index) == self._HOME_TAB_DATA:
-        homeTabRect = self.tabRect(index)
-        separatorX = homeTabRect.right() - self._HOME_TAB_GAP // 2
+        separatorX = self.tabRect(index).right() - self._HOME_TAB_GAP // 2
         painter = QPainter(self)
         separatorPen = QPen(self._separatorColor)
         separatorPen.setWidth(1)
@@ -39,28 +42,54 @@ class ProjectTabBar(QTabBar):
 
 
   def mousePressEvent(self, event: QMouseEvent) -> None:
-    """Remember whether a drag was initiated on the Home tab."""
+    """Remember whether a drag was initiated on the Home tab.
+
+    Args:
+      event (QMouseEvent): The mouse press event
+    """
     self._draggingHomeTab = self.tabData(self.tabAt(event.position().toPoint())) == self._HOME_TAB_DATA
     super().mousePressEvent(event)
 
 
   def mouseMoveEvent(self, event: QMouseEvent) -> None:
-    """Allow table tabs to move, but never the Home tab."""
+    """Allow table tabs to move, but never the Home tab
+
+    Args:
+      event (QMouseEvent): The mouse move event
+    """
     if not self._draggingHomeTab:
       super().mouseMoveEvent(event)
 
 
   def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-    """End the potential Home-tab drag."""
+    """End the potential Home-tab drag
+
+    Args:
+      event (QMouseEvent): The mouse release event
+    """
     self._draggingHomeTab = False
     super().mouseReleaseEvent(event)
 
 
   @Slot(int, int)
-  def keepHomeTabFirst(self, _: int, __: int) -> None:
-    """Move Home back if another tab was dragged before it."""
+  def keepHomeTabFirst(self, oldIndex: int, newIndex: int) -> None:
+    """Move Home back if another tab was dragged before it.
+
+    Args:
+      oldIndex: The old index of the moved tab
+      newIndex: The new index of the moved tab
+    """
     for index in range(self.count()):
       if self.tabData(index) == self._HOME_TAB_DATA:
         if index != 0:
           self.moveTab(index, 0)
         return
+
+
+  def markHomeTab(self, index: int) -> None:
+    """Mark the tab which must remain first in the tab bar. Called by body.py
+
+    Args:
+      index (int): The index of the home tab
+    """
+    self.setTabData(index, self._HOME_TAB_DATA)

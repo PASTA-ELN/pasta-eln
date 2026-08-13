@@ -56,7 +56,24 @@ For visual review of the user's actual desktop layout, ask them to press `F12` i
 
 ## UI development guidelines
 
-Follow [`pasta_eln/ui_new/development_guidelines.md`](pasta_eln/ui_new/development_guidelines.md) for UI-specific design and implementation rules. In short: use standard PySide6 widgets and theme colours; test light and dark themes with empty, short, and long content; keep the user’s current context and important actions visible; and organize widgets into clear, typed, focused components.
+- Prefer standard PySide6 widgets and `palette.py`; add styling only for readability or a clear design need. Use icon plus text where practical (`ri.iconname`), and test light/dark themes with empty, short, and long content.
+- A theme change requires an application reload; immediate theme-switch updates are not supported.
+- Highlight at most one button per area with its `default` property. Other controls may use a primary-coloured icon but must not compete with that action.
+- Keep the current project, table, sample, and editing/viewing context clear. Important actions must be visible, require few clicks, and usually also be available in a context menu.
+- Recreate Figma where practical, but prefer useful native Qt behaviour (for example, a splitter over a duplicate sidebar-toggle control). Use resilient layouts and user-resizable columns instead of hard truncation.
+
+### UI code design
+
+- Keep components focused and colocate their related files; create a custom widget when a subwidget becomes substantial. `project_sidebar.py` is a good example.
+- In `__init__`, define instance variables; configure widgets; build layouts; apply necessary style; assemble the main layout; connect signals; then run immediate code. Comment widget/layout blocks and non-obvious behaviour.
+- In UI files, order methods as: `__init__`, `onGetData`, `paint`, `execute`, then other slots, event handlers, and helpers. Omit inapplicable methods.
+- Make runtime widget changes in `paint`; use descriptive names and type hints.
+
+### Commands and controls
+
+- Interactive hosts inherit `ui.widget.Widget` and implement `execute`; use `ui.widget.Button` for command buttons and its `DEFAULT`, `HIGHLIGHTED`, and `PRIMARY` roles.
+- Identify actions with enums, not positional lists or opaque string codes. Read operational data from authoritative current state where possible.
+- Attach typed enum/dataclass payloads only when the clicked control provides unrecoverable target information (for example, a document type, add-on, repository, or formatting target). Keep intrinsic component data, such as a filter ID, on that component instead.
 
 ## Open issues
 

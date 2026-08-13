@@ -27,29 +27,21 @@ class Body(QWidget):
     self.tabWidget = QTabWidget()
     self.projectTabBar = ProjectTabBar(self.comm.palette.getThemeColor('foreground', 'base'))
     self.tabWidget.setTabBar(self.projectTabBar)
-    self.tabWidget.setContentsMargins(0, 0, 0, 0)
     self.tabWidget.setMovable(True)
-    borderColor = self.comm.palette.getThemeColor('border', 'base')
+    self.tabWidget.setContentsMargins(0, 0, 0, 0)
     self.tabWidget.setStyleSheet(f"""
     QTabWidget::pane {{
       border: none;
-      border-top: 1px solid {borderColor};
+      border-top: 1px solid {self.comm.palette.getThemeColor('border', 'base')};
       margin: 0px;
     }}
     """)
-    # tabMenuButton for actions like add new tab # Simple-GUI
-    # self.tabMenuButton = QPushButton()
-    # self.tabMenuButton.setIcon(qtawesome.icon('ri.menu-fill'))
-    # self.tabWidget.setCornerWidget(self.tabMenuButton)
-
-    # Details-Widget (right sidebar, displaying the details of a single entry)
-    self.detailsWidget = Details(self.comm)
-
     # Splitter (for Tabwidget and Details)
+    self.detailsW = Details(self.comm)     # Details (right sidebar, displaying the details of a single entry)
     self.splitter = QSplitter(handleWidth=3)
     self.splitter.addWidget(self.tabWidget)
     self.splitter.setStretchFactor(0, 3)
-    self.splitter.addWidget(self.detailsWidget)
+    self.splitter.addWidget(self.detailsW)
     self.splitter.setStretchFactor(1, 1)
 
     # Layout
@@ -62,24 +54,7 @@ class Body(QWidget):
     self.comm.docTypesChanged.connect(self.paint)
     self.comm.changeProject.connect(self.onChangeProject)
     self.tabWidget.currentChanged.connect(self.onTabChanged)
-    self.detailsWidget.becameVisible.connect(self.resizeDetailsSplitter)
-
-  @Slot()
-  def resizeDetailsSplitter(self) -> None:
-    """Set the details sidebar to the configured width after it becomes visible."""
-    detailsWidth = int(self.comm.configuration['GUI']['detailsWidth'])
-    self.splitter.setSizes([self.splitter.width() - detailsWidth, detailsWidth])
-
-  def createTabIcon(self, iconName: str, color: str, selectedColor: str) -> QIcon:
-    """Create a tab icon with distinct selected and unselected render states."""
-    unselectedIcon = qtawesome.icon(iconName, color=color)
-    selectedIcon = qtawesome.icon(iconName, color=selectedColor)
-    tabIcon = QIcon()
-    iconSize = QSize(64, 64)
-    for mode in (QIcon.Mode.Normal, QIcon.Mode.Active, QIcon.Mode.Selected):
-      tabIcon.addPixmap(unselectedIcon.pixmap(iconSize, mode), mode, QIcon.State.Off)
-      tabIcon.addPixmap(selectedIcon.pixmap(iconSize, mode), mode, QIcon.State.On)
-    return tabIcon
+    self.detailsW.becameVisible.connect(self.resizeDetailsSplitter)
 
 
   @Slot()
@@ -87,39 +62,65 @@ class Body(QWidget):
     """
     Create the changable things in the Widget.
     """
-    iconColor = self.comm.palette.getThemeColor('foreground', 'base')
+    iconColor         = self.comm.palette.getThemeColor('foreground', 'base')
     selectedIconColor = self.comm.palette.getThemeColor('primary', 'base')
     # Add Project View - Tab
     projectView = Project(self.comm)
     homeIndex = self.tabWidget.addTab(projectView,
-                                      self.createTabIcon('ri.home-2-fill', iconColor, selectedIconColor), 'Home')
+                                      self.createIcon('ri.home-2-fill', iconColor, selectedIconColor), 'Home')
     self.projectTabBar.markHomeTab(homeIndex)
     # Add Table Views - Tabs
     for doctype, docTypeDetails in self.comm.docTypesTitles.items():
       if doctype[0] == 'x' or '/' in doctype:
         continue
       tableView = TableView(self.comm, doctype)
-      icon = 'ri.asterisk' if docTypeDetails['icon'] == '' else docTypeDetails['icon']
-      icon = self.createTabIcon(icon, iconColor, selectedIconColor)
-      label = docTypeDetails['title']
+      iconName = 'ri.asterisk' if docTypeDetails['icon'] == '' else docTypeDetails['icon']
+      icon     = self.createIcon(iconName, iconColor, selectedIconColor)
+      label    = docTypeDetails['title']
       self.tabWidget.addTab(tableView, icon, label)
+
+
+  def createIcon(self, iconName: str, color: str, selectedColor: str) -> QIcon:
+    """Create a tab icon with distinct selected and unselected render states
+
+    Args:
+      iconName (str): name of the icon to create
+      color (str): color of the icon
+      selectedColor (str): color of the icon when selected
+
+    Returns:
+      QIcon: the created icon
+    """
+    tabIcon = QIcon()
+    unselectedIcon = qtawesome.icon(iconName, color=color)
+    selectedIcon   = qtawesome.icon(iconName, color=selectedColor)
+    for mode in (QIcon.Mode.Normal, QIcon.Mode.Active, QIcon.Mode.Selected):
+      tabIcon.addPixmap(unselectedIcon.pixmap(QSize(64, 64), mode), mode, QIcon.State.Off)
+      tabIcon.addPixmap(selectedIcon.pixmap(QSize(64, 64), mode), mode, QIcon.State.On)
+    return tabIcon
+
+
+  @Slot()
+  def resizeDetailsSplitter(self) -> None:
+    """Set the details sidebar to the configured width after it becomes visible."""
+    detailsWidth = int(self.comm.configuration['GUI']['detailsWidth'])
+    self.splitter.setSizes([self.splitter.width() - detailsWidth, detailsWidth])
 
 
   @Slot(str, str)
   def onChangeProject(self, docID: str, projectID: str) -> None:
-    """
-    What happens when the currently chosen project is changed.
+    """What happens when the currently chosen project is changed
+
     Args:
       docID: from Signal: Which doc should be shown.
       projectID: from Signal: Which Project it was changed to.
     """
-    # When changing a Project, the Project-View should be shown.
     self.tabWidget.setCurrentIndex(0)
 
 
   @Slot(int)
   def onTabChanged(self, index: int) -> None:
-    """
+    """What happens when tab is changed -> new table
 
     Args:
       index: index of the now active tab after change.

@@ -10,10 +10,17 @@ from pasta_eln.ui.gui_style import Label
 
 
 class ProjectCard(QFrame):
-  """ Widget for displaying a project in the ProjectSidebar"""
+  """Widget for displaying a project in the ProjectSidebar"""
   clicked = Signal()
 
   def __init__(self, comm: Communicate, project: pd.Series[Any]) -> None:
+    """
+    Create a new project card
+
+    Args:
+      comm (Communicate): The communication object
+      project (pd.Series[Any]): The project data
+    """
     super().__init__()
     self.comm = comm
     self.project = project
@@ -50,24 +57,27 @@ class ProjectCard(QFrame):
     self.setStyleSheet(self.defaultCSS)
 
     # Layout
-    self.mainLayout = QVBoxLayout()
-    self.mainLayout.addWidget(self.titleLabel)
-    self.mainLayout.addWidget(self.infoLabel)
-    # self.mainLayout.setContentsMargins(0,0,0,0)
-    # self.mainLayout.setSpacing(0)
-    self.setLayout(self.mainLayout)
+    self.mainL = QVBoxLayout()
+    self.mainL.addWidget(self.titleLabel)
+    self.mainL.addWidget(self.infoLabel)
+    self.setLayout(self.mainL)
 
     # Signals
     self.clicked.connect(self.onClick)
 
+
   @override
   def mousePressEvent(self, event: QMouseEvent) -> None:
     """
-    Override Event to simulate click and Position of potential drag start.
+    Override Event to simulate click and Position of potential drag start
+
+    Args:
+      event (QMouseEvent): The mouse press event
     """
     if event.button() == Qt.MouseButton.LeftButton:
       self.clicked.emit()
     super().mousePressEvent(event)
+
 
   def onClick(self) -> None:
     """
@@ -76,12 +86,14 @@ class ProjectCard(QFrame):
     self.comm.projectID = self.project['id']
     self.comm.changeProject.emit(self.project['id'], '')
 
+
   def highlight(self) -> None:
     """
     Updates the Style of this Item to highlight it
     """
     self.setProperty('highlight', True)
     self.setStyleSheet(self.defaultCSS)
+
 
   def lowlight(self) -> None:
     """

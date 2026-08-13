@@ -100,13 +100,13 @@ class IconButton(QPushButton):
 
 class Action(QAction):
   """ QAction and assign function to menu"""
-  def __init__(self, label:str, widget:QWidget, command:list[Any],
+  def __init__(self, label:str, widget:QWidget, command:Any,
                menu:QMenu, shortcut:str | None=None, icon:str=''):
     """
     Args:
       label (str): label printed on submenu
       widget (QWidget): widget / dialog that host the button and that has the execute function
-      command (enum): command that is used in called-function: possibly a list of multiple terms
+      command: value forwarded to the host widget's ``execute`` method
       menu (QMenu): button to be added to this menu
       shortcut (str): shortcut (e.g. Ctrl+K)
       icon (str): icon name

@@ -6,19 +6,20 @@ from typing import Any
 from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot
 from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayout
 from ...backend_worker.worker import Task
 from ...fixed_strings_json import DO_NOT_RENDER
 from ...misc_tools import callAddOn
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import createDirName
 from ..gui_communicate import Communicate
-from ..gui_style import Action, Label, TextButton, widgetAndLayout
+from ..gui_style import Action, Label, widgetAndLayout
 from ..message_dialog import showMessage
+from ..widget import Button, ButtonStyle, Widget
 from .project_tree_view import TreeView
 
 
-class Project(QWidget):
+class Project(Widget):
   """ Widget that shows the content of project in a electronic labnotebook """
   def __init__(self, comm:Communicate):
     super().__init__()
@@ -39,10 +40,10 @@ class Project(QWidget):
     self.actHideDetail                     = QAction()
     self.actionFoldAll                     = QAction()
     self.showDetailsAll                    = False
-    self.btnAddSubfolder:TextButton | None = None
-    self.btnEditProject:TextButton | None  = None
-    self.btnMore:TextButton | None         = None
-    self.btnVisibility:TextButton | None   = None
+    self.btnAddSubfolder:Button | None     = None
+    self.btnEditProject: Button | None     = None
+    self.btnMore:        Button | None     = None
+    self.btnVisibility:  Button | None     = None
     self.lineSep = 20
     self.metaRole = Qt.ItemDataRole.UserRole + 1
 
@@ -72,84 +73,6 @@ class Project(QWidget):
     self.docIDHighlight = docID
     self.projID = projID
     self.comm.uiRequestHierarchy.emit(projID, self.showAll)
-
-
-  def projHeader(self) -> None:
-    """
-    Initialize / Create header of page
-    """
-    if not self.docProj:
-      return
-    # TOP LINE includes name on left, buttons on right
-    _, topLineL       = widgetAndLayout('H',self.mainL,'m')
-    hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
-                       if [b for b in self.docProj['branch'] if False in b['show']] else \
-                       ('', 'Mark project as hidden')
-    topLineL.addWidget(Label(self.docProj['name']+hidden, 'h2'))
-    showStatus = '(Show all items)' if self.showAll else '(Hide hidden items)'
-    topLineL.addWidget(QLabel(showStatus))
-    topLineL.addStretch(1)
-    # buttons in top line
-    self.btnAddSubfolder = TextButton('Add subfolder', self, [Command.ADD_CHILD], topLineL)
-    self.btnEditProject =  TextButton('Edit project',  self, [Command.EDIT],      topLineL)
-    self.btnVisibility = TextButton(  'Visibility',    self, [],                  topLineL)
-    visibilityMenu = QMenu(self)
-    self.actHideDetail = Action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
-    menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
-    minimizeItems = 'Show all item details' if self.showDetailsAll else 'Hide all item details'
-    Action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
-    Action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
-    self.actionFoldAll     = Action( minimizeItems,    self, [Command.SHOW_DETAILS],     visibilityMenu)
-    self.btnVisibility.setMenu(visibilityMenu)
-    self.btnMore = TextButton('More',           self, [], topLineL)
-    moreMenu = QMenu(self)
-    Action('Scan',                      self, [Command.SCAN], moreMenu)
-    for docType, value in self.comm.docTypesTitles.items():
-      if docType[0]!='x':
-        icon = 'fa5s.asterisk' if value['icon']=='' else value['icon']
-        Action(f'list of {value["title"].lower()}',   self, [Command.SHOW_TABLE, docType], moreMenu, icon=icon)
-    Action('list of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
-    moreMenu.addSeparator()
-    projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
-    if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
-      for label, description in sorted(projectAddOns.items(), key=lambda item: item[1].casefold()):
-        Action(description, self, [Command.ADD_ON, label], moreMenu)
-      moreMenu.addSeparator()
-    Action('Delete project',            self, [Command.DELETE], moreMenu)
-    self.btnMore.setMenu(moreMenu)
-
-    # Details section
-    # self.infoW = QScrollArea()
-    # self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    # self.infoW.setWidgetResizable(True)
-    self.allDetails = QTextEdit(self)
-    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, self.comm.dataHierarchyNodes['x0'],
-                                             self))
-    if not self.docProj['gui'][0]:
-      self.allDetails.hide()
-      self.actHideDetail.setText('Show project details')
-    self.allDetails.resizeEvent = self.commentResize                                            # type: ignore
-    bgColor = self.comm.palette.get('secondaryDark', 'background-color')
-    fgColor = self.comm.palette.get('secondaryText', 'color')
-    #TODO: Debug/solve on windows: For none: no color is set, as it should; but then the Windows10 color is white not the default background
-    self.allDetails.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
-    self.allDetails.setReadOnly(True)
-    self.mainL.addWidget(self.allDetails)
-    self.commentResize(None)
-    return
-
-
-  def commentResize(self, _:Any) -> None:
-    """ called if comment is resized because widget initially/finally knows its size
-    - comment widget is hard coded size it depends on the rendered size
-    """
-    if self.allDetails is None:
-      return
-    self.allDetails.document().setTextWidth(self.width()-20)
-    height = int(self.allDetails.document().size().toTuple()[1])
-    self.allDetails.setMaximumHeight(height+12)
-    self.allDetails.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    return
 
 
   def paint(self) -> None:
@@ -199,6 +122,155 @@ class Project(QWidget):
     return
 
 
+  def projHeader(self) -> None:
+    """
+    Paint header of page
+    """
+    if not self.docProj:
+      return
+    # TOP LINE includes name on left, buttons on right
+    _, topLineL       = widgetAndLayout('H',self.mainL,'m')
+    hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
+                       if [b for b in self.docProj['branch'] if False in b['show']] else \
+                       ('', 'Mark project as hidden')
+    topLineL.addWidget(Label(self.docProj['name']+hidden, 'h2'))
+    showStatus = '(Show all items)' if self.showAll else '(Hide hidden items)'
+    topLineL.addWidget(QLabel(showStatus))
+    topLineL.addStretch(1)
+    # buttons in top line
+    self.btnAddSubfolder = Button('Add subfolder', self, Command.ADD_CHILD, topLineL,
+                                  icon='ri.folder-add-line')
+    self.btnEditProject = Button('Edit project', self, Command.EDIT, topLineL,
+                                 icon='ri.edit-2-fill', style=ButtonStyle.HIGHLIGHTED)
+    self.btnVisibility = Button('Visibility', self, layout=topLineL,
+                                icon='ri.eye-line', style=ButtonStyle.PRIMARY)
+    visibilityMenu = QMenu(self)
+    self.actHideDetail = Action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
+    menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
+    minimizeItems = 'Show all item details' if self.showDetailsAll else 'Hide all item details'
+    Action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
+    Action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
+    self.actionFoldAll     = Action( minimizeItems,    self, [Command.SHOW_DETAILS],     visibilityMenu)
+    self.btnVisibility.setMenu(visibilityMenu)
+    self.btnMore = Button('More', self, layout=topLineL,
+                          icon='ri.more-fill', style=ButtonStyle.PRIMARY)
+    moreMenu = QMenu(self)
+    Action('Scan',                      self, [Command.SCAN], moreMenu)
+    for docType, value in self.comm.docTypesTitles.items():
+      if docType[0]!='x':
+        icon = 'fa5s.asterisk' if value['icon']=='' else value['icon']
+        Action(f'list of {value["title"].lower()}',   self, [Command.SHOW_TABLE, docType], moreMenu, icon=icon)
+    Action('list of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
+    moreMenu.addSeparator()
+    projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
+    if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
+      for label, description in sorted(projectAddOns.items(), key=lambda item: item[1].casefold()):
+        Action(description, self, [Command.ADD_ON, label], moreMenu)
+      moreMenu.addSeparator()
+    Action('Delete project',            self, [Command.DELETE], moreMenu)
+    self.btnMore.setMenu(moreMenu)
+
+    # Details section
+    # self.infoW = QScrollArea()
+    # self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    # self.infoW.setWidgetResizable(True)
+    self.allDetails = QTextEdit(self)
+    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, self.comm.dataHierarchyNodes['x0'],
+                                             self))
+    if not self.docProj['gui'][0]:
+      self.allDetails.hide()
+      self.actHideDetail.setText('Show project details')
+    self.allDetails.resizeEvent = self.commentResize                                            # type: ignore
+    bgColor = self.comm.palette.get('secondaryDark', 'background-color')
+    fgColor = self.comm.palette.get('secondaryText', 'color')
+    #TODO: Debug/solve on windows: For none: no color is set, as it should; but then the Windows10 color is white not the default background
+    self.allDetails.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
+    self.allDetails.setReadOnly(True)
+    self.mainL.addWidget(self.allDetails)
+    self.commentResize(None)
+    return
+
+
+  def execute(self, command: Command | list[Any]) -> None:
+    """
+    Event if user clicks button in the center
+
+    Args:
+      command: command emitted by a button or legacy menu action
+    """
+    commandType = command if isinstance(command, Command) else command[0]
+    payload = [] if isinstance(command, Command) else command[1:]
+    if commandType is Command.EDIT:
+      self.comm.formDoc.emit({'id':self.docProj['id']})
+      self.change(self.projID,'')
+      #collect information and then change
+      oldPath = self.comm.basePath/self.docProj['branch'][0]['path']
+      if oldPath.is_dir():
+        newPath = self.comm.basePath/createDirName(self.docProj, 0, self.comm.basePath)
+        if oldPath != newPath:
+          oldPath.rename(newPath)
+      self.comm.changeSidebar.emit('redraw')
+    elif commandType is Command.DELETE:
+      ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?', \
+                                 QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                 QMessageBox.StandardButton.No)
+      if ret==QMessageBox.StandardButton.Yes:
+        self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':self.projID, 'stack':self.projID})
+        #update sidebar, show projects
+        self.comm.changeTable.emit('x0','')
+    elif commandType is Command.SCAN:
+      self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.projID})
+      self.comm.changeProject.emit(self.projID,'')
+    elif commandType is Command.SHOW_PROJ_DETAILS:
+      self.docProj['gui'][0] = not self.docProj['gui'][0]
+      self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':self.projID, 'gui':self.docProj['gui']})
+      if self.allDetails is not None and self.allDetails.isHidden():
+        self.allDetails.show()
+        self.actHideDetail.setText('Hide project details')
+      elif self.allDetails is not None:
+        self.allDetails.hide()
+        self.actHideDetail.setText('Show project details')
+    elif commandType is Command.HIDE:
+      self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':self.projID})
+      self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
+      self.comm.changeSidebar.emit('')
+    elif commandType is Command.SHOW_DETAILS and self.tree is not None:
+      def recursiveRowIteration(index:QModelIndex) -> None:
+        for subRow in range(self.tree.model().rowCount(index)):                     # type: ignore[union-attr]
+          subIndex = self.tree.model().index(subRow,0, index)                       # type: ignore[union-attr]
+          subItem  = self.tree.model().itemFromIndex(subIndex)                      # type: ignore[union-attr]
+          meta = subItem.data(self.metaRole)
+          if not isinstance(meta, dict):
+            continue
+          docID    = meta['hierStack'].split('/')[-1]
+          gui      = meta['gui']
+          gui[0]   = self.showDetailsAll
+          subItem.setData({ **meta, **{'gui':gui}}, self.metaRole)
+          self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
+          recursiveRowIteration(subIndex)
+      recursiveRowIteration(self.tree.model().index(-1,0))
+      self.showDetailsAll = not self.showDetailsAll
+      if self.showDetailsAll:
+        self.actionFoldAll.setText('Show all item details')
+      else:
+        self.actionFoldAll.setText('Hide all item details')
+    elif commandType is Command.HIDE_SHOW_ITEMS:
+      self.showAll = not self.showAll
+      self.change('','')
+    elif commandType is Command.ADD_CHILD:
+      self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':[self.projID], 'docType':'x1', 'doc':{'name':'new item'}})
+      self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
+
+    elif commandType is Command.SHOW_TABLE:
+      self.comm.changeTable.emit(payload[0], self.projID)
+    elif commandType is Command.ADD_ON:
+      callAddOn(payload[0], self.comm, self.projID, self)
+      self.comm.uiRequestTask.emit(Task.TUTORIAL, {'doc':{'task':'callAddOnInProject'}})
+    else:
+      logging.error('Project menu unknown: %s',command, exc_info=True)
+    return
+
+
   def _clearProjectWidgets(self) -> None:
     """Disconnect and delete old project widgets on the GUI thread."""
     if self.tree is not None:
@@ -223,6 +295,19 @@ class Project(QWidget):
     self.tree = None
     self.model = None
     self.allDetails = None
+
+
+  def commentResize(self, _:Any) -> None:
+    """ called if comment is resized because widget initially/finally knows its size
+    - comment widget is hard coded size it depends on the rendered size
+    """
+    if self.allDetails is None:
+      return
+    self.allDetails.document().setTextWidth(self.width()-20)
+    height = int(self.allDetails.document().size().toTuple()[1])
+    self.allDetails.setMaximumHeight(height+12)
+    self.allDetails.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    return
 
 
   @Slot(QModelIndex)
@@ -271,84 +356,6 @@ class Project(QWidget):
     docID = meta['hierStack'].split('/')[-1]
     self.model.itemFromIndex(index).setData({ **meta, **{'gui':gui}}, self.metaRole)
     self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
-    return
-
-
-  def execute(self, command:list[Any]) -> None:
-    """
-    Event if user clicks button in the center
-
-    Args:
-      command (list): list of commands
-    """
-    if command[0] is Command.EDIT:
-      self.comm.formDoc.emit({'id':self.docProj['id']})
-      self.change(self.projID,'')
-      #collect information and then change
-      oldPath = self.comm.basePath/self.docProj['branch'][0]['path']
-      if oldPath.is_dir():
-        newPath = self.comm.basePath/createDirName(self.docProj, 0, self.comm.basePath)
-        if oldPath != newPath:
-          oldPath.rename(newPath)
-      self.comm.changeSidebar.emit('redraw')
-    elif command[0] is Command.DELETE:
-      ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?', \
-                                 QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
-                                 QMessageBox.StandardButton.No)
-      if ret==QMessageBox.StandardButton.Yes:
-        self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':self.projID, 'stack':self.projID})
-        #update sidebar, show projects
-        self.comm.changeTable.emit('x0','')
-    elif command[0] is Command.SCAN:
-      self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.projID})
-      self.comm.changeProject.emit(self.projID,'')
-    elif command[0] is Command.SHOW_PROJ_DETAILS:
-      self.docProj['gui'][0] = not self.docProj['gui'][0]
-      self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':self.projID, 'gui':self.docProj['gui']})
-      if self.allDetails is not None and self.allDetails.isHidden():
-        self.allDetails.show()
-        self.actHideDetail.setText('Hide project details')
-      elif self.allDetails is not None:
-        self.allDetails.hide()
-        self.actHideDetail.setText('Show project details')
-    elif command[0] is Command.HIDE:
-      self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':self.projID})
-      self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
-      self.comm.changeSidebar.emit('')
-    elif command[0] is Command.SHOW_DETAILS and self.tree is not None:
-      def recursiveRowIteration(index:QModelIndex) -> None:
-        for subRow in range(self.tree.model().rowCount(index)):                     # type: ignore[union-attr]
-          subIndex = self.tree.model().index(subRow,0, index)                       # type: ignore[union-attr]
-          subItem  = self.tree.model().itemFromIndex(subIndex)                      # type: ignore[union-attr]
-          meta = subItem.data(self.metaRole)
-          if not isinstance(meta, dict):
-            continue
-          docID    = meta['hierStack'].split('/')[-1]
-          gui      = meta['gui']
-          gui[0]   = self.showDetailsAll
-          subItem.setData({ **meta, **{'gui':gui}}, self.metaRole)
-          self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
-          recursiveRowIteration(subIndex)
-      recursiveRowIteration(self.tree.model().index(-1,0))
-      self.showDetailsAll = not self.showDetailsAll
-      if self.showDetailsAll:
-        self.actionFoldAll.setText('Show all item details')
-      else:
-        self.actionFoldAll.setText('Hide all item details')
-    elif command[0] is Command.HIDE_SHOW_ITEMS:
-      self.showAll = not self.showAll
-      self.change('','')
-    elif command[0] is Command.ADD_CHILD:
-      self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':[self.projID], 'docType':'x1', 'doc':{'name':'new item'}})
-      self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
-
-    elif command[0] is Command.SHOW_TABLE:
-      self.comm.changeTable.emit(command[1], self.projID)
-    elif command[0] is Command.ADD_ON:
-      callAddOn(command[1], self.comm, self.projID, self)
-      self.comm.uiRequestTask.emit(Task.TUTORIAL, {'doc':{'task':'callAddOnInProject'}})
-    else:
-      logging.error('Project menu unknown: %s',command, exc_info=True)
     return
 
 
@@ -418,10 +425,10 @@ class Project(QWidget):
 
 class Command(Enum):
   """ Commands used in this file """
-  EDIT   = 1
-  DELETE = 2
-  SCAN   = 3
-  HIDE   = 4
+  EDIT              = 1
+  DELETE            = 2
+  SCAN              = 3
+  HIDE              = 4
   SHOW_PROJ_DETAILS = 5
   HIDE_SHOW_ITEMS   = 6
   SHOW_DETAILS      = 7
