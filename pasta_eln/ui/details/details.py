@@ -10,7 +10,7 @@ from pasta_eln.misc_tools import clearLayout, makeStringWrappable
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Label, ResizeImage
 from pasta_eln.ui.details.details_hier_item import DetailsHierItem
-from pasta_eln.ui.widget import Button, ButtonStyle, Widget
+from pasta_eln.ui.widget import SPACE, Button, ButtonStyle, Widget
 
 
 class Details(Widget):
@@ -78,7 +78,7 @@ class Details(Widget):
 
     # Main Layout
     self.mainLayout = QVBoxLayout()
-    self.mainLayout.setContentsMargins(0, 0, 0, 0)
+    self.mainLayout.setContentsMargins(SPACE.M, 0, 0, 0)
     self.mainLayout.addWidget(self.headerW)
     self.mainLayout.addWidget(self.splitter, stretch=0)
     self.setLayout(self.mainLayout)

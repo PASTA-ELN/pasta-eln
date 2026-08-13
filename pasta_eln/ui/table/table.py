@@ -8,7 +8,7 @@ from pasta_eln.misc_tools import isDocID
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Action
 from pasta_eln.ui.table.pandas_table_model import PandasTableModel
-from pasta_eln.ui.widget import Button, ButtonStyle, Widget
+from pasta_eln.ui.widget import SPACE, Button, ButtonStyle, Widget
 from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
 
 
@@ -56,7 +56,7 @@ class TableView(Widget):
     self.moreMenu = QMenu(self)
     self.moreButton.setMenu(self.moreMenu)
     Action('Test1', self, Command.TEST, self.moreMenu)
-    self.buttonbarL.setContentsMargins(0, 10, 0, 10)
+    self.buttonbarL.setContentsMargins(SPACE.M, 10, SPACE.M, 10)
     self.buttonbarW.setLayout(self.buttonbarL)
 
     # Table
@@ -71,12 +71,18 @@ class TableView(Widget):
     self.table.setSortingEnabled(True)
     self.table.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
 
+    # Table container: preserve the toolbar alignment while giving the table breathing room.
+    self.tableW = QWidget()
+    self.tableL = QVBoxLayout(self.tableW)
+    self.tableL.setContentsMargins(SPACE.M, 0, SPACE.M, 0)
+    self.tableL.addWidget(self.table)
+
     # Layout
     self.mainLayout = QVBoxLayout()
     self.mainLayout.setContentsMargins(0, 0, 0, 0)
-    self.mainLayout.setSpacing(0)
+    self.mainLayout.setSpacing(SPACE.S)
     self.mainLayout.addWidget(self.buttonbarW)
-    self.mainLayout.addWidget(self.table)
+    self.mainLayout.addWidget(self.tableW)
     self.setLayout(self.mainLayout)
 
     # Style
