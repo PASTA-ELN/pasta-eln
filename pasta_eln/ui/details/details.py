@@ -27,6 +27,7 @@ class Details(Widget):
     self.comm = comm
     self.docID = ''
     self.data: dict[str, Any] = {'content': ''}
+    self.contentText: QTextEdit | None = None
 
     ### HEADER WIDGETS
     self.titleLabel = Label('', 'h1')
@@ -111,6 +112,7 @@ class Details(Widget):
 
     # BODY
     # clear old items
+    self.contentText = None
     clearLayout(self.contentPreviewL)
     clearLayout(self.bodyL)
     self.contentPreviewW.hide()
@@ -127,12 +129,12 @@ class Details(Widget):
         ResizeImage(self.data['image'], self.contentPreviewL)
         self.contentPreviewW.show()
       elif key == 'content':
-        contentText = QTextEdit()
-        contentText.setMarkdown(self.data['content'])
-        contentText.setReadOnly(True)
-        self.contentPreviewL.addWidget(contentText)
+        self.contentText = QTextEdit()
+        self.contentText.setMarkdown(self.data['content'])
+        self.contentText.setReadOnly(True)
+        self.contentPreviewL.addWidget(self.contentText)
         self.contentPreviewW.show()
-        size = min([int(contentText.document().size().height()), self.splitter.size().height() // 2])
+        size = min([int(self.contentText.document().size().height()), self.splitter.size().height() // 2])
         self.splitter.setSizes([size, self.splitter.size().height() - size])
       elif key == 'metaVendor':
         vendorItem.addContent('metaVendor', self.data['metaVendor'])

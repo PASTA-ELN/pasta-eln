@@ -102,9 +102,9 @@ class Shortcut(QShortcut):
     """Create a new shortcut
 
     Args:
-      key (str): The key combination for the shortcut
-      parent (QWidget): The widget that the shortcut belongs to
-      function (Callable[[], None]): The function to call when the shortcut is triggered
+      key (str): key combination for the shortcut, using key.parseKeyBinding
+      parent (QWidget): widget that the shortcut belongs to
+      function (Callable[[], None]): function to call when the shortcut is triggered
     """
     super().__init__(key, parent)
     self.activated.connect(function)
