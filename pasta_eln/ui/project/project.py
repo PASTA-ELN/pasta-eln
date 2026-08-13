@@ -6,7 +6,7 @@ from typing import Any
 from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot
 from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QLabel, QMenu, QMessageBox, QTextEdit, QVBoxLayout
+from PySide6.QtWidgets import QLabel, QMenu, QTextEdit, QVBoxLayout
 from ...backend_worker.worker import Task
 from ...fixed_strings_json import DO_NOT_RENDER
 from ...misc_tools import callAddOn
@@ -156,18 +156,10 @@ class Project(Widget):
                           icon='ri.more-fill', style=ButtonStyle.PRIMARY)
     moreMenu = QMenu(self)
     Action('Scan',                      self, [Command.SCAN], moreMenu)
-    for docType, value in self.comm.docTypesTitles.items():
-      if docType[0]!='x':
-        icon = 'fa5s.asterisk' if value['icon']=='' else value['icon']
-        Action(f'list of {value["title"].lower()}',   self, [Command.SHOW_TABLE, docType], moreMenu, icon=icon)
-    Action('list of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
-    moreMenu.addSeparator()
     projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
       for label, description in sorted(projectAddOns.items(), key=lambda item: item[1].casefold()):
         Action(description, self, [Command.ADD_ON, label], moreMenu)
-      moreMenu.addSeparator()
-    Action('Delete project',            self, [Command.DELETE], moreMenu)
     self.btnMore.setMenu(moreMenu)
 
     # Details section
@@ -210,14 +202,6 @@ class Project(Widget):
         if oldPath != newPath:
           oldPath.rename(newPath)
       self.comm.changeSidebar.emit('redraw')
-    elif commandType is Command.DELETE:
-      ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?', \
-                                 QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
-                                 QMessageBox.StandardButton.No)
-      if ret==QMessageBox.StandardButton.Yes:
-        self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':self.projID, 'stack':self.projID})
-        #update sidebar, show projects
-        self.comm.changeTable.emit('x0','')
     elif commandType is Command.SCAN:
       self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.projID})
       self.comm.changeProject.emit(self.projID,'')
@@ -261,8 +245,6 @@ class Project(Widget):
       self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':[self.projID], 'docType':'x1', 'doc':{'name':'new item'}})
       self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
 
-    elif commandType is Command.SHOW_TABLE:
-      self.comm.changeTable.emit(payload[0], self.projID)
     elif commandType is Command.ADD_ON:
       callAddOn(payload[0], self.comm, self.projID, self)
       self.comm.uiRequestTask.emit(Task.TUTORIAL, {'doc':{'task':'callAddOnInProject'}})
@@ -426,12 +408,10 @@ class Project(Widget):
 class Command(Enum):
   """ Commands used in this file """
   EDIT              = 1
-  DELETE            = 2
   SCAN              = 3
   HIDE              = 4
   SHOW_PROJ_DETAILS = 5
   HIDE_SHOW_ITEMS   = 6
   SHOW_DETAILS      = 7
   ADD_CHILD         = 8
-  SHOW_TABLE        = 9
   ADD_ON            = 10

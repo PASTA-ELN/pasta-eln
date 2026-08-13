@@ -179,10 +179,12 @@ class Details(Widget):
                           if recipe.startswith(documentTypes[0])}
     for recipe, label in extractorChoices.items():
       Action(label, self, [Command.RERUN_EXTRACTOR, recipe], extractionMenu)
-    if not extractorChoices:
-      extractionMenu.setEnabled(False)
+    if self.sourcePath() is not None:
+      Action('Test extraction', self, Command.TEST_EXTRACTION, extractionMenu)
     if bool(extractorChoices) and 'image' in self.data and self.sourcePath() is not None:
       Action('Save extracted image', self, Command.SAVE_EXTRACTED_IMAGE, extractionMenu)
+    if not extractorChoices and self.sourcePath() is None:
+      extractionMenu.setEnabled(False)
     self.moreMenu.addSeparator()
     Action('Hide item', self, Command.HIDE_ITEM, self.moreMenu)
     Action('Close details', self, Command.HIDE_DETAILS, self.moreMenu)
@@ -201,6 +203,11 @@ class Details(Widget):
         self.comm.changeProject.emit(stack[0], self.docID)
     elif commandType is Command.RERUN_EXTRACTOR:
       self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs': [self.docID], 'recipe': payload[0]})
+    elif commandType is Command.TEST_EXTRACTION:
+      sourcePath = self.sourcePath()
+      if sourcePath is not None:
+        self.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST, {
+            'fileName': str(sourcePath), 'style': 'html', 'recipe': '', 'saveFig': ''})
     elif commandType is Command.SAVE_EXTRACTED_IMAGE:
       sourcePath = self.sourcePath()
       if sourcePath is None:
@@ -268,7 +275,8 @@ class Command(Enum):
   EDIT                 = 1
   OPEN_PROJECT         = 2
   RERUN_EXTRACTOR      = 3
-  SAVE_EXTRACTED_IMAGE = 4
-  OPEN_FOLDER          = 5
-  HIDE_ITEM            = 6
-  HIDE_DETAILS         = 7
+  TEST_EXTRACTION      = 4
+  SAVE_EXTRACTED_IMAGE = 5
+  OPEN_FOLDER          = 6
+  HIDE_ITEM            = 7
+  HIDE_DETAILS         = 8

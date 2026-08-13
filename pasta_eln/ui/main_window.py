@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QEvent, Qt, QTimer, QUrl, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QPixmap
-from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QMainWindow, QSplitter, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QMainWindow, QMessageBox, QSplitter, QVBoxLayout
 from pasta_eln import __version__
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.fixed_strings_json import aboutMessage, confFileName, shortcuts
@@ -27,7 +27,6 @@ from pasta_eln.ui.tutorials.manager import TutorialManager
 from pasta_eln.ui.tutorials.tutorial_panel import TutorialPanel
 from pasta_eln.ui.body.body import Body
 from pasta_eln.ui.sidebar.sidebar import ProjectSidebar
-from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
 from pasta_eln.ui.widget import Shortcut
 
 
@@ -75,9 +74,15 @@ class MainWindow(QMainWindow):
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
     menu = self.menuBar()
     projectMenu = menu.addMenu('&Project')
-    Action('&Export project to .eln',   self, Command.EXPORT, projectMenu)
-    Action('&Import .eln into project', self, Command.IMPORT, projectMenu)
-    Action('&Upload to repository',     self, Command.REPOSITORY, projectMenu)
+    self.projectActions = [
+        Action('&Export project to .eln',   self, Command.EXPORT, projectMenu),
+        Action('&Import .eln into project', self, Command.IMPORT, projectMenu),
+        Action('&Upload to repository',     self, Command.REPOSITORY, projectMenu),
+    ]
+    projectMenu.addSeparator()
+    self.projectActions.append(Action('&Delete current project...', self, Command.DELETE_PROJECT, projectMenu))
+    projectMenu.aboutToShow.connect(self.paintProjectActions)
+    projectMenu.addSeparator()
     Action('&Exit',                     self, Command.EXIT, projectMenu)
 
     self.viewMenu = menu.addMenu('Common &Lists')
@@ -91,23 +96,23 @@ class MainWindow(QMainWindow):
       Action('Get all',                 self, Command.SYNC_GET_ALL, syncMenu)
       Action('Get',                     self, Command.SYNC_GET, syncMenu, shortcut='F4')
       Action('Smart sync',              self, Command.SYNC_SMART, syncMenu)
-    Action('&Item type editor',         self, Command.SCHEMA, systemMenu, shortcut='F8')
-    Action('&Definitions editor',       self, Command.DEFINITIONS, systemMenu)
-    Action('Workplan Creator',          self, Command.WORKPLANCREATOR, systemMenu)
-    systemMenu.addSeparator()
-    Action('&Test extraction from a file',   self, Command.TEST1, systemMenu)
-    Action('Test &selected item extraction', self, Command.TEST2, systemMenu, shortcut='F2')
-    Action('Update &Add-on list',       self, Command.UPDATE, systemMenu)
-    if 'develop' in self.comm.configuration:
-      systemMenu.addSeparator()
-      Action('&Verify database',        self, Command.CHECK_DB, systemMenu, shortcut='Ctrl+?')
+    configureMenu = systemMenu.addMenu('&Configure')
+    Action('&Item type editor',         self, Command.SCHEMA, configureMenu, shortcut='F8')
+    Action('&Definitions editor',       self, Command.DEFINITIONS, configureMenu)
+    addOnsMenu = systemMenu.addMenu('&Add-ons')
+    Action('Test extraction from a file', self, Command.TEST1, addOnsMenu)
+    Action('Update add-on list',          self, Command.UPDATE, addOnsMenu)
 
     helpMenu = menu.addMenu('&Other')
     Action('&Website',                  self, Command.WEBSITE, helpMenu)
     Action('Shortcuts',                 self, Command.SHORTCUTS, helpMenu)
     Action('About',                     self, Command.ABOUT, helpMenu)
-    systemMenu.addSeparator()
+    helpMenu.addSeparator()
     Action('&Configuration',            self, Command.CONFIG, helpMenu, shortcut='Ctrl+0')
+    developerMenu = helpMenu.addMenu('&Developer tools')
+    Action('Verify database',           self, Command.CHECK_DB, developerMenu, shortcut='Ctrl+?')
+    Action('Restart application',       self, Command.RESTART, developerMenu, shortcut='F9')
+    Action('Capture window screenshot', self, Command.SCREENSHOT, developerMenu, shortcut='F12')
 
     # shortcuts for advanced usage (user should not need)
     self.restartShortcut = Shortcut('F9',             self, lambda: self.execute(Command.RESTART))
@@ -149,6 +154,12 @@ class MainWindow(QMainWindow):
     return
 
 
+  def paintProjectActions(self) -> None:
+    """Enable project-scoped menu actions only when a project is open."""
+    for action in self.projectActions:
+      action.setEnabled(bool(self.comm.projectID))
+
+
   def closeEvent(self, event: QEvent) -> None:
     """
     Handle window close event - cleanup of backend thread
@@ -183,29 +194,32 @@ class MainWindow(QMainWindow):
     # file menu
     commandType = command if isinstance(command, Command) else command[0]
     payload = [] if isinstance(command, Command) else command[1:]
+    projectCommands = (Command.EXPORT, Command.IMPORT, Command.REPOSITORY, Command.DELETE_PROJECT)
+    if commandType in projectCommands and not self.comm.projectID:
+      logging.critical('Open a project before using this action.')
+      return
     if commandType is Command.EXPORT:
-      if self.comm.projectID == '':
-        showMessage(self, 'Error', 'You have to open a project to export', 'Critical')
-        return
       fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
         docTypes = [i for i in self.comm.docTypesTitles if i[0] != 'x']
         self.comm.uiRequestTask.emit(Task.EXPORT_ELN,
                                      {'fileName': fileName, 'projID': self.comm.projectID, 'docTypes': docTypes})
     elif commandType is Command.IMPORT:
-      if self.comm.projectID == '':
-        showMessage(self, 'Error', 'You have to open a project to import', 'Critical')
-        return
       fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
         self.comm.uiRequestTask.emit(Task.IMPORT_ELN, {'fileName': fileName, 'projID': self.comm.projectID})
         self.comm.changeProject.emit(self.comm.projectID, '')
     elif commandType is Command.REPOSITORY:
-      if self.comm.projectID == '':
-        showMessage(self, 'Error', 'You have to open a project to upload', 'Critical')
-        return
       dialogR = UploadGUI(self.comm)
       dialogR.exec()
+    elif commandType is Command.DELETE_PROJECT:
+      confirmation = QMessageBox.critical(self, 'Critical', 'Do you want to delete the current project?',
+          QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  QMessageBox.StandardButton.No)
+      if confirmation == QMessageBox.StandardButton.Yes:
+        self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID': self.comm.projectID, 'stack': self.comm.projectID})
+        self.comm.changeTable.emit('x0', '')
+        self.comm.changeSidebar.emit('redraw')
+        self.comm.changeDetails.emit('')
     elif commandType is Command.EXIT:
       self.close()
     # view menu
@@ -241,8 +255,6 @@ class MainWindow(QMainWindow):
       if fileName is not None:
         self.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST,
                                      {'fileName': fileName, 'style': 'html', 'recipe': '', 'saveFig': ''})
-    elif commandType is Command.TEST2:
-      self.comm.testExtractor.emit()
     elif commandType is Command.UPDATE:
       configProjecGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
       installPythonPackages(configProjecGroup['addOnDir'])
@@ -263,9 +275,6 @@ class MainWindow(QMainWindow):
       showMessage(self, 'Keyboard shortcuts', shortcuts, 'Information')
     elif commandType is Command.ABOUT:
       showMessage(self, 'About', f'{aboutMessage}Environment: {sys.prefix}\n', 'Information')
-    elif commandType is Command.WORKPLANCREATOR:
-      workplanCreatorDialog = WorkplanCreatorDialog(self.comm)
-      workplanCreatorDialog.exec()
     elif commandType is Command.RESTART:
       hardRestart()
     elif commandType is Command.SCREENSHOT:
@@ -315,7 +324,6 @@ class Command(Enum):
   SYNC_SMART = 9
   SCHEMA = 10
   TEST1 = 11
-  TEST2 = 12
   UPDATE = 13
   CONFIG = 14
   WEBSITE = 15
@@ -326,6 +334,6 @@ class Command(Enum):
   ABOUT = 20
   DEFINITIONS = 21
   REPOSITORY = 22
-  WORKPLANCREATOR = 23
   SYNC_SEND_ALL = 24
   SYNC_GET_ALL = 25
+  DELETE_PROJECT = 26

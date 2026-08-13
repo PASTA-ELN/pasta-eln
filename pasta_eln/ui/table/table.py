@@ -50,12 +50,6 @@ class TableView(Widget):
     self.actionMenu.addSeparator()
     Action('Delete',     self, Command.DELETE,     self.actionMenu)
 
-    # More-Button
-    self.moreButton = Button('More', self, layout=self.buttonbarL, icon='ri.more-fill',
-                             style=ButtonStyle.PRIMARY)
-    self.moreMenu = QMenu(self)
-    self.moreButton.setMenu(self.moreMenu)
-    Action('Test1', self, Command.TEST, self.moreMenu)
     self.buttonbarL.setContentsMargins(SPACE.M, 10, SPACE.M, 10)
     self.buttonbarW.setLayout(self.buttonbarL)
 
@@ -157,10 +151,7 @@ class TableView(Widget):
     Args:
       command: command emitted by a button or menu action
     """
-    if command is Command.TEST:
-      print('Test')
-
-    elif command is Command.NEW_ENTRY:
+    if command is Command.NEW_ENTRY:
       if self.docType == 'workflow/workplan':
         workplanCreatorDialog = WorkplanCreatorDialog(self.comm)
         workplanCreatorDialog.exec()
@@ -301,7 +292,6 @@ def normalizeColumns(view: QTableView) -> None:
 
 class Command(Enum):
   """Commands for execute function in this file"""
-  TEST = 0
   NEW_ENTRY = 1
   GROUP_EDIT = 2
   DELETE = 3
