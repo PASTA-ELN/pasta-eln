@@ -4,9 +4,10 @@ The classes in this module deliberately keep a concise construction style  while
 the same ``execute`` interface.
 """
 from enum import Enum, auto
-from typing import Any, Final, Literal
+from typing import Any, Callable, Final, Literal
 
 import qtawesome
+from PySide6.QtGui import QShortcut
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QLayout, QPushButton, QWidget
 
@@ -93,3 +94,17 @@ class Button(QPushButton):
         color = widget.comm.palette.getThemeColor('primary', 'base')
       self.setIcon(qtawesome.icon(self.iconName, color=color))
       self.setIconSize(self.buttonIconSize)
+
+
+class Shortcut(QShortcut):
+  """Keyboard shortcut which can be added to a widget"""
+  def __init__(self, key:str, parent: QWidget, function:Callable[[], None]) -> None:
+    """Create a new shortcut
+
+    Args:
+      key (str): The key combination for the shortcut
+      parent (QWidget): The widget that the shortcut belongs to
+      function (Callable[[], None]): The function to call when the shortcut is triggered
+    """
+    super().__init__(key, parent)
+    self.activated.connect(function)
