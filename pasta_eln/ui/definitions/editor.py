@@ -6,18 +6,35 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 import qtawesome as qta
-from PySide6.QtCore import Qt, Slot
+from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, Slot
 from PySide6.QtWidgets import (QDialog, QFileDialog, QHBoxLayout, QMessageBox, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
 from ...misc_tools import callAddOn
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle
-from .key_delegate import KeyDelegate
-from .link_online_delegate import LinkOnlineDelegate
-from .lookup_delegate import LookupDelegate
+from ..icon_button_delegate import IconButtonDelegate
+from .terminology_lookup_dialog import TerminologyLookupDialog
 
 COLUMN_NAMES = ['key','label','PURL','', '']
 COLUMN_WIDTH = [200,  400,   250, 50, 50]
+
+
+def _hasOnlineLink(index: QModelIndex) -> bool:
+  """Return whether the row contains a usable online identifier."""
+  link = index.model().index(index.row(), 2).data()
+  return bool(link and 'http' in link and '://' in link)
+
+
+def _openOnlineLink(_: QAbstractItemModel, index: QModelIndex) -> None:
+  """Open the first online identifier from the selected row."""
+  import webbrowser
+  webbrowser.open(index.model().index(index.row(), 2).data().split(', ')[0])
+
+
+def _hasKeyOrLabel(index: QModelIndex) -> bool:
+  """Return whether terminology lookup has a search term."""
+  model = index.model()
+  return bool(model.index(index.row(), 0).data() or model.index(index.row(), 1).data())
 
 
 class Editor(QDialog):
@@ -50,11 +67,9 @@ class Editor(QDialog):
     self.table.setHorizontalHeaderLabels(COLUMN_NAMES)
     for idx, width in enumerate(COLUMN_WIDTH):
       self.table.setColumnWidth(idx, width)
-    self.keyDelegate = KeyDelegate()
-    self.table.setItemDelegateForColumn(0, self.keyDelegate)
-    self.linkOnlineDelegate = LinkOnlineDelegate()
+    self.linkOnlineDelegate = IconButtonDelegate('mdi.earth-arrow-right', _hasOnlineLink, _openOnlineLink)
     self.table.setItemDelegateForColumn(3, self.linkOnlineDelegate)
-    self.lookupDelegate     = LookupDelegate()
+    self.lookupDelegate = IconButtonDelegate('fa5s.search', _hasKeyOrLabel, self.openTerminologyLookup)
     self.table.setItemDelegateForColumn(4, self.lookupDelegate)
     self.table.horizontalHeader().setStretchLastSection(True)
     mainL.addWidget(self.table)
@@ -161,8 +176,22 @@ class Editor(QDialog):
       item = QTableWidgetItem(self.data.iloc[i, j])
       if j==0:
         item.setIcon(icon)
+        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
       self.table.setItem(i, j, item)
     return
+
+
+  def openTerminologyLookup(self, _: QAbstractItemModel, index: QModelIndex) -> None:
+    """Show terminology lookup and store selected identifiers in the PURL column."""
+    model = index.model()
+    key = model.index(index.row(), 0).data()
+    label = model.index(index.row(), 1).data()
+
+    def setPURL(iris: list[str]) -> None:
+      model.setData(model.index(index.row(), 2), ', '.join(iris))
+
+    self.terminologyDialog = TerminologyLookupDialog(label or key, setPURL)
+    self.terminologyDialog.show()
 
 
   def getDataframe(self) -> pd.DataFrame:

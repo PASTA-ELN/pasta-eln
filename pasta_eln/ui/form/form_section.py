@@ -1,7 +1,6 @@
 """Collapsible sections used by the document editor."""
-from PySide6.QtWidgets import QFormLayout, QVBoxLayout, QWidget
-from pasta_eln.ui.gui_style import SPACE, Button
-from .section_host import SectionHost
+from PySide6.QtWidgets import QFormLayout, QPushButton, QVBoxLayout, QWidget
+from pasta_eln.ui.gui_style import SPACE
 
 
 class FormSection(QWidget):
@@ -10,11 +9,12 @@ class FormSection(QWidget):
   def __init__(self, title: str, *, expanded: bool = True) -> None:
     super().__init__()
     self.title = title
-    self.host = SectionHost(self)
-    self.toggle = Button(f'⌄  {title}', self.host, flat=True, checkable=True)
+    self.toggle = QPushButton(f'⌄  {title}')
+    self.toggle.setFlat(True)
+    self.toggle.setCheckable(True)
     self.toggle.setChecked(expanded)
     self.toggle.setStyleSheet('text-align: left; font-weight: bold; padding: 6px 0;')
-    self.toggle.clicked.connect(self.host.toggle)
+    self.toggle.clicked.connect(lambda checked: self.setExpanded(checked))
     self.formW = QWidget()
     self.formL = QFormLayout(self.formW)
     self.formL.setContentsMargins(SPACE.M, SPACE.S, SPACE.M, SPACE.M)

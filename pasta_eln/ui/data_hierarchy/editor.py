@@ -2,25 +2,50 @@
 from enum import Enum
 import numpy as np
 import pandas as pd
-from PySide6.QtCore import Slot
+from PySide6.QtCore import QAbstractItemModel, QModelIndex, Slot
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QInputDialog, QMessageBox, QTabBar, QTableWidget,
                                QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
 from ...fixed_strings_json import defaultDataHierarchyNode
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label
+from ..icon_button_delegate import IconButtonDelegate
 from ..message_dialog import showMessage
-from .delete_column_delegate import DeleteColumnDelegate
 from .doc_type_edit import DocTypeEditor
 from .list_free_delegate import ListFreeDelegate
 from .list_item_delegate import ListItemDelegate
 from .mandatory_column_delegate import MandatoryColumnDelegate
 from .name_column_delegate import NameColumnDelegate
-from .reorder_column_delegate import ReorderColumnDelegate
 
 #                0       1            2      3           4      5         6
 COLUMN_NAMES = ['name','description','unit','mandatory','item list','free list','move up','delete']
 COLUMN_WIDTH = [100,   250,          60,    80,         150,        200,        60,       50]
 pd.options.mode.copy_on_write = True
+
+
+def _hasEditableName(index: QModelIndex) -> bool:
+  """Return whether a schema row represents an editable property."""
+  return bool(index.model().index(index.row(), 0).data())
+
+
+def _canDeleteRow(index: QModelIndex) -> bool:
+  """Keep the schema's required name, tags, and comment rows."""
+  return bool(index.model().index(index.row(), 0).data() not in ['name', 'tags', 'comment'])
+
+
+def _moveRowUp(model: QAbstractItemModel, index: QModelIndex) -> None:
+  """Exchange a schema row with the preceding row."""
+  for column in range(7):
+    top = model.index(index.row() - 1, column)
+    current = model.index(index.row(), column)
+    value = model.data(top)
+    model.setData(top, model.data(current))
+    model.setData(current, value)
+  model.layoutChanged.emit()
+
+
+def _deleteRow(model: QAbstractItemModel, index: QModelIndex) -> None:
+  """Remove the selected schema row."""
+  model.removeRow(index.row())
 
 class SchemeEditor(QDialog):
   """ dialog to edit docType schema """
@@ -75,8 +100,7 @@ class SchemeEditor(QDialog):
     self.mandatoryColumnDelegates:list[MandatoryColumnDelegate] = []
     self.listItemDelegates       :list[ListItemDelegate]        = []
     self.listFreeDelegates       :list[ListFreeDelegate]        = []
-    self.reorderColumnDelegates  :list[ReorderColumnDelegate]   = []
-    self.deleteColumnDelegates   :list[DeleteColumnDelegate]    = []
+    self.iconButtonDelegates     :list[IconButtonDelegate]      = []
     self.newWidget = QTableWidget()
     # Final actions
     mainL.addStretch(1)
@@ -140,7 +164,7 @@ class SchemeEditor(QDialog):
     df['idx'] = df['idx'].astype('int')
     # GUI
     self.tabW.clear()
-    self.reorderColumnDelegates.clear()
+    self.iconButtonDelegates.clear()
     for group in df['class'].unique():
       data  = df[df['class']==group]
       table = QTableWidget(len(data)+1, 8)
@@ -163,10 +187,10 @@ class SchemeEditor(QDialog):
       table.setItemDelegateForColumn(4, self.listItemDelegates[-1])
       self.listFreeDelegates.append(ListFreeDelegate())
       table.setItemDelegateForColumn(5, self.listFreeDelegates[-1])
-      self.reorderColumnDelegates.append(ReorderColumnDelegate())
-      table.setItemDelegateForColumn(6, self.reorderColumnDelegates[-1])
-      self.deleteColumnDelegates.append(DeleteColumnDelegate())
-      table.setItemDelegateForColumn(7, self.deleteColumnDelegates[-1])
+      self.iconButtonDelegates.append(IconButtonDelegate('fa5s.arrow-up', _hasEditableName, _moveRowUp))
+      table.setItemDelegateForColumn(6, self.iconButtonDelegates[-1])
+      self.iconButtonDelegates.append(IconButtonDelegate('fa5s.trash', _canDeleteRow, _deleteRow))
+      table.setItemDelegateForColumn(7, self.iconButtonDelegates[-1])
       self.tabW.addTab(table, group or 'default')
     # define close buttons on some of the tabs
     self.closeButtons.clear()

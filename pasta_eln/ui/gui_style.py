@@ -73,18 +73,21 @@ class Button(QPushButton):
       layout.addWidget(self)
 
 
-class Shortcut(QShortcut):
-  """Keyboard shortcut which can be added to a widget."""
-  def __init__(self, key:str, parent: QWidget, function:Callable[[], None]) -> None:
-    super().__init__(key, parent)
-    self.activated.connect(function)
+def Shortcut(key: str, parent: QWidget, function: Callable[[], None]) -> QShortcut:
+  """Create a keyboard shortcut owned by ``parent``.
+    Args:
+      key (str): shortcut key (e.g. Ctrl+K)
+      parent (QWidget): widget / dialog that host the button and that has the execute function
+      function (callable): function to be called when shortcut is triggered
+  """
+  shortcut = QShortcut(key, parent)
+  shortcut.activated.connect(function)
+  return shortcut
 
 
-class Action(QAction):
-  """ QAction and assign function to menu"""
-  def __init__(self, label:str, widget:QWidget, command:Any,
-               menu:QMenu, shortcut:str | None=None, icon:str=''):
-    """
+def Action(label: str, widget: QWidget, command: Any, menu: QMenu, shortcut: str | None = None,
+           icon: str = '') -> QAction:
+  """Create a menu action that forwards its command to the owning widget
     Args:
       label (str): label printed on submenu
       widget (QWidget): widget / dialog that host the button and that has the execute function
@@ -92,87 +95,88 @@ class Action(QAction):
       menu (QMenu): button to be added to this menu
       shortcut (str): shortcut (e.g. Ctrl+K)
       icon (str): icon name
-    """
-    super().__init__()
-    self.setParent(widget)
-    self.setText(label)
-    def _triggered() -> None:
-      """Wrapper around calling the execute function, checking that widget still exists"""
-      try:
-        # if widget is None or not isValid(widget):
-        #   return
-        widget.execute(command)                                                   # type: ignore[attr-defined]
-      except Exception:
-        return
-    self.triggered.connect(_triggered)
-    if icon:
-      color = 'black' if widget is None else widget.comm.palette.text             # type: ignore[attr-defined]
-      self.setIcon(qta.icon(icon, color=color, scale_factor=1))
-    if shortcut is not None:
-      self.setShortcut(QKeySequence(shortcut))
-    menu.addAction(self)
+  """
+  action = QAction(widget)
+  action.setText(label)
+
+  def triggered() -> None:
+    try:
+      widget.execute(command)                                                     # type: ignore[attr-defined]
+    except Exception:
+      return
+
+  action.triggered.connect(triggered)
+  if icon:
+    color = 'black' if widget is None else widget.comm.palette.text               # type: ignore[attr-defined]
+    action.setIcon(qta.icon(icon, color=color, scale_factor=1))
+  if shortcut is not None:
+    action.setShortcut(QKeySequence(shortcut))
+  menu.addAction(action)
+  return action
 
 
-class Image():
-  """ Image widget depending on type of data """
-  def __init__(self, data:str, layout:QLayout | None, width:int=-1, height:int=-1, anyDimension:int=-1):
-    """
+def Image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,
+          anyDimension: int = -1) -> QWidget | None:
+  """Create an image widget from base64 raster or SVG data and add it to a layout.
     Args:
       data (str): image data in byte64-encoding or svg-encoding
       layout (QLayout): to be added to this layout
       width (int): width of image, dominant if both are given
       height (int): height of image
       anyDimension (int): maximum size in any direction
-    """
-    if data.startswith('data:image/'):                                                      # jpg or png image
-      try:
-        byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21]==',' else data[23:], encoding='utf-8'))
-        imageW = QImage()
-        imageType = data[11:15].upper()
-        success = imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType)#type: ignore[arg-type]
-        if not success:
-          logging.warning('Could not load image data with format %s', imageType)
-          return
-        pixmap = QPixmap.fromImage(imageW)
-        if height>0:
-          pixmap = pixmap.scaledToHeight(height)
-        if width>0:
-          pixmap = pixmap.scaledToWidth(width)
-        if anyDimension>0:
-          width0 = max(1, pixmap.size().width())
-          height0 = max(1, pixmap.size().height())
-          if height0 > width0:
-            pixmap = pixmap.scaledToHeight(min(anyDimension, height0*2))
-          else:
-            pixmap = pixmap.scaledToWidth(min(anyDimension, width0*2))
-        label = QLabel()
-        label.setPixmap(pixmap)
-        label.setAlignment(Qt.AlignCenter)                                                      # type: ignore
-        if layout is not None:
-          layout.addWidget(label, alignment=Qt.AlignHCenter)                                    # type: ignore
-      except Exception as e:
-        logging.warning('Error processing base64-image %s', e)
-    elif data.startswith('<?xml'):                                                                  #svg image
-      imageSVG = QSvgWidget()
-      policy = imageSVG.sizePolicy()
-      policy.setHorizontalPolicy(QSizePolicy.Policy.Fixed)
-      policy.setVerticalPolicy(QSizePolicy.Policy.Fixed)
-      imageSVG.setSizePolicy(policy)
-      imageSVG.load(bytearray(data, encoding='utf-8'))
-      if height>0:
-        imageSVG.setMaximumSize(int(float(imageSVG.width())/float(imageSVG.height())*height) ,height)
-      if width>0:
-        imageSVG.setMaximumSize(width, int(float(imageSVG.height())/float(imageSVG.width())*width))
-      if anyDimension>0:
-        if imageSVG.height()>imageSVG.width():
-          imageSVG.setMaximumSize(int(float(imageSVG.width())/float(imageSVG.height())*anyDimension) ,anyDimension)
+  """
+  if data.startswith('data:image/'):
+    try:
+      byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21] == ',' else data[23:], encoding='utf-8'))
+      imageW = QImage()
+      imageType = data[11:15].upper()
+      success = imageW.loadFromData(byteArr, format=(imageType[:-1] if imageType.endswith(';') else imageType).encode())
+      if not success:
+        logging.warning('Could not load image data with format %s', imageType)
+        return None
+      pixmap = QPixmap.fromImage(imageW)
+      if height > 0:
+        pixmap = pixmap.scaledToHeight(height)
+      if width > 0:
+        pixmap = pixmap.scaledToWidth(width)
+      if anyDimension > 0:
+        width0 = max(1, pixmap.size().width())
+        height0 = max(1, pixmap.size().height())
+        if height0 > width0:
+          pixmap = pixmap.scaledToHeight(min(anyDimension, height0 * 2))
         else:
-          imageSVG.setMaximumSize(anyDimension, int(float(imageSVG.height())/float(imageSVG.width())*anyDimension))
+          pixmap = pixmap.scaledToWidth(min(anyDimension, width0 * 2))
+      label = QLabel()
+      label.setPixmap(pixmap)
+      label.setAlignment(Qt.AlignCenter)                                                       # type: ignore
       if layout is not None:
-        layout.addWidget(imageSVG, alignment=Qt.AlignHCenter)                                   # type: ignore
-    elif len(data)>2:
-      logging.error('guiStyle.Image: %s', data[:50], exc_info=True)
-    return
+        layout.addWidget(label, alignment=Qt.AlignHCenter)                                     # type: ignore
+      return label
+    except Exception as error:
+      logging.warning('Error processing base64 image %s', error)
+      return None
+  if data.startswith('<?xml'):
+    imageSVG = QSvgWidget()
+    policy = imageSVG.sizePolicy()
+    policy.setHorizontalPolicy(QSizePolicy.Policy.Fixed)
+    policy.setVerticalPolicy(QSizePolicy.Policy.Fixed)
+    imageSVG.setSizePolicy(policy)
+    imageSVG.load(bytearray(data, encoding='utf-8'))
+    if height > 0:
+      imageSVG.setMaximumSize(int(float(imageSVG.width()) / float(imageSVG.height()) * height), height)
+    if width > 0:
+      imageSVG.setMaximumSize(width, int(float(imageSVG.height()) / float(imageSVG.width()) * width))
+    if anyDimension > 0:
+      if imageSVG.height() > imageSVG.width():
+        imageSVG.setMaximumSize(int(float(imageSVG.width()) / float(imageSVG.height()) * anyDimension), anyDimension)
+      else:
+        imageSVG.setMaximumSize(anyDimension, int(float(imageSVG.height()) / float(imageSVG.width()) * anyDimension))
+    if layout is not None:
+      layout.addWidget(imageSVG, alignment=Qt.AlignHCenter)                                    # type: ignore
+    return imageSVG
+  if len(data) > 2:
+    logging.error('gui_style.Image: %s', data[:50], exc_info=True)
+  return None
 
 
 class Label(QLabel):
