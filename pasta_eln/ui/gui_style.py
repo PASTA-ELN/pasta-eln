@@ -7,9 +7,7 @@ import qtawesome as qta
 from PySide6.QtCore import QByteArray, QSize, Qt
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap, QShortcut
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtWidgets import (QBoxLayout, QFrame, QHBoxLayout, QLabel, QLayout, QMenu, QPushButton,
-                               QSizePolicy, QSplitter,
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import QFrame, QLabel, QLayout, QMenu, QPushButton, QSizePolicy, QWidget
 
 class _Spacing:
   """Shared layout distances, in logical pixels."""
@@ -225,47 +223,10 @@ class Label(QLabel):
     return
 
 
-def widgetAndLayout(direction:str='V', parentLayout:QLayout |QSplitter | None=None, spacing:str='0', left:str='0',
-                    top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QBoxLayout]:
-  """
-  Convenient function for widget and a boxLayout
-
-  Spacings and margins:
-  - different than in css/html
-  - spacing is the space between elements in the orientation of the BoxLayout
-  - is the padding that surrounds the content in the layout
-
-  Distances are given in
-  - '0': zero distance
-  - 's': small distance used as padding round elements, or vertical spacings
-  - 'm': medium used as space between horizontal elements
-  - 'l': large used when things need to be separated
-  - 'xl': extra large indentations, frames
-
-  Args:
-    direction (str): type of layout [H,V]
-    parentLayout (QLayout): to which layout should the widget be added. If none, no adding
-    spacing (str): spacing
-    left (str): padding on left
-    top (str): padding on top
-    right (str): padding on right
-    bottom (str): padding on bottom
-  """
-  distance = {'0':0, 's':SPACE.S, 'm':SPACE.M, 'l':SPACE.L, 'xl':SPACE.XL}
-  widget = QWidget()
-  layout = QVBoxLayout(widget) if direction=='V' else QHBoxLayout(widget)
-  layout.setSpacing(distance[spacing])
-  layout.setContentsMargins(distance[left], distance[top], distance[right], distance[bottom])
-  if parentLayout is not None:
-    parentLayout.addWidget(widget)
-  return widget, layout
-
-
 class HSeparator(QFrame):
   """
   Horizontal Separator
   """
-
   def __init__(self) -> None:
     super().__init__()
     self.setFrameShape(QFrame.Shape.HLine)

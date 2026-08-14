@@ -6,14 +6,14 @@ from typing import Any
 from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot
 from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QLabel, QMenu, QTextEdit, QVBoxLayout
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QMenu, QTextEdit, QVBoxLayout, QWidget
 from ...backend_worker.worker import Task
 from ...fixed_strings_json import DO_NOT_RENDER
 from ...misc_tools import callAddOn
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import createDirName
 from ..gui_communicate import Communicate
-from ..gui_style import Action, Button, ButtonStyle, Label, Widget, widgetAndLayout
+from ..gui_style import SPACE, Action, Button, ButtonStyle, Label, Widget
 from ..message_dialog import showMessage
 from .project_tree_view import TreeView
 
@@ -127,7 +127,11 @@ class Project(Widget):
     if not self.docProj:
       return
     # TOP LINE includes name on left, buttons on right
-    _, topLineL       = widgetAndLayout('H',self.mainL,'m')
+    topLineW = QWidget(self)
+    topLineL = QHBoxLayout(topLineW)
+    topLineL.setSpacing(SPACE.M)
+    topLineL.setContentsMargins(0, 0, 0, 0)
+    self.mainL.addWidget(topLineW)
     hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
                        if [b for b in self.docProj['branch'] if False in b['show']] else \
                        ('', 'Mark project as hidden')

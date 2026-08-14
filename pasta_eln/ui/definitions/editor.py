@@ -7,10 +7,11 @@ from typing import Any
 import pandas as pd
 import qtawesome as qta
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import QDialog, QFileDialog, QMessageBox, QTableWidget, QTableWidgetItem, QVBoxLayout
+from PySide6.QtWidgets import (QDialog, QFileDialog, QHBoxLayout, QMessageBox, QTableWidget, QTableWidgetItem,
+                               QVBoxLayout, QWidget)
 from ...misc_tools import callAddOn
 from ..gui_communicate import Communicate
-from ..gui_style import SPACE, Button, ButtonStyle, widgetAndLayout
+from ..gui_style import SPACE, Button, ButtonStyle
 from .key_delegate import KeyDelegate
 from .link_online_delegate import LinkOnlineDelegate
 from .lookup_delegate import LookupDelegate
@@ -58,7 +59,11 @@ class Editor(QDialog):
     self.table.horizontalHeader().setStretchLastSection(True)
     mainL.addWidget(self.table)
     ### final button box
-    _, buttonLineL = widgetAndLayout('H', mainL, 'm')
+    buttonLineW = QWidget(self)
+    buttonLineL = QHBoxLayout(buttonLineW)
+    buttonLineL.setSpacing(SPACE.M)
+    buttonLineL.setContentsMargins(0, 0, 0, 0)
+    mainL.addWidget(buttonLineW)
     Button('Import', self, Command.IMPORT, buttonLineL, tooltip='Import from CSV')
     Button('Export', self, Command.EXPORT, buttonLineL, tooltip='Export to CSV')
     buttonLineL.addStretch(1)

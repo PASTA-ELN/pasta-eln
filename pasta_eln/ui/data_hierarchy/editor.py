@@ -4,10 +4,10 @@ import numpy as np
 import pandas as pd
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QInputDialog, QMessageBox, QTabBar, QTableWidget,
-                               QTableWidgetItem, QTabWidget, QVBoxLayout)
+                               QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
 from ...fixed_strings_json import defaultDataHierarchyNode
 from ..gui_communicate import Communicate
-from ..gui_style import SPACE, Button, ButtonStyle, Label, widgetAndLayout
+from ..gui_style import SPACE, Button, ButtonStyle, Label
 from ..message_dialog import showMessage
 from .delete_column_delegate import DeleteColumnDelegate
 from .doc_type_edit import DocTypeEditor
@@ -51,7 +51,11 @@ class SchemeEditor(QDialog):
     mainL.setSpacing(SPACE.S)
     Label('Item type editor', 'h1', mainL)
     Label('Warning: every change of the item type saves that content', 'h3', mainL)
-    _, docTypeL = widgetAndLayout('H', mainL, 's')
+    docTypeW = QWidget(self)
+    docTypeL = QHBoxLayout(docTypeW)
+    docTypeL.setSpacing(SPACE.S)
+    docTypeL.setContentsMargins(0, 0, 0, 0)
+    mainL.addWidget(docTypeW)
     Label('Item type:', '', docTypeL)
     self.selectDocType = QComboBox()
     self.selectDocType.currentTextChanged.connect(self.changeDocType)

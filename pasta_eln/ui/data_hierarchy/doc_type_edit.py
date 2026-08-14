@@ -9,7 +9,7 @@ from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 from ...fixed_strings_json import allIcons
 from ..gui_communicate import Communicate
-from ..gui_style import SPACE, Button, ButtonStyle, widgetAndLayout
+from ..gui_style import SPACE, Button, ButtonStyle
 from ..message_dialog import showMessage
 
 
@@ -88,7 +88,10 @@ class DocTypeEditor(QDialog):
     self.row2.setToolTip('Label that the user reads: it is suggested to start with upper case and end with s as in "Samples"')
     self.mainForm.addRow(QLabel('Label '), self.row2)
 
-    row3W, row3L = widgetAndLayout('H', None, 's')
+    row3W = QWidget(self)
+    row3L = QHBoxLayout(row3W)
+    row3L.setSpacing(SPACE.S)
+    row3L.setContentsMargins(0, 0, 0, 0)
     # Label('type:', 'h2', row3L)
     # self.comboType = QComboBox()
     # self.comboType.addItems(set(i.split('.')[0] for i in allIcons))

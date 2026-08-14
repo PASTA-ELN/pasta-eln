@@ -5,11 +5,11 @@ from pathlib import Path
 from typing import Any
 import qtawesome as qta
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import QCheckBox, QDialog, QGridLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QCheckBox, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 from ...backend_worker.worker import Task
 from ...fixed_strings_json import confFileName
 from ..gui_communicate import Communicate
-from ..gui_style import Button, ButtonStyle, Label, widgetAndLayout
+from ..gui_style import SPACE, Button, ButtonStyle, Label
 from ..message_dialog import showMessage
 
 
@@ -63,7 +63,11 @@ class UploadGUI(QDialog):
     if not self.docProject:
       return
     Label('Upload to a repository', 'h1', self.mainL)
-    _, center = widgetAndLayout('H', self.mainL, spacing='l', bottom='l', top='m')
+    centerW = QWidget(self)
+    center = QHBoxLayout(centerW)
+    center.setSpacing(SPACE.L)
+    center.setContentsMargins(0, SPACE.M, 0, SPACE.L)
+    self.mainL.addWidget(centerW)
     repositories = self.comm.configuration['repositories']
     leftSideW = QWidget(self)
     leftSide = QGridLayout(leftSideW)
@@ -92,7 +96,11 @@ class UploadGUI(QDialog):
 
     self.allDocTypes = [[k,v['title']] for k,v in self.comm.docTypesTitles.items()]
     projectString = ', '.join(i[1] for i in self.allDocTypes if i[0].startswith('x'))
-    _, rightSide = widgetAndLayout('V', center, spacing='m', right='l')
+    rightSideW = QWidget(self)
+    rightSide = QVBoxLayout(rightSideW)
+    rightSide.setSpacing(SPACE.M)
+    rightSide.setContentsMargins(0, 0, SPACE.L, 0)
+    center.addWidget(rightSideW)
     rightSide.setAlignment(Qt.AlignTop)                                           # type: ignore[attr-defined]
     Label('Include item types','h2', rightSide)
     self.allCheckboxes = [QCheckBox(projectString, self)]
@@ -107,7 +115,11 @@ class UploadGUI(QDialog):
         rightSide.addWidget(checkbox)
 
     #final button box
-    _, buttonLineL = widgetAndLayout('H', self.mainL, 'm')
+    buttonLineW = QWidget(self)
+    buttonLineL = QHBoxLayout(buttonLineW)
+    buttonLineL.setSpacing(SPACE.M)
+    buttonLineL.setContentsMargins(0, 0, 0, 0)
+    self.mainL.addWidget(buttonLineW)
     buttonLineL.addStretch(1)
     if 'zenodo' in repositories and 'url' in repositories['zenodo']:
       Button('Upload to Zenodo', self, (Command.UPLOAD, True), buttonLineL,
