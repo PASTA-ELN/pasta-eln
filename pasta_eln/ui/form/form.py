@@ -497,7 +497,7 @@ class Form(QDialog):
     self.advancedSection = FormSection('Advanced', expanded=True)
     self.advancedSection.setVisible(self.showAdvanced)
     bodyLayout.addWidget(self.advancedSection)
-    advancedLayout = self.advancedSection.formLayout
+    advancedLayout = self.advancedSection.formL
     if self.allowProjectChange:
       if not self.allowProjectUnassign and self.projectComboBox.count() > 1:
         self.projectComboBox.removeItem(0)

@@ -5,12 +5,12 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFileDialog, QLabel, QMessageBox, QProgressBar, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFileDialog, QHBoxLayout, QLabel, QMessageBox, QProgressBar, QVBoxLayout, QWidget
 from ...fixed_strings_json import exampleDataString, setupText
 from ...installation_tools import configuration, createShortcut, exampleData
 from ...misc_tools import hardRestart
 from ..gui_communicate import Communicate
-from ..gui_style import TextButton, widgetAndLayout
+from ..widget import SPACE, Button, ButtonStyle
 
 
 class ConfigurationSetup(QWidget):
@@ -35,21 +35,26 @@ class ConfigurationSetup(QWidget):
     self.setLayout(self.mainL)
     self.callbackFinished = callbackFinished
 
-    self.mainText = setupText
+    self.mainText = setupText                                                                      # make copy
     self.text = QLabel()
     self.text.setText(self.mainText)
     self.text.setTextFormat(Qt.TextFormat.MarkdownText)
     self.text.setOpenExternalLinks(True)
     self.mainL.addWidget(self.text)
+    self.mainL.addStretch(1)
     self.progressBar = QProgressBar(self)
     self.progressBar.setMaximum(24)
     self.progressBar.hide()
     self.mainL.addWidget(self.progressBar)
 
-    _, footerL = widgetAndLayout('H', self.mainL, 's', top='m', left='xl', right='xl')
-    style = 'color: orange; font-weight: 550; font-size: 20px'
-    self.button1 = TextButton('Click to install / repair', self, [Command.ANALYSE], footerL, style=style)
-    self.button2 = TextButton('Click to finish',           self, [Command.FINISHED], footerL, style=style, hide=True)
+    footerL = QHBoxLayout()
+    footerL.setContentsMargins(SPACE.L, SPACE.M, SPACE.L, 0)
+    self.mainL.addLayout(footerL)
+    self.button1 = Button('Click to install / repair', self, [Command.ANALYSE], footerL,
+                          style=ButtonStyle.HIGHLIGHTED)
+    self.button2 = Button('Click to finish', self, [Command.FINISHED], footerL,
+                          style=ButtonStyle.HIGHLIGHTED)
+    self.button2.hide()
 
 
   def callbackProgress(self, number:int) -> None:

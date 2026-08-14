@@ -3,12 +3,14 @@ import json
 from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
-from PySide6.QtWidgets import QApplication, QDialog, QGroupBox, QLineEdit, QVBoxLayout
+from typing import Any
+from PySide6.QtWidgets import QApplication, QDialog, QGroupBox, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
 from ...fixed_strings_json import confFileName
 from ...misc_tools import loadNamedModule
 from ..gui_communicate import Communicate
-from ..gui_style import Label, TextButton, widgetAndLayout
+from ..gui_style import Label
 from ..message_dialog import showMessage
+from ..widget import SPACE, Button, ButtonStyle, Shortcut
 
 
 class ConfigurationAddOnParameter(QDialog):
@@ -26,16 +28,18 @@ class ConfigurationAddOnParameter(QDialog):
     self.comm = comm
     self.callbackFinished = callbackFinished
     mainL = QVBoxLayout(self)
+    mainL.setContentsMargins(SPACE.S, 0, 0, 0)
     Label('Define Add-On parameters','h2',mainL)
+    mainL.addSpacing(SPACE.M)
 
     #GUI elements
     self.allLineEdits:list[tuple[str,str,str,QLineEdit]] = []
     self.allGroupBoxes = []
     if hasattr(comm, 'configuration'):
       addOns = comm.configuration['projectGroups'][comm.projectGroup]['addOns']
-      for addOnType in addOns:                                                        # loop over add-on types
+      for addOnType in sorted(addOns, key=str.casefold):                              # loop over add-on types
         if addOnType != 'extractors' and addOns[addOnType]:
-          for name, _ in addOns[addOnType].items():                                        # loop over add-ons
+          for name in sorted(addOns[addOnType], key=str.casefold):                         # loop over add-ons
             groupbox = QGroupBox(name.capitalize())
             mainL.addWidget(groupbox)
             groupLayout = QVBoxLayout(groupbox)
@@ -43,16 +47,21 @@ class ConfigurationAddOnParameter(QDialog):
 
     #final button box
     mainL.addStretch(1)
-    _, buttonLineL = widgetAndLayout('H', mainL, 'm')
+    footerW = QWidget()
+    buttonLineL = QHBoxLayout(footerW)
+    buttonLineL.setContentsMargins(0, SPACE.S, 0, 0)
+    buttonLineL.setSpacing(SPACE.M)
+    mainL.addWidget(footerW)
     tooltip = 'Scan files to find parameters. Takes time.'
-    self.scanBtn = TextButton('Scan',                self, [Command.SCAN],   buttonLineL, tooltip)
-    self.scanBtn.setStyleSheet('background: orange; color: black;')
+    self.scanBtn = Button('Scan', self, [Command.SCAN], buttonLineL, tooltip=tooltip)
     buttonLineL.addStretch(1)
-    self.saveBtn = TextButton('Save', self, [Command.SAVE],   buttonLineL, 'Save changes', shortCut='Ctrl+Return')
-    self.cancelBtn = TextButton('Cancel',              self, [Command.CANCEL], buttonLineL, 'Discard changes')
+    self.cancelBtn = Button('Cancel', self, [Command.CANCEL], buttonLineL, tooltip='Discard changes')
+    self.saveBtn   = Button('Save', self, [Command.SAVE], buttonLineL, tooltip='Save changes',
+                          style=ButtonStyle.HIGHLIGHTED)
+    Shortcut('Ctrl+Return', self, lambda: self.execute([Command.SAVE]))
 
 
-  def execute(self, command:list[str]) -> None:
+  def execute(self, command:list[Any]) -> None:
     """
     Execute a command
 
@@ -87,12 +96,16 @@ class ConfigurationAddOnParameter(QDialog):
           if not requiredParam:
             groupbox.hide()
           for param, tooltip in requiredParam.items():                                  # loop over parameters
-            _, barL = widgetAndLayout('H', groupLayout, 'm', 's', 's', 's', 's')
+            barW = QWidget()
+            barL = QHBoxLayout(barW)
+            barL.setContentsMargins(SPACE.S, SPACE.S, SPACE.S, SPACE.S)
+            barL.setSpacing(SPACE.M)
+            groupLayout.addWidget(barW)
             Label(f'{name}.py: {param}', 'h4', barL, tooltip=tooltip)
             lineEdit = QLineEdit()                                           # pylint: disable=qt-local-widget
             barL.addWidget(lineEdit)
             if helpText:
-              TextButton('?', self, command=[helpText], layout=barL)
+              Button('?', self, command=[helpText], layout=barL)
             self.allLineEdits.append((addonType,name,param,lineEdit))
         except Exception:
           Label(f'{name}.py: Error occurred; please check add-on.', 'h4', groupLayout)

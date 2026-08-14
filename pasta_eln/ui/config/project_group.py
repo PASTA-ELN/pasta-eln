@@ -13,12 +13,13 @@ import requests
 from PIL.ImageQt import ImageQt
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator, Qt
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QLabel, QLineEdit, QMessageBox,
-                               QSizePolicy, QSpacerItem, QTextEdit, QVBoxLayout)
+                               QGridLayout, QHBoxLayout, QSizePolicy, QSpacerItem, QTextEdit, QVBoxLayout, QWidget)
 from ...backend_worker.elab_ftw_api import ElabFTWApi
 from ...fixed_strings_json import confFileName
 from ..gui_communicate import Communicate
-from ..gui_style import IconButton, Label, TextButton, widgetAndLayoutGrid
+from ..gui_style import Label
 from ..message_dialog import showMessage
+from ..widget import SPACE, Button, ButtonStyle
 
 
 class ProjectGroup(QDialog):
@@ -46,8 +47,16 @@ class ProjectGroup(QDialog):
     mainL = QVBoxLayout(self)
     Label('Project group editor', 'h1', mainL)
 
-    # LEFT SIDE: form
-    _, self.formL = widgetAndLayoutGrid(mainL, spacing='m')
+    # Keep the QR preview independent from the form's grid row heights.
+    contentL = QHBoxLayout()
+    contentL.setContentsMargins(0, 0, 0, 0)
+    contentL.setSpacing(SPACE.L)
+    mainL.addLayout(contentL)
+    formW = QWidget()
+    self.formL = QGridLayout(formW)
+    self.formL.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
+    self.formL.setSpacing(SPACE.M)
+    contentL.addWidget(formW, stretch=1)
     self.selectGroup = QComboBox()
     self.selectGroup.addItems(self.configuration['projectGroups'].keys())
     self.selectGroup.currentTextChanged.connect(self.changeProjectGroup)
@@ -56,21 +65,21 @@ class ProjectGroup(QDialog):
     self.groupTextField.setValidator(QRegularExpressionValidator('\\w{3,}'))
     self.comboboxActive = True
 
-    self.newButton = IconButton('fa5s.plus',    self, [Command.NEW], tooltip='New project group')
+    self.newButton = Button('', self, [Command.NEW], icon='ri.add-line', tooltip='New project group', flat=True)
     self.formL.addWidget(self.newButton, 0, 2)
-    self.delButton = IconButton('fa5s.trash',   self, [Command.DEL], tooltip='Delete project group')
+    self.delButton = Button('', self, [Command.DEL], icon='ri.delete-bin-line', tooltip='Delete project group', flat=True)
     self.formL.addWidget(self.delButton, 0, 3)
 
     self.directoryLabel = QLabel('label')
     self.directoryLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
     self.formL.addWidget(self.directoryLabel, 1, 0, 1, 2)
-    self.row1Button = IconButton('fa5.edit',   self, [Command.CHANGE_DIR], tooltip='Edit data path')
+    self.row1Button = Button('', self, [Command.CHANGE_DIR], icon='ri.edit-line', tooltip='Edit data path', flat=True)
     self.formL.addWidget(self.row1Button, 1, 3)
 
     self.addOnLabel = QLabel('add-on')
     self.addOnLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
     self.formL.addWidget(self.addOnLabel, 2, 0, 1, 2)
-    self.row2Button = IconButton('fa5.edit',   self, [Command.CHANGE_ADDON], tooltip='Edit add-on path')
+    self.row2Button = Button('', self, [Command.CHANGE_ADDON], icon='ri.edit-line', tooltip='Edit add-on path', flat=True)
     self.formL.addWidget(self.row2Button, 2, 3)
 
     self.formL.addItem(QSpacerItem(0, 5, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed), 3, 0, 1,
@@ -81,7 +90,7 @@ class ProjectGroup(QDialog):
     self.serverLabel = QLineEdit('server')
     self.serverLabel.setPlaceholderText('Enter server address')
     self.formL.addWidget(self.serverLabel,                 5, 1)
-    self.row3Button = TextButton('Verify',   self, [Command.TEST_SERVER], tooltip='Check server')
+    self.row3Button = Button('Verify', self, [Command.TEST_SERVER], tooltip='Check server')
     self.formL.addWidget(self.row3Button,                  5, 3)
 
     self.formL.addWidget(QLabel('\tAPI-key:'),             6, 0)
@@ -90,15 +99,15 @@ class ProjectGroup(QDialog):
     self.apiKeyLabel.setFixedHeight(48)
     # self.apiKeyLabel.setValidator(QRegularExpressionValidator(r"\d+-[0-9a-f]{85}"))
     self.formL.addWidget(self.apiKeyLabel,                 6, 1)
-    self.row4Button1 = IconButton('fa5s.question-circle', self, [Command.TEST_API_HELP], tooltip='Help on obtaining API key')
+    self.row4Button1 = Button('', self, [Command.TEST_API_HELP], icon='ri.question-line', tooltip='Help on obtaining API key', flat=True)
     self.formL.addWidget(self.row4Button1,                 6, 2)
-    self.row4Button2 = TextButton('Verify',   self, [Command.TEST_APIKEY], tooltip='Check API-key')
+    self.row4Button2 = Button('Verify', self, [Command.TEST_APIKEY], tooltip='Check API-key')
     self.formL.addWidget(self.row4Button2,                 6, 3)
 
     self.formL.addWidget(QLabel('\tStorage block:'),       7, 0)
     self.serverProjectGroupLabel = QComboBox()
     self.formL.addWidget(self.serverProjectGroupLabel,     7, 1)
-    self.row5Button2 = TextButton('Verify',   self, [Command.TEST_SERVERPG], tooltip='Check access to storage block')
+    self.row5Button2 = Button('Verify', self, [Command.TEST_SERVERPG], tooltip='Check access to storage block')
     self.formL.addWidget(self.row5Button2,                 7, 3)
 
     self.formL.addItem(QSpacerItem(0, 25, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed), 8, 0, 1,
@@ -108,14 +117,21 @@ class ProjectGroup(QDialog):
     self.commonFolder = QLineEdit('commonFiles')
     self.commonFolder.setPlaceholderText('Enter folder for common files in project group. Leave empty to disable.')
     self.formL.addWidget(self.commonFolder,                9, 1)
-    self.row4Button = TextButton('Create',   self, [Command.CREATE_FOLDER], tooltip='Create folder')
+    self.row4Button = Button('Create', self, [Command.CREATE_FOLDER], tooltip='Create folder')
     self.formL.addWidget(self.row4Button,                  9, 3)
 
-    # RIGHT SIDE: button and image
-    self.qrButton = TextButton('Create QR code', self, [Command.CREATE_QRCODE])
-    self.formL.addWidget(self.qrButton, 0, 6)
+    # Right-side QR panel
+    qrW = QWidget()
+    qrL = QVBoxLayout(qrW)
+    qrL.setContentsMargins(0, SPACE.M, SPACE.M, 0)
+    qrL.setSpacing(SPACE.M)
+    contentL.addWidget(qrW)
+    self.qrButton = Button('Create QR code', self, [Command.CREATE_QRCODE], style=ButtonStyle.HIGHLIGHTED)
+    qrL.addWidget(self.qrButton)
     self.image = QLabel()
-    self.formL.addWidget(self.image, 1, 6, 4, 1)
+    self.image.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+    qrL.addWidget(self.image)
+    qrL.addStretch()
 
     #final button box
     mainL.addStretch(1)
@@ -130,7 +146,7 @@ class ProjectGroup(QDialog):
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
 
 
-  def closeDialog(self, btn:TextButton) -> None:
+  def closeDialog(self, btn: Button) -> None:
     """
     cancel or save entered data
 
@@ -359,7 +375,7 @@ class ProjectGroup(QDialog):
     return
 
 
-  def changeButtonOnTest(self, success:bool, button:TextButton, message:str='') -> None:
+  def changeButtonOnTest(self, success:bool, button:Button, message:str='') -> None:
     """ Helper function to change buttons upon success/failure
 
     Args:

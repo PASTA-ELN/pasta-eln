@@ -7,13 +7,14 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 import qtawesome as qta
-from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit, QToolButton, QVBoxLayout
+from PySide6.QtWidgets import QComboBox, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QToolButton, QVBoxLayout, QWidget
 from ...backend_worker.dataverse import DataverseClient
 from ...backend_worker.zenodo import ZenodoClient
 from ...fixed_strings_json import confFileName
 from ..gui_communicate import Communicate
-from ..gui_style import Label, TextButton, widgetAndLayout, widgetAndLayoutGrid
+from ..gui_style import Label
 from ..message_dialog import showMessage
+from ..widget import SPACE, Button, ButtonStyle, Shortcut
 
 
 class ConfigurationRepositories(QDialog):
@@ -40,9 +41,15 @@ class ConfigurationRepositories(QDialog):
     # GUI elements
     mainL = QVBoxLayout(self)
     Label('Configure the repositories', 'h1', mainL)
-    _, center = widgetAndLayout('H', mainL, spacing='l', bottom='l', top='m')
+    center = QHBoxLayout()
+    center.setContentsMargins(0, SPACE.M, 0, SPACE.L)
+    center.setSpacing(SPACE.L)
+    mainL.addLayout(center)
 
-    leftSideW, leftSide = widgetAndLayoutGrid(center, spacing='m', right='l')
+    leftSideW = QWidget()
+    leftSide = QGridLayout(leftSideW)
+    leftSide.setSpacing(SPACE.M)
+    center.addWidget(leftSideW)
     leftSideW.setStyleSheet('border-right: 2px solid black;')
     leftSide.addWidget(QLabel('Zenodo'), 0, 0)
     leftSide.addWidget(QLabel('URL'), 1, 0)
@@ -61,16 +68,19 @@ class ConfigurationRepositories(QDialog):
       self.zenodoToggle.setIcon(qta.icon('fa5s.eye' if checked else 'fa5s.eye-slash'))
     self.zenodoToggle.toggled.connect(_toggleZenodo)
     leftSide.addWidget(self.zenodoToggle, 2, 2)
-    self.zenodoButton = TextButton('Check',   self, [Command.CHECK_ZENODO], tooltip='Check Zenodo login details')
+    self.zenodoButton = Button('Check', self, [Command.CHECK_ZENODO], tooltip='Check Zenodo login details')
     leftSide.addWidget(self.zenodoButton, 3, 1)
 
-    _, rightSide = widgetAndLayoutGrid(center, spacing='m', right='l')
+    rightSideW = QWidget()
+    rightSide = QGridLayout(rightSideW)
+    rightSide.setSpacing(SPACE.M)
+    center.addWidget(rightSideW)
     rightSide.addWidget(QLabel('Dataverse'), 0, 0)
     rightSide.addWidget(QLabel('URL'), 1, 0)
     self.urlDatavese = QLineEdit(conf['dataverse']['url'])                               # type: ignore[index]
     self.urlDatavese.setMinimumWidth(350)
     rightSide.addWidget(self.urlDatavese, 1, 1)
-    self.dataverseButton1 = TextButton('Check',   self, [Command.CHECK_DV1], tooltip='Check Dataverse server details')
+    self.dataverseButton1 = Button('Check', self, [Command.CHECK_DV1], tooltip='Check Dataverse server details')
     self.dataverseButton1.setMinimumWidth(100)
     rightSide.addWidget(self.dataverseButton1, 1, 3)
     rightSide.addWidget(QLabel('API key'), 2, 0)
@@ -85,7 +95,7 @@ class ConfigurationRepositories(QDialog):
     self.dataverseToggle.toggled.connect(_toggleDataverse)
     rightSide.addWidget(self.dataverseToggle, 2, 2)
     rightSide.addWidget(self.apiDataverse, 2, 1)
-    self.dataverseButton2 = TextButton('Check',   self, [Command.CHECK_DV2], tooltip='Check Dataverse API-key')
+    self.dataverseButton2 = Button('Check', self, [Command.CHECK_DV2], tooltip='Check Dataverse API-key')
     rightSide.addWidget(self.dataverseButton2, 2, 3)
     rightSide.addWidget(QLabel('Sub dataverse'), 3, 0)
     self.dvDataverse = QComboBox()
@@ -94,11 +104,17 @@ class ConfigurationRepositories(QDialog):
     rightSide.addWidget(self.dvDataverse, 3, 1)
 
     #final button box
-    _, buttonLineL = widgetAndLayout('H', mainL, 'm')
-    TextButton('Help',                self, [Command.HELP],   buttonLineL, 'Help for this dialog')
+    mainL.addStretch(1)
+    buttonLineL = QHBoxLayout()
+    buttonLineL.setContentsMargins(0, SPACE.S, 0, 0)
+    buttonLineL.setSpacing(SPACE.M)
+    mainL.addLayout(buttonLineL)
+    Button('Help', self, [Command.HELP], buttonLineL, tooltip='Help for this dialog')
     buttonLineL.addStretch(1)
-    self.saveBtn = TextButton('Save', self, [Command.SAVE],   buttonLineL, 'Save changes', shortCut='Ctrl+Return')
-    TextButton('Cancel',              self, [Command.CANCEL], buttonLineL, 'Discard changes')
+    Button('Cancel', self, [Command.CANCEL], buttonLineL, tooltip='Discard changes')
+    self.saveBtn = Button('Save', self, [Command.SAVE], buttonLineL, tooltip='Save changes',
+                          style=ButtonStyle.HIGHLIGHTED)
+    Shortcut('Ctrl+Return', self, lambda: self.execute([Command.SAVE]))
 
 
   def execute(self, command:list[Any]) -> None:
@@ -183,7 +199,7 @@ class ConfigurationRepositories(QDialog):
     return
 
 
-  def changeButtonOnTest(self, success:bool, button:TextButton, message:str='') -> None:
+  def changeButtonOnTest(self, success:bool, button:Button, message:str='') -> None:
     """ Helper function to change buttons upon success/failure
 
     Args:

@@ -2,10 +2,9 @@
 import json
 from collections.abc import Callable
 from pathlib import Path
-from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFormLayout, QGroupBox, QLabel, QVBoxLayout
+from PySide6.QtWidgets import QAbstractButton, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QGroupBox, QLabel, QVBoxLayout
 from ...fixed_strings_json import confFileName, configurationGUI
 from ..gui_communicate import Communicate
-from ..gui_style import TextButton
 
 
 class ConfigurationGUI(QDialog):
@@ -38,7 +37,8 @@ class ConfigurationGUI(QDialog):
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
     #TODO allow users to switch of info after extractor success
 
-  def closeDialog(self, btn:TextButton) -> None:
+
+  def closeDialog(self, btn: QAbstractButton) -> None:
     """
     Save changes to hard-disk
     """

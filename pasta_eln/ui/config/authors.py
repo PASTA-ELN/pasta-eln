@@ -6,11 +6,11 @@ from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 from ...fixed_strings_json import confFileName
 from ...misc_tools import getORCIDName, getRORIDLabel
 from ..gui_communicate import Communicate
-from ..gui_style import IconButton, TextButton, widgetAndLayout, widgetAndLayoutForm
+from ..widget import SPACE, Button
 
 
 class ConfigurationAuthors(QDialog):
@@ -35,20 +35,27 @@ class ConfigurationAuthors(QDialog):
     #GUI elements
     if hasattr(self.comm, 'configuration'):
       self.author = self.comm.configuration['authors'][0]
-      _, self.tabAuthorL = widgetAndLayoutForm(mainL, 's')
+      authorForm = QWidget()
+      self.tabAuthorL = QFormLayout(authorForm)
+      self.tabAuthorL.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
+      self.tabAuthorL.setSpacing(SPACE.S)
+      mainL.addWidget(authorForm)
       self.userOrcid = self.addRowText('orcid','ORCID')
       self.userTitle = self.addRowText('title','Title')
       self.userFirst = self.addRowText('first','First name')
       self.userLast  = self.addRowText('last', 'Surname')
       self.userEmail = self.addRowText('email','Email address')
       #headline of organizations
-      orgaW, orgaL = widgetAndLayout('H', None, spacing='s', top='l')
+      orgaW = QWidget()
+      orgaL = QHBoxLayout(orgaW)
+      orgaL.setContentsMargins(0, SPACE.L, 0, 0)
+      orgaL.setSpacing(SPACE.S)
       self.orgaCB = QComboBox()
       self.orgaCB.addItems([i['organization'] for i in self.author['organizations']])
       orgaL.addStretch(1)
       orgaL.addWidget(self.orgaCB, stretch=2)
-      IconButton('fa5s.plus',  self, [Command.ADD],    orgaL, 'Add organization')
-      IconButton('fa5s.trash', self, [Command.DELETE], orgaL, 'Delete organization')
+      Button('', self, [Command.ADD],    orgaL, icon='ri.add-line', tooltip='Add organization', flat=True)
+      Button('', self, [Command.DELETE], orgaL, icon='ri.delete-bin-line', tooltip='Delete organization', flat=True)
       self.tabAuthorL.addRow(orgaW)
 
       self.userRorid = self.addRowText('rorid','RORID')
@@ -112,7 +119,7 @@ class ConfigurationAuthors(QDialog):
     return
 
 
-  def closeDialog(self, btn:TextButton) -> None:
+  def closeDialog(self, btn: Button) -> None:
     """
     cancel or save entered data
 
