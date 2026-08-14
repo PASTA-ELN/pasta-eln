@@ -115,6 +115,7 @@ class Body(QWidget):
       docID: from Signal: Which doc should be shown.
       projectID: from Signal: Which Project it was changed to.
     """
+    self.comm.changeDetails.emit('')                                                           # close details
     self.tabWidget.setCurrentIndex(0)
 
 
@@ -126,6 +127,8 @@ class Body(QWidget):
       index: index of the now active tab after change.
     """
     widget = self.tabWidget.widget(index)
-    if isinstance(widget, TableView):
+    if isinstance(widget, Project):
+      self.comm.changeDetails.emit('')                                                         # close details
+    elif isinstance(widget, TableView):
       docType = widget.docType
       self.comm.changeTable.emit(docType, '')

@@ -17,6 +17,7 @@ from pasta_eln.misc_tools import hardRestart, installPythonPackages, updateAddOn
 from pasta_eln.ui.config.main import Configuration
 from pasta_eln.ui.data_hierarchy.editor import SchemeEditor
 from pasta_eln.ui.definitions.editor import Editor as DefinitionsEditor
+from pasta_eln.ui.details.details import Command as DetailsCommand
 from pasta_eln.ui.form.form import Form
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Action, ScrollMessageBox
@@ -100,8 +101,9 @@ class MainWindow(QMainWindow):
     Action('&Item type editor',         self, Command.SCHEMA, configureMenu, shortcut='F8')
     Action('&Definitions editor',       self, Command.DEFINITIONS, configureMenu)
     addOnsMenu = systemMenu.addMenu('&Add-ons')
-    Action('Test extraction from a file', self, Command.TEST1, addOnsMenu)
-    Action('Update add-on list',          self, Command.UPDATE, addOnsMenu)
+    Action('Update add-on list',            self, Command.UPDATE, addOnsMenu)
+    Action('Test extraction from a file',   self, Command.TEST1, addOnsMenu)
+    Action('Test selected item extraction', self, Command.TEST_SELECTED, addOnsMenu, shortcut='F2')
 
     helpMenu = menu.addMenu('&Other')
     Action('&Website',                  self, Command.WEBSITE, helpMenu)
@@ -255,6 +257,8 @@ class MainWindow(QMainWindow):
       if fileName is not None:
         self.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST,
                                      {'fileName': fileName, 'style': 'html', 'recipe': '', 'saveFig': ''})
+    elif commandType is Command.TEST_SELECTED:
+      self.body.detailsW.execute(DetailsCommand.TEST_EXTRACTION)
     elif commandType is Command.UPDATE:
       configProjecGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
       installPythonPackages(configProjecGroup['addOnDir'])
@@ -324,6 +328,7 @@ class Command(Enum):
   SYNC_SMART = 9
   SCHEMA = 10
   TEST1 = 11
+  TEST_SELECTED = 23
   UPDATE = 13
   CONFIG = 14
   WEBSITE = 15
