@@ -129,9 +129,8 @@ class DetailsHierItem(QWidget):
       #   else:
       #     newValue[k] = v
       # labelStr = f'{cssStyleHtmlEditors}<b>{key}:</b><br>{dict2ul(newValue)}<br><br>'
-    if '<a href=' in labelStr:
-      return labelStr
-    return makeStringWrappable(labelStr)             # Wrapping can force an HTML-statement wrap in rare cases
+    # Wrapping can force an HTML-statement wrap in rare cases
+    return labelStr if '<a href=' in labelStr else makeStringWrappable(labelStr)
 
   def addContent(self, key: str, value: Any) -> None:
     """Appends formatted Content to the Label of this Widget, see self.formatContent for details"""

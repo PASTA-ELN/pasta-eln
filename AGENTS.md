@@ -4,15 +4,14 @@
 
 - `pasta_eln/`: application package.
   - `backend_worker/`: SQLite storage, import/export, repository clients, and worker tasks.
-  - `ui/`: shared and established Qt widgets, configuration dialogs, and communication.
-  - `ui_new/`: current UI implementation, including project sidebar, details, table view, and workplan creator.
+  - `ui/`: current Qt user interface, including shared widgets, configuration dialogs, communication, project sidebar, details, table view, and workplan creator.
   - `add_ons/`: extractors and optional project/table extensions.
   - `text_tools/`: Markdown/HTML and string helpers.
 - `tests/`: standard pytest suite.
 - `testsComplicated/`: environment-dependent or integration-style tests; do not add these to the default test run without a clear isolation strategy.
 - `docs/`: Sphinx documentation.
 
-The GUI entry point is `python -m pasta_eln.gui`. Its startup module creates `ui_new.main_window.MainWindow`; keep old and new UI imports explicit while the migration is in progress.
+The GUI entry point is `python -m pasta_eln.gui`. Its startup module creates `ui.main_window.MainWindow`.
 
 ## Development commands
 
@@ -43,7 +42,7 @@ make -C docs html
 
 Before editing, run `git status --short`. Do not overwrite, reset, or remove unrelated user changes. Run the smallest relevant test first, then the standard suite when practical. The standard test suite is intentionally stateful: keep numbered `test_XX_` modules in their required execution order; `tests/conftest.py` enforces that order. Run pytest and pylint outside the execution sandbox: extractor tests use multiprocessing and the sandbox prevents its forkserver from starting; pylint writes its cache under the user home directory. GUI tests must use Qt's offscreen platform in headless environments.
 
-For visual review of the user's actual desktop layout, ask them to press `F12` in PASTA-ELN. It overwrites `/tmp/pasta-eln-current-window.png` with a direct capture of the live main window; inspect that image instead of relying only on offscreen test screenshots, which can differ in theme, scaling, and font rendering.
+For visual review of the user's actual desktop layout, ask them to press `F12` in PASTA-ELN. It saves a direct capture of the live main window as `pasta-eln-current-window.png` in the system temporary directory and shows its location. Inspect that image instead of relying only on offscreen test screenshots, which can differ in theme, scaling, and font rendering.
 
 ## Engineering conventions
 
@@ -64,7 +63,7 @@ For visual review of the user's actual desktop layout, ask them to press `F12` i
 
 ### UI code design
 
-- Keep components focused and colocate their related files; create a custom widget when a subwidget becomes substantial. `project_sidebar.py` is a good example.
+- Keep components focused and colocate their related files; create a custom widget when a subwidget becomes substantial. `ui/sidebar/sidebar.py` is a good example.
 - In `__init__`, define instance variables; configure widgets; build layouts; apply necessary style; assemble the main layout; connect signals; then run immediate code. Comment widget/layout blocks and non-obvious behaviour.
 - In UI files, order methods as: `__init__`, `onGetData`, `paint`, `execute`, then other slots, event handlers, and helpers. Omit inapplicable methods.
 - Make runtime widget changes in `paint`; use descriptive names and type hints.

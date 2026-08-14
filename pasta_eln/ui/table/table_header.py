@@ -140,8 +140,7 @@ class TableHeader(QDialog):
     Args:
       index (int): The index of the property to add
     """
-    name = self.propertyName.itemText(index)
-    if name:
+    if name:= self.propertyName.itemText(index):
       column = f'{self.propertyGroup.currentText()}.{name}'
       if column not in self.selected:
         self.selected.append(column)

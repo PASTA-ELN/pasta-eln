@@ -204,7 +204,7 @@ class TableView(Widget):
     self.gallery.clear()
     self.galleryDocumentIds = set(documentIds)
     for row, docID in enumerate(documentIds):
-      name = self.tableData.iloc[row, 0] if not self.tableData.empty else docID
+      name = docID if self.tableData.empty else self.tableData.iloc[row, 0]
       item = QListWidgetItem(str(name))
       item.setData(Qt.ItemDataRole.UserRole, docID)
       self.gallery.addItem(item)
@@ -390,11 +390,12 @@ class TableView(Widget):
     if not title:
       return
     matching = [key for key in self.comm.docTypesTitles if self.comm.docTypesTitles[key]['title'] == title]
-    if matching:
-      docType = matching[0]
-      self.reloadComboBoxFlag = not (self.docType in docType or docType in self.docType)
-      self.docType = docType
-      self.refresh()
+    if not matching:
+      return
+    docType = matching[0]
+    self.reloadComboBoxFlag = not (self.docType in docType or docType in self.docType)
+    self.docType = docType
+    self.refresh()
 
 
   @Slot(int, bool)

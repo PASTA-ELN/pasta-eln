@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import sys
+import tempfile
 import webbrowser
 from enum import Enum
 from pathlib import Path
@@ -282,8 +283,10 @@ class MainWindow(QMainWindow):
     elif commandType is Command.RESTART:
       hardRestart()
     elif commandType is Command.SCREENSHOT:
-      screenshotPath = Path('/tmp/pasta-eln-current-window.png')
-      if not self.grab().save(str(screenshotPath), 'PNG'):
+      screenshotPath = Path(tempfile.gettempdir()) / 'pasta-eln-current-window.png'
+      if self.grab().save(str(screenshotPath), 'PNG'):
+        showMessage(self, 'Screenshot saved', f'Window screenshot saved to:\n{screenshotPath}', 'Information')
+      else:
         logging.error('Could not save UI screenshot to %s', screenshotPath)
     else:
       logging.error('Gui menu unknown: %s', command, exc_info=True)
