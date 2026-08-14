@@ -184,6 +184,8 @@ class SqlLiteDB:
     Returns:
       list: information inquired
     """
+    if column and column not in DOC_TYPES + ['meta', 'metaColumns']:
+      raise ValueError(f'Invalid docTypes column: {column}')
     ### return column information
     if not docType:                                                                           #if all docTypes
       column = f', {column}' if column else ''

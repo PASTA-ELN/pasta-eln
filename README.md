@@ -46,5 +46,4 @@ Open issues are the union of:
 ### Repository maintenance items
 
 - Persistence safety
-  - Replace SQL f-strings in SQLite persistence code with parameterized queries; quoted document values can currently break saves and imported values must not alter queries.
   - Make ELN imports fail atomically and report failure when adding a document fails; the current recovery path can continue after an add failure and report a partial import as successful.
