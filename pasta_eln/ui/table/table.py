@@ -393,7 +393,7 @@ class TableView(Widget):
     if not matching:
       return
     docType = matching[0]
-    self.reloadComboBoxFlag = not (self.docType in docType or docType in self.docType)
+    self.reloadComboBoxFlag = self.docType not in docType and docType not in self.docType
     self.docType = docType
     self.refresh()
 
