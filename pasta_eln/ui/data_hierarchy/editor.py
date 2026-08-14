@@ -194,7 +194,8 @@ class SchemeEditor(QDialog):
     if nonUniqueStr:= ', '.join(k for k,v in nonUnique.items() if v>1):
       button = QMessageBox.question(self, 'Non unique definitions',
                                   f'The definitions are non-unique for {nonUniqueStr}. Do you want to flatten?',
-                                  QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+                                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                  QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.No:
         return
     dfDef = dfDef.groupby(['key']).first()
@@ -239,7 +240,8 @@ class SchemeEditor(QDialog):
       dialog.exec()
     elif command[0] is Command.DEL:
       button = QMessageBox.question(self, 'Question', 'Do you really want to remove the doc-type?',
-                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+                                    QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                    QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.No:
         return
       self.comm.uiSendSQL.emit([
@@ -251,7 +253,8 @@ class SchemeEditor(QDialog):
     elif command[0] is Command.DEL_GROUP:
       docLabel = str(self.docLabel)
       button = QMessageBox.question(self, 'Question', 'Do you really want to remove this group?',
-                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+                                    QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                    QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:
         group = self.tabW.tabBar().tabText(command[1])
         self.comm.uiSendSQL.emit([{'type':'one','cmd':

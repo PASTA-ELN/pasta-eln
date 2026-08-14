@@ -717,7 +717,10 @@ class Form(QDialog):
       keyValueDict = {f'.{k}':v for k,v in keyValueDict.items() if k and v and f'.{k}' not in self.doc}
       self.doc = keyValueDict | self.doc
       # ---- if project changed: only branch save; remaining data still needs saving
-      newProjID = [self.projectComboBox.currentData()] if self.projectComboBox.currentData() else []
+      if self.doc['type'][0] == 'x0':
+        newProjID = []
+      else:
+        newProjID = [self.projectComboBox.currentData()] if self.projectComboBox.currentData() else []
       # ---- if docType changed: save; no further save to db required ----
       if self.docTypeComboBox.currentData() != '' and self.docTypeComboBox.currentData() is not None:
         self.doc['type'] = [self.docTypeComboBox.currentData()]

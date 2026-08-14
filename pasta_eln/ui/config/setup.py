@@ -75,12 +75,13 @@ class ConfigurationSetup(QWidget):
         self.text.setText(self.mainText)
       else:
         dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
-        if dirName is None:
+        if not dirName:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to INVALID folder' )
           self.text.setText(self.mainText)
         elif list(Path(dirName).iterdir()):
           button = QMessageBox.question(self, 'PASTA-ELN configuration', 'Folder is not empty. Do you want to remove all content?',
-                                  QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+                                        QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                        QMessageBox.StandardButton.No)
           if button == QMessageBox.StandardButton.Yes:
             configuration('repair', dirName)
           else:
@@ -90,7 +91,8 @@ class ConfigurationSetup(QWidget):
           configuration('repair', dirName)
       #Shortcut
       button = QMessageBox.question(self, 'Create shortcut', 'Do you want to create the shortcut for PASTA-ELN on desktop?',
-                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+                                    QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                    QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:
         createShortcut()
         self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to add a shortcut' )
@@ -99,7 +101,8 @@ class ConfigurationSetup(QWidget):
       self.text.setText(self.mainText)
       #Example data
       button = QMessageBox.question(self, 'Example data', exampleDataString,
-                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+                                    QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                    QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:
         self.progressBar.show()
         exampleData(True, self.callbackProgress)

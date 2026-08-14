@@ -204,12 +204,14 @@ class ProjectGroup(QDialog):
         return
       if [i for i in Path(answer).iterdir() if i.name=='pastaELN.db']:
         button = QMessageBox.question(self, 'Question', 'Do you want to use existing PASTA ELN data?',
-                                      QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+                                      QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                      QMessageBox.StandardButton.No)
         if button == QMessageBox.StandardButton.No:
           return
       elif list(Path(answer).iterdir()):
         button = QMessageBox.question(self, 'Question', 'Do you want to use folder, which is not empty? This is not recommended.',
-                                      QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+                                      QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                      QMessageBox.StandardButton.No)
         if button == QMessageBox.StandardButton.No:
           return
       config['local']['path'] = answer
@@ -220,7 +222,8 @@ class ProjectGroup(QDialog):
       if not answer:
         return
       button = QMessageBox.question(self, 'Question', 'Do you want to copy the add-ons from the old directory (recommended)?',
-                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+                                    QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                    QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:
         source =Path(__file__).parent.parent.parent/'add_ons'
         shutil.copytree(source, answer, dirs_exist_ok=True)
@@ -325,7 +328,8 @@ class ProjectGroup(QDialog):
 
     elif command[0] is Command.DEL:
       button = QMessageBox.question(self, 'Question', 'Do you really want to delete this project group from the configuration (Data will remain)?',
-                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+                                    QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                    QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:
         del self.configuration['projectGroups'][key]
         self.selectGroup.removeItem(self.selectGroup.currentIndex())

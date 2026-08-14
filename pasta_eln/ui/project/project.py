@@ -240,7 +240,6 @@ class Project(Widget):
 
     elif commandType is Command.ADD_ON:
       callAddOn(payload[0], self.comm, self.projID, self)
-      self.comm.uiRequestTask.emit(Task.TUTORIAL, {'doc':{'task':'callAddOnInProject'}})
     else:
       logging.error('Project menu unknown: %s',command, exc_info=True)
     return

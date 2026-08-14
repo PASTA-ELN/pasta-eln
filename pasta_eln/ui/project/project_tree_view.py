@@ -4,7 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QDropEvent, QEventPoint, QStandardItem, QStandardItemModel
+from PySide6.QtGui import QContextMenuEvent, QDropEvent, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget
 from ...backend_worker.worker import Task
 from ...misc_tools import callAddOn
@@ -37,14 +37,18 @@ class TreeView(QTreeView):
     self.doubleClicked.connect(self.tree2Clicked)
 
 
-  def contextMenuEvent(self, p:QEventPoint) -> None:                                  # type: ignore[override]
+  def contextMenuEvent(self, event:QContextMenuEvent) -> None:
     """
     create context menu
 
     Args:
-      p (QPoint): point of clicking
+      event (QContextMenuEvent): context-menu event
     """
-    item = self.model().itemFromIndex(self.currentIndex())                        # type: ignore[attr-defined]
+    clickedIndex = self.indexAt(event.pos())
+    if not clickedIndex.isValid():
+      return
+    self.setCurrentIndex(clickedIndex)
+    item = self.model().itemFromIndex(clickedIndex)                               # type: ignore[attr-defined]
     if item is None:                                                                 #clicked outside any leaf
       return
     folder = item.data()['hierStack'].split('/')[-1][0]=='x'
@@ -66,7 +70,7 @@ class TreeView(QTreeView):
         context.addSeparator()
         for label, description in projectAddOns.items():
           Action(description, self, [Command.ADD_ON, label], context)
-    context.exec(p.globalPos())                                                   # type: ignore[attr-defined]
+    context.exec(event.globalPos())
     return
 
 
@@ -88,7 +92,8 @@ class TreeView(QTreeView):
 
     elif command[0] is Command.DELETE:
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data?',\
-                                 QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
+                                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                 QMessageBox.StandardButton.No)
       if ret==QMessageBox.StandardButton.Yes:
         docID = hierStack[-1]
         self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':docID, 'stack':item.data()['hierStack']})
@@ -217,11 +222,18 @@ class TreeView(QTreeView):
                                                         'addToExisting':item.data()['fPath']=='*'})# if true, add to existing; if false, create new
       event.ignore()
     elif 'application/x-qstandarditemmodeldatalist' in event.mimeData().formats():
-      sourceIndex = event.source().selectionModel().selectedIndexes()[0]          # type: ignore[attr-defined]
+      if event.source() is not self:
+        event.ignore()
+        return
+      selectedIndexes = self.selectionModel().selectedIndexes()
+      if not selectedIndexes:
+        event.ignore()
+        return
+      sourceIndex = selectedIndexes[0]
       sourceDocID = sourceIndex.data(Qt.ItemDataRole.UserRole + 1)['hierStack'].split('/')[-1]
       targetIndex = self.indexAt(event.position().toPoint())
       if self.dropIndicatorPosition() == QAbstractItemView.DropIndicatorPosition.OnItem and \
-        not targetIndex.data(Qt.ItemDataRole.UserRole + 1)['docType'][0].startswith('x'):# this is not a folder but an item with no path
+        (not targetIndex.isValid() or not targetIndex.data(Qt.ItemDataRole.UserRole + 1)['docType'][0].startswith('x')):# this is not a folder but an item with no path
         QMessageBox.critical(self, 'Error', 'You can drop items only onto folders.')
         return
       if self.dropIndicatorPosition() in (QAbstractItemView.DropIndicatorPosition.AboveItem,

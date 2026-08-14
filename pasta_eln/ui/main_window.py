@@ -8,9 +8,9 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QEvent, Qt, QTimer, QUrl, Slot
+from PySide6.QtCore import QEvent, QTimer, QUrl, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QPixmap
-from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QMainWindow, QMessageBox, QSplitter, QVBoxLayout
+from PySide6.QtWidgets import QFileDialog, QLabel, QMainWindow, QMessageBox, QSplitter
 from pasta_eln import __version__
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.fixed_strings_json import aboutMessage, confFileName, shortcuts
@@ -27,8 +27,6 @@ from pasta_eln.ui.message_dialog import showMessage
 from pasta_eln.ui.palette import Palette
 from pasta_eln.ui.repositories.upload_gui import UploadGUI
 from pasta_eln.ui.sidebar.sidebar import ProjectSidebar
-from pasta_eln.ui.tutorials.manager import TutorialManager
-from pasta_eln.ui.tutorials.tutorial_panel import TutorialPanel
 from pasta_eln.ui.widget import Shortcut
 
 
@@ -54,19 +52,6 @@ class MainWindow(QMainWindow):
     self.comm.formDoc.connect(self.formDoc)
     self.comm.changeSidebar.connect(self.paint)
     self.comm.backendThread.worker.beSendTaskReport.connect(self.showReport)
-
-    if self.comm.configuration['GUI'].get('tutorial', ''):
-      self.tutorialManager = TutorialManager(self.comm.configuration['GUI']['tutorial'])
-      self.tutorialPanel = TutorialPanel(self.comm, self.tutorialManager)
-      self.tutorialDialog = QDialog(self)
-      self.tutorialDialog.setWindowTitle('Tutorial')
-      dialogLayout = QVBoxLayout()
-      dialogLayout.setContentsMargins(0, 0, 0, 0)
-      dialogLayout.addWidget(self.tutorialPanel)
-      self.tutorialDialog.setLayout(dialogLayout)
-      self.tutorialDialog.setWindowFlag(Qt.WindowType.Window, True)
-      self.tutorialDialog.show()
-      self.comm.uiRequestTask.connect(self.tutorialManager.handleTask)
 
     # GUI
     self.setWindowTitle(f"PASTA-ELN {__version__}")
@@ -251,8 +236,7 @@ class MainWindow(QMainWindow):
       dialogS = SchemeEditor(self.comm)
       dialogS.exec()
     elif commandType is Command.DEFINITIONS:
-      dialogD = DefinitionsEditor(self.comm)
-      dialogD.show()
+      DefinitionsEditor(self.comm).exec()
     elif commandType is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       if fileName is not None:

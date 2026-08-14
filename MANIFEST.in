@@ -5,4 +5,3 @@ global-exclude *.py[cod]
 
 include pasta_eln/Resources/ExampleMeasurements/*
 include pasta_eln/Resources/Icons/*
-include pasta_eln/Resources/Tutorials/*

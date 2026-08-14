@@ -7,7 +7,7 @@ from typing import Any
 import pandas as pd
 import qtawesome as qta
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import QDialog, QFileDialog, QTableWidget, QTableWidgetItem, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QFileDialog, QMessageBox, QTableWidget, QTableWidgetItem, QVBoxLayout
 from ...misc_tools import callAddOn
 from ..gui_communicate import Communicate
 from ..gui_style import TextButton, space, widgetAndLayout
@@ -108,7 +108,17 @@ class Editor(QDialog):
     elif command[0] is Command.IMPORT:
       fileName = QFileDialog.getOpenFileName(self, 'Read table from .csv file', str(Path.home()), '*.csv')[0]
       if fileName != '':
-        self.data = pd.read_csv(fileName).fillna('')
+        importedData = pd.read_csv(fileName, dtype=str).fillna('')
+        requiredColumns = {'key', 'description', 'PURL', 'defType'}
+        if set(importedData.columns) != requiredColumns:
+          QMessageBox.warning(self, 'Invalid definitions file',
+                              'The CSV file must contain exactly the columns: key, description, PURL, defType.')
+          return
+        if not importedData['defType'].isin({'class', 'attribute'}).all():
+          QMessageBox.warning(self, 'Invalid definitions file',
+                              'The defType column may contain only "class" or "attribute".')
+          return
+        self.data = importedData.rename({'description':'label'}, axis=1)[['key', 'label', 'PURL', 'defType']]
         self.paint()
     elif command[0] is Command.ADDON:
       try:
@@ -123,8 +133,8 @@ class Editor(QDialog):
       for _, row in self.getDataframe().iterrows():
         key, description, purl, dType = row.values
         if dType == 'class':
-          tasks.append({'type':'one',
-                   'cmd':f"UPDATE docTypes SET PURL='{purl}', title='{description}' WHERE docType = '{key}'"})
+          tasks.append({'type':'one', 'cmd':'UPDATE docTypes SET PURL = ?, title = ? WHERE docType = ?',
+                        'list':[purl, description, key]})
         else:
           tasks.append({'type':'one', 'cmd':'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);',
                         'list':[key, description, purl]})
