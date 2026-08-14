@@ -14,6 +14,7 @@ from pasta_eln import __version__
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.fixed_strings_json import aboutMessage, confFileName, shortcuts
 from pasta_eln.misc_tools import hardRestart, installPythonPackages, updateAddOnList
+from pasta_eln.ui.body.body import Body
 from pasta_eln.ui.config.main import Configuration
 from pasta_eln.ui.data_hierarchy.editor import SchemeEditor
 from pasta_eln.ui.definitions.editor import Editor as DefinitionsEditor
@@ -24,10 +25,9 @@ from pasta_eln.ui.gui_style import Action, ScrollMessageBox
 from pasta_eln.ui.message_dialog import showMessage
 from pasta_eln.ui.palette import Palette
 from pasta_eln.ui.repositories.upload_gui import UploadGUI
+from pasta_eln.ui.sidebar.sidebar import ProjectSidebar
 from pasta_eln.ui.tutorials.manager import TutorialManager
 from pasta_eln.ui.tutorials.tutorial_panel import TutorialPanel
-from pasta_eln.ui.body.body import Body
-from pasta_eln.ui.sidebar.sidebar import ProjectSidebar
 from pasta_eln.ui.widget import Shortcut
 
 

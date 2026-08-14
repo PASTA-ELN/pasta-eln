@@ -4,13 +4,11 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
-
 import pandas as pd
 from PySide6.QtCore import QByteArray, QItemSelection, QItemSelectionModel, QModelIndex, QSize, Qt, Slot
 from PySide6.QtGui import QIcon, QImage, QPixmap
-from PySide6.QtWidgets import (QComboBox, QFileDialog, QHBoxLayout, QListWidget, QListWidgetItem, QMenu,
-                               QMessageBox, QTableView, QVBoxLayout, QWidget)
-
+from PySide6.QtWidgets import (QComboBox, QFileDialog, QHBoxLayout, QListWidget, QListWidgetItem, QMenu, QMessageBox,
+                               QTableView, QVBoxLayout, QWidget)
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.misc_tools import callAddOn, isDocID
 from pasta_eln.ui.gui_communicate import Communicate

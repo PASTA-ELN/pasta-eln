@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QInputDialog, QPushButton, QScrollArea, QSizePolic
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Label
 from pasta_eln.ui.workplan_creator.workplan_functions import (Storage, Workplan, WorkplanProcedure,
-                                                                  generateAndSaveWorkplan)
+                                                              generateAndSaveWorkplan)
 from pasta_eln.ui.workplan_creator.workplan_list_item import WorkplanListItem
 
 

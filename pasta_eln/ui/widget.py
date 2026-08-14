@@ -3,12 +3,12 @@
 The classes in this module deliberately keep a concise construction style  while giving every interactive host
 the same ``execute`` interface.
 """
+from collections.abc import Callable
 from enum import Enum, auto
-from typing import Any, Callable, Final, Literal
-
+from typing import Any, Final, Literal
 import qtawesome
-from PySide6.QtGui import QShortcut
 from PySide6.QtCore import QSize
+from PySide6.QtGui import QShortcut
 from PySide6.QtWidgets import QLayout, QPushButton, QWidget
 
 

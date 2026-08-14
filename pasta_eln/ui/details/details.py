@@ -5,12 +5,12 @@ from typing import Any
 from PySide6.QtCore import QUrl, Signal, Slot
 from PySide6.QtGui import QDesktopServices, QShowEvent, Qt
 from PySide6.QtWidgets import QHBoxLayout, QMenu, QScrollArea, QSplitter, QTextEdit, QVBoxLayout, QWidget
-from pasta_eln.fixed_strings_json import SORTED_DB_KEYS
 from pasta_eln.backend_worker.worker import Task
+from pasta_eln.fixed_strings_json import SORTED_DB_KEYS
 from pasta_eln.misc_tools import clearLayout, makeStringWrappable
+from pasta_eln.ui.details.details_hier_item import DetailsHierItem
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Action, Label, ResizeImage
-from pasta_eln.ui.details.details_hier_item import DetailsHierItem
 from pasta_eln.ui.widget import SPACE, Button, ButtonStyle, Widget
 
 

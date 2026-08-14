@@ -6,11 +6,11 @@ import qtawesome
 from PySide6.QtCore import QSize, Slot
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QSplitter, QTabWidget, QVBoxLayout, QWidget
+from pasta_eln.ui.body.tabBar import ProjectTabBar
+from pasta_eln.ui.details.details import Details
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.project.project import Project
-from pasta_eln.ui.details.details import Details
 from pasta_eln.ui.table.table import TableView
-from pasta_eln.ui.body.tabBar import ProjectTabBar
 
 
 class Body(QWidget):

@@ -1,11 +1,8 @@
 """Dialog for choosing and ordering the columns displayed in a document list."""
 from collections import defaultdict
-
 import pandas as pd
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QHBoxLayout,
-                               QListWidget, QPushButton, QVBoxLayout)
-
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QHBoxLayout, QListWidget, QPushButton, QVBoxLayout
 from pasta_eln.backend_worker.sqlite import MAIN_ORDER
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.ui.gui_communicate import Communicate

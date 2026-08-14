@@ -3,6 +3,7 @@ from PySide6.QtCore import Slot
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QTabBar
 
+
 class ProjectTabBar(QTabBar):
   """A tab bar which keeps the project overview tab visually separate."""
   _HOME_TAB_DATA = 'project-home'
