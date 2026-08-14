@@ -6,10 +6,10 @@ import pandas as pd
 import qtawesome as qta
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QRegularExpressionValidator
-from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 from ...fixed_strings_json import allIcons
 from ..gui_communicate import Communicate
-from ..gui_style import widgetAndLayout, widgetAndLayoutForm
+from ..gui_style import widgetAndLayout
 from ..message_dialog import showMessage
 from ..widget import SPACE, Button, ButtonStyle
 
@@ -34,7 +34,10 @@ class DocTypeEditor(QDialog):
     mainL = QVBoxLayout(self)
     mainL.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
     mainL.setSpacing(SPACE.S)
-    _, self.mainForm = widgetAndLayoutForm(mainL)
+    self.mainForm = QFormLayout()
+    self.mainForm.setSpacing(0)
+    self.mainForm.setContentsMargins(0, 0, 0, 0)
+    mainL.addLayout(self.mainForm)
     self.setWindowTitle('Edit item type properties')
     mainL.addStretch(1)
     footer = QHBoxLayout()

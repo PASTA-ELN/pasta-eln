@@ -7,10 +7,9 @@ from PySide6.QtCore import QByteArray, QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPainter, QPixmap, QResizeEvent
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtWidgets import (QBoxLayout, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel, QLayout, QLayoutItem,
-                               QMenu, QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTabWidget,
+from PySide6.QtWidgets import (QBoxLayout, QFrame, QHBoxLayout, QLabel, QLayout, QLayoutItem,
+                               QMenu, QSizePolicy, QSplitter,
                                QVBoxLayout, QWidget)
-from ..text_tools.handle_dictionaries import dict2ul
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                   # spaces: padding and margin
 
@@ -158,43 +157,6 @@ class Label(QLabel):
     return
 
 
-class ScrollMessageBox(QMessageBox):
-  """ Scrollable message box for lots of dictionary information """
-  def __init__(self, title:str, content:dict[str,Any], style:str=''):
-    """
-    Args:
-      title (str): title
-      content (dict): dictionary of lots of information
-      style (str): css style
-    """
-    cssStyle = '<style> ul {list-style-type: none; padding-left: 0; margin: 0; text-indent: -20px; padding-left: -20px;} </style>'
-    QMessageBox.__init__(self)
-    self.setWindowTitle(title)
-    if not style:
-      self.setStyleSheet('QScrollArea{min-width:300 px; min-height: 400px}')
-    else:
-      self.setStyleSheet(style)
-    self.scrollAreas = []
-    self.labels = []
-    for value in content.values():
-      scroll = QScrollArea(self)
-      scroll.setWidgetResizable(True)
-      label = QLabel()
-      label.setWordWrap(True)
-      label.setText(cssStyle+dict2ul(value))
-      label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-      scroll.setWidget(label)
-      self.scrollAreas.append(scroll)
-      self.labels.append(label)
-    if len(content)==1:
-      self.layout().addWidget(self.scrollAreas[0], 0, 0, 1, self.layout().columnCount())        # type: ignore
-    else:
-      self.tabW = QTabWidget(self)
-      for idx, key in enumerate(content):
-        self.tabW.addTab(self.scrollAreas[idx], key)
-      self.layout().addWidget(self.tabW, 0, 0, 1, self.layout().columnCount())                  # type: ignore
-
-
 def widgetAndLayout(direction:str='V', parentLayout:QLayout |QSplitter | None=None, spacing:str='0', left:str='0',
                     top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QBoxLayout]:
   """
@@ -229,51 +191,6 @@ def widgetAndLayout(direction:str='V', parentLayout:QLayout |QSplitter | None=No
     parentLayout.addWidget(widget)
   return widget, layout
 
-
-def widgetAndLayoutForm(parentLayout:QLayout |QSplitter | None=None, spacing:str='0', left:str='0',
-                    top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QFormLayout]:
-  """
-  Convenient function for widget and a form layout
-  - comment see above
-
-  Args:
-    parentLayout (QLayout): to which layout should the widget be added. If none, no adding
-    spacing (str): spacing
-    left (str): padding on left
-    top (str): padding on top
-    right (str): padding on right
-    bottom (str): padding on bottom
-  """
-  widget = QWidget()
-  layout = QFormLayout(widget)
-  layout.setSpacing(space[spacing])
-  layout.setContentsMargins(space[left], space[top], space[right], space[bottom])
-  if parentLayout is not None:
-    parentLayout.addWidget(widget)
-  return widget, layout
-
-
-def widgetAndLayoutGrid(parentLayout:QLayout | None=None, spacing:str='0', left:str='0',
-                    top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QGridLayout]:
-  """
-  Convenient function for widget and a grid layout
-  - comment see above
-
-  Args:
-    parentLayout (QLayout): to which layout should the widget be added. If none, no adding
-    spacing (str): spacing
-    left (str): padding on left
-    top (str): padding on top
-    right (str): padding on right
-    bottom (str): padding on bottom
-  """
-  widget = QWidget()
-  layout = QGridLayout(widget)
-  layout.setSpacing(space[spacing])
-  layout.setContentsMargins(space[left], space[top], space[right], space[bottom])
-  if parentLayout is not None:
-    parentLayout.addWidget(widget)
-  return widget, layout
 
 class HSeparator(QFrame):
   """

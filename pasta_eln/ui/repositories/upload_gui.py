@@ -5,11 +5,11 @@ from pathlib import Path
 from typing import Any
 import qtawesome as qta
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import QCheckBox, QDialog, QLabel, QLineEdit, QVBoxLayout
+from PySide6.QtWidgets import QCheckBox, QDialog, QGridLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 from ...backend_worker.worker import Task
 from ...fixed_strings_json import confFileName
 from ..gui_communicate import Communicate
-from ..gui_style import Label, widgetAndLayout, widgetAndLayoutGrid
+from ..gui_style import Label, widgetAndLayout
 from ..message_dialog import showMessage
 from ..widget import Button, ButtonStyle
 
@@ -66,7 +66,11 @@ class UploadGUI(QDialog):
     Label('Upload to a repository', 'h1', self.mainL)
     _, center = widgetAndLayout('H', self.mainL, spacing='l', bottom='l', top='m')
     repositories = self.comm.configuration['repositories']
-    leftSideW, leftSide = widgetAndLayoutGrid(center, spacing='m', right='l')
+    leftSideW = QWidget(self)
+    leftSide = QGridLayout(leftSideW)
+    leftSide.setSpacing(10)
+    leftSide.setContentsMargins(0, 0, 20, 0)
+    center.addWidget(leftSideW)
     leftSideW.setStyleSheet('border-right: 2px solid black;')
     leftSide.setAlignment(Qt.AlignTop)                                            # type: ignore[attr-defined]
     leftSide.addWidget(Label('Metadata','h2'), 0, 0)

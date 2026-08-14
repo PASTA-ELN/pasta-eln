@@ -22,12 +22,11 @@ from pasta_eln.ui.definitions.editor import Editor as DefinitionsEditor
 from pasta_eln.ui.details.details import Command as DetailsCommand
 from pasta_eln.ui.form.form import Form
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.gui_style import Action, ScrollMessageBox
-from pasta_eln.ui.message_dialog import showMessage
+from pasta_eln.ui.gui_style import Action
+from pasta_eln.ui.message_dialog import MessageDialog, showMessage
 from pasta_eln.ui.palette import Palette
 from pasta_eln.ui.repositories.upload_gui import UploadGUI
 from pasta_eln.ui.sidebar.sidebar import ProjectSidebar
-from pasta_eln.ui.widget import Shortcut
 
 
 class MainWindow(QMainWindow):
@@ -101,12 +100,6 @@ class MainWindow(QMainWindow):
     Action('Verify database',           self, Command.CHECK_DB, developerMenu, shortcut='Ctrl+?')
     Action('Restart application',       self, Command.RESTART, developerMenu, shortcut='F9')
     Action('Capture window screenshot', self, Command.SCREENSHOT, developerMenu, shortcut='F12')
-
-    # shortcuts for advanced usage (user should not need)
-    self.restartShortcut = Shortcut('F9',             self, lambda: self.execute(Command.RESTART))
-    self.uiScreenshotShortcut = Shortcut('F12',       self, lambda: self.execute(Command.SCREENSHOT))
-    if 'develop' not in self.comm.configuration:
-      self.checkDatabaseShortcut = Shortcut('Ctrl+?', self, lambda: self.execute(Command.CHECK_DB))
 
     # GUI elements
     self.splitter = QSplitter(handleWidth=3)
@@ -248,9 +241,8 @@ class MainWindow(QMainWindow):
       configProjecGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
       installPythonPackages(configProjecGroup['addOnDir'])
       reportDict = updateAddOnList(self.comm.projectGroup)
-      messageWindow = ScrollMessageBox('Add-on list updated', {'main': reportDict},
-                                       style='QScrollArea{min-width:600 px; min-height:400px}')
-      messageWindow.exec()
+      MessageDialog(self, 'Add-on list updated', {'main': reportDict}, minWidth=600,
+                    style='QScrollArea{min-height:400px}').exec()
       hardRestart()
     elif commandType is Command.CONFIG:
       dialogC = Configuration(self.comm)

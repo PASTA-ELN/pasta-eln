@@ -20,8 +20,8 @@ from ...misc_tools import callAddOn, isDocID
 from ...text_tools.string_changes import markdownEqualizer
 from .._context_menu import CommandMenu, executeContextMenu, initContextMenu
 from ..gui_communicate import Communicate
-from ..gui_style import Action, FlowLayout, Image, Label, ScrollMessageBox
-from ..message_dialog import showMessage
+from ..gui_style import Action, FlowLayout, Image, Label
+from ..message_dialog import MessageDialog, showMessage
 from ..widget import SPACE, Button, ButtonStyle, Shortcut
 from .form_section import FormSection
 from .text_editor import TextEditor
@@ -757,9 +757,8 @@ class Form(QDialog):
       self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':sqlCmd}])
       while history is None:
         time.sleep(0.1)
-      messageWindow = ScrollMessageBox('Details', {'current':doc,'history':history},
-                                       style='QScrollArea{min-width:600 px; min-height:400px}')
-      messageWindow.exec()
+      MessageDialog(self, 'Details', {'current':doc,'history':history}, minWidth=600,
+                    style='QScrollArea{min-height:400px}').exec()
 
     else:
       logging.error('Unknown Command %s', command, exc_info=True)

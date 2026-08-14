@@ -4,25 +4,28 @@ from typing import Any
 import qtawesome as qta
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QTextDocument
-from PySide6.QtWidgets import QApplication, QDialog, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QDialog, QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
 from .gui_style import Image, Label
+from ..text_tools.handle_dictionaries import dict2ul
 from .widget import SPACE, Button, ButtonStyle
 
 iconSize = 40                                                              # size of the icon at top of dialog
 
 class MessageDialog(QDialog):
   """ Dialog that shows a message and the progress-bar """
-  def __init__(self, parent:QWidget, title:str, text:str, icon:str='', image:str='', minWidth:int=-1) -> None:
+  def __init__(self, parent:QWidget | None, title:str, text:str | dict[str, Any], icon:str='', image:str='',
+               minWidth:int=-1, style:str='') -> None:
     """
     Show message box for little information and possibly an image
 
     Args:
       parent (QWidget): parent widget (self)
       title (str): title of box
-      text (str): text in box
+      text (str | dict): text or sectioned content in box
       icon (str): icon: 'Information','Warning','Critical'
       image (str): image to show
       minWidth (int): minimum width of dialog
+      style (str): additional style sheet
     """
     super().__init__(parent)
     self.comm:Any = getattr(parent, 'comm', None)
@@ -31,6 +34,8 @@ class MessageDialog(QDialog):
                     'fa5s.exclamation-circle' if icon=='Warning' else
                     'fa5s.info', color='white', scale_factor=1)
     self.setWindowTitle(title)
+    if style:
+      self.setStyleSheet(style)
     if minWidth > 0:
       self.setMinimumWidth(minWidth)
     else:
@@ -47,16 +52,36 @@ class MessageDialog(QDialog):
       mainL.addWidget(iconLabel, alignment=Qt.AlignHCenter)                                     # type: ignore
     if image:
       Image(image, mainL, anyDimension=400)
-    textLabel = Label(text, 'h2', mainL)
-    if text.startswith('<') and text.endswith('>'):
-      textLabel.setTextFormat(Qt.TextFormat.RichText)
-      text = text.replace('<font color="black">',f'<font color="{parent.comm.palette.get("secondaryText", "").strip()[2:-1]}">')# type: ignore[attr-defined]
-      textLabel.setText(text)
+    if isinstance(text, dict):
+      self.messageText = dict2ul(text)
+      sectionsWidget = QWidget()
+      sectionsLayout = QVBoxLayout(sectionsWidget)
+      sectionsLayout.setContentsMargins(SPACE.S, SPACE.S, SPACE.S, SPACE.S)
+      sectionsLayout.setSpacing(SPACE.S)
+      cssStyle = ('<style> ul {list-style-type: none; padding-left: 0; margin: 0; '
+                  'text-indent: -20px; padding-left: -20px;} </style>')
+      for sectionTitle, sectionContent in text.items():
+        Label(sectionTitle, 'h2', sectionsLayout)
+        sectionLabel = QLabel(cssStyle + dict2ul(sectionContent))
+        sectionLabel.setWordWrap(True)
+        sectionLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        sectionsLayout.addWidget(sectionLabel)
+      scrollArea = QScrollArea(widgetResizable=True)
+      scrollArea.setWidget(sectionsWidget)
+      mainL.addWidget(scrollArea, stretch=1)
     else:
-      textLabel.setTextFormat(Qt.TextFormat.MarkdownText)
+      self.messageText = text
+      textLabel = Label(text, 'h2', mainL)
+      if text.startswith('<') and text.endswith('>'):
+        textLabel.setTextFormat(Qt.TextFormat.RichText)
+        if self.comm is not None:
+          text = text.replace('<font color="black">',
+                              f'<font color="{self.comm.palette.get("secondaryText", "").strip()[2:-1]}">')
+        textLabel.setText(text)
+      else:
+        textLabel.setTextFormat(Qt.TextFormat.MarkdownText)
     buttonLineL = QHBoxLayout()
     buttonLineL.setContentsMargins(0, SPACE.S, 0, 0)
-    self.messageText = text
     self.copyButton = Button('Copy message', self, Command.COPY, buttonLineL, tooltip='Copy to clipboard')
     buttonLineL.addStretch(2)
     self.okButton = Button('OK', self, Command.ACCEPT, buttonLineL, tooltip='Accept', style=ButtonStyle.HIGHLIGHTED)
