@@ -8,9 +8,9 @@ import matplotlib
 import pandas as pd
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLineEdit, QTableWidget, QTableWidgetItem
+from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget,
+                               QTableWidgetItem, QVBoxLayout, QWidget)
 from pasta_eln.misc_tools import MplCanvas, callDataExtractor, isFloat
-from pasta_eln.ui.gui_style import Label, space, widgetAndLayout
 
 # The following two variables are mandatory
 description  = 'Default data plot'  #short description that is shown in the menu
@@ -35,9 +35,13 @@ class DataAnalyse(QDialog):
     self.setWindowTitle('Analyze data')
     self.setMinimumWidth(1050)  #set size to match 4 blocks of 8bytes
     masterL = QHBoxLayout(self)
-    masterL.setSpacing(space['s'])
+    masterL.setSpacing(4)
     self.setStyleSheet(f"QLineEdit, QComboBox {{  {widget.comm.palette.get('secondaryText','color')} }}")
-    _, mainL = widgetAndLayout('V', masterL, spacing='s')
+    mainW = QWidget(self)
+    mainL = QVBoxLayout(mainW)
+    mainL.setSpacing(5)
+    mainL.setContentsMargins(0, 0, 0, 0)
+    masterL.addWidget(mainW)
     self.rightW = QTableWidget(self.df.shape[0], 1)
     for row in range(self.rightW.rowCount()):
       item = QTableWidgetItem(self.df['name'].iloc[row])
@@ -56,7 +60,10 @@ class DataAnalyse(QDialog):
     self.columns = list(data[0].columns)
 
     #graph
-    self.graphW, graphL = widgetAndLayout('V', None)
+    self.graphW = QWidget(self)
+    graphL = QVBoxLayout(self.graphW)
+    graphL.setSpacing(0)
+    graphL.setContentsMargins(0, 0, 0, 0)
     self.graph = MplCanvas(self, width=5, height=4, dpi=100)
     self.graphToolbar = NavigationToolbar(self.graph, self)
     self.graphToolbar.setIconSize(QSize(24, 24))
@@ -66,44 +73,63 @@ class DataAnalyse(QDialog):
     mainL.addWidget(self.graphW, stretch=1)
 
     #X-Axis
-    _, rowXL = widgetAndLayout('H', mainL, 'm', 's', '0', 's')
-    Label('x-axis:','h2',rowXL)
+    rowXL = QHBoxLayout()
+    rowXL.setSpacing(10)
+    rowXL.setContentsMargins(5, 5, 0, 5)
+    mainL.addLayout(rowXL)
+    xAxisTitle = QLabel('x-axis:')
+    xAxisTitle.setStyleSheet('border: none; font-size: 14pt;')
+    rowXL.addWidget(xAxisTitle)
     self.xAxisCB = QComboBox()
     self.xAxisCB.addItems(self.columns)
     self.xAxisCB.currentTextChanged.connect(self.refresh)
     rowXL.addWidget(self.xAxisCB)
-    Label('min:','',rowXL)
+    rowXL.addWidget(QLabel('min:'))
     self.xAxisMin = QLineEdit('')
     self.xAxisMin.textChanged.connect(self.refresh)
     rowXL.addWidget(self.xAxisMin)
-    Label('max:','',rowXL)
+    rowXL.addWidget(QLabel('max:'))
     self.xAxisMax = QLineEdit('')
     self.xAxisMax.textChanged.connect(self.refresh)
     rowXL.addWidget(self.xAxisMax)
-    Label('label:','',rowXL)
+    rowXL.addWidget(QLabel('label:'))
     self.xAxisLabel = QLineEdit('')
     self.xAxisLabel.textChanged.connect(self.refresh)
     rowXL.addWidget(self.xAxisLabel)
 
     #Y-Axis
-    self.rowYW, rowYL = widgetAndLayout('H', mainL, 'm', 's', '0', 's')
-    Label('y-axis:','h2',rowYL)
+    self.rowYW = QWidget(self)
+    rowYL = QHBoxLayout(self.rowYW)
+    rowYL.setSpacing(10)
+    rowYL.setContentsMargins(5, 5, 0, 5)
+    mainL.addWidget(self.rowYW)
+    yAxisTitle = QLabel('y-axis:')
+    yAxisTitle.setStyleSheet('border: none; font-size: 14pt;')
+    rowYL.addWidget(yAxisTitle)
     self.yAxisCB = QComboBox()
     self.yAxisCB.addItems(self.columns)
     self.yAxisCB.currentTextChanged.connect(self.refresh)
     rowYL.addWidget(self.yAxisCB)
-    Label('min:','',rowYL)
+    rowYL.addWidget(QLabel('min:'))
     self.yAxisMin = QLineEdit('')
     self.yAxisMin.textChanged.connect(self.refresh)
     rowYL.addWidget(self.yAxisMin)
-    Label('max:','',rowYL)
+    rowYL.addWidget(QLabel('max:'))
     self.yAxisMax = QLineEdit('')
     self.yAxisMax.textChanged.connect(self.refresh)
     rowYL.addWidget(self.yAxisMax)
-    Label('label:','',rowYL)
+    rowYL.addWidget(QLabel('label:'))
     self.yAxisLabel = QLineEdit('')
     self.yAxisLabel.textChanged.connect(self.refresh)
     rowYL.addWidget(self.yAxisLabel)
+
+    footer = QHBoxLayout()
+    footer.addStretch()
+    closeButton = QPushButton('Close')
+    closeButton.setDefault(True)
+    closeButton.clicked.connect(self.reject)
+    footer.addWidget(closeButton)
+    mainL.addLayout(footer)
 
     self.refresh()
 

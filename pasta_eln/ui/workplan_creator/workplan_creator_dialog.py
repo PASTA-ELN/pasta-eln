@@ -5,12 +5,13 @@ The Top level Widget of the Workplan Creator Dialog. Containing the 3 Main Widge
   - RightMainWidget: Displays Workplan and export-button
 """
 from typing import Any
-from PySide6.QtWidgets import QApplication, QDialog, QGridLayout, QSplitter
+from PySide6.QtWidgets import QApplication, QDialog, QVBoxLayout, QSplitter
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.workplan_creator.center_main_widget import CenterMainWidget
 from pasta_eln.ui.workplan_creator.left_main_widget import LeftMainWidget
 from pasta_eln.ui.workplan_creator.right_main_widget import RightMainWidget
 from pasta_eln.ui.workplan_creator.workplan_functions import Workplan
+from pasta_eln.ui.widget import SPACE
 
 
 class WorkplanCreatorDialog(QDialog):
@@ -37,7 +38,7 @@ class WorkplanCreatorDialog(QDialog):
     self.rightMainWidget = RightMainWidget(self.comm, displayWorkplan)
 
     # splitter to resize each column
-    self.splitter = QSplitter(handleWidth=3)
+    self.splitter = QSplitter(handleWidth=SPACE.M)
     self.splitter.addWidget(self.leftMainWidget)
     self.splitter.setStretchFactor(0, 1)
     self.splitter.addWidget(self.centerMainWidget)
@@ -55,10 +56,10 @@ class WorkplanCreatorDialog(QDialog):
     self.resize(int(screen.width() * 0.75), int(screen.height() * 0.75))
 
     # layout
-    self.mainLayout = QGridLayout()
-    self.mainLayout.addWidget(self.splitter, 0, 0)
-    self.mainLayout.setContentsMargins(0, 0, 0, 0)
-    self.setLayout(self.mainLayout)
+    self.mainLayout = QVBoxLayout(self)
+    self.mainLayout.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
+    self.mainLayout.setSpacing(0)
+    self.mainLayout.addWidget(self.splitter)
 
   def _onGetProjectDoc(self, doc: dict[str, Any]) -> None:
     """
