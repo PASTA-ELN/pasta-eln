@@ -8,94 +8,11 @@ from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPainter, 
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (QBoxLayout, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel, QLayout, QLayoutItem,
-                               QMenu, QMessageBox, QPushButton, QScrollArea, QSizePolicy, QSplitter, QTabWidget,
+                               QMenu, QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTabWidget,
                                QVBoxLayout, QWidget)
 from ..text_tools.handle_dictionaries import dict2ul
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                   # spaces: padding and margin
-
-
-class TextButton(QPushButton):
-  """ Button that has only text"""
-  def __init__(self, label:str, widget:QWidget, command:list[Any]|None=[], layout:QLayout | None=None,
-               tooltip:str='', checkable:bool=False, style:str='', hide:bool=False, iconName:str='',
-               shortCut:str | None=None):
-    """
-    Args:
-      label (str): label printed on button
-      widget (QWidget): widget / dialog that host the button and that has the execute function
-      command (enum): command that is used in called-function: possibly a list of multiple terms
-      layout (QLayout): button to be added to this layout
-      tooltip (str): tooltip shown when mouse hovers the button
-      checkable (bool): can the button change its background color
-      style (str): css style
-      hide (bool): hidden or shown initially
-      iconName (str): icon name
-      shortcut (str): shortcut (e.g. Ctrl+K), automatically set as tooltip
-    """
-    super().__init__()
-    self.setText(label)
-    self.setCheckable(checkable)
-    self.setChecked(checkable)
-    self.setAutoDefault(False)
-    self.setDefault(False)
-    if command is not None:
-      self.clicked.connect(lambda: widget.execute(command))                       # type: ignore[attr-defined]
-    if shortCut is not None:
-      self.setShortcut(QKeySequence(shortCut))
-      shortcutText = QKeySequence(shortCut).toString(QKeySequence.SequenceFormat.NativeText)
-      tooltip = f'{tooltip} ({shortcutText})' if tooltip else shortcutText
-    if tooltip:
-      self.setToolTip(tooltip)
-    if style:
-      self.setStyleSheet(style)
-    else:
-      primaryColor   = widget.comm.palette.get('primary',  'background-color')    # type: ignore[attr-defined]
-      secondaryColor = widget.comm.palette.get('buttonText','color')              # type: ignore[attr-defined]
-      self.setStyleSheet(f'border-width: 0px; {primaryColor} {secondaryColor}')
-    if hide:
-      self.hide()
-    if iconName:
-      icon = qta.icon(iconName, scale_factor=1)
-      self.setIcon(icon)
-    if layout is not None:
-      layout.addWidget(self)
-
-
-class IconButton(QPushButton):
-  """ Button that has only an icon"""
-  def __init__(self, iconName:str, widget:QWidget, command:list[Any]=[], layout:QLayout | None=None,
-               tooltip:str='', style:str='', hide:bool=False, checkable:bool=False):
-    """
-    Args:
-      iconName (str): icon to show on button
-      widget (QWidget): widget / dialog that host the button and that has the execute function
-      command (enum): command that is used in called-function: possibly a list of multiple terms
-      layout (QLayout): button to be added to this layout
-      tooltip (str): tooltip shown when mouse hovers the button
-      style (str): css style
-      hide (bool): hidden or shown initially
-      checkable (bool): can the button change its background color
-    """
-    super().__init__()
-    icon = qta.icon(iconName, scale_factor=1)                                              # color change here
-    self.setIcon(icon)
-    self.setCheckable(checkable)
-    self.command = command
-    self.clicked.connect(lambda: widget.execute(self.command))                    # type: ignore[attr-defined]
-    self.setFixedHeight(30)
-    if tooltip:
-      self.setToolTip(tooltip)
-    if style:
-      self.setStyleSheet(f'QPushButton {{{style}}} QPushButton:checked {{border: "red"; border-width: 5px; {style}}}')
-    else:
-      primaryColor   = widget.comm.palette.get('primary', 'background-color')     # type: ignore[attr-defined]
-      secondaryColor = widget.comm.palette.get('secondary','color')               # type: ignore[attr-defined]
-      self.setStyleSheet(f'QPushButton {{border-width: 0px; {primaryColor} {secondaryColor}}} QPushButton:checked {{border: 3px solid red; {primaryColor} {secondaryColor}}}')
-    if hide:
-      self.hide()
-    if layout is not None:
-      layout.addWidget(self)
 
 
 class Action(QAction):

@@ -59,21 +59,11 @@ def main(comm, hierStack, widget, parameter={}):
     hierarchy, _ = getHierarchy(comm, hierStack.split('/')[0])
     qtDocument = QTextDocument()   #used for markdown -> html conversion
 
-    # function to handle each data entry
-    def node2html(node):
-        """
-        Function that renders each node into html
-        - Node properties: depth, name, docType, id
-
-        Args:
-            node (anyNode): anytree node to process
-
-        Returns:
-            str: conversion of node into html string
-        """
+    out = ''
+    for node in PreOrderIter(hierarchy):
         hidden = not all(node.gui)        # is this node hidden?
         if hidden:
-            return ''
+            continue
         doc = getDoc(comm, node.id)  # GET ALL INFORMATION OF THIS NODE
         output = '<div class="node">\n'
         # headline of each node: either as html headline or normal text, incl. the objective
@@ -96,10 +86,7 @@ def main(comm, hierStack, widget, parameter={}):
             output += qtDocument.toHtml()
         output += f'<img src="{doc["image"]}"/>' if 'image' in doc and doc['image'].startswith('data:') else ''
         output += doc['image'] if 'image' in doc and doc['image'].startswith('<?xml version="1.0"') else ''
-        return f'{output}</td></tr></table></div>\n\n'
-
-    # main function that calls the render function
-    out = ''.join(node2html(node) for node in PreOrderIter(hierarchy))
+        out += f'{output}</td></tr></table></div>\n\n'
 
     # add footer line with pasta-eln icon (read and converted to base64 to be inline included in html)
     iconImg = Image.open(f'{icons.__path__[0]}/favicon64.ico')
