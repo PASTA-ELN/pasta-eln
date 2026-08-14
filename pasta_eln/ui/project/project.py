@@ -41,7 +41,6 @@ class Project(Widget):
     self.actionFoldAll                     = QAction()
     self.showDetailsAll                    = False
     self.btnAddSubfolder:Button | None     = None
-    self.btnEditProject: Button | None     = None
     self.btnMore:        Button | None     = None
     self.btnVisibility:  Button | None     = None
     self.lineSep = 20
@@ -97,7 +96,7 @@ class Project(Widget):
     try:
       for node in PreOrderIter(self.hierarchy, maxlevel=2):
         if node is None or node.is_root:                                                      # Project header
-          self.projHeader()
+          self.paintProjectHeader()
         else:
           rootItem.appendRow(self.iterateTree(node))
     except AttributeError:
@@ -122,7 +121,7 @@ class Project(Widget):
     return
 
 
-  def projHeader(self) -> None:
+  def paintProjectHeader(self) -> None:
     """
     Paint header of page
     """
@@ -139,9 +138,7 @@ class Project(Widget):
     topLineL.addStretch(1)
     # buttons in top line
     self.btnAddSubfolder = Button('Add subfolder', self, Command.ADD_CHILD, topLineL,
-                                  icon='ri.folder-add-line')
-    self.btnEditProject = Button('Edit project', self, Command.EDIT, topLineL,
-                                 icon='ri.edit-2-fill', style=ButtonStyle.HIGHLIGHTED)
+                                  icon='ri.folder-add-line', style=ButtonStyle.HIGHLIGHTED)
     self.btnVisibility = Button('Visibility', self, layout=topLineL,
                                 icon='ri.eye-line', style=ButtonStyle.PRIMARY)
     visibilityMenu = QMenu(self)
@@ -155,17 +152,14 @@ class Project(Widget):
     self.btnMore = Button('More', self, layout=topLineL,
                           icon='ri.more-fill', style=ButtonStyle.PRIMARY)
     moreMenu = QMenu(self)
-    Action('Scan',                      self, [Command.SCAN], moreMenu)
+    Action('Edit project',              self, Command.EDIT, moreMenu, icon='ri.edit-2-fill')
+    Action('Scan',                      self, Command.SCAN, moreMenu, icon='fa5s.search')
     projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
       for label, description in sorted(projectAddOns.items(), key=lambda item: item[1].casefold()):
         Action(description, self, [Command.ADD_ON, label], moreMenu)
     self.btnMore.setMenu(moreMenu)
 
-    # Details section
-    # self.infoW = QScrollArea()
-    # self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    # self.infoW.setWidgetResizable(True)
     self.allDetails = QTextEdit(self)
     self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, self.comm.dataHierarchyNodes['x0'],
                                              self))
@@ -175,7 +169,6 @@ class Project(Widget):
     self.allDetails.resizeEvent = self.commentResize                                            # type: ignore
     bgColor = self.comm.palette.get('secondaryDark', 'background-color')
     fgColor = self.comm.palette.get('secondaryText', 'color')
-    #TODO: Debug/solve on windows: For none: no color is set, as it should; but then the Windows10 color is white not the default background
     self.allDetails.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
     self.allDetails.setReadOnly(True)
     self.mainL.addWidget(self.allDetails)
