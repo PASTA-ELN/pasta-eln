@@ -7,7 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 from urllib import request
-from ..misc_tools import getConfiguration
+from ..misc_tools import Bcolors, getConfiguration
 from ..text_tools.handle_dictionaries import diffDicts, fillDocBeforeCreate
 from ..text_tools.string_changes import camelCase, createDirName, outputString
 from .extractor import ExtractorManager
@@ -473,6 +473,9 @@ class Backend(CliMixin):
     Returns:
         string: output incl. \n
     """
+    jsonOutput = outputStyle == 'json'
+    if jsonOutput:
+      outputStyle = 'text'
     # check database itself for consistency
     output = self.db.checkDB(outputStyle=outputStyle, minimal=minimal, repair=repair)
     # compare with file system
@@ -584,4 +587,25 @@ class Backend(CliMixin):
       output += outputString(outputStyle,'h2','File summary')
     if outputStyle == 'text':
       output += 'Success\n' if not orphans and count==0 else 'Failure (* can be auto-repaired)\n'
-    return output
+    if not jsonOutput:
+      return output
+    report: dict[str, list[str]] = {'critical': [], 'warning': [], 'information': []}
+    sections = output.split(Bcolors.ENDC) if Bcolors.ENDC else output.splitlines()
+    for section in sections:
+      sectionText = section.lstrip()
+      if (Bcolors.FAIL and Bcolors.FAIL in section) or sectionText.startswith('**ERROR '):
+        category = 'critical'
+      elif (Bcolors.WARNING and Bcolors.WARNING in section) or (Bcolors.HEADER and Bcolors.HEADER in section) or \
+            sectionText.startswith('**Warning '):
+        category = 'warning'
+      else:
+        category = 'information'
+        section = section.replace(Bcolors.FAIL, '').replace(Bcolors.WARNING, '').replace(Bcolors.HEADER, '') \
+                         .replace(Bcolors.OKBLUE, '').replace(Bcolors.OKGREEN, '').replace(Bcolors.BOLD, '') \
+                         .replace(Bcolors.UNDERLINE, '')
+        for message in section.splitlines():
+          message = message.strip().removeprefix('**ERROR ').removeprefix('**Warning ')
+          if not message or message.startswith('***') or message.startswith(('Green:', 'Blue:')):
+            continue
+          report[category].append(message)
+    return json.dumps(report)

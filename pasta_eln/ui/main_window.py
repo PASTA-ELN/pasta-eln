@@ -1,7 +1,6 @@
 """ Graphical user interface houses all widgets """
 import json
 import logging
-import re
 import sys
 import tempfile
 import webbrowser
@@ -251,7 +250,7 @@ class MainWindow(QMainWindow):
     elif commandType is Command.WEBSITE:
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
     elif commandType is Command.CHECK_DB:
-      self.comm.uiRequestTask.emit(Task.CHECK_DB, {'style': 'html'})
+      self.comm.uiRequestTask.emit(Task.CHECK_DB, {'style': 'json'})
     elif commandType is Command.SHORTCUTS:
       showMessage(self, 'Keyboard shortcuts', shortcuts, 'Information')
     elif commandType is Command.ABOUT:
@@ -284,11 +283,8 @@ class MainWindow(QMainWindow):
     if task in (Task.SCAN, Task.DROP_EXTERNAL):
       self.comm.changeProject.emit(self.comm.projectID, '')
     elif task is Task.CHECK_DB:
-      regexStr = r'<font color="magenta">image does not exist m-[0-9a-f]+ image: comment:<\/font><br>'
-      myCount = len(re.findall(regexStr, reportText))
-      if myCount > 5:
-        reportText = re.sub(regexStr, '', reportText, count=myCount - 5)
-        reportText += r'<font color="magenta">image does not exist ...:<\/font><br>'
+      MessageDialog(self, 'Database verification', json.loads(reportText)).exec()
+      return
     elif task not in (Task.EXTRACTOR_TEST, Task.EXTRACTOR_RERUN, Task.DELETE_DOC, Task.EXPORT_ELN, Task.IMPORT_ELN,
                       Task.SYNC_ELAB):                              # e.g. extractor tests work out of the box
       logging.error('Unknown task in showReport: %s', task, exc_info=True)

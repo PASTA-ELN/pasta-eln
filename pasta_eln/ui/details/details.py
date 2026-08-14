@@ -75,11 +75,11 @@ class Details(Widget):
     self.splitter.setSizes([200, self.splitter.size().height() - 200])
 
     # Main Layout
-    self.mainLayout = QVBoxLayout()
-    self.mainLayout.setContentsMargins(SPACE.M, 0, 0, 0)
-    self.mainLayout.addWidget(self.headerW)
-    self.mainLayout.addWidget(self.splitter, stretch=0)
-    self.setLayout(self.mainLayout)
+    self.mainL = QVBoxLayout()
+    self.mainL.setContentsMargins(SPACE.M, 0, 0, 0)
+    self.mainL.addWidget(self.headerW)
+    self.mainL.addWidget(self.splitter, stretch=0)
+    self.setLayout(self.mainL)
 
     # Signals
     self.comm.changeDetails.connect(self.onDetailsChanged)
@@ -118,8 +118,8 @@ class Details(Widget):
     self.contentPreviewW.hide()
     # Init the collapsible Items that contain all the details
     detailsItem = DetailsHierItem(self.comm, 'Details', dataHierarchyNode)
-    vendorItem  = DetailsHierItem(self.comm, 'Vendor Metadata', dataHierarchyNode)
     userItem    = DetailsHierItem(self.comm, 'User Metadata', dataHierarchyNode)
+    vendorItem  = DetailsHierItem(self.comm, 'Vendor Metadata', dataHierarchyNode, startCollapsed=True)
     elnItem     = DetailsHierItem(self.comm, 'ELN Details', dataHierarchyNode, startCollapsed=True)
     # Populate the Content/Image
     for key in self.data:

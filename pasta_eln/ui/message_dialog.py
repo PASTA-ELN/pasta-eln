@@ -1,4 +1,6 @@
 """ Dialog that shows a message and possibly an image """
+import json
+from html import escape
 from enum import Enum, auto
 from typing import Any
 import qtawesome as qta
@@ -6,7 +8,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QTextDocument
 from PySide6.QtWidgets import QApplication, QDialog, QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
 from .gui_style import SPACE, Button, ButtonStyle, Image, Label
-from ..text_tools.handle_dictionaries import dict2ul
+from .details.details_hier_item import DetailsHierItem
 
 iconSize = 40                                                              # size of the icon at top of dialog
 
@@ -52,19 +54,17 @@ class MessageDialog(QDialog):
     if image:
       Image(image, mainL, anyDimension=400)
     if isinstance(text, dict):
-      self.messageText = dict2ul(text)
+      self.messageText = json.dumps(text, indent=2, ensure_ascii=False)
       sectionsWidget = QWidget()
       sectionsLayout = QVBoxLayout(sectionsWidget)
       sectionsLayout.setContentsMargins(SPACE.S, SPACE.S, SPACE.S, SPACE.S)
       sectionsLayout.setSpacing(SPACE.S)
-      cssStyle = ('<style> ul {list-style-type: none; padding-left: 0; margin: 0; '
-                  'text-indent: -20px; padding-left: -20px;} </style>')
       for sectionTitle, sectionContent in text.items():
-        Label(sectionTitle, 'h2', sectionsLayout)
-        sectionLabel = QLabel(cssStyle + dict2ul(sectionContent))
-        sectionLabel.setWordWrap(True)
-        sectionLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        sectionsLayout.addWidget(sectionLabel)
+        messages = sectionContent if isinstance(sectionContent, list) else [sectionContent]
+        content = '<br><br>'.join(escape(str(message)).replace('\n', '<br>') for message in messages)
+        sectionsLayout.addWidget(DetailsHierItem(self.comm, sectionTitle.capitalize(), [], content,  # type: ignore[arg-type]
+                                                 startCollapsed=sectionTitle == 'information'))
+      sectionsLayout.addStretch(1)
       scrollArea = QScrollArea(widgetResizable=True)
       scrollArea.setWidget(sectionsWidget)
       mainL.addWidget(scrollArea, stretch=1)
