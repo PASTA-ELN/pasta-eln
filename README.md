@@ -45,12 +45,7 @@ Open issues are the union of:
 
 ### Repository maintenance items
 
-- Continue GUI transition
-  - Move old ui out of way and renaming ui_new -> ui
-  - Details-edit is bugged, unclear reason
-  - Table selection sometimes deselects everything or is lagging
-  - new Entry - Workplan Creator Interaction → not obvious enough
-  - Table-view gallery has to be merged?
+- Continue GUI transition for all modal dialogs
 - Clean up
   - rerun code quality skill once-a-while
   - Find unused code

@@ -89,6 +89,6 @@ class LookupDelegate(QStyledItemDelegate):
     labelText = index.model().index(index.row(), 1).data()
     if isClickWithinBounds(event, option) and (keyText or labelText):
       ui = TerminologyLookupDialog(labelText or keyText, setPURL)
-      ui.instance.show()
+      ui.show()
       return True
     return False

@@ -4,14 +4,15 @@ import re
 from collections.abc import Callable
 from typing import Any
 from PySide6.QtCore import QThread, Signal
-from PySide6.QtWidgets import QDialogButtonBox, QProgressBar, QTextBrowser, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QProgressBar, QTextBrowser, QVBoxLayout
 
 
-class WaitDialog(QWidget):
+class WaitDialog(QDialog):
   """ Dialog that shows a message and the progress-bar. The content is markdown! """
   def __init__(self) -> None:
     """ Initialization """
     super().__init__()
+    self.setModal(True)
     self.count  = 0
     self.mainL = QVBoxLayout()
     self.setMinimumWidth(500)
