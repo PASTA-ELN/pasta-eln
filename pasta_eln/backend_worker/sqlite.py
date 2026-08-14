@@ -103,7 +103,7 @@ class SqlLiteDB:
       docType (str): docType
       columns (list): list of columns
     """
-    self.cursor.execute(f"UPDATE docTypes SET view='{','.join(columns)}' WHERE docType = '{docType}'")
+    self.cursor.execute('UPDATE docTypes SET view=? WHERE docType=?', (','.join(columns), docType))
     self.connection.commit()
     return
 
@@ -195,15 +195,15 @@ class SqlLiteDB:
       self.connection.row_factory = sqlite3.Row                                                  #default None
       cursor = self.connection.cursor()
       if group:
-        cursor.execute(f"SELECT * FROM docTypeSchema WHERE docType == '{docType}' and class == '{group}'")
+        cursor.execute('SELECT * FROM docTypeSchema WHERE docType=? AND class=?', (docType, group))
       else:
-        cursor.execute(f"SELECT * FROM docTypeSchema WHERE docType == '{docType}'")
+        cursor.execute('SELECT * FROM docTypeSchema WHERE docType=?', (docType,))
       return [dict(i) for i in cursor.fetchall()]
     if column == 'metaColumns':
-      self.cursor.execute(f"SELECT DISTINCT class FROM docTypeSchema WHERE docType == '{docType}'")
+      self.cursor.execute('SELECT DISTINCT class FROM docTypeSchema WHERE docType=?', (docType,))
       return [i[0] for i in self.cursor.fetchall()]
     # if specific docType
-    self.cursor.execute(f"SELECT {column} FROM docTypes WHERE docType == '{docType}'")
+    self.cursor.execute(f"SELECT {column} FROM docTypes WHERE docType=?", (docType,))
     result = self.cursor.fetchone()
     if result is None:
       return []
@@ -238,16 +238,16 @@ class SqlLiteDB:
     """
     self.connection.row_factory = sqlite3.Row                                                    #default None
     cursor = self.connection.cursor()
-    cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
+    cursor.execute('SELECT * FROM main WHERE id=?', (docID,))
     res = cursor.fetchone()
     if res is None:
       if not noError:
         logging.error('sqlite: could not get docID: %s | %s', docID, tracebackString(False, docID))
       return {}
     doc = dict(res)
-    self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")
+    self.cursor.execute('SELECT tag FROM tags WHERE id=?', (docID,))
     doc['tags'] = [i[0] for i in self.cursor.fetchall()]
-    self.cursor.execute(f"SELECT qrCode FROM qrCodes WHERE id == '{docID}'")
+    self.cursor.execute('SELECT qrCode FROM qrCodes WHERE id=?', (docID,))
     doc['qrCodes'] = [i[0] for i in self.cursor.fetchall()]
     for key in ['image', 'content', 'shasum', 'client', 'qrCodes']:
       if len(doc[key])==0 or doc[key]==['']:
@@ -256,7 +256,7 @@ class SqlLiteDB:
     doc['gui'] = [i=='T' for i in doc['gui']]
     doc['branch'] = []
     # data ends with 'id' 'stack', 'child', 'path', 'show', 'dateModified'
-    self.cursor.execute(f"SELECT * FROM branches WHERE id == '{docID}'")
+    self.cursor.execute('SELECT * FROM branches WHERE id=?', (docID,))
     for dataI in self.cursor.fetchall():
       doc['branch'].append({'stack': dataI[2].split('/')[:-1],
                             'child': dataI[3],
@@ -265,8 +265,8 @@ class SqlLiteDB:
     cmd = 'SELECT properties.key, properties.value, properties.unit, definitions.long, definitions.PURL, ' \
           'docTypeSchema.unit FROM properties LEFT JOIN definitions USING(key) '\
           "LEFT JOIN docTypeSchema ON properties.key = (docTypeSchema.class || '.' || docTypeSchema.name) "\
-          f"WHERE properties.id == '{docID}'"
-    self.cursor.execute(cmd)
+          'WHERE properties.id=?'
+    self.cursor.execute(cmd, (docID,))
     res = self.cursor.fetchall()
     metadataFlat:dict[str, tuple[str,str,str,str]]  = {i[0]:(    i[1],                                  #value
                 ('' if i[2] is None else i[2]) or ('' if i[5] is None else i[5]),#unit(priority:property.unit)
@@ -404,7 +404,8 @@ class SqlLiteDB:
         dict: json representation of updated document
     """
     if set(dataNew.keys()) == {'type','image'}:        #if only type and image in update = change of extractor
-      self.cursor.execute(f"UPDATE main SET type='{'/'.join(dataNew['type'])}', image='{dataNew['image']}' WHERE id = '{docID}'")
+      self.cursor.execute('UPDATE main SET type=?, image=? WHERE id=?',
+                          ('/'.join(dataNew['type']), dataNew['image'], docID))
       self.connection.commit()
       return {'id':docID}
     dataNew['client'] = tracebackString(False, f'updateDoc:{docID}')
@@ -416,22 +417,22 @@ class SqlLiteDB:
 
     # tags and qrCodes
     tagsNew= set(dataNew.pop('tags'))
-    self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")
+    self.cursor.execute('SELECT tag FROM tags WHERE id=?', (docID,))
     tagsOld= {i[0] for i in self.cursor.fetchall()}
     if tagsOld.difference(tagsNew):
-      cmd = f"DELETE FROM tags WHERE id == '{docID}' and tag == ?"
-      self.cursor.executemany(cmd, [(i,) for i in tagsOld.difference(tagsNew)])
+      self.cursor.executemany('DELETE FROM tags WHERE id=? AND tag=?',
+                              [(docID, tag) for tag in tagsOld.difference(tagsNew)])
       changesDict['tags'] = ','.join(tagsOld)
     if tagsNew.difference(tagsOld):
       change = tagsNew.difference(tagsOld)
       self.cursor.executemany('INSERT INTO tags VALUES (?, ?);', zip([docID]*len(change), change))
       changesDict['tags'] = ','.join(tagsOld)
     qrCodesNew= set(dataNew.pop('qrCodes', []))
-    self.cursor.execute(f"SELECT qrCode FROM qrCodes WHERE id == '{docID}'")
+    self.cursor.execute('SELECT qrCode FROM qrCodes WHERE id=?', (docID,))
     qrCodesOld= {i[0] for i in self.cursor.fetchall()}
     if qrCodesOld.difference(qrCodesNew):
-      cmd = f"DELETE FROM qrCodes WHERE id == '{docID}' and qrCode == ?"
-      self.cursor.executemany(cmd, [(i,) for i in qrCodesOld.difference(qrCodesNew)])
+      self.cursor.executemany('DELETE FROM qrCodes WHERE id=? AND qrCode=?',
+                              [(docID, qr_code) for qr_code in qrCodesOld.difference(qrCodesNew)])
       changesDict['qrCodes'] = ','.join(qrCodesOld)
     if qrCodesNew.difference(qrCodesOld):
       change = qrCodesNew.difference(qrCodesOld)
@@ -441,7 +442,7 @@ class SqlLiteDB:
     mainNew    = {key: dataNew.pop(key) for key in MAIN_ORDER if key in dataNew}
     branchNew  = dataNew.pop('branch',{})
     # read branches and identify changes
-    cursor.execute(f"SELECT stack, child, path, show FROM branches WHERE id == '{docID}'")
+    cursor.execute('SELECT stack, child, path, show FROM branches WHERE id=?', (docID,))
     branchOld = [dict(i) for i in cursor.fetchall()]
     branchOld[0]['show'] = [i=='T' for i in branchOld[0]['show']]
     branchOld[0]['stack'] = branchOld[0]['stack'].split('/')[:-1]
@@ -484,10 +485,10 @@ class SqlLiteDB:
             branchOld[idx] = branchNew                                        #change branch 0 aka the default
           if idx is None:                                          # create new branch: should not happen here
             raise ValueError(f'sqlite.2: idx unset: {mainNew["id"]} {mainNew["name"]}')
-          self.cursor.execute(f"UPDATE branches SET stack='{'/'.join(branchOld[idx]['stack']+[docID])}', "
-                              f"path='{branchOld[idx]['path']}', child='{branchOld[idx]['child']}', "
-                              f"show='{''.join(['T' if j else 'F' for j in branchOld[idx]['show']])}' "
-                              f"WHERE id = '{docID}' and idx = {idx}")
+          self.cursor.execute('UPDATE branches SET stack=?, path=?, child=?, show=? WHERE id=? AND idx=?',
+                              ('/'.join(branchOld[idx]['stack']+[docID]), branchOld[idx]['path'],
+                               branchOld[idx]['child'], ''.join('T' if v else 'F' for v in branchOld[idx]['show']),
+                               docID, idx))
         elif op=='d':                                                                                  #delete
           branchOld = [branch for branch in branchOld if branch['path']!=branchNew['path']]
         else:
@@ -497,7 +498,7 @@ class SqlLiteDB:
     flat = self._flattenMetadata(dataNew, skipEmpty=False)
     changesDict |= self._updateMetadata(docID, flat)
     # read main and identify if something changed
-    cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
+    cursor.execute('SELECT * FROM main WHERE id=?', (docID,))
     mainOld = dict(cursor.fetchone())
     mainOld['type']= mainOld['type'].split('/')
     changesDB: dict[str,dict[str,str]] = {'main': {}}
@@ -507,8 +508,10 @@ class SqlLiteDB:
         changesDict[key] = mainOld[key]
     # save change content in database: main and changes are updated
     if set(changesDict.keys()).difference(('dateModified','client','user')):
-      if changeString:= ', '.join([f"{k}='{v}'" for k,v in changesDB['main'].items()]):
-        self.cursor.execute(f"UPDATE main SET {changeString} WHERE id = '{docID}'")
+      if changesDB['main']:
+        assignments = ', '.join(f'{key}=?' for key in changesDB['main'])
+        self.cursor.execute(f'UPDATE main SET {assignments} WHERE id=?',
+                            (*changesDB['main'].values(), docID))
       if 'name' not in changesDict or changesDict['name']!='new item':#don't save initial change from new item
         self.cursor.execute('INSERT INTO changes VALUES (?,?,?)', [docID, datetime.now().isoformat(), json.dumps(changesDict)])
       self.connection.commit()
@@ -524,7 +527,7 @@ class SqlLiteDB:
       dict: dictionary of changes: updated here
     """
     changesDict:dict[str,Any] = {}
-    self.cursor.execute(f"SELECT key, value, unit FROM properties WHERE id == '{docID}'")
+    self.cursor.execute('SELECT key, value, unit FROM properties WHERE id=?', (docID,))
     dataOld = {i[0]:(i[1], '' if i[2] is None else i[2]) for i in self.cursor.fetchall()}
     if not flat and not dataOld:
       return changesDict
@@ -534,7 +537,8 @@ class SqlLiteDB:
       if key in dataOld:
         oldValue, oldUnit = dataOld[key]
         if value != oldValue or unit != oldUnit:
-          self.cursor.execute(f"UPDATE properties SET value='{value}', unit='{unit}' WHERE id = '{docID}' and key = '{key}'")
+          self.cursor.execute('UPDATE properties SET value=?, unit=? WHERE id=? AND key=?',
+                              (value, unit, docID, key))
           changesDict[key] = oldValue
       else:
         self.cursor.execute(cmdInsert, [docID, key, value, unit])
@@ -542,8 +546,8 @@ class SqlLiteDB:
       if key in dataOld:
         del dataOld[key]
     if dataOld:
-      cmd = f"DELETE FROM properties WHERE id == '{docID}' and key == ?"
-      self.cursor.executemany(cmd, [(i,) for i in dataOld])
+      self.cursor.executemany('DELETE FROM properties WHERE id=? AND key=?',
+                              [(docID, key) for key in dataOld])
       changesDict |= {k:v for k,(v,_) in dataOld.items()}
     return changesDict
 
@@ -567,17 +571,17 @@ class SqlLiteDB:
     #convert into db style
     path = '*' if path is None else path
     if branch == -2:                                                                         #delete this path
-      self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}' and path == '{path}'")
+      self.cursor.execute('DELETE FROM branches WHERE id=? AND path=?', (docID, path))
       self.connection.commit()
       # test if there is a branch remaining, if not delete document
-      self.cursor.execute(f'SELECT id FROM branches WHERE id == "{docID}"')
+      self.cursor.execute('SELECT id FROM branches WHERE id=?', (docID,))
       res = self.cursor.fetchall()
       if len(res)==0:
         self.remove(docID)
       return (path, None)
 
     if branch == -1:                                                                      #append a new branch
-      self.cursor.execute(f"SELECT idx FROM branches WHERE id == '{docID}'")
+      self.cursor.execute('SELECT idx FROM branches WHERE id=?', (docID,))
       idxOld = [i[0] for i in self.cursor.fetchall()]
       idxNew  = min(set(range(max(idxOld)+2)).difference(idxOld))
       show  = self.createShowFromStack(stack)
@@ -589,13 +593,13 @@ class SqlLiteDB:
     # modify existing branch
     if 'pathOld' in kwargs:
       pathOld = kwargs['pathOld']
-      cmd = f"SELECT path, stack, show FROM branches WHERE path == '{pathOld}'"
+      cmd, params = 'SELECT path, stack, show FROM branches WHERE path=?', (pathOld,)
     elif 'stackOld' in kwargs:
       stackOld = '/'.join(kwargs['stackOld'])
-      cmd = f"SELECT path, stack, show FROM branches WHERE stack == '{stackOld}'"
+      cmd, params = 'SELECT path, stack, show FROM branches WHERE stack=?', (stackOld,)
     else:
-      cmd = f"SELECT path, stack, show FROM branches WHERE id == '{docID}' and idx == {branch}"
-    self.cursor.execute(cmd)
+      cmd, params = 'SELECT path, stack, show FROM branches WHERE id=? AND idx=?', (docID, branch)
+    self.cursor.execute(cmd, params)
     reply = self.cursor.fetchone()
     if reply is None:
       raise ValueError(f"FAILED AT: {cmd}")
@@ -604,7 +608,7 @@ class SqlLiteDB:
     if pathOld=='*':
       path = '*'
     elif path=='':
-      self.cursor.execute(f"SELECT type, name FROM main WHERE id == '{docID}'")
+      self.cursor.execute('SELECT type, name FROM main WHERE id=?', (docID,))
       docType, name = self.cursor.fetchall()[0]
       parentDir = Path(pathOld).parent
       if docType.startswith('x'):
@@ -612,9 +616,8 @@ class SqlLiteDB:
         name = createDirName(docTemp, child, parentDir)
       path = (parentDir/name).as_posix()
     show  = self.createShowFromStack(stack, showOld[-1])
-    cmd = f"UPDATE branches SET stack='{'/'.join(stack+[docID])}', child={child}, path='{path}', show='{show}' "\
-          f"WHERE path = '{pathOld}' and stack = '{stackOld}'"
-    self.cursor.execute(cmd)
+    self.cursor.execute('UPDATE branches SET stack=?, child=?, path=?, show=? WHERE path=? AND stack=?',
+                        ('/'.join(stack+[docID]), child, path, show, pathOld, stackOld))
     self.connection.commit()
     # move content: folder and data and write .json to disk
     if pathOld!='*' and ':/' not in pathOld and path!='*' and path is not None:
@@ -641,8 +644,8 @@ class SqlLiteDB:
       stackOld (str): old stack of parent
       stackNew (str): new stack of parent
     """
-    cmd = f"SELECT path, stack, show, id, idx FROM branches WHERE stack LIKE '{stackOld}/%'"
-    self.cursor.execute(cmd)
+    self.cursor.execute('SELECT path, stack, show, id, idx FROM branches WHERE stack LIKE ?',
+                        (f'{stackOld}/%',))
     children = self.cursor.fetchall()
     updatedInfo = []
     for (pathIOld, stackIOld, showIOld, docID, idx) in children:
@@ -671,7 +674,7 @@ class SqlLiteDB:
     """
     show = len(stack)*['T'] + [currentShow]
     for idx, docID in enumerate(stack):
-      self.cursor.execute(f"SELECT show FROM branches WHERE id == '{docID}'")
+      self.cursor.execute('SELECT show FROM branches WHERE id=?', (docID,))
       if self.cursor.fetchone()[0][-1] == 'F':
         show[idx] = 'F'
     return ''.join(show)
@@ -690,16 +693,12 @@ class SqlLiteDB:
     doc = self.getDoc(docID)
     if len(doc['branch'])>1 and stack:                                                 #only remove one branch
       stack = stack[:-1] if stack.endswith('/') else stack
-      self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}' and stack LIKE '{stack}%'")
+      self.cursor.execute('DELETE FROM branches WHERE id=? AND stack LIKE ?', (docID, f'{stack}%'))
     else:                                                                                   #remove everything
       doc.pop('image','')
       doc.pop('content','')
-      self.cursor.execute(f"DELETE FROM main WHERE id == '{docID}'")
-      self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}'")
-      self.cursor.execute(f"DELETE FROM properties WHERE id == '{docID}'")
-      self.cursor.execute(f"DELETE FROM tags WHERE id == '{docID}'")
-      self.cursor.execute(f"DELETE FROM qrCodes WHERE id == '{docID}'")
-      self.cursor.execute(f"DELETE FROM attachments WHERE id == '{docID}'")
+      for table in ('main', 'branches', 'properties', 'tags', 'qrCodes', 'attachments'):
+        self.cursor.execute(f'DELETE FROM {table} WHERE id=?', (docID,))
       self.cursor.execute('INSERT INTO changes VALUES (?,?,?)', [docID, datetime.now().isoformat(), json.dumps(doc)])
     self.connection.commit()
     return doc
@@ -758,12 +757,14 @@ class SqlLiteDB:
       viewColumns = self.dataHierarchy(docType, 'view')
       viewColumns = viewColumns+['id'] if viewColumns and viewColumns != [''] else ['name','tags','comment','id']
       textSelect = ', '.join([f'main.{i}' for i in viewColumns if i in MAIN_ORDER or i[1:] in MAIN_ORDER])
-      cmd = f"SELECT {textSelect}, branches.show FROM main INNER JOIN branches USING(id) WHERE main.type LIKE '{docType}%'"
+      cmd = f'SELECT {textSelect}, branches.show FROM main INNER JOIN branches USING(id) WHERE main.type LIKE ?'
+      params: list[str] = [f'{docType}%']
       if not allFlag:
         cmd += r" and NOT branches.show LIKE '%F%'"
       if startKey:
-        cmd += f" and branches.stack LIKE '{startKey}%'"
-      df      = pd.read_sql_query(cmd, self.connection, index_col='id', ).fillna('')
+        cmd += ' AND branches.stack LIKE ?'
+        params.append(f'{startKey}%')
+      df      = pd.read_sql_query(cmd, self.connection, params=params, index_col='id').fillna('')
       #clean main df
       df      = df.loc[~df.index.duplicated(keep='first')].copy()
       if 'image' in viewColumns:
@@ -771,34 +772,40 @@ class SqlLiteDB:
       # add: tags, qrCodes, parameters
       if 'tags' in viewColumns:
         cmd = 'SELECT main.id, tags.tag FROM main INNER JOIN tags USING(id) INNER JOIN branches USING(id) '\
-              f"WHERE main.type LIKE '{docType}%'"
+              'WHERE main.type LIKE ?'
+        params = [f'{docType}%']
         if not allFlag:
           cmd += r" and NOT branches.show LIKE '%F%'"
         if startKey:
-          cmd += f" and branches.stack LIKE '{startKey}%'"
-        dfTags = pd.read_sql_query(cmd, self.connection, index_col='id').fillna('')
+          cmd += ' AND branches.stack LIKE ?'
+          params.append(f'{startKey}%')
+        dfTags = pd.read_sql_query(cmd, self.connection, params=params, index_col='id').fillna('')
         dfTags = dfTags.groupby(['id'])['tag'].apply(lambda x: ', '.join(set(x))).reset_index().set_index('id')
         dfTags.rename(columns={'tag':'tags'}, inplace=True)
         df = df.join(dfTags)
       if 'qrCodes' in viewColumns:
         cmd = 'SELECT main.id, qrCodes.qrCode FROM main INNER JOIN qrCodes USING(id) INNER JOIN branches '\
-              f"USING(id) WHERE main.type LIKE '{docType}%'"
+              'USING(id) WHERE main.type LIKE ?'
+        params = [f'{docType}%']
         if not allFlag:
           cmd += r" and NOT branches.show LIKE '%F%'"
         if startKey:
-          cmd += f" and branches.stack LIKE '{startKey}%'"
-        dfQrCodes = pd.read_sql_query(cmd, self.connection, index_col='id').fillna('')
+          cmd += ' AND branches.stack LIKE ?'
+          params.append(f'{startKey}%')
+        dfQrCodes = pd.read_sql_query(cmd, self.connection, params=params, index_col='id').fillna('')
         dfQrCodes = dfQrCodes.groupby(['id'])['qrCode'].apply(', '.join).reset_index().set_index('id')
         dfQrCodes.rename(columns={'qrCode':'qrCodes'}, inplace=True)
         df = df.join(dfQrCodes)
-      if metadataKeys:= [f'properties.key == "{i}"' for i in viewColumns if i not in MAIN_ORDER+['tags']]:
+      if metadataKeys := [column for column in viewColumns if column not in MAIN_ORDER+['tags']]:
         cmd = 'SELECT main.id, properties.key, properties.value FROM main INNER JOIN properties USING(id) '\
-              f"INNER JOIN branches USING(id) WHERE main.type LIKE '{docType}%' AND ({' OR '.join(metadataKeys)})"
+              f"INNER JOIN branches USING(id) WHERE main.type LIKE ? AND ({' OR '.join('properties.key=?' for _ in metadataKeys)})"
+        params = [f'{docType}%', *metadataKeys]
         if not allFlag:
           cmd += r" and NOT branches.show LIKE '%F%'"
         if startKey:
-          cmd += f" and branches.stack LIKE '{startKey}%'"
-        dfParams = pd.read_sql_query(cmd, self.connection).fillna('')
+          cmd += ' AND branches.stack LIKE ?'
+          params.append(f'{startKey}%')
+        dfParams = pd.read_sql_query(cmd, self.connection, params=params).fillna('')
         dfParams = dfParams.drop_duplicates(subset=['key', 'id'], keep='first').set_index('id')# drop duplicates if there are multiple branches
         dfParams = dfParams.pivot(columns='key', values='value')                         # Pivot the DataFrame
         #dfParams.columns.name = None                               # Flatten the columns; seems not necessary
@@ -811,11 +818,11 @@ class SqlLiteDB:
       return df
     elif thePath=='viewHierarchy/viewHierarchy':
       cmd = 'SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui, branches.idx, branches.path '\
-            f"FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '{startKey}%'"
+            'FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE ?'
       if not allFlag:
         cmd += r" and NOT branches.show LIKE '%F%'"
       cmd += ' ORDER BY branches.stack'
-      self.cursor.execute(cmd)
+      self.cursor.execute(cmd, (f'{startKey}%',))
       results = self.cursor.fetchall()
       # value: [child, doc['type'], doc['name'], doc['gui'], branches.idx]
       results = [{'id':i[0], 'key':i[1],
@@ -827,15 +834,17 @@ class SqlLiteDB:
       if startKey is not None:
         if startKey.endswith('/'):
           startKey = startKey.removesuffix('/')
-        cmd += f" WHERE branches.path LIKE '{startKey}%'"
+        cmd += ' WHERE branches.path LIKE ?'
+        params = (f'{startKey}%',)
       elif preciseKey is not None:
-        cmd += f" WHERE branches.path LIKE '{preciseKey}'"
+        cmd += ' WHERE branches.path LIKE ?'
+        params = (preciseKey,)
       if not allFlag:
         if 'WHERE' in cmd:
           cmd += r" AND NOT branches.show LIKE '%F%'"
         else:
           cmd += r" WHERE NOT branches.show LIKE '%F%'"
-      self.cursor.execute(cmd)
+      self.cursor.execute(cmd, params if startKey is not None or preciseKey is not None else ())
       results = self.cursor.fetchall()
       # value: [branch.stack, doc['-type'], branch.child, doc.shasum, idx]
       results = [{'id':i[0], 'key':i[1],
@@ -860,12 +869,12 @@ class SqlLiteDB:
           if not allFlag:
             cmd += r" INNER JOIN branches USING(id) WHERE NOT branches.show LIKE '%F%'"
         else:
-          cmd = f"SELECT main.id, main.shasum, main.name FROM main INNER JOIN branches USING(id) WHERE shasum='{startKey}'"
+          cmd = 'SELECT main.id, main.shasum, main.name FROM main INNER JOIN branches USING(id) WHERE shasum=?'
           if not allFlag:
             cmd += r" and NOT branches.show LIKE '%F%'"
       else:
         raise ValueError('Invalid docType')
-      self.cursor.execute(cmd)
+      self.cursor.execute(cmd, (startKey,) if docType=='viewSHAsum' and startKey is not None else ())
       results = self.cursor.fetchall()
       results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':i[2]} for i in results if i[1] is not None]
     else:
@@ -957,8 +966,7 @@ class SqlLiteDB:
       showL = list(show)
       showL[j] = 'T' if showL[j]=='F' else 'F'
       return (''.join(showL), localDocID, idx)
-    cmd = f"SELECT id, idx, stack, show FROM branches WHERE stack LIKE '%{docID}%'"
-    self.cursor.execute(cmd)
+    self.cursor.execute('SELECT id, idx, stack, show FROM branches WHERE stack LIKE ?', (f'%{docID}%',))
     changed = map(adoptShow, self.cursor.fetchall())
     cmd = 'UPDATE branches SET show=? WHERE id = ? and idx= ?'
     self.cursor.executemany(cmd, changed)
@@ -977,8 +985,7 @@ class SqlLiteDB:
       guiState (list): list of bool that show if document is shown
     """
     guiList = ''.join(['T' if i else 'F' for i in guiState])
-    cmd = f"UPDATE main SET gui='{guiList}' WHERE id = '{docID}'"
-    self.cursor.execute(cmd)
+    self.cursor.execute('UPDATE main SET gui=? WHERE id=?', (guiList, docID))
     self.connection.commit()
     return
 
@@ -1061,7 +1068,7 @@ class SqlLiteDB:
         if repair is None:
           reply+= errorStr
         elif repair(errorStr):
-          self.cursor.execute(f"UPDATE main SET type='x1' WHERE id = '{docID}'")
+          self.cursor.execute("UPDATE main SET type='x1' WHERE id=?", (docID,))
       if not all(k.startswith('x-') for k in stack.split('/')[:-1]):
         reply+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {docID}")
       if any(len(i)==0 for i in stack) and not docType.startswith('x0'):                    #if no inheritance
@@ -1107,8 +1114,8 @@ class SqlLiteDB:
                 pathNew = (lostAndFoundProjPath/createDirName(tempDoc, 0, lostAndFoundProjPath)).as_posix() if docID.startswith('x-')\
                           else '*'
                 stackNew = f'{lostAndFoundProjId}/{docID}'
-                self.cursor.execute(f"UPDATE branches SET path='{pathNew}', stack='{stackNew}' "\
-                                    f"WHERE id='{docID}' AND stack='{stack}'")
+                self.cursor.execute('UPDATE branches SET path=?, stack=? WHERE id=? AND stack=?',
+                                    (pathNew, stackNew, docID, stack))
                 self.connection.commit()
               continue
             parentDocBranches = parentDoc['branch']
@@ -1135,7 +1142,7 @@ class SqlLiteDB:
       if repair is None:
         reply+= errorStr
       elif repair(errorStr):
-        self.cursor.execute(f"DELETE FROM properties WHERE id='{docID}' AND key='{key}'")
+        self.cursor.execute('DELETE FROM properties WHERE id=? AND key=?', (docID, key))
         self.connection.commit()
 
     cmd = 'SELECT branches.id, branches.path, main.shasum FROM branches JOIN main USING(id) '\
@@ -1146,7 +1153,7 @@ class SqlLiteDB:
       if repair is None:
         reply+= errorStr
       elif repair(errorStr):
-        self.cursor.execute(f"UPDATE main SET shasum='' WHERE id = '{line[0]}'")
+        self.cursor.execute("UPDATE main SET shasum='' WHERE id=?", (line[0],))
         self.connection.commit()
 
     #doc-type specific tests

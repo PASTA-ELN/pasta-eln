@@ -393,7 +393,7 @@ class Pasta2Elab:
       squashTupleIntoValue(docUpdate)
       self.backend.db.updateDoc(docUpdate, node.id)
     else:
-      self.backend.db.cursor.execute(f"UPDATE main SET dateSync='{docMerged['dateSync']}' WHERE id = '{node.id}'")
+      self.backend.db.cursor.execute('UPDATE main SET dateSync=? WHERE id=?', (docMerged['dateSync'], node.id))
       self.backend.db.connection.commit()
     # send doc (merged version) to server
     if flagUpdateServer:

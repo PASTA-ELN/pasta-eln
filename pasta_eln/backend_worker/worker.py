@@ -288,7 +288,7 @@ class BackendWorker(QObject):
       if data['addToExisting']:
         docID = data['docID']
         path = targetName.relative_to(self.backend.basePath)
-        self.backend.db.cursor.execute(f"UPDATE branches SET path='{path}' WHERE id='{docID}' AND idx='0'")
+        self.backend.db.cursor.execute('UPDATE branches SET path=? WHERE id=? AND idx=0', (str(path), docID))
         self.backend.db.connection.commit()
         #rerun extractors
         oldDocType = doc['type']
@@ -323,7 +323,7 @@ class BackendWorker(QObject):
         if len(branches)!=1:
           self.beSendTaskReport.emit(task, f'Cannot find location {data["stack"]} for item.', '', '')
           return
-        self.backend.db.cursor.execute(f'DELETE FROM branches WHERE stack="{data["stack"]}"')
+        self.backend.db.cursor.execute('DELETE FROM branches WHERE stack=?', (data['stack'],))
         self.backend.db.connection.commit()
       # rename on disk
       renamedPaths = set()

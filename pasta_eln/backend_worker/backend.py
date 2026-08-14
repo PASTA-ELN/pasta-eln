@@ -556,7 +556,8 @@ class Backend(CliMixin):
         output += outputString(outputStyle,'error','bch01: These paths of database not on filesystem(3):\n  - '+'\n  - '.join(orphans))
       else:
         for orphan in sorted(orphans):
-          self.db.cursor.execute(f'SELECT main.name, main.type, branches.path, main.id, main.comment FROM main JOIN branches USING(id) WHERE branches.path == "{orphan}"')
+          self.db.cursor.execute('SELECT main.name, main.type, branches.path, main.id, main.comment '
+                                 'FROM main JOIN branches USING(id) WHERE branches.path=?', (orphan,))
           res = self.db.cursor.fetchall()
           resString = '\n  '.join(str(i) for i in res)
           if repair(f'Path of database not on filesystem:\n  {resString}. Repair: file-remove path; folder-create folder and .id_pastaELN'):
@@ -565,7 +566,7 @@ class Backend(CliMixin):
               with open(self.basePath/orphan/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
                 json.dump({'id':res[0][3]}, fOut)
             else:
-              self.db.cursor.execute(f"UPDATE branches SET path='*' WHERE id == '{res[0][3]}' and path == '{orphan}'")
+              self.db.cursor.execute("UPDATE branches SET path='*' WHERE id=? AND path=?", (res[0][3], orphan))
               self.db.connection.commit()
     # identify trash_ files and trash_folders
     projLevelFolders = os.listdir(self.basePath)
