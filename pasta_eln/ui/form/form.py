@@ -20,10 +20,11 @@ from ...misc_tools import callAddOn, isDocID
 from ...text_tools.string_changes import markdownEqualizer
 from .._context_menu import CommandMenu, executeContextMenu, initContextMenu
 from ..gui_communicate import Communicate
-from ..gui_style import Action, FlowLayout, Image, Label
+from ..gui_style import Action, Image, Label
 from ..message_dialog import MessageDialog, showMessage
 from ..widget import SPACE, Button, ButtonStyle, Shortcut
 from .form_section import FormSection
+from .flow_layout import FlowLayout
 from .text_editor import TextEditor
 
 

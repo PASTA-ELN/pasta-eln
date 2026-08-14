@@ -1,17 +1,88 @@
 """ all styling of buttons and other general widgets, some defined colors... """
 import logging
 from collections.abc import Callable
-from typing import Any
+from enum import Enum, auto
+from typing import Any, Final, Literal, Protocol
 import qtawesome as qta
 from PySide6.QtCore import QByteArray, QPoint, QRect, QSize, Qt
-from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPainter, QPixmap, QResizeEvent
+from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtWidgets import (QBoxLayout, QFrame, QHBoxLayout, QLabel, QLayout, QLayoutItem,
-                               QMenu, QSizePolicy, QSplitter,
+from PySide6.QtWidgets import (QBoxLayout, QFrame, QHBoxLayout, QLabel, QLayout, QMenu, QPushButton, QShortcut,
+                               QSizePolicy, QSplitter,
                                QVBoxLayout, QWidget)
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                   # spaces: padding and margin
+
+
+class _Spacing:
+  """Shared layout distances, in logical pixels."""
+  S: Final[int] = 4
+  M: Final[int] = 12
+  L: Final[int] = 36
+SPACE = _Spacing()
+
+
+class Widget(QWidget):
+  """Base class for widgets that receive commands from child controls."""
+  comm: Any
+
+  def execute(self, command: Any) -> None:
+    """Handle a command issued by a child control."""
+    raise NotImplementedError(f'{type(self).__name__} does not handle commands')
+
+
+class CommandHost(Protocol):
+  """Minimal interface required by controls that dispatch commands."""
+  comm: Any
+
+  def execute(self, command: Any) -> None:
+    """Handle a command issued by a child control."""
+
+
+class ButtonStyle(Enum):
+  """The visual role of a :class:`Button`."""
+  DEFAULT     = auto()
+  HIGHLIGHTED = auto()
+  PRIMARY     = auto()
+
+
+class Button(QPushButton):
+  """A command button that optionally adds itself to a layout."""
+  def __init__(self, label: str, widget: CommandHost, command: Any | None = None,
+               layout: QLayout | None = None, *, icon: str | None = None,
+               tooltip: str = '', style: ButtonStyle = ButtonStyle.DEFAULT,
+               iconSize: Literal['m', 'l'] = 'm', flat: bool = False,
+               checkable: bool = False) -> None:
+    super().__init__(label)
+    self.buttonIconSize = QSize(32,32) if iconSize=='l' else QSize(20,20)
+    self.setAutoDefault(False)
+    self.setDefault(style is ButtonStyle.HIGHLIGHTED)
+    self.setFlat(flat)
+    self.setCheckable(checkable)
+    if not label:
+      self.setFixedSize(self.buttonIconSize)
+    if command is not None:
+      self.clicked.connect(lambda: widget.execute(command))
+    if tooltip:
+      self.setToolTip(tooltip)
+    if icon is not None:
+      color = widget.comm.palette.getThemeColor('foreground', 'base')
+      if style is ButtonStyle.HIGHLIGHTED:
+        color = widget.comm.palette.getThemeColor('background', 'base')
+      if style is ButtonStyle.PRIMARY:
+        color = widget.comm.palette.getThemeColor('primary', 'base')
+      self.setIcon(qta.icon(icon, color=color))
+      self.setIconSize(self.buttonIconSize)
+    if layout is not None:
+      layout.addWidget(self)
+
+
+class Shortcut(QShortcut):
+  """Keyboard shortcut which can be added to a widget."""
+  def __init__(self, key:str, parent: QWidget, function:Callable[[], None]) -> None:
+    super().__init__(key, parent)
+    self.activated.connect(function)
 
 
 class Action(QAction):
@@ -203,218 +274,3 @@ class HSeparator(QFrame):
     self.setFrameShadow(QFrame.Shadow.Sunken)
     self.setLineWidth(1)
 
-
-
-class FlowLayout(QLayout):
-  """A simple flow layout that wraps widgets into multiple rows."""
-  def __init__(self, spacing:int=-1):
-    """
-    Initialize
-
-    Args:
-      spacing (int): spacing between elements
-    """
-    super().__init__(None)
-    self.itemList:list[QLayoutItem] = []
-    if spacing >= 0:
-      self.setSpacing(spacing)
-
-  def addItem(self, item:QLayoutItem) -> None:
-    """ Add an item to the layout
-
-    Args:
-      item (QLayoutItem): item to add
-    """
-    self.itemList.append(item)
-
-  def count(self) -> int:
-    """ Return the number of items in the layout.
-    Return:
-      int: number of items
-      """
-    return len(self.itemList)
-
-  def itemAt(self, index:int) -> QLayoutItem|None:
-    """ Return the item at the given index.
-    Args:
-      index (int): index of the item
-    Return:
-      QLayoutItem: item at index
-    """
-    return self.itemList[index] if 0 <= index < len(self.itemList) else None
-
-  def takeAt(self, index:int) -> QLayoutItem:
-    """ Take widget at index.
-    Args:
-      index (int): index of the item
-    Return:
-      QLayoutItem: item at index
-    """
-    return self.itemList.pop(index) if 0 <= index < len(self.itemList) else QLayoutItem()
-
-  def expandingDirections(self) -> Qt.Orientation:
-    """ Define direction to expand into
-    Return:
-      Qt.Orientation: expand in height direction
-    """
-    return Qt.Orientations(0)                                                     # type: ignore[attr-defined]
-
-  def hasHeightForWidth(self) -> bool:
-    """ Define that height is given by width
-    Return:
-      bool: True
-    """
-    return True
-
-  def heightForWidth(self, width:int) -> int:
-    """ Return height for given width
-    Args:
-      width (int): width
-    Returns:
-      int: height
-    """
-    return self._doLayout(QRect(0, 0, width, 0), True)
-
-  def setGeometry(self, rect:QRect) -> None:
-    """ Set geometry by giving rectangle
-    Args:
-      rect (QRect): rectangle
-    """
-    super().setGeometry(rect)
-    self._doLayout(rect, False)
-
-  def sizeHint(self) -> QSize:
-    """ Return size hint
-    Return:
-      QSize: size hint = minimum size
-    """
-    return self.minimumSize()
-
-  def minimumSize(self) -> QSize:
-    """ Return minimum size
-    Return:
-      QSize: minimum size
-    """
-    size = QSize()
-    for item in self.itemList:
-      size = size.expandedTo(item.sizeHint())
-    margins:tuple[int,int,int,int] = self.getContentsMargins()                      # type: ignore[assignment]
-    size += QSize(margins[0] + margins[2], margins[1] + margins[3])
-    return size
-
-  def _doLayout(self, rect:QRect, testOnly:bool) -> int:
-    """ Calculate the layout of the widgets
-    Args:
-      rect (QRect): rectangle
-      testOnly (bool): only test if content fits
-    Return:
-      int: height of layout
-    """
-    margins:tuple[int,int,int,int] = self.getContentsMargins()                      # type: ignore[assignment]
-    effective = rect.adjusted(margins[0], margins[1], -margins[2], -margins[3])
-    x = effective.x()
-    y = effective.y()
-    lineHeight = 0
-    spacingX = self.spacing()
-    spacingY = self.spacing()
-    for item in self.itemList:
-      itemSize = item.sizeHint()
-      nextX = x + itemSize.width() + spacingX
-      if nextX - spacingX > effective.x() + effective.width() and lineHeight > 0:
-        x = effective.x()
-        y += lineHeight + spacingY
-        lineHeight = 0
-        nextX = x + itemSize.width() + spacingX
-      if not testOnly:
-        item.setGeometry(QRect(QPoint(x, y), itemSize))
-      x = nextX
-      lineHeight = max(lineHeight, itemSize.height())
-    return y + lineHeight + margins[3] - rect.y()
-
-class ResizeImage(QLabel):
-  """QLabel that displays a base64 image and automatically rescales it."""
-
-  def __init__(self, data: str, layout: QLayout|None = None) -> None:
-    super().__init__()
-    self._sourcePixmap = QPixmap()
-    self._isSvg = False
-    self._svgRenderer = None
-
-    self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    self.setSizePolicy(
-      QSizePolicy.Policy.Expanding,
-      QSizePolicy.Policy.Expanding,
-    )
-    self.setMinimumSize(50, 50)
-
-    if data.startswith('data:image/'):
-      try:
-        byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21] == ',' else data[23:], encoding='utf-8'))
-        imageW = QImage()
-        imageType = data[11:15].upper()
-        success = imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType)# type: ignore[arg-type]
-        if not success:
-          logging.warning('Could not load image data with format %s', imageType)
-          return
-        self._sourcePixmap = QPixmap.fromImage(imageW)
-        if layout is not None:
-          layout.addWidget(self)
-        self._updatePixmap()
-      except Exception as e:
-        logging.warning('Error processing base64-image %s', e)
-
-    elif data.startswith('<?xml'):
-      self._isSvg = True
-      byteData = QByteArray(data.encode('utf-8'))
-      self._svgRenderer = QSvgRenderer(byteData, self)
-      if layout is not None:
-        layout.addWidget(self)
-      self._updatePixmap()
-    elif len(data) > 2:
-      logging.error('guiStyle.Image: %s', data[:50], exc_info=True)
-
-  def resizeEvent(self, event: QResizeEvent) -> None:
-    super().resizeEvent(event)
-    self._updatePixmap()
-
-  def _updatePixmap(self) -> None:
-    if self._isSvg:
-      self._renderSvg()
-      return
-    if self._sourcePixmap.isNull():
-      return
-    scaled = self._sourcePixmap.scaled(
-      self.size(),
-      Qt.AspectRatioMode.KeepAspectRatio,
-      Qt.TransformationMode.SmoothTransformation,
-    )
-    super().setPixmap(scaled)
-
-  def _renderSvg(self) -> None:
-    if self._svgRenderer is None or not self._svgRenderer.isValid():
-      return
-
-    size = self.size()
-    if size.width() <= 0 or size.height() <= 0:
-      return
-    intrinsic = self._svgRenderer.defaultSize()
-    scaled = intrinsic.scaled(size, Qt.AspectRatioMode.KeepAspectRatio)
-    x = (size.width() - scaled.width()) // 2
-    y = (size.height() - scaled.height()) // 2
-    pixmap = QPixmap(size)
-    pixmap.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(pixmap)
-    renderRect = QRect(x, y, scaled.width(), scaled.height())
-    self._svgRenderer.render(painter, renderRect)
-    painter.end()
-
-    super().setPixmap(pixmap)
-
-  def setSourcePixmap(self, pixmap: QPixmap) -> None:
-    """Replace the source image."""
-    self._sourcePixmap = pixmap
-    self._updatePixmap()
-
-  def sourcePixmap(self) -> QPixmap:
-    """Return the original image."""
-    return self._sourcePixmap
