@@ -5,14 +5,14 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 import pandas as pd
-from PySide6.QtCore import QByteArray, QItemSelection, QItemSelectionModel, QModelIndex, QSize, Qt, Slot
-from PySide6.QtGui import QIcon, QImage, QPixmap
+from PySide6.QtCore import QByteArray, QItemSelection, QItemSelectionModel, QModelIndex, QRect, QSize, Qt, Slot
+from PySide6.QtGui import QIcon, QImage, QPainter, QPixmap
+from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (QComboBox, QFileDialog, QHBoxLayout, QListWidget, QListWidgetItem, QMenu, QMessageBox,
                                QTableView, QVBoxLayout, QWidget)
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.misc_tools import callAddOn, isDocID
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.gui_style import Action
 from pasta_eln.ui.table.filter_row import FilterRow
 from pasta_eln.ui.table.pandas_table_model import PandasTableModel
 from pasta_eln.ui.table.table_header import TableHeader
@@ -207,6 +207,7 @@ class TableView(Widget):
       name = docID if self.tableData.empty else self.tableData.iloc[row, 0]
       item = QListWidgetItem(str(name))
       item.setData(Qt.ItemDataRole.UserRole, docID)
+      item.setSizeHint(self.gallery.gridSize())
       self.gallery.addItem(item)
       self.comm.uiRequestDoc.emit(docID)
 
@@ -309,18 +310,34 @@ class TableView(Widget):
     """
     docID = str(document.get('id', ''))
     image = document.get('image')
-    if docID not in self.galleryDocumentIds or not isinstance(image, str) or ',' not in image:
+    if docID not in self.galleryDocumentIds or not isinstance(image, str):
       return
-    imageData = QByteArray.fromBase64(image.split(',', 1)[1].encode())
-    qimage = QImage.fromData(imageData)
-    if qimage.isNull():
+    if image.lstrip().startswith(('<?xml', '<svg')):
+      renderer = QSvgRenderer(QByteArray(image.encode('utf-8')))
+      if not renderer.isValid():
+        return
+      pixmap = QPixmap(self.gallery.iconSize())
+      pixmap.fill(Qt.GlobalColor.transparent)
+      renderedSize = renderer.defaultSize().scaled(pixmap.size(), Qt.AspectRatioMode.KeepAspectRatio)
+      painter = QPainter(pixmap)
+      renderer.render(painter, QRect((pixmap.width() - renderedSize.width()) // 2,
+                                     (pixmap.height() - renderedSize.height()) // 2,
+                                     renderedSize.width(), renderedSize.height()))
+      painter.end()
+    elif ',' in image:
+      imageData = QByteArray.fromBase64(image.split(',', 1)[1].encode())
+      qimage = QImage.fromData(imageData)
+      if qimage.isNull():
+        return
+      pixmap = QPixmap.fromImage(qimage).scaled(self.gallery.iconSize(), Qt.AspectRatioMode.KeepAspectRatio,
+                                                 Qt.TransformationMode.SmoothTransformation)
+    else:
       return
-    pixmap = QPixmap.fromImage(qimage).scaled(self.gallery.iconSize(), Qt.AspectRatioMode.KeepAspectRatio,
-                                               Qt.TransformationMode.SmoothTransformation)
     for row in range(self.gallery.count()):
       item = self.gallery.item(row)
       if item.data(Qt.ItemDataRole.UserRole) == docID:
         item.setIcon(QIcon(pixmap))
+        self.gallery.doItemsLayout()
         break
 
 

@@ -180,11 +180,9 @@ def Image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,
   if data.startswith('data:image/'):
     try:
       byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21] == ',' else data[23:], encoding='utf-8'))
-      imageW = QImage()
-      imageType = data[11:15].upper()
-      success = imageW.loadFromData(byteArr, format=(imageType[:-1] if imageType.endswith(';') else imageType).encode())
-      if not success:
-        logging.warning('Could not load image data with format %s', imageType)
+      imageW = QImage.fromData(bytes(byteArr))
+      if imageW.isNull():
+        logging.warning('Could not load image data')
         return None
       pixmap = QPixmap.fromImage(imageW)
       if height > 0:
