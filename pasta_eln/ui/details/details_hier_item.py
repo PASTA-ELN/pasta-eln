@@ -3,34 +3,25 @@
 import logging
 import re
 from typing import Any
-import qtawesome
-from PySide6.QtCore import QSize, Qt, Slot
-from PySide6.QtWidgets import QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtWidgets import QLabel, QSizePolicy
 from pasta_eln.misc_tools import isDocID, makeStringWrappable
 from pasta_eln.text_tools.string_changes import tuple2html
+from pasta_eln.ui.gui_style import CollapsibleSection
 from pasta_eln.ui.gui_communicate import Communicate
 
 
-class DetailsHierItem(QWidget):
+class DetailsHierItem(CollapsibleSection):
   """
   Widget inside the details-sidebar that consists of a button and a collapsible area that shows info.
   """
 
   def __init__(self, comm: Communicate, categoryName: str, dataHierarchyNode: list[dict[str, Any]],
                initialContent: str = '', startCollapsed: bool = False) -> None:
-    super().__init__()
     self.comm = comm
     self.categoryName = categoryName
     self.content = initialContent
     self.dataHierarchyNode = dataHierarchyNode
-
-    # Button to Expand and Collapse Content
-    self.button = QPushButton(self.categoryName)
-    self.button.setCheckable(True)
-    self.button.setFlat(True)
-    self.button.setIconSize(QSize(16, 16))
-    self.button.setStyleSheet('text-align: left; border-radius: 0px; padding: 6px 0px;')
-    self.button.clicked.connect(self.onButtonClicked)
 
     # contentLabel
     self.contentLabel = QLabel(self.content)
@@ -40,43 +31,20 @@ class DetailsHierItem(QWidget):
                                               Qt.TextInteractionFlag.LinksAccessibleByMouse)
     self.contentLabel.setOpenExternalLinks(True)
 
-    # Main Layout
-    self.mainLayout = QVBoxLayout()
-    self.mainLayout.setContentsMargins(0, 0, 0, 0)
-    self.mainLayout.addWidget(self.button)
-    self.mainLayout.addWidget(self.contentLabel)
-    self.setLayout(self.mainLayout)
+    super().__init__(self.categoryName, self.contentLabel, expanded=not startCollapsed,
+                     iconSize=QSize(32, 32), outlined=True)
+    self.button = self.toggle
 
     #
     self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
 
-    # CODE
-    if startCollapsed:
-      self.collapse()
-    else:
-      self.button.setChecked(True)
-      self.expand()
-
-  @Slot()
-  def onButtonClicked(self) -> None:
-    """
-    What happens when the button is clicked
-    -> Collapse/Expand Content
-    """
-    if self.button.isChecked():
-      self.expand()
-    else:
-      self.collapse()
-
   def collapse(self) -> None:
     """Hide the content of this widget"""
-    self.contentLabel.hide()
-    self.button.setIcon(qtawesome.icon('ri.arrow-drop-right-line'))
+    self.setExpanded(False)
 
   def expand(self) -> None:
     """Show the content of this widget"""
-    self.contentLabel.show()
-    self.button.setIcon(qtawesome.icon('ri.arrow-drop-down-line'))
+    self.setExpanded(True)
 
   def formatContent(self, key: str, value: Any) -> str:
     """

@@ -147,10 +147,10 @@ class Details(Widget):
 
     if detailsItem.content:
       self.bodyL.addWidget(detailsItem)
-    if vendorItem.content:
-      self.bodyL.addWidget(vendorItem)
     if userItem.content:
       self.bodyL.addWidget(userItem)
+    if vendorItem.content:
+      self.bodyL.addWidget(vendorItem)
     if elnItem.content:
       self.bodyL.addWidget(elnItem)
     self.bodyL.addStretch(0)

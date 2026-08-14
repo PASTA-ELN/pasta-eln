@@ -7,7 +7,7 @@ import qtawesome as qta
 from PySide6.QtCore import QByteArray, QSize, Qt
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap, QShortcut
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtWidgets import QFrame, QLabel, QLayout, QMenu, QPushButton, QSizePolicy, QWidget
+from PySide6.QtWidgets import QFrame, QLabel, QLayout, QMenu, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 
 class _Spacing:
   """Shared layout distances, in logical pixels."""
@@ -71,6 +71,58 @@ class Button(QPushButton):
       self.setIconSize(self.buttonIconSize)
     if layout is not None:
       layout.addWidget(self)
+
+
+class CollapsibleSection(QFrame):
+  """A titled section whose content can be shown or hidden."""
+
+  def __init__(self, title: str, contentWidget: QWidget, *, expanded: bool = True,
+               iconSize: QSize = QSize(16, 16), boldTitle: bool = False,
+               outlined: bool = False) -> None:
+    """
+    
+    Args:
+      title (str): title of the section
+      contentWidget (QWidget): widget to be shown or hidden
+      expanded (bool): whether the section should be expanded by default
+      iconSize (QSize): size of the icon
+      boldTitle (bool): whether the title should be bold
+      outlined (bool): whether the section should be outlined
+    """
+    super().__init__()
+    self.title = title
+    self.contentWidget = contentWidget
+    self.outlined = outlined
+
+    self.toggle = QPushButton(title)
+    self.toggle.setCheckable(True)
+    self.toggle.setFlat(True)
+    self.toggle.setIconSize(iconSize)
+    titleStyle = ' font-weight: bold;' if boldTitle else ''
+    self.toggle.setStyleSheet(f'text-align: left; border: 0; padding: 6px 0;{titleStyle}')
+    self.toggle.clicked.connect(self.setExpanded)
+
+    layout = QVBoxLayout(self)
+    layout.setContentsMargins(4, 0, 4, 4)
+    layout.setSpacing(0)
+    layout.addWidget(self.toggle)
+    layout.addWidget(self.contentWidget)
+
+    self.setExpanded(expanded)
+
+  def setExpanded(self, expanded: bool) -> None:
+    """Show or hide the content and update the disclosure icon
+    Args:
+      expanded (bool): True if the content should be shown, False otherwise
+    """
+    self.toggle.setChecked(expanded)
+    self.contentWidget.setVisible(expanded)
+    iconName = 'ri.arrow-drop-down-line' if expanded else 'ri.arrow-drop-right-line'
+    self.toggle.setIcon(qta.icon(iconName))
+    if self.outlined:
+      self.setFrameShape(QFrame.Shape.NoFrame if expanded else QFrame.Shape.Box)
+      self.setFrameShadow(QFrame.Shadow.Plain)
+      self.setLineWidth(1)
 
 
 def Shortcut(key: str, parent: QWidget, function: Callable[[], None]) -> QShortcut:
