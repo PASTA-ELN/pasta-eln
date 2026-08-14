@@ -1,7 +1,7 @@
 import logging
 import pytest
-from pasta_eln.UI.guiCommunicate import Communicate
-from pasta_eln.UI.details import Details
+from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.ui.details.details import Details
 from pasta_eln.backendWorker.worker import Task
 from .test_34_GUI_Form import getTable
 

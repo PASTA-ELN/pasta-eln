@@ -1,6 +1,6 @@
 import logging, tempfile
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.project import Project
+from pasta_eln.ui.project.project import Project
 from pasta_eln.add_ons.project_import_csv import main
 from .test_34_GUI_Form import getTable
 

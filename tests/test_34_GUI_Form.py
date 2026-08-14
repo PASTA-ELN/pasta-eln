@@ -1,6 +1,6 @@
 import logging
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.form import Form
+from pasta_eln.ui.form.form import Form
 
 def getTable(qtbot, comm, docType):
   table = None

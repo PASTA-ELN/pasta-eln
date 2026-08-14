@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.project import Project
+from pasta_eln.ui.project.project import Project
 from .test_34_GUI_Form import getTable
 
 import logging, os, shutil, tempfile

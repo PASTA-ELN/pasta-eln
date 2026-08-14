@@ -4,7 +4,7 @@ import logging, warnings, random
 from pathlib import Path
 from anytree import PreOrderIter
 from PySide6.QtCore import QModelIndex, QEventLoop                         # pylint: disable=no-name-in-module
-from pasta_eln.ui.project import Project
+from pasta_eln.ui.project.project import Project
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.backend_worker.worker import Task
 
