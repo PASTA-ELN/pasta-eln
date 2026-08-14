@@ -12,8 +12,7 @@ import pandas as pd
 from PySide6.QtCore import QSize, Qt, QTimer, Slot
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QInputDialog, QLabel, QLayout, QLineEdit,
-                               QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTabWidget, QTextEdit, QVBoxLayout,
-                               QWidget)
+                               QMenu, QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTextEdit, QVBoxLayout, QWidget)
 from ...backend_worker.sqlite import MAIN_ORDER
 from ...backend_worker.worker import Task
 from ...fixed_strings_json import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
@@ -21,9 +20,10 @@ from ...misc_tools import callAddOn, isDocID
 from ...text_tools.string_changes import markdownEqualizer
 from .._context_menu import CommandMenu, executeContextMenu, initContextMenu
 from ..gui_communicate import Communicate
-from ..gui_style import (FlowLayout, IconButton, Image, Label, ScrollMessageBox, TextButton, widgetAndLayout,
-                         widgetAndLayoutForm)
+from ..gui_style import Action, FlowLayout, Image, Label, ScrollMessageBox
 from ..message_dialog import showMessage
+from ..widget import SPACE, Button, ButtonStyle, Shortcut
+from .form_section import FormSection
 from .text_editor import TextEditor
 
 
@@ -58,42 +58,39 @@ class Form(QDialog):
       self.setWindowTitle('Create new entry')
     else:
       self.setWindowTitle('Edit information')
-    self.setMinimumSize(QSize(800,600))
+    self.setMinimumSize(QSize(800, 600))
     self.mainL = QVBoxLayout(self)
-    self.splitter = QSplitter(Qt.Orientation.Horizontal)                         # will be filled during paint
+    self.mainL.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
+    self.mainL.setSpacing(SPACE.S)
+    self.visibilityText = QLabel()
+
+    self.splitter = QSplitter(Qt.Orientation.Horizontal)                         # filled during paint
     self.splitter.setHandleWidth(10)
-    self.splitter.setContentsMargins(0,0,0,0)
+    self.splitter.setContentsMargins(0, 0, 0, 0)
     self.mainL.addWidget(self.splitter, stretch=2)
 
-    # final button box
-    _, buttonLineL = widgetAndLayout('H', self.mainL, 'm')
-    self.visibilityText = QLabel('')
+    # Button box: uncommon commands live in More
+    buttonLineW = QWidget()
+    buttonLineL = QHBoxLayout(buttonLineW)
+    buttonLineL.setContentsMargins(0, SPACE.S, 0, 0)
     buttonLineL.addWidget(self.visibilityText)
-    buttonLineL.addStretch(1)
-    self.btnAddKWPairs = IconButton('ri.menu-add-fill', self, [Command.FORM_ADD_KV],   buttonLineL,
-                                    'Add key-value pair', style='border-width:1')
-    self.btnAddKWPairs.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-    self.btnAddKWPairs.setAutoDefault(False)
-    self.btnAddKWPairs.setDefault(False)
+    buttonLineL.addStretch()
+    moreButton = Button('More', self, layout=buttonLineL, icon='ri.more-fill', style=ButtonStyle.PRIMARY)
+    moreMenu = QMenu(self)
+    moreButton.setMenu(moreMenu)
+    Action('Add key-value pair', self, Command.FORM_ADD_KV, moreMenu)
+    Action('Show advanced fields', self, Command.SHOW_ADVANCED, moreMenu)
     if not self.flagNewDoc:                                                                  #existing dataset
-      self.showDocBtn = IconButton('fa5s.poll-h',      self, [Command.FORM_SHOW_DOC], buttonLineL, 'Show all information',
-                 style='border-width:1')
-      self.showDocBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-      self.showDocBtn.setAutoDefault(False)
-      self.btnDuplicate = IconButton('fa5s.plus-circle', self, [Command.FORM_SAVE_NEXT], buttonLineL,
-                                     'Duplicate data set', style='border-width:1')
-      self.btnDuplicate.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-      self.btnDuplicate.setAutoDefault(False)
-    self.saveBtn = TextButton('Save', self, [Command.FORM_SAVE], buttonLineL, 'Save changes', shortCut='Ctrl+Return')
-    self.saveBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-    self.saveBtn.setAutoDefault(False)
-    self.cancelBtn = TextButton('Cancel',           self, [Command.FORM_CANCEL],   buttonLineL, 'Discard changes')
-    self.cancelBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-    self.cancelBtn.setAutoDefault(False)
+      Action('Show all information', self, Command.FORM_SHOW_DOC, moreMenu)
+      Action('Duplicate data set', self, Command.FORM_SAVE_DUPL, moreMenu)
+    self.cancelBtn = Button('Cancel', self, Command.FORM_CANCEL, buttonLineL, tooltip='Discard changes')
+    self.saveBtn = Button('Save', self, Command.FORM_SAVE, buttonLineL, tooltip='Save changes',
+                          style=ButtonStyle.HIGHLIGHTED)
+    Shortcut('Ctrl+Return', self, lambda: self.execute(Command.FORM_SAVE))
     if self.flagNewDoc:                                                                           #new dataset
-      self.saveNextBtn = TextButton('Save && Next', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Save this and handle next')
-      self.saveNextBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-      self.saveNextBtn.setAutoDefault(False)
+      self.saveNextBtn = Button('Save & Next', self, Command.FORM_SAVE_NEXT, buttonLineL,
+                                tooltip='Save this and handle next')
+    self.mainL.addWidget(buttonLineW)
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
 
     #GUI elements, filled later
@@ -111,7 +108,7 @@ class Form(QDialog):
     self.values:    list[QLineEdit]           = []
     self.imageL:QLayout|None                  = None
     self.dataHierarchyNode:list[dict[str,str]]= [{}]
-    self.tabW                                 = QTabWidget()                    # has count=0 if not connected
+    self.advancedSection: FormSection | None  = None
     self.formsL:list[QLayout]                 = []
     self.allUserElements:list[tuple[str,str]] = []
     self.docTypeComboBox                      = QComboBox()
@@ -119,6 +116,7 @@ class Form(QDialog):
     self.tagsAllList: list[str] = []
     self.comboBoxDocTypeList:dict[str, tuple[QComboBox,str]] = {}# dict of docType:.. for links to other items
     self.projectTableData:pd.DataFrame|None = None
+    self.showAdvanced = False
 
     # Request data
     if not self.flagNewDoc:
@@ -257,14 +255,15 @@ class Form(QDialog):
       self.doc['name'] = ''
     if 'branch' in self.doc:
       visibilityIcon = all(all(branch['show']) for branch in self.doc['branch'])
-      self.visibilityText = QLabel('' if visibilityIcon else 'HIDDEN     \U0001F441')
-      self.btnDuplicate.setHidden(self.doc['branch'][0]['path'] is not None)
+      self.visibilityText.setText('' if visibilityIcon else 'Hidden')
 
-    # image
+    # Image preview and scrollable sectioned editor.
     if 'image' in self.doc:
       imageWSA = QScrollArea()
       imageWSA.setWidgetResizable(True)
-      imageW, self.imageL = widgetAndLayout('V', self.splitter)
+      imageW = QWidget()
+      self.imageL = QVBoxLayout(imageW)
+      self.imageL.setContentsMargins(SPACE.S, SPACE.S, SPACE.S, SPACE.S)
       width= self.comm.configuration['GUI']['imageSizeDetails'] if hasattr(self.comm,'configuration') else 300
       Image(self.doc['image'], self.imageL, anyDimension=width)
       if 'id' in self.doc:
@@ -276,6 +275,20 @@ class Form(QDialog):
       self.setMinimumHeight(600)
     else:
       self.setMinimumWidth(600)
+
+    bodyW = QWidget()
+    bodyL = QVBoxLayout(bodyW)
+    bodyL.setContentsMargins(0, 0, 0, 0)
+    bodyL.setSpacing(SPACE.S)
+    editorScroll = QScrollArea(widgetResizable=True)
+    editorScroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    editorScroll.setWidget(bodyW)
+    self.splitter.addWidget(editorScroll)
+    if 'image' in self.doc:
+      # Start image forms evenly split; the user can still drag the handle afterwards.
+      self.splitter.setStretchFactor(0, 1)
+      self.splitter.setStretchFactor(1, 1)
+      self.splitter.setSizes([1, 1])
 
     # create data hierarchy node: data structure
     if self.doc['type'][0] in self.comm.docTypesTitles:
@@ -303,20 +316,14 @@ class Form(QDialog):
     # END TEMPORARY CHECK
 
     groups = {i['class'] for i in self.dataHierarchyNode}.difference({'metaVendor','metaUser'})
-    # create tabs or not: depending on the number of groups
-    if len(groups)>1:
-      self.tabW.setParent(self)
-      self.tabW.tabBarClicked.connect(self.changeTabs)
-      self.splitter.addWidget(self.tabW)
+    orderedGroups = [''] + sorted(groups.difference({''}))
+    self.formsL = []
 
-    # create forms by looping
-    for group in groups:
-      if len(groups)==1:
-        _, formL = widgetAndLayoutForm(self.splitter, 's')
-      else:
-        formW, formL = widgetAndLayoutForm(None, 's', top='m')
-        self.tabW.addTab(formW, 'Home' if group=='' else group)
-      self.formsL.append(formL)
+    # Create a stable, vertically scrollable section for every hierarchy group.
+    for group in orderedGroups:
+      section = FormSection('General' if group == '' else group, expanded=group == '')
+      bodyL.addWidget(section)
+      self.formsL.append(section.formL)
       dataframe = pd.DataFrame(self.dataHierarchyNode)
       dataframe = dataframe[dataframe['class']==group]
       dataframe = dataframe.sort_values('idx')
@@ -330,10 +337,13 @@ class Form(QDialog):
         if key == '.name' and not self.groupEdit:
           setattr(self, elementName, QLineEdit(self.doc.get('name','')))
           getattr(self, elementName).setValidator(QRegularExpressionValidator('[\\w\\ .-]+'))
-          formL.addRow('Name', getattr(self, elementName))
+          section.formL.addRow('Name', getattr(self, elementName))
           self.allUserElements.append(('name','LineEdit'))
         elif key == '.tags':
-          self.tagsBarMainW, tagsBarMainL = widgetAndLayout('H', spacing='s')
+          self.tagsBarMainW = QWidget()
+          tagsBarMainL = QHBoxLayout(self.tagsBarMainW)
+          tagsBarMainL.setContentsMargins(0, 0, 0, 0)
+          tagsBarMainL.setSpacing(SPACE.S)
           self.gradeChoices = QComboBox()                                     #part/combobox that shows grades
           self.gradeChoices.setMaximumWidth(95)
           self.gradeChoices.setStyleSheet('padding: 3px;')
@@ -343,7 +353,7 @@ class Form(QDialog):
           gradeTagStr = '\u2605'*int(gradeTag[0][1]) if gradeTag else ''
           self.gradeChoices.setCurrentText(gradeTagStr)
           tagsBarMainL.addWidget(self.gradeChoices)
-          Label('Tags:', '',  tagsBarMainL, style='margin-left: 20px;')
+          tagsBarMainL.addWidget(QLabel('Tags:'))
           tagsBarSubW = QWidget()
           flow = FlowLayout(spacing=5)
           flow.setContentsMargins(0, 7, 0, 0)
@@ -360,29 +370,35 @@ class Form(QDialog):
           self.otherChoices.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
           self.otherChoices.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
           tagsBarMainL.addWidget(self.otherChoices)
-          formL.addRow(QLabel('Rating:'), self.tagsBarMainW)
+          section.formL.addRow(QLabel('Rating and tags:'), self.tagsBarMainW)
           self.allUserElements.append(('tags',''))
           self.updateTagsBar()
           self.otherChoices.currentIndexChanged.connect(self.addTag)   #connect to slot after painting is done
 
         elif key in ['.comment', '.content']:
           key = key[1:]
-          labelW, labelL = widgetAndLayout('V', spacing='s')
-          labelL.addWidget(QLabel(key))
-          TextButton('More', self, [Command.FOCUS_AREA, key], labelL, checkable=True)
+          labelW = QWidget()
+          labelL = QVBoxLayout(labelW)
+          labelL.setContentsMargins(0, 0, 0, 0)
+          labelL.setSpacing(SPACE.S)
+          labelL.addWidget(QLabel(key.capitalize()))
+          Button('Preview', self, [Command.FOCUS_AREA, key], labelL, checkable=True)
           projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
           if 'form' in projectGroup.get('addOns',{}) and projectGroup['addOns']['form']:
-            TextButton('Auto', self, [Command.AUTO_COMMENT],    labelL, checkable=True)
-          rightSideW, rightSideL = widgetAndLayout('V')
+            Button('Auto', self, Command.AUTO_COMMENT, labelL)
+          rightSideW = QWidget()
+          rightSideL = QVBoxLayout(rightSideW)
+          rightSideL.setContentsMargins(0, 0, 0, 0)
+          rightSideL.setSpacing(SPACE.S)
           setattr(self, f'buttonBarW_{key}', QWidget())
           getattr(self, f'buttonBarW_{key}').hide()
           buttonBarL = QHBoxLayout(getattr(self, f'buttonBarW_{key}'))
+          buttonBarL.setContentsMargins(0, 0, 0, 0)
           for name, tooltip in [['bold','Bold text'],['italic','Italic text'],['list-ul','Bullet list'],\
                                       ['list-ol','Numbered list']]:
-            IconButton(f'fa5s.{name}', self, [Command.BUTTON_BAR, name, key], buttonBarL, tooltip)
+            Button(name.replace('list-', ''), self, [Command.BUTTON_BAR, name, key], buttonBarL, tooltip=tooltip)
           for i in range(1,4):
-            icon = f'mdi.format-header-{str(i)}'
-            IconButton(icon, self, [Command.BUTTON_BAR, f'heading{str(i)}', key], buttonBarL, f'Heading {str(i)}')
+            Button(f'H{i}', self, [Command.BUTTON_BAR, f'heading{str(i)}', key], buttonBarL, tooltip=f'Heading {i}')
           rightSideL.addWidget(getattr(self, f'buttonBarW_{key}'))
           textStr = self.doc.get(key, '')
           if key == 'content' and 'branch' in self.doc:
@@ -398,13 +414,13 @@ class Form(QDialog):
           setattr(self, f'textShow_{key}', QTextEdit())
           getattr(self, f'textShow_{key}').setMarkdown(markdownEqualizer(textStr))
           getattr(self, f'textShow_{key}').setReadOnly(True)
-          getattr(self, f'textShow_{key}').hide()
           splittedEditor = QSplitter()
           splittedEditor.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
           splittedEditor.addWidget(getattr(self, f'textEdit_{key}'))
           splittedEditor.addWidget(getattr(self, f'textShow_{key}'))
+          getattr(self, f'textShow_{key}').hide()
           rightSideL.addWidget(splittedEditor)
-          formL.addRow(labelW, rightSideW)
+          section.formL.addRow(labelW, rightSideW)
           self.allUserElements.append((key, 'comment'))
         elif key in self.skipKeys:                                                      #skip non desired ones
           continue
@@ -412,7 +428,7 @@ class Form(QDialog):
           if len(defaultValue)>0 and isinstance(defaultValue[0], str):
             setattr(self, elementName, QLineEdit(' '.join(defaultValue)))
             self.allUserElements.append((key,'LineEdit'))
-            formL.addRow(QLabel(key), getattr(self, elementName))
+            section.formL.addRow(QLabel(key), getattr(self, elementName))
           else:
             logging.info('Cannot display value of key=%s: %s. Write unknown value for docID=%s',
                          key, str(defaultValue), self.doc['id'])
@@ -452,7 +468,7 @@ class Form(QDialog):
             formLabelW = Label(label, 'h3', None)
           formLabelW.setOpenExternalLinks(True)
           formLabelW.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse)
-          formL.addRow(formLabelW, getattr(self, elementName))
+          section.formL.addRow(formLabelW, getattr(self, elementName))
         else:
           print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(defaultValue)}")
         if group in self.doc and row.name in self.doc[group]:
@@ -461,28 +477,39 @@ class Form(QDialog):
             del self.doc[group]
       if group == '':
         # individual key-value items
-        self.keyValueListW, self.keyValueListL = widgetAndLayoutForm(None, 's')
+        self.keyValueListW = QWidget()
+        self.keyValueListL = QFormLayout(self.keyValueListW)
+        self.keyValueListL.setContentsMargins(0, 0, 0, 0)
+        self.keyValueListL.setSpacing(SPACE.S)
         self.keyValueListW.hide()
         self.keyValueLabel = QLabel('Key - values')
         self.keyValueLabel.hide()
-        formL.addRow(self.keyValueLabel, self.keyValueListW)
-        ### add extra questions at bottom of form
-        # project change
-        if self.allowProjectChange:
-          if not self.allowProjectUnassign and self.projectComboBox.count()>1:
-            self.projectComboBox.removeItem(0)
-          formL.addRow(QLabel('Project'), self.projectComboBox)
-        # docType change
-        if self.allowDocTypeChange:                                                 #if not-new and non-folder
-          self.docTypeComboBox = QComboBox()
-          self.docTypeComboBox.addItem('- no change -', userData='')
-          for key1, value1 in self.comm.docTypesTitles.items():
-            if key1[0]!='x':
-              self.docTypeComboBox.addItem(value1['title'], userData=key1)
-          self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
-          formL.addRow(QLabel('Item type'), self.docTypeComboBox)
-    if [i for i in self.doc if i.startswith('_') and i not in ['_projectID']]:
-      logging.error('There should not be "_" in a doc: %s', str(self.doc), exc_info=True)
+        section.formL.addRow(self.keyValueLabel, self.keyValueListW)
+    self.paintAdvancedSection(bodyL)
+    bodyL.addStretch()
+
+
+  def paintAdvancedSection(self, bodyLayout: QVBoxLayout) -> None:
+    """Add infrequent project and item-type controls after the regular metadata
+    Args:
+      bodyLayout (QVBoxLayout): layout to add section to
+    """
+    self.advancedSection = FormSection('Advanced', expanded=True)
+    self.advancedSection.setVisible(self.showAdvanced)
+    bodyLayout.addWidget(self.advancedSection)
+    advancedLayout = self.advancedSection.formLayout
+    if self.allowProjectChange:
+      if not self.allowProjectUnassign and self.projectComboBox.count() > 1:
+        self.projectComboBox.removeItem(0)
+      advancedLayout.addRow('Project', self.projectComboBox)
+    if self.allowDocTypeChange:
+      self.docTypeComboBox = QComboBox()
+      self.docTypeComboBox.addItem('- no change -', userData='')
+      for key, value in self.comm.docTypesTitles.items():
+        if not key.startswith('x'):
+          self.docTypeComboBox.addItem(value['title'], userData=key)
+      self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
+      advancedLayout.addRow('Item type', self.docTypeComboBox)
 
 
   def formLabelClicked(self, key: str, _:str='') -> None:
@@ -537,98 +564,43 @@ class Form(QDialog):
     return
 
 
-  def execute(self, command:list[Any]) -> None:
+  def execute(self, command: Command | list[Any]) -> None:
     """
     Event if user clicks button
 
     Args:
-      command (list): list of commands
+      command (Command | list[Any]): command and optional payload
     """
-    if isinstance(command[0], CommandMenu):
+    commandType = command if isinstance(command, Command) else command[0]
+    payload = [] if isinstance(command, Command) else command[1:]
+    if isinstance(command, list) and isinstance(commandType, CommandMenu):
       if executeContextMenu(self, command) and self.imageL is not None:
         self.allDocIDs = list(self.allDocIDsCopy)
         self.doc = {'id':self.allDocIDs[0]}
         self.comm.uiRequestDoc.emit(self.doc['id'])
 
-    elif command[0] is Command.BUTTON_BAR:
-      if command[1]=='bold':
-        getattr(self, f'textEdit_{command[2]}').insertPlainText('**TEXT**')
-      elif command[1]=='italic':
-        getattr(self, f'textEdit_{command[2]}').insertPlainText('*TEXT*')
-      elif command[1]=='list-ul':
-        getattr(self, f'textEdit_{command[2]}').insertPlainText('\n- item 1\n- item 2')
-      elif command[1]=='list-ol':
-        getattr(self, f'textEdit_{command[2]}').insertPlainText('\n1. item 1\n1. item 2')
-      elif command[1].startswith('heading'):
-        getattr(self, f'textEdit_{command[2]}').insertPlainText('#' * int(command[1][-1]) +' Heading\n')
+    elif commandType is Command.BUTTON_BAR:
+      if payload[0] == 'bold':
+        getattr(self, f'textEdit_{payload[1]}').insertPlainText('**TEXT**')
+      elif payload[0] == 'italic':
+        getattr(self, f'textEdit_{payload[1]}').insertPlainText('*TEXT*')
+      elif payload[0] == 'list-ul':
+        getattr(self, f'textEdit_{payload[1]}').insertPlainText('\n- item 1\n- item 2')
+      elif payload[0] == 'list-ol':
+        getattr(self, f'textEdit_{payload[1]}').insertPlainText('\n1. item 1\n1. item 2')
+      elif str(payload[0]).startswith('heading'):
+        getattr(self, f'textEdit_{payload[1]}').insertPlainText('#' * int(str(payload[0])[-1]) +' Heading\n')
 
-    elif command[0] is Command.FOCUS_AREA:
-      unknownWidget = []
-      idx = 0 if self.tabW.count()==0 else self.tabW.currentIndex()
-      if self.allHidden:                                       #hide the special buttons and show general form
-        getattr(self, f'textShow_{command[1]}').hide()
-        getattr(self, f'buttonBarW_{command[1]}').hide()
-        for i in range(self.formsL[idx].count()):
-          item = self.formsL[idx].itemAt(i)
-          widget = None if item is None else item.widget()
-          if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
-            widget.show()
-          else:
-            unknownWidget.append(i)
-        self.tagsBarMainW.show()
-        if command[1]=='content' and len(unknownWidget)==5:#show / hide label and right-side of non-content and non-comment
-          item = self.formsL[idx].itemAt(unknownWidget[0])
-          widget = None if item is None else item.widget()
-          if widget is not None:
-            widget.show()
-          item = self.formsL[idx].itemAt(unknownWidget[1])
-          widget = None if item is None else item.widget()
-          if widget is not None:
-            widget.show()
-        if command[1]=='comment' and len(unknownWidget)==5:
-          item = self.formsL[idx].itemAt(unknownWidget[2])
-          widget = None if item is None else item.widget()
-          if widget is not None:
-            widget.show()
-          item = self.formsL[idx].itemAt(unknownWidget[3])
-          widget = None if item is None else item.widget()
-          if widget is not None:
-            widget.show()
-        if self.keyValueListL is not None and self.keyValueListL.count() == 0:
-          self.keyValueLabel.hide()
-          self.keyValueListW.hide()
-      else:                                   #show buttons to allow for easy markdown edit; hide general form
-        getattr(self, f'textShow_{command[1]}').show()
-        getattr(self, f'buttonBarW_{command[1]}').show()
-        for i in range(self.formsL[idx].count()):
-          item = self.formsL[idx].itemAt(i)
-          widget = None if item is None else item.widget()
-          if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
-            widget.hide()
-          else:
-            unknownWidget.append(i)
-        self.tagsBarMainW.hide()
-        if command[1]=='content' and len(unknownWidget)==5:
-          item = self.formsL[idx].itemAt(unknownWidget[0])
-          widget = None if item is None else item.widget()
-          if widget is not None:
-            widget.hide()
-          item = self.formsL[idx].itemAt(unknownWidget[1])
-          widget = None if item is None else item.widget()
-          if widget is not None:
-            widget.hide()
-        if command[1]=='comment' and len(unknownWidget)==5:
-          item = self.formsL[idx].itemAt(unknownWidget[2])
-          widget = None if item is None else item.widget()
-          if widget is not None:
-            widget.hide()
-          item = self.formsL[idx].itemAt(unknownWidget[3])
-          widget = None if item is None else item.widget()
-          if widget is not None:
-            widget.hide()
-      self.allHidden = not self.allHidden
+    elif commandType is Command.FOCUS_AREA:
+      preview = getattr(self, f'textShow_{payload[0]}')
+      preview.setVisible(not preview.isVisible())
 
-    elif command[0] is Command.AUTO_COMMENT:
+    elif commandType is Command.SHOW_ADVANCED:
+      self.showAdvanced = True
+      if self.advancedSection is not None:
+        self.advancedSection.show()
+
+    elif commandType is Command.AUTO_COMMENT:
       try:
         text  = f'\n{"-"*20}\n'
         text += callAddOn('form_auto', self.comm, self.doc, self)
@@ -637,7 +609,7 @@ class Form(QDialog):
       except Exception:
         pass
 
-    elif command[0] is Command.FORM_CANCEL:
+    elif commandType is Command.FORM_CANCEL:
       if self.comm. configuration['GUI']['autosave'] == 'Yes':
         ret = QMessageBox.critical(self, 'Warning', 'You will lose the entered information. Do you want to '+
           'save everything to a temporary location?',
@@ -650,7 +622,7 @@ class Form(QDialog):
       self.checkThreadTimer.stop()
       self.reject()
 
-    elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT, Command.FORM_SAVE_DUPL):
+    elif commandType in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT, Command.FORM_SAVE_DUPL):
       self.checkThreadTimer.stop()
       if (Path.home()/'.pastaELN.temp').is_file():                               #if there is a temporary file
         with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:
@@ -744,16 +716,16 @@ class Form(QDialog):
       self.doc = docBackup
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
-      if command[0] in [Command.FORM_SAVE_NEXT, Command.FORM_SAVE_DUPL]:
+      if commandType in [Command.FORM_SAVE_NEXT, Command.FORM_SAVE_DUPL]:
         for delKey in [i for i in self.doc if i in ['id'] or i.startswith('meta')]:        # delete these keys
           del self.doc[delKey]
-        if command[0] is Command.FORM_SAVE_NEXT:
+        if commandType is Command.FORM_SAVE_NEXT:
           self.comm.changeTable.emit(self.doc['type'][0], '')
       else:
         self.accept()                                                                                   #close
         self.close()
 
-    elif command[0] is Command.FORM_ADD_KV and self.keyValueListL is not None:
+    elif commandType is Command.FORM_ADD_KV and self.keyValueListL is not None:
       self.keyValueLabel.show()
       self.keyValueListW.show()
       self.keyLabels.append(QLineEdit(''))
@@ -764,7 +736,7 @@ class Form(QDialog):
       self.values[-1].setPlaceholderText('value')
       self.keyValueListL.addRow(self.keyLabels[-1], self.values[-1])
 
-    elif command[0] is Command.FORM_SHOW_DOC:
+    elif commandType is Command.FORM_SHOW_DOC:
       doc = copy.deepcopy(self.doc)
       if 'image' in doc:
         del doc['image']
@@ -856,19 +828,6 @@ class Form(QDialog):
     return
 
 
-  def changeTabs(self, idx:int) -> None:
-    """
-    Clicked on tabs to change to different one
-
-    Args:
-      idx (int): index of tab that was clicked
-    """
-    if idx == 0:
-      self.btnAddKWPairs.show()
-    else:
-      self.btnAddKWPairs.hide()
-    return
-
   def reject(self) -> None:
     """ Reject the dialog, stop the thread and disconnect signals """
     warnings.filterwarnings('ignore', category=RuntimeWarning)
@@ -903,16 +862,13 @@ class Form(QDialog):
 
 class Command(Enum):
   """ Commands used in this file """
-  BUTTON_BAR       = 1
-  CHANGE_EXTRACTOR = 2
-  SAVE_IMAGE       = 3
-  OPEN_FILEBROWSER = 4
-  OPEN_EXTERNAL    = 5
-  FOCUS_AREA       = 6
-  AUTO_COMMENT     = 7
-  FORM_SAVE        = 8
-  FORM_CANCEL      = 9
-  FORM_ADD_KV      = 10
-  FORM_SHOW_DOC    = 11
-  FORM_SAVE_NEXT   = 12
-  FORM_SAVE_DUPL   = 13
+  BUTTON_BAR     = 1
+  FOCUS_AREA     = 2
+  AUTO_COMMENT   = 3
+  FORM_SAVE      = 4
+  FORM_CANCEL    = 5
+  FORM_ADD_KV    = 6
+  FORM_SHOW_DOC  = 7
+  FORM_SAVE_NEXT = 8
+  FORM_SAVE_DUPL = 9
+  SHOW_ADVANCED  = 10

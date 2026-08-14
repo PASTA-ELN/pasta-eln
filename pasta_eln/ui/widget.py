@@ -5,7 +5,7 @@ the same ``execute`` interface.
 """
 from collections.abc import Callable
 from enum import Enum, auto
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, Protocol
 import qtawesome
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QShortcut
@@ -33,6 +33,14 @@ class Widget(QWidget):
     raise NotImplementedError(f'{type(self).__name__} does not handle commands')
 
 
+class CommandHost(Protocol):
+  """Minimal interface required by controls that dispatch commands."""
+  comm: Any
+
+  def execute(self, command: Any) -> None:
+    """Handle a command issued by a child control."""
+
+
 
 class ButtonStyle(Enum):
   """The visual role of a :class:`Button`."""
@@ -43,10 +51,11 @@ class ButtonStyle(Enum):
 
 class Button(QPushButton):
   """A command button that optionally adds itself to a layout"""
-  def __init__(self, label: str, widget: Widget, command: Any | None = None,
+  def __init__(self, label: str, widget: CommandHost, command: Any | None = None,
                layout: QLayout | None = None, *, icon: str | None = None,
                tooltip: str = '', style: ButtonStyle = ButtonStyle.DEFAULT,
-               iconSize: Literal['m', 'l'] = 'm', flat: bool = False) -> None:
+               iconSize: Literal['m', 'l'] = 'm', flat: bool = False,
+               checkable: bool = False) -> None:
     """
     Create a new button
 
@@ -60,14 +69,14 @@ class Button(QPushButton):
       style (ButtonStyle): style of the button
       iconSize (Literal['m', 'l']): size of the icon ('m' or 'l')
       flat (bool): whether the button should be flat
+      checkable (bool): whether the button keeps an on/off state
     """
     super().__init__(label)
-    self.iconName = icon
-    self.iconStyle = style
     self.buttonIconSize = QSize(32,32) if iconSize=='l' else QSize(20,20)
     self.setAutoDefault(False)
     self.setDefault(style is ButtonStyle.HIGHLIGHTED)
     self.setFlat(flat)
+    self.setCheckable(checkable)
     if not label:
       self.setFixedSize(self.buttonIconSize)
     if command is not None:
@@ -75,25 +84,15 @@ class Button(QPushButton):
     if tooltip:
       self.setToolTip(tooltip)
     if icon is not None:
-      self.reloadIcon(widget)
+      color = widget.comm.palette.getThemeColor('foreground', 'base')
+      if style is ButtonStyle.HIGHLIGHTED:
+        color = widget.comm.palette.getThemeColor('background', 'base')
+      if style is ButtonStyle.PRIMARY:
+        color = widget.comm.palette.getThemeColor('primary', 'base')
+      self.setIcon(qtawesome.icon(icon, color=color))
+      self.setIconSize(self.buttonIconSize)
     if layout is not None:
       layout.addWidget(self)
-
-
-  def reloadIcon(self, widget: Widget) -> None:
-    """Refresh the icon after the application theme changes
-
-    Args:
-      widget (Widget): widget that the button belongs to
-    """
-    if self.iconName is not None:
-      color = widget.comm.palette.getThemeColor('foreground', 'base')
-      if self.iconStyle is ButtonStyle.HIGHLIGHTED:
-        color = widget.comm.palette.getThemeColor('background', 'base')
-      if self.iconStyle is ButtonStyle.PRIMARY:
-        color = widget.comm.palette.getThemeColor('primary', 'base')
-      self.setIcon(qtawesome.icon(self.iconName, color=color))
-      self.setIconSize(self.buttonIconSize)
 
 
 class Shortcut(QShortcut):
