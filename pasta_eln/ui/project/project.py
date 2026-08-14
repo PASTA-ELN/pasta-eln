@@ -13,7 +13,7 @@ from ...misc_tools import callAddOn
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import createDirName
 from ..gui_communicate import Communicate
-from ..gui_style import SPACE, action, Button, ButtonStyle, Label, Widget
+from ..gui_style import SPACE, Button, ButtonStyle, Label, Widget, action
 from ..message_dialog import showMessage
 from .project_tree_view import TreeView
 

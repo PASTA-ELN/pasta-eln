@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QTextDocument
 from PySide6.QtWidgets import QApplication, QDialog, QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
 from .details.details_hier_item import DetailsHierItem
-from .gui_style import SPACE, Button, ButtonStyle, image as addImage, Label
+from .gui_style import SPACE, Button, ButtonStyle, Label, image as addImage
 
 iconSize = 40                                                              # size of the icon at top of dialog
 
