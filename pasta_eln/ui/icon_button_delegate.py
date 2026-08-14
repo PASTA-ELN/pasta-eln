@@ -25,7 +25,7 @@ class IconButtonDelegate(QStyledItemDelegate):
 
   def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: CellIndex) -> None:
     """Draw the configured button when the row supports its action."""
-    if not self.isVisible(index):  # type: ignore[arg-type]
+    if not self.isVisible(index):                                                     # type: ignore[arg-type]
       return
     buttonOption = QStyleOptionButton()
     buttonOption.state = QStyle.StateFlag.State_Active | QStyle.StateFlag.State_Enabled
@@ -36,14 +36,14 @@ class IconButtonDelegate(QStyledItemDelegate):
 
   def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: CellIndex) -> QWidget:
     """Icon buttons do not create in-place editors."""
-    return None  # type: ignore[return-value]
+    return None                                                                   # type: ignore[return-value]
 
   def editorEvent(self, event: QEvent, model: QAbstractItemModel, option: QStyleOptionViewItem,
                   index: CellIndex) -> bool:
     """Run the configured action for clicks inside a visible button cell."""
-    if self.isVisible(index):  # type: ignore[arg-type]
+    if self.isVisible(index):                                                         # type: ignore[arg-type]
       if not isClickWithinBounds(event, option):
         return False
-      self.onClick(model, index)  # type: ignore[arg-type]
+      self.onClick(model, index)                                                      # type: ignore[arg-type]
       return True
     return False

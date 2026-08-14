@@ -62,7 +62,7 @@ class MessageDialog(QDialog):
       for sectionTitle, sectionContent in text.items():
         messages = sectionContent if isinstance(sectionContent, list) else [sectionContent]
         content = '<br><br>'.join(escape(str(message)).replace('\n', '<br>') for message in messages)
-        sectionsLayout.addWidget(DetailsHierItem(self.comm, sectionTitle.capitalize(), [], content,  # type: ignore[arg-type]
+        sectionsLayout.addWidget(DetailsHierItem(self.comm, sectionTitle.capitalize(), [], content,# type: ignore[arg-type]
                                                  startCollapsed=sectionTitle == 'information'))
       sectionsLayout.addStretch(1)
       scrollArea = QScrollArea(widgetResizable=True)

@@ -76,29 +76,29 @@ class MainWindow(QMainWindow):
     self.changeProjectGroups = systemMenu.addMenu('&Change project group')
     syncMenu = systemMenu.addMenu('&Synchronize')
     action('Send all',                  self, Command.SYNC_SEND_ALL, syncMenu)
-    action('Send',                      self, Command.SYNC_SEND, syncMenu, shortcut='F5')
+    action('Send',                      self, Command.SYNC_SEND, syncMenu, keySequence='F5')
     if 'develop' in self.comm.configuration:
       action('Get all',                 self, Command.SYNC_GET_ALL, syncMenu)
-      action('Get',                     self, Command.SYNC_GET, syncMenu, shortcut='F4')
+      action('Get',                     self, Command.SYNC_GET, syncMenu, keySequence='F4')
       action('Smart sync',              self, Command.SYNC_SMART, syncMenu)
     configureMenu = systemMenu.addMenu('&Configure')
-    action('&Item type editor',         self, Command.SCHEMA, configureMenu, shortcut='F8')
+    action('&Item type editor',         self, Command.SCHEMA, configureMenu, keySequence='F8')
     action('&Definitions editor',       self, Command.DEFINITIONS, configureMenu)
     addOnsMenu = systemMenu.addMenu('&Add-ons')
     action('Update add-on list',            self, Command.UPDATE, addOnsMenu)
     action('Test extraction from a file',   self, Command.TEST1, addOnsMenu)
-    action('Test selected item extraction', self, Command.TEST_SELECTED, addOnsMenu, shortcut='F2')
+    action('Test selected item extraction', self, Command.TEST_SELECTED, addOnsMenu, keySequence='F2')
 
     helpMenu = menu.addMenu('&Other')
     action('&Website',                  self, Command.WEBSITE, helpMenu)
     action('Shortcuts',                 self, Command.SHORTCUTS, helpMenu)
     action('About',                     self, Command.ABOUT, helpMenu)
     helpMenu.addSeparator()
-    action('&Configuration',            self, Command.CONFIG, helpMenu, shortcut='Ctrl+0')
+    action('&Configuration',            self, Command.CONFIG, helpMenu, keySequence='Ctrl+0')
     developerMenu = helpMenu.addMenu('&Developer tools')
-    action('Verify database',           self, Command.CHECK_DB, developerMenu, shortcut='Ctrl+?')
-    action('Restart application',       self, Command.RESTART, developerMenu, shortcut='F9')
-    action('Capture window screenshot', self, Command.SCREENSHOT, developerMenu, shortcut='F12')
+    action('Verify database',           self, Command.CHECK_DB, developerMenu, keySequence='Ctrl+?')
+    action('Restart application',       self, Command.RESTART, developerMenu, keySequence='F9')
+    action('Capture window screenshot', self, Command.SCREENSHOT, developerMenu, keySequence='F12')
 
     # GUI elements
     self.splitter = QSplitter(handleWidth=3)
@@ -123,10 +123,10 @@ class MainWindow(QMainWindow):
     self.viewMenu.clear()
     for key, value in self.comm.docTypesTitles.items():
       shortcut = None if value['shortcut'] == '' else f"Ctrl+{value['shortcut']}"
-      action(value['title'], self, [Command.VIEW, key], self.viewMenu, shortcut=shortcut)
+      action(value['title'], self, [Command.VIEW, key], self.viewMenu, keySequence=shortcut)
     self.viewMenu.addSeparator()
-    action('&Tags', self, [Command.VIEW, '_tags_'], self.viewMenu, shortcut='Ctrl+T')
-    action('&Unidentified', self, [Command.VIEW, '-'], self.viewMenu, shortcut='Ctrl+U')
+    action('&Tags', self, [Command.VIEW, '_tags_'], self.viewMenu, keySequence='Ctrl+T')
+    action('&Unidentified', self, [Command.VIEW, '-'], self.viewMenu, keySequence='Ctrl+U')
     # Things that are related to project group
     self.changeProjectGroups.clear()
     for name in self.comm.configuration['projectGroups'].keys():
@@ -136,8 +136,8 @@ class MainWindow(QMainWindow):
 
   def paintProjectActions(self) -> None:
     """Enable project-scoped menu actions only when a project is open."""
-    for action in self.projectActions:
-      action.setEnabled(bool(self.comm.projectID))
+    for projectAction in self.projectActions:
+      projectAction.setEnabled(bool(self.comm.projectID))
 
 
   def closeEvent(self, event: QEvent) -> None:

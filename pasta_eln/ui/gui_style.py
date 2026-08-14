@@ -133,15 +133,12 @@ def shortcut(key: str, parent: QWidget, function: Callable[[], None]) -> QShortc
       parent (QWidget): widget / dialog that host the button and that has the execute function
       function (callable): function to be called when shortcut is triggered
   """
-  shortcut = QShortcut(key, parent)  # pylint: disable=qt-local-widget
-  shortcut.activated.connect(function)
-  shortcuts = getattr(parent, '_shortcuts', [])
-  shortcuts.append(shortcut)
-  parent._shortcuts = shortcuts  # type: ignore[attr-defined]
-  return shortcut
+  shortcutObject = QShortcut(key, parent)  # pylint: disable=qt-local-widget
+  shortcutObject.activated.connect(function)
+  return shortcutObject
 
 
-def action(label: str, widget: QWidget, command: Any, menu: QMenu, shortcut: str | None = None,
+def action(label: str, widget: QWidget, command: Any, menu: QMenu, keySequence: str | None = None,
            icon: str = '') -> QAction:
   """Create a menu action that forwards its command to the owning widget
     Args:
@@ -149,11 +146,11 @@ def action(label: str, widget: QWidget, command: Any, menu: QMenu, shortcut: str
       widget (QWidget): widget / dialog that host the button and that has the execute function
       command: value forwarded to the host widget's ``execute`` method
       menu (QMenu): button to be added to this menu
-      shortcut (str): shortcut (e.g. Ctrl+K)
+      keySequence (str): shortcut (e.g. Ctrl+K)
       icon (str): icon name
   """
-  action = QAction(widget)
-  action.setText(label)
+  actionObject = QAction(widget)
+  actionObject.setText(label)
 
   def triggered() -> None:
     try:
@@ -161,14 +158,14 @@ def action(label: str, widget: QWidget, command: Any, menu: QMenu, shortcut: str
     except Exception:
       return
 
-  action.triggered.connect(triggered)
+  actionObject.triggered.connect(triggered)
   if icon:
     color = 'black' if widget is None else widget.comm.palette.text               # type: ignore[attr-defined]
-    action.setIcon(qta.icon(icon, color=color, scale_factor=1))
-  if shortcut is not None:
-    action.setShortcut(QKeySequence(shortcut))
-  menu.addAction(action)
-  return action
+    actionObject.setIcon(qta.icon(icon, color=color, scale_factor=1))
+  if keySequence is not None:
+    actionObject.setShortcut(QKeySequence(keySequence))
+  menu.addAction(actionObject)
+  return actionObject
 
 
 def image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,
@@ -202,9 +199,9 @@ def image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,
           pixmap = pixmap.scaledToWidth(min(anyDimension, width0 * 2))
       label = QLabel()
       label.setPixmap(pixmap)
-      label.setAlignment(Qt.AlignCenter)                                                       # type: ignore
+      label.setAlignment(Qt.AlignCenter)                                                        # type: ignore
       if layout is not None:
-        layout.addWidget(label, alignment=Qt.AlignHCenter)                                     # type: ignore
+        layout.addWidget(label, alignment=Qt.AlignHCenter)                                      # type: ignore
       return label
     except Exception as error:
       logging.warning('Error processing base64 image %s', error)
@@ -226,7 +223,7 @@ def image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,
       else:
         imageSVG.setMaximumSize(anyDimension, int(float(imageSVG.height()) / float(imageSVG.width()) * anyDimension))
     if layout is not None:
-      layout.addWidget(imageSVG, alignment=Qt.AlignHCenter)                                    # type: ignore
+      layout.addWidget(imageSVG, alignment=Qt.AlignHCenter)                                     # type: ignore
     return imageSVG
   if len(data) > 2:
     logging.error('gui_style.Image: %s', data[:50], exc_info=True)

@@ -57,7 +57,7 @@ class ConfigurationAddOnParameter(QDialog):
     self.cancelBtn = Button('Cancel', self, [Command.CANCEL], buttonLineL, tooltip='Discard changes')
     self.saveBtn   = Button('Save', self, [Command.SAVE], buttonLineL, tooltip='Save changes',
                           style=ButtonStyle.HIGHLIGHTED)
-    shortcut('Ctrl+Return', self, lambda: self.execute([Command.SAVE]))
+    self.saveShortcut = shortcut('Ctrl+Return', self, lambda: self.execute([Command.SAVE]))
 
 
   def execute(self, command:list[Any]) -> None:

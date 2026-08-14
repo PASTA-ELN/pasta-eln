@@ -64,7 +64,7 @@ class Form(QDialog):
     self.mainL.setSpacing(SPACE.S)
     self.visibilityText = QLabel()
 
-    self.splitter = QSplitter(Qt.Orientation.Horizontal)                         # filled during paint
+    self.splitter = QSplitter(Qt.Orientation.Horizontal)                                 # filled during paint
     self.splitter.setHandleWidth(10)
     self.splitter.setContentsMargins(0, 0, 0, 0)
     self.mainL.addWidget(self.splitter, stretch=2)
@@ -86,7 +86,7 @@ class Form(QDialog):
     self.cancelBtn = Button('Cancel', self, Command.FORM_CANCEL, buttonLineL, tooltip='Discard changes')
     self.saveBtn = Button('Save', self, Command.FORM_SAVE, buttonLineL, tooltip='Save changes',
                           style=ButtonStyle.HIGHLIGHTED)
-    shortcut('Ctrl+Return', self, lambda: self.execute(Command.FORM_SAVE))
+    self.saveShortcut = shortcut('Ctrl+Return', self, lambda: self.execute(Command.FORM_SAVE))
     if self.flagNewDoc:                                                                           #new dataset
       self.saveNextBtn = Button('Save & Next', self, Command.FORM_SAVE_NEXT, buttonLineL,
                                 tooltip='Save this and handle next')

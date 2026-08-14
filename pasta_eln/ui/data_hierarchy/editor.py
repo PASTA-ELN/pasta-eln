@@ -65,7 +65,7 @@ class SchemeEditor(QDialog):
     self.cmd     = ''
     self.df      = pd.DataFrame()
     self.docTypesLabels = [(k,v['title']) for k,v in self.comm.docTypesTitles.items()]
-    self.closeButtons:list[Button] = []                                                 # close buttons of tabs
+    self.closeButtons:list[Button] = []                                                # close buttons of tabs
     self.setWindowTitle('Item type editor')
 
     # GUI elements
@@ -284,7 +284,7 @@ class SchemeEditor(QDialog):
                                     QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                     QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:
-        group = self.tabW.tabBar().tabText(command[1])  # type: ignore[index]
+        group = self.tabW.tabBar().tabText(command[1])                                   # type: ignore[index]
         self.comm.uiSendSQL.emit([{'type':'one','cmd':
           f"DELETE FROM docTypeSchema WHERE docType == '{self.docType}' AND class == '{group}'"}])
         self.changeDocType(docLabel)
