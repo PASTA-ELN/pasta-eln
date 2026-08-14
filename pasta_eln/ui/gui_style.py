@@ -4,22 +4,19 @@ from collections.abc import Callable
 from enum import Enum, auto
 from typing import Any, Final, Literal, Protocol
 import qtawesome as qta
-from PySide6.QtCore import QByteArray, QPoint, QRect, QSize, Qt
-from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPainter, QPixmap
-from PySide6.QtSvg import QSvgRenderer
+from PySide6.QtCore import QByteArray, QSize, Qt
+from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap, QShortcut
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtWidgets import (QBoxLayout, QFrame, QHBoxLayout, QLabel, QLayout, QMenu, QPushButton, QShortcut,
+from PySide6.QtWidgets import (QBoxLayout, QFrame, QHBoxLayout, QLabel, QLayout, QMenu, QPushButton,
                                QSizePolicy, QSplitter,
                                QVBoxLayout, QWidget)
 
-space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':80}                                   # spaces: padding and margin
-
-
 class _Spacing:
   """Shared layout distances, in logical pixels."""
-  S: Final[int] = 4
-  M: Final[int] = 12
-  L: Final[int] = 36
+  S: Final[int]  = 4
+  M: Final[int]  = 12
+  L: Final[int]  = 36
+  XL: Final[int] = 72
 SPACE = _Spacing()
 
 
@@ -254,10 +251,11 @@ def widgetAndLayout(direction:str='V', parentLayout:QLayout |QSplitter | None=No
     right (str): padding on right
     bottom (str): padding on bottom
   """
+  distance = {'0':0, 's':SPACE.S, 'm':SPACE.M, 'l':SPACE.L, 'xl':SPACE.XL}
   widget = QWidget()
   layout = QVBoxLayout(widget) if direction=='V' else QHBoxLayout(widget)
-  layout.setSpacing(space[spacing])
-  layout.setContentsMargins(space[left], space[top], space[right], space[bottom])
+  layout.setSpacing(distance[spacing])
+  layout.setContentsMargins(distance[left], distance[top], distance[right], distance[bottom])
   if parentLayout is not None:
     parentLayout.addWidget(widget)
   return widget, layout
@@ -273,4 +271,3 @@ class HSeparator(QFrame):
     self.setFrameShape(QFrame.Shape.HLine)
     self.setFrameShadow(QFrame.Shadow.Sunken)
     self.setLineWidth(1)
-

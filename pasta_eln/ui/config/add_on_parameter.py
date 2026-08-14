@@ -10,7 +10,7 @@ from ...misc_tools import loadNamedModule
 from ..gui_communicate import Communicate
 from ..gui_style import Label
 from ..message_dialog import showMessage
-from ..widget import SPACE, Button, ButtonStyle, Shortcut
+from ..gui_style import SPACE, Button, ButtonStyle, Shortcut
 
 
 class ConfigurationAddOnParameter(QDialog):

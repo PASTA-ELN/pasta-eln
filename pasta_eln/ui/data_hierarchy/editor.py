@@ -7,9 +7,8 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QInputDialog, QM
                                QTableWidgetItem, QTabWidget, QVBoxLayout)
 from ...fixed_strings_json import defaultDataHierarchyNode
 from ..gui_communicate import Communicate
-from ..gui_style import Label, widgetAndLayout
+from ..gui_style import SPACE, Button, ButtonStyle, Label, widgetAndLayout
 from ..message_dialog import showMessage
-from ..widget import SPACE, Button, ButtonStyle
 from .delete_column_delegate import DeleteColumnDelegate
 from .doc_type_edit import DocTypeEditor
 from .list_free_delegate import ListFreeDelegate

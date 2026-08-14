@@ -1,7 +1,7 @@
 """A filter row used to filter a document table."""
 from typing import TYPE_CHECKING
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLineEdit, QWidget
-from pasta_eln.ui.widget import Button
+from pasta_eln.ui.gui_style import Button
 
 if TYPE_CHECKING:
   from pasta_eln.ui.table.table import TableView

@@ -10,7 +10,7 @@ from ...fixed_strings_json import exampleDataString, setupText
 from ...installation_tools import configuration, createShortcut, exampleData
 from ...misc_tools import hardRestart
 from ..gui_communicate import Communicate
-from ..widget import SPACE, Button, ButtonStyle
+from ..gui_style import SPACE, Button, ButtonStyle
 
 
 class ConfigurationSetup(QWidget):

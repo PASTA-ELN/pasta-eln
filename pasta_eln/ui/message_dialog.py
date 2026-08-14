@@ -5,9 +5,8 @@ import qtawesome as qta
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QTextDocument
 from PySide6.QtWidgets import QApplication, QDialog, QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
-from .gui_style import Image, Label
+from .gui_style import SPACE, Button, ButtonStyle, Image, Label
 from ..text_tools.handle_dictionaries import dict2ul
-from .widget import SPACE, Button, ButtonStyle
 
 iconSize = 40                                                              # size of the icon at top of dialog
 

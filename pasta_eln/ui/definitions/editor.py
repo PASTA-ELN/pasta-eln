@@ -10,8 +10,7 @@ from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QDialog, QFileDialog, QMessageBox, QTableWidget, QTableWidgetItem, QVBoxLayout
 from ...misc_tools import callAddOn
 from ..gui_communicate import Communicate
-from ..gui_style import widgetAndLayout
-from ..widget import SPACE, Button, ButtonStyle
+from ..gui_style import SPACE, Button, ButtonStyle, widgetAndLayout
 from .key_delegate import KeyDelegate
 from .link_online_delegate import LinkOnlineDelegate
 from .lookup_delegate import LookupDelegate

@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QListWidget, QVBo
 from pasta_eln.backend_worker.sqlite import MAIN_ORDER
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.widget import SPACE, Button, ButtonStyle
+from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle
 
 
 class TableHeader(QDialog):

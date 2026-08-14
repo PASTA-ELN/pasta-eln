@@ -11,7 +11,7 @@ from pasta_eln.ui.workplan_creator.center_main_widget import CenterMainWidget
 from pasta_eln.ui.workplan_creator.left_main_widget import LeftMainWidget
 from pasta_eln.ui.workplan_creator.right_main_widget import RightMainWidget
 from pasta_eln.ui.workplan_creator.workplan_functions import Workplan
-from pasta_eln.ui.widget import SPACE
+from pasta_eln.ui.gui_style import SPACE
 
 
 class WorkplanCreatorDialog(QDialog):

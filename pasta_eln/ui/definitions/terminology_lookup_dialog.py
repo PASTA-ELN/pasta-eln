@@ -8,8 +8,7 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (QCheckBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QProgressBar,
                                QPushButton, QScrollArea, QTextEdit, QVBoxLayout, QWidget)
 from pasta_eln.ui.definitions.terminology_lookup_service import TerminologyLookupService
-from pasta_eln.ui.gui_style import Label
-from pasta_eln.ui.widget import SPACE, Button, ButtonStyle
+from pasta_eln.ui.gui_style import Label, SPACE, Button, ButtonStyle
 
 
 class TerminologyLookupDialog(QDialog):

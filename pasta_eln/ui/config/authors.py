@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFormLayout,
 from ...fixed_strings_json import confFileName
 from ...misc_tools import getORCIDName, getRORIDLabel
 from ..gui_communicate import Communicate
-from ..widget import SPACE, Button
+from ..gui_style import SPACE, Button
 
 
 class ConfigurationAuthors(QDialog):

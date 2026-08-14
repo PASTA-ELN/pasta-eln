@@ -6,7 +6,7 @@ from enum import Enum, auto
 from typing import Any
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import QDialog, QProgressBar, QTextBrowser, QVBoxLayout
-from .widget import SPACE, Button, ButtonStyle
+from .gui_style import SPACE, Button, ButtonStyle
 
 
 class WaitDialog(QDialog):

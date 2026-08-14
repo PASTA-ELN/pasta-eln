@@ -16,7 +16,7 @@ from pasta_eln.ui.gui_style import Action
 from pasta_eln.ui.table.filter_row import FilterRow
 from pasta_eln.ui.table.pandas_table_model import PandasTableModel
 from pasta_eln.ui.table.table_header import TableHeader
-from pasta_eln.ui.widget import SPACE, Button, ButtonStyle, Widget
+from pasta_eln.ui.gui_style import SPACE, Action, Button, ButtonStyle, Widget
 from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
 
 

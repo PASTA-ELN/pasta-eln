@@ -9,9 +9,8 @@ from PySide6.QtWidgets import QCheckBox, QDialog, QGridLayout, QLabel, QLineEdit
 from ...backend_worker.worker import Task
 from ...fixed_strings_json import confFileName
 from ..gui_communicate import Communicate
-from ..gui_style import Label, widgetAndLayout
+from ..gui_style import Button, ButtonStyle, Label, widgetAndLayout
 from ..message_dialog import showMessage
-from ..widget import Button, ButtonStyle
 
 
 class UploadGUI(QDialog):

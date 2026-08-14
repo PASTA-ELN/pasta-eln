@@ -13,9 +13,8 @@ from ...misc_tools import callAddOn
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import createDirName
 from ..gui_communicate import Communicate
-from ..gui_style import Action, Label, widgetAndLayout
+from ..gui_style import Action, Button, ButtonStyle, Label, Widget, widgetAndLayout
 from ..message_dialog import showMessage
-from ..widget import Button, ButtonStyle, Widget
 from .project_tree_view import TreeView
 
 
