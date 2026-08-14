@@ -9,6 +9,7 @@ from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap, Q
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import QFrame, QLabel, QLayout, QMenu, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 
+
 class _Spacing:
   """Shared layout distances, in logical pixels."""
   S: Final[int]  = 4
@@ -80,7 +81,7 @@ class CollapsibleSection(QFrame):
                iconSize: QSize = QSize(16, 16), boldTitle: bool = False,
                outlined: bool = False) -> None:
     """
-    
+
     Args:
       title (str): title of the section
       contentWidget (QWidget): widget to be shown or hidden
@@ -125,19 +126,22 @@ class CollapsibleSection(QFrame):
       self.setLineWidth(1)
 
 
-def Shortcut(key: str, parent: QWidget, function: Callable[[], None]) -> QShortcut:
+def shortcut(key: str, parent: QWidget, function: Callable[[], None]) -> QShortcut:
   """Create a keyboard shortcut owned by ``parent``.
     Args:
       key (str): shortcut key (e.g. Ctrl+K)
       parent (QWidget): widget / dialog that host the button and that has the execute function
       function (callable): function to be called when shortcut is triggered
   """
-  shortcut = QShortcut(key, parent)
+  shortcut = QShortcut(key, parent)  # pylint: disable=qt-local-widget
   shortcut.activated.connect(function)
+  shortcuts = getattr(parent, '_shortcuts', [])
+  shortcuts.append(shortcut)
+  parent._shortcuts = shortcuts  # type: ignore[attr-defined]
   return shortcut
 
 
-def Action(label: str, widget: QWidget, command: Any, menu: QMenu, shortcut: str | None = None,
+def action(label: str, widget: QWidget, command: Any, menu: QMenu, shortcut: str | None = None,
            icon: str = '') -> QAction:
   """Create a menu action that forwards its command to the owning widget
     Args:
@@ -167,7 +171,7 @@ def Action(label: str, widget: QWidget, command: Any, menu: QMenu, shortcut: str
   return action
 
 
-def Image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,
+def image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,
           anyDimension: int = -1) -> QWidget | None:
   """Create an image widget from base64 raster or SVG data and add it to a layout.
     Args:
@@ -180,7 +184,7 @@ def Image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,
   if data.startswith('data:image/'):
     try:
       byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21] == ',' else data[23:], encoding='utf-8'))
-      imageW = QImage.fromData(bytes(byteArr))
+      imageW = QImage.fromData(byteArr.data())
       if imageW.isNull():
         logging.warning('Could not load image data')
         return None

@@ -12,14 +12,13 @@ import qtawesome as qta
 import requests
 from PIL.ImageQt import ImageQt
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator, Qt
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QLabel, QLineEdit, QMessageBox,
-                               QGridLayout, QHBoxLayout, QSizePolicy, QSpacerItem, QTextEdit, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QGridLayout, QHBoxLayout, QLabel,
+                               QLineEdit, QMessageBox, QSizePolicy, QSpacerItem, QTextEdit, QVBoxLayout, QWidget)
 from ...backend_worker.elab_ftw_api import ElabFTWApi
 from ...fixed_strings_json import confFileName
 from ..gui_communicate import Communicate
-from ..gui_style import Label
+from ..gui_style import SPACE, Button, ButtonStyle, Label
 from ..message_dialog import showMessage
-from ..gui_style import SPACE, Button, ButtonStyle
 
 
 class ProjectGroup(QDialog):

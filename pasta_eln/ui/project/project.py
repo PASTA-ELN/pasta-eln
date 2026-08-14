@@ -13,7 +13,7 @@ from ...misc_tools import callAddOn
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import createDirName
 from ..gui_communicate import Communicate
-from ..gui_style import SPACE, Action, Button, ButtonStyle, Label, Widget
+from ..gui_style import SPACE, action, Button, ButtonStyle, Label, Widget
 from ..message_dialog import showMessage
 from .project_tree_view import TreeView
 
@@ -145,22 +145,22 @@ class Project(Widget):
     self.btnVisibility = Button('Visibility', self, layout=topLineL,
                                 icon='ri.eye-line', style=ButtonStyle.PRIMARY)
     visibilityMenu = QMenu(self)
-    self.actHideDetail = Action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
+    self.actHideDetail = action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
     menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
     minimizeItems = 'Show all item details' if self.showDetailsAll else 'Hide all item details'
-    Action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
-    Action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
-    self.actionFoldAll     = Action( minimizeItems,    self, [Command.SHOW_DETAILS],     visibilityMenu)
+    action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
+    action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
+    self.actionFoldAll     = action( minimizeItems,    self, [Command.SHOW_DETAILS],     visibilityMenu)
     self.btnVisibility.setMenu(visibilityMenu)
     self.btnMore = Button('More', self, layout=topLineL,
                           icon='ri.more-fill', style=ButtonStyle.PRIMARY)
     moreMenu = QMenu(self)
-    Action('Edit project',              self, Command.EDIT, moreMenu, icon='ri.edit-2-fill')
-    Action('Scan',                      self, Command.SCAN, moreMenu, icon='fa5s.search')
+    action('Edit project',              self, Command.EDIT, moreMenu, icon='ri.edit-2-fill')
+    action('Scan',                      self, Command.SCAN, moreMenu, icon='fa5s.search')
     projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
       for label, description in sorted(projectAddOns.items(), key=lambda item: item[1].casefold()):
-        Action(description, self, [Command.ADD_ON, label], moreMenu)
+        action(description, self, [Command.ADD_ON, label], moreMenu)
     self.btnMore.setMenu(moreMenu)
 
     self.allDetails = QTextEdit(self)

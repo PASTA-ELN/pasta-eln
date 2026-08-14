@@ -9,9 +9,9 @@ from pasta_eln.backend_worker.worker import Task
 from pasta_eln.fixed_strings_json import SORTED_DB_KEYS
 from pasta_eln.misc_tools import clearLayout, makeStringWrappable
 from pasta_eln.ui.details.details_hier_item import DetailsHierItem
-from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.gui_style import SPACE, Action, Button, ButtonStyle, Label, Widget
 from pasta_eln.ui.details.resize_image import ResizeImage
+from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.ui.gui_style import SPACE, action as addAction, Button, ButtonStyle, Label, Widget
 
 
 class Details(Widget):
@@ -162,9 +162,9 @@ class Details(Widget):
     self.moreMenu.clear()
     if not self.docID:
       return
-    Action('Open in project', self, Command.OPEN_PROJECT, self.moreMenu)
+    addAction('Open in project', self, Command.OPEN_PROJECT, self.moreMenu)
     if self.sourcePath() is not None:
-      Action('Open folder in file browser', self, Command.OPEN_FOLDER, self.moreMenu)
+      addAction('Open folder in file browser', self, Command.OPEN_FOLDER, self.moreMenu)
     self.moreMenu.addSeparator()
 
     extractionMenu = self.moreMenu.addMenu('Extraction')
@@ -178,16 +178,16 @@ class Details(Widget):
       extractorChoices = {recipe: label for recipe, label in extensionExtractors.items()
                           if recipe.startswith(documentTypes[0])}
     for recipe, label in extractorChoices.items():
-      Action(label, self, [Command.RERUN_EXTRACTOR, recipe], extractionMenu)
+      addAction(label, self, [Command.RERUN_EXTRACTOR, recipe], extractionMenu)
     if self.sourcePath() is not None:
-      Action('Test extraction', self, Command.TEST_EXTRACTION, extractionMenu)
+      addAction('Test extraction', self, Command.TEST_EXTRACTION, extractionMenu)
     if bool(extractorChoices) and 'image' in self.data and self.sourcePath() is not None:
-      Action('Save extracted image', self, Command.SAVE_EXTRACTED_IMAGE, extractionMenu)
+      addAction('Save extracted image', self, Command.SAVE_EXTRACTED_IMAGE, extractionMenu)
     if not extractorChoices and self.sourcePath() is None:
       extractionMenu.setEnabled(False)
     self.moreMenu.addSeparator()
-    Action('Hide item', self, Command.HIDE_ITEM, self.moreMenu)
-    Action('Close details', self, Command.HIDE_DETAILS, self.moreMenu)
+    addAction('Hide item', self, Command.HIDE_ITEM, self.moreMenu)
+    addAction('Close details', self, Command.HIDE_DETAILS, self.moreMenu)
 
 
   def execute(self, command: Command | list[Any]) -> None:

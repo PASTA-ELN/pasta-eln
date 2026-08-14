@@ -52,6 +52,7 @@ class Editor(QDialog):
     self.data:pd.DataFrame = pd.DataFrame()
     self.df0:pd.DataFrame = pd.DataFrame()
     self.df1:pd.DataFrame = pd.DataFrame()
+    self.terminologyDialog: TerminologyLookupDialog | None = None
     self.setMinimumWidth(1000)
     self.setWindowTitle('Edit definitions')
 

@@ -1,14 +1,14 @@
 """ Dialog that shows a message and possibly an image """
 import json
-from html import escape
 from enum import Enum, auto
+from html import escape
 from typing import Any
 import qtawesome as qta
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QTextDocument
 from PySide6.QtWidgets import QApplication, QDialog, QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
-from .gui_style import SPACE, Button, ButtonStyle, Image, Label
 from .details.details_hier_item import DetailsHierItem
+from .gui_style import SPACE, Button, ButtonStyle, image as addImage, Label
 
 iconSize = 40                                                              # size of the icon at top of dialog
 
@@ -52,7 +52,7 @@ class MessageDialog(QDialog):
       iconLabel.setMinimumSize(iconSize, iconSize)
       mainL.addWidget(iconLabel, alignment=Qt.AlignHCenter)                                     # type: ignore
     if image:
-      Image(image, mainL, anyDimension=400)
+      addImage(image, mainL, anyDimension=400)
     if isinstance(text, dict):
       self.messageText = json.dumps(text, indent=2, ensure_ascii=False)
       sectionsWidget = QWidget()

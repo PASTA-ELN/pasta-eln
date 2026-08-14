@@ -21,7 +21,7 @@ from pasta_eln.ui.definitions.editor import Editor as DefinitionsEditor
 from pasta_eln.ui.details.details import Command as DetailsCommand
 from pasta_eln.ui.form.form import Form
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.gui_style import Action
+from pasta_eln.ui.gui_style import action
 from pasta_eln.ui.message_dialog import MessageDialog, showMessage
 from pasta_eln.ui.palette import Palette
 from pasta_eln.ui.repositories.upload_gui import UploadGUI
@@ -60,45 +60,45 @@ class MainWindow(QMainWindow):
     menu = self.menuBar()
     projectMenu = menu.addMenu('&Project')
     self.projectActions = [
-        Action('&Export project to .eln',   self, Command.EXPORT, projectMenu),
-        Action('&Import .eln into project', self, Command.IMPORT, projectMenu),
-        Action('&Upload to repository',     self, Command.REPOSITORY, projectMenu),
+        action('&Export project to .eln',   self, Command.EXPORT, projectMenu),
+        action('&Import .eln into project', self, Command.IMPORT, projectMenu),
+        action('&Upload to repository',     self, Command.REPOSITORY, projectMenu),
     ]
     projectMenu.addSeparator()
-    self.projectActions.append(Action('&Delete current project...', self, Command.DELETE_PROJECT, projectMenu))
+    self.projectActions.append(action('&Delete current project...', self, Command.DELETE_PROJECT, projectMenu))
     projectMenu.aboutToShow.connect(self.paintProjectActions)
     projectMenu.addSeparator()
-    Action('&Exit',                     self, Command.EXIT, projectMenu)
+    action('&Exit',                     self, Command.EXIT, projectMenu)
 
     self.viewMenu = menu.addMenu('Common &Lists')
 
     systemMenu = menu.addMenu('Project &group')
     self.changeProjectGroups = systemMenu.addMenu('&Change project group')
     syncMenu = systemMenu.addMenu('&Synchronize')
-    Action('Send all',                  self, Command.SYNC_SEND_ALL, syncMenu)
-    Action('Send',                      self, Command.SYNC_SEND, syncMenu, shortcut='F5')
+    action('Send all',                  self, Command.SYNC_SEND_ALL, syncMenu)
+    action('Send',                      self, Command.SYNC_SEND, syncMenu, shortcut='F5')
     if 'develop' in self.comm.configuration:
-      Action('Get all',                 self, Command.SYNC_GET_ALL, syncMenu)
-      Action('Get',                     self, Command.SYNC_GET, syncMenu, shortcut='F4')
-      Action('Smart sync',              self, Command.SYNC_SMART, syncMenu)
+      action('Get all',                 self, Command.SYNC_GET_ALL, syncMenu)
+      action('Get',                     self, Command.SYNC_GET, syncMenu, shortcut='F4')
+      action('Smart sync',              self, Command.SYNC_SMART, syncMenu)
     configureMenu = systemMenu.addMenu('&Configure')
-    Action('&Item type editor',         self, Command.SCHEMA, configureMenu, shortcut='F8')
-    Action('&Definitions editor',       self, Command.DEFINITIONS, configureMenu)
+    action('&Item type editor',         self, Command.SCHEMA, configureMenu, shortcut='F8')
+    action('&Definitions editor',       self, Command.DEFINITIONS, configureMenu)
     addOnsMenu = systemMenu.addMenu('&Add-ons')
-    Action('Update add-on list',            self, Command.UPDATE, addOnsMenu)
-    Action('Test extraction from a file',   self, Command.TEST1, addOnsMenu)
-    Action('Test selected item extraction', self, Command.TEST_SELECTED, addOnsMenu, shortcut='F2')
+    action('Update add-on list',            self, Command.UPDATE, addOnsMenu)
+    action('Test extraction from a file',   self, Command.TEST1, addOnsMenu)
+    action('Test selected item extraction', self, Command.TEST_SELECTED, addOnsMenu, shortcut='F2')
 
     helpMenu = menu.addMenu('&Other')
-    Action('&Website',                  self, Command.WEBSITE, helpMenu)
-    Action('Shortcuts',                 self, Command.SHORTCUTS, helpMenu)
-    Action('About',                     self, Command.ABOUT, helpMenu)
+    action('&Website',                  self, Command.WEBSITE, helpMenu)
+    action('Shortcuts',                 self, Command.SHORTCUTS, helpMenu)
+    action('About',                     self, Command.ABOUT, helpMenu)
     helpMenu.addSeparator()
-    Action('&Configuration',            self, Command.CONFIG, helpMenu, shortcut='Ctrl+0')
+    action('&Configuration',            self, Command.CONFIG, helpMenu, shortcut='Ctrl+0')
     developerMenu = helpMenu.addMenu('&Developer tools')
-    Action('Verify database',           self, Command.CHECK_DB, developerMenu, shortcut='Ctrl+?')
-    Action('Restart application',       self, Command.RESTART, developerMenu, shortcut='F9')
-    Action('Capture window screenshot', self, Command.SCREENSHOT, developerMenu, shortcut='F12')
+    action('Verify database',           self, Command.CHECK_DB, developerMenu, shortcut='Ctrl+?')
+    action('Restart application',       self, Command.RESTART, developerMenu, shortcut='F9')
+    action('Capture window screenshot', self, Command.SCREENSHOT, developerMenu, shortcut='F12')
 
     # GUI elements
     self.splitter = QSplitter(handleWidth=3)
@@ -123,14 +123,14 @@ class MainWindow(QMainWindow):
     self.viewMenu.clear()
     for key, value in self.comm.docTypesTitles.items():
       shortcut = None if value['shortcut'] == '' else f"Ctrl+{value['shortcut']}"
-      Action(value['title'], self, [Command.VIEW, key], self.viewMenu, shortcut=shortcut)
+      action(value['title'], self, [Command.VIEW, key], self.viewMenu, shortcut=shortcut)
     self.viewMenu.addSeparator()
-    Action('&Tags', self, [Command.VIEW, '_tags_'], self.viewMenu, shortcut='Ctrl+T')
-    Action('&Unidentified', self, [Command.VIEW, '-'], self.viewMenu, shortcut='Ctrl+U')
+    action('&Tags', self, [Command.VIEW, '_tags_'], self.viewMenu, shortcut='Ctrl+T')
+    action('&Unidentified', self, [Command.VIEW, '-'], self.viewMenu, shortcut='Ctrl+U')
     # Things that are related to project group
     self.changeProjectGroups.clear()
     for name in self.comm.configuration['projectGroups'].keys():
-      Action(name, self, [Command.CHANGE_PG, name], self.changeProjectGroups)
+      action(name, self, [Command.CHANGE_PG, name], self.changeProjectGroups)
     return
 
 

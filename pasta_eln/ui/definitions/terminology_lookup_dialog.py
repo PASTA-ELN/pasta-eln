@@ -8,7 +8,7 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (QCheckBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QProgressBar,
                                QPushButton, QScrollArea, QTextEdit, QVBoxLayout, QWidget)
 from pasta_eln.ui.definitions.terminology_lookup_service import TerminologyLookupService
-from pasta_eln.ui.gui_style import Label, SPACE, Button, ButtonStyle
+from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, Label
 
 
 class TerminologyLookupDialog(QDialog):
@@ -39,9 +39,9 @@ class TerminologyLookupDialog(QDialog):
     self.terminologyLineEdit.setPlaceholderText('Search definitions in wikis and ontologies')
     self.terminologyLineEdit.returnPressed.connect(lambda: self.execute(Command.SEARCH))
     searchLayout.addWidget(self.terminologyLineEdit)
-    searchButton = QPushButton('Search')
-    searchButton.clicked.connect(lambda: self.execute(Command.SEARCH))
-    searchLayout.addWidget(searchButton)
+    self.searchButton = QPushButton('Search')
+    self.searchButton.clicked.connect(lambda: self.execute(Command.SEARCH))
+    searchLayout.addWidget(self.searchButton)
     mainLayout.addLayout(searchLayout)
 
     self.searchProgressBar = QProgressBar()

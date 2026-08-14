@@ -20,10 +20,10 @@ from ...misc_tools import callAddOn, isDocID
 from ...text_tools.string_changes import markdownEqualizer
 from .._context_menu import CommandMenu, executeContextMenu, initContextMenu
 from ..gui_communicate import Communicate
-from ..gui_style import SPACE, Action, Button, ButtonStyle, Image, Label, Shortcut
+from ..gui_style import SPACE, action, Button, ButtonStyle, image, Label, shortcut
 from ..message_dialog import MessageDialog, showMessage
-from .form_section import FormSection
 from .flow_layout import FlowLayout
+from .form_section import FormSection
 from .text_editor import TextEditor
 
 
@@ -78,15 +78,15 @@ class Form(QDialog):
     moreButton = Button('More', self, layout=buttonLineL, icon='ri.more-fill', style=ButtonStyle.PRIMARY)
     moreMenu = QMenu(self)
     moreButton.setMenu(moreMenu)
-    Action('Add key-value pair', self, Command.FORM_ADD_KV, moreMenu)
-    Action('Show advanced fields', self, Command.SHOW_ADVANCED, moreMenu)
+    action('Add key-value pair', self, Command.FORM_ADD_KV, moreMenu)
+    action('Show advanced fields', self, Command.SHOW_ADVANCED, moreMenu)
     if not self.flagNewDoc:                                                                  #existing dataset
-      Action('Show all information', self, Command.FORM_SHOW_DOC, moreMenu)
-      Action('Duplicate data set', self, Command.FORM_SAVE_DUPL, moreMenu)
+      action('Show all information', self, Command.FORM_SHOW_DOC, moreMenu)
+      action('Duplicate data set', self, Command.FORM_SAVE_DUPL, moreMenu)
     self.cancelBtn = Button('Cancel', self, Command.FORM_CANCEL, buttonLineL, tooltip='Discard changes')
     self.saveBtn = Button('Save', self, Command.FORM_SAVE, buttonLineL, tooltip='Save changes',
                           style=ButtonStyle.HIGHLIGHTED)
-    Shortcut('Ctrl+Return', self, lambda: self.execute(Command.FORM_SAVE))
+    shortcut('Ctrl+Return', self, lambda: self.execute(Command.FORM_SAVE))
     if self.flagNewDoc:                                                                           #new dataset
       self.saveNextBtn = Button('Save & Next', self, Command.FORM_SAVE_NEXT, buttonLineL,
                                 tooltip='Save this and handle next')
@@ -265,7 +265,7 @@ class Form(QDialog):
       self.imageL = QVBoxLayout(imageW)
       self.imageL.setContentsMargins(SPACE.S, SPACE.S, SPACE.S, SPACE.S)
       width= self.comm.configuration['GUI']['imageSizeDetails'] if hasattr(self.comm,'configuration') else 300
-      Image(self.doc['image'], self.imageL, anyDimension=width)
+      image(self.doc['image'], self.imageL, anyDimension=width)
       if 'id' in self.doc:
         imageW.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))

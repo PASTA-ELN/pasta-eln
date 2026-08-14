@@ -29,7 +29,7 @@ def _hasEditableName(index: QModelIndex) -> bool:
 
 def _canDeleteRow(index: QModelIndex) -> bool:
   """Keep the schema's required name, tags, and comment rows."""
-  return bool(index.model().index(index.row(), 0).data() not in ['name', 'tags', 'comment'])
+  return index.model().index(index.row(), 0).data() not in ['name', 'tags', 'comment']
 
 
 def _moveRowUp(model: QAbstractItemModel, index: QModelIndex) -> None:

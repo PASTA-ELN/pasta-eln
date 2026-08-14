@@ -7,8 +7,8 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QLabel, QSizePolicy
 from pasta_eln.misc_tools import isDocID, makeStringWrappable
 from pasta_eln.text_tools.string_changes import tuple2html
-from pasta_eln.ui.gui_style import CollapsibleSection
 from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.ui.gui_style import CollapsibleSection
 
 
 class DetailsHierItem(CollapsibleSection):

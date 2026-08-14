@@ -1,6 +1,6 @@
 """Collapsible sections used by the document editor."""
 from PySide6.QtWidgets import QFormLayout, QWidget
-from pasta_eln.ui.gui_style import CollapsibleSection, SPACE
+from pasta_eln.ui.gui_style import SPACE, CollapsibleSection
 
 
 class FormSection(CollapsibleSection):

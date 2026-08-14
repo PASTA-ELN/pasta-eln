@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, 
 from ...backend_worker.worker import Task
 from ...misc_tools import callAddOn
 from ..gui_communicate import Communicate
-from ..gui_style import Action
+from ..gui_style import action
 from ..message_dialog import showMessage
 from .project_leaf_renderer import ProjectLeafRenderer
 
@@ -54,22 +54,22 @@ class TreeView(QTreeView):
     folder = item.data()['hierStack'].split('/')[-1][0]=='x'
     context = QMenu(self)
     if folder:
-      Action('Add child folder',                   self, [Command.ADD_CHILD],      context)
-    Action('Add sibling folder',                   self, [Command.ADD_SIBLING],    context)
-    Action('Delete item',                          self, [Command.DELETE],         context)
+      action('Add child folder',                   self, [Command.ADD_CHILD],      context)
+    action('Add sibling folder',                   self, [Command.ADD_SIBLING],    context)
+    action('Delete item',                          self, [Command.DELETE],         context)
     context.addSeparator()
-    Action('Hide/show item details',               self, [Command.SHOW_DETAILS], context)
-    Action('Mark item as hidden/shown',            self, [Command.HIDE],           context)
+    action('Hide/show item details',               self, [Command.SHOW_DETAILS], context)
+    action('Mark item as hidden/shown',            self, [Command.HIDE],           context)
     context.addSeparator()
     if not folder:
-      Action('Open file with another application', self, [Command.OPEN_EXTERNAL],    context)
-    Action('Open folder in file browser',          self, [Command.OPEN_FILEBROWSER], context)
+      action('Open file with another application', self, [Command.OPEN_EXTERNAL],    context)
+    action('Open folder in file browser',          self, [Command.OPEN_FILEBROWSER], context)
     if folder:
       projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
       if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
         context.addSeparator()
         for label, description in projectAddOns.items():
-          Action(description, self, [Command.ADD_ON, label], context)
+          action(description, self, [Command.ADD_ON, label], context)
     context.exec(event.globalPos())
     return
 

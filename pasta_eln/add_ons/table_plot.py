@@ -6,8 +6,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 from PySide6.QtCore import QSize
-from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout,
-                               QWidget)
+from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget
 from scipy import stats
 from sklearn.metrics import r2_score
 from pasta_eln.misc_tools import MplCanvas, dfConvertColumns, isFloat

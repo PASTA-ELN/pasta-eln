@@ -8,9 +8,8 @@ from PySide6.QtWidgets import QApplication, QDialog, QGroupBox, QHBoxLayout, QLi
 from ...fixed_strings_json import confFileName
 from ...misc_tools import loadNamedModule
 from ..gui_communicate import Communicate
-from ..gui_style import Label
+from ..gui_style import SPACE, Button, ButtonStyle, Label, shortcut
 from ..message_dialog import showMessage
-from ..gui_style import SPACE, Button, ButtonStyle, Shortcut
 
 
 class ConfigurationAddOnParameter(QDialog):
@@ -58,7 +57,7 @@ class ConfigurationAddOnParameter(QDialog):
     self.cancelBtn = Button('Cancel', self, [Command.CANCEL], buttonLineL, tooltip='Discard changes')
     self.saveBtn   = Button('Save', self, [Command.SAVE], buttonLineL, tooltip='Save changes',
                           style=ButtonStyle.HIGHLIGHTED)
-    Shortcut('Ctrl+Return', self, lambda: self.execute([Command.SAVE]))
+    shortcut('Ctrl+Return', self, lambda: self.execute([Command.SAVE]))
 
 
   def execute(self, command:list[Any]) -> None:

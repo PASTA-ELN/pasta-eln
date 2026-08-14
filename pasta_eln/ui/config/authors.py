@@ -6,7 +6,8 @@ from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit,
+                               QVBoxLayout, QWidget)
 from ...fixed_strings_json import confFileName
 from ...misc_tools import getORCIDName, getRORIDLabel
 from ..gui_communicate import Communicate

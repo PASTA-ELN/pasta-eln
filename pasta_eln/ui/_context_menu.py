@@ -9,7 +9,7 @@ from typing import Any
 from PySide6.QtCore import QPoint
 from PySide6.QtWidgets import QMenu, QWidget
 from ..backend_worker.worker import Task
-from .gui_style import Action
+from .gui_style import action
 
 
 def initContextMenu(widget:QWidget, pos:QPoint) -> None:
@@ -30,12 +30,12 @@ def initContextMenu(widget:QWidget, pos:QPoint) -> None:
     baseDocType= widget.doc['type'][0]                                            # type: ignore[attr-defined]
     choices= {key:value for key,value in extractors.items() if key.startswith(baseDocType)}
     for key,value in choices.items():
-      Action(value,                     widget, [CommandMenu.CHANGE_EXTRACTOR, key], context)
+      action(value,                     widget, [CommandMenu.CHANGE_EXTRACTOR, key], context)
     context.addSeparator()
-    Action('Save image',                widget, [CommandMenu.SAVE_IMAGE],            context)
+    action('Save image',                widget, [CommandMenu.SAVE_IMAGE],            context)
   # Action('Open file with another application', widget.changeExtractor, context, widget, name='_openExternal_')
-  Action('Open folder in file browser', widget, [CommandMenu.OPEN_FILEBROWSER],      context)
-  Action('Hide',                        widget, [CommandMenu.HIDE],                  context)
+  action('Open folder in file browser', widget, [CommandMenu.OPEN_FILEBROWSER],      context)
+  action('Hide',                        widget, [CommandMenu.HIDE],                  context)
   context.exec(widget.mapToGlobal(pos))
   return
 

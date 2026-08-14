@@ -13,10 +13,10 @@ from PySide6.QtWidgets import (QComboBox, QFileDialog, QHBoxLayout, QListWidget,
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.misc_tools import callAddOn, isDocID
 from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.ui.gui_style import SPACE, action, Button, ButtonStyle, Widget
 from pasta_eln.ui.table.filter_row import FilterRow
 from pasta_eln.ui.table.pandas_table_model import PandasTableModel
 from pasta_eln.ui.table.table_header import TableHeader
-from pasta_eln.ui.gui_style import SPACE, Action, Button, ButtonStyle, Widget
 from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
 
 
@@ -57,30 +57,30 @@ class TableView(Widget):
                                style=ButtonStyle.PRIMARY)
     self.actionMenu = QMenu(self)
     self.actionButton.setMenu(self.actionMenu)
-    self.toggleSelectionAction = Action('Toggle selection', self, Command.TOGGLE_SELECTION, self.actionMenu)
+    self.toggleSelectionAction = action('Toggle selection', self, Command.TOGGLE_SELECTION, self.actionMenu)
     self.actionMenu.addSeparator()
-    self.groupEditAction = Action('Group edit', self, Command.GROUP_EDIT, self.actionMenu)
-    self.sequentialEditAction = Action('Sequential edit', self, Command.SEQUENTIAL_EDIT, self.actionMenu)
-    self.toggleHiddenAction = Action('Hide/show selected', self, Command.TOGGLE_HIDDEN, self.actionMenu)
-    self.rerunExtractorsAction = Action('Rerun extractors', self, Command.RERUN_EXTRACTORS, self.actionMenu)
-    self.deleteAction = Action('Delete', self, Command.DELETE, self.actionMenu)
+    self.groupEditAction = action('Group edit', self, Command.GROUP_EDIT, self.actionMenu)
+    self.sequentialEditAction = action('Sequential edit', self, Command.SEQUENTIAL_EDIT, self.actionMenu)
+    self.toggleHiddenAction = action('Hide/show selected', self, Command.TOGGLE_HIDDEN, self.actionMenu)
+    self.rerunExtractorsAction = action('Rerun extractors', self, Command.RERUN_EXTRACTORS, self.actionMenu)
+    self.deleteAction = action('Delete', self, Command.DELETE, self.actionMenu)
 
     self.viewButton = Button('View', self, layout=self.buttonbarL, icon='ri.eye-line', style=ButtonStyle.PRIMARY)
     self.viewMenu = QMenu(self)
     self.viewButton.setMenu(self.viewMenu)
-    Action('Add filter', self, Command.ADD_FILTER, self.viewMenu)
-    self.showHiddenAction = Action('Show hidden rows', self, Command.SHOW_HIDDEN, self.viewMenu)
-    self.galleryAction = Action('Gallery view', self, Command.TOGGLE_GALLERY, self.viewMenu)
+    action('Add filter', self, Command.ADD_FILTER, self.viewMenu)
+    self.showHiddenAction = action('Show hidden rows', self, Command.SHOW_HIDDEN, self.viewMenu)
+    self.galleryAction = action('Gallery view', self, Command.TOGGLE_GALLERY, self.viewMenu)
     self.galleryAction.setVisible(False)
 
     self.moreButton = Button('More', self, layout=self.buttonbarL, icon='ri.more-fill', style=ButtonStyle.PRIMARY)
     self.moreMenu = QMenu(self)
     self.moreButton.setMenu(self.moreMenu)
-    Action('Export CSV', self, Command.EXPORT_CSV, self.moreMenu)
+    action('Export CSV', self, Command.EXPORT_CSV, self.moreMenu)
     self.moreMenu.addSeparator()
     self.tableAddOnMenu = self.moreMenu.addMenu('Table add-ons')
     self.moreMenu.addSeparator()
-    self.changeColumnsAction = Action('Change list columns', self, Command.CHANGE_COLUMNS, self.moreMenu)
+    self.changeColumnsAction = action('Change list columns', self, Command.CHANGE_COLUMNS, self.moreMenu)
     self.paintTableAddOnsMenu()
 
     # Filter rows live directly above the document table.
@@ -195,7 +195,7 @@ class TableView(Widget):
     """Populate the table add-on submenu for the active project group."""
     addOns = self.comm.configuration['projectGroups'][self.comm.projectGroup].get('addOns', {}).get('table', {})
     for label, description in sorted(addOns.items(), key=lambda item: item[1].casefold()):
-      Action(description, self, [Command.ADD_ON, label], self.tableAddOnMenu)
+      action(description, self, [Command.ADD_ON, label], self.tableAddOnMenu)
     self.tableAddOnMenu.setEnabled(bool(addOns))
 
 

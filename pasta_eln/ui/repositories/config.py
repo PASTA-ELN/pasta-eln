@@ -7,14 +7,14 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 import qtawesome as qta
-from PySide6.QtWidgets import QComboBox, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QToolButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (QComboBox, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QToolButton,
+                               QVBoxLayout, QWidget)
 from ...backend_worker.dataverse import DataverseClient
 from ...backend_worker.zenodo import ZenodoClient
 from ...fixed_strings_json import confFileName
 from ..gui_communicate import Communicate
-from ..gui_style import Label
+from ..gui_style import SPACE, Button, ButtonStyle, Label, shortcut
 from ..message_dialog import showMessage
-from ..gui_style import SPACE, Button, ButtonStyle, Shortcut
 
 
 class ConfigurationRepositories(QDialog):
@@ -114,7 +114,7 @@ class ConfigurationRepositories(QDialog):
     Button('Cancel', self, [Command.CANCEL], buttonLineL, tooltip='Discard changes')
     self.saveBtn = Button('Save', self, [Command.SAVE], buttonLineL, tooltip='Save changes',
                           style=ButtonStyle.HIGHLIGHTED)
-    Shortcut('Ctrl+Return', self, lambda: self.execute([Command.SAVE]))
+    shortcut('Ctrl+Return', self, lambda: self.execute([Command.SAVE]))
 
 
   def execute(self, command:list[Any]) -> None:
