@@ -133,7 +133,7 @@ def shortcut(key: str, parent: QWidget, function: Callable[[], None]) -> QShortc
       parent (QWidget): widget / dialog that host the button and that has the execute function
       function (callable): function to be called when shortcut is triggered
   """
-  shortcutObject = QShortcut(key, parent)  # pylint: disable=qt-local-widget
+  shortcutObject = QShortcut(key, parent)                                    # pylint: disable=qt-local-widget
   shortcutObject.activated.connect(function)
   return shortcutObject
 
