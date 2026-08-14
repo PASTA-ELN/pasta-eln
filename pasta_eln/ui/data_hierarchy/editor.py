@@ -1,15 +1,15 @@
 """ dialog to edit docType schema """
 from enum import Enum
-from typing import Any
 import numpy as np
 import pandas as pd
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QInputDialog, QMessageBox, QTabBar, QTableWidget,
+from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QInputDialog, QMessageBox, QTabBar, QTableWidget,
                                QTableWidgetItem, QTabWidget, QVBoxLayout)
 from ...fixed_strings_json import defaultDataHierarchyNode
 from ..gui_communicate import Communicate
-from ..gui_style import IconButton, Label, TextButton, widgetAndLayout
+from ..gui_style import Label, widgetAndLayout
 from ..message_dialog import showMessage
+from ..widget import SPACE, Button, ButtonStyle
 from .delete_column_delegate import DeleteColumnDelegate
 from .doc_type_edit import DocTypeEditor
 from .list_free_delegate import ListFreeDelegate
@@ -41,13 +41,15 @@ class SchemeEditor(QDialog):
     self.cmd     = ''
     self.df      = pd.DataFrame()
     self.docTypesLabels = [(k,v['title']) for k,v in self.comm.docTypesTitles.items()]
-    self.closeButtons:list[IconButton] = []                                             #close buttons of tabs
+    self.closeButtons:list[Button] = []                                                 # close buttons of tabs
     self.setWindowTitle('Item type editor')
 
     # GUI elements
     self.setMinimumWidth(int(np.sum(COLUMN_WIDTH))+80)
     self.setMinimumHeight(500)
     mainL = QVBoxLayout(self)
+    mainL.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
+    mainL.setSpacing(SPACE.S)
     Label('Item type editor', 'h1', mainL)
     Label('Warning: every change of the item type saves that content', 'h3', mainL)
     _, docTypeL = widgetAndLayout('H', mainL, 's')
@@ -57,9 +59,9 @@ class SchemeEditor(QDialog):
     self.selectDocType.setStyleSheet(self.comm.palette.get('secondaryText','color'))
     docTypeL.addWidget(self.selectDocType)
     docTypeL.addStretch(1)
-    IconButton('fa5s.plus',  self, [Command.NEW],  docTypeL, tooltip='New item type')
-    IconButton('fa5s.edit',  self, [Command.EDIT], docTypeL, tooltip='Edit item type')
-    IconButton('fa5s.trash', self, [Command.DEL],  docTypeL, tooltip='Delete item type')
+    Button('', self, Command.NEW, docTypeL, icon='ri.add-line', tooltip='New item type', flat=True)
+    Button('', self, Command.EDIT, docTypeL, icon='ri.edit-line', tooltip='Edit item type', flat=True)
+    Button('', self, Command.DEL, docTypeL, icon='ri.delete-bin-line', tooltip='Delete item type', flat=True)
 
     # tabs: empty
     self.tabW = QTabWidget(self)
@@ -73,11 +75,13 @@ class SchemeEditor(QDialog):
     self.reorderColumnDelegates  :list[ReorderColumnDelegate]   = []
     self.deleteColumnDelegates   :list[DeleteColumnDelegate]    = []
     self.newWidget = QTableWidget()
-    #final button box
+    # Final actions
     mainL.addStretch(1)
-    buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
-    buttonBox.clicked.connect(self.closeDialog)
-    mainL.addWidget(buttonBox)
+    footer = QHBoxLayout()
+    footer.addStretch()
+    Button('Cancel', self, Command.CANCEL, footer)
+    Button('Save', self, Command.SAVE, footer, style=ButtonStyle.HIGHLIGHTED)
+    mainL.addLayout(footer)
     #initialize
     _ = [self.selectDocType.addItem(v,k) for k,v in self.docTypesLabels]
     self.selectDocType.setCurrentIndex(0)
@@ -164,7 +168,8 @@ class SchemeEditor(QDialog):
     # define close buttons on some of the tabs
     self.closeButtons.clear()
     for idx in range(1, self.tabW.count()):
-      self.closeButtons.append(IconButton('fa5s.times', self, [Command.DEL_GROUP,idx], None, 'Delete group'))
+      self.closeButtons.append(Button('', self, (Command.DEL_GROUP, idx), icon='ri.close-line',
+                                      tooltip='Delete group', flat=True))
       self.tabW.tabBar().setTabButton(idx, QTabBar.ButtonPosition.RightSide, self.closeButtons[-1])
       header = table.horizontalHeader()
       header.setStretchLastSection(True)
@@ -209,36 +214,32 @@ class SchemeEditor(QDialog):
     return
 
 
-  def closeDialog(self, btn:TextButton) -> None:
-    """
-    cancel or save entered data
-
-    Args:
-      btn (QButton): save or cancel button
-    """
-    if btn.text().endswith('Cancel'):
+  def closeDialog(self, save:bool) -> None:
+    """Close the editor, optionally persisting the current item type."""
+    if not save:
       self.reject()
-    elif btn.text().endswith('Save'):
+    else:
       self.finishDocType()
       self.comm.start()
       self.accept()
     return
 
 
-  def execute(self, command:list[Any]) -> None:
+  def execute(self, command:'Command | tuple[Command, int]') -> None:
     """
     Event if user clicks button in the center
 
     Args:
       command (list): list of commands
     """
-    if command[0] is Command.NEW:
+    action = command[0] if isinstance(command, tuple) else command
+    if action is Command.NEW:
       dialog = DocTypeEditor(self.comm, '', self.createdNewDocType)
       dialog.exec()
-    elif command[0] is Command.EDIT:
+    elif action is Command.EDIT:
       dialog = DocTypeEditor(self.comm, self.selectDocType.currentData())
       dialog.exec()
-    elif command[0] is Command.DEL:
+    elif action is Command.DEL:
       button = QMessageBox.question(self, 'Question', 'Do you really want to remove the doc-type?',
                                     QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                     QMessageBox.StandardButton.No)
@@ -250,16 +251,20 @@ class SchemeEditor(QDialog):
       ])
       self.comm.commSendConfiguration.emit(self.comm.configuration, self.comm.projectGroup)#reset docTypes, etc.
       self.selectDocType.clear()
-    elif command[0] is Command.DEL_GROUP:
+    elif action is Command.DEL_GROUP:
       docLabel = str(self.docLabel)
       button = QMessageBox.question(self, 'Question', 'Do you really want to remove this group?',
                                     QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                     QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:
-        group = self.tabW.tabBar().tabText(command[1])
+        group = self.tabW.tabBar().tabText(command[1])  # type: ignore[index]
         self.comm.uiSendSQL.emit([{'type':'one','cmd':
           f"DELETE FROM docTypeSchema WHERE docType == '{self.docType}' AND class == '{group}'"}])
         self.changeDocType(docLabel)
+    elif action is Command.CANCEL:
+      self.closeDialog(False)
+    elif action is Command.SAVE:
+      self.closeDialog(True)
     return
 
 
@@ -348,3 +353,5 @@ class Command(Enum):
   DEL          = 2
   EDIT         = 3
   DEL_GROUP    = 4
+  SAVE         = 5
+  CANCEL       = 6

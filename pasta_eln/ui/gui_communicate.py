@@ -152,7 +152,7 @@ class Communicate(QObject):
     if task.msgWaitDialog == '' or 'PYTEST_CURRENT_TEST' in os.environ:
       return
     self.waitDialog.count = 0
-    self.waitDialog.buttonBox.hide()
+    self.waitDialog.closeButton.hide()
     self.waitDialog.text.setMarkdown(task.msgWaitDialog)
     if task is Task.SYNC_ELAB:
       self.waitDialog.text.setFixedHeight(450)

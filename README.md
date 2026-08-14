@@ -46,6 +46,7 @@ Open issues are the union of:
 ### Repository maintenance items
 
 - Continue GUI transition for all modal dialogs
+- F12 does not seem to work
 - Clean up
   - rerun code quality skill once-a-while
   - Find unused code

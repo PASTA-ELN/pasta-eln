@@ -9,8 +9,9 @@ from PySide6.QtWidgets import QCheckBox, QDialog, QLabel, QLineEdit, QVBoxLayout
 from ...backend_worker.worker import Task
 from ...fixed_strings_json import confFileName
 from ..gui_communicate import Communicate
-from ..gui_style import Label, TextButton, widgetAndLayout, widgetAndLayoutGrid
+from ..gui_style import Label, widgetAndLayout, widgetAndLayoutGrid
 from ..message_dialog import showMessage
+from ..widget import Button, ButtonStyle
 
 
 class UploadGUI(QDialog):
@@ -106,13 +107,15 @@ class UploadGUI(QDialog):
     _, buttonLineL = widgetAndLayout('H', self.mainL, 'm')
     buttonLineL.addStretch(1)
     if 'zenodo' in repositories and 'url' in repositories['zenodo']:
-      TextButton('Upload to Zenodo',    self, [Command.UPLOAD, True],  buttonLineL)
+      Button('Upload to Zenodo', self, (Command.UPLOAD, True), buttonLineL,
+             style=ButtonStyle.HIGHLIGHTED)
     if 'dataverse' in repositories and 'url' in repositories['dataverse']:
-      TextButton('Upload to Dataverse', self, [Command.UPLOAD, False], buttonLineL)
-    TextButton('Cancel',              self, [Command.CANCEL], buttonLineL, 'Discard changes')
+      Button('Upload to Dataverse', self, (Command.UPLOAD, False), buttonLineL,
+             style=ButtonStyle.HIGHLIGHTED)
+    Button('Cancel', self, (Command.CANCEL,), buttonLineL, tooltip='Discard changes')
 
 
-  def execute(self, command:list[Any]) -> None:
+  def execute(self, command:'tuple[Command, bool] | tuple[Command]') -> None:
     """
     Event if user clicks button in the center
 
@@ -122,6 +125,7 @@ class UploadGUI(QDialog):
     if command[0] is Command.CANCEL:
       self.reject()
     elif command[0] is Command.UPLOAD:
+      assert len(command) == 2
       # collect docTypes and create .eln
       docTypes = [i.text() for i in self.allCheckboxes if i.isChecked() and ', ' not in i.text()]
       # collect metadata and save parts of it
@@ -144,7 +148,7 @@ class UploadGUI(QDialog):
     return
 
 
-  def changeButtonOnTest(self, success:bool, button:TextButton, message:str='') -> None:
+  def changeButtonOnTest(self, success:bool, button:Button, message:str='') -> None:
     """ Helper function to change buttons upon success/failure
 
     Args:

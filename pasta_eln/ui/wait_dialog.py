@@ -2,9 +2,11 @@
 import logging
 import re
 from collections.abc import Callable
+from enum import Enum, auto
 from typing import Any
 from PySide6.QtCore import QThread, Signal
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QProgressBar, QTextBrowser, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QProgressBar, QTextBrowser, QVBoxLayout
+from .widget import SPACE, Button, ButtonStyle
 
 
 class WaitDialog(QDialog):
@@ -12,13 +14,15 @@ class WaitDialog(QDialog):
   def __init__(self) -> None:
     """ Initialization """
     super().__init__()
+    self.comm:Any = None
     self.setModal(True)
     self.count  = 0
-    self.mainL = QVBoxLayout()
+    self.mainL = QVBoxLayout(self)
+    self.mainL.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
+    self.mainL.setSpacing(SPACE.S)
     self.setMinimumWidth(500)
     self.setMinimumHeight(600)
     self.setWindowTitle('Wait for processes...')
-    self.setLayout(self.mainL)
 
     self.text = QTextBrowser()
     self.text.setFixedHeight(450)
@@ -30,11 +34,9 @@ class WaitDialog(QDialog):
     self.mainL.addWidget(self.progressBar)
     self.mainL.addStretch(1)
 
-    #final button box
-    self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
-    self.buttonBox.clicked.connect(self.close)
-    self.buttonBox.hide()
-    self.mainL.addWidget(self.buttonBox)
+    # Completion action is shown only once the worker has finished.
+    self.closeButton = Button('Close', self, Command.CLOSE, self.mainL, style=ButtonStyle.HIGHLIGHTED)
+    self.closeButton.hide()
 
 
   def updateProgressBar(self, dType:str, data:str) -> None:
@@ -58,8 +60,19 @@ class WaitDialog(QDialog):
       logging.error('Unknown data %s %s', dType, data, exc_info=True)
     self.progressBar.setValue(self.count)
     if self.count > 99:
-      self.buttonBox.show()
+      self.closeButton.show()
     return
+
+
+  def execute(self, command:'Command') -> None:
+    """Handle completion actions from the dialog footer."""
+    if command is Command.CLOSE:
+      self.close()
+
+
+class Command(Enum):
+  """Commands available in the wait dialog."""
+  CLOSE = auto()
 
 
 

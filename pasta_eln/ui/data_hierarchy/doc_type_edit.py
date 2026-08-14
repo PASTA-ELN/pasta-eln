@@ -1,15 +1,17 @@
 """ Edit properties of a docType """
 import string
 from collections.abc import Callable
+from enum import Enum, auto
 import pandas as pd
 import qtawesome as qta
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QRegularExpressionValidator
-from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout
+from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 from ...fixed_strings_json import allIcons
 from ..gui_communicate import Communicate
-from ..gui_style import TextButton, widgetAndLayout, widgetAndLayoutForm
+from ..gui_style import widgetAndLayout, widgetAndLayoutForm
 from ..message_dialog import showMessage
+from ..widget import SPACE, Button, ButtonStyle
 
 
 class DocTypeEditor(QDialog):
@@ -30,12 +32,18 @@ class DocTypeEditor(QDialog):
     self.shortcuts:list[list[str]] = []
     self.callback = callback
     mainL = QVBoxLayout(self)
+    mainL.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
+    mainL.setSpacing(SPACE.S)
     _, self.mainForm = widgetAndLayoutForm(mainL)
     self.setWindowTitle('Edit item type properties')
     mainL.addStretch(1)
-    buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
-    buttonBox.clicked.connect(self.closeDialog)
-    mainL.addWidget(buttonBox)
+    footer = QHBoxLayout()
+    footer.addStretch()
+    Button('Cancel', self, Command.CANCEL, footer)
+    Button('Save', self, Command.SAVE, footer, style=ButtonStyle.HIGHLIGHTED)
+    footerWidget = QWidget()
+    footerWidget.setLayout(footer)
+    mainL.addWidget(footerWidget)
     # initialize communication if needed
     self.comm.uiSendSQL.emit([{'type':'get_df',
                                'cmd':'SELECT docType, shortcut from docTypes'}])
@@ -104,14 +112,13 @@ class DocTypeEditor(QDialog):
     self.mainForm.addRow(QLabel('Shortcut '), self.row4)
 
 
-  def closeDialog(self, btn:TextButton) -> None:
-    """
-    cancel or save entered data
+  def closeDialog(self, save:bool) -> None:
+    """Cancel or save entered data.
 
     Args:
-      btn (QButton): save or cancel button
+      save: Whether to validate and save the edited item type.
     """
-    if btn.text().endswith('Cancel'):
+    if not save:
       self.reject()
     else:
       label    = self.row2.text()
@@ -144,6 +151,11 @@ class DocTypeEditor(QDialog):
     return
 
 
+  def execute(self, command:'Command') -> None:
+    """Handle the dialog footer commands."""
+    self.closeDialog(command is Command.SAVE)
+
+
   def reject(self) -> None:
     """ Reject the dialog, stop the thread and disconnect signals """
     self.comm.backendThread.worker.beSendSQL.disconnect(self.onGetData)
@@ -154,3 +166,9 @@ class DocTypeEditor(QDialog):
     """ Accept the dialog, stop the thread and disconnect signals """
     self.comm.backendThread.worker.beSendSQL.disconnect(self.onGetData)
     super().accept()
+
+
+class Command(Enum):
+  """Commands available in the item-type properties dialog."""
+  SAVE = auto()
+  CANCEL = auto()

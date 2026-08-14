@@ -1,11 +1,13 @@
 """Dialog for choosing and ordering the columns displayed in a document list."""
 from collections import defaultdict
+from enum import Enum, auto
 import pandas as pd
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QHBoxLayout, QListWidget, QPushButton, QVBoxLayout
+from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QListWidget, QVBoxLayout, QWidget
 from pasta_eln.backend_worker.sqlite import MAIN_ORDER
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.ui.gui_communicate import Communicate
+from pasta_eln.ui.widget import SPACE, Button, ButtonStyle
 
 
 class TableHeader(QDialog):
@@ -27,6 +29,8 @@ class TableHeader(QDialog):
     self.setWindowTitle('Select list columns')
     self.setMinimumWidth(600)
     layout = QVBoxLayout(self)
+    layout.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
+    layout.setSpacing(SPACE.S)
     listsLayout = QHBoxLayout()
     layout.addLayout(listsLayout)
 
@@ -37,10 +41,9 @@ class TableHeader(QDialog):
     controls = QVBoxLayout()
     listsLayout.addLayout(controls)
     self.buttons = []
-    for label, slot in (('Add →', self.addColumns), ('← Remove', self.removeColumns),
-                        ('Move up', self.moveUp), ('Move down', self.moveDown)):
-      self.buttons.append(QPushButton(label))
-      self.buttons[-1].clicked.connect(slot)
+    for label, command in (('Add →', Command.ADD), ('← Remove', Command.REMOVE),
+                           ('Move up', Command.MOVE_UP), ('Move down', Command.MOVE_DOWN)):
+      self.buttons.append(Button(label, self, command))
       controls.addWidget(self.buttons[-1])
     controls.addStretch()
 
@@ -56,10 +59,13 @@ class TableHeader(QDialog):
     self.propertyName.activated.connect(self.addProperty)
     propertyLayout.addWidget(self.propertyName)
 
-    buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
-    buttons.accepted.connect(self.save)
-    buttons.rejected.connect(self.reject)
-    layout.addWidget(buttons)
+    footer = QHBoxLayout()
+    footer.addStretch()
+    Button('Cancel', self, Command.CANCEL, footer)
+    Button('Save', self, Command.SAVE, footer, style=ButtonStyle.HIGHLIGHTED)
+    footerWidget = QWidget()
+    footerWidget.setLayout(footer)
+    layout.addWidget(footerWidget)
 
     self.comm.backendThread.worker.beSendSQL.connect(self.onGetData)
     self.comm.uiSendSQL.emit([{'type': 'get_df', 'cmd': self.viewQuery}])
@@ -93,35 +99,31 @@ class TableHeader(QDialog):
     self.selectedList.addItems(self.selected)
 
 
-  def addColumns(self) -> None:
-    """Add selected columns to the list"""
-    self.selected.extend(item.text() for item in self.availableList.selectedItems())
-    self.paint()
-
-
-  def removeColumns(self) -> None:
-    """Remove selected columns from the list"""
-    remove = {item.text() for item in self.selectedList.selectedItems()}
-    self.selected = [column for column in self.selected if column not in remove or column == 'name']
-    self.paint()
-
-
-  def moveUp(self) -> None:
-    """Move selected column up in the list"""
-    row = self.selectedList.currentRow()
-    if row > 0:
-      self.selected[row - 1], self.selected[row] = self.selected[row], self.selected[row - 1]
+  def execute(self, command:'Command') -> None:
+    """Handle a column-selection command."""
+    if command is Command.ADD:
+      self.selected.extend(item.text() for item in self.availableList.selectedItems())
       self.paint()
-      self.selectedList.setCurrentRow(row - 1)
-
-
-  def moveDown(self) -> None:
-    """Move selected column down in the list"""
-    row = self.selectedList.currentRow()
-    if 0 <= row < len(self.selected) - 1:
-      self.selected[row + 1], self.selected[row] = self.selected[row], self.selected[row + 1]
+    elif command is Command.REMOVE:
+      remove = {item.text() for item in self.selectedList.selectedItems()}
+      self.selected = [column for column in self.selected if column not in remove or column == 'name']
       self.paint()
-      self.selectedList.setCurrentRow(row + 1)
+    elif command is Command.MOVE_UP:
+      row = self.selectedList.currentRow()
+      if row > 0:
+        self.selected[row - 1], self.selected[row] = self.selected[row], self.selected[row - 1]
+        self.paint()
+        self.selectedList.setCurrentRow(row - 1)
+    elif command is Command.MOVE_DOWN:
+      row = self.selectedList.currentRow()
+      if 0 <= row < len(self.selected) - 1:
+        self.selected[row + 1], self.selected[row] = self.selected[row], self.selected[row + 1]
+        self.paint()
+        self.selectedList.setCurrentRow(row + 1)
+    elif command is Command.CANCEL:
+      self.reject()
+    elif command is Command.SAVE:
+      self.save()
 
 
   def updatePropertyNames(self, group: str) -> None:
@@ -166,3 +168,13 @@ class TableHeader(QDialog):
     except (RuntimeError, TypeError):
       pass
     super().done(result)
+
+
+class Command(Enum):
+  """Commands available in the column-selection dialog."""
+  ADD = auto()
+  REMOVE = auto()
+  MOVE_UP = auto()
+  MOVE_DOWN = auto()
+  SAVE = auto()
+  CANCEL = auto()

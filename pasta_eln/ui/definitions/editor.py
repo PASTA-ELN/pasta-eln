@@ -10,7 +10,8 @@ from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QDialog, QFileDialog, QMessageBox, QTableWidget, QTableWidgetItem, QVBoxLayout
 from ...misc_tools import callAddOn
 from ..gui_communicate import Communicate
-from ..gui_style import TextButton, space, widgetAndLayout
+from ..gui_style import widgetAndLayout
+from ..widget import SPACE, Button, ButtonStyle
 from .key_delegate import KeyDelegate
 from .link_online_delegate import LinkOnlineDelegate
 from .lookup_delegate import LookupDelegate
@@ -38,9 +39,9 @@ class Editor(QDialog):
     self.setWindowTitle('Edit definitions')
 
     ### GUI elements
-    mainL = QVBoxLayout()
-    mainL.setSpacing(space['l'])
-    self.setLayout(mainL)
+    mainL = QVBoxLayout(self)
+    mainL.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
+    mainL.setSpacing(SPACE.S)
     ### Table
     self.table = QTableWidget(1, 5)
     self.table.verticalHeader().hide()
@@ -59,16 +60,17 @@ class Editor(QDialog):
     mainL.addWidget(self.table)
     ### final button box
     _, buttonLineL = widgetAndLayout('H', mainL, 'm')
-    TextButton('Import', self, [Command.IMPORT], buttonLineL, 'Import from Excel')
-    TextButton('Export', self, [Command.EXPORT], buttonLineL, 'Export to Excel')
+    Button('Import', self, Command.IMPORT, buttonLineL, tooltip='Import from CSV')
+    Button('Export', self, Command.EXPORT, buttonLineL, tooltip='Export to CSV')
     buttonLineL.addStretch(1)
     projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if 'definition' in projectGroup.get('addOns',{}) and projectGroup['addOns']['definition']:
-      TextButton('Autofill PURL',  self, [Command.ADDON], buttonLineL, 'Autofill by using add-on')
+      Button('Autofill PURL', self, Command.ADDON, buttonLineL, tooltip='Autofill by using add-on')
       buttonLineL.addStretch(1)
-    self.saveBtn = TextButton('Save', self, [Command.SAVE], buttonLineL, 'Save changes')
+    self.saveBtn = Button('Save', self, Command.SAVE, buttonLineL, tooltip='Save changes',
+                          style=ButtonStyle.HIGHLIGHTED)
     self.saveBtn.setShortcut('Ctrl+Return')
-    TextButton('Cancel', self, [Command.CANCEL],   buttonLineL, 'Discard changes')
+    Button('Cancel', self, Command.CANCEL, buttonLineL, tooltip='Discard changes')
     ### Data
     self.comm.uiSendSQL.emit([{'type':'get_df','cmd':'SELECT docType, PURL, title FROM docTypes'},
                               {'type':'get_df','cmd':'SELECT * FROM definitions'}])
@@ -94,18 +96,18 @@ class Editor(QDialog):
     self.paint()
 
 
-  def execute(self, command:list[Any]) -> None:
+  def execute(self, command:'Command') -> None:
     """
     Event if user clicks button in the center
 
     Args:
       command (list): list of commands
     """
-    if command[0] is Command.EXPORT:
+    if command is Command.EXPORT:
       fileName = QFileDialog.getSaveFileName(self, 'Save table to .csv file', str(Path.home()), '*.csv')[0]
       if fileName != '':
         self.getDataframe().to_csv(fileName, index=False)
-    elif command[0] is Command.IMPORT:
+    elif command is Command.IMPORT:
       fileName = QFileDialog.getOpenFileName(self, 'Read table from .csv file', str(Path.home()), '*.csv')[0]
       if fileName != '':
         importedData = pd.read_csv(fileName, dtype=str).fillna('')
@@ -120,15 +122,15 @@ class Editor(QDialog):
           return
         self.data = importedData.rename({'description':'label'}, axis=1)[['key', 'label', 'PURL', 'defType']]
         self.paint()
-    elif command[0] is Command.ADDON:
+    elif command is Command.ADDON:
       try:
         self.data = callAddOn('definition_autofill', self.comm, self.data, self)
         self.paint()
       except Exception:
         pass
-    elif command[0] is Command.CANCEL:
+    elif command is Command.CANCEL:
       self.reject()
-    elif command[0] is Command.SAVE:
+    elif command is Command.SAVE:
       tasks:list[dict[str,Any]] = []
       for _, row in self.getDataframe().iterrows():
         key, description, purl, dType = row.values

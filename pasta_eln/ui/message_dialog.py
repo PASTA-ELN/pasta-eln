@@ -1,9 +1,12 @@
 """ Dialog that shows a message and possibly an image """
+from enum import Enum, auto
+from typing import Any
 import qtawesome as qta
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QTextDocument
-from PySide6.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QWidget
-from .gui_style import Image, Label, TextButton, widgetAndLayout
+from PySide6.QtWidgets import QApplication, QDialog, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from .gui_style import Image, Label
+from .widget import SPACE, Button, ButtonStyle
 
 iconSize = 40                                                              # size of the icon at top of dialog
 
@@ -22,6 +25,7 @@ class MessageDialog(QDialog):
       minWidth (int): minimum width of dialog
     """
     super().__init__(parent)
+    self.comm:Any = getattr(parent, 'comm', None)
     color = 'red' if icon=='Critical' else '#ffbc00' if icon=='Warning' else '#'
     iconSymbol = qta.icon('fa5s.minus-circle' if icon=='Critical' else
                     'fa5s.exclamation-circle' if icon=='Warning' else
@@ -32,6 +36,8 @@ class MessageDialog(QDialog):
     else:
       self.setMinimumWidth(800)
     mainL = QVBoxLayout(self)
+    mainL.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
+    mainL.setSpacing(SPACE.S)
     if icon:
       iconLabel = QLabel('')
       iconLabel.setPixmap(iconSymbol.pixmap(iconSize, iconSize))
@@ -39,7 +45,7 @@ class MessageDialog(QDialog):
         iconLabel.setStyleSheet(f'background: {color};')
       iconLabel.setMinimumSize(iconSize, iconSize)
       mainL.addWidget(iconLabel, alignment=Qt.AlignHCenter)                                     # type: ignore
-    if image is not None:
+    if image:
       Image(image, mainL, anyDimension=400)
     textLabel = Label(text, 'h2', mainL)
     if text.startswith('<') and text.endswith('>'):
@@ -48,13 +54,13 @@ class MessageDialog(QDialog):
       textLabel.setText(text)
     else:
       textLabel.setTextFormat(Qt.TextFormat.MarkdownText)
-    # final button box
-    _, buttonLineL = widgetAndLayout('H', mainL, 'm', 'm', '0', 'm', 's')
-    self.copyButton = TextButton('Copy message', parent, None, buttonLineL, 'Copy to clipboard')
-    self.copyButton.clicked.connect(lambda: self.copyToClipboard(text))
+    buttonLineL = QHBoxLayout()
+    buttonLineL.setContentsMargins(0, SPACE.S, 0, 0)
+    self.messageText = text
+    self.copyButton = Button('Copy message', self, Command.COPY, buttonLineL, tooltip='Copy to clipboard')
     buttonLineL.addStretch(2)
-    self.okButton   = TextButton('OK',   parent, None, buttonLineL, 'Accept')
-    self.okButton.clicked.connect(self.accept)
+    self.okButton = Button('OK', self, Command.ACCEPT, buttonLineL, tooltip='Accept', style=ButtonStyle.HIGHLIGHTED)
+    mainL.addLayout(buttonLineL)
 
 
   def copyToClipboard(self, text:str) -> None:
@@ -68,6 +74,20 @@ class MessageDialog(QDialog):
       text = doc.toPlainText()
     clipboard = QApplication.clipboard()
     clipboard.setText(text)
+
+
+  def execute(self, command:'Command') -> None:
+    """Handle actions in the message footer."""
+    if command is Command.COPY:
+      self.copyToClipboard(self.messageText)
+    elif command is Command.ACCEPT:
+      self.accept()
+
+
+class Command(Enum):
+  """Commands available in the message dialog."""
+  COPY = auto()
+  ACCEPT = auto()
 
 
 def showMessage(parent:QWidget, title:str, text:str, icon:str='', image:str='', minWidth:int=-1) -> None:
