@@ -74,13 +74,20 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
     str: success message, statistics
   '''
   elnName = ''
-  statistics:dict[str,Any] = {}
-  with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
+  statistics:dict[str,Any] = {'errors': []}
+  try:
+    elnFile = ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED)
+  except Exception as error:
+    logging.error('Cannot open import archive %s', elnFileName, exc_info=True)
+    return f'ERROR: cannot open .eln archive: {error}', statistics
+  with elnFile:
     archiveError = _checkImportArchive(elnFile)
     if archiveError:
       logging.error(archiveError)
       return archiveError, {}
     files = elnFile.namelist()
+    if not files:
+      return 'ERROR: eln file is empty. Cannot process', {}
     baseFolderSet = {Path(i).parts[0] for i in files}
     if len(baseFolderSet) != 1:
       logging.error('eln file has multiple top-level directories: %s. Cannot process',str(baseFolderSet))
@@ -90,29 +97,56 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
     if f'{dirName}/ro-crate-metadata.json' not in files:
       logging.error('ro-crate does not exist in folder. EXIT')
       return 'ERROR: ro-crate does not exist in folder. EXIT',{}
-    graph = json.loads(elnFile.read(f'{dirName}/ro-crate-metadata.json'))['@graph']
-    listAllTypes = [i['@type'] for i in graph if isinstance(i['@type'],str)]
+    try:
+      metadata = json.loads(elnFile.read(f'{dirName}/ro-crate-metadata.json'))
+      graph = metadata['@graph']
+      if not isinstance(graph, list) or not all(isinstance(node, dict) and
+                                                 isinstance(node.get('@id'), str) and
+                                                 isinstance(node.get('@type'), (str, list))
+                                                 for node in graph):
+        raise ValueError('invalid graph')
+      listAllTypes = [i['@type'] for i in graph if isinstance(i.get('@type'), str)]
+    except Exception as error:
+      logging.error('Cannot read RO-Crate metadata', exc_info=True)
+      return f'ERROR: invalid ro-crate-metadata.json: {error}', {}
     statistics['types'] = {i:listAllTypes.count(i) for i in listAllTypes}
 
     #find information from master node
-    rocrateNode = [i for i in graph if i['@id'].endswith('ro-crate-metadata.json')][0]
+    rocrateNodes = [i for i in graph if str(i.get('@id', '')).endswith('ro-crate-metadata.json')]
+    if len(rocrateNodes) != 1:
+      return 'ERROR: RO-Crate metadata node is missing or ambiguous. Cannot process', {}
+    rocrateNode = rocrateNodes[0]
     if 'sdPublisher' in rocrateNode:
-      publisherNode = rocrateNode['sdPublisher']
-      if 'name' not in publisherNode:
-        publisherNode = [i for i in graph if i['@id']==rocrateNode['sdPublisher']['@id']][0]
-      elnName = publisherNode['name']
+      try:
+        publisherNode = rocrateNode['sdPublisher']
+        if not isinstance(publisherNode, dict):
+          raise ValueError('sdPublisher is not an object')
+        if 'name' not in publisherNode:
+          publisherNode = [i for i in graph if i['@id'] == publisherNode['@id']][0]
+        elnName = publisherNode['name']
+      except (IndexError, KeyError, TypeError, ValueError) as error:
+        return f'ERROR: invalid RO-Crate publisher metadata: {error}', {}
     logging.info('Import %s', elnName)
     if not projID:
       return 'FAILURE: YOU CANNOT IMPORT AS PROJECT IF NON PASTA-ELN FILE',{}
-    backend.changeHierarchy(projID)
+    try:
+      backend.changeHierarchy(projID)
+    except Exception as error:
+      logging.error('Cannot open import destination %s', projID, exc_info=True)
+      return f'ERROR: cannot open import destination: {error}', {}
     childrenStack = [0]
-    mainNode    = [i for i in graph if i['@id']=='./'][0]
+    mainNodes = [i for i in graph if i.get('@id') == './']
+    if len(mainNodes) != 1 or not isinstance(mainNodes[0].get('hasPart', []), list):
+      backend.cwd = Path(backend.basePath)
+      backend.hierStack = []
+      return 'ERROR: RO-Crate root node is missing or invalid. Cannot process', {}
+    mainNode = mainNodes[0]
     # clean subchildren from mainNode: see https://github.com/TheELNConsortium/TheELNFileFormat/issues/98
-    parentNodes = {i['@id'] for i in mainNode['hasPart']}
+    parentNodes = {i['@id'] for i in mainNode['hasPart'] if isinstance(i, dict) and isinstance(i.get('@id'), str)}
     for nodeAny in graph:
       if nodeAny['@id']=='./':
         continue
-      children = {i['@id'] for i in nodeAny.get('hasPart',[])}
+      children = {i['@id'] for i in nodeAny.get('hasPart',[]) if isinstance(i, dict) and isinstance(i.get('@id'), str)}
       parentNodes = parentNodes.difference(children)
     mainNode['hasPart'] = [{'@id':i} for i in parentNodes]
 
@@ -136,7 +170,8 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       doc = {}
       elnID = inputData['@id'][2:] if inputData['@id'][:2]=='./' else inputData['@id']
       children = inputData.pop('hasPart') if 'hasPart' in inputData else []
-      dataType = inputData['@type']
+      rawDataType = inputData['@type']
+      dataType = rawDataType if isinstance(rawDataType, str) else rawDataType[0]
       encodingFormat = ''
       for key, value in inputData.items():
         if key in ['@id','@type','hasPart','author','contentSize', 'sha256']:
@@ -201,6 +236,12 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       return doc, elnID, children, dataType
 
 
+    def recordError(part:Any, error:Exception | str) -> None:
+      identifier = part.get('@id', '<unknown>') if isinstance(part, dict) else repr(part)
+      message = f'{identifier}: {error}'
+      statistics['errors'].append(message)
+      logging.error('Import failed for %s', message, exc_info=isinstance(error, Exception))
+
     def processPart(part:dict[str,str]) -> int:
       """
       recursive function call to process this node
@@ -213,14 +254,14 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       """
       addedDocs = 1
       if not isinstance(part, dict):              #leave these tests in since other .elns might do funky stuff
-        logging.error('in part %s', part, exc_info=True)
+        recordError(part, 'hasPart entry is not an object')
         return 0
       # print('\nProcess: '+part['@id'])
       # find next node to process
       docS = [i for i in graph if '@id' in i and i['@id']==part['@id']]
       if len(docS)!=1 or backend.cwd is None:
-        logging.error('zero or multiple nodes with same id %s or cwd is None in %s', docS, part['@id'], exc_info=True)
-        return -1
+        recordError(part, 'node is missing, duplicated, or has no import destination')
+        return 0
       # pull all subentries (variableMeasured, comments, ...) into this dict: do not pull hasPart-entries in
       keys = [k for k,v in docS[0].items() if k!='hasPart' and (isinstance(v,dict) or (isinstance(v,list) and len(v)>0 and isinstance(v[0], dict)))]
       for key in keys:
@@ -239,18 +280,34 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
           docS[0][key] = value
           logging.warning('Could not replace %s-entries using ids: %s', key, items)
       # convert to Pasta's style
-      doc, elnID, children, dataType = json2pastaFunction(docS[0])
+      try:
+        doc, elnID, children, dataType = json2pastaFunction(docS[0])
+      except Exception as error:
+        recordError(part, error)
+        return 0
       if elnName == 'PASTA ELN' and elnID.startswith('http') and ':/' in elnID:
         fullPath = None
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
       # Copy file onto hard disk
-      if fullPath is not None and f'{dirName}/{elnID}' in elnFile.namelist() and \
-          not [i for i in elnFile.infolist() if f'{dirName}/{elnID}'==i.filename][0].is_dir():#prevent folders
-        target = open(fullPath, 'wb')
-        source = elnFile.open(f'{dirName}/{elnID}')
-        with source, target:                                          #extract one file to its target directly
-          shutil.copyfileobj(source, target)
+      archivePath = f'{dirName}/{elnID}'
+      copiedFile:Path | None = None
+      if fullPath is not None and dataType.lower() == 'file':
+        if archivePath not in elnFile.namelist():
+          recordError(part, f'embedded file {elnID!r} is missing from the archive')
+          return 0
+        try:
+          info = next(i for i in elnFile.infolist() if archivePath == i.filename)
+          if info.is_dir():
+            raise ValueError('embedded file points to a directory')
+          if fullPath.exists():
+            raise FileExistsError(f'import would overwrite existing file {fullPath.name!r}')
+          with elnFile.open(archivePath) as source, open(fullPath, 'xb') as target:
+            shutil.copyfileobj(source, target)
+          copiedFile = fullPath
+        except Exception as error:
+          recordError(part, error)
+          return 0
       # FOR ALL ELNs
       if elnName == 'PASTA ELN':
         docType = doc['type']
@@ -269,9 +326,12 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       # print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
       try:
         docID = backend.addData(docType, doc)['id']
-      except Exception:
-        logging.error('Cannot process %s', json.dumps(doc,indent=2), exc_info=True)
-        docID = None
+      except Exception as error:
+        logging.error('Could not add imported entry', exc_info=True)
+        recordError(part, error)
+        if copiedFile is not None:
+          copiedFile.unlink(missing_ok=True)
+        return 0
       if docID[0]=='x':
         backend.changeHierarchy(docID)
         childrenStack.append(0)
@@ -279,12 +339,16 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
           f.write(json.dumps(backend.db.getDoc(docID)))
         # children, aka recursive part
         for child in children:
-          if child['@id'].endswith('/metadata.json') or child['@id'].endswith('_metadata.json'):#skip own metadata
+          if not isinstance(child, dict):
+            recordError(child, 'hasPart entry is not an object')
+            continue
+          childID = str(child.get('@id', ''))
+          if childID.endswith('/metadata.json') or childID.endswith('_metadata.json'):#skip own metadata
             continue
           try:
             addedDocs += processPart(child)
-          except Exception:
-            logging.error('Cannot process child %s', json.dumps(child,indent=2), exc_info=True)
+          except Exception as error:
+            recordError(child, error)
         backend.changeHierarchy(None)
         childrenStack.pop()
       return addedDocs
@@ -296,12 +360,14 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
     for part in mainNode['hasPart']:
       try:
         addedDocuments += processPart(part)
-      except Exception:
-        logging.error('Cannot process main part %s', json.dumps(part,indent=2), exc_info=True)
+      except Exception as error:
+        recordError(part, error)
   #return to home stack and path
   backend.cwd = Path(backend.basePath)
   backend.hierStack = []
-  return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName}', statistics
+  failures = len(statistics['errors'])
+  status = 'Partial success' if failures else 'Success'
+  return f'{status}: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName}', statistics
 
 
 

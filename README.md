@@ -46,4 +46,4 @@ Open issues are the union of:
 ### Repository maintenance items
 
 - Persistence safety
-  - Make ELN imports fail atomically and report failure when adding a document fails; the current recovery path can continue after an add failure and report a partial import as successful.
+  - Make ELN imports best-effort: continue importing valid entries and clearly report entries that failed.
