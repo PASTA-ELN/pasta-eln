@@ -593,6 +593,7 @@ class SqlLiteDB:
       return (None, None if path=='*' else path)
 
     # modify existing branch
+    params: tuple[str | int, ...]
     if 'pathOld' in kwargs:
       pathOld = kwargs['pathOld']
       cmd, params = 'SELECT path, stack, show FROM branches WHERE path=?', (pathOld,)
@@ -837,10 +838,10 @@ class SqlLiteDB:
         if startKey.endswith('/'):
           startKey = startKey.removesuffix('/')
         cmd += ' WHERE branches.path LIKE ?'
-        params = (f'{startKey}%',)
+        params = [f'{startKey}%']
       elif preciseKey is not None:
         cmd += ' WHERE branches.path LIKE ?'
-        params = (preciseKey,)
+        params = [preciseKey]
       if not allFlag:
         if 'WHERE' in cmd:
           cmd += r" AND NOT branches.show LIKE '%F%'"
