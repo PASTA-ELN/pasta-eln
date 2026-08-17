@@ -5,7 +5,6 @@ import json
 import secrets
 from pathlib import Path
 from typing import Any
-
 import keyring
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from PySide6.QtCore import Qt
@@ -81,14 +80,13 @@ def saveConfiguration(configuration:dict[str, Any], fileName:Path|None=None) -> 
     target:Any = stored
     for part in path[:-1]:
       target = target[part]
-    value = target[path[-1]]
-    if value:
+    if value:= target[path[-1]]:
       cipher = cipher or AESGCM(_masterKey())
       nonce = secrets.token_bytes(NONCE_SIZE)
       ciphertext = cipher.encrypt(nonce, str(value).encode('utf-8'), aadPath.encode('utf-8'))
       target[path[-1]] = base64.b64encode(nonce + ciphertext).decode('ascii')
   stored['version'] = CONFIGURATION_VERSION
-  temporaryFile = fileName.with_suffix(fileName.suffix + '.tmp')
+  temporaryFile = fileName.with_suffix(f'{fileName.suffix}.tmp')
   temporaryFile.write_text(json.dumps(stored, indent=2), encoding='utf-8')
   temporaryFile.replace(fileName)
 
@@ -112,8 +110,7 @@ def loadConfiguration(fileName:Path|None=None) -> dict[str, Any]:
     target:Any = configuration                                 # recreate the intermediate configuration jsons
     for part in path[:-1]:
       target = target[part]
-    value = target[path[-1]]                                       # final path is the value that is encrypted
-    if value:
+    if value:= target[path[-1]]:                                       # final path is the value that is encrypted
       cipher = cipher or AESGCM(_masterKey())
       raw = base64.b64decode(value, validate=True)
       target[path[-1]] = cipher.decrypt(raw[:NONCE_SIZE], raw[NONCE_SIZE:], aadPath.encode('utf-8')).decode('utf-8')

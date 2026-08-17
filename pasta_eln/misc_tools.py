@@ -28,8 +28,8 @@ from packaging.version import parse as parse_version
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QLayout, QWidget
 import pasta_eln
-from .fixed_strings_json import configurationGUI, defaultConfiguration
 from .configuration_file import CONFIGURATION_VERSION, loadConfiguration, saveConfiguration
+from .fixed_strings_json import configurationGUI, defaultConfiguration
 
 
 class Bcolors:
