@@ -1,5 +1,4 @@
 '''  Methods that check, repair, the local PASTA-ELN installation: no Qt-here '''
-import json
 import logging
 import os
 import platform
@@ -10,7 +9,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 from .backend_worker.backend import Backend
-from .fixed_strings_json import confFileName, configurationGUI, defaultConfiguration
+from .configuration_file import CONFIGURATION_VERSION, loadConfiguration, saveConfiguration
+from .fixed_strings_json import configurationGUI, defaultConfiguration
 from .text_tools.string_changes import outputString
 
 
@@ -58,7 +58,7 @@ def createDefaultConfiguration(pathPasta:Path | None=None) -> dict[str,Any]:
               'addOnDir': str(addOnDir),
               'addOns': {'project': {}, 'extractors':{}, 'table':{}}
           }},
-      'version': 3}
+      'version': CONFIGURATION_VERSION}
   try:
     conf['userID']      = os.getlogin()
   except Exception:                                                                             #github action
@@ -88,12 +88,10 @@ def configuration(command:str, pathData:str) -> str:
     pathPasta = Path.home()/pathData
     pathPasta.mkdir(exist_ok=True)
   try:
-    with open(Path.home()/confFileName, encoding='utf-8') as fConf:
-      conf = json.load(fConf)
+    conf = loadConfiguration()
   except Exception:
     output += '**INFO configuration file does not exist\n'
     conf = createDefaultConfiguration(pathPasta) if command == 'repair' else {}
-  logging.info(json.dumps(conf, indent=2))
 
   #check normal items
   for k,v in defaultConfiguration.items():
@@ -118,8 +116,7 @@ def configuration(command:str, pathData:str) -> str:
         else:
           output += outputString('text','error', f'No {k} in GUI part of config file')
   if command == 'repair':
-    with open(Path.home()/confFileName,'w', encoding='utf-8') as f:
-      f.write(json.dumps(conf,indent=2))
+    saveConfiguration(conf)
   logging.info('Configuration ending')
   return output
 

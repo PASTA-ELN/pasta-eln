@@ -12,7 +12,8 @@ from PySide6.QtGui import QDesktopServices, QIcon, QPixmap
 from PySide6.QtWidgets import QFileDialog, QLabel, QMainWindow, QMessageBox, QSplitter
 from pasta_eln import __version__
 from pasta_eln.backend_worker.worker import Task
-from pasta_eln.fixed_strings_json import aboutMessage, confFileName, shortcuts
+from pasta_eln.configuration_file import saveConfiguration
+from pasta_eln.fixed_strings_json import aboutMessage, shortcuts
 from pasta_eln.misc_tools import hardRestart, installPythonPackages, updateAddOnList
 from pasta_eln.ui.body.body import Body
 from pasta_eln.ui.config.main import Configuration
@@ -210,8 +211,7 @@ class MainWindow(QMainWindow):
     # system menu
     elif commandType is Command.CHANGE_PG:
       self.comm.configuration['defaultProjectGroup'] = payload[0]
-      with open(Path.home() / confFileName, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.comm.configuration, indent=2))
+      saveConfiguration(self.comm.configuration)
       self.comm.projectGroup = payload[0]
       self.comm.start(payload[0])
     elif commandType is Command.SYNC_SEND_ALL:

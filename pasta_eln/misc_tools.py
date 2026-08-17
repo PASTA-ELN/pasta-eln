@@ -28,7 +28,8 @@ from packaging.version import parse as parse_version
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QLayout, QWidget
 import pasta_eln
-from .fixed_strings_json import confFileName, configurationGUI, defaultConfiguration
+from .fixed_strings_json import configurationGUI, defaultConfiguration
+from .configuration_file import CONFIGURATION_VERSION, loadConfiguration, saveConfiguration
 
 
 class Bcolors:
@@ -70,8 +71,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   Returns:
     dict: dict with all add-ons
   """
-  with open(Path.home()/confFileName, encoding='utf-8') as f:
-    configuration = json.load(f)
+  configuration = loadConfiguration()
   if not projectGroup:
     projectGroup = configuration['defaultProjectGroup']
   directory = Path(configuration['projectGroups'][projectGroup]['addOnDir'])
@@ -147,8 +147,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   #update configuration file
   configuration['projectGroups'][projectGroup]['addOns']['extractors'] = extractorsAll
   configuration['projectGroups'][projectGroup]['addOns'] |= otherAddOns
-  with open(Path.home()/confFileName,'w', encoding='utf-8') as f:
-    f.write(json.dumps(configuration, indent=2))
+  saveConfiguration(configuration)
   return {'addon directory':directory} | errors | extractorsAll | otherAddOns
 
 
@@ -403,16 +402,16 @@ def getConfiguration(defaultProjectGroup:str='') -> tuple[dict[str, Any],str]:
     tuple: configuration dict and default project group
   """
   configuration = copy.deepcopy(defaultConfiguration)
-  configFileName = Path.home() / confFileName
-  if configFileName.is_file():
-    with open(configFileName, encoding='utf-8') as confFile:
-      configuration |= json.load(confFile)
+  try:
+    configuration |= loadConfiguration()
+  except FileNotFoundError:
+    pass
   for _, items in configurationGUI.items():
     for k,v in items.items():
       if k not in configuration['GUI']:
         configuration['GUI'][k] = v[1]
-  if configuration['version'] != 3:
-    print('**Info: configuration file does not exist or version is != 3')
+  if configuration['version'] != CONFIGURATION_VERSION:
+    print(f'**Info: configuration file does not exist or version is != {CONFIGURATION_VERSION}')
     return {},''
   defaultProjectGroup = defaultProjectGroup or configuration['defaultProjectGroup']
   if defaultProjectGroup not in configuration['projectGroups']:

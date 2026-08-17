@@ -1,13 +1,12 @@
 """ Upload for Zenodo and Dataverse """
 import json
 from enum import Enum
-from pathlib import Path
 from typing import Any
 import qtawesome as qta
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QCheckBox, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 from ...backend_worker.worker import Task
-from ...fixed_strings_json import confFileName
+from ...configuration_file import saveConfiguration
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label
 from ..message_dialog import showMessage
@@ -153,8 +152,7 @@ class UploadGUI(QDialog):
       repositories = self.comm.configuration['repositories']
       repositories['category'] = self.leCategory.text()
       repositories['additional'] = json.loads(self.leAdditional.text())
-      with open(Path.home()/confFileName, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.comm.configuration,indent=2))
+      saveConfiguration(self.comm.configuration)
       self.comm.uiRequestTask.emit(Task.SEND_REPOSITORY, {'projID': self.comm.projectID, 'docTypes': docTypes,
                 'uploadZenodo':command[1], 'repositories': repositories, 'metadata': metadata})
       self.accept()

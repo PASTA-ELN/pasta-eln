@@ -1,17 +1,15 @@
 """ Config for Zenodo and Dataverse """
-import json
 import re
 import webbrowser
 from collections.abc import Callable
 from enum import Enum
-from pathlib import Path
 from typing import Any
 import qtawesome as qta
 from PySide6.QtWidgets import (QComboBox, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QToolButton,
                                QVBoxLayout, QWidget)
 from ...backend_worker.dataverse import DataverseClient
 from ...backend_worker.zenodo import ZenodoClient
-from ...fixed_strings_json import confFileName
+from ...configuration_file import saveConfiguration
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label, shortcut
 from ..message_dialog import showMessage
@@ -189,8 +187,7 @@ class ConfigurationRepositories(QDialog):
         self.comm.configuration['repositories']['dataverse'] = {'url':self.urlDatavese.text(),
                                                           'key':self.apiDataverse.text(),
                                                           'dataverse':self.dvDataverse.currentData()}
-      with open(Path.home()/confFileName, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.comm.configuration,indent=2))
+      saveConfiguration(self.comm.configuration)
       self.accept()
     elif command[0] is Command.HELP:
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/repositories.html')

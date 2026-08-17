@@ -1,11 +1,10 @@
 """ Main class of config tab on parameters (e.g. API keys) for add-ons """
-import json
 from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
 from typing import Any
 from PySide6.QtWidgets import QApplication, QDialog, QGroupBox, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
-from ...fixed_strings_json import confFileName
+from ...configuration_file import saveConfiguration
 from ...misc_tools import loadNamedModule
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label, shortcut
@@ -77,8 +76,7 @@ class ConfigurationAddOnParameter(QDialog):
           apiKeys[name] = {}
         apiKeys[name][param] = lineEdit.text()
       self.comm.configuration['addOnParameter'] = apiKeys
-      with open(Path.home()/confFileName, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.comm.configuration,indent=2))
+      saveConfiguration(self.comm.configuration)
       self.accept()
       self.callbackFinished(False)
     elif command[0] is Command.SCAN:
@@ -102,6 +100,7 @@ class ConfigurationAddOnParameter(QDialog):
             groupLayout.addWidget(barW)
             Label(f'{name}.py: {param}', 'h4', barL, tooltip=tooltip)
             lineEdit = QLineEdit()                                           # pylint: disable=qt-local-widget
+            lineEdit.setEchoMode(QLineEdit.EchoMode.Password)
             barL.addWidget(lineEdit)
             if helpText:
               Button('?', self, command=[helpText], layout=barL)

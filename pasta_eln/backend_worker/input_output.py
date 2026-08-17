@@ -14,7 +14,7 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 import requests
 from anytree import Node
 from pasta_eln import __version__, minisign
-from ..fixed_strings_json import confFileName
+from ..configuration_file import saveConfiguration
 from ..misc_tools import flatten, isDocID
 from ..text_tools.html2markdown import html2markdown
 from ..text_tools.string_changes import camelCase
@@ -597,8 +597,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       keyPairRaw = minisign.KeyPair.generate()
       keyPair    = {'id':str(uuid.uuid4()), 'secret':bytes(keyPairRaw.secret_key).decode(), 'public':bytes(keyPairRaw.public_key).decode()}
       backend.configuration['signingKeyPair'] = keyPair
-      with open(Path.home()/confFileName, 'w', encoding='utf-8') as fConf:
-        json.dump(backend.configuration, fConf, ensure_ascii=False, indent=2)
+      saveConfiguration(backend.configuration)
     keyPair = backend.configuration['signingKeyPair']
     secretKey = minisign.SecretKey.from_bytes(keyPair['secret'].encode())
     comment   = {'pubkey_url':f'https://raw.githubusercontent.com/PASTA-ELN/Signatures/main/{keyPair["id"]}.pub',

@@ -1,14 +1,12 @@
 """ Main class of config tab on authors """
-import json
 import logging
 import re
 from collections.abc import Callable
 from enum import Enum
-from pathlib import Path
 from typing import Any
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit,
                                QVBoxLayout, QWidget)
-from ...fixed_strings_json import confFileName
+from ...configuration_file import saveConfiguration
 from ...misc_tools import getORCIDName, getRORIDLabel
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button
@@ -140,8 +138,7 @@ class ConfigurationAuthors(QDialog):
         self.author['organizations'][j]['organization'] = self.userOrg.text().strip()
         self.author['organizations'][j]['rorid']        = self.userRorid.text().strip()
       self.comm.configuration['authors'][0] = self.author
-      with open(Path.home()/confFileName, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.comm.configuration,indent=2))
+      saveConfiguration(self.comm.configuration)
       self.comm.commSendConfiguration.emit(self.comm.configuration, self.comm.projectGroup)
     self.callbackFinished(False)
     return

@@ -1,10 +1,9 @@
 """ config tab on GUI / Appearance / Interface elements """
-import json
 from collections.abc import Callable
-from pathlib import Path
 from PySide6.QtWidgets import (QAbstractButton, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QGroupBox, QLabel,
                                QVBoxLayout)
-from ...fixed_strings_json import confFileName, configurationGUI
+from ...configuration_file import saveConfiguration
+from ...fixed_strings_json import configurationGUI
 from ..gui_communicate import Communicate
 
 
@@ -56,8 +55,7 @@ class ConfigurationGUI(QDialog):
             self.comm.configuration['GUI'][k] = getattr(self, k).currentText()
           if k == 'theme':
             self.comm.palette.setTheme(getattr(self, k).currentText())
-      with open(Path.home()/confFileName, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.comm.configuration,indent=2))
+      saveConfiguration(self.comm.configuration)
       self.accept()
       self.callbackFinished(True)
     return

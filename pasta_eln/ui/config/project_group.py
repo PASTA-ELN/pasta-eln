@@ -15,7 +15,7 @@ from PySide6.QtGui import QPixmap, QRegularExpressionValidator, Qt
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QGridLayout, QHBoxLayout, QLabel,
                                QLineEdit, QMessageBox, QSizePolicy, QSpacerItem, QTextEdit, QVBoxLayout, QWidget)
 from ...backend_worker.elab_ftw_api import ElabFTWApi
-from ...fixed_strings_json import confFileName
+from ...configuration_file import saveConfiguration
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label
 from ..message_dialog import showMessage
@@ -181,8 +181,7 @@ class ProjectGroup(QDialog):
       if defaultProjectGroup not in self.configuration['projectGroups']:
         self.configuration['defaultProjectGroup'] = list(self.configuration['projectGroups'].keys())[0]
 
-      with open(Path.home()/confFileName, 'w', encoding='utf-8') as confFile:
-        confFile.write(json.dumps(self.configuration, indent=2))
+      saveConfiguration(self.configuration)
       self.comm.configuration = copy.deepcopy(self.configuration)
       self.comm.commSendConfiguration.emit(self.comm.configuration, self.configuration['defaultProjectGroup'])
       self.comm.projectGroup = self.configuration['defaultProjectGroup']

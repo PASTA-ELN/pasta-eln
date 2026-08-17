@@ -7,8 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from pasta_eln.backend_worker.backend import Backend
-from pasta_eln.fixed_strings_json import confFileName
-
+from pasta_eln.configuration_file import CONFIGURATION_FILE_NAME
 
 class TestIgnoreMarker(unittest.TestCase):
   """
@@ -29,10 +28,10 @@ class TestIgnoreMarker(unittest.TestCase):
                 'addOns': {'project': {}, 'extractors': {}, 'table': {}}
             }
         },
-        'version': 3,
+        'version': 4,
         'userID': 'test_user'
     }
-    with open(Path(self.tempDir.name)/confFileName, 'w', encoding='utf-8') as fConf:
+    with open(Path(self.tempDir.name)/CONFIGURATION_FILE_NAME, 'w', encoding='utf-8') as fConf:
       fConf.write(json.dumps(self.configuration))
     self.backend = Backend('research')
     self.project = self.backend.addData('x0', {'name': 'Ignore Marker Project'})
