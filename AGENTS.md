@@ -51,6 +51,8 @@ For visual review of the user's actual desktop layout, ask them to press `F12` i
 - Keep related subwidgets in the same directory and create a dedicated custom widget when a subwidget becomes substantial.
 - Use parameterized SQL for values; never build SQL from user- or document-provided strings.
 - Treat SQLite data, user files, configuration, and external repository uploads as durable user data. Avoid destructive operations unless explicitly requested and validated.
+- Avoid overengineering. For example, rare corrupt-input paths into normal UI workflows. For example, do not add a user-facing import rollback choice for the exceptional case of a corrupt `.eln` file.
+- Treat internal data created by one part of the application as valid when it is passed to another trusted part; do not add redundant validation merely to defend against impossible internal states (for example, rechecking the document returned by import before `addData`).
 - Keep README concise and user-facing; put detailed documentation in `docs/`. Update this file when commands, package structure, or safety constraints change.
 
 ## UI development guidelines
