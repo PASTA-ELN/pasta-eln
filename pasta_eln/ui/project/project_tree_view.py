@@ -13,9 +13,17 @@ from ..gui_style import action
 from ..message_dialog import showMessage
 from .project_leaf_renderer import ProjectLeafRenderer
 
+SCROLL_SPEED = 25
 
 class TreeView(QTreeView):
-  """ Custom tree view on data model """
+  """ Custom tree view on data model
+
+  Uses a standard QTreeView with custom event handling and a delegate that
+  paints each project item. This is more efficient for large project views and
+  requires less code than embedding widgets in every item. The trade-off is
+  that per-item buttons are more difficult to implement. Anyhow, buttons could visually
+  clutter the interface.
+  """
   def __init__(self, parent:QWidget, comm:Communicate, model:QStandardItemModel):
     super().__init__(parent)
     self.aParentWidget: Any = parent
@@ -34,6 +42,8 @@ class TreeView(QTreeView):
     self.setDropIndicatorShown(True)
     self.setDefaultDropAction(Qt.DropAction.MoveAction)
     self.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+    self.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+    self.verticalScrollBar().setSingleStep(SCROLL_SPEED)
     self.doubleClicked.connect(self.tree2Clicked)
 
 

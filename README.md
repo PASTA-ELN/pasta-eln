@@ -45,5 +45,13 @@ Open issues are the union of:
 
 ### Repository maintenance items
 
-- Create an interactive tutorial runner as a separate program launched from the main program. It should use a read-only SQLite connection, define a clear busy-timeout/WAL strategy for concurrent access, and maintain its own JSON file to track tutorial progress.
-- Rewrite the tutorial content with more steps, details, screenshots, contextual help, and clear expected results.
+- Project-Table-View
+  - Possibly add button:
+    Delegate-based buttons are painted manually inside QStyledItemDelegate.paint(). The delegate detects mouse movement and clicks through editorEvent(), determines whether the event lies within a button rectangle, and emits an action or
+    signal. It can also draw hover, pressed, and disabled states.
+    The buttons are not real child widgets; they are visual regions managed by the delegate. Therefore, you must implement hit testing, keyboard accessibility, focus handling, tooltips, state updates, and repaint requests yourself. This
+    approach avoids creating many widgets and remains efficient, but requires more interaction code and careful handling of scrolling, resizing, and high-DPI rendering.
+  - Make right-click context more clear
+- Tutorial
+  - Create an interactive tutorial runner as a separate program launched from the main program. It should use a read-only SQLite connection, define a clear busy-timeout/WAL strategy for concurrent access, and maintain its own JSON file to track tutorial progress.
+  - Rewrite the tutorial content with more steps, details, screenshots, contextual help, and clear expected results.
