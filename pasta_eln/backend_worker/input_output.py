@@ -318,7 +318,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
           logging.warning('Could not replace %s-entries using ids: %s', key, items)
       # convert to Pasta's style
       doc, elnID, children, dataType = json2pastaFunction(docS[0])
-      if elnName == 'PASTA ELN' and elnID.startswith('http') and ':/' in elnID:
+      if (elnName == 'PASTA ELN' and elnID.startswith('http') and ':/' in elnID) or backend.cwd is None:
         fullPath = None
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
@@ -346,7 +346,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       doc['qrCodes'] = qrCodes
       # print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
       docID = backend.addData(docType, doc)['id']
-      if docID[0]=='x':
+      if docID[0]=='x' and backend.cwd is not None:
         backend.changeHierarchy(docID)
         childrenStack.append(0)
         with open(backend.basePath/backend.cwd/'.id_pastaELN.json','w', encoding='utf-8') as f:#local path, update in any case

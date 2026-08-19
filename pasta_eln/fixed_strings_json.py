@@ -112,22 +112,19 @@ configurationGUI: dict[str, Any] = {
   'general': {
     'showHidden': ['Show hidden items by default', 'Yes', ['Yes','No']],
     'autosave': ['Autosave entries in form', 'No', ['Yes', 'No']],
-    'loggingLevel': ['Logging level (more->less)', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR']],
-    'maxUploadSize': ['Maximum upload size', '100 MB', ['50 MB', '100 MB', '500 MB', '1 GB']],
-    'maxExtractionDuration': ['Maximum duration of extractor', '1 min', ['10 sec', '1 min', '10 min']],
     'checkForUpdates': ['Check for updates on startup', 'Yes', ['Yes', 'No']]
   },
   'appearance': {
     'theme': ['Color style', 'automatic', ['automatic', 'dark', 'light']],
-    'showProjectBtn': ['Show project button on top-left', 'Yes', ['Yes', 'No']],
     'sidebarWidth': ['Sidebar width', 280, [220, 280, 340]],
-    'maxTableColumnWidth': ['Maximum column width in tables', 400, [300, 400, 500, 600]],
+    'detailsWidth': ['Details panel width', 360, [280, 360, 440]],
     'imageSizeDetails': ['Image size in form', 600, [300, 400, 500, 600]],
-    'imageWidthProject': ['Image width in project view', 300, [200, 250, 300, 350, 400]],
-    'maxProjectLeafHeight': ['Maximum height of item in project view', 250, [200, 250, 300, 400]],
-    'widthContent': ['Width of procedures in project view', 600, [400, 500, 600, 700]],
-    'docTypeOffset': ['Offset of document type in project view', 500, [400, 500, 600, 700]],
-    'frameSize': ['Frame width around items in project view', 6, [4, 6, 8, 10]],
+    'projectItemHeight': ['Project item height', 250, [200, 250, 300, 400]],
+  },
+  'advanced': {
+    'loggingLevel': ['Logging level (more->less)', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR']],
+    'maxUploadSize': ['Maximum upload size', '100 MB', ['50 MB', '100 MB', '500 MB', '1 GB']],
+    'maxExtractionDuration': ['Maximum duration of extractor', '1 min', ['10 sec', '1 min', '10 min']],
   }
 }
 

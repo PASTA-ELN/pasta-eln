@@ -94,12 +94,44 @@ class TestConfigSecrets(unittest.TestCase):
 
   def test_migrates_version_three_plaintext(self) -> None:
     legacy = configurationWithSecrets(3)
+    legacy['GUI'] = {
+        'showProjectBtn': 'Yes',
+        'maxTableColumnWidth': 400,
+        'imageWidthProject': 300,
+        'widthContent': 600,
+        'docTypeOffset': 500,
+        'frameSize': 6,
+        'maxProjectLeafHeight': 300,
+    }
     self.fileName.write_text(json.dumps(legacy), encoding='utf-8')
     migrated = configurationWithSecrets(4)
+    migrated['GUI'] = {key: value[1] for section in configuration_file.configurationGUI.values()
+                       for key, value in section.items()}
+    migrated['GUI']['projectItemHeight'] = 300
     self.assertEqual(configuration_file.loadConfiguration(self.fileName), migrated)
     stored = json.loads(self.fileName.read_text(encoding='utf-8'))
     self.assertEqual(stored['version'], 4)
     self.assertNotEqual(stored['repositories']['zenodo']['key'], 'zenodo-secret')
+
+
+  def test_migrates_legacy_gui_settings(self) -> None:
+    legacy = configurationWithSecrets(3)
+    legacy['GUI'] = {
+        'showProjectBtn': 'Yes',
+        'maxTableColumnWidth': 400,
+        'imageWidthProject': 300,
+        'widthContent': 600,
+        'docTypeOffset': 500,
+        'frameSize': 6,
+        'maxProjectLeafHeight': 300,
+    }
+    self.fileName.write_text(json.dumps(legacy), encoding='utf-8')
+    migrated = configuration_file.loadConfiguration(self.fileName)
+    self.assertNotIn('showProjectBtn', migrated['GUI'])
+    self.assertNotIn('maxTableColumnWidth', migrated['GUI'])
+    self.assertNotIn('imageWidthProject', migrated['GUI'])
+    self.assertEqual(migrated['GUI']['projectItemHeight'], 300)
+    self.assertEqual(migrated['GUI']['detailsWidth'], 360)
 
 
   def test_invalid_ciphertext_and_keyring_errors_raise(self) -> None:

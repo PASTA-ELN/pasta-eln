@@ -9,6 +9,7 @@ import keyring
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox
+from .fixed_strings_json import configurationGUI
 
 CONFIGURATION_FILE_NAME = '.pastaELN.json'
 CONFIGURATION_VERSION = 4
@@ -100,6 +101,17 @@ def loadConfiguration(fileName:Path|None=None) -> dict[str, Any]:
   configuration = json.loads(fileName.read_text(encoding='utf-8'))
   version = configuration.get('version')
   if version == 3:
+    gui = configuration.setdefault('GUI', {})
+    for key in ['showProjectBtn', 'maxTableColumnWidth', 'imageWidthProject', 'widthContent',
+                'docTypeOffset', 'frameSize']:
+      gui.pop(key, None)
+    if 'maxProjectLeafHeight' in gui and 'projectItemHeight' not in gui:
+      gui['projectItemHeight'] = gui.pop('maxProjectLeafHeight')
+    else:
+      gui.pop('maxProjectLeafHeight', None)
+    for section in configurationGUI.values():
+      for key, value in section.items():
+        gui.setdefault(key, value[1])
     configuration['version'] = CONFIGURATION_VERSION
     saveConfiguration(configuration, fileName)
     return configuration
