@@ -408,7 +408,10 @@ class Form(QDialog):
                   textStr = fIn.read()
           for k,v in SQLiteTranslationDict.items():
             textStr = textStr.replace(v,k)
-          setattr(self, f'textEdit_{key}', TextEditor(textStr))
+          textEditor = TextEditor(textStr)
+          inputBackground = self.comm.palette.getThemeColor('background', 'input')
+          textEditor.setStyleSheet(f'background-color: {inputBackground};')
+          setattr(self, f'textEdit_{key}', textEditor)
           getattr(self, f'textEdit_{key}').setAccessibleName(key)
           getattr(self, f'textEdit_{key}').textChanged.connect(self.textChanged)
           setattr(self, f'textShow_{key}', QTextEdit())

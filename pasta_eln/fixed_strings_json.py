@@ -335,7 +335,7 @@ allIcons = ['fa5s.address-book', 'fa5s.address-card', 'fa5s.adjust', 'fa5s.align
 """Default color values."""
 
 THEME_COLOR_VALUES = {
-  'dark': {'background': {'base': '#202124', 'list': {}, 'panel': {'darken': 0.3}, 'popup': {'lighten': 0.3},
+  'dark': {'background': {'base': '#202124', 'input': '#3f4042', 'list': {}, 'panel': {'darken': 0.3}, 'popup': {'lighten': 0.3},
                           'table': {'darken': 0.5}, 'textarea': {'darken': 0.13}, 'title': {'darken': 0.3}},
            'border': {'base': '#3f4042', 'input': {'transparent': 0}},
            'foreground': {'base': '#e4e7eb', 'defaultButton.disabledBackground': {'transparent': 0.2},
@@ -371,7 +371,7 @@ THEME_COLOR_VALUES = {
            'toolbar.activeBackground': '#ffffff34', 'toolbar.background': '#333333',
            'toolbar.hoverBackground': '#ffffff22', 'tree.inactiveIndentGuidesStroke': '#ffffff35',
            'tree.indentGuidesStroke': '#ffffff60', 'treeSectionHeader.background': '#3f4042'},
-  'light': {'background': {'base': '#f8f9fa', 'list': {}, 'panel': {'lighten': 0.5}, 'popup': {'lighten': 0.2},
+  'light': {'background': {'base': '#f8f9fa', 'input': '#f8f9fa', 'list': {}, 'panel': {'lighten': 0.5}, 'popup': {'lighten': 0.2},
                            'table': {'lighten': 0.5}, 'textarea': {'lighten': 0.25}, 'title': {'darken': 0.04}},
             'border': {'base': '#dadce0', 'input': {}},
             'foreground': {'base': '#4d5157', 'defaultButton.disabledBackground': {'transparent': 0.25},

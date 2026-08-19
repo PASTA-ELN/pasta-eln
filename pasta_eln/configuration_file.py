@@ -100,7 +100,7 @@ def loadConfiguration(fileName:Path|None=None) -> dict[str, Any]:
   fileName = fileName or Path.home()/CONFIGURATION_FILE_NAME
   configuration = json.loads(fileName.read_text(encoding='utf-8'))
   version = configuration.get('version')
-  if version == 3:
+  if version == 3:                                                                # TODO REMOVE IN August 2027
     # Warn before migration
     message = (f'The configuration file {fileName} uses version 3 and will be '
               'updated to version 4. Back up this JSON file before continuing.')

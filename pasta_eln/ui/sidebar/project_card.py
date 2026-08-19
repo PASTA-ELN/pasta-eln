@@ -41,7 +41,7 @@ class ProjectCard(QFrame):
     shadow = QGraphicsDropShadowEffect(self, offset=QPointF(0, 1), blurRadius=8, color=QColor(0, 0, 0, 25))
     self.setGraphicsEffect(shadow)
     self.setCursor(Qt.CursorShape.PointingHandCursor)
-    color = self.comm.palette.getThemeColor('background', 'table')
+    color = self.comm.palette.getThemeColor('background', 'panel')
     borderColor = self.comm.palette.alterColor(self.comm.palette.getThemeColor('border', 'base'), 125)
     selectionColor = self.comm.palette.getThemeColor('primary', 'base')
     self.defaultCSS = f"""

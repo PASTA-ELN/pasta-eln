@@ -170,7 +170,7 @@ class Project(Widget):
       self.allDetails.hide()
       self.actHideDetail.setText('Show project details')
     self.allDetails.resizeEvent = self.commentResize                                            # type: ignore
-    bgColor = self.comm.palette.get('secondaryDark', 'background-color')
+    bgColor = f"background-color: {self.comm.palette.getThemeColor('background', 'base')};"
     fgColor = self.comm.palette.get('secondaryText', 'color')
     self.allDetails.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
     self.allDetails.setReadOnly(True)
