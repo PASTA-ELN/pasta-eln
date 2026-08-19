@@ -7,7 +7,7 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QEvent, QObject, QTimer, QUrl, Qt, Slot
+from PySide6.QtCore import QEvent, QObject, Qt, QTimer, QUrl, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QKeyEvent, QPixmap
 from PySide6.QtWidgets import QApplication, QFileDialog, QLabel, QMainWindow, QMessageBox, QSplitter
 from pasta_eln import __version__

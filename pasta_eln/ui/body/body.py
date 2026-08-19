@@ -128,7 +128,7 @@ class Body(QWidget):
   @Slot(str, str)
   def onChangeTable(self, docType: str, _projectID: str) -> None:
     """Select the table tab targeted by a table-change request."""
-    if docType == 'x0':     # to return to Home after large changes: e.g. project creation
+    if docType == 'x0':                         # to return to Home after large changes: e.g. project creation
       self.tabWidget.setCurrentIndex(0)
       return
     for index in range(self.tabWidget.count()):

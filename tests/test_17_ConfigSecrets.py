@@ -119,9 +119,10 @@ class TestConfigSecrets(unittest.TestCase):
   def test_warns_in_cli_before_migration(self) -> None:
     legacy = configurationWithSecrets(3)
     self.fileName.write_text(json.dumps(legacy), encoding='utf-8')
-    with patch('pasta_eln.configuration_file._warnBeforeMigration') as warning:
+    with patch('builtins.print') as warning:
       configuration_file.loadConfiguration(self.fileName)
-    warning.assert_called_once_with(self.fileName)
+    self.assertTrue(any('Back up this JSON file' in call.args[0]
+                        for call in warning.call_args_list))
 
 
   def test_warns_in_gui_before_migration(self) -> None:

@@ -2,8 +2,8 @@
 import base64
 import logging
 from typing import Any
-from PySide6.QtCore import (QAbstractItemModel, QEvent, QMargins, QModelIndex,
-                            QPersistentModelIndex, QPoint, QRect, QRectF, QSize, Signal, Qt, Slot)
+from PySide6.QtCore import (QAbstractItemModel, QEvent, QMargins, QModelIndex, QPersistentModelIndex, QPoint, QRect,
+                            QRectF, QSize, Qt, Signal, Slot)
 from PySide6.QtGui import QMouseEvent, QPainter, QPen, QPixmap, QStaticText, QTextDocument
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QAbstractItemView, QStyle, QStyledItemDelegate, QStyleOptionViewItem

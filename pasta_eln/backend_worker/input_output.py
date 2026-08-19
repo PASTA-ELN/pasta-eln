@@ -324,11 +324,10 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
       # Copy file onto hard disk
       archivePath = f'{dirName}/{elnID}'
-      if fullPath is not None and dataType.lower() == 'file':
-        if archivePath in elnFile.namelist() and not [i for i in elnFile.infolist()
-                                                       if archivePath == i.filename][0].is_dir():
-          with elnFile.open(archivePath) as source, open(fullPath, 'wb') as target:
-            shutil.copyfileobj(source, target)
+      if fullPath is not None and dataType.lower() == 'file' and archivePath in elnFile.namelist() and \
+                                  not [i for i in elnFile.infolist() if archivePath == i.filename][0].is_dir():
+        with elnFile.open(archivePath) as source, open(fullPath, 'wb') as target:
+          shutil.copyfileobj(source, target)
       # FOR ALL ELNs
       if elnName == 'PASTA ELN':
         docType = doc['type']

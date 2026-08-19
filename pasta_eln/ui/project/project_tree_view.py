@@ -3,7 +3,7 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QPoint, QModelIndex, Qt
+from PySide6.QtCore import QModelIndex, QPoint, Qt
 from PySide6.QtGui import QContextMenuEvent, QDropEvent, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget
 from ...backend_worker.worker import Task
@@ -62,7 +62,7 @@ class TreeView(QTreeView):
 
   def showContextMenu(self, clickedIndex:QModelIndex, globalPos:QPoint) -> None:
     """Show the context menu for the item at ``clickedIndex``.
-    
+
     Args:
       clickedIndex (QModelIndex): index of the item
       globalPos (QPoint): global position of the mouse

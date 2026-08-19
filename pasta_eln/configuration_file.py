@@ -132,7 +132,7 @@ def loadConfiguration(fileName:Path|None=None) -> dict[str, Any]:
     target:Any = configuration                                 # recreate the intermediate configuration jsons
     for part in path[:-1]:
       target = target[part]
-    if value:= target[path[-1]]:                                       # final path is the value that is encrypted
+    if value:= target[path[-1]]:                                   # final path is the value that is encrypted
       cipher = cipher or AESGCM(_masterKey())
       raw = base64.b64decode(value, validate=True)
       target[path[-1]] = cipher.decrypt(raw[:NONCE_SIZE], raw[NONCE_SIZE:], aadPath.encode('utf-8')).decode('utf-8')
