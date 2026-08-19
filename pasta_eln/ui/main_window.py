@@ -7,9 +7,9 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QEvent, QTimer, QUrl, Slot
-from PySide6.QtGui import QDesktopServices, QIcon, QPixmap
-from PySide6.QtWidgets import QFileDialog, QLabel, QMainWindow, QMessageBox, QSplitter
+from PySide6.QtCore import QEvent, QTimer, QUrl, Qt, Slot
+from PySide6.QtGui import QDesktopServices, QIcon, QKeyEvent, QPixmap
+from PySide6.QtWidgets import QApplication, QFileDialog, QLabel, QMainWindow, QMessageBox, QSplitter
 from pasta_eln import __version__
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.configuration_file import saveConfiguration
@@ -35,11 +35,12 @@ class MainWindow(QMainWindow):
   def __init__(self, comm: Communicate) -> None:
     """ Init main window
     Args:
-      projectGroup (str): project group to load
+      comm (Communicate): communicate object to transfer information
     """
     # global setting
     super().__init__()
     self.comm = comm
+    self.application = QApplication.instance()
     if self.comm.configuration:
       self.comm.palette = Palette(comm, self.comm.configuration['GUI']['theme'])
       self.comm.docTypesChanged.connect(self.paint)
@@ -99,7 +100,10 @@ class MainWindow(QMainWindow):
     developerMenu = helpMenu.addMenu('&Developer tools')
     action('Verify database',           self, Command.CHECK_DB, developerMenu, keySequence='Ctrl+?')
     action('Restart application',       self, Command.RESTART, developerMenu, keySequence='F9')
-    action('Capture window screenshot', self, Command.SCREENSHOT, developerMenu, keySequence='F12')
+    screenshotAction = action('Capture window screenshot', self, Command.SCREENSHOT, developerMenu, keySequence='F12')
+    # F12 must remain available while a modal dialog (for example Form) is open.
+    if self.application is not None:
+      self.application.installEventFilter(self)
 
     # GUI elements
     self.splitter = QSplitter(handleWidth=3)
@@ -123,7 +127,8 @@ class MainWindow(QMainWindow):
     # Things that are inside the List menu
     self.viewMenu.clear()
     for key, value in self.comm.docTypesTitles.items():
-      shortcut = None if value['shortcut'] == '' else f"Ctrl+{value['shortcut']}"
+      shortcutValue = value['shortcut'].strip()
+      shortcut = None if shortcutValue == '' else f'Ctrl+{shortcutValue.upper()}'
       action(value['title'], self, [Command.VIEW, key], self.viewMenu, keySequence=shortcut)
     self.viewMenu.addSeparator()
     action('&Tags', self, [Command.VIEW, '_tags_'], self.viewMenu, keySequence='Ctrl+T')
@@ -148,9 +153,26 @@ class MainWindow(QMainWindow):
     Args:
       event: close event
     """
+    if self.application is not None:
+      self.application.removeEventFilter(self)
     if self.comm and hasattr(self.comm, 'backendThread') and self.comm.backendThread:
       self.comm.shutdownBackendThread()
     event.accept()
+
+
+  def eventFilter(self, watched: object, event: QEvent) -> bool:
+    """Handle F12 even when a modal dialog owns the keyboard focus.
+    Args:
+      watched: object that was watched
+      event: event
+    Returns:
+      bool: True if the event was handled, False otherwise
+    """
+    if (isinstance(event, QKeyEvent) and event.type() == QEvent.Type.KeyPress
+        and event.key() == Qt.Key.Key_F12 and not event.isAutoRepeat()):
+      self.execute(Command.SCREENSHOT)
+      return True
+    return super().eventFilter(watched, event)
 
 
   @Slot(dict)
@@ -169,8 +191,9 @@ class MainWindow(QMainWindow):
 
 
   def execute(self, command: Command | list[Any]) -> None:
-    """
-    action after clicking menu item
+    """Action after clicking menu item
+    Args:
+      command (Command | list[Any]): command to execute
     """
     # file menu
     commandType = command if isinstance(command, Command) else command[0]

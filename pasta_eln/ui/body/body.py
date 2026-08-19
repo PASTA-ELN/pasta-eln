@@ -53,6 +53,7 @@ class Body(QWidget):
     # Signals
     self.comm.docTypesChanged.connect(self.paint)
     self.comm.changeProject.connect(self.onChangeProject)
+    self.comm.changeTable.connect(self.onChangeTable)
     self.tabWidget.currentChanged.connect(self.onTabChanged)
     self.detailsW.becameVisible.connect(self.resizeDetailsSplitter)
 
@@ -77,6 +78,11 @@ class Body(QWidget):
       iconName = 'ri.asterisk' if docTypeDetails['icon'] == '' else docTypeDetails['icon']
       icon     = self.createIcon(iconName, iconColor, selectedIconColor)
       label    = docTypeDetails['title']
+      self.tabWidget.addTab(tableView, icon, label)
+    for docType, iconName, label in (('_tags_', 'ri.price-tag-3-line', 'Tags'),
+                                     ('-', 'ri.question-line', 'Unidentified')):
+      tableView = TableView(self.comm, docType)
+      icon = self.createIcon(iconName, iconColor, selectedIconColor)
       self.tabWidget.addTab(tableView, icon, label)
 
 
@@ -117,6 +123,19 @@ class Body(QWidget):
     """
     self.comm.changeDetails.emit('')                                                           # close details
     self.tabWidget.setCurrentIndex(0)
+
+
+  @Slot(str, str)
+  def onChangeTable(self, docType: str, _projectID: str) -> None:
+    """Select the table tab targeted by a table-change request."""
+    if docType == 'x0':     # to return to Home after large changes: e.g. project creation
+      self.tabWidget.setCurrentIndex(0)
+      return
+    for index in range(self.tabWidget.count()):
+      widget = self.tabWidget.widget(index)
+      if isinstance(widget, TableView) and widget.docType == docType:
+        self.tabWidget.setCurrentIndex(index)
+        return
 
 
   @Slot(int)

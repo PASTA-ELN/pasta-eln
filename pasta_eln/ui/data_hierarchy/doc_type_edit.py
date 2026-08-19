@@ -7,7 +7,7 @@ import qtawesome as qta
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
-from ...fixed_strings_json import allIcons
+from ...fixed_strings_json import allIcons, reservedDocTypeShortcuts
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle
 from ..message_dialog import showMessage
@@ -108,11 +108,11 @@ class DocTypeEditor(QDialog):
     self.mainForm.addRow(QLabel('Icon '), row3W)
 
     self.row4 = QLineEdit(self.initialData[4])
-    self.row4.setToolTip('One letter shortcut used with Ctrl-. Must be unique.')
+    self.row4.setToolTip('One-letter shortcut used with Ctrl+. Must be unique and cannot be T or U.')
     if self.docType.startswith('x'):
       self.row4.setDisabled(True)
     else:
-      dataSet = set(string.ascii_lowercase).difference(self.shortcuts)
+      dataSet = set(string.ascii_lowercase).difference(self.shortcuts).difference(reservedDocTypeShortcuts)
       self.row4.setValidator(QRegularExpressionValidator(f'^[{"".join(dataSet)}]$'))
     self.mainForm.addRow(QLabel('Shortcut '), self.row4)
 

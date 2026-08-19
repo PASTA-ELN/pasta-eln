@@ -3,7 +3,7 @@ from typing import Any
 
 defaultDocTypes: list[list[str]] = [
   #docType,               PURL,                                              title,          icon,                   shortcut, view
-  ['x0',                  'http://purl.obolibrary.org/obo/NCIT_C47885',      'Projects',     '',                     'space', 'name,tags,.status,.objective,comment'],
+  ['x0',                  'http://purl.obolibrary.org/obo/NCIT_C47885',      'Projects',     '',                     '',      'name,tags,.status,.objective,comment'],
   ['x1',                  'http://purl.obolibrary.org/obo/NCIT_C101129',     'Folders',      '',                      '',     ''],
   ['measurement',         'http://purl.obolibrary.org/obo/NCIT_C42790',      'Measurements', 'fa5s.thermometer-half', 'm',    'name,tags,comment,type,image,.sample,.workflow/procedure'],
   ['sample',              'http://purl.obolibrary.org/obo/NCIT_C19157',      'Samples',      'fa5s.vial',             's',    'name,tags,.chemistry,comment,qrCodes'],
@@ -182,34 +182,45 @@ is not responding and asks if to close/wait. Please WAIT
 """
 
 shortcuts = """
-### Default shortcuts:
+## Keyboard shortcuts
 
-**Ctrl+Space**: List projects
+### Navigation
 
-**Ctrl+M**: List measurements
+| Shortcut | Action |
+|---|---|
+| **Ctrl+M** | Show measurements |
+| **Ctrl+S** | Show samples |
+| **Ctrl+W** | Show workflows |
+| **Ctrl+D** | Show devices |
+| **Ctrl+T** | Show tags |
+| **Ctrl+U** | Show unidentified items |
 
-**Ctrl+S**: List samples
+Document unique one-letter shortcut are assigned in Item Editor and can hence vary from these defaults. Use
+**Ctrl+<letter>** to show that document type.
 
-**Ctrl+W**: List workflows
+### Application actions
 
-**Ctrl+D**: List devices
+| Shortcut | Action |
+|---|---|
+| **F2** | Test extraction for the selected item |
+| **F4** | Get data from the repository (development mode) |
+| **F5** | Send data to the repository |
+| **F8** | Open the item type editor |
+| **F9** | Restart PASTA-ELN |
+| **F12** | Capture a screenshot of the main window |
+| **Ctrl+?** | Verify database integrity |
+| **Ctrl+0** | Open configuration |
 
-**Ctrl+T**: List tags
+### Dialog actions
 
-**Ctrl+U**: List unidentified
-
-**F2**: Test file extraction
-
-**F5**: Synchronize
-
-**F9**: Restart
-
-**F12**: Capture a UI screenshot
-
-**Ctrl+?**: Verify database integrity
-
-**Ctrl+0**: Configuration
+| Shortcut | Action |
+|---|---|
+| **Ctrl+Return** | Save the current form or dialog |
 """
+
+
+# Reserved by fixed main-window shortcuts.
+reservedDocTypeShortcuts = {'t', 'u'}
 
 
 tableHeaderHelp = """
