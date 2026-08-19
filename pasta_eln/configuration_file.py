@@ -101,6 +101,15 @@ def loadConfiguration(fileName:Path|None=None) -> dict[str, Any]:
   configuration = json.loads(fileName.read_text(encoding='utf-8'))
   version = configuration.get('version')
   if version == 3:
+    # Warn before migration
+    message = (f'The configuration file {fileName} uses version 3 and will be '
+              'updated to version 4. Back up this JSON file before continuing.')
+    if QApplication.instance() is not None:
+      QMessageBox.warning(None, 'Configuration migration', message)
+    else:
+      print(f'WARNING: {message}')
+      input('Press Enter to continue with the migration.')
+    # Clean old GUI content
     gui = configuration.setdefault('GUI', {})
     for key in ['showProjectBtn', 'maxTableColumnWidth', 'imageWidthProject', 'widthContent',
                 'docTypeOffset', 'frameSize']:
@@ -112,6 +121,7 @@ def loadConfiguration(fileName:Path|None=None) -> dict[str, Any]:
     for section in configurationGUI.values():
       for key, value in section.items():
         gui.setdefault(key, value[1])
+    # Update version
     configuration['version'] = CONFIGURATION_VERSION
     saveConfiguration(configuration, fileName)
     return configuration

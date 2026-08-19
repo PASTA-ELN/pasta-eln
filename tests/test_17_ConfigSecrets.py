@@ -35,10 +35,12 @@ class TestConfigSecrets(unittest.TestCase):
     self.setPatch = patch('pasta_eln.configuration_file.keyring.set_password', side_effect=self._setKey)
     self.applicationPatch = patch('pasta_eln.configuration_file.QApplication.instance', return_value=None)
     self.printPatch = patch('builtins.print')
+    self.inputPatch = patch('builtins.input', return_value='')
     self.getPatch.start()
     self.setPatch.start()
     self.applicationPatch.start()
     self.showMasterKey = self.printPatch.start()
+    self.inputPatch.start()
 
 
   def tearDown(self) -> None:
@@ -112,6 +114,25 @@ class TestConfigSecrets(unittest.TestCase):
     stored = json.loads(self.fileName.read_text(encoding='utf-8'))
     self.assertEqual(stored['version'], 4)
     self.assertNotEqual(stored['repositories']['zenodo']['key'], 'zenodo-secret')
+
+
+  def test_warns_in_cli_before_migration(self) -> None:
+    legacy = configurationWithSecrets(3)
+    self.fileName.write_text(json.dumps(legacy), encoding='utf-8')
+    with patch('pasta_eln.configuration_file._warnBeforeMigration') as warning:
+      configuration_file.loadConfiguration(self.fileName)
+    warning.assert_called_once_with(self.fileName)
+
+
+  def test_warns_in_gui_before_migration(self) -> None:
+    legacy = configurationWithSecrets(3)
+    self.fileName.write_text(json.dumps(legacy), encoding='utf-8')
+    with patch('pasta_eln.configuration_file.QApplication.instance', return_value=object()), \
+         patch('pasta_eln.configuration_file.QMessageBox.warning') as warning, \
+         patch('pasta_eln.configuration_file._masterKey', return_value=b'master-key-32-bytes-long-value!!'):
+      configuration_file.loadConfiguration(self.fileName)
+    warning.assert_called_once()
+    self.assertIn('Back up this JSON file', warning.call_args.args[2])
 
 
   def test_migrates_legacy_gui_settings(self) -> None:
