@@ -45,5 +45,5 @@ Open issues are the union of:
 
 ### Repository maintenance items
 
-- Persistence safety
-  - Make ELN imports best-effort: continue importing valid entries and clearly report entries that failed.
+- Create an interactive tutorial runner as a separate program launched from the main program. It should use a read-only SQLite connection, define a clear busy-timeout/WAL strategy for concurrent access, and maintain its own JSON file to track tutorial progress.
+- Rewrite the tutorial content with more steps, details, screenshots, contextual help, and clear expected results.
