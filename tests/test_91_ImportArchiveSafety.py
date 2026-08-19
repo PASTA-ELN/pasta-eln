@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from pasta_eln.backend_worker.input_output import _checkImportArchive
+from pasta_eln.backend_worker.input_output import validate
 
 
 class TestImportArchiveSafety(unittest.TestCase):
@@ -25,16 +25,16 @@ class TestImportArchiveSafety(unittest.TestCase):
     self.addCleanup(archivePath.unlink)
     with ZipFile(archivePath) as archive, \
          patch.object(archive, 'infolist', return_value=[Mock(file_size=0)]*10_001):
-      error = _checkImportArchive(archive)
-    self.assertEqual(error, 'ERROR: eln file contains more than 10000 archive members. Cannot process')
+      isValid = validate(archive)
+    self.assertFalse(isValid)
 
   def test_rejects_excessive_uncompressed_data(self):
     archivePath = self._createArchive(['content'])
     self.addCleanup(archivePath.unlink)
     with ZipFile(archivePath) as archive, \
          patch.object(archive, 'infolist', return_value=[Mock(file_size=4*1024**3+1)]):
-      error = _checkImportArchive(archive)
-    self.assertEqual(error, 'ERROR: eln file expands beyond 4294967296 bytes. Cannot process')
+      isValid = validate(archive)
+    self.assertFalse(isValid)
 
 
 if __name__ == '__main__':

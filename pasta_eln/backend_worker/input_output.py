@@ -61,18 +61,6 @@ metadataFile = 'ro-crate-metadata.json'
 ##########################################
 ###           VALIDATIONS              ###
 ##########################################
-def _checkImportArchive(elnFile: ZipFile) -> str | None:
-  """Return an error when an import archive exceeds safe resource limits."""
-  maxArchiveMembers = 10_000
-  maxArchiveBytes = 4 * 1024**3
-  archiveInfo = elnFile.infolist()
-  if len(archiveInfo) > maxArchiveMembers:
-    return f'ERROR: eln file contains more than {maxArchiveMembers} archive members. Cannot process'
-  archiveBytes = sum(info.file_size for info in archiveInfo)
-  if archiveBytes > maxArchiveBytes:
-    return f'ERROR: eln file expands beyond {maxArchiveBytes} bytes. Cannot process'
-  return None
-
 def validate(elnFile:ZipFile) -> bool:
   """Validate the archive structure needed by :func:`importELN`.
 
@@ -80,13 +68,21 @@ def validate(elnFile:ZipFile) -> bool:
   operate on the archive and graph without repeating structural checks while
   processing individual documents.
   """
+  maxArchiveMembers = 10_000
+  maxArchiveBytes = 4 * 1024**3
+  archiveInfo = elnFile.infolist()
+  if len(archiveInfo) > maxArchiveMembers:
+    logging.error('eln file contains more than %s archive members. Cannot process',
+                  maxArchiveMembers)
+    return False
+  archiveBytes = sum(info.file_size for info in archiveInfo)
+  if archiveBytes > maxArchiveBytes:
+    logging.error('eln file expands beyond %s bytes. Cannot process', maxArchiveBytes)
+    return False
+
   def fail(message:str) -> bool:
     logging.error(message)
     return False
-
-  archiveError = _checkImportArchive(elnFile)
-  if archiveError:
-    return fail(archiveError)
 
   entriesOutsideRoot:set[str] = set()
   rootFolders:set[str] = set()
