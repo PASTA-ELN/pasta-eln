@@ -3,7 +3,7 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, QModelIndex, Qt
 from PySide6.QtGui import QContextMenuEvent, QDropEvent, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget
 from ...backend_worker.worker import Task
@@ -35,8 +35,10 @@ class TreeView(QTreeView):
     TreeView {{background-color:{self.comm.palette.getThemeColor("background", "base")};}}
     ''')
     self.setIndentation(40)
-    self.renderer = ProjectLeafRenderer(self.comm)
+    self.renderer = ProjectLeafRenderer(self, self.comm)
     self.setItemDelegate(self.renderer)
+    self.renderer.contextMenuRequested.connect(self.showContextMenu)
+    self.viewport().setMouseTracking(True)
     self.setExpandsOnDoubleClick(False)
     self.setAcceptDrops(True)
     self.setDropIndicatorShown(True)
@@ -54,7 +56,17 @@ class TreeView(QTreeView):
     Args:
       event (QContextMenuEvent): context-menu event
     """
-    clickedIndex = self.indexAt(event.pos())
+    self.showContextMenu(self.indexAt(event.pos()), event.globalPos())
+    return
+
+
+  def showContextMenu(self, clickedIndex:QModelIndex, globalPos:QPoint) -> None:
+    """Show the context menu for the item at ``clickedIndex``.
+    
+    Args:
+      clickedIndex (QModelIndex): index of the item
+      globalPos (QPoint): global position of the mouse
+    """
     if not clickedIndex.isValid():
       return
     self.setCurrentIndex(clickedIndex)
@@ -80,7 +92,7 @@ class TreeView(QTreeView):
         context.addSeparator()
         for label, description in projectAddOns.items():
           action(description, self, [Command.ADD_ON, label], context)
-    context.exec(event.globalPos())
+    context.exec(globalPos)
     return
 
 

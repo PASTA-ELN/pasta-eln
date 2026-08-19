@@ -2,10 +2,11 @@
 import base64
 import logging
 from typing import Any
-from PySide6.QtCore import QMargins, QModelIndex, QPersistentModelIndex, QPoint, QRectF, QSize, Qt, Slot
-from PySide6.QtGui import QPainter, QPen, QPixmap, QStaticText, QTextDocument
+from PySide6.QtCore import (QAbstractItemModel, QEvent, QMargins, QModelIndex,
+                            QPersistentModelIndex, QPoint, QRect, QRectF, QSize, Signal, Qt, Slot)
+from PySide6.QtGui import QMouseEvent, QPainter, QPen, QPixmap, QStaticText, QTextDocument
 from PySide6.QtSvg import QSvgRenderer
-from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem
+from PySide6.QtWidgets import QAbstractItemView, QStyle, QStyledItemDelegate, QStyleOptionViewItem
 from ...fixed_strings_json import DO_NOT_RENDER, defaultDataHierarchyNode
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import markdownEqualizer
@@ -13,6 +14,8 @@ from ..gui_communicate import Communicate
 
 FRAME_SIZE = 6
 MIN_CONTENT_WIDTH = 240
+MENU_BUTTON_SIZE = 24
+MENU_BUTTON_MARGIN = 12
 
 def layoutWidths(availableWidth:int) -> tuple[int, int, int]:
   """Return adaptive content, image, and document-type widths
@@ -30,8 +33,16 @@ def layoutWidths(availableWidth:int) -> tuple[int, int, int]:
 
 class ProjectLeafRenderer(QStyledItemDelegate):
   """ ONE Renderer for all leafs of project tree using QPaint """
-  def __init__(self, comm:Communicate) -> None:
-    super().__init__()
+  contextMenuRequested = Signal(QModelIndex, QPoint)
+
+  def __init__(self, parent:QAbstractItemView, comm:Communicate) -> None:
+    """ Initialize the ProjectLeafRenderer
+
+    Args:
+      parent (QAbstractItemView): parent widget
+      comm (Communication): communication layer
+    """
+    super().__init__(parent)
     self.comm               = comm
     self.comm.backendThread.worker.beSendDoc.connect(self.onGetDoc)
     self.debugMode          = logging.root.level<logging.INFO
@@ -82,6 +93,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       staticText.setTextWidth(docTypeOffset)
       painter.drawStaticText(x0, y0+y, staticText)
       painter.drawStaticText(x0+docTypeOffset, y0+y, QStaticText(docTypeText))
+      self.paintMenuButton(painter, option)
       return
     hiddenText = '     \U0001F441' if self.docs.get(docID, {}).get('hidden', False) else ''
     staticText = QStaticText(f'<strong>{nameText} {hiddenText}</strong>')
@@ -117,12 +129,67 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         topLeft2nd     = option.rect.topRight()   - QPoint(widthImage+FRAME_SIZE+1,-FRAME_SIZE)
         image = QSvgRenderer(bytearray(self.docs.get(docID, {}).get('image',''), encoding='utf-8'))
         image.render(painter,    QRectF(topLeft2nd, bottomRight2nd))
+    self.paintMenuButton(painter, option)
     return
+
+  def paintMenuButton(self, painter:QPainter, option:QStyleOptionViewItem) -> None:
+    """Paint a compact overflow button that exposes the item's context menu.
+
+    Args:
+      painter (QPainter): painter
+      option (QStyleOptionViewItem): option
+    """
+    if not option.state & (QStyle.StateFlag.State_Selected | QStyle.StateFlag.State_MouseOver):
+      return
+    buttonRect = QRect(option.rect.right() - MENU_BUTTON_SIZE - MENU_BUTTON_MARGIN,
+                       option.rect.top() + MENU_BUTTON_MARGIN,
+                       MENU_BUTTON_SIZE, MENU_BUTTON_SIZE)
+    painter.save()
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(option.palette.base())
+    painter.drawRoundedRect(buttonRect, 4, 4)
+    painter.setPen(self.comm.palette.primary)
+    painter.setBrush(Qt.BrushStyle.NoBrush)
+    painter.drawText(buttonRect, Qt.AlignmentFlag.AlignCenter, '\N{VERTICAL ELLIPSIS}')
+    painter.restore()
+
+
+  def editorEvent(self, event:QEvent, model:QAbstractItemModel, option:QStyleOptionViewItem,
+                  index:QModelIndex | QPersistentModelIndex) -> bool:
+    """Open the item's context menu when its overflow button is clicked.
+
+    Args:
+      event (QEvent): event
+      model (QAbstractItemModel): model
+      option (QStyleOptionViewItem): option
+      index (QModelIndex): index
+
+    Returns:
+      bool: True if the event was handled, False otherwise
+    """
+    if (event.type() != QEvent.Type.MouseButtonRelease or not isinstance(event, QMouseEvent)
+        or event.button() != Qt.MouseButton.LeftButton):
+      return super().editorEvent(event, model, option, index)
+    if option.widget is None:
+      return False
+    buttonRect = QRect(option.rect.right() - MENU_BUTTON_SIZE - MENU_BUTTON_MARGIN,
+                       option.rect.top() + MENU_BUTTON_MARGIN,
+                       MENU_BUTTON_SIZE, MENU_BUTTON_SIZE)
+    if not buttonRect.contains(event.position().toPoint()):
+      return super().editorEvent(event, model, option, index)
+    self.contextMenuRequested.emit(index, option.widget.mapToGlobal(event.position().toPoint()))
+    return True
 
 
   def sizeHint(self, option:QStyleOptionViewItem, index:QModelIndex | QPersistentModelIndex) -> QSize:
-    """
-    determine size of this leaf
+    """ Determine size of this leaf
+
+    Args:
+      option (QStyleOptionViewItem): option
+      index (QModelIndex | QPersistentModelIndex): index
+
+    Returns:
+      QSize: size of this leaf
     """
     if not index or not index.data(Qt.ItemDataRole.UserRole+1):
       return QSize()

@@ -7,7 +7,7 @@ import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QEvent, QTimer, QUrl, Qt, Slot
+from PySide6.QtCore import QEvent, QObject, QTimer, QUrl, Qt, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QKeyEvent, QPixmap
 from PySide6.QtWidgets import QApplication, QFileDialog, QLabel, QMainWindow, QMessageBox, QSplitter
 from pasta_eln import __version__
@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
     developerMenu = helpMenu.addMenu('&Developer tools')
     action('Verify database',           self, Command.CHECK_DB, developerMenu, keySequence='Ctrl+?')
     action('Restart application',       self, Command.RESTART, developerMenu, keySequence='F9')
-    screenshotAction = action('Capture window screenshot', self, Command.SCREENSHOT, developerMenu, keySequence='F12')
+    action('Capture window screenshot', self, Command.SCREENSHOT, developerMenu, keySequence='F12')
     # F12 must remain available while a modal dialog (for example Form) is open.
     if self.application is not None:
       self.application.installEventFilter(self)
@@ -160,7 +160,7 @@ class MainWindow(QMainWindow):
     event.accept()
 
 
-  def eventFilter(self, watched: object, event: QEvent) -> bool:
+  def eventFilter(self, watched: QObject, event: QEvent) -> bool:
     """Handle F12 even when a modal dialog owns the keyboard focus.
     Args:
       watched: object that was watched
