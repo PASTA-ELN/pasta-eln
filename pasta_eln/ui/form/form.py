@@ -42,6 +42,7 @@ class Form(QDialog):
 
     # get data into shape
     self.doc:dict[str,Any] = copy.deepcopy(doc)
+    self.hierStack: list[str] | None = self.doc.pop('_hierStack', None)
     self.allDocIDs = self.doc.get('_ids', [self.doc['id']] if 'id' in self.doc else [])
     self.allDocIDsCopy = list(self.allDocIDs)
     self.flagNewDoc = 'id' not in self.doc and '_ids' not in self.doc
@@ -51,6 +52,8 @@ class Form(QDialog):
       self.allowDocTypeChange = all(docID[0] != 'x' for docID in self.allDocIDs)
     self.allowDocTypeChange = self.allowDocTypeChange and not self.flagNewDoc
     self.allowProjectChange = doc['type'][0]!='x0' if self.flagNewDoc else True              # allow to change
+    if self.hierStack is not None:
+      self.allowProjectChange = False
     self.allowProjectUnassign = True # samples can get unassigned, folders can change but cannot be unassigned
 
     # GUI elements
@@ -692,7 +695,9 @@ class Form(QDialog):
       keyValueDict = {f'.{k}':v for k,v in keyValueDict.items() if k and v and f'.{k}' not in self.doc}
       self.doc = keyValueDict | self.doc
       # ---- if project changed: only branch save; remaining data still needs saving
-      if self.doc['type'][0] == 'x0':
+      if self.hierStack is not None:
+        newProjID = self.hierStack
+      elif self.doc['type'][0] == 'x0':
         newProjID = []
       else:
         newProjID = [self.projectComboBox.currentData()] if self.projectComboBox.currentData() else []

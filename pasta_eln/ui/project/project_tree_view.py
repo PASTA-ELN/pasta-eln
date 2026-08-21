@@ -90,8 +90,15 @@ class TreeView(QTreeView):
       projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
       if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
         context.addSeparator()
+        projectAddOnMenu = context.addMenu('Project add-ons')
         for label, description in projectAddOns.items():
-          action(description, self, [Command.ADD_ON, label], context)
+          action(description, self, [Command.ADD_ON, label], projectAddOnMenu)
+    addItemMenu = context.addMenu('Add item')
+    addItemMenu.setEnabled(folder)
+    if folder:
+      for docType, details in sorted(self.comm.docTypesTitles.items(), key=lambda item: item[1]['title'].casefold()):
+        if not docType.startswith(('x', '-')):
+          action(details['title'], self, [Command.ADD_ITEM, docType], addItemMenu)
     context.exec(globalPos)
     return
 
@@ -105,7 +112,9 @@ class TreeView(QTreeView):
     """
     item = self.model().itemFromIndex(self.currentIndex())                        # type: ignore[attr-defined]
     hierStack = item.data()['hierStack'].split('/')
-    if command[0] is Command.ADD_CHILD:
+    if command[0] is Command.ADD_ITEM:
+      self.comm.formDoc.emit({'type': [command[1]], '_hierStack': hierStack})
+    elif command[0] is Command.ADD_CHILD:
       self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':hierStack, 'docType':'x1', 'doc':{'name':'new item'}})
 
     elif command[0] is Command.ADD_SIBLING:
@@ -276,11 +285,12 @@ class TreeView(QTreeView):
 
 class Command(Enum):
   """ Commands used in this file """
-  ADD_CHILD        = 1
-  ADD_SIBLING      = 2
-  DELETE           = 3
-  SHOW_DETAILS     = 4
-  HIDE             = 5
-  OPEN_EXTERNAL    = 6
-  OPEN_FILEBROWSER = 7
-  ADD_ON           = 8
+  ADD_ITEM         = 1
+  ADD_CHILD        = 2
+  ADD_SIBLING      = 3
+  DELETE           = 4
+  SHOW_DETAILS     = 5
+  HIDE             = 6
+  OPEN_EXTERNAL    = 7
+  OPEN_FILEBROWSER = 8
+  ADD_ON           = 9
