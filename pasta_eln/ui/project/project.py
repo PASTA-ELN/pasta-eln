@@ -35,6 +35,7 @@ class Project(Widget):
     self.setLayout(self.mainL)
     self.tree :TreeView | None             = None
     self.model:QStandardItemModel | None   = None
+    self._modelItemChangedConnected        = False
     self.allDetails:QTextEdit | None       = None
     self.actHideDetail                     = QAction()
     self.actionFoldAll                     = QAction()
@@ -87,20 +88,20 @@ class Project(Widget):
     # self.tree.setSelectionBehavior(QAbstractItemView.SelectRows)
     # self.tree.setSelectionMode(QAbstractItemView.SingleSelection)
     self.model.itemChanged.connect(self.modelChanged)
+    self._modelItemChangedConnected = True
     rootItem = self.model.invisibleRootItem()
     #Populate model body of change project: start recursion
+    if self.hierarchy is None:
+      self.mainL.addWidget(self.tree)
+      return
     if self.hierarchy is not None and self.hierarchy.name == '__ERROR_in_getHierarchy__':
       showMessage(self, 'Error', 'There is an error in the project hierarchy: a parent of a node is incorrect.', 'Critical')
       return
-    try:
-      for node in PreOrderIter(self.hierarchy, maxlevel=2):
-        if node is None or node.is_root:                                                      # Project header
-          self.paintProjectHeader()
-        else:
-          rootItem.appendRow(self.iterateTree(node))
-    except AttributeError:
-      self.model = QStandardItemModel()
-      self.tree = TreeView(self, self.comm, self.model)              # if hierarchy is None, create empty tree
+    for node in PreOrderIter(self.hierarchy, maxlevel=2):
+      if node is None or node.is_root:                                                        # Project header
+        self.paintProjectHeader()
+      else:
+        rootItem.appendRow(self.iterateTree(node))
     # collapse / expand depending on stored value
     # by iterating each leaf, and converting item and index
     root = self.model.invisibleRootItem()
@@ -259,11 +260,12 @@ class Project(Widget):
         self.tree.collapsed.disconnect(self.onTreeCollapsed)
       except (RuntimeError, TypeError):
         pass
-    if self.model is not None:
+    if self.model is not None and self._modelItemChangedConnected:
       try:
         self.model.itemChanged.disconnect(self.modelChanged)
       except (RuntimeError, TypeError):
         pass
+      self._modelItemChangedConnected = False
     while self.mainL.count():
       item = self.mainL.takeAt(0)
       widget = None if item is None else item.widget()

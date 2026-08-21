@@ -1,12 +1,13 @@
 """The Toplevel Sidebar on the left that displays the projects to choose."""
 from enum import Enum
 import pandas as pd
+import qtawesome as qta
 from PySide6.QtCore import Slot
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
 from pasta_eln.misc_tools import clearLayout
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.gui_style import SPACE, Button, HSeparator, Label, Widget
+from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, HSeparator, Label, Widget
 from pasta_eln.ui.sidebar.project_card import ProjectCard
 
 
@@ -20,6 +21,7 @@ class ProjectSidebar(Widget):
     self.comm = comm
     self.projects = pd.DataFrame()
     self._initialProjectSelected = False
+    self.showHiddenProjects = self.comm.configuration['GUI']['showHidden'] == 'Yes'
 
     # Header: project label and button
     self.headerLabel = Label('Projects', 'h2')
@@ -28,6 +30,11 @@ class ProjectSidebar(Widget):
     self.headerW = QWidget()
     self.headerL = QHBoxLayout(self.headerW)
     self.headerL.addWidget(self.headerLabel, stretch=1)
+    self.showHiddenBtn = Button('', self, Command.TOGGLE_HIDDEN_PROJECTS, self.headerL,
+                                icon='fa5s.eye-slash', style=ButtonStyle.PRIMARY,
+                                tooltip='Show hidden projects', checkable=True)
+    self.showHiddenBtn.setChecked(self.showHiddenProjects)
+    self.paintHiddenProjectButton()
     self.headerL.addWidget(self.newProjectBtn)
     self.headerL.setContentsMargins(0, 0, 0, 0)
 
@@ -53,12 +60,21 @@ class ProjectSidebar(Widget):
     self.setLayout(self.mainLayout)
 
     # Signals
-    self.comm.changeSidebar.connect(self.paint)
+    self.comm.changeSidebar.connect(self.onSidebarChange)
     self.comm.changeProject.connect(self.highlightActiveProject)
     self.comm.backendThread.worker.beSendTable.connect(self.onGetData)
 
     # CODE
-    self.comm.uiRequestTable.emit('x0', '', self.comm.configuration['GUI']['showHidden'] == 'Yes')
+    self.comm.uiRequestTable.emit('x0', '', True)
+
+
+  @Slot(str)
+  def onSidebarChange(self, projectChoice: str) -> None:
+    """Refresh projects after a visibility or project-selection change."""
+    if projectChoice not in ('', 'redraw'):
+      self.comm.projectID = projectChoice
+    self.paint()
+    self.comm.uiRequestTable.emit('x0', '', True)
 
 
   @Slot(pd.DataFrame, str)
@@ -73,9 +89,10 @@ class ProjectSidebar(Widget):
     if docType == 'x0':
       self.projects = projects
       self.paint('redraw')
-      if not self._initialProjectSelected and not self.projects.empty:
+      visibleProjects = self.visibleProjects()
+      if not self._initialProjectSelected and not visibleProjects.empty:
         self._initialProjectSelected = True
-        projectId = self.projects.iloc[0]['id']
+        projectId = visibleProjects.iloc[0]['id']
         self.comm.projectID = projectId
         self.comm.changeProject.emit(projectId, '')
 
@@ -92,26 +109,54 @@ class ProjectSidebar(Widget):
     clearLayout(self.projectListL)
 
     # 2. Update Project in comm if necessary
-    if projectChoice != 'redraw':
+    if projectChoice not in ('', 'redraw'):
       self.comm.projectID = projectChoice
 
     # 3. Fill projectList with Items = ProjectCards
-    if self.projects.empty:
+    projects = self.visibleProjects()
+    if projects.empty:
       emptyWarning = Label('Create a Project by clicking on the "+"-button above.', 'h1',
                            style=f"color: {self.comm.palette.getThemeColor("foreground", "disabled")};")
       emptyWarning.setWordWrap(True)
       self.projectListL.addWidget(emptyWarning)
-    self.projects = self.projects.sort_values('name', axis=0).reset_index(drop=True)
-    for i in range(self.projects.shape[0]):
-      self.projectListL.addWidget(ProjectCard(self.comm, self.projects.iloc[i, :]))
+    projects = projects.sort_values('name', axis=0).reset_index(drop=True)
+    for i in range(projects.shape[0]):
+      projectCard = ProjectCard(self.comm, projects.iloc[i, :])
+      if projectCard.project['id'] == self.comm.projectID:
+        projectCard.highlight()
+      self.projectListL.addWidget(projectCard)
+
+
+  def paintHiddenProjectButton(self) -> None:
+    """Update the visibility toggle's icon and tooltip."""
+    iconName = 'fa5s.eye' if self.showHiddenProjects else 'fa5s.eye-slash'
+    tooltip = 'Hide hidden projects' if self.showHiddenProjects else 'Show hidden projects'
+    color = self.comm.palette.getThemeColor('primary', 'base')
+    self.showHiddenBtn.setIcon(qta.icon(iconName, color=color))
+    self.showHiddenBtn.setToolTip(tooltip)
 
 
   def execute(self, command: Command) -> None:
     """Handle commands emitted by the sidebar controls."""
-    if command is Command.CREATE_PROJECT:
+    if command is Command.TOGGLE_HIDDEN_PROJECTS:
+      self.showHiddenProjects = not self.showHiddenProjects
+      self.showHiddenBtn.setChecked(self.showHiddenProjects)
+      self.paintHiddenProjectButton()
+      self.paint()
+    elif command is Command.CREATE_PROJECT:
       self.comm.formDoc.emit({'type': ['x0'], '_projectID': self.comm.projectID})
       self.comm.changeTable.emit('x0', self.comm.projectID)
       self.comm.changeSidebar.emit('redraw')
+
+
+  def visibleProjects(self) -> pd.DataFrame:
+    """Return projects allowed by the current sidebar visibility policy."""
+    if self.showHiddenProjects or self.projects.empty:
+      return self.projects
+    isActive = self.projects['id'] == self.comm.projectID
+    isHidden = self.projects['show'].str.contains('F')
+    return self.projects[~isHidden | isActive]
+
 
 
   @Slot(str, str)
@@ -134,4 +179,5 @@ class ProjectSidebar(Widget):
 
 class Command(Enum):
   """Commands handled by :class:`ProjectSidebar`."""
-  CREATE_PROJECT = 1
+  TOGGLE_HIDDEN_PROJECTS = 1
+  CREATE_PROJECT = 2

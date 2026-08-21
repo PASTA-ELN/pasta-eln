@@ -26,7 +26,8 @@ class ProjectCard(QFrame):
     self.project = project
 
     # Title-Label
-    self.titleLabel = Label(makeStringWrappable(self.project['name']), 'h3')
+    hidden = '     \U0001F441' if 'F' in self.project['show'] else ''
+    self.titleLabel = Label(makeStringWrappable(self.project['name'] + hidden), 'h3')
     self.titleLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     self.titleLabel.setWordWrap(True)
 
@@ -85,6 +86,7 @@ class ProjectCard(QFrame):
     """
     self.comm.projectID = self.project['id']
     self.comm.changeProject.emit(self.project['id'], '')
+    self.comm.changeSidebar.emit('redraw')
 
 
   def highlight(self) -> None:
