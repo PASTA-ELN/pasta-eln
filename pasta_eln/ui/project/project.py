@@ -89,6 +89,7 @@ class Project(Widget):
     # self.tree.setSelectionMode(QAbstractItemView.SingleSelection)
     self.model.itemChanged.connect(self.modelChanged)
     self._modelItemChangedConnected = True
+    self.tree.selectionModel().currentChanged.connect(self.onTreeSelectionChanged)
     rootItem = self.model.invisibleRootItem()
     #Populate model body of change project: start recursion
     if self.hierarchy is None:
@@ -156,8 +157,9 @@ class Project(Widget):
     self.btnMore = Button('More', self, layout=topLineL,
                           icon='ri.more-fill', style=ButtonStyle.PRIMARY)
     moreMenu = QMenu(self)
-    action('Edit project',              self, Command.EDIT, moreMenu, icon='ri.edit-2-fill')
-    action('Scan',                      self, Command.SCAN, moreMenu, icon='fa5s.search')
+    action('Edit project',              self, Command.EDIT,            moreMenu, icon='ri.edit-2-fill')
+    action('Scan',                      self, Command.SCAN,            moreMenu, icon='fa5s.search')
+    action('Show project on side',      self, Command.SHOW_IN_DETAILS, moreMenu, icon='ri.information-line')
     projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
       for label, description in sorted(projectAddOns.items(), key=lambda item: item[1].casefold()):
@@ -199,6 +201,8 @@ class Project(Widget):
         if oldPath != newPath:
           oldPath.rename(newPath)
       self.comm.changeSidebar.emit('redraw')
+    elif commandType is Command.SHOW_IN_DETAILS:
+      self.comm.changeDetails.emit(self.projID)
     elif commandType is Command.SCAN:
       self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.projID})
       self.comm.changeProject.emit(self.projID,'')
@@ -253,6 +257,10 @@ class Project(Widget):
     """Disconnect and delete old project widgets on the GUI thread."""
     if self.tree is not None:
       try:
+        self.tree.selectionModel().currentChanged.disconnect(self.onTreeSelectionChanged)
+      except (RuntimeError, TypeError):
+        pass
+      try:
         self.tree.expanded.disconnect(self.onTreeExpanded)
       except (RuntimeError, TypeError):
         pass
@@ -299,6 +307,17 @@ class Project(Widget):
   def onTreeCollapsed(self, index:QModelIndex) -> None:
     """Persist the collapsed state of a folder item."""
     self.actionExpandCollapse(index, False)
+
+
+  @Slot(QModelIndex, QModelIndex)
+  def onTreeSelectionChanged(self, current:QModelIndex, _:QModelIndex) -> None:
+    """Show the selected project item in the shared details pane."""
+    if not current.isValid():                                # hide details when user clicks in between leaves
+      self.comm.changeDetails.emit('')
+      return
+    meta = current.data(self.metaRole)
+    docID = meta['hierStack'].split('/')[-1]
+    self.comm.changeDetails.emit(docID)
 
 
   def setExpandedState(self, node:QStandardItem) -> None:
@@ -405,6 +424,7 @@ class Project(Widget):
 class Command(Enum):
   """ Commands used in this file """
   EDIT              = 1
+  SHOW_IN_DETAILS   = 2
   SCAN              = 3
   HIDE              = 4
   SHOW_PROJ_DETAILS = 5
