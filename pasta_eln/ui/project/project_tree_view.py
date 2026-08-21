@@ -3,8 +3,8 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QModelIndex, QPoint, Qt
-from PySide6.QtGui import QContextMenuEvent, QDropEvent, QStandardItem, QStandardItemModel
+from PySide6.QtCore import QModelIndex, QPoint, Qt, Signal
+from PySide6.QtGui import QContextMenuEvent, QDropEvent, QMouseEvent, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget
 from ...backend_worker.worker import Task
 from ...misc_tools import callAddOn
@@ -24,6 +24,8 @@ class TreeView(QTreeView):
   that per-item buttons are more difficult to implement. Anyhow, buttons could visually
   clutter the interface.
   """
+  sameItemClicked = Signal(QModelIndex)
+
   def __init__(self, parent:QWidget, comm:Communicate, model:QStandardItemModel):
     super().__init__(parent)
     self.aParentWidget: Any = parent
@@ -47,6 +49,17 @@ class TreeView(QTreeView):
     self.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
     self.verticalScrollBar().setSingleStep(SCROLL_SPEED)
     self.doubleClicked.connect(self.tree2Clicked)
+
+
+  def mousePressEvent(self, event:QMouseEvent) -> None:
+    """Notify the project view when the current item is clicked again."""
+    clickedIndex = self.indexAt(event.position().toPoint())
+    # save the item that was previously selected
+    sameItem = event.button() == Qt.MouseButton.LeftButton and clickedIndex.isValid() and clickedIndex == self.currentIndex()
+    # update things
+    super().mousePressEvent(event)
+    if sameItem:
+      self.sameItemClicked.emit(clickedIndex)
 
 
   def contextMenuEvent(self, event:QContextMenuEvent) -> None:

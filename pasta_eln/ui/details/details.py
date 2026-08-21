@@ -227,7 +227,7 @@ class Details(Widget):
       self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID': self.docID})
       self.comm.changeDetails.emit('')
     elif commandType is Command.HIDE_DETAILS:
-      self.hide()
+      self.comm.changeDetails.emit('')                              # all widgets know that details are hidden
 
 
   @Slot(str)

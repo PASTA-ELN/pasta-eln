@@ -24,11 +24,13 @@ class Project(Widget):
     super().__init__()
     self.comm = comm
     self.comm.changeProject.connect(self.change)
+    self.comm.changeDetails.connect(self.onDetailsChanged)
     self.comm.backendThread.worker.beSendHierarchy.connect(self.onGetData)
     self.hierarchy = Node('__none__')
     self.docProj:dict[str,Any] = {}
     self.projID = ''
     self.docIDHighlight = ''
+    self.detailsDocID = ''
     self.showAll= self.comm.configuration['GUI']['showHidden']=='Yes'
 
     self.mainL = QVBoxLayout()
@@ -90,6 +92,7 @@ class Project(Widget):
     self.model.itemChanged.connect(self.modelChanged)
     self._modelItemChangedConnected = True
     self.tree.selectionModel().currentChanged.connect(self.onTreeSelectionChanged)
+    self.tree.sameItemClicked.connect(self.onTreeSameItemClicked)
     rootItem = self.model.invisibleRootItem()
     #Populate model body of change project: start recursion
     if self.hierarchy is None:
@@ -261,6 +264,10 @@ class Project(Widget):
       except (RuntimeError, TypeError):
         pass
       try:
+        self.tree.sameItemClicked.disconnect(self.onTreeSameItemClicked)
+      except (RuntimeError, TypeError):
+        pass
+      try:
         self.tree.expanded.disconnect(self.onTreeExpanded)
       except (RuntimeError, TypeError):
         pass
@@ -318,6 +325,22 @@ class Project(Widget):
     meta = current.data(self.metaRole)
     docID = meta['hierStack'].split('/')[-1]
     self.comm.changeDetails.emit(docID)
+
+
+  @Slot(str)
+  def onDetailsChanged(self, docID:str) -> None:
+    """Track in this project.py the document currently shown in the shared details pane."""
+    self.detailsDocID = docID
+
+
+  @Slot(QModelIndex)
+  def onTreeSameItemClicked(self, index:QModelIndex) -> None:
+    """Toggle details when the current project item is clicked again
+    -'' = close when self.detailsDocID == docID
+    - docID = open else
+    """
+    docID = index.data(self.metaRole)['hierStack'].split('/')[-1]
+    self.comm.changeDetails.emit('' if self.detailsDocID == docID else docID)
 
 
   def setExpandedState(self, node:QStandardItem) -> None:
