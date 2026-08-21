@@ -963,11 +963,12 @@ class SqlLiteDB:
         tuple: show, id, idx
       """
       localDocID, idx, stack, show = item
-      j = stack.split('/').index(docID)
       showL = list(show)
+      j = len(showL)-1 if localDocID == docID else stack.split('/').index(docID)
       showL[j] = 'T' if showL[j]=='F' else 'F'
       return (''.join(showL), localDocID, idx)
-    self.cursor.execute('SELECT id, idx, stack, show FROM branches WHERE stack LIKE ?', (f'%{docID}%',))
+    self.cursor.execute("SELECT id, idx, stack, show FROM branches WHERE id = ? OR ('/' || stack || '/') LIKE ?",
+                        (docID, f'%/{docID}/%'))
     changed = map(adoptShow, self.cursor.fetchall())
     cmd = 'UPDATE branches SET show=? WHERE id = ? and idx= ?'
     self.cursor.executemany(cmd, changed)

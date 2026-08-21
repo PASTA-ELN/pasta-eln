@@ -241,7 +241,7 @@ class Project(Widget):
         self.actionFoldAll.setText('Hide all item details')
     elif commandType is Command.HIDE_SHOW_ITEMS:
       self.showAll = not self.showAll
-      self.change('','')
+      self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
     elif commandType is Command.ADD_CHILD:
       self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':[self.projID], 'docType':'x1', 'doc':{'name':'new item'}})
       self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
