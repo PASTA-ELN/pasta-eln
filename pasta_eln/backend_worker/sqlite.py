@@ -209,9 +209,7 @@ class SqlLiteDB:
     result = self.cursor.fetchone()
     if result is None:
       return []
-    if column=='meta':
-      return json.loads(result[0])
-    elif column=='view':
+    if column=='view':
       return result[0].split(',')
     return result
 
@@ -817,7 +815,7 @@ class SqlLiteDB:
       df = df.rename(columns={i:i[1:] for i in columnOrder if i.startswith('.') })
       df = df.fillna('').astype('str')
       return df
-    elif thePath=='viewHierarchy/viewHierarchy':
+    if thePath=='viewHierarchy/viewHierarchy':
       cmd = 'SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui, branches.idx, branches.path '\
             'FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE ?'
       if not allFlag:

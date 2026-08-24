@@ -478,8 +478,6 @@ class Form(QDialog):
                 self.comm.uiRequestTable.emit(listDocType, '', True)
                 self.comboBoxDocTypeList[listDocType] = (getattr(self, elementName), value)
             self.allUserElements.append((key,'ComboBox'))
-          elif isDocID(value):
-            continue
           else:
             setattr(self, elementName, QLineEdit(value))
             self.allUserElements.append((key,'LineEdit'))

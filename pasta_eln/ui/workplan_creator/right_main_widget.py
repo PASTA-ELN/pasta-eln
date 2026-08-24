@@ -99,7 +99,7 @@ class RightMainWidget(QWidget):
                                   text='unnamed_workplan')
     if not ok:
       return
-    elif not filename:
+    if not filename:
       filename = 'unnamed_workplan'
     workplan: Workplan = {'name': filename, 'procedures': []}
     for i in range(self.workplanLayout.count()):

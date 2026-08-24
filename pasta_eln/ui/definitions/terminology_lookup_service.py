@@ -60,8 +60,7 @@ class TerminologyLookupService:
         if response.status_code == 200:
           webResult = response.json()
           return self.parseWebResult(searchTerm, webResult, service)
-        else:
-          errors.append(f"Error querying {service['name']}: {response.status_code} {response.reason}")
+        errors.append(f"Error querying {service['name']}: {response.status_code} {response.reason}")
       except requests.RequestException as e:
         errors.append(f"Exception querying {service['name']}: {str(e)}")
       return None
