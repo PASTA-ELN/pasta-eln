@@ -26,6 +26,18 @@ Extractors generate metadata when scanning projects or dropping files into folde
 * **Vendor-metadata** detailing instrument settings.
 * **Links** to instruments or procedures.
 
+Metadata categories
+^^^^^^^^^^^^^^^^^^^
+
+``metaVendor`` contains metadata read from the original data file and provided
+by the scientific instrument or its vendor, such as acquisition settings.
+
+``metaUser`` contains metadata derived by the extractor that is useful for
+interpreting the scientific data, such as tensile strength. It can also contain
+technical provenance needed to reproduce extraction. In particular,
+``metaUser.extractorHash`` stores the hash of the extractor currently used for
+the item. This technical value need not be shown in the normal details view.
+
 PASTA-ELN includes extractors for CSV, JPEG, JSON, MD, and PNG files. PNG and JPEG extractors serve as examples for custom development.
 
 Testing and Optimizing Extractors

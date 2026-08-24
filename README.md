@@ -45,6 +45,30 @@ Open issues are the union of:
 
 ### Repository maintenance items
 
+- Order of open issues that do not have a question
+  - Version 3.3
+    1.  647 – Test extraction of a file does not agree with actual extraction
+    2.  646 – Assignment of item type for “unknown” items when re-running extractors
+    3.  602 – Saving image preview leads to an empty text box
+
+  - Version 3.3.1: New features that require minimal changes, possibly some config changes
+    1.  609 – Re-ordering of list after re-run extractor?
+    2.  612 – Restarting Pasta resets visibility setting
+    3.  381 – Visualization of linked items
+    4.  570 – Version control for extractors
+    5.  41 – Spellcheck in form
+    6.  566 – Create GUI for attachments
+    7.  436 – Re-running of extractors whenever measurement details are saved
+    8.  528 – Feature Request: easily visible changelog
+    9.  608 – Feature Request: Color implementation
+    10. 430 – Creating templates for items
+
+  - Redesign of Pasta
+    1.  421 – Data hierarchy structure
+    2.  451 – Should items with the same ...
+    3.  644 – Linking multiple items = list
+
+
 - Tutorial
   - Create an interactive tutorial runner as a separate program launched from the main program. It should use a read-only SQLite connection, define a clear busy-timeout/WAL strategy for concurrent access, and maintain its own JSON file to track tutorial progress.
   - Rewrite the tutorial content with more steps, details, screenshots, contextual help, and clear expected results.
