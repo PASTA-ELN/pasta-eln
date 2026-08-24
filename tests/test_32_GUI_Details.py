@@ -1,6 +1,7 @@
 import logging
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.details.details import Details
+from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from .test_34_GUI_Form import getTable
 
 def test_simple(qtbot, caplog):
@@ -18,7 +19,7 @@ def test_simple(qtbot, caplog):
   print(docIDs)
 
   for i in range(3):
-    window.comm.changeDetails.emit(docIDs[i])
+    window.comm.changeDetails.emit(DetailContext(docIDs[i], origin=DetailOrigin.TABLE))
     qtbot.wait(1000)
     path = qtbot.screenshot(window)
     print(path)

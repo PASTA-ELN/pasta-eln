@@ -8,6 +8,7 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QSplitter, QTabWidget, QVBoxLayout, QWidget
 from pasta_eln.ui.body.tabBar import ProjectTabBar
 from pasta_eln.ui.details.details import Details
+from pasta_eln.ui.details.context import DetailContext
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.project.project import Project
 from pasta_eln.ui.table.table import TableView
@@ -126,7 +127,7 @@ class Body(QWidget):
       docID: from Signal: Which doc should be shown.
       projectID: from Signal: Which Project it was changed to.
     """
-    self.comm.changeDetails.emit('')                                                           # close details
+    self.comm.changeDetails.emit(DetailContext())                                              # close details
     self.tabWidget.setCurrentIndex(0)
 
 
@@ -152,7 +153,7 @@ class Body(QWidget):
     """
     widget = self.tabWidget.widget(index)
     if isinstance(widget, Project):
-      self.comm.changeDetails.emit('')                                                         # close details
+      self.comm.changeDetails.emit(DetailContext())                                            # close details
     elif isinstance(widget, TableView):
       docType = widget.docType
       self.comm.changeTable.emit(docType, '')

@@ -98,14 +98,8 @@ class TreeView(QTreeView):
     if folder:
       action('Add child folder',                   self, [Command.ADD_CHILD],      context)
     action('Add sibling folder',                   self, [Command.ADD_SIBLING],    context)
-    action('Delete item',                          self, [Command.DELETE],         context)
     context.addSeparator()
     action('Hide/show item details',               self, [Command.SHOW_DETAILS], context)
-    action('Mark item as hidden/shown',            self, [Command.HIDE],           context)
-    context.addSeparator()
-    if not folder:
-      action('Open file with another application', self, [Command.OPEN_EXTERNAL],    context)
-    action('Open folder in file browser',          self, [Command.OPEN_FILEBROWSER], context)
     if folder:
       projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
       if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
@@ -141,16 +135,6 @@ class TreeView(QTreeView):
       hierStack= hierStack[:-1]
       self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':hierStack, 'docType':'x1', 'doc':{'name':'new item'}})
 
-    elif command[0] is Command.DELETE:
-      ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data?',\
-                                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                 QMessageBox.StandardButton.No)
-      if ret==QMessageBox.StandardButton.Yes:
-        docID = hierStack[-1]
-        self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':docID, 'stack':item.data()['hierStack']})
-        self.comm.changeProject.emit(self.aParentWidget.projID, '')
-        return
-
     elif command[0] is Command.SHOW_DETAILS:
       gui    = item.data()['gui']
       gui[0] = not gui[0]
@@ -170,21 +154,6 @@ class TreeView(QTreeView):
       iterate(self.model().invisibleRootItem())                                   # type: ignore[attr-defined]
       # only one change once the DB
       self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
-
-    elif command[0] is Command.HIDE:
-      logging.debug('hide document %s',hierStack[-1])
-      self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':hierStack[-1]})
-      #TODO: current implementation: you hide one; all others are hidden as well
-      # Talk to GW what is the default expectation; system allows for individual hiding
-      #
-      # after hide, do not hide immediately but wait on next refresh
-
-    elif command[0] is Command.OPEN_EXTERNAL or command[0] is Command.OPEN_FILEBROWSER:
-      # depending if non-folder / folder; address different item in hierstack
-      docID = hierStack[-2] \
-        if command[0] is Command.OPEN_FILEBROWSER and hierStack[-1][0]!='x' \
-        else hierStack[-1]
-      self.comm.uiRequestTask.emit(Task.OPEN_EXTERNAL, {'docID':docID})
 
     elif command[0] is Command.ADD_ON:
       callAddOn(command[1], self.comm, item.data()['hierStack'], self)
@@ -308,9 +277,5 @@ class Command(Enum):
   ADD_ITEM         = 1
   ADD_CHILD        = 2
   ADD_SIBLING      = 3
-  DELETE           = 4
   SHOW_DETAILS     = 5
-  HIDE             = 6
-  OPEN_EXTERNAL    = 7
-  OPEN_FILEBROWSER = 8
   ADD_ON           = 9

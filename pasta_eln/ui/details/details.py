@@ -5,12 +5,13 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QUrl, Signal, Slot
 from PySide6.QtGui import QDesktopServices, QShowEvent, Qt
-from PySide6.QtWidgets import QHBoxLayout, QMenu, QScrollArea, QSplitter, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QMenu, QMessageBox, QScrollArea, QSplitter, QTextEdit, QVBoxLayout, QWidget
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.fixed_strings_json import SORTED_DB_KEYS
 from pasta_eln.misc_tools import clearLayout, makeStringWrappable
 from pasta_eln.ui.details.details_hier_item import DetailsHierItem
 from pasta_eln.ui.details.resize_image import ResizeImage
+from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, Label, Widget, action as addAction
 
@@ -27,6 +28,7 @@ class Details(Widget):
     super().__init__()
     self.comm = comm
     self.docID = ''
+    self.context = DetailContext()
     self.data: dict[str, Any] = {'content': ''}
     self.contentText: QTextEdit | None = None
 
@@ -34,16 +36,21 @@ class Details(Widget):
     self.titleLabel = Label('', 'h1')
     self.titleLabel.setWordWrap(True)
     self.editButton = Button('Edit', self, Command.EDIT, icon='ri.edit-2-fill', style=ButtonStyle.HIGHLIGHTED)
-    self.moreButton = Button('More', self, icon='ri.more-fill', style=ButtonStyle.PRIMARY)
-    self.moreMenu = QMenu(self)
-    self.moreMenu.aboutToShow.connect(self.paintMoreMenu)
-    self.moreButton.setMenu(self.moreMenu)
+    self.openButton = Button('Open', self,               icon='ri.external-link-line', style=ButtonStyle.PRIMARY)
+    self.openMenu = QMenu(self)
+    self.openMenu.aboutToShow.connect(self.paintOpenMenu)
+    self.openButton.setMenu(self.openMenu)
+    self.actionsButton = Button('Actions', self, icon='ri.more-fill', style=ButtonStyle.PRIMARY)
+    self.actionsMenu   = QMenu(self)
+    self.actionsMenu.aboutToShow.connect(self.paintActionsMenu)
+    self.actionsButton.setMenu(self.actionsMenu)
 
     # Header Layout
     self.headerL = QHBoxLayout()
     self.headerL.addWidget(self.titleLabel, stretch=1)
     self.headerL.addWidget(self.editButton)
-    self.headerL.addWidget(self.moreButton)
+    self.headerL.addWidget(self.openButton)
+    self.headerL.addWidget(self.actionsButton)
     self.headerW = QWidget()
     self.headerW.setLayout(self.headerL)
 
@@ -167,19 +174,30 @@ class Details(Widget):
       self.bodyL.addWidget(elnItem)
     self.bodyL.addStretch(0)
 
-  def paintMoreMenu(self) -> None:
-    """Build the item-specific actions shown in the Details menu."""
-    for action in self.moreMenu.actions():
-      action.deleteLater()
-    self.moreMenu.clear()
+  def paintOpenMenu(self) -> None:
+    """Build navigation and local-file actions for the selected item."""
+    self.openMenu.clear()
     if not self.docID:
       return
-    addAction('Open in project', self, Command.OPEN_PROJECT, self.moreMenu)
-    if self.sourcePath() is not None:
-      addAction('Open folder in file browser', self, Command.OPEN_FOLDER, self.moreMenu)
-    self.moreMenu.addSeparator()
+    if self.context.origin is DetailOrigin.TABLE:
+      addAction('Open in project', self, Command.OPEN_PROJECT, self.openMenu)
+    elif self.context.origin is DetailOrigin.PROJECT and self.data['type'][0] in self.comm.docTypesTitles \
+        and not self.data['type'][0].startswith('x'):
+      addAction('Open in table', self, Command.OPEN_TABLE, self.openMenu)
+    sourcePath = self.sourcePath()
+    if sourcePath is not None:
+      self.openMenu.addSeparator()
+      if sourcePath.is_file():
+        addAction('Open file with another application', self, Command.OPEN_EXTERNAL, self.openMenu)
+      addAction('Open folder in file browser', self, Command.OPEN_FOLDER, self.openMenu)
 
-    extractionMenu = self.moreMenu.addMenu('Extraction')
+
+  def paintActionsMenu(self) -> None:
+    """Build item actions that are neither editing nor navigation."""
+    self.actionsMenu.clear()
+    if not self.docID:
+      return
+    extractionMenu = self.actionsMenu.addMenu('Extraction')
     branch = self.data.get('branch', [{}])
     path = branch[0].get('path') if branch else None
     documentTypes = self.data.get('type', [])
@@ -197,9 +215,11 @@ class Details(Widget):
       addAction('Save extracted image', self, Command.SAVE_EXTRACTED_IMAGE, extractionMenu)
     if not extractorChoices and self.sourcePath() is None:
       extractionMenu.setEnabled(False)
-    self.moreMenu.addSeparator()
-    addAction('Hide item', self, Command.HIDE_ITEM, self.moreMenu)
-    addAction('Close details', self, Command.HIDE_DETAILS, self.moreMenu)
+    self.actionsMenu.addSeparator()
+    addAction('Hide item', self,     Command.HIDE_ITEM,    self.actionsMenu)
+    addAction('Close details', self, Command.HIDE_DETAILS, self.actionsMenu)
+    self.actionsMenu.addSeparator()
+    addAction('Remove…', self,       Command.REMOVE,       self.actionsMenu)
 
 
   def execute(self, command: Command | list[Any]) -> None:
@@ -213,6 +233,8 @@ class Details(Widget):
       stack = branch[0].get('stack', []) if branch else []
       if stack:
         self.comm.changeProject.emit(stack[0], self.docID)
+    elif commandType is Command.OPEN_TABLE:
+      self.comm.changeTable.emit(self.data['type'][0], '')
     elif commandType is Command.RERUN_EXTRACTOR:
       self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs': [self.docID], 'recipe': payload[0]})
     elif commandType is Command.TEST_EXTRACTION:
@@ -234,27 +256,50 @@ class Details(Widget):
     elif commandType is Command.OPEN_FOLDER:
       sourcePath = self.sourcePath()
       if sourcePath is not None:
-        QDesktopServices.openUrl(QUrl.fromLocalFile(str(sourcePath.parent)))
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(sourcePath if sourcePath.is_dir() else sourcePath.parent)))
+    elif commandType is Command.OPEN_EXTERNAL:
+      sourcePath = self.sourcePath()
+      if sourcePath is not None:
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(sourcePath)))
     elif commandType is Command.HIDE_ITEM:
       self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID': self.docID})
-      self.comm.changeDetails.emit('')
+      self.comm.changeDetails.emit(DetailContext())
+    elif commandType is Command.REMOVE:
+      message = QMessageBox(self)
+      message.setWindowTitle('Remove item')
+      message.setText(f'Remove “{self.data["name"]}”?')
+      everywhereButton = message.addButton('Remove everywhere', QMessageBox.ButtonRole.DestructiveRole)
+      currentButton = None
+      if self.context.treeStack:
+        currentButton = message.addButton('Remove from current location', QMessageBox.ButtonRole.DestructiveRole)
+      message.addButton(QMessageBox.StandardButton.Cancel)
+      message.exec()
+      if message.clickedButton() in (everywhereButton, currentButton):
+        stack = self.context.treeStack if message.clickedButton() is currentButton else ''
+        self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID': self.docID, 'stack': stack})
+        self.comm.changeDetails.emit(DetailContext())
+        if stack:
+          self.comm.changeProject.emit(stack.split('/')[0], '')
+        else:
+          self.comm.changeTable.emit(self.data['type'][0], self.comm.projectID)
     elif commandType is Command.HIDE_DETAILS:
-      self.comm.changeDetails.emit('')                              # all widgets know that details are hidden
+      self.comm.changeDetails.emit(DetailContext())                  # all widgets know that details are hidden
 
 
-  @Slot(str)
-  def onDetailsChanged(self, docID: str) -> None:
+  @Slot(object)
+  def onDetailsChanged(self, context: DetailContext) -> None:
     """
     What happens when the displayed item changes.
     Args:
-      docID (str): Document ID of the item to be displayed.
+      context (DetailContext): Document, origin, and optional tree location to display.
     """
-    if docID:
-      self.docID = docID
+    self.context = context
+    if context.docID:
+      self.docID = context.docID
       self.comm.uiRequestDoc.emit(self.docID)
     else:
+      self.docID = ''
       self.hide()
-
 
   def showEvent(self, event: QShowEvent) -> None:
     """Notify the containing splitter when the details panel first becomes visible
@@ -292,3 +337,6 @@ class Command(Enum):
   OPEN_FOLDER          = 6
   HIDE_ITEM            = 7
   HIDE_DETAILS         = 8
+  OPEN_TABLE           = 9
+  OPEN_EXTERNAL        = 10
+  REMOVE               = 11

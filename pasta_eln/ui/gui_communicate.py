@@ -25,8 +25,7 @@ class Communicate(QObject):
   changeSidebar      = Signal(str)              # redraw sidebar after hide/show of project in table, focus on this projectID
   changeTable        = Signal(str, str)         # send doctype,projectID from sidebar to main-table
                                                 #      can also be used for hiding the details on right side if nothing to show
-  changeDetails      = Signal(str)              # send docID from main-table to details
-                                                #      docID (str): document-id; ''=draw nothing; 'redraw' implies redraw
+  changeDetails      = Signal(object)           # DetailContext sent from the project tree or a table to Details
   changeProject      = Signal(str, str)         # send docID,projectID from sidebar or main-table to projects
   stopSequentialEdit = Signal()                 # in sequential edit, stop if there is a cancel
   # send data or data-request to backend

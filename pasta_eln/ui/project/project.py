@@ -12,6 +12,7 @@ from ...fixed_strings_json import DO_NOT_RENDER
 from ...misc_tools import callAddOn
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import createDirName
+from ..details.context import DetailContext, DetailOrigin
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label, Widget, action
 from ..message_dialog import showMessage
@@ -152,12 +153,12 @@ class Project(Widget):
     # buttons in top line
     self.btnAddSubfolder = Button('Add subfolder', self, Command.ADD_CHILD, topLineL,
                                   icon='ri.folder-add-line', style=ButtonStyle.HIGHLIGHTED)
-    self.btnVisibility = Button('Visibility', self, layout=topLineL,
+    self.btnVisibility = Button('Display', self, layout=topLineL,
                                 icon='ri.eye-line', style=ButtonStyle.PRIMARY)
     visibilityMenu = QMenu(self)
     self.actHideDetail = action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
     menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
-    minimizeItems = 'Show all item details' if self.showDetailsAll else 'Hide all item details'
+    minimizeItems = 'Show full view' if self.showDetailsAll else 'Compact view'
     action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
     action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
     self.actionFoldAll     = action( minimizeItems,    self, [Command.SHOW_DETAILS],     visibilityMenu)
@@ -236,7 +237,7 @@ class Project(Widget):
           oldPath.rename(newPath)
       self.comm.changeSidebar.emit('redraw')
     elif commandType is Command.SHOW_IN_DETAILS:
-      self.comm.changeDetails.emit(self.projID)
+      self.comm.changeDetails.emit(DetailContext(self.projID, origin=DetailOrigin.PROJECT))
     elif commandType is Command.SCAN:
       self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.projID})
       self.comm.changeProject.emit(self.projID,'')
@@ -275,9 +276,9 @@ class Project(Widget):
       recursiveRowIteration(self.tree.model().index(-1,0))
       self.showDetailsAll = not self.showDetailsAll
       if self.showDetailsAll:
-        self.actionFoldAll.setText('Show all item details')
+        self.actionFoldAll.setText('Show full view')
       else:
-        self.actionFoldAll.setText('Hide all item details')
+        self.actionFoldAll.setText('Compact view')
     elif commandType is Command.HIDE_SHOW_ITEMS:
       self.showAll = not self.showAll
       self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
@@ -356,17 +357,17 @@ class Project(Widget):
   def onTreeSelectionChanged(self, current:QModelIndex, _:QModelIndex) -> None:
     """Show the selected project item in the shared details pane."""
     if not current.isValid():                                # hide details when user clicks in between leaves
-      self.comm.changeDetails.emit('')
+      self.comm.changeDetails.emit(DetailContext())
       return
     meta = current.data(self.metaRole)
     docID = meta['hierStack'].split('/')[-1]
-    self.comm.changeDetails.emit(docID)
+    self.comm.changeDetails.emit(DetailContext(docID, meta['hierStack'], DetailOrigin.PROJECT))
 
 
-  @Slot(str)
-  def onDetailsChanged(self, docID:str) -> None:
+  @Slot(object)
+  def onDetailsChanged(self, context:DetailContext) -> None:
     """Track in this project.py the document currently shown in the shared details pane."""
-    self.detailsDocID = docID
+    self.detailsDocID = context.docID
 
 
   @Slot(QModelIndex)
@@ -376,7 +377,8 @@ class Project(Widget):
     - docID = open else
     """
     docID = index.data(self.metaRole)['hierStack'].split('/')[-1]
-    self.comm.changeDetails.emit('' if self.detailsDocID == docID else docID)
+    self.comm.changeDetails.emit(DetailContext() if self.detailsDocID == docID
+                      else DetailContext(docID, index.data(self.metaRole)['hierStack'], DetailOrigin.PROJECT))
 
 
   def setExpandedState(self, node:QStandardItem) -> None:

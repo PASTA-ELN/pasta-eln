@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (QComboBox, QFileDialog, QHBoxLayout, QListWidget,
                                QTableView, QVBoxLayout, QWidget)
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.misc_tools import callAddOn, isDocID
+from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, Widget, action
 from pasta_eln.ui.table.filter_row import FilterRow
@@ -63,7 +64,7 @@ class TableView(Widget):
     self.sequentialEditAction = action('Sequential edit', self, Command.SEQUENTIAL_EDIT, self.actionMenu)
     self.toggleHiddenAction = action('Hide/show selected', self, Command.TOGGLE_HIDDEN, self.actionMenu)
     self.rerunExtractorsAction = action('Rerun extractors', self, Command.RERUN_EXTRACTORS, self.actionMenu)
-    self.deleteAction = action('Delete', self, Command.DELETE, self.actionMenu)
+    self.deleteAction = action('Remove selected items…', self, Command.DELETE, self.actionMenu)
 
     self.viewButton = Button('View', self, layout=self.buttonbarL, icon='ri.eye-line', style=ButtonStyle.PRIMARY)
     self.viewMenu = QMenu(self)
@@ -158,7 +159,7 @@ class TableView(Widget):
     if docType == self.docType:
       self.data = data
       if self.detailsDocID and self.detailsDocID not in data.id.values:
-        self.comm.changeDetails.emit('')
+        self.comm.changeDetails.emit(DetailContext())
       self.paint()
 
 
@@ -263,7 +264,7 @@ class TableView(Widget):
         self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs': selected, 'recipe': ''})
         self.refresh()
     elif commandType is Command.DELETE and selected:
-      answer = QMessageBox.warning(self, 'Delete selected items', 'Delete the selected items?',
+      answer = QMessageBox.warning(self, 'Remove selected items', 'Remove the selected items everywhere?',
                                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                    QMessageBox.StandardButton.No)
       if answer is QMessageBox.StandardButton.Yes:
@@ -352,7 +353,7 @@ class TableView(Widget):
     if isinstance(model, PandasTableModel):
       docID = model.documentIds[index.row()]
       self.detailsDocID = docID
-      self.comm.changeDetails.emit(docID)
+      self.comm.changeDetails.emit(DetailContext(docID, origin=DetailOrigin.TABLE))
 
 
   @Slot(QModelIndex)
@@ -383,7 +384,7 @@ class TableView(Widget):
     """
     docID = str(item.data(Qt.ItemDataRole.UserRole))
     self.detailsDocID = docID
-    self.comm.changeDetails.emit(docID)
+    self.comm.changeDetails.emit(DetailContext(docID, origin=DetailOrigin.TABLE))
 
 
   @Slot(QListWidgetItem)
