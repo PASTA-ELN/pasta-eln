@@ -23,7 +23,7 @@ class DetailsHierItem(CollapsibleSection):
     """Initialize a collapsible section for one entry
 
     Args:
-      comm (Communicate): Shared communication object for backend requests.
+      comm (Communicate): Shared communication object.
       categoryName (str): Display label of the entry.
       dataHierarchyNode (list[dict[str, Any]]): Hierarchy data used to populate the section.
       initialContent (str): Text shown before additional content is loaded.

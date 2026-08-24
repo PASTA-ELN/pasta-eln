@@ -20,7 +20,7 @@ helpText = 'To get API key, you have to register at https://aistudio.google.com/
 def main(comm, doc, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        comm (Communicate): communicate-backend
+        comm (Communicate): Shared communication object.
         doc (dict): dictionary of the content: comment, title, image might be helpful
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters

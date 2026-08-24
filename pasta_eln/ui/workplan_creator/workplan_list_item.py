@@ -28,7 +28,7 @@ class WorkplanListItem(QFrame):
     """Initialize a workplan list item with its procedure and parameters.
 
     Args:
-      comm (Communicate): Shared communication object for workplan actions.
+      comm (Communicate): Shared communication object.
       procedureID (str): Document ID of the selected procedure.
       sample (str): Sample name associated with this procedure step.
       parameters (dict[str, str]): Parameter values entered for the procedure step.

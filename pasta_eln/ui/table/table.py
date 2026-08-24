@@ -27,7 +27,7 @@ class TableView(Widget):
   def __init__(self, comm: Communicate, docType: str):
     """ Initializes TableView
     Args:
-      comm (Communicate): The communication object to obtain data and send commands to
+      comm (Communicate): Shared communication object.
       docType (str): The type of documents to display.
     """
     super().__init__()

@@ -23,7 +23,7 @@ class DataAnalyse(QDialog):
     Initialization
 
     Args:
-      comm (Communicate): communication channel
+      comm (Communicate): Shared communication object.
       df (pandas dataframe): all data
     """
     super().__init__()
@@ -261,7 +261,7 @@ class DataAnalyse(QDialog):
 def main(comm, df, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        comm (communication): pasta communication layer
+        comm (communication): Shared communication object.
         df (Dataframe): dataframe with the data to plot
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters

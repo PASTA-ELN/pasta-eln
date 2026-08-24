@@ -225,7 +225,7 @@ def callAddOn(name:str, comm:Any, content:Any, widget:QWidget) -> Any:
   """ Call add-ons
   Args:
     name (str): name of the add-on
-    comm (Any): communication object
+    comm (Any): Shared communication object.
     content (Any): content to be consumed by addon, e.g. projectID, document
     widget: widget to be used
 
@@ -252,7 +252,7 @@ def callDataExtractor(docID:str, comm:Any) -> Any:
 
   Args:
     docID (str): docID
-    comm (Communication): communication layer
+    comm (Communication): Shared communication object.
 
   Returns:
     Any: result of the data extractor
@@ -289,7 +289,7 @@ def callDataExtractor(docID:str, comm:Any) -> Any:
 def getHierarchy(comm:Any, docID:str, showAll:bool=True) -> tuple[Node, dict[str, Any]]:
   """ Helper for add-ons: get hierarchy of a project from backend
   Args:
-    comm (Communicate): communicate-backend
+    comm (Communicate): Shared communication object.
     docID (str): project ID
     showAll (bool): show all nodes, even hidden ones
 
@@ -321,7 +321,7 @@ def getDoc(comm:Any, docID:str) -> dict[str, Any]:
   """ Helper for add-ons: get document from backend
 
   Args:
-    comm (Communicate): communicate-backend
+    comm (Communicate): Shared communication object.
     docID (str): document ID
 
   Returns:

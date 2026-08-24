@@ -20,7 +20,7 @@ class DocTypeEditor(QDialog):
     Initialization
 
     Args:
-      comm (Communicate): communication channel
+      comm (Communicate): Shared communication object.
       doc (dict):  document to change / create
       callback (function): callback to allow sending the new doc-type
     """

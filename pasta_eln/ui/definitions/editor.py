@@ -44,7 +44,7 @@ class Editor(QDialog):
     Initialization
 
     Args:
-      comm (Communicate): communication channel
+      comm (Communicate): Shared communication object.
     """
     super().__init__()
     self.comm = comm

@@ -54,7 +54,7 @@ class SchemeEditor(QDialog):
     Initialization
 
     Args:
-      comm (Communicate): communication channel
+      comm (Communicate): Shared communication object.
       doc (dict):  document to change / create
     """
     super().__init__()

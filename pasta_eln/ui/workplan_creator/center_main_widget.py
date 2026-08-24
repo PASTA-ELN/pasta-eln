@@ -18,7 +18,7 @@ class CenterMainWidget(QWidget):
     """Initialize the central workplan editor with shared communication state.
 
     Args:
-      comm (Communicate): Shared object used to request and publish workplan data.
+      comm (Communicate): Shared communication object.
     """
     super().__init__()
     self.comm = comm

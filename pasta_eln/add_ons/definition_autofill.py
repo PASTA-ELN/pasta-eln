@@ -38,7 +38,7 @@ def getFirstWikidataEntry(definition):
 def main(comm, df, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        comm (Communicate): communicate-backend
+        comm (Communicate): Shared communication object.
         df (DataFrame): pandas dataframe with data
            Columns are: 'key', 'long', 'PURL', 'defType' with the PURL being filled
         widget (QWidget): allows to create new gui dialogs

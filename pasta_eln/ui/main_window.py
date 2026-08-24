@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
   def __init__(self, comm: Communicate) -> None:
     """ Init main window
     Args:
-      comm (Communicate): communicate object to transfer information
+      comm (Communicate): Shared communication object.
     """
     # global setting
     super().__init__()

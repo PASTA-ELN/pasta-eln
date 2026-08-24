@@ -15,7 +15,7 @@ class LeftMainWidget(QWidget):
     """Initialize the procedure-list pane with shared communication state.
 
     Args:
-      comm (Communicate): Shared object used to load and select procedures.
+      comm (Communicate): Shared communication object.
     """
     super().__init__()
     self.comm = comm

@@ -25,7 +25,7 @@ class Project(Widget):
     """Initialize the project widget and connect it to shared communication state.
 
     Args:
-      comm (Communicate): Shared object for project, backend, and GUI communication.
+      comm (Communicate): Shared communication object.
     """
     super().__init__()
     self.comm = comm

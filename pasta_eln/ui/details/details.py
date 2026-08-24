@@ -23,7 +23,7 @@ class Details(Widget):
   def __init__(self, comm: Communicate):
     """Create a details pane on the right-hand side
     Args:
-      comm (Communicate): communication pipeline to get colors, etc.
+      comm (Communicate): Shared communication object.
     """
     super().__init__()
     self.comm = comm

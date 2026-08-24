@@ -40,7 +40,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
 
     Args:
       parent (QAbstractItemView): parent widget
-      comm (Communication): communication layer
+      comm (Communication): Shared communication object.
     """
     super().__init__(parent)
     self.comm               = comm

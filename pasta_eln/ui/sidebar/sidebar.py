@@ -20,7 +20,7 @@ class ProjectSidebar(Widget):
     """Initialize the project sidebar and connect it to the GUI state.
 
     Args:
-      comm (Communicate): Shared communication object
+      comm (Communicate): Shared communication object.
       parent (QWidget | None): Optional Qt parent widget, aka main window
     """
     super().__init__(parent)

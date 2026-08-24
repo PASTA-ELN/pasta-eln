@@ -28,7 +28,7 @@ def generateAndSaveWorkplan(comm: Communicate, workplan: Workplan, filename: str
   """
   Write the given parameters of a workplan in a file with the format of the common workplan description.
   Args:
-    comm: for Communication between widgets
+    comm: Shared communication object.
     workplan: workplan dictionary that contains all important workplan information
     filename: name of the file that is saved
 
@@ -49,7 +49,7 @@ class Storage:
     """Initialize procedure storage and request the current project procedures.
 
     Args:
-      comm (Communicate): Shared communication object used for backend requests and signals.
+      comm (Communicate): Shared communication object.
       projectID (str): Project document ID whose procedures should be stored.
     """
     self.comm = comm

@@ -17,7 +17,7 @@ class ProcedureListItem(QFrame):
     """Initialize a list item representing one procedure.
 
     Args:
-      comm (Communicate): Shared communication object for procedure actions.
+      comm (Communicate): Shared communication object.
       procedureID (str): Document ID of the represented procedure.
     """
     super().__init__()

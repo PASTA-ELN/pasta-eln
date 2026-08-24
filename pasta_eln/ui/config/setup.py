@@ -22,7 +22,7 @@ class ConfigurationSetup(QWidget):
     Initialization
 
     Args:
-      comm (Communicate): communication
+      comm (Communicate): Shared communication object.
       callbackFinished (function): callback function to call upon end
     """
     super().__init__()

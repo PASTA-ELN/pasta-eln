@@ -18,7 +18,7 @@ class RightMainWidget(QWidget):
     """Initialize the workplan preview pane.
 
     Args:
-      comm (Communicate): Shared object used to communicate workplan changes.
+      comm (Communicate): Shared communication object.
       displayWorkplan (Workplan | None): Workplan currently selected for display, if any.
     """
     super().__init__()

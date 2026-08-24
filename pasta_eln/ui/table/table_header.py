@@ -17,7 +17,7 @@ class TableHeader(QDialog):
     """Initialize the table-header dialog for a document type.
 
     Args:
-      comm (Communicate): Shared communication object used to load and save headers.
+      comm (Communicate): Shared communication object.
       docType (str): Document type whose table columns are being configured.
     """
     super().__init__()

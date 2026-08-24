@@ -31,7 +31,7 @@ class TreeView(QTreeView):
 
     Args:
       parent (QWidget): Widget that owns this tree view.
-      comm (Communicate): Shared object used for project actions and backend requests.
+      comm (Communicate): Shared communication object.
       model (QStandardItemModel): Standard item model containing the project hierarchy.
     """
     super().__init__(parent)

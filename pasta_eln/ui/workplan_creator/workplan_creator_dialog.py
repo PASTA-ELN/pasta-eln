@@ -26,7 +26,7 @@ class WorkplanCreatorDialog(QDialog):
     """Initialize the dialog used to create or edit a workplan.
 
     Args:
-      comm (Communicate): Shared communication object for workplan operations.
+      comm (Communicate): Shared communication object.
       displayWorkplan (Workplan | None): Existing workplan to edit, or ``None`` for a new one.
     """
     super().__init__()
