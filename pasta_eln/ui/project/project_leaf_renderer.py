@@ -139,7 +139,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       painter (QPainter): painter
       option (QStyleOptionViewItem): option
     """
-    if not option.state & (QStyle.StateFlag.State_Selected | QStyle.StateFlag.State_MouseOver):
+    if not option.state & QStyle.StateFlag.State_MouseOver:
       return
     buttonRect = QRect(option.rect.right() - MENU_BUTTON_SIZE - MENU_BUTTON_MARGIN,
                        option.rect.top() + MENU_BUTTON_MARGIN,
