@@ -3,7 +3,7 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QModelIndex, QPoint, QItemSelectionModel, Qt, QTimer, Signal
+from PySide6.QtCore import QItemSelectionModel, QModelIndex, QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QContextMenuEvent, QDropEvent, QMouseEvent, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget
 from ...backend_worker.worker import Task

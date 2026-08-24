@@ -9,9 +9,9 @@ from PySide6.QtWidgets import QHBoxLayout, QMenu, QMessageBox, QScrollArea, QSpl
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.fixed_strings_json import SORTED_DB_KEYS
 from pasta_eln.misc_tools import clearLayout, makeStringWrappable
+from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.details.details_hier_item import DetailsHierItem
 from pasta_eln.ui.details.resize_image import ResizeImage
-from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, Label, Widget, action as addAction
 
@@ -286,7 +286,7 @@ class Details(Widget):
         else:
           self.comm.changeTable.emit(self.data['type'][0], self.comm.projectID, '')
     elif commandType is Command.HIDE_DETAILS:
-      self.comm.changeDetails.emit(DetailContext())                  # all widgets know that details are hidden
+      self.comm.changeDetails.emit(DetailContext())                 # all widgets know that details are hidden
 
 
   @Slot(object)

@@ -6,7 +6,7 @@ from typing import Any
 from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot
 from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QInputDialog, QMenu, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QInputDialog, QLabel, QMenu, QTextEdit, QVBoxLayout, QWidget
 from ...backend_worker.worker import Task
 from ...fixed_strings_json import DO_NOT_RENDER
 from ...misc_tools import callAddOn
@@ -104,7 +104,7 @@ class Project(Widget):
     if self.hierarchy is None:
       self.mainL.addWidget(self.tree)
       return
-    if self.hierarchy is not None and self.hierarchy.name == '__ERROR_in_getHierarchy__':
+    if self.hierarchy.name == '__ERROR_in_getHierarchy__':
       showMessage(self, 'Error', 'There is an error in the project hierarchy: a parent of a node is incorrect.', 'Critical')
       return
     for node in PreOrderIter(self.hierarchy, maxlevel=2):
@@ -218,7 +218,7 @@ class Project(Widget):
       # if the user has selected another folder, use that as default....
       if self.tree is not None and self.tree.currentIndex().isValid():
         item = self.model.itemFromIndex(self.tree.currentIndex()) if self.model is not None else None
-        if item is not None and item.data()["docType"][0].startswith('x'):
+        if item is not None and item.data()['docType'][0].startswith('x'):
           selectedFolder = item.data()['hierStack'].split('/')[-1]
       current = next((index for index, node in enumerate(folders) if node.id == selectedFolder), 0)
       label, accepted = QInputDialog.getItem(self, 'Import files', 'Destination folder:', labels, current, False)
