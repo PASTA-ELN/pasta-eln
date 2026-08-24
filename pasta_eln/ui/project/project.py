@@ -6,7 +6,7 @@ from typing import Any
 from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot
 from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QMenu, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QInputDialog, QMenu, QTextEdit, QVBoxLayout, QWidget
 from ...backend_worker.worker import Task
 from ...fixed_strings_json import DO_NOT_RENDER
 from ...misc_tools import callAddOn
@@ -186,6 +186,17 @@ class Project(Widget):
     self.allDetails.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
     self.allDetails.setReadOnly(True)
     self.mainL.addWidget(self.allDetails)
+    if sum(node.docType[0].startswith('x') for node in PreOrderIter(self.hierarchy)) <= 5:
+      hint = 'Drag files onto a folder to add them.'
+      if not self.hierarchy.children:
+        hint = 'Add a subfolder, then drag files onto it.'
+      hintLabel = QLabel(hint)
+      hintLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+      hintLabel.setFrameShape(QFrame.Shape.StyledPanel)
+      hintLabel.setStyleSheet(
+          f'padding: {SPACE.M}px; border: 1px solid {self.comm.palette.getThemeColor("primary", "base")}; '
+          f'background-color: {self.comm.palette.getThemeColor("background", "popup")};')
+      self.mainL.addWidget(hintLabel)
     self.commentResize(None)
     return
 
@@ -199,7 +210,22 @@ class Project(Widget):
     """
     commandType = command if isinstance(command, Command) else command[0]
     payload = [] if isinstance(command, Command) else command[1:]
-    if commandType is Command.EDIT:
+    if commandType is Command.IMPORT_FILES:
+      folders = [node for node in PreOrderIter(self.hierarchy) if node.docType[0].startswith('x')]
+      labels = ['/'.join(node.name for node in (*node.ancestors, node)) for node in folders]
+      selectedFolder = self.projID                                             # use project id as the default
+      # if the user has selected another folder, use that as default....
+      if self.tree is not None and self.tree.currentIndex().isValid():
+        item = self.model.itemFromIndex(self.tree.currentIndex()) if self.model is not None else None
+        if item is not None and item.data()["docType"][0].startswith('x'):
+          selectedFolder = item.data()['hierStack'].split('/')[-1]
+      current = next((index for index, node in enumerate(folders) if node.id == selectedFolder), 0)
+      label, accepted = QInputDialog.getItem(self, 'Import files', 'Destination folder:', labels, current, False)
+      if accepted:
+        folder = folders[labels.index(label)]
+        self.comm.uiRequestTask.emit(Task.DROP_EXTERNAL,
+                                    {'docID': folder.id, 'items': payload[0], 'addToExisting': False})
+    elif commandType is Command.EDIT:
       self.comm.formDoc.emit({'id':self.docProj['id']})
       self.change(self.projID,'')
       #collect information and then change
@@ -465,3 +491,4 @@ class Command(Enum):
   SHOW_DETAILS      = 7
   ADD_CHILD         = 8
   ADD_ON            = 10
+  IMPORT_FILES      = 11

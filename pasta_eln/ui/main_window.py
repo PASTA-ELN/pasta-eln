@@ -25,6 +25,7 @@ from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import action
 from pasta_eln.ui.message_dialog import MessageDialog, showMessage
 from pasta_eln.ui.palette import Palette
+from pasta_eln.ui.project.project import Command as ProjectCommand, Project
 from pasta_eln.ui.repositories.upload_gui import UploadGUI
 from pasta_eln.ui.sidebar.sidebar import ProjectSidebar
 
@@ -62,9 +63,10 @@ class MainWindow(QMainWindow):
     menu = self.menuBar()
     projectMenu = menu.addMenu('&Project')
     self.projectActions = [
-        action('&Export project to .eln',   self, Command.EXPORT, projectMenu),
-        action('&Import .eln into project', self, Command.IMPORT, projectMenu),
-        action('&Upload to repository',     self, Command.REPOSITORY, projectMenu),
+        action('Import file(s)…',           self, Command.IMPORT_FILES, projectMenu),
+        action('&Export project to .eln',   self, Command.EXPORT_ELN,   projectMenu),
+        action('&Import .eln into project', self, Command.IMPORT_ELN,   projectMenu),
+        action('&Upload to repository',     self, Command.REPOSITORY,   projectMenu),
     ]
     projectMenu.addSeparator()
     self.projectActions.append(action('&Delete current project...', self, Command.DELETE_PROJECT, projectMenu))
@@ -198,17 +200,23 @@ class MainWindow(QMainWindow):
     # file menu
     commandType = command if isinstance(command, Command) else command[0]
     payload = [] if isinstance(command, Command) else command[1:]
-    projectCommands = (Command.EXPORT, Command.IMPORT, Command.REPOSITORY, Command.DELETE_PROJECT)
+    projectCommands = (Command.IMPORT_FILES, Command.EXPORT_ELN, Command.IMPORT_ELN, Command.REPOSITORY,
+                       Command.DELETE_PROJECT)
     if commandType in projectCommands and not self.comm.projectID:
       logging.critical('Open a project before using this action.')
       return
-    if commandType is Command.EXPORT:
+    if commandType is Command.IMPORT_FILES:
+      fileNames, _ = QFileDialog.getOpenFileNames(self, 'Import files', str(Path.home()), 'All files (*)')
+      project = self.body.tabWidget.widget(0)
+      if fileNames and isinstance(project, Project):
+        project.execute([ProjectCommand.IMPORT_FILES, fileNames])
+    elif commandType is Command.EXPORT_ELN:
       fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
         docTypes = [i for i in self.comm.docTypesTitles if i[0] != 'x']
         self.comm.uiRequestTask.emit(Task.EXPORT_ELN,
                                      {'fileName': fileName, 'projID': self.comm.projectID, 'docTypes': docTypes})
-    elif commandType is Command.IMPORT:
+    elif commandType is Command.IMPORT_ELN:
       fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
         self.comm.uiRequestTask.emit(Task.IMPORT_ELN, {'fileName': fileName, 'projID': self.comm.projectID})
@@ -317,8 +325,8 @@ class MainWindow(QMainWindow):
 
 class Command(Enum):
   """ Commands used in this file """
-  EXPORT = 1
-  IMPORT = 2
+  EXPORT_ELN = 1
+  IMPORT_ELN = 2
   EXIT = 3
   VIEW = 4
   CHANGE_PG = 6
@@ -341,3 +349,4 @@ class Command(Enum):
   SYNC_SEND_ALL = 24
   SYNC_GET_ALL = 25
   DELETE_PROJECT = 26
+  IMPORT_FILES = 27

@@ -33,7 +33,7 @@ class Task(Enum):
   ADD_DOC        = (1 , '')                                        #keys: hierStack, docType, doc
   EDIT_DOC       = (2 , '')                                        #keys: doc, newProjID
   MOVE_LEAVES    = (3 , '')                                        #keys: docID, stackOld, stackNew, childOld, childNew
-  DROP_EXTERNAL  = (4 , 'Including drag&drop files and folders:')  #keys: docID, items, addToExisting
+  DROP_EXTERNAL  = (4 , 'Importing files and folders:')            #keys: docID, items, addToExisting
   HIDE_SHOW      = (5 , '')                                        #keys: docID
   SET_GUI        = (6 , '')                                        #keys: docID, gui
   DELETE_DOC     = (7 , '')                                        #keys: docID, stack
@@ -310,7 +310,7 @@ class BackendWorker(QObject):
         # scan
         for _ in range(2):                                                       #scan twice: convert, extract
           reply += self.backend.scanProject(None, data['docID'], targetFolder.relative_to(self.backend.basePath))
-      msg = 'Drag-drop operation finished successfully.'
+      msg = 'Import finished successfully.'
       if reply:
         msg += f' <p style="color:red;">{reply}</p>'
       self.beSendTaskReport.emit(task, msg, '', '')
