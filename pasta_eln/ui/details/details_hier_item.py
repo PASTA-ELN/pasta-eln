@@ -18,6 +18,15 @@ class DetailsHierItem(CollapsibleSection):
 
   def __init__(self, comm: Communicate, categoryName: str, dataHierarchyNode: list[dict[str, Any]],
                initialContent: str = '', startCollapsed: bool = False) -> None:
+    """Initialize a collapsible section for one entry
+
+    Args:
+      comm (Communicate): Shared communication object for backend requests.
+      categoryName (str): Display label of the entry.
+      dataHierarchyNode (list[dict[str, Any]]): Hierarchy data used to populate the section.
+      initialContent (str): Text shown before additional content is loaded.
+      startCollapsed (bool): Whether the section starts in its collapsed state.
+    """
     self.comm = comm
     self.categoryName = categoryName
     self.content = initialContent
@@ -38,16 +47,19 @@ class DetailsHierItem(CollapsibleSection):
     #
     self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
 
+
   def collapse(self) -> None:
     """Hide the content of this widget"""
     self.setExpanded(False)
+
 
   def expand(self) -> None:
     """Show the content of this widget"""
     self.setExpanded(True)
 
+
   def formatContent(self, key: str, value: Any) -> str:
-    """
+    """ Format content
 
     Args:
       key: key of the datapoint to add. E.g. 'user'
@@ -86,19 +98,9 @@ class DetailsHierItem(CollapsibleSection):
       if isinstance(value, tuple) and len(value) == 4:
         k, v = tuple2html(key, value)
         labelStr = f'<b>{k}:</b><br>{v}<br><br>'
-      # if isinstance(value, dict):
-      # newValue = {}
-      # for k, v in value.items():
-      #   if isinstance(v, tuple) and len(v) == 4:
-      #     k2, v2 = tuple2html(k, v)
-      #     newValue[k2] = v2
-      #   elif isinstance(v, (list, tuple)):
-      #     newValue[k] = v[0]
-      #   else:
-      #     newValue[k] = v
-      # labelStr = f'{cssStyleHtmlEditors}<b>{key}:</b><br>{dict2ul(newValue)}<br><br>'
     # Wrapping can force an HTML-statement wrap in rare cases
     return labelStr if '<a href=' in labelStr else makeStringWrappable(labelStr)
+
 
   def addContent(self, key: str, value: Any) -> None:
     """Appends formatted Content to the Label of this Widget, see self.formatContent for details"""

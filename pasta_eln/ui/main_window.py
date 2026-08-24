@@ -113,11 +113,11 @@ class MainWindow(QMainWindow):
     self.splitter.addWidget(self.sidebar)
     self.splitter.addWidget(self.body)
 
+    self.paint()
     def _resizeSplitter() -> None:
+      """Restore the sidebar width from the GUI configuration."""
       sidebarWidth = self.comm.configuration['GUI']['sidebarWidth']
       self.splitter.setSizes([sidebarWidth, self.splitter.width() - sidebarWidth])
-
-    self.paint()
     QTimer.singleShot(0, _resizeSplitter)
 
 

@@ -21,6 +21,11 @@ from .project_tree_view import TreeView
 class Project(Widget):
   """ Widget that shows the content of project in a electronic labnotebook """
   def __init__(self, comm:Communicate):
+    """Initialize the project widget and connect it to shared communication state.
+
+    Args:
+      comm (Communicate): Shared object for project, backend, and GUI communication.
+    """
     super().__init__()
     self.comm = comm
     self.comm.changeProject.connect(self.change)
@@ -224,6 +229,11 @@ class Project(Widget):
       self.comm.changeSidebar.emit('')
     elif commandType is Command.SHOW_DETAILS and self.tree is not None:
       def recursiveRowIteration(index:QModelIndex) -> None:
+        """Visit descendants of a tree index and apply the current row action.
+
+        Args:
+          index (QModelIndex): Parent index whose child rows should be traversed.
+        """
         for subRow in range(self.tree.model().rowCount(index)):                     # type: ignore[union-attr]
           subIndex = self.tree.model().index(subRow,0, index)                       # type: ignore[union-attr]
           subItem  = self.tree.model().itemFromIndex(subIndex)                      # type: ignore[union-attr]

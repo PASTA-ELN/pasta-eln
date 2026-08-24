@@ -20,6 +20,11 @@ class Body(QWidget):
   """
 
   def __init__(self, comm: Communicate):
+    """Initialize the main body widget with its communication object.
+
+    Args:
+      comm (Communicate): Shared object used to exchange UI and backend requests.
+    """
     super().__init__()
     self.comm = comm
 

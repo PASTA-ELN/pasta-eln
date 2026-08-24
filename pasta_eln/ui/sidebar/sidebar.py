@@ -17,6 +17,12 @@ class ProjectSidebar(Widget):
   """
 
   def __init__(self, comm: Communicate, parent: QWidget | None = None) -> None:
+    """Initialize the project sidebar and connect it to the GUI state.
+
+    Args:
+      comm (Communicate): Shared communication object
+      parent (QWidget | None): Optional Qt parent widget, aka main window
+    """
     super().__init__(parent)
     self.comm = comm
     self.projects = pd.DataFrame()

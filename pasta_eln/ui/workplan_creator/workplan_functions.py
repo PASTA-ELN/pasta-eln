@@ -32,8 +32,6 @@ def generateAndSaveWorkplan(comm: Communicate, workplan: Workplan, filename: str
     workplan: workplan dictionary that contains all important workplan information
     filename: name of the file that is saved
 
-  Returns:
-
   """
   jsonWorkplan = json.dumps(workplan, indent=2)
   comm.uiRequestTask.emit(Task.ADD_DOC, {
@@ -48,6 +46,12 @@ class Storage:
   """
 
   def __init__(self, comm: Communicate, projectID: str):
+    """Initialize procedure storage and request the current project procedures.
+
+    Args:
+      comm (Communicate): Shared communication object used for backend requests and signals.
+      projectID (str): Project document ID whose procedures should be stored.
+    """
     self.comm = comm
     self.procedureTable = pd.DataFrame()
 
@@ -60,11 +64,15 @@ class Storage:
     Args:
       projectID: ID of the Project for which the table should be requested.
 
-    Returns:
-
     """
 
     def onGetTable(table: pd.DataFrame, docType: str) -> None:
+      """Store a received procedure table and notify listeners when it is ready.
+
+      Args:
+        table (pd.DataFrame): Data frame returned by the backend table request.
+        docType (str): Document type represented by ``table``.
+      """
       if docType == 'workflow/procedure':
         self.procedureTable = table
         self.comm.storageUpdated.emit(projectID)
@@ -109,6 +117,11 @@ class Storage:
       procedureID: docID for the procedure
     """
     def onGetDoc(doc: dict[str, Any]) -> None:
+      """Load full procedure text from the document's referenced file.
+
+      Args:
+        doc (dict[str, Any]): Procedure document returned by the backend.
+      """
       if procedureID != doc['id']:
         return
       docPath = doc['branch'][0]['path']

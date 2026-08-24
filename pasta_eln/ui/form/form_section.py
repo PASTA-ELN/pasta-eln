@@ -7,6 +7,12 @@ class FormSection(CollapsibleSection):
   """A collapsible form section used for a data-hierarchy group."""
 
   def __init__(self, title: str, *, expanded: bool = True) -> None:
+    """Initialize a form section with a title and expansion state.
+
+    Args:
+      title (str): Heading displayed above the section's form fields.
+      expanded (bool): Whether the section's contents are initially visible.
+    """
     self.formW = QWidget()
     self.formL = QFormLayout(self.formW)
     self.formL.setContentsMargins(SPACE.M, SPACE.S, SPACE.M, SPACE.M)

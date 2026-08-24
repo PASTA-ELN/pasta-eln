@@ -197,6 +197,11 @@ class Form(QDialog):
 
 
   def _fillProjectComboBox(self, data: pd.DataFrame) -> None:
+    """Replace the project selector contents with projects from a data frame.
+
+    Args:
+      data (pd.DataFrame): Table containing the project names and docIDs to display.
+    """
     self.projectComboBox.clear()
     if self.groupEdit:
       self.projectComboBox.addItem('- no change -',    userData='')

@@ -15,6 +15,12 @@ class RightMainWidget(QWidget):
   """
 
   def __init__(self, comm: Communicate, displayWorkplan: Workplan | None = None) -> None:
+    """Initialize the workplan preview pane.
+
+    Args:
+      comm (Communicate): Shared object used to communicate workplan changes.
+      displayWorkplan (Workplan | None): Workplan currently selected for display, if any.
+    """
     super().__init__()
     self.comm = comm
     if self.comm.storage is None:

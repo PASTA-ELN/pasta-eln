@@ -45,6 +45,14 @@ class TerminologyLookupService:
 
     # Define a function to perform the HTTP request
     def fetchService(service: dict[str, Any]) -> dict[str, str] | None:
+      """Query one terminology service using the current search term.
+
+      Args:
+        service (dict[str, Any]): Service configuration containing the URL and request mappings.
+
+      Returns:
+        dict[str, str] | None: Parsed service response, or ``None`` when the request fails.
+      """
       try:
         service['request_params'][service['search_term_key']] = searchTerm
         response = requests.get(service['url'], params=service['request_params'], headers=service.get('header',{}),

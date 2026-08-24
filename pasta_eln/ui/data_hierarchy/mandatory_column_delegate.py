@@ -29,8 +29,6 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
       option (QStyleOptionViewItem): Style option for the cell represented by index
       index (Union[QModelIndex, QPersistentModelIndex]): Table cell index
 
-    Returns: None
-
     """
     indexName = index.model().index(index.row(), 0)
     if not indexName.data():

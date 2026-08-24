@@ -14,6 +14,12 @@ class TableHeader(QDialog):
   """Choose the stored list columns for one document type."""
 
   def __init__(self, comm: Communicate, docType: str) -> None:
+    """Initialize the table-header dialog for a document type.
+
+    Args:
+      comm (Communicate): Shared communication object used to load and save headers.
+      docType (str): Document type whose table columns are being configured.
+    """
     super().__init__()
     self.comm = comm
     self.docType = docType

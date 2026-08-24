@@ -17,6 +17,14 @@ class IconButtonDelegate(QStyledItemDelegate):
   """Paint an icon button and invoke a supplied action when it is clicked."""
 
   def __init__(self, icon: str, isVisible: IsVisible, onClick: OnClick, parent: QObject | None = None) -> None:
+    """Initialize a table delegate that displays and activates an icon button.
+
+    Args:
+      icon (str): QtAwesome icon name rendered in the delegate button.
+      isVisible (IsVisible): Callback deciding whether a cell should show the button.
+      onClick (OnClick): Callback invoked with the clicked table index.
+      parent (QObject | None): Optional Qt parent object.
+    """
     super().__init__(parent)
     self.icon = icon
     self.isVisible = isVisible

@@ -12,6 +12,11 @@ class LeftMainWidget(QWidget):
   """
 
   def __init__(self, comm: Communicate) -> None:
+    """Initialize the procedure-list pane with shared communication state.
+
+    Args:
+      comm (Communicate): Shared object used to load and select procedures.
+    """
     super().__init__()
     self.comm = comm
     self.storage: Storage = Storage(self.comm, self.comm.projectID)

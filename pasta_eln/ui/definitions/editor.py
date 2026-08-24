@@ -189,6 +189,11 @@ class Editor(QDialog):
     label = model.index(index.row(), 1).data()
 
     def setPURL(iris: list[str]) -> None:
+      """Write the selected persistent URLs into the current definition row.
+
+      Args:
+        iris (list[str]): Persistent identifiers selected by the terminology lookup.
+      """
       model.setData(model.index(index.row(), 2), ', '.join(iris))
 
     self.terminologyDialog = TerminologyLookupDialog(label or key, setPURL)

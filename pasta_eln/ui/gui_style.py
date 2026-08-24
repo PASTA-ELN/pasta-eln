@@ -50,6 +50,20 @@ class Button(QPushButton):
                tooltip: str = '', style: ButtonStyle = ButtonStyle.DEFAULT,
                iconSize: Literal['m', 'l'] = 'm', flat: bool = False,
                checkable: bool = False) -> None:
+    """Create a command button and optionally add it to a layout.
+
+    Args:
+      label (str): Text shown on the button; an empty label creates an icon-only button.
+      widget (CommandHost): Command host that receives the button's command.
+      command (Any | None): Command passed to the host when the button is clicked.
+      layout (QLayout | None): Optional layout to which the button is added.
+      icon (str | None): Optional QtAwesome icon name.
+      tooltip (str): Optional explanatory text shown on hover.
+      style (ButtonStyle): Visual role controlling button emphasis and icon color.
+      iconSize (Literal['m', 'l']): Named size of the icon-only or displayed icon button.
+      flat (bool): Whether the button should omit its default frame.
+      checkable (bool): Whether the button maintains a checked state.
+    """
     super().__init__(label)
     self.buttonIconSize = QSize(32,32) if iconSize=='l' else QSize(20,20)
     self.setAutoDefault(False)
@@ -151,13 +165,12 @@ def action(label: str, widget: QWidget, command: Any, menu: QMenu, keySequence: 
   """
   actionObject = QAction(widget)
   actionObject.setText(label)
-
   def triggered() -> None:
+    """Dispatch the configured command through the host widget."""
     try:
       widget.execute(command)                                                     # type: ignore[attr-defined]
     except Exception:
       return
-
   actionObject.triggered.connect(triggered)
   if icon:
     color = 'black' if widget is None else widget.comm.palette.text               # type: ignore[attr-defined]

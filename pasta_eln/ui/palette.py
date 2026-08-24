@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 class ColorModifiers(TypedDict, total=False):
   """Transformations applied to a category's base colour."""
-
   darken: float
   lighten: float
   transparent: float
@@ -49,6 +48,7 @@ class Palette:
     self.leafO = self.getThemeColor('background', 'popup')
     self.leafShadow = '#55000000'                                                          # Transparent Black
 
+
   def setTheme(self, theme: str = '', saveTheme: bool = True) -> None:
     """
     Update the theme of the whole App.
@@ -81,6 +81,7 @@ class Palette:
       qdarktheme.setup_theme(self.qtheme, additional_qss=css, corner_shape=cornershape, custom_colors=customColors)
     self.comm.themeUpdated.emit()
 
+
   def get(self, color: str, prefix: str) -> str:
     """
     Get color with a prefix for CSS styling
@@ -104,6 +105,7 @@ class Palette:
     if color == 'buttonText':
       return f'{prefix}: {self.text}; '
     return '' if colors[color] == '' else f'{prefix}: {colors[color]}; '
+
 
   def getThemeColor(self, category: str, subcategory: str) -> str:
     """
@@ -135,15 +137,32 @@ class Palette:
 
     # Helper functions
     def _darken(color: QColor, amount: float) -> QColor:
+      """Reduce the value channel of a color by the requested fraction.
+
+      Args:
+        color (QColor): Color whose brightness should be reduced.
+        amount (float): Fraction by which the HSV value channel is reduced.
+
+      Returns:
+        QColor: Color with the adjusted value and original hue, saturation, and alpha.
+      """
       h, s, v, a = cast(ColorChannels, color.getHsv())
       v = max(0, int(v * (1 - amount)))
       return QColor.fromHsv(h, s, v, a)
 
     def _lighten(color: QColor, amount: float) -> QColor:
+      """Increase the value channel of a color by the requested fraction.
+
+      Args:
+        color (QColor): Color whose brightness should be increased.
+        amount (float): Fraction by which the HSV value channel is increased.
+
+      Returns:
+        QColor: Color with the adjusted value and original hue, saturation, and alpha.
+      """
       h, s, v, a = cast(ColorChannels, color.getHsv())
       v = min(255, int(v * (1 + amount)))
       return QColor.fromHsv(h, s, v, a)
-
     # 4. If it's a dict with modifiers
     if isinstance(rule, dict):
       # Apply darken/lighten first
@@ -158,19 +177,19 @@ class Palette:
         r, g, b, a = cast(ColorChannels, color.getRgb())
         return f"rgba({r}, {g}, {b}, {a})"
       return color.name()
-
     # 5. Fallback: return base color
     return color.name()
 
+
   def alterColor(self, colorHex:str, newAlpha:int=255) -> str:
-    """
+    """ Change the color
 
     Args:
-      colorHex:
-      newAlpha:
+      colorHex:  hex value of the color
+      newAlpha:  alpha value of the new color
 
     Returns:
-
+      str: new color
     """
     newColor = QColor(colorHex)
     r, g, b, _ = cast(ColorChannels, newColor.getRgb())

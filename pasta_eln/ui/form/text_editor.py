@@ -7,6 +7,11 @@ from PySide6.QtWidgets import QPlainTextEdit
 class TextEditor(QPlainTextEdit):
   """ Plain text ediotr that has the special feature of Alt-Up/Down to move text """
   def __init__(self, text:str):
+    """Initialize the editor with the supplied plain text.
+
+    Args:
+      text (str): Initial document content shown in the editor.
+    """
     super().__init__(text)
     self.setTabStopDistance(20)
 

@@ -81,6 +81,14 @@ def validate(elnFile:ZipFile) -> bool:
     return False
 
   def fail(message:str) -> bool:
+    """Log an archive validation error and report that validation failed.
+
+    Args:
+      message (str): Human-readable explanation of the invalid archive condition.
+
+    Returns:
+      bool: Always ``False``, allowing the caller to return the failure directly.
+    """
     logging.error(message)
     return False
 

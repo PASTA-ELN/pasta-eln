@@ -9,6 +9,12 @@ from PySide6.QtWidgets import QLabel, QLayout, QSizePolicy
 class ResizeImage(QLabel):
   """QLabel that displays a base64 image and automatically rescales it."""
   def __init__(self, data: str, layout: QLayout|None = None) -> None:
+    """Initialize an image label from encoded raster or SVG data.
+
+    Args:
+      data (str): Base64-encoded image data to display.
+      layout (QLayout | None): Optional layout that should receive this label.
+    """
     super().__init__()
     self._sourcePixmap = QPixmap()
     self._isSvg = False
@@ -40,12 +46,15 @@ class ResizeImage(QLabel):
     elif len(data) > 2:
       logging.error('ResizeImage: %s', data[:50], exc_info=True)
 
+
   def resizeEvent(self, event: QResizeEvent) -> None:
     """Scale the preview after the widget size changes."""
     super().resizeEvent(event)
     self._updatePixmap()
 
+
   def _updatePixmap(self) -> None:
+    """Refresh the displayed pixmap using the currently stored image data."""
     if self._isSvg:
       self._renderSvg()
       return
@@ -55,7 +64,9 @@ class ResizeImage(QLabel):
                                        Qt.TransformationMode.SmoothTransformation)
     super().setPixmap(scaled)
 
+
   def _renderSvg(self) -> None:
+    """Render the stored SVG into the label's current display size."""
     if self._svgRenderer is None or not self._svgRenderer.isValid():
       return
     size = self.size()
@@ -71,10 +82,12 @@ class ResizeImage(QLabel):
     painter.end()
     super().setPixmap(pixmap)
 
+
   def setSourcePixmap(self, pixmap: QPixmap) -> None:
     """Replace the source image."""
     self._sourcePixmap = pixmap
     self._updatePixmap()
+
 
   def sourcePixmap(self) -> QPixmap:
     """Return the original image."""

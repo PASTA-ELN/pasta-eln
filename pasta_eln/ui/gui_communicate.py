@@ -53,6 +53,11 @@ class Communicate(QObject):
     dict)  # add a procedure to the workplan on the right side. Params: procedure, sample, parameters
 
   def __init__(self, projectGroup:str=''):
+    """Initialize the signals and shared state used by the GUI and backend
+
+    Args:
+      projectGroup (str): Configuration key identifying the active project group.
+    """
     super().__init__()
     self.waitDialog            = WaitDialog()
     self.worker:Worker|None    = None

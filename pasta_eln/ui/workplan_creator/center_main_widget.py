@@ -15,6 +15,11 @@ class CenterMainWidget(QWidget):
   """
 
   def __init__(self, comm: Communicate) -> None:
+    """Initialize the central workplan editor with shared communication state.
+
+    Args:
+      comm (Communicate): Shared object used to request and publish workplan data.
+    """
     super().__init__()
     self.comm = comm
     if self.comm.storage is None:

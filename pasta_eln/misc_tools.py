@@ -300,6 +300,12 @@ def getHierarchy(comm:Any, docID:str, showAll:bool=True) -> tuple[Node, dict[str
   projDoc   = None
   @Slot(Node, dict)
   def receiveData(h:Node, doc:dict[str,Any]) -> None:
+    """Callback: store the hierarchy and project document returned by the backend signal.
+
+    Args:
+      h (Node): Root node of the requested project hierarchy.
+      doc (dict[str, Any]): Project document associated with that hierarchy.
+    """
     nonlocal hierarchyI
     hierarchyI = h
     nonlocal projDoc

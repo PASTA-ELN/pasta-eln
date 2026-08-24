@@ -81,6 +81,11 @@ class Worker(QThread):
   progress = Signal(str, str)                                              # Signal to update the progress bar
 
   def __init__(self, taskFunction:Callable[[Callable[[str,str],None]],Any]):
+    """Initialize a worker thread with the task it should execute.
+
+    Args:
+      taskFunction (Callable[[Callable[[str, str], None]], Any]): Callable receiving a progress callback and performing the background task.
+    """
     super().__init__()
     self.taskFunction = taskFunction                                                     # Function to execute
 

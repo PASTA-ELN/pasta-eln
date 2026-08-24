@@ -298,6 +298,14 @@ def truncateDictForElabFTW(data:dict[str,Any], maxChars:int=900) -> dict[str,Any
   result:dict[str,Any] = {}
 
   def fits(candidate:dict[str,Any]) -> bool:
+    """Check whether a candidate dictionary fits within the JSON size limit.
+
+    Args:
+      candidate (dict[str, Any]): Reduced dictionary being tested for serialized length.
+
+    Returns:
+      bool: ``True`` when the serialized candidate is at most ``maxChars`` long.
+    """
     return len(json.dumps(candidate)) <= maxChars
 
   for key, value in data.items():

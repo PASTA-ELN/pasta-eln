@@ -16,6 +16,12 @@ class TerminologyLookupDialog(QDialog):
 
   def __init__(self, defaultLookupTerm: str | None = None,
                acceptedCallback: Callable[[list[str]], None] | None = None) -> None:
+    """Initialize the terminology lookup dialog and its optional callback.
+
+    Args:
+      defaultLookupTerm (str | None): Initial text placed in the lookup field, if provided.
+      acceptedCallback (Callable[[list[str]], None] | None): Callback function called with the selected terminology identifiers.
+    """
     super().__init__()
     self.comm: Any = None
     self.acceptedCallback = acceptedCallback

@@ -27,6 +27,13 @@ class TreeView(QTreeView):
   sameItemClicked = Signal(QModelIndex)
 
   def __init__(self, parent:QWidget, comm:Communicate, model:QStandardItemModel):
+    """Initialize the project tree view with its model and communication state.
+
+    Args:
+      parent (QWidget): Widget that owns this tree view.
+      comm (Communicate): Shared object used for project actions and backend requests.
+      model (QStandardItemModel): Standard item model containing the project hierarchy.
+    """
     super().__init__(parent)
     self.aParentWidget: Any = parent
     self.comm = comm

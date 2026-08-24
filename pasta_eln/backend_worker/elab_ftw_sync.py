@@ -198,6 +198,14 @@ class Pasta2Elab:
     elabTypes = {i['title'].lower():i['id'] for i in self.api.readEntry('items_types')}  |  {'measurement':-1}
     elabTypes |= {'x0':elabTypes.pop('project'), 'x1':elabTypes.pop('folder'), '-':elabTypes.pop('default')}
     def getNewEntry(elabType:str) -> int:
+      """Create a remote eLabFTW entry and link it to the current project group.
+
+      Args:
+        elabType (str): eLabFTW category used to choose an item or experiment entry.
+
+      Returns:
+        int: ID assigned to the newly created remote entry.
+      """
       urlSuffix = 'items'                  if int(elabType)>0 else 'experiments'
       content   = {'category_id':elabType} | self.readWriteAccess
       elabID    = self.api.touchEntry(urlSuffix, content)

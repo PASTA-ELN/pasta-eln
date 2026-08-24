@@ -4,8 +4,13 @@ from PySide6.QtWidgets import QLayout, QLayoutItem
 
 
 class FlowLayout(QLayout):
-  """A simple flow layout that wraps widgets into multiple rows."""
+  """A simple flow layout that wraps tags into multiple rows."""
   def __init__(self, spacing:int=-1):
+    """Initialize an empty wrapping layout with the requested spacing.
+
+    Args:
+      spacing (int): Gap, in pixels, between adjacent layout items; ``-1`` uses Qt's default.
+    """
     super().__init__(None)
     self.itemList:list[QLayoutItem] = []
     if spacing >= 0:
