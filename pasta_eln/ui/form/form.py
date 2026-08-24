@@ -761,7 +761,7 @@ class Form(QDialog):
         for delKey in [i for i in self.doc if i in ['id'] or i.startswith('meta')]:        # delete these keys
           del self.doc[delKey]
         if commandType is Command.FORM_SAVE_NEXT:
-          self.comm.changeTable.emit(self.doc['type'][0], '')
+          self.comm.changeTable.emit(self.doc['type'][0], '', '')
       else:
         self.accept()                                                                                   #close
         self.close()

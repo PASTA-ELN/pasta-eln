@@ -41,6 +41,7 @@ class TableView(Widget):
     self.reloadComboBoxFlag = True                           # prevent combobox reloads after sub-type changes
     self.galleryDocumentIds: set[str] = set()
     self._stopSequentialEdit = False
+    self.docIdToHighlight = ''
 
     # Toolbar
     self.buttonbarW = QWidget(self)
@@ -134,17 +135,26 @@ class TableView(Widget):
     self.comm.stopSequentialEdit.connect(self.stopSequentialEdit)
 
 
-  @Slot(str, str)
-  def onTableChange(self, docType: str, projID: str) -> None:
+  @Slot(str, str, str)
+  def onTableChange(self, docType: str, projID: str, docID: str) -> None:
     """React to table change requests.
     Args:
       docType (str): The type of documents to display.
       projID (str): The ID of the project.
+      docID (str): ID of the row that is being highlighted
     """
     if docType != self.docType:
       return
     if projID:
       self.comm.projectID = projID
+    if docID:
+      self.docIdToHighlight = docID
+      # remove all filters that might potentially block the line
+      for filterRow in self.filterRows:
+        self.filterL.removeWidget(filterRow)
+        filterRow.deleteLater()
+      self.filterRows.clear()
+      self.filterW.hide()
     logging.debug('request table for %s, %s %s', self.docType, self.comm.projectID, self.showAll)
     self.comm.uiRequestTable.emit(self.docType, self.comm.projectID, self.showAll)
 
@@ -183,6 +193,13 @@ class TableView(Widget):
     self.table.resizeColumnsToContents()
     normalizeColumns(self.table)
     self.table.setColumnWidth(0, 30)
+    if self.docIdToHighlight in documentIds:
+      row = documentIds.index(self.docIdToHighlight)
+      index = model.index(row, 0)
+      self.table.selectRow(row)
+      self.table.scrollTo(index, QTableView.ScrollHint.PositionAtCenter)
+      self.detailsDocID = self.docIdToHighlight
+      self.docIdToHighlight = ''
 
     self.galleryAction.setVisible(self.docType.startswith('measurement'))
     self.changeColumnsAction.setVisible(self.docType not in ('-', '_tags_'))
@@ -215,7 +232,7 @@ class TableView(Widget):
 
   def refresh(self) -> None:
     """Refresh the table data"""
-    self.comm.changeTable.emit(self.docType, self.comm.projectID)
+    self.comm.changeTable.emit(self.docType, self.comm.projectID, '')
     if self.docType == 'x0':
       self.comm.changeSidebar.emit('redraw')
 

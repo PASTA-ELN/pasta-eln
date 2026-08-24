@@ -28,6 +28,7 @@ class Body(QWidget):
     """
     super().__init__()
     self.comm = comm
+    self._tableChangingInProgress = False
 
     # Tabwidget (Contains Project- and Table-views)
     self.tabWidget = QTabWidget()
@@ -131,8 +132,8 @@ class Body(QWidget):
     self.tabWidget.setCurrentIndex(0)
 
 
-  @Slot(str, str)
-  def onChangeTable(self, docType: str, _projectID: str) -> None:
+  @Slot(str, str, str)
+  def onChangeTable(self, docType: str, _projectID: str, docID: str) -> None:
     """Select the table tab targeted by a table-change request."""
     if docType == 'x0':                         # to return to Home after large changes: e.g. project creation
       self.tabWidget.setCurrentIndex(0)
@@ -140,7 +141,9 @@ class Body(QWidget):
     for index in range(self.tabWidget.count()):
       widget = self.tabWidget.widget(index)
       if isinstance(widget, TableView) and widget.docType == docType:
+        self._tableChangingInProgress = True
         self.tabWidget.setCurrentIndex(index)
+        self._tableChangingInProgress = False
         return
 
 
@@ -151,9 +154,11 @@ class Body(QWidget):
     Args:
       index: index of the now active tab after change.
     """
+    if self._tableChangingInProgress:
+      return
     widget = self.tabWidget.widget(index)
     if isinstance(widget, Project):
       self.comm.changeDetails.emit(DetailContext())                                            # close details
     elif isinstance(widget, TableView):
       docType = widget.docType
-      self.comm.changeTable.emit(docType, '')
+      self.comm.changeTable.emit(docType, '', '')

@@ -3,7 +3,7 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtCore import QModelIndex, QPoint, Qt, Signal
+from PySide6.QtCore import QModelIndex, QPoint, QItemSelectionModel, Qt, QTimer, Signal
 from PySide6.QtGui import QContextMenuEvent, QDropEvent, QMouseEvent, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget
 from ...backend_worker.worker import Task
@@ -189,9 +189,22 @@ class TreeView(QTreeView):
       return None
     item = iterate(self.model().invisibleRootItem())                              # type: ignore[attr-defined]
     if item is not None:
-      # TODO scroll does not work even if item is not none and visible
-      # there is some fast scrolling to some locatino, but then the view scrolls back
-      self.scrollTo(item.index(), QAbstractItemView.EnsureVisible)                # type: ignore[attr-defined]
+      parents: list[QModelIndex] = []                                     # list of parents, grandparents, ...
+      parent = item.index().parent()
+      while parent.isValid():
+        parents.append(parent)
+        parent = parent.parent()
+      # expand all parents such that this item is visible (prevent expanding to interfere with scrolling)
+      self.blockSignals(True)
+      for parent in reversed(parents):
+        self.setExpanded(parent, True)
+      self.blockSignals(False)
+      # select
+      self.selectionModel().select(item.index(), QItemSelectionModel.SelectionFlag.ClearAndSelect |
+                                   QItemSelectionModel.SelectionFlag.Rows)
+      self.setCurrentIndex(item.index())
+      # scroll
+      QTimer.singleShot(100, lambda: self.scrollTo(item.index(), QAbstractItemView.ScrollHint.PositionAtCenter))
     return
 
 

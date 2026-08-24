@@ -228,7 +228,7 @@ class MainWindow(QMainWindow):
           QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  QMessageBox.StandardButton.No)
       if confirmation == QMessageBox.StandardButton.Yes:
         self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID': self.comm.projectID, 'stack': self.comm.projectID})
-        self.comm.changeTable.emit('x0', '')
+        self.comm.changeTable.emit('x0', '', '')
         self.comm.changeSidebar.emit('redraw')
         self.comm.changeDetails.emit(DetailContext())
     elif commandType is Command.EXIT:
@@ -236,7 +236,7 @@ class MainWindow(QMainWindow):
     # view menu
     elif commandType is Command.VIEW:
       self.comm.projectID = ''
-      self.comm.changeTable.emit(payload[0], '')
+      self.comm.changeTable.emit(payload[0], '', '')
       self.comm.changeSidebar.emit('')
     # system menu
     elif commandType is Command.CHANGE_PG:

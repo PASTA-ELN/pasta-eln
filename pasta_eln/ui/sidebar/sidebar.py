@@ -151,7 +151,7 @@ class ProjectSidebar(Widget):
       self.paint()
     elif command is Command.CREATE_PROJECT:
       self.comm.formDoc.emit({'type': ['x0'], '_projectID': self.comm.projectID})
-      self.comm.changeTable.emit('x0', self.comm.projectID)
+      self.comm.changeTable.emit('x0', self.comm.projectID, '')
       self.comm.changeSidebar.emit('redraw')
 
 

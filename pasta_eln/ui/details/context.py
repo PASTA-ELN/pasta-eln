@@ -7,6 +7,7 @@ class DetailOrigin(Enum):
   """View that selected the item shown in Details."""
   PROJECT = 'project'
   TABLE = 'table'
+  LINK = 'link'
 
 
 @dataclass(frozen=True)

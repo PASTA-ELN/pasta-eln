@@ -181,9 +181,12 @@ class Details(Widget):
       return
     if self.context.origin is DetailOrigin.TABLE:
       addAction('Open in project', self, Command.OPEN_PROJECT, self.openMenu)
-    elif self.context.origin is DetailOrigin.PROJECT and self.data['type'][0] in self.comm.docTypesTitles \
-        and not self.data['type'][0].startswith('x'):
-      addAction('Open in table', self, Command.OPEN_TABLE, self.openMenu)
+    elif self.context.origin is DetailOrigin.PROJECT and not self.data['type'][0].startswith('x'):
+      addAction('Open in list', self, Command.OPEN_LIST, self.openMenu)
+    elif self.context.origin is DetailOrigin.LINK:
+      if not self.data['type'][0].startswith('x'):
+        addAction('Open in list', self, Command.OPEN_LIST, self.openMenu)
+      addAction('Open in project', self, Command.OPEN_PROJECT, self.openMenu)
     sourcePath = self.sourcePath()
     if sourcePath is not None:
       self.openMenu.addSeparator()
@@ -233,8 +236,8 @@ class Details(Widget):
       stack = branch[0].get('stack', []) if branch else []
       if stack:
         self.comm.changeProject.emit(stack[0], self.docID)
-    elif commandType is Command.OPEN_TABLE:
-      self.comm.changeTable.emit(self.data['type'][0], '')
+    elif commandType is Command.OPEN_LIST:
+      self.comm.changeTable.emit(self.data['type'][0], '', self.docID)
     elif commandType is Command.RERUN_EXTRACTOR:
       self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs': [self.docID], 'recipe': payload[0]})
     elif commandType is Command.TEST_EXTRACTION:
@@ -281,7 +284,7 @@ class Details(Widget):
         if stack:
           self.comm.changeProject.emit(stack.split('/')[0], '')
         else:
-          self.comm.changeTable.emit(self.data['type'][0], self.comm.projectID)
+          self.comm.changeTable.emit(self.data['type'][0], self.comm.projectID, '')
     elif commandType is Command.HIDE_DETAILS:
       self.comm.changeDetails.emit(DetailContext())                  # all widgets know that details are hidden
 
@@ -337,6 +340,6 @@ class Command(Enum):
   OPEN_FOLDER          = 6
   HIDE_ITEM            = 7
   HIDE_DETAILS         = 8
-  OPEN_TABLE           = 9
+  OPEN_LIST            = 9
   OPEN_EXTERNAL        = 10
   REMOVE               = 11

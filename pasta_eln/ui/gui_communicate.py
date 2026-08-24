@@ -23,7 +23,7 @@ class Communicate(QObject):
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES
   # signals request a change within the UI elements:
   changeSidebar      = Signal(str)              # redraw sidebar after hide/show of project in table, focus on this projectID
-  changeTable        = Signal(str, str)         # send doctype,projectID from sidebar to main-table
+  changeTable        = Signal(str, str, str)    # send docType, projectID, optional docID to the main table
                                                 #      can also be used for hiding the details on right side if nothing to show
   changeDetails      = Signal(object)           # DetailContext sent from the project tree or a table to Details
   changeProject      = Signal(str, str)         # send docID,projectID from sidebar or main-table to projects
@@ -132,7 +132,7 @@ class Communicate(QObject):
       projectGroup (str): project group to use, if empty use the one from initialization
     """
     self.commSendConfiguration.emit(self.configuration, projectGroup or self.projectGroup)
-    self.changeTable.emit('x0', '')                                      # show project table, without details
+    self.changeTable.emit('x0', '', '')                                  # show project table, without details
 
 
   def shutdownBackendThread(self) -> None:

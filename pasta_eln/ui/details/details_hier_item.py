@@ -3,10 +3,12 @@
 import logging
 import re
 from typing import Any
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, QUrl
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QLabel, QSizePolicy
 from pasta_eln.misc_tools import isDocID, makeStringWrappable
 from pasta_eln.text_tools.string_changes import tuple2html
+from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import CollapsibleSection
 
@@ -38,7 +40,7 @@ class DetailsHierItem(CollapsibleSection):
     self.contentLabel.setTextFormat(Qt.TextFormat.RichText)
     self.contentLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse |
                                               Qt.TextInteractionFlag.LinksAccessibleByMouse)
-    self.contentLabel.setOpenExternalLinks(True)
+    self.contentLabel.linkActivated.connect(self.openLink)
 
     super().__init__(self.categoryName, self.contentLabel, expanded=not startCollapsed,
                      iconSize=QSize(32, 32), outlined=True)
@@ -49,12 +51,12 @@ class DetailsHierItem(CollapsibleSection):
 
 
   def collapse(self) -> None:
-    """Hide the content of this widget"""
+    """Hide this section's content."""
     self.setExpanded(False)
 
 
   def expand(self) -> None:
-    """Show the content of this widget"""
+    """Show this section's content."""
     self.setExpanded(True)
 
 
@@ -88,21 +90,39 @@ class DetailsHierItem(CollapsibleSection):
           logging.info('Not a tuple: %s : %s', key, value)
         if not isDocID(value[0]):
           value = value[0]
-        elif value[2]:
-          value = value[2]
       elif isinstance(value, list):
         value = ', '.join([str(i) for i in value])
-      if isinstance(value, tuple) and len(value) == 4 and isDocID(value[0]):
-        value = 'Cannot resolve link'
       labelStr = f'<b>{key}:</b><br>{value}<br><br>'
       if isinstance(value, tuple) and len(value) == 4:
         k, v = tuple2html(key, value)
+        if isDocID(value[0]):
+          k = key
+          valueText = f'<a href="pasta-eln://{value[0]}">{value[2] or value[1]}</a>'
+          v = valueText if value[3] is None or value[3] == '' else \
+              f'{valueText}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
         labelStr = f'<b>{k}:</b><br>{v}<br><br>'
     # Wrapping can force an HTML-statement wrap in rare cases
     return labelStr if '<a href=' in labelStr else makeStringWrappable(labelStr)
 
 
   def addContent(self, key: str, value: Any) -> None:
-    """Appends formatted Content to the Label of this Widget, see self.formatContent for details"""
+    """Append a formatted metadata value to the section.
+
+    Args:
+      key: Metadata field name.
+      value: Metadata field value.
+    """
     self.content += self.formatContent(key, value)
     self.contentLabel.setText(self.content.removesuffix('<br><br>'))
+
+
+  def openLink(self, link: str) -> None:
+    """Open an internal item link in Details or delegate an external URL to Qt.
+
+    Args:
+      link: URL activated in the rich-text label.
+    """
+    if link.startswith('pasta-eln://') and isDocID(link.removeprefix('pasta-eln://')):
+      self.comm.changeDetails.emit(DetailContext(link.removeprefix('pasta-eln://'), origin=DetailOrigin.LINK))
+    else:
+      QDesktopServices.openUrl(QUrl(link))
