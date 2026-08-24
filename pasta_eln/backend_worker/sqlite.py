@@ -209,9 +209,7 @@ class SqlLiteDB:
     result = self.cursor.fetchone()
     if result is None:
       return []
-    if column=='view':
-      return result[0].split(',')
-    return result
+    return result[0].split(',') if column=='view' else result
 
 
   def exit(self) -> None:
