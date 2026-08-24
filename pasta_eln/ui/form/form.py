@@ -345,8 +345,18 @@ class Form(QDialog):
         if key == '.name' and not self.groupEdit:
           setattr(self, elementName, QLineEdit(self.doc.get('name','')))
           getattr(self, elementName).setValidator(QRegularExpressionValidator('[\\w\\ .-]+'))
-          section.formL.addRow('Name', getattr(self, elementName))
+          nameW = QWidget()
+          nameL = QHBoxLayout(nameW)
+          nameL.setContentsMargins(0, 0, 0, 0)
+          nameL.setSpacing(SPACE.S)
+          nameL.addWidget(getattr(self, elementName))
+          filenameIndicator = QLabel('ℹ')
+          filenameIndicator.setStyleSheet('font-size: 14pt;')
+          nameL.addWidget(filenameIndicator, alignment=Qt.AlignmentFlag.AlignTop)
+          section.formL.addRow('Name', nameW)
           self.allUserElements.append(('name','LineEdit'))
+          getattr(self, elementName).textChanged.connect(self.updateFilenameIndicator)
+          self.updateFilenameIndicator()
         elif key == '.tags':
           self.tagsBarMainW = QWidget()
           tagsBarMainL = QHBoxLayout(self.tagsBarMainW)
@@ -521,6 +531,24 @@ class Form(QDialog):
           self.docTypeComboBox.addItem(value['title'], userData=key)
       self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
       advancedLayout.addRow('Item type', self.docTypeComboBox)
+
+
+  def updateFilenameIndicator(self) -> None:
+    """Show the filename indicator when every stored path differs from the edited name."""
+    if ('name', 'LineEdit') not in self.allUserElements:
+      return
+    nameInput = getattr(self, f"key_{self.allUserElements.index(('name', 'LineEdit'))}")
+    filenameIndicator = nameInput.parentWidget().layout().itemAt(1).widget()
+    paths = [branch['path'] for branch in self.doc.get('branch', [])]
+    if not paths or any(path is None for path in paths):
+      filenameIndicator.hide()
+      return
+    filenames = [Path(path).name for path in paths]
+    name = nameInput.text().casefold()
+    differs = all(re.sub(r'^\d{3}_', '', filename).casefold() != name for filename in filenames)
+    filenameIndicator.setVisible(differs)
+    filenameIndicator.setToolTip('The filename on disk is:\n' +
+                                 '\n'.join(filenames) if differs else '')
 
 
   def formLabelClicked(self, key: str, _:str='') -> None:

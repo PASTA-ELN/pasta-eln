@@ -53,3 +53,5 @@ For a visual check of the user's actual desktop, ask them to press `F12` in PAST
 ## GitHub issues
 
 The authoritative issue set is GitHub Issues plus the **Repository maintenance items** in `README.md`; record actionable findings in the appropriate place. For issue writes, use authenticated `gh` if the connector cannot write: check `gh auth status`, preserve real line breaks, and remove labels with `gh issue edit <number> --remove-label "<exact label>"` followed by verification.
+
+Before implementing `#<number>`, read its body and every comment in chronological order; later comments may supersede earlier text. Implement and verify every explicitly scoped surface, and report any unmet or ambiguous requirement rather than silently narrowing the scope.

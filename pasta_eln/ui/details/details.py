@@ -1,4 +1,5 @@
 """ This Widget is the right sidebar that shows the details of the currently selected item """
+import re
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -108,7 +109,18 @@ class Details(Widget):
     dataHierarchyNode = self.comm.dataHierarchyNodes[self.data['type'][0]]
 
     # HEADER
-    self.titleLabel.setText(makeStringWrappable(self.data['name'], nChars=15))
+    title = makeStringWrappable(self.data['name'], nChars=15)
+    # Show the filename indicator when every stored path differs from the item name
+    paths = [branch['path'] for branch in self.data.get('branch', [])]
+    if not paths or any(path is None for path in paths):
+      self.titleLabel.setText(title)
+      self.titleLabel.setToolTip('')
+    else:
+      filenames = [Path(path).name for path in paths]
+      name = self.data['name'].casefold()
+      differs = all(re.sub(r'^\d{3}_', '', filename).casefold() != name for filename in filenames)
+      self.titleLabel.setText(f'{title}<sup><span style="font-size: 24pt;">ℹ</span></sup>' if differs else title)
+      self.titleLabel.setToolTip('The filename on disk is:\n' + '\n'.join(filenames) if differs else '')
 
     # BODY
     # clear old items
