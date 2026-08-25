@@ -1,9 +1,10 @@
 """Parent class to repository classes"""
+from abc import ABC, abstractmethod
 from typing import Any
 
 
-class RepositoryClient:
-  """Parent class to repository classes"""
+class RepositoryClient(ABC):
+  """Required interface shared by repository clients."""
   def __init__(self, serverUrl: str, apiToken: str) -> None:
     """
     Initializes the client
@@ -16,6 +17,7 @@ class RepositoryClient:
     self.serverUrl = serverUrl
 
 
+  @abstractmethod
   def checkServer(self) -> tuple[bool, str]:
     """
     Checks if the data-verse server is reachable
@@ -23,9 +25,9 @@ class RepositoryClient:
     Returns (tuple(bool, Any)):
       A tuple of (success, a message) is returned
     """
-    return False, ''
 
 
+  @abstractmethod
   def checkAPIKey(self) -> bool:
     """
     Checks if the given API token is valid
@@ -41,9 +43,9 @@ class RepositoryClient:
     Returns:
         bool: True if the API token is valid, False otherwise
     """
-    return False
 
 
+  @abstractmethod
   def uploadRepository(self, metadata:dict[str,Any], filePath:str) -> tuple[bool, str]:
     """
     Uploads a file and metadata to become a dataset
@@ -55,9 +57,9 @@ class RepositoryClient:
     Returns:
       tuple: success of function, message
     """
-    return False, f"Mock output of metadata {metadata} and filePath {filePath}"
 
 
+  @abstractmethod
   def prepareMetadata(self, metadata:dict[str,Any]) -> dict[str,Any]:
     """
     Prepares the metadata for uploading
@@ -68,4 +70,3 @@ class RepositoryClient:
     Returns:
         dict: The prepared metadata
     """
-    return {}

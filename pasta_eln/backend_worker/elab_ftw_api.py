@@ -61,7 +61,7 @@ class ElabFTWApi:
     return
 
 
-  def touchEntry(self, entryType:str, content:dict[str,Any]={}) -> int:
+  def touchEntry(self, entryType:str, content:dict[str,Any] | None=None) -> int:
     """
     create entry of type: experiment, item/resource, without much content
 
@@ -72,7 +72,7 @@ class ElabFTWApi:
     Returns:
       int: elabFTW id
     """
-    response = self.session.post(self.url+entryType, data=json.dumps(content), **self.param)
+    response = self.session.post(self.url+entryType, data=json.dumps({} if content is None else content), **self.param)
     if response.status_code == 201:
       return int(response.headers['Location'].split('/')[-1])
     if response.status_code == 400:
@@ -122,7 +122,7 @@ class ElabFTWApi:
     return [{}]
 
 
-  def updateEntry(self, entryType:str, identifier:int, content:dict[str,Any]={}) -> bool:
+  def updateEntry(self, entryType:str, identifier:int, content:dict[str,Any] | None=None) -> bool:
     """
     update entry: experiment, item/resource
 
@@ -134,6 +134,7 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
+    content = {} if content is None else content.copy()
     tags = content.pop('tags',[])
     response = self.session.patch(f'{self.url}{entryType}/{identifier}', data=json.dumps(content), **self.param)
     if response.status_code != 200:
@@ -262,7 +263,7 @@ class ElabFTWApi:
     return -1
 
 
-  def upLoadUpdate(self, entryType:str, identifier:int, uploadID:int, content:dict[str,Any]={}) -> bool:
+  def upLoadUpdate(self, entryType:str, identifier:int, uploadID:int, content:dict[str,Any] | None=None) -> bool:
     """
     update an upload
 
@@ -276,7 +277,7 @@ class ElabFTWApi:
       bool: success of operation
     """
     url = f'{self.url}{entryType}/{identifier}/uploads/{uploadID}'
-    response = self.session.patch(url, data=json.dumps(content), **self.param)
+    response = self.session.patch(url, data=json.dumps({} if content is None else content), **self.param)
     return response.status_code == 200
 
 

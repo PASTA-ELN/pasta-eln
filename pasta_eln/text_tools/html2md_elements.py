@@ -2,6 +2,7 @@
 Copied from https://github.com/Alir3z4/html2text
 - which has a GPL-3.0 license
 - simplified into four files, removed the library constraint
+- This externally sourced file is not and will not be modified as part of this work.
 """
 from typing import Dict, Optional
 
