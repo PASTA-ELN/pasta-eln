@@ -83,7 +83,6 @@ class Pasta2Elab:
     self.docID2elabID:dict[str,tuple[int,bool]] = {}      # e.g. x-15343154th54325243, (4, bool if experiment)
     self.readWriteAccess:dict[str,str] = {}
     self.elabProjectGroupData:dict[str,Any] = {}           # data of project group on elab-server, cached data
-    self.verbose         = False
     return
 
 
@@ -174,9 +173,6 @@ class Pasta2Elab:
     #verify nothing extraneous
     if missingDocTypes:
       docTypesElab  = {i['title']:i['id'] for i in self.api.readEntry('items_types')}
-    if set(docTypesElab.keys()).difference(docTypesPasta|{'Default','ProjectGroup'}) and self.verbose:
-      print('**Info: some items exist that should not:', set(docTypesElab.keys()).difference(docTypesPasta|{'Default'}),
-            'You can remove manually, but should not interfere since not used.')
     # sync data-hierarchy
     dataHierarchy = []
     for docType in self.backend.db.dataHierarchy('',''):
@@ -214,9 +210,6 @@ class Pasta2Elab:
     self.backend.db.cursor.execute('SELECT id, type, externalId FROM main')
     self.docID2elabID = {i[0]:((i[2],i[1].split('/')[0]=='measurement') if i[2] else (getNewEntry(elabTypes[i[1].split('/')[0]]),i[1].split('/')[0]=='measurement'))
                     for i in self.backend.db.cursor.fetchall()}
-    if self.verbose:
-      print('List of docIDs and corresponding elabIDs (flag if experiment)')
-      print('\n'.join([f'{k} : {v}' for k,v in self.docID2elabID.items()]))
     # save to sqlite
     self.backend.db.cursor.executemany('UPDATE main SET id=?, externalId=? WHERE id=?', [(k,v[0],k) for k, v in self.docID2elabID.items()])
     self.backend.db.connection.commit()
@@ -245,8 +238,6 @@ class Pasta2Elab:
     elabID = self.docID2elabID[node.id][0]
     if 'dateSync' not in docClient or not docClient['dateSync']:
       docClient['dateSync'] = datetime.fromisoformat('2000-01-03').isoformat()+'.0000'
-    if self.verbose:
-      print(f'\n{node.id}\n>>>DOC_CLIENT sync&modified', docClient['dateSync'], docClient['dateModified'])
     # pull from server: content and other's client content
     entryType = 'experiments' if self.docID2elabID[node.id][1] else 'items'
     dataFromElab = self.api.readEntry(entryType, elabID)[0]
@@ -257,8 +248,6 @@ class Pasta2Elab:
       self.docID2elabID.pop(node.id)
       return node.id, -2
     docServer, uploads = self.elab2doc(dataFromElab)
-    if self.verbose:
-      print('>>>DOC_SERVER', docServer)
     # Check if nothing changed by comparing data that is already present, without download
     flagNothingChanged = False
     pattern = '%Y-%m-%dT%H:%M:%S.%f'
@@ -287,8 +276,6 @@ class Pasta2Elab:
           break
     if flagNothingChanged:
       mergeCase = 4
-      if self.verbose:
-        print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
       return node.id, mergeCase
     # Collect data from server
     if listDoNotChange :=[i for i in uploads if i['real_name']=='do_not_change.json']:
@@ -297,8 +284,6 @@ class Pasta2Elab:
       docOther = {'name':'Untitled', 'tags':[], 'comment':'', 'dateSync':datetime.fromisoformat('2000-01-02').isoformat()+'.0000',
                   'dateModified':datetime.fromisoformat('2000-01-01').isoformat()+'.0000'}
       # return(node.id, -1)
-    if self.verbose:
-      print('>>>DOC_OTHER sync&modified', docOther.get('dateSync'), docOther.get('dateModified'))
     docMerged:dict[str,Any] = {}
     flagUpdateClient, flagUpdateServer = False, False
 
@@ -308,26 +293,16 @@ class Pasta2Elab:
       if isinstance(v, str):
         if k not in docOther or v != html2markdown(markdown2html(docOther[k])):
           flagServerChange = True
-          if self.verbose:
-            print(f'str change k:{k}; v:\n|{v}|\nvOther:\n|{docOther[k]}|\n|{html2markdown(markdown2html(docOther[k]))}|\ntype:{type(v)}')
           docOther[k] = docServer[k]
       elif isinstance(v, dict):
         if k not in docOther or v != docOther[k]:
           flagServerChange = True
-          if self.verbose:
-            print(f'dict change k:{k}; v:{v}; vOther:{docOther[k]}|type:{type(v)}')
           docOther[k] = docServer[k]
       elif isinstance(v, list):
         if set(v) != {i for i in docOther[k] if not re.match(r'^_\d$', i)}:
           flagServerChange = True
-          if self.verbose:
-            print('list change', k,v, docOther[k])
           docOther[k] = docServer[k]
-      elif self.verbose:
-        print('other change', k,v, docOther[k], type(v))
     if flagServerChange:
-      if self.verbose:
-        print('Server content changed from other')
       docOther['dateModified'] = datetime.now().isoformat()
 
     # merge 2: compare server client
@@ -338,8 +313,6 @@ class Pasta2Elab:
         datetime.strptime(docOther['dateModified'], pattern)  <= datetime.strptime(docOther['dateSync'], pattern) and  \
         not mode.startswith('g'))     or     mode=='sA':
       mergeCase = 1
-      if self.verbose:
-        print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
       flagUpdateServer = True
       flagUpdateClient = False
       docMerged = copy.deepcopy(docClient)
@@ -348,8 +321,6 @@ class Pasta2Elab:
         datetime.strptime(docOther['dateModified'], pattern)  >  datetime.strptime(docOther['dateSync'], pattern) and \
         not mode.startswith('s'))     or     mode=='gA':
       mergeCase = 2
-      if self.verbose:
-        print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
       flagUpdateServer = False
       flagUpdateClient = True
       docMerged = copy.deepcopy(docOther)
@@ -358,8 +329,6 @@ class Pasta2Elab:
        datetime.strptime(docOther['dateModified'], pattern)  >  datetime.strptime(docOther['dateSync'], pattern) and \
        flagServerChange and not mode.startswith('s'):
       mergeCase = 3
-      if self.verbose:
-        print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
       flagUpdateServer = True
       flagUpdateClient = True
       docMerged = copy.deepcopy(docOther)
@@ -368,8 +337,6 @@ class Pasta2Elab:
        datetime.strptime(docOther['dateModified'], pattern)  <= datetime.strptime(docOther['dateSync'], pattern) and \
           not mode.endswith('A'):
       mergeCase = 4
-      if self.verbose:
-        print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
       # flagUpdateServer = False
       # flagUpdateClient = False
       # docMerged = {}
@@ -378,8 +345,6 @@ class Pasta2Elab:
     if datetime.strptime(docClient['dateModified'], pattern) > datetime.strptime(docClient['dateSync'], pattern) and \
        datetime.strptime(docOther['dateModified'], pattern)  > datetime.strptime(docOther['dateSync'], pattern):
       mergeCase = 5
-      if self.verbose:
-        print(f'** MERGE CASE {MERGE_LABELS[mergeCase]}')
       flagUpdateServer = True
       flagUpdateClient = False
       docMerged = copy.deepcopy(docClient)
@@ -388,8 +353,6 @@ class Pasta2Elab:
       return node.id, -1
 
     docMerged['dateSync'] = datetime.now().isoformat()
-    if self.verbose:
-      print('>>>MERGE TIME', docMerged['dateSync'])
     # update client
     if flagUpdateClient:
       docUpdate = copy.deepcopy(docMerged)
@@ -481,8 +444,6 @@ class Pasta2Elab:
             self.backend.db.cursor.execute('UPDATE main SET externalId=? WHERE externalId=?', ['', str(idx)])
             self.backend.db.connection.commit()
       if diff := inELAB[entryType].difference(inPasta[entryType]):
-        if self.verbose:
-          print(f'**INFO** There is a difference in {entryType} between SERVER and CLIENT. Ids on server: {diff}.')
         for count1, idx in enumerate(diff):
           if progressCallback is not None:
             progressCallback('count', str(round(count0*50+count1*50/len(diff))))

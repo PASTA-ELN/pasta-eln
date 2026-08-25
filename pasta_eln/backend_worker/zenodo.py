@@ -30,11 +30,6 @@ class ZenodoClient(RepositoryClient):
       A tuple of (success, a message) is returned
     """
     return True, 'VOID TEST'
-    # resp = requests.get(f"{self.serverUrl}/api/info/version", headers=self.headers1)
-    # success = (resp.status_code == 200 and resp.json().get('data').get('version') is not None)
-    # return (success, 'Dataverse is reachable') \
-    #   if success \
-    #   else (success, f"Cannot reach server: {self.serverUrl}, Status: {resp.status_code}, json: {resp.json()}")
 
 
   def checkAPIKey(self) -> bool:

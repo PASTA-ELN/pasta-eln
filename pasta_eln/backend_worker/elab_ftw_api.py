@@ -5,7 +5,7 @@ import json
 import logging
 import mimetypes
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any
 import requests  # only requirement; could be replaced with urllib to eliminate requirements
 
 
@@ -31,16 +31,10 @@ class ElabFTWApi:
       print(f'Go to website: {url}ucp.php?tab=4, enter a name and as permission: read/write. Create the API key')
       apiKey = input('Copy-paste the api-key: ').strip()
 
-    class Param(TypedDict):
-      """ class for parameters """
-      headers: dict[str, str]
-      verify: bool
-      timeout: int
-
     # test server
     self.url = ''                                          #initialize: indicator if initialization successful
     self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
-    self.param:Param = {'headers':self.headers, 'verify':verifySSL, 'timeout':10}
+    self.param:dict[str,Any] = {'headers':self.headers, 'verify':verifySSL, 'timeout':10}
     self.session = requests.Session()
     try:
       response = self.session.get(f'{url}info', **self.param)
