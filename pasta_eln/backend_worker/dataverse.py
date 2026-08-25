@@ -1,7 +1,6 @@
 """ Client for communicating with Dataverse Server via REST API
 - Author: Jithu Murugan, Steffen Brinckmann
 """
-import logging
 from datetime import datetime
 from json import dumps
 from os.path import basename
@@ -29,20 +28,6 @@ class DataverseClient(RepositoryClient):
     super().__init__(serverUrl, apiToken)
     self.identifier = identifier
     self.headers = {'Accept': 'application/json', 'X-Dataverse-key': self.apiToken}
-
-
-  def recreateAPIKey(self) -> str | Any:
-    """
-    Recreates the API token using existing token
-
-    Returns:
-        str | Any: The new API token or any error message if the token recreation fails
-    """
-    resp = requests.post(f"{self.serverUrl}/api/users/token/recreate", headers=self.headers, timeout=10)
-    if resp.status_code == 200:
-      tokenMessage = resp.json().get('data').get('message')
-      return tokenMessage.replace('New token for dataverseAdmin is ', '')
-    return f"Error recreating the token, Info: {resp.text}"
 
 
   def checkServer(self) -> tuple[bool, str]:
@@ -75,72 +60,7 @@ class DataverseClient(RepositoryClient):
         bool: True if the API token is valid, False otherwise
     """
     resp = requests.get(f"{self.serverUrl}/api/users/token", headers=self.headers, timeout=10)
-    return (bool(resp) and resp.status_code is not None
-            and resp.status_code not in [401, 403, 500])
-
-
-  def checkAPIKeyExpired(self) -> bool:
-    """
-    Check if the API token has expired
-    Returns:
-      True if the token has expired, False otherwise
-    """
-    resp = requests.get(f"{self.serverUrl}/api/users/token", headers=self.headers, timeout=10)
-    if resp.status_code == 200:
-      expiryMessage = resp.json().get('data').get('message')
-      expiryTimeString = expiryMessage.replace(f"Token {self.apiToken} expires on ", '')
-      expiryTime = datetime.strptime(expiryTimeString, '%Y-%m-%d %H:%M:%S.%f')
-      return expiryTime < datetime.now()
-    print(f"Error checking token expiration, Info: {resp.text}")
-    return False
-
-
-  ################ DATAVERSE #######################
-  def createDataverse(self, dvParent: str, dvName: str, dvDescription: str, dvAlias: str,
-                      dvContactEmailList: list[dict[str, str]], dvAffiliation: str, dvType: str) -> dict[Any, Any] | Any:
-    """
-    Creates and publishes a dataverse
-    Args:
-      dvParent (str): The name of the parent dataverse
-      dvName (str): The name of the dataverse
-      dvDescription (str): The description of the dataverse
-      dvAlias (str): The alias of the dataverse
-      dvContactEmailList (list[dict[str, str]]): The list of contact emails which must be provided in the following format:
-        [{"contactEmail": "example1@example.edu"}, {"contactEmail": "example2@example.edu"}]
-      dvAffiliation (str): The affiliation of the dataverse
-      dvType (str): The type of the dataverse which must be one of the following:
-        DEPARTMENT
-        JOURNALS
-        LABORATORY
-        ORGANIZATIONS_INSTITUTIONS
-        RESEARCHERS
-        RESEARCH_GROUP
-        RESEARCH_PROJECTS
-        TEACHING_COURSES
-        UNCATEGORIZED
-
-    Returns(dict[Any, Any] | Any):
-      A dictionary representing the created and published dataverse, or an error message
-    """
-    dvJson = {
-      'name': dvName,
-      'alias': dvAlias,
-      'dataverseContacts': dvContactEmailList,
-      'affiliation': dvAffiliation,
-      'description': dvDescription,
-      'dataverseType': dvType
-    }
-    # Create the data-verse
-    resp = requests.post(f"{self.serverUrl}/api/dataverses/{dvParent}",
-      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken},
-      data=dumps(dvJson), timeout=10)
-    if resp.status_code == 201:                                                                      # Success
-      pubResp = requests.post(f"{self.serverUrl}/api/dataverses/{resp.json().get('data').get('alias')}/actions/:publish",
-        headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken}, timeout=10)
-      if pubResp.status_code == 200:
-        return pubResp.json().get('data')
-      return f"Error publishing dataverse, Status: {pubResp.status_code}, Info: {pubResp.text}"
-    return f"Error creating dataverse, Status: {resp.status_code}, Info: {resp.text}"
+    return resp.ok
 
 
   def getDataverseList(self) -> dict[Any, Any] | Any:
@@ -168,47 +88,6 @@ class DataverseClient(RepositoryClient):
     return f"Error get dataverse list, Server:{self.serverUrl},  Status:{resp.status_code}"
 
 
-  def getDataverseContent(self) -> dict[Any, Any] | Any:
-    """
-    Retrieves the contents of a dataverse
-
-    Returns (dict[Any, Any] | Any):
-      A dictionary of dataverse contents for successful request, otherwise the error message is returned
-    """
-    resp = requests.get(f"{self.serverUrl}/api/dataverses/{self.identifier}/contents", headers=self.headers,
-                        timeout=10)
-    return resp.json() if resp.status_code == 200 else \
-      f"Error retrieving the contents of dataverse, Id: {self.identifier}, Info: {resp.json()}"
-
-
-  def getDataverseSize(self) -> str | Any:
-    """
-    Retrieves the size of a dataverse
-    Returns (str):
-      Dataverse size in bytes for successful request, otherwise the error message is returned
-    """
-    resp = requests.get(f"{self.serverUrl}/api/dataverses/{self.identifier}/storagesize", headers=self.headers,
-                        timeout=10)
-    if resp.status_code == 200:
-      return (resp.json().get('data').get('message').replace('Total size of the files stored in this dataverse: ', ''))
-    return f"Error retrieving the size for data verse, Id: {self.identifier}, Info: {resp.json()}"
-
-
-  def getDataverseInfo(self) -> str | Any:
-    """
-    Retrieves information about a dataverse
-
-    Returns:
-        str | Any: The data associated with the dataverse if the request is successful, otherwise an error message
-    """
-    resp = requests.get(f"{self.serverUrl}/api/dataverses/{self.identifier}", headers=self.headers,
-                        timeout=10)
-    if resp.status_code:
-      return resp.json().get('data')
-    return f"Error retrieving the info for data verse, Id: {self.identifier}, Info: {resp.text}"
-
-
-  ################ DATASET #######################
   def createDataset(self, dsMetadata: dict[str, Any], dsValidateMetadata: bool = False
                                         ) -> dict[Any, Any] | Any:
     """
@@ -310,179 +189,6 @@ class DataverseClient(RepositoryClient):
     if isinstance(reply, str):
       return False, 'Error publishing the file'
     return True, f'Published: {doi}, {res["persistentUrl"]}'
-
-
-  def getDatasetInfo(self, dsPersistentId: str, version: str = ':latest-published') -> dict[Any, Any] | Any:
-    """
-    Fetch JSON representation of a dataset
-    Args:
-      dsPersistentId (str): The identifier of the dataset
-      version (str): The version of the dataset
-        Note dataset versions can be referred to as:
-          :draft the draft version, if any
-          :latest either a draft (if exists) or the latest published version
-          :latest-published the latest published version
-          x.y a specific version, where x is the major version number and y is the minor version number
-          x same as x.0
-
-    Returns:
-      JSON representation of the dataset for successful request, otherwise the error message is returned
-    """
-    resp = requests.get(
-      f"{self.serverUrl}/api/datasets/:persistentId/versions/{version}?persistentId={dsPersistentId}",
-      params={'Accept': 'application/json'}, timeout=10,
-      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken})
-    if resp.status_code == 200:
-      return resp.json().get('data')
-    return f"Error fetching JSON representation of dataset: {dsPersistentId} Info: {resp.json()}"
-
-
-  def getDatasetVersions(self, dsPersistentId: str) -> dict[Any, Any] | Any:
-    """
-    Fetch the version list for dataset
-    Args:
-      dsPersistentId (str): The identifier of the dataset
-
-    Returns:
-      Version list for the dataset for successful request, otherwise the error message is returned
-    """
-    resp = requests.get(
-      f"{self.serverUrl}/api/datasets/:persistentId/versions?persistentId={dsPersistentId}",
-      params={'Accept': 'application/json'}, timeout=10,
-      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken})
-    if resp.status_code == 200:
-      return resp.json().get('data')
-    return f"Error fetching version list for dataset: {dsPersistentId} Info: {resp.json()}"
-
-
-  def getDatasetLocks(self, dsPersistentId: str) -> dict[Any, Any] | Any:
-    """
-    Fetches locks for a dataset
-
-    Explanation:
-        This method fetches the locks for a dataset identified by the persistent ID
-        It makes an asynchronous HTTP GET request to retrieve the locks information and handles exceptions
-
-    Args:
-        dsPersistentId (str): The persistent ID of the dataset to fetch locks for
-
-    Returns:
-        dict[Any, Any] | Any: A dictionary containing the locks information if successful, or an error message
-    """
-    resp = requests.get(
-      f"{self.serverUrl}/api/datasets/:persistentId/locks?persistentId={dsPersistentId}",
-      params={'Accept': 'application/json'}, timeout=10,
-      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken})
-    if resp.status_code == 200:
-      return {'locks': resp.json().get('data')}
-    return f"Error fetching locks for dataset: {dsPersistentId}  Info: {resp.json()}"
-
-
-  def getDatasetFiles(self, dsPersistentId: str, version: str = ':latest-published') -> dict[Any, Any] | Any:
-    """
-    Fetch the file list for dataset
-    Args:
-      dsPersistentId (str): The identifier of the dataset
-      version (str): The version of the dataset
-        Note dataset versions can be referred to as:
-          :draft the draft version, if any
-          :latest either a draft (if exists) or the latest published version
-          :latest-published the latest published version
-          x.y a specific version, where x is the major version number and y is the minor version number
-          x same as x.0
-
-    Returns:
-      File list for the dataset for successful request, otherwise the error message is returned
-    """
-    resp = requests.get(
-      f"{self.serverUrl}/api/datasets/:persistentId/versions/{version}/files?persistentId={dsPersistentId}",
-      params={'Accept': 'application/json'}, timeout=10,
-      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken})
-    if resp.status_code == 200:
-      return resp.json().get('data')
-    return f"Error fetching file list for dataset: {dsPersistentId}  Info: {resp.json()}"
-
-
-  def getDatasetMetadata(self, dsPersistentId: str, version: str = ':latest-published') -> dict[Any, Any] | Any:
-    """
-    Fetch the metadata block for dataset
-    Args:
-      dsPersistentId (str): The identifier of the dataset
-      version (str): The version of the dataset
-        Note dataset versions can be referred to as:
-          :draft the draft version, if any
-          :latest either a draft (if exists) or the latest published version
-          :latest-published the latest published version
-          x.y a specific version, where x is the major version number and y is the minor version number
-          x same as x.0
-
-    Returns:
-      Metadata block for the dataset for successful request, otherwise the error message is returned
-    """
-    resp = requests.get(
-      f"{self.serverUrl}/api/datasets/:persistentId/versions/{version}/metadata?persistentId={dsPersistentId}",
-      params={'Accept': 'application/json'}, timeout=10,
-      headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken})
-    if resp.status_code == 200:
-      return resp.json().get('data')
-    return f"Error fetching metadata block for dataset: {dsPersistentId}  Info: {resp.json()}"
-
-
-  def deleteEmptyDataverse(self) -> str | Any:
-    """
-    Deletes an empty dataverse
-
-    Returns:
-      Message for successful request, otherwise the error message is returned
-    """
-    resp = requests.delete(f"{self.serverUrl}/api/dataverses/{self.identifier}", headers=self.headers, timeout=10)
-    if resp.status_code == 200:
-      return resp.json().get('data').get('message')
-    return f"Error deleting dataverse,  Info: {resp.json()}"
-
-
-  def deletePublishedDataset(self, dsPersistentId: str) -> str | Any:
-    """
-    Deletes a published dataset
-    Note: The method fails presently due to a bug in dataverse API
-          Every time the API returns 403 errors saying the user needs to be superuser
-    Args:
-      dsPersistentId (str): The identifier of the dataset
-
-    Returns:
-      Message for successful request, otherwise the error message is returned
-    """
-    resp = requests.delete(
-      f"{self.serverUrl}/api/datasets/:persistentId/destroy/",
-      params={'persistentId': dsPersistentId},
-      headers=self.headers, timeout=10)
-    if resp.status_code == 200:
-      return resp.json().get('data').get('message')
-    return f"Error deleting dataset, Id: {dsPersistentId}, Info: {resp.json()}"
-
-
-  def deleteNonEmptyDataverse(self) -> str | Any:
-    """
-    Deletes a non-empty dataverse
-
-    Note: The method fails presently due to a bug in dataverse API while invoking the delete_published_dataset method
-
-    Returns:
-      Message for successful request, otherwise the error message is returned
-    """
-    contents = self.getDataverseContent()
-    for content in contents:
-      if content.get('type') == 'dataset':
-        self.deletePublishedDataset(f"{content.get('protocol')}:{content.get('authority')}/{content.get('identifier')}")
-      elif content.get('type') == 'dataverse':
-        self.deleteNonEmptyDataverse()
-      else:
-        logging.error('Unknown content type: %s while deleting dataverse: %s on server: %s ', content.type,
-                      self.identifier, self.serverUrl, exc_info=True)
-    resp = requests.delete(f"{self.serverUrl}/api/dataverses/{self.identifier}", headers=self.headers, timeout=10)
-    if resp.status_code == 200:
-      return resp.json().get('data').get('message')
-    return f"Error deleting dataverse, Id: {self.identifier}, Info: {resp.json()}"
 
 
   def prepareMetadata(self, metadata:dict[str,Any]) -> dict[str,Any]:

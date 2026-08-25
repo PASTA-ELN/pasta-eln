@@ -53,8 +53,7 @@ class ZenodoClient(RepositoryClient):
         bool: True if the API token is valid, False otherwise
     """
     resp = requests.get(f"{self.serverUrl}", headers=self.headers1, timeout=10)
-    return (bool(resp) and resp.status_code is not None
-            and resp.status_code not in [401, 403, 500])
+    return resp.ok
 
 
   def uploadRepository(self, metadata:dict[str,Any], filePath:str) -> tuple[bool, str]:

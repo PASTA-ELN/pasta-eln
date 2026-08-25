@@ -81,26 +81,6 @@ class ElabFTWApi:
     return -1
 
 
-  def createEntry(self, entryType:str, content:str='') -> bool:
-    """
-    create entry of type: experiment, item/resource
-
-    Args:
-      entryType (str): entryType to create, e.g. experiments, items, items_types
-      content (str): content to create
-
-    Returns:
-      bool: success of operation
-    """
-    raise NotImplementedError('Not implemented and tested')
-    # response = requests.post(self.url+entryType, **self.param)
-    # print("**TODO", content)
-    # if response.status_code == 201:
-    #   return True
-    # logging.error("occurred in create of url %s: %s", entryType, response.json, exc_info=True)
-    # return False
-
-
   def readEntry(self, entryType:str, identifier:int=-1) -> list[dict[str,Any]]:
     """
     read entry or all entries (use identifier=-1 in the latter case)
@@ -169,24 +149,6 @@ class ElabFTWApi:
       return True
     logging.error('Occurred in delete of url %s', entryType, exc_info=True)
     return False
-
-
-  def purgeExperimentsItems(self, areYouSure:bool=False) -> None:
-    """ Remove all experiments and items on server
-    - not used in Pasta
-
-    Args:
-      areYouSure (bool): safety mechanism to prevent accidental operation
-    """
-    if not areYouSure:
-      return
-    for entryType in ['experiments','items']:
-      response = self.session.get(f'{self.url}{entryType}?archived=on', **self.param)
-      for identifier in [i['id'] for i in json.loads(response.content.decode('utf-8'))]:
-        response = self.session.delete(f'{self.url}{entryType}/{identifier}', **self.param)
-        if response.status_code != 204:
-          logging.error('Purge delete %s : %s',entryType, identifier, exc_info=True)
-    return
 
 
   ### ---------------------------------------------
@@ -263,24 +225,6 @@ class ElabFTWApi:
     return -1
 
 
-  def upLoadUpdate(self, entryType:str, identifier:int, uploadID:int, content:dict[str,Any] | None=None) -> bool:
-    """
-    update an upload
-
-    Args:
-      entryType (str): entry to create, e.g. experiments, items, items_types
-      identifier (int): elabFTW's identifier
-      uploadID (int): identifier of the upload
-      content (dict): content to update
-
-    Returns:
-      bool: success of operation
-    """
-    url = f'{self.url}{entryType}/{identifier}/uploads/{uploadID}'
-    response = self.session.patch(url, data=json.dumps({} if content is None else content), **self.param)
-    return response.status_code == 200
-
-
   def uploadDelete(self, entryType:str, identifier:int, uploadID:int) -> bool:
     """
     delete an upload
@@ -318,25 +262,3 @@ class ElabFTWApi:
         return json.loads(response.content.decode('utf-8'))
       return {'data':response.content}
     return {}
-
-
-  ### ---------------------------------------------
-  ### USER / TEAM GROUPS
-  ### ---------------------------------------------
-  def readGroups(self, teamID:int, groupID:int=-1) -> list[dict[str,Any]]:
-    """ List all groups or just one (not used in Pasta)
-
-    Args:
-      teamID (int): elabFTW's identifier of the team
-      groupID (int): elabFTW's identifier of the group
-
-    Returns:
-      list: list of reply
-    """
-    url = f"{self.url}teams/{teamID}/teamgroups" if groupID==-1 else f"{self.url}teams/{teamID}/teamgroups/{groupID}"
-    response = self.session.get(url, **self.param)
-    if response.status_code == 200:
-      res = json.loads(response.content.decode('utf-8'))
-      return res if groupID == -1 else [res]
-    logging.error('occurred in get of url: %s',url, exc_info=True)
-    return [{}]

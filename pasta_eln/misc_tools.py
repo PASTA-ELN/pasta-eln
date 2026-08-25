@@ -387,10 +387,9 @@ def dfConvertColumns(df:pd.DataFrame, ratio:int=10) -> pd.DataFrame:
 
 class MplCanvas(FigureCanvas):
   """ Canvas to draw upon """
-  def __init__(self, _:Any=None, width:float=5, height:float=4, dpi:int=100):
+  def __init__(self, width:float=5, height:float=4, dpi:int=100):
     """
     Args:
-      _ (Any): figure
       width (float): width in inch
       height (float): height in inch
       dpi (int): dots per inch
@@ -648,6 +647,7 @@ def rgba2argb(hexColor: str) -> str:
   r, g, b, a = hexColor[:2], hexColor[2:4], hexColor[4:6], hexColor[6:8]
   return f"#{a}{r}{g}{b}"
 
+
 def clearLayout(layout: QLayout, start:int = 0) -> None:
   """
   removes all widgets from the given layout
@@ -655,9 +655,7 @@ def clearLayout(layout: QLayout, start:int = 0) -> None:
     layout: QLayout that should be emptied
     start: number of items in layout that should be skipped in front
   """
-  while layout.count()-start:
+  while layout.count() > start:
     item = layout.takeAt(start)
-    if item is None:
-      break
     if widget:= item.widget():
       widget.deleteLater()

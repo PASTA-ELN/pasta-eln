@@ -8,7 +8,6 @@ from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as Navigation
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget
 from scipy import stats
-from sklearn.metrics import r2_score
 from pasta_eln.misc_tools import MplCanvas, dfConvertColumns, isFloat
 
 # The following two variables are mandatory
@@ -48,7 +47,7 @@ class DataAnalyse(QDialog):
     graphL = QVBoxLayout(self.graphW)
     graphL.setSpacing(0)
     graphL.setContentsMargins(0, 0, 0, 0)
-    self.graph = MplCanvas(self, width=5, height=4, dpi=100)
+    self.graph = MplCanvas(width=5, height=4, dpi=100)
     self.graphToolbar = NavigationToolbar(self.graph, self)
     self.graphToolbar.setIconSize(QSize(24, 24))
     self.graphToolbar.setStyleSheet('QToolButton {min-width: 18px; min-height: 24px;}')
@@ -139,14 +138,6 @@ class DataAnalyse(QDialog):
     self.cAxisCB.addItems(df.columns)
     self.cAxisCB.currentTextChanged.connect(self.refresh)
     rowCL.addWidget(self.cAxisCB)
-    rowCL.addWidget(QLabel('min:'))
-    self.cAxisMin = QLineEdit('')
-    self.cAxisMin.textChanged.connect(self.refresh)
-    rowCL.addWidget(self.cAxisMin)
-    rowCL.addWidget(QLabel('max:'))
-    self.cAxisMax = QLineEdit('')
-    self.cAxisMax.textChanged.connect(self.refresh)
-    rowCL.addWidget(self.cAxisMax)
     rowCL.addWidget(QLabel('label:'))
     self.cAxisLabel = QLineEdit('')
     self.cAxisLabel.textChanged.connect(self.refresh)
@@ -208,7 +199,7 @@ class DataAnalyse(QDialog):
         fit = [np.nan, np.nan]
       # fit
       self.graph.axes.plot(x, np.polyval(fit, x), 'k--')
-      text = f'y={fit[0]:.3f}*x+{fit[1]:.3f}' # : $R^2$={round(r2_score(y, np.polyval(fit, x)), 2)}' #Comment in and install sklearn
+      text = f'y={fit[0]:.3f}*x+{fit[1]:.3f}'
       self.graph.axes.text(x.mean(), np.polyval(fit, x.mean()), text, verticalalignment='top')
       self.graph.axes.set_ylim(bottom=yMin, top=yMax)
       self.graph.axes.set_ylabel(self.yAxisLabel.text() or self.yAxisCB.currentText())
@@ -254,8 +245,6 @@ class DataAnalyse(QDialog):
     self.graph.axes.tick_params(axis='both', direction='in')
     self.graph.figure.tight_layout()
     self.graph.draw()
-    self.graphToolbar.show()
-    self.graph.show()
     return
 
 def main(comm, df, widget, parameter={}):

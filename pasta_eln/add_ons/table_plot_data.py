@@ -64,7 +64,7 @@ class DataAnalyse(QDialog):
     graphL = QVBoxLayout(self.graphW)
     graphL.setSpacing(0)
     graphL.setContentsMargins(0, 0, 0, 0)
-    self.graph = MplCanvas(self, width=5, height=4, dpi=100)
+    self.graph = MplCanvas(width=5, height=4, dpi=100)
     self.graphToolbar = NavigationToolbar(self.graph, self)
     self.graphToolbar.setIconSize(QSize(24, 24))
     self.graphToolbar.setStyleSheet('QToolButton {min-width: 18px; min-height: 24px;}')
@@ -155,8 +155,6 @@ class DataAnalyse(QDialog):
     self.graph.axes.set_ylim(bottom=yMin, top=yMax)
     self.graph.axes.tick_params(axis='both', direction='in')
     self.graph.draw() # Trigger the canvas to update and redraw
-    self.graphToolbar.show()
-    self.graph.show()
 
 
   def cellClicked(self, item):
