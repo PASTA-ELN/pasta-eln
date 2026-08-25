@@ -1,15 +1,13 @@
 """ all styling of buttons and other general widgets, some defined colors... """
 import logging
-import traceback
 from collections.abc import Callable
 from enum import Enum, auto
-from html import escape
 from typing import Any, Final, Literal, Protocol
 import qtawesome as qta
 from PySide6.QtCore import QByteArray, QSize, Qt
-from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent, QPixmap, QShortcut
+from PySide6.QtGui import QImage, QMouseEvent, QPixmap, QShortcut
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtWidgets import QFrame, QLabel, QLayout, QMenu, QPushButton, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QLabel, QLayout, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 
 
 class _Spacing:
@@ -152,38 +150,6 @@ def shortcut(key: str, parent: QWidget, function: Callable[[], None]) -> QShortc
   shortcutObject = QShortcut(key, parent)                                    # pylint: disable=qt-local-widget
   shortcutObject.activated.connect(function)
   return shortcutObject
-
-
-def action(label: str, widget: QWidget, command: Any, menu: QMenu, keySequence: str | None = None,
-           icon: str = '') -> QAction:
-  """Create a menu action that forwards its command to the owning widget
-    Args:
-      label (str): label printed on submenu
-      widget (QWidget): widget / dialog that host the button and that has the execute function
-      command: value forwarded to the host widget's ``execute`` method
-      menu (QMenu): button to be added to this menu
-      keySequence (str): shortcut (e.g. Ctrl+K)
-      icon (str): icon name
-  """
-  actionObject = QAction(widget)
-  actionObject.setText(label)
-  def triggered() -> None:
-    """Dispatch the configured command through the host widget."""
-    try:
-      widget.execute(command)                                                     # type: ignore[attr-defined]
-    except Exception:
-      from pasta_eln.ui.message_dialog import showMessage  # Import here as it itself imports from this module
-      logging.exception('Unable to execute menu action %r', label)
-      errorMsg = (f'<p>Could not execute “{escape(label)}”.</p><pre>{escape(traceback.format_exc())}</pre>')
-      showMessage(widget, 'Action failed', errorMsg, 'Critical')
-  actionObject.triggered.connect(triggered)
-  if icon:
-    color = 'black' if widget is None else widget.comm.palette.text               # type: ignore[attr-defined]
-    actionObject.setIcon(qta.icon(icon, color=color, scale_factor=1))
-  if keySequence is not None:
-    actionObject.setShortcut(QKeySequence(keySequence))
-  menu.addAction(actionObject)
-  return actionObject
 
 
 def image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,

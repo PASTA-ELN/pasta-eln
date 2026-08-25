@@ -76,7 +76,7 @@ class TestExtractorTimeoutParallel(unittest.TestCase):
 
     report, _ = self.backend.extractors.test(dataPath)
 
-    self.assertIn('metaVendor must be a dictionary or list, not str.', report)
+    self.assertIn('metaVendor must be a dictionary not str.', report)
 
 
   def test_extractor_timeout_marks_document_stopped(self):

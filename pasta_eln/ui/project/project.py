@@ -14,7 +14,8 @@ from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import createDirName
 from ..details.context import DetailContext, DetailOrigin
 from ..gui_communicate import Communicate
-from ..gui_style import SPACE, Button, ButtonStyle, Label, Widget, action
+from ..gui_actions import action
+from ..gui_style import SPACE, Button, ButtonStyle, Label, Widget
 from ..message_dialog import showMessage
 from .project_tree_view import TreeView
 

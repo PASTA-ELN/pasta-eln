@@ -22,7 +22,7 @@ from pasta_eln.ui.definitions.editor import Editor as DefinitionsEditor
 from pasta_eln.ui.details.context import DetailContext
 from pasta_eln.ui.form.form import Form
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.gui_style import action
+from pasta_eln.ui.gui_actions import action
 from pasta_eln.ui.message_dialog import MessageDialog, showMessage
 from pasta_eln.ui.palette import Palette
 from pasta_eln.ui.project.project import Command as ProjectCommand, Project

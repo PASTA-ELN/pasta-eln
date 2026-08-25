@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, 
 from ...backend_worker.worker import Task
 from ...misc_tools import callAddOn
 from ..gui_communicate import Communicate
-from ..gui_style import action
+from ..gui_actions import action
 from ..message_dialog import showMessage
 from .project_leaf_renderer import ProjectLeafRenderer
 

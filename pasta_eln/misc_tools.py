@@ -657,5 +657,5 @@ def clearLayout(layout: QLayout, start:int = 0) -> None:
   """
   while layout.count() > start:
     item = layout.takeAt(start)
-    if widget:= item.widget():
+    if item is not None and (widget := item.widget()):
       widget.deleteLater()

@@ -9,7 +9,7 @@ from typing import Any
 from PySide6.QtCore import QPoint
 from PySide6.QtWidgets import QMenu, QWidget
 from ..backend_worker.worker import Task
-from .gui_style import action
+from .gui_actions import action
 
 
 def initContextMenu(widget:QWidget, pos:QPoint) -> None:
