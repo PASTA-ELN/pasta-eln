@@ -2,7 +2,7 @@
 import re
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, overload
 from PySide6.QtCore import QUrl, Signal, Slot
 from PySide6.QtGui import QDesktopServices, QShowEvent, Qt
 from PySide6.QtWidgets import QHBoxLayout, QMenu, QMessageBox, QScrollArea, QSplitter, QTextEdit, QVBoxLayout, QWidget
@@ -205,19 +205,19 @@ class Details(Widget):
     path = branch[0].get('path') if branch else None
     documentTypes = self.data.get('type', [])
     extractorChoices: dict[str, str] = {}
-    if isinstance(path, str) and path and documentTypes:
+    if isinstance(path, str) and path and documentTypes and self.sourcePath(False) is not None:
       extractors = self.comm.configuration['projectGroups'][self.comm.projectGroup].get('addOns', {}).get('extractors', {})
       extensionExtractors = extractors.get(Path(path).suffix.removeprefix('.').lower(), {})
       extractorChoices = {recipe: label for recipe, label in extensionExtractors.items()
                           if recipe.startswith(documentTypes[0])}
     for recipe, label in extractorChoices.items():
       addAction(label, self, [Command.RERUN_EXTRACTOR, recipe], extractionMenu)
-    if self.sourcePath() is not None:
-      addAction('Test extraction', self, Command.TEST_EXTRACTION, extractionMenu)
-    if bool(extractorChoices) and 'image' in self.data and self.sourcePath() is not None:
+    if not extractorChoices:
+      addAction('Rerun extractors',     self, Command.RERUN_EXTRACTOR,      extractionMenu)
+    extractionMenu.addSeparator()
+    addAction('Test extraction',        self, Command.TEST_EXTRACTION,      extractionMenu)
+    if 'image' in self.data and self.sourcePath() is not None:
       addAction('Save extracted image', self, Command.SAVE_EXTRACTED_IMAGE, extractionMenu)
-    if not extractorChoices and self.sourcePath() is None:
-      extractionMenu.setEnabled(False)
     self.actionsMenu.addSeparator()
     addAction('Hide item', self,     Command.HIDE_ITEM,    self.actionsMenu)
     addAction('Close details', self, Command.HIDE_DETAILS, self.actionsMenu)
@@ -239,9 +239,10 @@ class Details(Widget):
     elif commandType is Command.OPEN_LIST:
       self.comm.changeTable.emit(self.data['type'][0], '', self.docID)
     elif commandType is Command.RERUN_EXTRACTOR:
-      self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs': [self.docID], 'recipe': payload[0]})
+      recipe = payload[0] if payload else ''
+      self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs': [self.docID], 'recipe': recipe})
     elif commandType is Command.TEST_EXTRACTION:
-      sourcePath = self.sourcePath()
+      sourcePath = self.sourcePath(False)
       if sourcePath is not None:
         self.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST, {
             'fileName': str(sourcePath), 'style': 'html', 'recipe': '', 'saveFig': ''})
@@ -318,15 +319,32 @@ class Details(Widget):
     """
     What happens, when the edit Button in the Top-right is clicked
     """
-    self.comm.formDoc.emit(self.data)
+    self.comm.formDoc.emit({'id': self.docID})
 
 
-  def sourcePath(self) -> Path | None:
-    """Return the local source-file path, excluding database-only and remote items."""
+# overload sourcePath such that type checking is successful and results in less isinstance ifs
+  @overload
+  def sourcePath(self, onlyLocal: Literal[True] = True) -> Path | None: ...
+
+  @overload
+  def sourcePath(self, onlyLocal: Literal[False]) -> Path | str | None: ...
+
+  def sourcePath(self, onlyLocal: bool = True) -> Path | str | None:
+    """Return the local source-file path, excluding database-only items.
+    Args:
+      onlyLocal (bool): if to allow remote parts, if true only local paths get a path, and remote get a None
+    Returns:
+      (Path|str|None): None representing an invalid path, str is representing URLs, Path is
+                   representing local files
+    """
     branch = self.data.get('branch', [{}])
     path = branch[0].get('path') if branch else None
-    if not isinstance(path, str) or not path or path.startswith('http'):
+    if not path or not isinstance(path, str):
       return None
+    if onlyLocal and path.startswith('http'):
+      return None
+    if not onlyLocal and path.startswith('http'):
+      return path
     return self.comm.basePath / path
 
 
