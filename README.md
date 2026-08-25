@@ -62,6 +62,7 @@ Open issues are the union of:
     8.  528 – Feature Request: easily visible changelog
     9.  608 – Feature Request: Color implementation
     10. 430 – Creating templates for items
+    11. Guard oversized extractor `metaVendor` and `metaUser` with a user-configurable maximum size
 
   - Redesign of Pasta
     1.  421 – Data hierarchy structure

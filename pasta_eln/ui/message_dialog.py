@@ -60,8 +60,10 @@ class MessageDialog(QDialog):
       sectionsLayout.setContentsMargins(SPACE.S, SPACE.S, SPACE.S, SPACE.S)
       sectionsLayout.setSpacing(SPACE.S)
       for sectionTitle, sectionContent in text.items():
-        messages = sectionContent if isinstance(sectionContent, list) else [sectionContent]
-        content = '<br><br>'.join(escape(str(message)).replace('\n', '<br>') for message in messages)
+        if isinstance(sectionContent, (dict, list)):
+          content = f'<pre>{escape(json.dumps(sectionContent, indent=2, ensure_ascii=False, default=str))}</pre>'
+        else:
+          content = escape(str(sectionContent)).replace('\n', '<br>')
         sectionsLayout.addWidget(DetailsHierItem(self.comm, sectionTitle.capitalize(), [], content,# type: ignore[arg-type]
                                                  startCollapsed=sectionTitle == 'information'))
       sectionsLayout.addStretch(1)

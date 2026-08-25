@@ -1,7 +1,9 @@
 """ all styling of buttons and other general widgets, some defined colors... """
 import logging
+import traceback
 from collections.abc import Callable
 from enum import Enum, auto
+from html import escape
 from typing import Any, Final, Literal, Protocol
 import qtawesome as qta
 from PySide6.QtCore import QByteArray, QSize, Qt
@@ -170,7 +172,10 @@ def action(label: str, widget: QWidget, command: Any, menu: QMenu, keySequence: 
     try:
       widget.execute(command)                                                     # type: ignore[attr-defined]
     except Exception:
-      return
+      from pasta_eln.ui.message_dialog import showMessage  # Import here as it itself imports from this module
+      logging.exception('Unable to execute menu action %r', label)
+      errorMsg = (f'<p>Could not execute “{escape(label)}”.</p><pre>{escape(traceback.format_exc())}</pre>')
+      showMessage(widget, 'Action failed', errorMsg, 'Critical')
   actionObject.triggered.connect(triggered)
   if icon:
     color = 'black' if widget is None else widget.comm.palette.text               # type: ignore[attr-defined]

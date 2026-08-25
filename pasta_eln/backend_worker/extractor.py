@@ -337,22 +337,24 @@ class ExtractorManager:
       except Exception:
         report += outputString(outputStyle,'error','Extractor reply not json dumpable.')
     if success:
-      try:
-        _ = json.dumps(content['metaVendor'])
-        if not isinstance(content['metaVendor'], (dict,list)):
-          raise TypeError(' Meta vendor: wrong type')
-        report += outputString(outputStyle,'info','Number of vendor entries: '+str(len(content['metaVendor'])))
-      except Exception:
-        # possible cause of failure: make sure that no int64 but normal int
+      metaVendor = content.get('metaVendor')
+      if isinstance(metaVendor, (dict)):
+        try:
+          _ = json.dumps(metaVendor)
+          report += outputString(outputStyle, 'info', f'Number of vendor entries: {len(metaVendor)}')
+        except (TypeError, ValueError):
+          success = False
+          report += outputString(outputStyle, 'error', 'Some JSON format does not fit in metaVendor')
+          report += outputString(outputStyle, 'error', f'{htmlStr}metadata-error">website</a>')
+          for key, value in metaVendor.items():
+            try:
+              _ = json.dumps(value)
+            except (TypeError, ValueError):
+              report += outputString(outputStyle, 'error', f'FAIL {key}: {value!r} ({type(value).__name__})')
+      else:
         success = False
-        report += outputString(outputStyle,'error', 'Some json format does not fit in metaVendor')
-        report += outputString(outputStyle, 'error', f'{htmlStr}metadata-error">website</a>')
-        #iterate keys
-        for key in content['metaVendor']:
-          try:
-            _ = json.dumps(content['metaVendor'][key])
-          except Exception:
-            report += outputString(outputStyle,'error',f'FAIL {key}:'+str(content['metaVendor'][key])+' type:')+str(type(content['metaVendor'][key]))
+        report += outputString(outputStyle, 'error',
+                               f'metaVendor must be a dictionary not {type(metaVendor).__name__}.')
     if success:
       try:
         _ = json.dumps(content['metaUser'])

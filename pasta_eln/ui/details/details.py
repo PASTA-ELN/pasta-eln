@@ -7,7 +7,7 @@ from PySide6.QtCore import QUrl, Signal, Slot
 from PySide6.QtGui import QDesktopServices, QShowEvent, Qt
 from PySide6.QtWidgets import QHBoxLayout, QMenu, QMessageBox, QScrollArea, QSplitter, QTextEdit, QVBoxLayout, QWidget
 from pasta_eln.backend_worker.worker import Task
-from pasta_eln.fixed_strings_json import SORTED_DB_KEYS
+from pasta_eln.fixed_strings_json import SORTED_DB_KEYS, defaultDataHierarchyNode
 from pasta_eln.misc_tools import clearLayout, makeStringWrappable
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.details.details_hier_item import DetailsHierItem
@@ -113,7 +113,7 @@ class Details(Widget):
     Fill in the things that change between displaying different items
     """
     self.show()
-    dataHierarchyNode = self.comm.dataHierarchyNodes[self.data['type'][0]]
+    dataHierarchyNode = self.comm.dataHierarchyNodes.get(self.data['type'][0], defaultDataHierarchyNode)
 
     # HEADER
     title = makeStringWrappable(self.data['name'], nChars=15)

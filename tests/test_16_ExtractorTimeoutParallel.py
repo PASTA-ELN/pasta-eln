@@ -61,6 +61,24 @@ class TestExtractorTimeoutParallel(unittest.TestCase):
         encoding='utf-8')
 
 
+  def _writeInvalidMetadataExtractor(self) -> None:
+    (self.addOnPath/'extractor_slow.py').write_text(
+        'def use(filePath, style={\'main\':\'\'}, saveFileName=None):\n'
+        '  return {\'style\': {\'main\': \'measurement/slow\'}, '
+        '\'metaVendor\': \'not metadata\', \'metaUser\': {}}\n',
+        encoding='utf-8')
+
+
+  def test_extractor_test_reports_invalid_metadata_type(self):
+    self._writeInvalidMetadataExtractor()
+    dataPath = self.basePath/'data.slow'
+    dataPath.write_text('slow data', encoding='utf-8')
+
+    report, _ = self.backend.extractors.test(dataPath)
+
+    self.assertIn('metaVendor must be a dictionary or list, not str.', report)
+
+
   def test_extractor_timeout_marks_document_stopped(self):
     self._writeExtractor(5)
     dataPath = self.basePath/'data.slow'
