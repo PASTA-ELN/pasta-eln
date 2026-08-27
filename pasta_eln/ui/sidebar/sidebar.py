@@ -1,4 +1,6 @@
 """The Toplevel Sidebar on the left that displays the projects to choose."""
+from __future__ import annotations
+
 from enum import Enum
 import pandas as pd
 import qtawesome as qta

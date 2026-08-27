@@ -1,4 +1,6 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
+from __future__ import annotations
+
 import copy
 import json
 import logging
@@ -732,7 +734,7 @@ class Form(QDialog):
           logging.error('Unknown value type %s %s',key, valueOld, exc_info=True)
       # new key-value pairs
       keyValueList = [] if self.keyValueListL is None else \
-                     [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]
+                     [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]# type: ignore[union-attr]
       keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
       keyValueDict = {f'.{k}':v for k,v in keyValueDict.items() if k and v and f'.{k}' not in self.doc}
       self.doc = keyValueDict | self.doc

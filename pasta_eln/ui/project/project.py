@@ -1,4 +1,6 @@
 """ Widget that shows the content of project in a electronic labnotebook """
+from __future__ import annotations
+
 import logging
 import os
 from enum import Enum

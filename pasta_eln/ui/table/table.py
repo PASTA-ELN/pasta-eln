@@ -1,4 +1,6 @@
 """Document list views and their table-specific commands."""
+from __future__ import annotations
+
 import csv
 import logging
 import re

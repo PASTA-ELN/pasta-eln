@@ -1,4 +1,6 @@
 """ This Widget is the right sidebar that shows the details of the currently selected item """
+from __future__ import annotations
+
 import re
 from enum import Enum
 from pathlib import Path

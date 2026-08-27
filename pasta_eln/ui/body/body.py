@@ -68,7 +68,7 @@ class Body(QWidget):
   @Slot()
   def paint(self) -> None:
     """
-    Create the changable things in the Widget.
+    Create the changeable things in the Widget.
     """
     iconColor         = self.comm.palette.getThemeColor('foreground', 'base')
     selectedIconColor = self.comm.palette.getThemeColor('primary', 'base')
