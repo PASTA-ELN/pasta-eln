@@ -1,4 +1,6 @@
 """ Widget for displaying a project in the ProjectSidebar"""
+from __future__ import annotations
+
 from typing import Any
 from typing_extensions import override
 import pandas as pd
