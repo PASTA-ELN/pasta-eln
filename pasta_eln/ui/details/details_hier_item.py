@@ -7,7 +7,8 @@ from PySide6.QtCore import QSize, Qt, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QLabel, QSizePolicy
 from pasta_eln.misc_tools import isDocID, makeStringWrappable
-from pasta_eln.text_tools.string_changes import tuple2html
+from pasta_eln.text_tools.markdown2html import markdown2html
+from pasta_eln.text_tools.string_changes import markdownEqualizer, tuple2html
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import CollapsibleSection
@@ -75,13 +76,14 @@ class DetailsHierItem(CollapsibleSection):
     if not value:
       return ''
     labelStr = ''
+    isMarkdown = key == 'comment' or (isinstance(value, str) and '\n' in value)# will become html: do not makeWrappable
     if key == 'tags':
       rating = ['\u2605' * int(i[1]) for i in value if re.match(r'^_\d$', i)]
       tags = [i for i in value if not re.match(r'^_\d$', i)]
       labelStr = f'<b>Rating:</b><br>{rating[0]}<br><br>' if rating else ''
       labelStr = f'{labelStr}   <b>Tags:</b><br>' + ', '.join(tags) + '<br><br>'
-    elif (isinstance(value, str) and '\n' in value) or key == 'comment':     # long values with /s or comments
-      labelStr = f'<b>{key.capitalize()}:</b><br>{value}<br><br>'
+    elif isMarkdown:     # long values or comments
+      labelStr = f'<b>{key.capitalize()}:</b><br>{markdown2html(markdownEqualizer(value))}<br><br>'
     else:
       dataHierarchyItems = [dict(i) for i in self.dataHierarchyNode if i['name'] == key]
       if len(dataHierarchyItems) == 1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
@@ -102,7 +104,7 @@ class DetailsHierItem(CollapsibleSection):
               f'{valueText}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
         labelStr = f'<b>{k}:</b><br>{v}<br><br>'
     # Wrapping can force an HTML-statement wrap in rare cases
-    return labelStr if '<a href=' in labelStr else makeStringWrappable(labelStr)
+    return labelStr if isMarkdown or '<a href=' in labelStr else makeStringWrappable(labelStr)
 
 
   def addContent(self, key: str, value: Any) -> None:

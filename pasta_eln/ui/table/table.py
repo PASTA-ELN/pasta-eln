@@ -1,6 +1,7 @@
 """Document list views and their table-specific commands."""
 import csv
 import logging
+import re
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,11 @@ from pasta_eln.ui.table.filter_row import FilterRow
 from pasta_eln.ui.table.pandas_table_model import PandasTableModel
 from pasta_eln.ui.table.table_header import TableHeader
 from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
+
+
+def formatTag(tag: str) -> str:
+  """Format internal rating tags for display in the tags table."""
+  return '\u2605' * int(tag[1]) if re.fullmatch(r'_\d', tag) else tag
 
 
 class TableView(Widget):
@@ -487,6 +493,9 @@ class TableView(Widget):
     base.replace('True', 'Y', inplace=True)
     base.mask(base.map(isDocID), 'oo', inplace=True)
     base = base.iloc[:, :-2].copy()
+    if self.docType == '_tags_':
+      base = base[base['tag'] != '_curated'].copy()
+      base.loc[:, 'tag'] = base['tag'].map(formatTag)
     documentIds = self.data.loc[base.index, 'id']
     for filterRow in self.filterRows:
       value = filterRow.text.text()

@@ -17,7 +17,7 @@ from ...backend_worker.sqlite import MAIN_ORDER
 from ...backend_worker.worker import Task
 from ...fixed_strings_json import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
 from ...misc_tools import callAddOn, isDocID
-from ...text_tools.string_changes import markdownEqualizer
+from ...text_tools.string_changes import createDirName, markdownEqualizer
 from .._context_menu import CommandMenu, executeContextMenu, initContextMenu
 from ..gui_actions import action
 from ..gui_communicate import Communicate
@@ -336,6 +336,7 @@ class Form(QDialog):
       dataframe = pd.DataFrame(self.dataHierarchyNode)
       dataframe = dataframe[dataframe['class']==group]
       dataframe = dataframe.sort_values('idx')
+      sectionHasTextArea = False
       for row in dataframe.itertuples(index=False):
         key = f"{group}.{row.name}"
         defaultValue = self.doc['qrCodes'] if key=='.qrCodes' and 'qrCodes' in self.doc else \
@@ -395,6 +396,7 @@ class Form(QDialog):
           self.otherChoices.currentIndexChanged.connect(self.addTag)   #connect to slot after painting is done
 
         elif key in ['.comment', '.content']:
+          sectionHasTextArea = True
           key = key[1:]
           labelW = QWidget()
           labelL = QVBoxLayout(labelW)
@@ -406,6 +408,7 @@ class Form(QDialog):
           if 'form' in projectGroup.get('addOns',{}) and projectGroup['addOns']['form']:
             Button('Auto', self, Command.AUTO_COMMENT, labelL)
           rightSideW = QWidget()
+          rightSideW.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
           rightSideL = QVBoxLayout(rightSideW)
           rightSideL.setContentsMargins(0, 0, 0, 0)
           rightSideL.setSpacing(SPACE.S)
@@ -505,6 +508,8 @@ class Form(QDialog):
         self.keyValueLabel = QLabel('Key - values')
         self.keyValueLabel.hide()
         section.formL.addRow(self.keyValueLabel, self.keyValueListW)
+      if sectionHasTextArea:
+        bodyL.setStretch(bodyL.indexOf(section), 1)
     self.paintAdvancedSection(bodyL)
     bodyL.addStretch()
 
@@ -543,8 +548,12 @@ class Form(QDialog):
       filenameIndicator.hide()
       return
     filenames = [Path(path).name for path in paths]
-    name = nameInput.text().casefold()
-    differs = all(re.sub(r'^\d{3}_', '', filename).casefold() != name for filename in filenames)
+    if self.doc['type'][0].startswith('x'):
+      differs = any(createDirName(self.doc, branch['child'], Path(branch['path']).parent).casefold() != filename.casefold()
+                    for branch, filename in zip(self.doc['branch'], filenames))
+    else:
+      name = nameInput.text().casefold()
+      differs = all(re.sub(r'^\d{3}_', '', filename).casefold() != name for filename in filenames)
     filenameIndicator.setVisible(differs)
     filenameIndicator.setToolTip('The filename on disk is:\n' +
                                  '\n'.join(filenames) if differs else '')
@@ -722,7 +731,8 @@ class Form(QDialog):
         else:
           logging.error('Unknown value type %s %s',key, valueOld, exc_info=True)
       # new key-value pairs
-      keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]# type: ignore[union-attr]
+      keyValueList = [] if self.keyValueListL is None else \
+                     [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]
       keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
       keyValueDict = {f'.{k}':v for k,v in keyValueDict.items() if k and v and f'.{k}' not in self.doc}
       self.doc = keyValueDict | self.doc

@@ -31,6 +31,14 @@ Before editing, run `git status --short`; preserve unrelated changes. Run the sm
 
 Do not run `releaseVersion.py` routinely: it regenerates files and may prompt for release actions.
 
+For coverage-guided iteration, use the test runner without invoking the release script:
+
+```bash
+python -c "import releaseVersion; raise SystemExit(0 if releaseVersion.runTests() else 1)"
+```
+
+After each run, inspect `htmlcov/index.html`, identify the largest useful uncovered regions, and add one minimal, reversible workflow step to the appropriate numbered test. Run that focused test first, then repeat the coverage command and retain changes only when coverage improves without regressions. Leave API-dependent paths to `testsComplicated/` and do not target copied third-party source files or the human-only GUI entry point.
+
 For a visual check of the user's actual desktop, ask them to press `F12` in PASTA-ELN and inspect the resulting temporary `pasta-eln-current-window.png` rather than relying only on offscreen screenshots.
 
 ## Engineering

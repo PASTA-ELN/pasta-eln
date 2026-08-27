@@ -4,11 +4,12 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Literal, overload
 from PySide6.QtCore import QUrl, Signal, Slot
-from PySide6.QtGui import QDesktopServices, QShowEvent, Qt
+from PySide6.QtGui import QDesktopServices, QFontMetrics, QShowEvent, Qt
 from PySide6.QtWidgets import QHBoxLayout, QMenu, QMessageBox, QScrollArea, QSplitter, QTextEdit, QVBoxLayout, QWidget
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.fixed_strings_json import SORTED_DB_KEYS, defaultDataHierarchyNode
-from pasta_eln.misc_tools import clearLayout, makeStringWrappable
+from pasta_eln.misc_tools import clearLayout
+from pasta_eln.text_tools.string_changes import createDirName
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.details.details_hier_item import DetailsHierItem
 from pasta_eln.ui.details.resize_image import ResizeImage
@@ -35,7 +36,7 @@ class Details(Widget):
 
     ### HEADER WIDGETS
     self.titleLabel = Label('', 'h1')
-    self.titleLabel.setWordWrap(True)
+    self.titleLabel.setWordWrap(False)
     self.editButton = Button('Edit', self, Command.EDIT, icon='ri.edit-2-fill', style=ButtonStyle.HIGHLIGHTED)
     self.openButton = Button('Open', self,               icon='ri.external-link-line', style=ButtonStyle.PRIMARY)
     self.openMenu = QMenu(self)
@@ -47,11 +48,14 @@ class Details(Widget):
     self.actionsButton.setMenu(self.actionsMenu)
 
     # Header Layout
-    self.headerL = QHBoxLayout()
-    self.headerL.addWidget(self.titleLabel, stretch=1)
-    self.headerL.addWidget(self.editButton)
-    self.headerL.addWidget(self.openButton)
-    self.headerL.addWidget(self.actionsButton)
+    self.headerL = QVBoxLayout()
+    self.headerL.addWidget(self.titleLabel)
+    self.headerButtonsL = QHBoxLayout()
+    self.headerButtonsL.addStretch()
+    self.headerButtonsL.addWidget(self.editButton)
+    self.headerButtonsL.addWidget(self.openButton)
+    self.headerButtonsL.addWidget(self.actionsButton)
+    self.headerL.addLayout(self.headerButtonsL)
     self.headerW = QWidget()
     self.headerW.setLayout(self.headerL)
 
@@ -117,18 +121,30 @@ class Details(Widget):
     dataHierarchyNode = self.comm.dataHierarchyNodes.get(self.data['type'][0], defaultDataHierarchyNode)
 
     # HEADER
-    title = makeStringWrappable(self.data['name'], nChars=15)
     # Show the filename indicator when every stored path differs from the item name
     paths = [branch['path'] for branch in self.data.get('branch', [])]
+    differs = False
     if not paths or any(path is None for path in paths):
-      self.titleLabel.setText(title)
       self.titleLabel.setToolTip('')
     else:
       filenames = [Path(path).name for path in paths]
-      name = self.data['name'].casefold()
-      differs = all(re.sub(r'^\d{3}_', '', filename).casefold() != name for filename in filenames)
-      self.titleLabel.setText(f'{title}<sup><span style="font-size: 24pt;">ℹ</span></sup>' if differs else title)
+      if self.data['type'][0].startswith('x'):
+        differs = any(createDirName(self.data, branch['child'], Path(branch['path']).parent).casefold()
+                      != filename.casefold() for branch, filename in zip(self.data['branch'], filenames))
+      else:
+        name = self.data['name'].casefold()
+        differs = all(re.sub(r'^\d{3}_', '', filename).casefold() != name for filename in filenames)
       self.titleLabel.setToolTip('The filename on disk is:\n' + '\n'.join(filenames) if differs else '')
+    # create name that fits into the space by putting ... in the middle
+    titleWidth = self.titleLabel.width() or self.width()
+    if differs:
+      titleWidth -= QFontMetrics(self.titleLabel.font()).height()
+    fontMetrics = QFontMetrics(self.titleLabel.font())
+    fullTitle = self.data['name']
+    elidedTitle = fontMetrics.elidedText(fullTitle, Qt.TextElideMode.ElideMiddle, max(0, titleWidth))
+    title = (elidedTitle if fontMetrics.horizontalAdvance(elidedTitle) < fontMetrics.horizontalAdvance(fullTitle)
+             else fullTitle)
+    self.titleLabel.setText(f'{title}<sup><span style="font-size: 24pt;">ℹ</span></sup>' if differs else title)
 
     # BODY
     # clear old items
