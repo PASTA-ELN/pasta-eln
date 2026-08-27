@@ -1,6 +1,5 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
 from __future__ import annotations
-
 import copy
 import json
 import logging

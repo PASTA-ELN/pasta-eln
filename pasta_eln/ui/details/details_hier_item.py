@@ -7,7 +7,7 @@ from PySide6.QtCore import QSize, Qt, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QLabel, QSizePolicy
 from pasta_eln.misc_tools import isDocID, makeStringWrappable
-from pasta_eln.text_tools.markdown2html import markdown2html                      # type: ignore[attr-defined]
+from pasta_eln.text_tools.markdown2html import markdown2html  # type: ignore[attr-defined]
 from pasta_eln.text_tools.string_changes import markdownEqualizer, tuple2html
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.gui_communicate import Communicate
@@ -82,7 +82,7 @@ class DetailsHierItem(CollapsibleSection):
       tags = [i for i in value if not re.match(r'^_\d$', i)]
       labelStr = f'<b>Rating:</b><br>{rating[0]}<br><br>' if rating else ''
       labelStr = f'{labelStr}   <b>Tags:</b><br>' + ', '.join(tags) + '<br><br>'
-    elif isMarkdown:     # long values or comments
+    elif isMarkdown:                                                                 # long values or comments
       labelStr = f'<b>{key.capitalize()}:</b><br>{markdown2html(markdownEqualizer(value))}<br><br>'
     else:
       dataHierarchyItems = [dict(i) for i in self.dataHierarchyNode if i['name'] == key]

@@ -1,12 +1,11 @@
 """ Widget for displaying a project in the ProjectSidebar"""
 from __future__ import annotations
-
 from typing import Any
-from typing_extensions import override
 import pandas as pd
 from PySide6.QtCore import QPointF, Qt, Signal
 from PySide6.QtGui import QColor, QMouseEvent
 from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QVBoxLayout
+from typing_extensions import override
 from pasta_eln.misc_tools import makeStringWrappable
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Label
