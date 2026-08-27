@@ -122,7 +122,7 @@ class ProjectSidebar(Widget):
     projects = self.visibleProjects()
     if projects.empty:
       emptyWarning = Label('Create a Project by clicking on the "+"-button above.', 'h1',
-                           style=f"color: {self.comm.palette.getThemeColor("foreground", "disabled")};")
+                           style=f"color: {self.comm.palette.getThemeColor('foreground', 'disabled')};")
       emptyWarning.setWordWrap(True)
       self.projectListL.addWidget(emptyWarning)
     projects = projects.sort_values('name', axis=0).reset_index(drop=True)

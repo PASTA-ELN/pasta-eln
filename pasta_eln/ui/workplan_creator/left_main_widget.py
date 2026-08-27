@@ -85,7 +85,7 @@ class LeftMainWidget(QWidget):
       firstSeparator.hide()
       self.procedureListLayout.addWidget(
         Label('No Procedure found in\ncurrent Project.', 'h1',
-              style=f"color: {self.comm.palette.getThemeColor("foreground", "disabled")};"))
+              style=f"color: {self.comm.palette.getThemeColor('foreground', 'disabled')};"))
     self.procedureListLayout.addStretch(1)
 
   def filterItems(self, filterText: str) -> None:

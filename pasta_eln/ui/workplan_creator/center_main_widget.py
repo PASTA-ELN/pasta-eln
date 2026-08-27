@@ -84,7 +84,7 @@ class CenterMainWidget(QWidget):
       self.shortDesc.setWordWrap(True)
       self.shortDesc.setMaximumHeight(100)
       self.shortDesc.setStyleSheet(
-        f"color: {self.comm.palette.getThemeColor("foreground", "disabled")}; font-size: 10pt;")
+        f"color: {self.comm.palette.getThemeColor('foreground', 'disabled')}; font-size: 10pt;")
       self.mainLayout.addWidget(self.shortDesc, 2, 0)
       # Short Separator (Between short and long description)
       self.mainLayout.addWidget(HSeparator(), 3, 0)
