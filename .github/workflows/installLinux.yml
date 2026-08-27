@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         python-version: [ "3.10", "3.11", "3.12", "3.13" ] # Check table https://wiki.qt.io/Qt_for_Python to find supported
@@ -32,24 +33,23 @@ jobs:
         pip install coverage pytest pytest-qt pytest-qt-app pytest-mock pytest-timeout coverage typing-extensions qt_material
     - name: Check installation
       run: |
-        coverage run -m pasta_eln.installation_tools
+        coverage run --source=pasta_eln -m pasta_eln.installation_tools
     - name: Installation
       run: |
-        coverage run -a -m pasta_eln.installation_tools install pasta_data
+        coverage run --source=pasta_eln -a -m pasta_eln.installation_tools install pasta_data
         ls ~
         echo '----------'
         ls ~/pasta_data
-        more ~/.pastaELN_v3.json
     - name: Check installation
       run: |
-        coverage run -a -m pasta_eln.installation_tools
+        coverage run --source=pasta_eln -a -m pasta_eln.installation_tools
     - name: Create example data
       run: |
-        coverage run -a -m pasta_eln.installation_tools example
+        coverage run --source=pasta_eln -a -m pasta_eln.installation_tools example
         tree ~/pasta_data
     - name: Run tests
       run: |
-        coverage run -a -m pytest -s -x --tb=short tests
+        coverage run --source=pasta_eln -a -m pytest -s -x --tb=short tests
         coverage html -i
       shell: bash
       env:
@@ -64,5 +64,4 @@ jobs:
           ~/pasta_data/pastaELN.db
           htmlcov/
           artifacts/
-          /tmp/pytest-of-runner/pytest-0/
       if: ${{ always() }}

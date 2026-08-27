@@ -3,7 +3,7 @@
 import logging, warnings, random
 from pathlib import Path
 from anytree import PreOrderIter
-from PySide6.QtCore import QModelIndex, QEventLoop                         # pylint: disable=no-name-in-module
+from PySide6.QtCore import QModelIndex                         # pylint: disable=no-name-in-module
 from pasta_eln.ui.project.project import Project
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.backend_worker.worker import Task
@@ -37,7 +37,7 @@ def test_simple(qtbot, caplog):
   choices = random.choices(range(100), k=16)
   # choices =
   print(f'Current choice: [{",".join([str(i) for i in choices])}]')
-  verify(comm, projID, -1)
+  verify(qtbot, comm, projID, -1)
   # start iteration
   for epoch in range(4):
     print(f'{"*"*40}\nStart drag-drop {epoch}\n{"*"*40}')
@@ -69,7 +69,7 @@ def test_simple(qtbot, caplog):
     targetChildRow   = validChoices[choices.pop(0)%len(validChoices)]
     print('  ',sourceItem.data(),'->\n  ', targetParent.data(),'   child', targetChildRow)
     targetParent.setChild(targetChildRow, sourceItem)
-    verify(comm, projID, epoch)
+    verify(qtbot, comm, projID, epoch)
 
   # close everything
   print(f'{"*"*40}\nEND TEST 03\n{"*"*40}')
@@ -80,26 +80,19 @@ def test_simple(qtbot, caplog):
   return
 
 
-def verify(comm, projID, epoch): # Output hierarchy and verify DB
-  # to communicate with backend
-  loop = QEventLoop()
-  def hierarchyCallback(hierarchy):
-    print(f'{"*"*40}\nHierarchy after drag-drop {epoch}\n{"*"*40}')
-    print(''.join('  '*node.depth + node.name + ' | ' + '/'.join(node.docType) + (f' | {node.id}') +'\n'
-                   for node in PreOrderIter(hierarchy)))
-    loop.quit()
-  def checkDBCallback(_, output):
-    print(f'{"*"*40}\nCheckDB after drag-drop {epoch}\n{"*"*40}')
-    print(output)
-    output = '\n'.join(output.split('\n')[8:])
-    assert '**ERROR' not in output, 'Error in checkDB'
-    loop.quit()
-  comm.backendThread.worker.beSendHierarchy.connect(hierarchyCallback)
-  comm.backendThread.worker.beSendTaskReport.connect(checkDBCallback)
-  comm.uiRequestHierarchy.emit(projID, True)
-  loop.exec()
-  comm.uiRequestTask.emit(Task.CHECK_DB, {'style':'text'})
-  loop.exec()
-  comm.backendThread.worker.beSendHierarchy.disconnect(hierarchyCallback)
-  comm.backendThread.worker.beSendTaskReport.disconnect(checkDBCallback)
+def verify(qtbot, comm, projID, epoch): # Output hierarchy and verify DB
+  with qtbot.waitSignal(comm.backendThread.worker.beSendHierarchy, timeout=30_000) as hierarchySignal:
+    comm.uiRequestHierarchy.emit(projID, True)
+  hierarchy = hierarchySignal.args[0]
+  print(f'{"*"*40}\nHierarchy after drag-drop {epoch}\n{"*"*40}')
+  print(''.join('  '*node.depth + node.name + ' | ' + '/'.join(node.docType) + (f' | {node.id}') +'\n'
+                for node in PreOrderIter(hierarchy)))
+
+  with qtbot.waitSignal(comm.backendThread.worker.beSendTaskReport, timeout=30_000) as reportSignal:
+    comm.uiRequestTask.emit(Task.CHECK_DB, {'style':'text'})
+  output = reportSignal.args[1]
+  print(f'{"*"*40}\nCheckDB after drag-drop {epoch}\n{"*"*40}')
+  print(output)
+  output = '\n'.join(output.split('\n')[8:])
+  assert '**ERROR' not in output, 'Error in checkDB'
   return
