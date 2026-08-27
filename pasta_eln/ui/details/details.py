@@ -22,6 +22,7 @@ from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, Label, Widget
 class Details(Widget):
   """The right sidebar that shows the details of the currently selected item"""
   becameVisible = Signal()
+  ignoreScanMarker = '.pastaELN_ignore'
 
   def __init__(self, comm: Communicate):
     """Create a details pane on the right-hand side
@@ -237,6 +238,13 @@ class Details(Widget):
     if 'image' in self.data and self.sourcePath() is not None:
       addAction('Save extracted image', self, Command.SAVE_EXTRACTED_IMAGE, extractionMenu)
     self.actionsMenu.addSeparator()
+    sourcePath = self.sourcePath()
+    if (self.comm.configuration['GUI']['detailsLevel'] == 'Advanced'
+        and self.data.get('type', [''])[0].startswith('x')
+        and sourcePath is not None and sourcePath.is_dir()):
+      markerPath = sourcePath / self.ignoreScanMarker
+      label = 'Include folder in scans' if markerPath.is_file() else 'Exclude folder from scans'
+      addAction(label, self, Command.TOGGLE_SCAN, self.actionsMenu)
     addAction('Hide item', self,     Command.HIDE_ITEM,    self.actionsMenu)
     addAction('Close details', self, Command.HIDE_DETAILS, self.actionsMenu)
     self.actionsMenu.addSeparator()
@@ -283,6 +291,16 @@ class Details(Widget):
       sourcePath = self.sourcePath()
       if sourcePath is not None:
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(sourcePath)))
+    elif commandType is Command.TOGGLE_SCAN:
+      sourcePath = self.sourcePath()
+      if sourcePath is None:
+        return
+      markerPath = sourcePath / self.ignoreScanMarker
+      if markerPath.is_file():
+        markerPath.unlink()
+      else:
+        markerPath.touch()
+      self.paintActionsMenu()
     elif commandType is Command.HIDE_ITEM:
       self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID': self.docID})
       self.comm.changeDetails.emit(DetailContext())
@@ -379,3 +397,4 @@ class Command(Enum):
   OPEN_LIST            = 9
   OPEN_EXTERNAL        = 10
   REMOVE               = 11
+  TOGGLE_SCAN          = 12

@@ -66,3 +66,34 @@ def test_rerun_extractors_uses_table_request(qtbot):
 
   assert requests == [(Task.EXTRACTOR_RERUN, {'docIDs': [docID], 'recipe': ''})]
   comm.shutdownBackendThread()
+
+
+def test_advanced_folder_scan_action_toggles_ignore_marker(qtbot, tmp_path):
+  """Advanced Details actions create and remove the scanner's existing marker."""
+  comm = Communicate('research')
+  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
+    qtbot.wait(100)
+  window = Details(comm)
+  qtbot.addWidget(window)
+  folder = tmp_path / 'folder'
+  folder.mkdir()
+  window.docID = 'folder'
+  window.data = {'id': 'folder', 'name': 'folder', 'type': ['x1'],
+                 'branch': [{'path': 'unused', 'stack': []}]}
+  window.sourcePath = lambda onlyLocal=True: folder  # type: ignore[method-assign]
+
+  comm.configuration['GUI']['detailsLevel'] = 'Default'
+  window.paintActionsMenu()
+  assert not any('folder in scans' in item.text() for item in window.actionsMenu.actions())
+
+  comm.configuration['GUI']['detailsLevel'] = 'Advanced'
+  window.paintActionsMenu()
+  excludeAction = next(item for item in window.actionsMenu.actions() if 'Exclude folder' in item.text())
+  excludeAction.trigger()
+  assert (folder / '.pastaELN_ignore').is_file()
+
+  window.paintActionsMenu()
+  includeAction = next(item for item in window.actionsMenu.actions() if 'Include folder' in item.text())
+  includeAction.trigger()
+  assert not (folder / '.pastaELN_ignore').exists()
+  comm.shutdownBackendThread()

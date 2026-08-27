@@ -20,16 +20,21 @@ class ConfigurationGUI(QDialog):
     super().__init__()
     self.comm = comm
     self.callbackFinished = callbackFinished
+    self.sectionGroups:dict[str, QGroupBox] = {}
     #GUI elements
     if hasattr(self.comm, 'configuration'):
       onDisk = self.comm.configuration['GUI']
       mainL  = QVBoxLayout(self)
       for label, items  in configurationGUI.items():                                                 # section
         groupbox = QGroupBox(label.capitalize())
+        self.sectionGroups[label] = groupbox
         mainL.addWidget(groupbox)
         sectionL = QFormLayout(groupbox)
         for k,v in items.items():
           setattr(self, k, self.addRowList(sectionL, label=v[0], default=str(onDisk[k]), itemList=[str(i) for i in v[2]]))
+        if label == 'appearance':
+          self.detailsLevel.currentTextChanged.connect(self.updateAdvancedVisibility)
+      self.updateAdvancedVisibility(self.detailsLevel.currentText())
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
     buttonBox.clicked.connect(self.closeDialog)
@@ -59,6 +64,15 @@ class ConfigurationGUI(QDialog):
       self.accept()
       self.callbackFinished(True)
     return
+
+
+  def updateAdvancedVisibility(self, detailsLevel:str) -> None:
+    """Update visibility of the Advanced configuration group.
+
+    Args:
+      detailsLevel (str): Selected interface detail level.
+    """
+    self.sectionGroups['advanced'].setVisible(detailsLevel == 'Advanced')
 
 
   def addRowList(self, layout:QFormLayout, label:str, default:str, itemList:list[str]) -> QComboBox:

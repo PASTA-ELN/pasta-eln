@@ -116,6 +116,7 @@ configurationGUI: dict[str, Any] = {
   },
   'appearance': {
     'theme': ['Color style', 'automatic', ['automatic', 'dark', 'light']],
+    'detailsLevel': ['Interface detail level', 'Default', ['Default', 'Advanced']],
     'sidebarWidth': ['Sidebar width', 280, [220, 280, 340]],
     'detailsWidth': ['Details panel width', 360, [280, 360, 440]],
     'imageSizeDetails': ['Image size in form', 600, [300, 400, 500, 600]],
