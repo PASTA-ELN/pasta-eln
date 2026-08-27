@@ -10,7 +10,7 @@ from pasta_eln.ui.form.form import Form
 from pasta_eln.ui.gui_communicate import Communicate
 from .test_03_dragDrop import verify
 
-def test_simple(qtbot, caplog):
+def test_simple(qtbot, caplog, request):
   """
   main function
   """
@@ -32,6 +32,7 @@ def test_simple(qtbot, caplog):
   # This test requires the dedicated test project group configured for this checkout.
   exampleData(True, None, 'research', '')
   comm = Communicate('research')
+  request.addfinalizer(comm.shutdownBackendThread)
   window = Form(comm, {'_projectID': '', 'type': ['x0']})
   qtbot.addWidget(window)
   while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
@@ -73,9 +74,8 @@ def test_simple(qtbot, caplog):
   comm.uiSendSQL.emit([{'type':'one', 'cmd':cmd}])
 
   qtbot.wait(1000)  # wait for backend to finish
-  verify(comm, projID, 0)
+  verify(qtbot, comm, projID, 0)
   print(f'{"*"*40}\nEND TEST 10\n{"*"*40}')
-  comm.shutdownBackendThread()
 
   errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
   assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"

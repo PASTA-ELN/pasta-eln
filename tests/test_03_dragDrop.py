@@ -9,7 +9,7 @@ from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.backend_worker.worker import Task
 
 
-def test_simple(qtbot, caplog):
+def test_simple(qtbot, caplog, request):
   """
   main function
   """
@@ -27,6 +27,7 @@ def test_simple(qtbot, caplog):
 
   # start app and load project
   comm = Communicate('research')
+  request.addfinalizer(comm.shutdownBackendThread)
   window = Project(comm)
   qtbot.addWidget(window)
   while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
@@ -73,7 +74,6 @@ def test_simple(qtbot, caplog):
 
   # close everything
   print(f'{"*"*40}\nEND TEST 03\n{"*"*40}')
-  comm.shutdownBackendThread()
 
   errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
   assert not errors, f"Logging errors found: {[record.getMessage() for record in errors]}"
