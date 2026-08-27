@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: randomly move,copy,delete files to check resistance of scanning """
+import itertools
 import os, shutil, logging, random
 import warnings
 import unittest
@@ -43,9 +44,9 @@ class TestStringMethods(unittest.TestCase):
     projID = self.be.output('x0').split('|')[-2].strip()
     self.be.changeHierarchy(projID)
 
-    choices = random.choices(range(100), k=260)
-    # choices =
-    print(f'Current choice: [{",".join([str(i) for i in choices])}]')
+    choiceValues = random.choices(range(100), k=200)
+    choices = itertools.cycle(choiceValues)
+    print(f'Current choice: [{",".join([str(i) for i in choiceValues])}]')
     for epoch in range(5):
       print(f'\nStart epoch: {epoch}')
       allDirs = []
@@ -56,11 +57,11 @@ class TestStringMethods(unittest.TestCase):
         allDirs.append(root)
         allFiles += [f'{root}{os.sep}{i}' for i in files if i not in ('.id_pastaELN.json','pastaELN.db')]
       for iFile in allFiles:
-        op = ['keep','copy','copy','move','move','delete'][choices.pop(0)%6]
+        op = ['keep','copy','copy','move','move','delete'][next(choices)%6]
         parent = Path(iFile).parent
         possTargets = [i for i in allDirs if Path(i)!=parent]
-        target = possTargets[choices.pop(0)%len(possTargets)]
-        if choices.pop(0)%4==0:
+        target = possTargets[next(choices)%len(possTargets)]
+        if next(choices)%4==0:
           target += f'/NewDirectory/{Path(iFile).name}'
         print(iFile[len(str(self.be.basePath))+1:], op, target[len(str(self.be.basePath))+1:])
         try:
@@ -78,10 +79,10 @@ class TestStringMethods(unittest.TestCase):
             os.unlink(iFile)
         except shutil.Error:
           pass  #skip step if invalid step because file already exists in that folder
-      if choices.pop(0)%2==1:
+      if next(choices)%2==1:
         print('Start scanning')
         self.be.scanProject(None, projID)
-      if choices.pop(0)%2==1:
+      if next(choices)%2==1:
         print('Start scanning')
         self.be.scanProject(None, projID)
     print('Final scanning and verification')
