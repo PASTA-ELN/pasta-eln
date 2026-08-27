@@ -303,6 +303,7 @@ def test_core_gui_workflow(qtbot, caplog):
     # Save the captured workflow steps as one inspectable repository artifact.
     if frames:
       animationPath = Path('artifacts') / 'pasta-eln-test-50-workflow.gif'
+      animationPath.parent.mkdir(exist_ok=True)
       frames[0].save(animationPath, save_all=True, append_images=frames[1:], duration=1500, loop=0)
       print(f'GUI workflow animation: {animationPath.resolve()}')
     if window is not None and window.isVisible():

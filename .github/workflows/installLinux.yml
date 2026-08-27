@@ -63,5 +63,6 @@ jobs:
           ~/.pastaELN*.json
           ~/pasta_data/pastaELN.db
           htmlcov/
+          artifacts/
           /tmp/pytest-of-runner/pytest-0/
       if: ${{ always() }}
