@@ -1,5 +1,6 @@
 """ Widget for displaying a project in the ProjectSidebar"""
-from typing import Any, override
+from typing import Any
+from typing_extensions import override
 import pandas as pd
 from PySide6.QtCore import QPointF, Qt, Signal
 from PySide6.QtGui import QColor, QMouseEvent

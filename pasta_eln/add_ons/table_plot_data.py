@@ -4,6 +4,8 @@ THIS IS A VERY ADVANCED ADD-ON TUTORIAL
 This tutorial teaches
 - how to plot the data from files
 """
+# This tutorial follows the conventional four-space indentation style.
+# pylint: disable=bad-indentation
 import matplotlib
 import pandas as pd
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
@@ -125,15 +127,16 @@ class DataAnalyse(QDialog):
 
     footer = QHBoxLayout()
     footer.addStretch()
-    closeButton = QPushButton('Close')
-    closeButton.setDefault(True)
-    closeButton.clicked.connect(self.reject)
-    footer.addWidget(closeButton)
+    self.closeButton = QPushButton('Close')
+    self.closeButton.setDefault(True)
+    self.closeButton.clicked.connect(self.reject)
+    footer.addWidget(self.closeButton)
     mainL.addLayout(footer)
 
     self.refresh()
 
   def refresh(self):
+    """Refresh the plot from the selected data."""
     matplotlib.pyplot.close('all')
     self.graph.axes.cla()
     for idx, iData in enumerate(self.data):
@@ -175,7 +178,7 @@ def main(comm, df, widget, parameter={}):
     """
     # no cleaning needed since we only use id and path columns
     data = []
-    for idx, row in df.iterrows():
+    for _, row in df.iterrows():
         res = callDataExtractor(row['docID'], comm)
         if res is None:
             continue

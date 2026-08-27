@@ -27,7 +27,7 @@ ColorChannels: TypeAlias = tuple[int, int, int, int]
 class Palette:
   """ Color palette allows easy color access and manages Theme"""
 
-  def __init__(self, comm: Communicate, theme: str) -> None:
+  def __init__(self, comm: 'Communicate', theme: str) -> None:
     """ Initialize the color palette
     Args:
       theme (str): 'light' or 'dark' or 'automatic'

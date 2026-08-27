@@ -4,6 +4,8 @@ THIS IS A VERY ADVANCED ADD-ON TUTORIAL
 This tutorial teaches
 - how to group import metadata
 """
+# This tutorial follows the conventional four-space indentation style.
+# pylint: disable=bad-indentation
 from pathlib import Path
 import pandas as pd
 from PySide6.QtWidgets import QFileDialog, QMessageBox

@@ -20,7 +20,7 @@ def action(label: str, widget: QWidget, command: Any, menu: QMenu, keySequence: 
       widget.execute(command)                                                     # type: ignore[attr-defined]
     except Exception:
       logging.exception('Unable to execute menu action %r', label)
-      errorMsg = (f'<p>Could not execute “{escape(label)}”.</p><pre>{escape(traceback.format_exc())}</pre>')
+      errorMsg = f'<p>Could not execute “{escape(label)}”.</p><pre>{escape(traceback.format_exc())}</pre>'
       showMessage(widget, 'Action failed', errorMsg, 'Critical')
   actionObject.triggered.connect(triggered)
   if icon:
