@@ -168,10 +168,14 @@ def runTests() -> bool:
     bool: True if all tests passed
   """
   print('Start running tests')
+  coverageArgs = [sys.executable, '-m', 'coverage', 'run', '--source=pasta_eln']
   tests = [i for i in os.listdir('tests') if i.endswith('.py') and i.startswith('test_')]
+  firstTest = True
   for fileI in sorted(tests):
-    result = subprocess.run(['pytest','-s','--no-skip',f'tests/{fileI}'],
+    coverageOption = [] if firstTest else ['-a']
+    result = subprocess.run(coverageArgs + coverageOption + ['-m', 'pytest', '-s', '--no-skip', f'tests/{fileI}'],
                             capture_output=True, check=False)
+    firstTest = False
     success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
     if success==1:
       success += result.stdout.decode('utf-8').count('**ERROR')
@@ -190,7 +194,7 @@ def runTests() -> bool:
   print('Start running complicated tests')
   tests = [i for i in os.listdir('testsComplicated') if i.endswith('.py') and i.startswith('test_')]
   for fileI in sorted(tests):
-    result = subprocess.run(['pytest','-s','--no-skip',f'testsComplicated/{fileI}'],
+    result = subprocess.run(coverageArgs + ['-a', '-m', 'pytest', '-s', '--no-skip', f'testsComplicated/{fileI}'],
                             capture_output=True, check=False)
     success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
     if success==1:
@@ -205,6 +209,12 @@ def runTests() -> bool:
       print(f"    run: 'pytest -s testsComplicated/{fileI}' and check logFile")
       print(f"\n---------------------------\n{result.stdout.decode('utf-8')}\n---------------------------\n")
       return False
+  coverageResult = subprocess.run([sys.executable, '-m', 'coverage', 'html'], capture_output=True, check=False)
+  reportPath = Path('htmlcov/index.html').resolve()
+  if coverageResult.returncode != 0:
+    print(f'**ERROR: HTML coverage report was not created at {reportPath}')
+    return False
+  print(f'HTML coverage report: {reportPath}')
   return True
 
 

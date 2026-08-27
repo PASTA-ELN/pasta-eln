@@ -38,8 +38,6 @@ def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
   comm = Communicate(projectGroup=projectGroup)
   mainWindow = MainWindow(comm)
   logging.getLogger().setLevel(getattr(logging, comm.configuration.get('GUI',{'loggingLevel':'DEBUG'})['loggingLevel']))
-  if mainWindow.comm.palette is not None:
-    mainWindow.comm.palette.setTheme()
   import qtawesome as qta  # qtawesome and matplot cannot coexist
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')

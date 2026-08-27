@@ -12,8 +12,8 @@ from pasta_eln.misc_tools import clearLayout, makeStringWrappable
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.details.details_hier_item import DetailsHierItem
 from pasta_eln.ui.details.resize_image import ResizeImage
-from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_actions import action as addAction
+from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, Label, Widget
 
 

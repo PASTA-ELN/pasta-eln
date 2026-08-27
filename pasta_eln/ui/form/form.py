@@ -19,8 +19,8 @@ from ...fixed_strings_json import SQLiteTranslationDict, defaultDataHierarchyNod
 from ...misc_tools import callAddOn, isDocID
 from ...text_tools.string_changes import markdownEqualizer
 from .._context_menu import CommandMenu, executeContextMenu, initContextMenu
-from ..gui_communicate import Communicate
 from ..gui_actions import action
+from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label, image, shortcut
 from ..message_dialog import MessageDialog, showMessage
 from .flow_layout import FlowLayout

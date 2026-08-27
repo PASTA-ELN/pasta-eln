@@ -55,6 +55,9 @@ urwid==3.0.2
 urwid-readline==0.15.1
 wcwidth==0.2.13
 
+# coverage
+coverage==7.15.4
+
 # pytest
 iniconfig==2.3.0
 pluggy==1.6.0

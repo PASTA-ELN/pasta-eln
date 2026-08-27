@@ -8,8 +8,8 @@ from PySide6.QtGui import QContextMenuEvent, QDropEvent, QMouseEvent, QStandardI
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget
 from ...backend_worker.worker import Task
 from ...misc_tools import callAddOn
-from ..gui_communicate import Communicate
 from ..gui_actions import action
+from ..gui_communicate import Communicate
 from ..message_dialog import showMessage
 from .project_leaf_renderer import ProjectLeafRenderer
 

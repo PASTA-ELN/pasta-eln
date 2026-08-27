@@ -21,8 +21,8 @@ from pasta_eln.ui.data_hierarchy.editor import SchemeEditor
 from pasta_eln.ui.definitions.editor import Editor as DefinitionsEditor
 from pasta_eln.ui.details.context import DetailContext
 from pasta_eln.ui.form.form import Form
-from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_actions import action
+from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.message_dialog import MessageDialog, showMessage
 from pasta_eln.ui.palette import Palette
 from pasta_eln.ui.project.project import Command as ProjectCommand, Project
@@ -44,6 +44,8 @@ class MainWindow(QMainWindow):
     self.application = QApplication.instance()
     if self.comm.configuration:
       self.comm.palette = Palette(comm, self.comm.configuration['GUI']['theme'])
+      # Apply the Qt palette before constructing child widgets.
+      self.comm.palette.setTheme()
       self.comm.docTypesChanged.connect(self.paint)
     else:
       configWindow = Configuration(self.comm, 'setup')
