@@ -17,17 +17,17 @@ User Story: Andrew
 
 * **Project Creation**: Andrew initiates his research by creating a new project with a clear **objective**, such as "Effects of temperature on enzyme activity," to focus his research. The **project status** is set to "active" while he works on it. If paused, he updates the status to "paused" and provides a comment explaining the reason, ensuring seamless resumption of work.
 
-* **Task Structuring**: Within the project view, Andrew outlines the necessary steps to achieve his research objective, breaking them into smaller, manageable sub-steps. For each task added, a corresponding folder is automatically created on the **hard drive within the project directory**, mirroring the project hierarchy.
+* **Task Structuring**: Within the project view, Andrew creates folders for the necessary steps and smaller, manageable sub-steps. Each folder is represented on the **hard drive within the project directory**, mirroring the project hierarchy.
 
 * **Including Data**: During task execution, Andrew collects relevant files by moving or copying them into the respective hard drive folder and then **scans the project hierarchy** to extract metadata. Alternatively, he employs the **drag-and-drop feature** to add files directly into the project view, maintaining the project structure.
 
 * **Annotation**: Andrew enhances his research documentation by adding **comments, tags, and ratings** to each measurement and task. This practice aids in recording observations and thoughts, proving invaluable during thesis writing and publication preparation.
 
-* **Linking Resources**: To document the samples or instruments used, Andrew **links measurements to existing samples, instruments, or procedures**. This linkage facilitates future reference when detailing scientific methods.
+* **Linking Resources**: To document the samples or devices used, Andrew **links measurements to existing samples, devices, or procedures**. This linkage facilitates future reference when detailing scientific methods.
 
 * **Workflow Organization**: Andrew utilizes the "Workflows" category to manage experimental workflows, which include the subcategories  **Workflow Plan**, **Workflow Log**, and **Procedure**. The Workflow Plan provides a high-level overview, Procedures detail individual steps akin to standard operating procedures, and the Workflow Log captures deviations from the original plan.
 
-* **Metadata Entry**: For manually entered metadata, such as notes on result quality or experimental processes, Andrew uses the **extra field** in the measurement's form view.
+* **Metadata Entry**: For manually entered metadata, such as notes on result quality or experimental processes, Andrew enters the value in the corresponding defined field, commonly **comment** or **content**, in the item's form view.
 
 This systematic approach enables Andrew to maintain a well-organized, planning-based project structure, ensuring efficient tracking of research steps and associated data entries.
 

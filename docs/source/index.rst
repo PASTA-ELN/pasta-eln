@@ -44,9 +44,9 @@ PASTA-ELN provides a streamlined and locally installed electronic labnotebook (E
             <div class="icon"><i data-lucide="blocks"></i></div>
             <div class="text"><b>Add-ons:</b> extractors, project reporter, etc.</div>
          </a>
-         <a href="definitions.html" class="card">
+         <a href="gui.html" class="card">
             <div class="icon"><i data-lucide="database"></i></div>
-            <div class="text">Configuration of<br> <b>data structure</b> and their <b>definitions</b></div>
+            <div class="text"><b>Advanced:</b> GUI, data structure,<br>and definitions</div>
          </a>
       </div>
       <div class="column">
@@ -78,6 +78,7 @@ PASTA-ELN provides a streamlined and locally installed electronic labnotebook (E
    user_andrew
    user_brenda
    user_claire
+   gui
    install
    addons
    definitions

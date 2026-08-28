@@ -32,33 +32,34 @@ How to write small python programs that test code directly
 
 .. code-block:: python
 
-   from pasta_eln.backend import Pasta
-   pasta = Pasta()
-   viewProj = pasta.db.getView('viewDocType/x0')
-   projID1  = [i['id'] for i in viewProj if 'PASTA' in i['value'][0]][0]
-   pasta.changeHierarchy(projID1)
-   print(pasta.outputHierarchy())
+   from pasta_eln.backend_worker.backend import Backend
+
+   backend = Backend('research')
+   projects = backend.db.getView('viewDocType/x0')
+   projectID = projects.loc[projects['name'].str.contains('PASTA'), 'id'].iloc[0]
+   hierarchy, error = backend.db.getHierarchy(projectID)
+   print(hierarchy, error)
 
 
 **Frontend: widgets**: For testing widgets put this code into "pasta_eln/test.py":
 
 .. code-block:: python
 
+   import sys
    from PySide6.QtWidgets import QApplication, QMainWindow
-   from .backend import Backend
-   from .communicate import Communicate
-   from .widgetDetails import Details
+   from pasta_eln.ui.gui_communicate import Communicate
+   from pasta_eln.ui.details.details import Details
+   from pasta_eln.ui.details.context import DetailContext
 
    class MainWindow(QMainWindow):
      def __init__(self):
        super().__init__()
-       self.backend = Backend()
-       comm = Communicate(self.backend)
+       comm = Communicate('research')
        widget = Details(comm)
        self.setCentralWidget(widget)
-       comm.changeDetails.emit('m-a23019163b9c4fccb4edaab0feb2b5ee')
+       comm.changeDetails.emit(DetailContext('m-a23019163b9c4fccb4edaab0feb2b5ee'))
 
-   app = QApplication()
+   app = QApplication(sys.argv)
    window = MainWindow()
    window.show()
    app.exec()
@@ -71,19 +72,15 @@ and execute "python -m pasta_eln.test"
 
    import sys
    from PySide6.QtWidgets import QApplication
-   from .GUI.form import Form
-   from .backend import Backend
-   from .guiCommunicate import Communicate
-   from .GUI.palette import Palette
+   from pasta_eln.ui.form.form import Form
+   from pasta_eln.ui.gui_communicate import Communicate
 
    app = QApplication(sys.argv)
-   backend = Backend()
-   palette = Palette(app,'none')
-   comm = Communicate(backend,palette)
-   doc = backend.db.getDoc("m-3a43570c4fd84b1ab81a8863ae058fb0")
+   comm = Communicate('research')
+   doc = {'type': ['measurement'], 'name': 'Test measurement'}
    dialog = Form(comm, doc)
-   dialog.show()
-   sys.exit(app.exec())
+   dialog.exec()
+   comm.shutdownBackendThread()
 
 and execute "python -m pasta_eln.test"
 
