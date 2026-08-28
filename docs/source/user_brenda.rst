@@ -21,7 +21,7 @@ User Story: Brenda
 
 * **Annotation**: After integrating the data collection, Brenda manually can add **additional metadata, comments, and links** to other items, such as samples or procedures, to enhance the dataset's usability.
 
-* **Publishing Data to Repositories**: Brenda ensures that the **User Information** and **Repository Configuration** settings are correctly set up. As a newcomer to research data management, she appreciates the **help text** provided in the configuration settings. Once configured, she selects the "Publish to Repository" option to make her data publicly available. Brenda is pleased to see that the **repository** is automatically populated with the metadata she entered, enabling her to publish her data with minimal effort.
+* **Publishing Data to Repositories**: Brenda ensures that the **Author** and **Repository** tabs in **Configuration** are correctly set up. She can verify the Zenodo or Dataverse connection there. Once configured, she opens a project and selects **Project > Upload to repository**. The upload dialog lets her review the title, description, keywords, category/community, additional metadata, and item types before uploading to Zenodo or Dataverse.
 
 This workflow highlights PASTA-ELN's adaptability in managing and integrating large datasets with minimal user input, as well as its user-friendly approach to publishing data in repositories like Zenodo and Dataverse.
 
