@@ -17,6 +17,7 @@ from pasta_eln.ui.details.resize_image import ResizeImage
 from pasta_eln.ui.gui_actions import action as addAction
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, Label, Widget
+from pasta_eln.ui.palette import nameColor
 
 
 class Details(Widget):
@@ -147,6 +148,7 @@ class Details(Widget):
     title = (elidedTitle if fontMetrics.horizontalAdvance(elidedTitle) < fontMetrics.horizontalAdvance(fullTitle)
              else fullTitle)
     self.titleLabel.setText(f'{title}<sup><span style="font-size: 24pt;">ℹ</span></sup>' if differs else title)
+    self.titleLabel.setStyleSheet(f'color: {nameColor(self.data.get('tags', [])).name()};' if color else '')
 
     # BODY
     # clear old items

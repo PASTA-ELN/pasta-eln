@@ -55,7 +55,6 @@ Order of open issues that do not have a question
   7.  566 – Create GUI for attachments
   8.  436 – Re-running of extractors whenever measurement details are saved
   9.  528 – Feature Request: easily visible changelog
-  10. 608 – Feature Request: Color implementation
   11. 430 – Creating templates for items
   12. Guard oversized extractor `metaVendor` and `metaUser` with a user-configurable maximum size
 

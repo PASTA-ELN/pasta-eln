@@ -22,6 +22,7 @@ from pasta_eln.ui.table.filter_row import FilterRow
 from pasta_eln.ui.table.pandas_table_model import PandasTableModel
 from pasta_eln.ui.table.table_header import TableHeader
 from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
+from pasta_eln.ui.palette import nameColor
 
 
 def formatTag(tag: str) -> str:
@@ -197,7 +198,9 @@ class TableView(Widget):
     self.reloadComboBoxFlag = True
 
     self.tableData, documentIds = self.filteredTableData()
-    model = PandasTableModel(self.tableData, documentIds)
+    tagsById = self.data.set_index('id')['tags' if 'tags' in self.data else '_tags'].to_dict()
+    colors = [nameColor(tagsById.get(docID, [])) for docID in documentIds]
+    model = PandasTableModel(self.tableData, documentIds, colors)
     self.table.setModel(model)
     if 0 < sortSection < model.columnCount():
       model.sort(sortSection, sortOrder)
@@ -499,7 +502,7 @@ class TableView(Widget):
     base.replace(['None', '', 'nan'], '-', inplace=True)
     base.replace('True', 'Y', inplace=True)
     base.mask(base.map(isDocID), 'oo', inplace=True)
-    base = base.iloc[:, :-2].copy()
+    base = base.drop(columns=['id', 'show', '_tags'], errors='ignore').copy()
     if self.docType == '_tags_':
       base = base[base['tag'] != '_curated'].copy()
       base.loc[:, 'tag'] = base['tag'].map(formatTag)

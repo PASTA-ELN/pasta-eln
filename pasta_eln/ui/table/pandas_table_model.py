@@ -2,6 +2,7 @@
 from typing import Any
 import pandas as pd
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt, Signal
+from PySide6.QtGui import QColor, QBrush
 from typing_extensions import override
 
 
@@ -18,7 +19,8 @@ class PandasTableModel(QAbstractTableModel):
   """
   rowCheckChanged = Signal(int, bool)
 
-  def __init__(self, df: pd.DataFrame, documentIds: list[str] | None = None) -> None:
+  def __init__(self, df: pd.DataFrame, documentIds: list[str] | None = None,
+               nameColors: list[QColor | None] | None = None) -> None:
     """ Initializes a new PandasTableModel
     Args:
       df (pd.DataFrame): The dataframe to display.
@@ -28,6 +30,7 @@ class PandasTableModel(QAbstractTableModel):
     self.df          = df
     self.checkedRows = [False] * len(self.df)
     self.documentIds = documentIds or ['']*len(self.df)
+    self.nameColors = nameColors or [None] * len(self.df)
 
 
   def rowCount(self, _: QModelIndex | QPersistentModelIndex = QModelIndex()) -> int:
@@ -63,6 +66,8 @@ class PandasTableModel(QAbstractTableModel):
         return Qt.CheckState.Checked if self.checkedRows[index.row()] else Qt.CheckState.Unchecked
       return '' if role == Qt.ItemDataRole.DisplayRole else None
     # Other columns
+    if index.column() == 1 and role == Qt.ItemDataRole.ForegroundRole and self.nameColors[index.row()] is not None:
+      return QBrush(self.nameColors[index.row()])
     if role == Qt.ItemDataRole.DisplayRole:
       return str(self.df.iat[index.row(), index.column() - 1])
     return None
@@ -146,9 +151,10 @@ class PandasTableModel(QAbstractTableModel):
       return
     self.layoutAboutToBeChanged.emit()
     ascending = order == Qt.SortOrder.AscendingOrder
-    dfColumn = self.df.columns[column - 1]
-    sortedDF = self.df.sort_values(by=dfColumn, ascending=ascending)
+    dfColumn  = self.df.columns[column - 1]
+    sortedDF  = self.df.sort_values(by=dfColumn, ascending=ascending)
     self.checkedRows = [self.checkedRows[i] for i in sortedDF.index]
     self.documentIds = [self.documentIds[i] for i in sortedDF.index]
+    self.nameColors  = [self.nameColors[i] for i in sortedDF.index]
     self.df = sortedDF.reset_index(drop=True)
     self.layoutChanged.emit()

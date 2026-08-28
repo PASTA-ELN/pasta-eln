@@ -767,19 +767,18 @@ class SqlLiteDB:
       if 'image' in viewColumns:
         df.loc[:, 'image'] = df['image'].apply(lambda x: 'Y' if len(str(x)) > 1 else 'N')
       # add: tags, qrCodes, parameters
-      if 'tags' in viewColumns:
-        cmd = 'SELECT main.id, tags.tag FROM main INNER JOIN tags USING(id) INNER JOIN branches USING(id) '\
-              'WHERE main.type LIKE ?'
-        params = [f'{docType}%']
-        if not allFlag:
-          cmd += r" and NOT branches.show LIKE '%F%'"
-        if startKey:
-          cmd += ' AND branches.stack LIKE ?'
-          params.append(f'{startKey}%')
-        dfTags = pd.read_sql_query(cmd, self.connection, params=params, index_col='id').fillna('')
-        dfTags = dfTags.groupby(['id'])['tag'].apply(lambda x: ', '.join(set(x))).reset_index().set_index('id')
-        dfTags.rename(columns={'tag':'tags'}, inplace=True)
-        df = df.join(dfTags)
+      cmd = 'SELECT main.id, tags.tag FROM main INNER JOIN tags USING(id) INNER JOIN branches USING(id) '\
+            'WHERE main.type LIKE ?'
+      params = [f'{docType}%']
+      if not allFlag:
+        cmd += r" and NOT branches.show LIKE '%F%'"
+      if startKey:
+        cmd += ' AND branches.stack LIKE ?'
+        params.append(f'{startKey}%')
+      dfTags = pd.read_sql_query(cmd, self.connection, params=params, index_col='id').fillna('')
+      dfTags = dfTags.groupby(['id'])['tag'].apply(lambda x: ', '.join(set(x))).reset_index().set_index('id')
+      dfTags.rename(columns={'tag':'tags' if 'tags' in viewColumns else '_tags'}, inplace=True)
+      df = df.join(dfTags)
       if 'qrCodes' in viewColumns:
         cmd = 'SELECT main.id, qrCodes.qrCode FROM main INNER JOIN qrCodes USING(id) INNER JOIN branches '\
               'USING(id) WHERE main.type LIKE ?'
@@ -808,7 +807,10 @@ class SqlLiteDB:
         #dfParams.columns.name = None                               # Flatten the columns; seems not necessary
         df = df.join(dfParams)
       # final sorting of columns
-      columnOrder = [i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]+['show']
+      columnOrder = [i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]
+      if 'tags' not in viewColumns:
+        columnOrder.append('_tags')
+      columnOrder += ['show']
       df = df.reset_index().reindex(columnOrder, axis=1)
       df = df.rename(columns={i:i[1:] for i in columnOrder if i.startswith('.') })
       df = df.fillna('').astype('str')

@@ -9,6 +9,7 @@ from typing_extensions import override
 from pasta_eln.misc_tools import makeStringWrappable
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Label
+from pasta_eln.ui.palette import nameColor
 
 
 class ProjectCard(QFrame):
@@ -29,7 +30,8 @@ class ProjectCard(QFrame):
 
     # Title-Label
     hidden = '     \U0001F441' if 'F' in self.project['show'] else ''
-    self.titleLabel = Label(makeStringWrappable(self.project['name'] + hidden), 'h3')
+    style = style=f'color: {nameColor(self.project.get('tags', [])).name()};' if color else ''
+    self.titleLabel = Label(makeStringWrappable(self.project['name'] + hidden), 'h3', style=style)
     self.titleLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     self.titleLabel.setWordWrap(True)
 

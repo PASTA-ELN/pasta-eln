@@ -19,6 +19,7 @@ from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label, Widget
 from ..message_dialog import showMessage
 from .project_tree_view import TreeView
+from ..palette import nameColor
 
 
 class Project(Widget):
@@ -148,7 +149,8 @@ class Project(Widget):
     hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
                        if [b for b in self.docProj['branch'] if False in b['show']] else \
                        ('', 'Mark project as hidden')
-    topLineL.addWidget(Label(self.docProj['name']+hidden, 'h2'))
+    style=f'color: {nameColor(self.docProj.get('tags', [])).name()};' if color else ''
+    topLineL.addWidget(Label(self.docProj['name']+hidden, 'h2', style=style))
     showStatus = '(Show all items)' if self.showAll else '(Hide hidden items)'
     topLineL.addWidget(QLabel(showStatus))
     topLineL.addStretch(1)

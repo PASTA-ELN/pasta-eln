@@ -1,5 +1,6 @@
 """Color palette allows easy colour access and manages the application theme."""
 
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, TypeAlias, TypedDict, cast
 import darkdetect
 import qdarktheme
@@ -22,6 +23,23 @@ ColorRule: TypeAlias = str | ColorModifiers
 ColorCategory: TypeAlias = dict[str, ColorRule]
 ThemeColorValues: TypeAlias = dict[str, dict[str, str | ColorCategory]]
 ColorChannels: TypeAlias = tuple[int, int, int, int]
+
+def nameColor(tags: str | Iterable[str]) -> QColor | None:
+  """Return the first configured name color represented by ``tags``."""
+  namedColors = {
+    '#red': '#d32f2f',
+    '#orange': '#ef6c00',
+    '#yellow': '#b58900',
+    '#green': '#2e7d32',
+    '#blue': '#1565c0',
+    '#purple': '#6a1b9a',
+  }
+  if isinstance(tags, str):
+    tags = tags.split(',')
+  for tag in tags:
+    if color:= namedColors.get(str(tag).strip().lower()):
+      return QColor(color)
+  return None
 
 
 class Palette:

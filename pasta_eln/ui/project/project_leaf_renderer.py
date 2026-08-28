@@ -11,6 +11,7 @@ from ...fixed_strings_json import DO_NOT_RENDER, defaultDataHierarchyNode
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import markdownEqualizer
 from ..gui_communicate import Communicate
+from ..palette import nameColor
 
 FRAME_SIZE = 6
 MIN_CONTENT_WIDTH = 240
@@ -88,20 +89,28 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       docTypeText = self.comm.docTypesTitles['x1']['title'].lower()[:-1]
     maxCharacter = int(docTypeOffset/7.5)
     nameText = name if len(name)<maxCharacter else f'...{name[-maxCharacter+3:]}'
+    color = nameColor(self.docs.get(docID, {}).get('tags', []))
     if not data['gui'][0]:                                                               #Only draw first line
       staticText = QStaticText(f'<strong>{nameText} (...)</strong>')
       staticText.setTextWidth(docTypeOffset)
+      if color:
+        painter.setPen(QPen(color))
       painter.drawStaticText(x0, y0+y, staticText)
+      painter.setPen(self.penDefault)
       painter.drawStaticText(x0+docTypeOffset, y0+y, QStaticText(docTypeText))
       self.paintMenuButton(painter, option)
       return
+    # draw full node
     hiddenText = '     \U0001F441' if self.docs.get(docID, {}).get('hidden', False) else ''
     staticText = QStaticText(f'<strong>{nameText} {hiddenText}</strong>')
     staticText.setTextWidth(docTypeOffset)
     secondaryText = docTypeText
     secondaryText += f" | {data['hierStack']}" if self.debugMode and len(data['hierStack'])<72 else \
                      f" | ...{data['hierStack'][-76:]}" if self.debugMode else ''
+    if color:
+      painter.setPen(QPen(color))
     painter.drawStaticText(x0, y0+y, staticText)
+    painter.setPen(self.penDefault)
     painter.drawStaticText(x0+docTypeOffset, y0+y, QStaticText(secondaryText))
     textDoc = QTextDocument()
     textDoc.setMarkdown(self.docs.get(docID, {}).get('markdown',''))
@@ -241,6 +250,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.docs[doc['id']]['hidden']  = any(b for b in doc['branch'] if False in b['show'])
     self.docs[doc['id']]['markdown']= markdownStr
     self.docs[doc['id']]['name']    = doc['name']
+    self.docs[doc['id']]['tags']    = doc.get('tags', [])
     self.docs[doc['id']]['type'] = doc['type']
     self.docs[doc['id']]['content'] = markdownEqualizer(doc['content']) if 'content' in doc else ''
     self.docs[doc['id']]['image']   = doc.get('image','')
