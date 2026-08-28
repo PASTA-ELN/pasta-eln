@@ -56,6 +56,10 @@ Files can be imported directly into a selected folder by drag-and-drop. The
 project **Scan** action checks the project directory for files and folders that
 are not yet represented in the database and runs applicable extractors.
 
+To show additional interface controls, open **Other > Configuration > Interface**
+and set **Interface detail level** to **Advanced**. The default level keeps
+less commonly used controls hidden.
+
 Important and advanced actions
 ------------------------------
 
@@ -76,6 +80,16 @@ or rerunning extractors, use the **Actions**, **View**, and **More** menus above
 the relevant list. These controls are intentionally kept close to the list
 because they apply only to that item type.
 
+Skipping folders during scans
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Advanced users can prevent a folder and its contents from being processed by
+the project scanner. Select the folder, open **Details > Actions**, and choose
+**Exclude folder from scans**. PASTA-ELN creates a marker file named
+``.pastaELN_ignore`` in that folder. The marker affects future scans only.
+Entries already present in the database
+are retained while the folder is excluded.
+
 Configuration
 -------------
 
@@ -83,8 +97,9 @@ Open **Other > Configuration** to change the following:
 
 * **Project group**: local data paths, add-on paths, common folders, and
   optional elabFTW settings.
-* **Interface**: theme, hidden-item behavior, window sizes, logging, upload,
-  and extractor limits.
+* **Interface**: theme, interface detail level, hidden-item behavior, window
+  sizes, logging, upload, and extractor limits. The **Advanced** detail level
+  reveals less commonly used interface and configuration options.
 * **Author**: author and organization information used in metadata.
 * **Repository**: Zenodo and Dataverse URLs, API keys, and Dataverse selection.
 * **Add-on parameters**: settings required by installed add-ons.
