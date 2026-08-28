@@ -183,6 +183,9 @@ class TableView(Widget):
 
   def paint(self) -> None:
     """Rebuild the list after data, filtering, or visibility changes."""
+    header = self.table.horizontalHeader()
+    sortSection = header.sortIndicatorSection()
+    sortOrder = header.sortIndicatorOrder()
     if self.reloadComboBoxFlag and '/' not in self.docType:
       self.subTypeCombo.blockSignals(True)
       self.subTypeCombo.clear()
@@ -196,6 +199,9 @@ class TableView(Widget):
     self.tableData, documentIds = self.filteredTableData()
     model = PandasTableModel(self.tableData, documentIds)
     self.table.setModel(model)
+    if 0 < sortSection < model.columnCount():
+      model.sort(sortSection, sortOrder)
+      header.setSortIndicator(sortSection, sortOrder)
     model.rowCheckChanged.connect(self.onRowCheckChanged)
     self.table.selectionModel().selectionChanged.connect(self.synchronizeSelectionAndCheckbox)
     self.table.resizeColumnsToContents()
