@@ -3,6 +3,7 @@ import copy
 import hashlib
 import importlib
 import importlib.util
+from inspect import signature
 import json
 import logging
 import os
@@ -89,6 +90,16 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
       with open(directory/fileName, encoding='utf-8') as fIn:
         if verboseDebug: print('\n'+fileName)
         lines = fIn.readlines()
+        try:
+          module = loadNamedModule(directory, fileName[:-3])
+          apiVersion = getattr(module, 'PASTA_ELN_EXTRACTOR_API', None)
+          parameters = tuple(signature(module.use).parameters)
+        except Exception as error:
+          errors[fileName] = f'ERROR loading extractor: {error}'
+        else:
+          if apiVersion != 2 or parameters != ('filePath', 'style', 'saveFigure'):
+            errors[fileName] = ('LEGACY EXTRACTOR: content-only mode. Update to PASTA_ELN_EXTRACTOR_API = 2 and '
+                                'use(filePath, style, saveFigure).')
         extractorsThis = {}
         ifInFile, headerState, header = False, True, []
         for idx,line in enumerate(lines):

@@ -9,7 +9,10 @@ import json
 import os
 
 
-def use(filePath, style={'main':''}, saveFileName=None):
+PASTA_ELN_EXTRACTOR_API = 2
+
+
+def use(filePath, style, saveFigure):
   """
   Args:
     filePath (Path): full path file name

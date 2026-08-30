@@ -440,7 +440,7 @@ class BackendWorker(QObject):
           job = self.backend.extractors.prepareJob(path, doc['type'], len(extractorJobs))
           if job is None:
             continue
-          job |= {'doc':doc, 'docID':docID, 'oldDocType':oldDocType, 'shasum':doc.get('shasum','')}
+          job |= {'doc':doc, 'docID':docID, 'oldDocType':oldDocType}
           extractorJobs.append(job)
       for job, doc in self.backend.extractors.applyResults(self.backend.extractors.runJobs(extractorJobs), extractorJobs):
         if doc['type'][0] == job['oldDocType'][0]:

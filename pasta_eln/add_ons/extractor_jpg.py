@@ -8,9 +8,10 @@ import re
 from io import BytesIO
 import numpy as np
 from PIL import Image
+PASTA_ELN_EXTRACTOR_API = 2
 
 
-def use(filePath, style={'main':''}, saveFileName=None):
+def use(filePath, style, saveFigure):
   """
   Args:
     filePath (Path): full path file name
@@ -44,8 +45,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
 
   #save to file
   imageData = Image.fromarray(imgArr)
-  if saveFileName is not None:
-    imageData.save(saveFileName)
+  saveFigure(imageData)
 
   # convert PIL image to base64
   figfile = BytesIO()

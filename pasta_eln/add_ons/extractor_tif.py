@@ -4,9 +4,10 @@
 import base64
 from io import BytesIO
 from PIL import Image
+PASTA_ELN_EXTRACTOR_API = 2
 
 
-def use(filePath, style={'main':''}, saveFileName=None):
+def use(filePath, style, saveFigure):
   """
   Args:
     filePath (Path): full path file name
@@ -27,8 +28,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
   metaUser   = {}
 
   # save to file: this is the high quality image
-  if saveFileName is not None:
-    image.save(saveFileName)
+  saveFigure(image)
 
   # convert PIL image to base64: here one should downscale
   maxSize = 400

@@ -10,9 +10,10 @@ from io import StringIO
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+PASTA_ELN_EXTRACTOR_API = 2
 
 
-def use(filePath, style={'main':''}, saveFileName=None):
+def use(filePath, style, saveFigure):
   """
   Args:
     filePath (Path): full path file name
@@ -60,8 +61,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
   ## plt.show()  #for fast testing
 
   #Save to file: each extractor should have this as it allows the user to create a high quality image
-  if saveFileName is not None:
-    plt.savefig(saveFileName, dpi=150, bbox_inches='tight')
+  saveFigure()
 
   #convert image to svg image: 2d graphs are good examples of svg files
   figfile = StringIO()

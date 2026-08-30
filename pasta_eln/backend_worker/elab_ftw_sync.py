@@ -533,7 +533,7 @@ class Pasta2Elab:
     tags       =doc.pop('tags')
     ratings    = [i[1] for i in tags if i.startswith('_')]
     tags       = [i for i in tags if not re.match(r'^_\d$', i)]
-    doc        = {k:v for k,v in doc.items() if k not in {'id','user','client','externalId','type','gui','branch','shasum','qrCodes'}}
+    doc        = {k:v for k,v in doc.items() if k not in {'id','user','client','externalId','type','gui','branch','dataHash','extractorHash','qrCodes'}}
     metadata = {'metaVendor': doc.pop('metaVendor') if 'metaVendor' in doc else {}}
     metadata['metaUser']    = doc.pop('metaUser')   if 'metaUser' in doc else {}
     if doc:

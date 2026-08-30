@@ -6,7 +6,7 @@ from pathlib import Path
 import qdarktheme
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication
 from pasta_eln import __version__
 from .misc_tools import testNewPastaVersion
 from .ui.gui_communicate import Communicate

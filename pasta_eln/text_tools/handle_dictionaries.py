@@ -221,7 +221,7 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any], onlyEssentials:bool=True
     if key in ignoreKeys or (onlyEssentials and key not in includeKeys):
       continue
     if key not in dict2Copy:
-      if not shortVersion or key not in ('__version__','content','image','shasum'):
+      if not shortVersion or key not in ('__version__','content','image','dataHash','extractorHash'):
         print(shortVersion, key)
         outString += f'key not in dictionary 2: {key}' + '\n'
       continue

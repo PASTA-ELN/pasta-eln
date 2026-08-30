@@ -107,7 +107,7 @@ class Form(QDialog):
     self.keyValueListL:QFormLayout|None       = None
     self.keyValueLabel                        = QLabel()
     self.projectComboBox                      = QComboBox()
-    self.skipKeys  = ['image','metaVendor','metaUser','shasum','._projectID','._ids','.name','.elnIdentifier']
+    self.skipKeys  = ['image','metaVendor','metaUser','dataHash','extractorHash','._projectID','._ids','.name','.elnIdentifier']
     self.allHidden                            = False
     self.keyLabels: list[QLineEdit]           = []
     self.values:    list[QLineEdit]           = []
@@ -185,7 +185,7 @@ class Form(QDialog):
       else:
         intersection = set(self.doc).intersection(set(doc))
         #remove keys that should not be group edited and build dict
-        intersection = intersection.difference({'branch', 'user', 'client', 'metaVendor', 'shasum', 'id', 'type',
+        intersection = intersection.difference({'branch', 'user', 'client', 'metaVendor', 'dataHash', 'extractorHash', 'id', 'type',
                            'metaUser', 'rev', 'name', 'dateCreated', 'dateModified', 'image', 'gui', ''})
         docType = list(self.doc['type'])
         self.doc = {i:'' for i in intersection}

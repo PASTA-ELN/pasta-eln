@@ -46,8 +46,9 @@ Open issues are the union of:
 ### Repository maintenance items
 Order of open issues that do not have a question
 
-- Version 3.3.1: New features that require minimal changes, possibly some config changes
+- Version 3.4: New features that require minimal changes, possibly some config changes
   1.  602 – Saving image preview leads to an empty text box
+  2.  570 – Version control for extractors
   3.  612 – Restarting Pasta resets visibility setting
   4.  381 – Visualization of linked items
   5.  570 – Version control for extractors

@@ -18,9 +18,11 @@ from PIL import Image
 from ..fixed_strings_json import SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema
 from ..misc_tools import hierarchy
 from ..text_tools.string_changes import camelCase, createDirName, outputString, tracebackString
+from .extractor import sha256File
 
-MAIN_ORDER     =['id'  ,'name','user','type','dateCreated','dateModified','gui',      'client','shasum','image','content','comment','externalId','dateSync']
-MAIN_TYPE      =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',   'TEXT',     'TEXT']
+DATABASE_VERSION = 1
+MAIN_ORDER     =['id'  ,'name','user','type','dateCreated','dateModified','gui',      'client','dataHash','image','content','comment','externalId','dateSync','extractorHash']
+MAIN_TYPE      =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',    'TEXT', 'TEXT',   'TEXT',   'TEXT',     'TEXT',    'TEXT']
 DOC_TYPES      =['docType', 'PURL','title','icon','shortcut','view']
 DOC_TYPE_SCHEMA=['docType', 'class', 'idx', 'name', 'unit', 'mandatory', 'list']
 
@@ -38,9 +40,15 @@ class SqlLiteDB:
       resetDataHierarchy (bool): reset dataHierarchy
       basePath (Path): path of project group
     """
+    isNewDatabaseFile = not (basePath/'pastaELN.db').is_file()
     self.connection = sqlite3.connect(basePath/'pastaELN.db', check_same_thread=False)
     self.basePath   = basePath
     self.cursor     = self.connection.cursor()
+    databaseVersion = self.cursor.execute('PRAGMA user_version').fetchone()[0]# V0 predates SQLite version marker
+    if isNewDatabaseFile:
+      self.cursor.execute(f'PRAGMA user_version={DATABASE_VERSION}')
+    elif databaseVersion != DATABASE_VERSION:
+      self.migrateDatabase(databaseVersion)
     self.dataHierarchyInit(resetDataHierarchy)
     # main table
     self.createSQLTable('main',            MAIN_ORDER,                                  'id', MAIN_TYPE)
@@ -60,6 +68,48 @@ class SqlLiteDB:
     # list of changes to all documents: gives history
     self.createSQLTable('changes',         ['id','date','change'],                     'id, date')
     return
+
+
+  def migrateDatabase(self, databaseVersion:int) -> None:
+    """Migrate a version-0 database from Git SHA-1 to raw SHA-256 identities."""
+    if os.environ.get('PASTA_ELN_ALLOW_DATAHASH_MIGRATION') != '1':
+      self.connection.close()
+      raise RuntimeError(
+          'This development migrates database identities. It is not safe for productive use. ' \
+          'Use a disposable database or set  PASTA_ELN_ALLOW_DATAHASH_MIGRATION=1 after making a backup.')
+    if databaseVersion != 0:
+      raise ValueError(f'Database version {databaseVersion} cannot be migrated to {DATABASE_VERSION}.')
+    rows = self.cursor.execute("SELECT id FROM main WHERE shasum NOT IN ('', '-')").fetchall()
+    hashes:dict[str, str] = {}
+    for docID, in rows:
+      paths = self.cursor.execute('SELECT path FROM branches WHERE id=? AND path!=\'*\'', (docID,)).fetchall()
+      if not paths:
+        logging.warning('Cannot migrate %s: data file is not reachable; dataHash was cleared.', docID)
+        hashes[docID] = ''
+        continue
+      for path, in paths:
+        try:
+          hashes[docID] = sha256File(self.basePath/path)
+          break
+        except OSError:
+          continue
+      if docID not in hashes:
+        logging.warning('Cannot migrate %s: data file is not reachable; dataHash was cleared.', docID)
+        hashes[docID] = ''
+    try:
+      databasePath = self.basePath/'pastaELN.db'
+      backupPath = databasePath.with_name(
+          f'{databasePath.stem}.pre-dataHash-migration-{datetime.now().strftime("%Y%m%d%H%M%S")}{databasePath.suffix}.bak')
+      shutil.copy2(databasePath, backupPath)
+      self.connection.execute('BEGIN')
+      self.cursor.execute('ALTER TABLE main RENAME COLUMN shasum TO dataHash')
+      self.cursor.execute("ALTER TABLE main ADD COLUMN extractorHash TEXT NOT NULL DEFAULT ''")
+      self.cursor.executemany('UPDATE main SET dataHash=? WHERE id=?', [(digest, docID) for docID, digest in hashes.items()])
+      self.cursor.execute(f'PRAGMA user_version={DATABASE_VERSION}')
+      self.connection.commit()
+    except Exception:
+      self.connection.rollback()
+      raise
 
 
   def dataHierarchyInit(self, resetDataHierarchy:bool=False) -> None:
@@ -106,47 +156,6 @@ class SqlLiteDB:
     self.cursor.execute('UPDATE docTypes SET view=? WHERE docType=?', (','.join(columns), docType))
     self.connection.commit()
     return
-
-
-  def _flattenMetadata(self, data:dict[str,Any], parentKeys:str='', skipEmpty:bool=True) -> dict[str, tuple[Any, str, str, str]]:
-    """Flatten nested metadata into a key -> (value, unit, label, purl) map
-    Different from misc_tools flatten which flattens a dict -> list; this one is only for changing sqlite-db
-    Args:
-      data (dict): hierarchical data
-      parentKeys (str): keys of parent, e.g. .userMetadata
-      skipEmpty (bool): skip empty values, not for update
-    Returns:
-      dict: flattened data
-    """
-    flat: dict[str, tuple[Any, str, str, str]] = {}
-    prefix = f'{parentKeys}.' if parentKeys else ''
-    for key, value in data.items():
-      key = str(key) if isinstance(key, int) else key
-      if skipEmpty and not value:
-        continue
-      if isinstance(value, dict):
-        flat |= self._flattenMetadata(value, f'{prefix}{key}' if prefix else key, skipEmpty)
-        continue
-      if isinstance(value, list) and not value:
-        continue
-      if key.endswith(']') and ('[') in key:
-        unit = re.findall(r'\[\S+\]', key)[-1][1:-1]
-        label = key[:-len(unit)-2].strip()
-        key = camelCase(label)
-        key = key[0].lower()+key[1:]
-        flat[f'{prefix}{key}'] = (str(value), unit, label, '')
-        continue
-      if isinstance(value, list) and isinstance(value[0], dict) and value[0].keys() >= {'key', 'value', 'unit'}:
-        for item in value:
-          itemKey = f'{prefix}{key}.{item["key"]}'
-          flat[itemKey] = (item['value'], item.get('unit', ''), item.get('label', ''), item.get('PURL', ''))
-        continue
-      if isinstance(value, tuple) and len(value)==4:
-        flat[f'{prefix}{key}'] = (value[0], value[1], value[2], value[3])
-        continue
-      if str(value)!='':
-        flat[f'{prefix}{key}'] = (str(value), '', '', '')
-    return flat
 
 
   def createSQLTable(self, name:str, columns:list[str], primary:str, colTypes:list[Any] | None=None) -> list[str]:
@@ -245,7 +254,7 @@ class SqlLiteDB:
     doc['tags'] = [i[0] for i in self.cursor.fetchall()]
     self.cursor.execute('SELECT qrCode FROM qrCodes WHERE id=?', (docID,))
     doc['qrCodes'] = [i[0] for i in self.cursor.fetchall()]
-    for key in ['image', 'content', 'shasum', 'client', 'qrCodes']:
+    for key in ['image', 'content', 'dataHash', 'extractorHash', 'client', 'qrCodes']:
       if len(doc[key])==0 or doc[key]==['']:
         del doc[key]
     doc['type']= doc['type'].split('/')
@@ -548,6 +557,47 @@ class SqlLiteDB:
     return changesDict
 
 
+  def _flattenMetadata(self, data:dict[str,Any], parentKeys:str='', skipEmpty:bool=True) -> dict[str, tuple[Any, str, str, str]]:
+    """Flatten nested metadata into a key -> (value, unit, label, purl) map
+    Different from misc_tools flatten which flattens a dict -> list; this one is only for changing sqlite-db
+    Args:
+      data (dict): hierarchical data
+      parentKeys (str): keys of parent, e.g. .userMetadata
+      skipEmpty (bool): skip empty values, not for update
+    Returns:
+      dict: flattened data
+    """
+    flat: dict[str, tuple[Any, str, str, str]] = {}
+    prefix = f'{parentKeys}.' if parentKeys else ''
+    for key, value in data.items():
+      key = str(key) if isinstance(key, int) else key
+      if skipEmpty and not value:
+        continue
+      if isinstance(value, dict):
+        flat |= self._flattenMetadata(value, f'{prefix}{key}' if prefix else key, skipEmpty)
+        continue
+      if isinstance(value, list) and not value:
+        continue
+      if key.endswith(']') and ('[') in key:
+        unit = re.findall(r'\[\S+\]', key)[-1][1:-1]
+        label = key[:-len(unit)-2].strip()
+        key = camelCase(label)
+        key = key[0].lower()+key[1:]
+        flat[f'{prefix}{key}'] = (str(value), unit, label, '')
+        continue
+      if isinstance(value, list) and isinstance(value[0], dict) and value[0].keys() >= {'key', 'value', 'unit'}:
+        for item in value:
+          itemKey = f'{prefix}{key}.{item["key"]}'
+          flat[itemKey] = (item['value'], item.get('unit', ''), item.get('label', ''), item.get('PURL', ''))
+        continue
+      if isinstance(value, tuple) and len(value)==4:
+        flat[f'{prefix}{key}'] = (value[0], value[1], value[2], value[3])
+        continue
+      if str(value)!='':
+        flat[f'{prefix}{key}'] = (str(value), '', '', '')
+    return flat
+
+
   def updateBranch(self, docID:str, branch:int, child:int, stack:list[str]=[],
                    path:str | None='', **kwargs:str) -> tuple[str | None, str | None]:
     """
@@ -827,7 +877,7 @@ class SqlLiteDB:
       results = [{'id':i[0], 'key':i[1],
                   'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]], i[6], i[7]]} for i in results]
     elif thePath=='viewHierarchy/viewPaths':
-      cmd = 'SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum, branches.idx '\
+      cmd = 'SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.dataHash, branches.idx '\
             'FROM branches INNER JOIN main USING(id)'
       # JOIN and get type
       if startKey is not None:
@@ -845,7 +895,7 @@ class SqlLiteDB:
           cmd += r" WHERE NOT branches.show LIKE '%F%'"
       self.cursor.execute(cmd, params if startKey is not None or preciseKey is not None else ())
       results = self.cursor.fetchall()
-      # value: [branch.stack, doc['-type'], branch.child, doc.shasum, idx]
+      # value: [branch.stack, doc['-type'], branch.child, doc.dataHash, idx]
       results = [{'id':i[0], 'key':i[1],
                   'value':[i[2], i[3].split('/')]+list(i[4:])} for i in results if i[1] is not None]
     elif viewType=='viewIdentify' and docType=='viewTags':
@@ -856,24 +906,23 @@ class SqlLiteDB:
       return pd.read_sql_query(cmd, self.connection).fillna('')
     elif viewType=='viewIdentify':
       if docType=='viewQR':
-        if startKey is None:
-          cmd = 'SELECT qrCodes.id, qrCodes.qrCode, main.name FROM qrCodes INNER JOIN main USING(id)'
-          if not allFlag:
-            cmd += r" INNER JOIN branches USING(id) WHERE NOT branches.show LIKE '%F%'"
-        else:
+        if startKey is not None:
           raise ValueError('Not implemented sqlite l 599')
-      elif docType=='viewSHAsum':
+        cmd = 'SELECT qrCodes.id, qrCodes.qrCode, main.name FROM qrCodes INNER JOIN main USING(id)'
+        if not allFlag:
+          cmd += r" INNER JOIN branches USING(id) WHERE NOT branches.show LIKE '%F%'"
+      elif docType=='viewDataHash':
         if startKey is None:
-          cmd = 'SELECT main.id, main.shasum, main.name FROM main'
+          cmd = 'SELECT main.id, main.dataHash, main.name FROM main'
           if not allFlag:
             cmd += r" INNER JOIN branches USING(id) WHERE NOT branches.show LIKE '%F%'"
         else:
-          cmd = 'SELECT main.id, main.shasum, main.name FROM main INNER JOIN branches USING(id) WHERE shasum=?'
+          cmd = 'SELECT main.id, main.dataHash, main.name FROM main INNER JOIN branches USING(id) WHERE dataHash=?'
           if not allFlag:
             cmd += r" and NOT branches.show LIKE '%F%'"
       else:
         raise ValueError('Invalid docType')
-      self.cursor.execute(cmd, (startKey,) if docType=='viewSHAsum' and startKey is not None else ())
+      self.cursor.execute(cmd, (startKey,) if docType=='viewDataHash' and startKey is not None else ())
       results = self.cursor.fetchall()
       results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':i[2]} for i in results if i[1] is not None]
     else:
@@ -1145,15 +1194,15 @@ class SqlLiteDB:
         self.cursor.execute('DELETE FROM properties WHERE id=? AND key=?', (docID, key))
         self.connection.commit()
 
-    cmd = 'SELECT branches.id, branches.path, main.shasum FROM branches JOIN main USING(id) '\
-          "WHERE branches.path=='*' AND main.shasum!=''"
+    cmd = 'SELECT branches.id, branches.path, main.dataHash FROM branches JOIN main USING(id) '\
+          "WHERE branches.path=='*' AND main.dataHash!=''"
     self.cursor.execute(cmd)
     for line in self.cursor.fetchall():
-      errorStr= outputString(outputStyle,'error',f"shasum!='' for item with no path docID:{line[0]}. Repair: remove shasum")
+      errorStr= outputString(outputStyle,'error',f"dataHash!='' for item with no path docID:{line[0]}. Repair: remove dataHash")
       if repair is None:
         reply+= errorStr
       elif repair(errorStr):
-        self.cursor.execute("UPDATE main SET shasum='' WHERE id=?", (line[0],))
+        self.cursor.execute("UPDATE main SET dataHash='' WHERE id=?", (line[0],))
         self.connection.commit()
 
     #doc-type specific tests
@@ -1161,11 +1210,11 @@ class SqlLiteDB:
     self.cursor.execute(cmd)
     if res:= [i[0] for i in self.cursor.fetchall() if i[1] is None]:
       reply+= outputString(outputStyle,'warning',f"dch09: qrCode not in samples {res}")
-    self.cursor.execute("SELECT id, shasum, image, comment FROM main WHERE  type LIKE 'measurement%'")
+    self.cursor.execute("SELECT id, dataHash, image, comment FROM main WHERE  type LIKE 'measurement%'")
     for row in self.cursor.fetchall():
-      docID, shasum, image, _ = row
-      if shasum is None:
-        reply+= outputString(outputStyle,'warning',f"dch10: shasum not in measurement {docID}")
+      docID, dataHash, image, _ = row
+      if dataHash is None:
+        reply+= outputString(outputStyle,'warning',f"dch10: dataHash not in measurement {docID}")
       if image.startswith('data:image'):                                                      #for jpg and png
         try:
           imgData = base64.b64decode(image[22:])

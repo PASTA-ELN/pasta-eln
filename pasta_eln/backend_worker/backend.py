@@ -10,8 +10,7 @@ from urllib import request
 from ..misc_tools import Bcolors, getConfiguration
 from ..text_tools.handle_dictionaries import diffDicts, fillDocBeforeCreate
 from ..text_tools.string_changes import camelCase, createDirName, outputString
-from .extractor import ExtractorManager
-from .hash_tools import genericHash
+from .extractor import ExtractorManager, isPastaExport, sha256File
 from .mixin_cli import CliMixin
 from .sqlite import SqlLiteDB
 
@@ -181,7 +180,7 @@ class Backend(CliMixin):
         path = parentDirectory/createDirName(doc, childNum, self.cwd)#update,or create (if new doc, update ignored anyhow)
       else:
         #measurement, sample, procedure
-        shasum = ''
+        dataHash = ''
         if '://' in doc['name']:                                                                 #make up name
           if localCopy:
             baseName  = Path(doc['name']).stem
@@ -195,7 +194,7 @@ class Backend(CliMixin):
           else:
             path = Path(doc['name'])
             try:
-              shasum  = genericHash(path)
+              dataHash = sha256File(path)
             except Exception:
               logging.error('bad01: fetch remote content failed. Data not added', exc_info=True)
               return {'id':''}
@@ -212,21 +211,21 @@ class Backend(CliMixin):
             logging.warning('backend - known issue: add/edit document with multiple branches %s.', doc['id'])
             # I might change the wrong one if I change the branch, but there is nothing in table that can distinguish which branch to change
         else:                                                                                   # make up name
-          shasum  = '-'
-        if shasum!='-' and path is not None:
-          if shasum == '':
-            shasum = genericHash(path, forceFile=True)
-          view = self.db.getView('viewIdentify/viewSHAsum',shasum)
+          dataHash = '-'
+        if dataHash!='-' and path is not None:
+          if dataHash == '':
+            dataHash = sha256File(path)
+          view = self.db.getView('viewIdentify/viewDataHash', dataHash)
           if (len(view)==0 or forceNewImage) and runExtractors:       #measurement not in database: create doc
-            self.extractors.use(path,shasum,doc)                                         #create image/content
+            self.extractors.use(path, dataHash, doc)                                      #create image/content
             # All files should appear in database
             # if not 'image' in doc and not 'content' in doc and not 'otherELNName' in doc:  #did not get valuable data: extractor does not exit
             #   return ''
           else:
-            doc['shasum'] = shasum
+            doc['dataHash'] = dataHash
           if len(view)==1:                                                 #measurement is already in database
             doc['id'] = view[0]['id']
-            doc['shasum'] = shasum
+            doc['dataHash'] = dataHash
             edit = True
     # assemble branch information
     if childNum is None:
@@ -299,7 +298,7 @@ class Backend(CliMixin):
     """ Scan directory tree recursively from project/... or project/task/...
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
-    - use shasum to track changes of measurements etc. (one file=one shasum=one entry in DB)
+    - use dataHash to track changes of measurements (one file=one hash=one entry in DB)
     - create database entries for measurements in directory
     - move/copy/delete allowed as the doc['path'] = list of all copies
       doc['path'] is adopted once changes are observed
@@ -399,7 +398,7 @@ class Backend(CliMixin):
         filesCount += 1
         if progressBar is not None:
           progressBar(int(100*filesCount/filesCountSum))
-        if fileName.startswith(('.', 'trash_')) or '_PastaExport' in fileName:                   #ignore files
+        if fileName.startswith(('.', 'trash_')) or isPastaExport(Path(root)/fileName):
           continue
         path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
         if path in pathsInDbData:
@@ -407,22 +406,22 @@ class Backend(CliMixin):
           pathsInDbData.remove(path)
         else:
           logging.info('Scan: add file to DB: %s',path)
-          shasum = genericHash(self.basePath/path, forceFile=True)
-          if not shasum:
+          dataHash = sha256File(self.basePath/path)
+          if not dataHash:
             raise NameError(f'Filepath does not exist {self.basePath/path}')
-          view = self.db.getView('viewIdentify/viewSHAsum',shasum)
+          view = self.db.getView('viewIdentify/viewDataHash', dataHash)
           if len(view)==0:                                                        #not in database: create doc
             job = self.extractors.prepareJob(self.basePath/path, jobID=len(extractorJobs))
             if job is None:                                                # if no suitable extractor is there
               self.addData('', {'name':path, 'type':['']}, hierStack, runExtractors=False)
             else:
-              job |= {'path':path, 'hierStack':hierStack, 'shasum':shasum}
+              job |= {'path':path, 'hierStack':hierStack, 'dataHash':dataHash}
               extractorJobs.append(job)
           else:
             self.db.updateBranch(view[0]['id'], -1, 9999, hierStack, path)
             reply = 'Create a link to existing entry instead of new entry.'
     for job, doc in self.extractors.applyResults(self.extractors.runJobs(extractorJobs), extractorJobs):
-      view = self.db.getView('viewIdentify/viewSHAsum', job['shasum'])
+      view = self.db.getView('viewIdentify/viewDataHash', job['dataHash'])
       if len(view)==0:
         doc['branch'] = [{'stack':job['hierStack'], 'child':9999, 'path':job['path'], 'show':[True]*(len(job['hierStack'])+1)}]
         self.addData('/'.join(doc['type']), doc, job['hierStack'], runExtractors=False)
@@ -500,7 +499,7 @@ class Backend(CliMixin):
           dirs[:] = []
           continue
         for fileName in files:
-          if fileName.startswith('.') or fileName.startswith('trash_') or '_PastaExport' in fileName:
+          if fileName.startswith('.') or fileName.startswith('trash_') or isPastaExport(Path(root)/fileName):
             continue
           path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
           if path not in pathsInDbData:

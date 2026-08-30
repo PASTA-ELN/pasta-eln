@@ -8,42 +8,28 @@ import time
 import traceback
 from collections.abc import Callable
 from datetime import datetime, timezone
+from hashlib import sha256
+from inspect import signature
+from io import BytesIO
 from pathlib import Path
-from typing import Any
+from typing import Any, BinaryIO
 from urllib import request
+import xml.etree.ElementTree as ET
 import matplotlib
 import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
-from PIL import Image
+from PIL import Image, PngImagePlugin
 from ..misc_tools import loadNamedModule
 from ..text_tools.string_changes import outputString
 
 matplotlib.use('Agg')
 matplotlib.rcParams['svg.fonttype'] = 'none'
 
-
-def runExtractorInSubprocess(job:dict[str,Any], connection:Any) -> None:
-  """Run one extractor in a child process and send the result through a pipe.
-
-  Args:
-    job (dict): Extractor job with add-on path, extractor file, data file, and style.
-    connection (Any): Multiprocessing pipe connection used to send the result to the parent.
-  """
-  try:
-    plt.clf()
-    module = loadNamedModule(job['addOnPath'], job['pyFile'][:-3])
-    content = module.use(job['absFilePath'], job['style'])
-    connection.send({'status':'ok', 'content':content})
-  except Exception:
-    connection.send({'status':'error', 'traceback':traceback.format_exc()})
-  finally:
-    plt.close('all')
-    connection.close()
+PROVENANCE_KEY = 'PastaELNProvenance'
 
 
 class ExtractorManager:
   """Manage extractor jobs independently from database workflows."""
-
   def __init__(self, basePath:Path, addOnPath:Path, timeout:str, dataHierarchy:Callable[[str,str],Any]) -> None:
     """Create an extractor manager for one backend/project-group context.
 
@@ -97,7 +83,8 @@ class ExtractorManager:
     if not pyPath.is_file():
       return None
     return {'id':jobID, 'doc':doc, 'addOnPath':self.addOnPath, 'pyFile':pyFile, 'absFilePath':absFilePath,
-            'extension':extension, 'style':{'main':'/'.join(docType)}}
+            'extension':extension, 'style':{'main':'/'.join(docType)}, 'dataHash':sha256File(absFilePath),
+            'extractorHash':sha256File(pyPath), 'saveFileName':None}
 
 
   def applyResults(self, results:list[dict[str,Any]], jobs:list[dict[str,Any]]) -> list[tuple[dict[str,Any],dict[str,Any]]]:
@@ -151,6 +138,8 @@ class ExtractorManager:
             doc['metaVendor']['fileExtension'] = result['extension'].lower()
           if 'links' in doc and len(doc['links'])==0:
             del doc['links']
+          doc['dataHash'] = job['dataHash']
+          doc['extractorHash'] = job['extractorHash']
         else:
           doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
                              'filesize':absFilePath.stat().st_size,
@@ -168,7 +157,7 @@ class ExtractorManager:
                            'filesize':absFilePath.stat().st_size,
                            'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
                            'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
-      doc['shasum'] = job['shasum']
+      doc['dataHash'] = job['dataHash']
       applied.append((job, doc))
     return applied
 
@@ -241,19 +230,19 @@ class ExtractorManager:
     return results
 
 
-  def use(self, filePath:Path, shasum:str, doc:dict[str,Any]) -> None:
+  def use(self, filePath:Path, dataHash:str, doc:dict[str,Any]) -> None:
     """Run the matching extractor for one document and merge its result.
 
     Args:
       filePath (Path): Local or remote file path to extract.
-      shasum (str): File hash to store in the document.
+      dataHash (str): SHA-256 of the data file to store in the document.
       doc (dict): Document to mutate with extractor output.
     """
     job = self.prepareJob(filePath, doc['type'], 0)
     if job is not None:
       try:
         job['doc'] = doc
-        job['shasum'] = shasum
+        job['dataHash'] = dataHash
         if results := self.runJobs([job]):
           self.applyResults(results, [job])
       except Exception:
@@ -263,7 +252,7 @@ class ExtractorManager:
                            'filesize':absFilePath.stat().st_size,
                            'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
                            'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
-    doc['shasum']=shasum                                       #essential for logic, always save, unlike image
+    doc['dataHash'] = dataHash                                 #essential for logic, always save, unlike image
 
 
   def test(self, filePath:Path |str, extractorPath:Path | None=None, style:dict[str,Any]={'main':''},
@@ -311,7 +300,20 @@ class ExtractorManager:
       try:
         module  = loadNamedModule(extractorPath, pyFile[:-3])
         plt.clf()
-        content = module.use(filePath, style, saveFig or None )
+        parameters = tuple(signature(module.use).parameters)
+        if (getattr(module, 'PASTA_ELN_EXTRACTOR_API', -1) == 2  and parameters == ('filePath','style','saveFigure')):
+          dataHash = sha256File(filePath)
+          extractorHash = sha256File(extractorPath/pyFile)
+
+          # assemble callback function with known content
+          def saveExtractorFigure(image:Image.Image | None=None) -> None:
+            saveFigure(Path(saveFig) if saveFig else None, dataHash, extractorHash, image)
+
+          content = module.use(filePath, style, saveExtractorFigure)
+        else:
+          report += outputString(outputStyle, 'warning',
+                                 'Legacy extractor: content was extracted, but marked figure export requires API v2.')
+          content = module.use(filePath, style)
         if saveFig:
           return report, content.get('image','')
       except Exception:
@@ -397,3 +399,102 @@ class ExtractorManager:
     if outputStyle=='print':
       logging.info('Identified metadata %s',content)
     return report, content.get('image','')
+
+
+# OTHER FUNCTIONS
+def saveFigure(path:Path | None, dataHash:str, extractorHash:str, image:Any=None) -> None:
+  """Save an extractor figure with PASTA-ELN provenance."""
+  if path is None:
+    return
+  imageType = path.suffix.lower().removeprefix('.')
+  imageType = 'jpg' if imageType == 'jpeg' else imageType
+  if imageType not in {'png', 'jpg', 'svg'}:
+    raise ValueError(f'Unsupported figure format: {path.suffix}')
+  output = BytesIO()
+  if image is None:
+    plt.savefig(output, format=imageType, dpi=150, bbox_inches='tight')
+  else:
+    image.save(output, format='JPEG' if imageType == 'jpg' else imageType)
+  payload = json.dumps({'PastaELNExport':True, 'dataHash':dataHash, 'extractorHash':extractorHash}, separators=(',', ':'))
+  if imageType == 'svg':
+    root = ET.fromstring(output.getvalue())
+    metadata = ET.Element('{http://www.w3.org/2000/svg}metadata', {'id':PROVENANCE_KEY})
+    metadata.text = payload
+    root.insert(0, metadata)
+    path.write_bytes(ET.tostring(root, encoding='utf-8', xml_declaration=True))
+    return
+  source = Image.open(BytesIO(output.getvalue()))
+  marked = BytesIO()
+  if imageType == 'png':
+    pngInfo = PngImagePlugin.PngInfo()
+    pngInfo.add_text(PROVENANCE_KEY, payload)
+    source.save(marked, format='PNG', pnginfo=pngInfo)
+  else:
+    exif = source.getexif()
+    exif[37510] = payload.encode('utf-8')
+    source.save(marked, format='JPEG', exif=exif.tobytes())
+  path.write_bytes(marked.getvalue())
+
+
+def isPastaExport(path:Path) -> bool:
+  """Return whether a file is a legacy-named or metadata-marked PASTA export."""
+  if '_PastaExport' in path.name:
+    return True
+  try:
+    if path.suffix.lower() == '.svg':
+      root = ET.fromstring(path.read_bytes())
+      element = root.find("{http://www.w3.org/2000/svg}metadata[@id='PastaELNProvenance']")
+      payload = '' if element is None or element.text is None else element.text
+    else:
+      with Image.open(path) as image:
+        payload = image.text.get(PROVENANCE_KEY, '') if path.suffix.lower() == '.png' else image.getexif().get(37510, b'')
+        if isinstance(payload, bytes):
+          payload = payload.decode('utf-8')
+    return json.loads(payload).get('PastaELNExport') is True
+  except (ET.ParseError, OSError, UnicodeDecodeError, ValueError, json.JSONDecodeError):
+    return False
+
+
+def runExtractorInSubprocess(job:dict[str,Any], connection:Any) -> None:
+  """Actually run one extractor in a child process and send the result through a pipe.
+
+  Args:
+    job (dict): Extractor job with add-on path, extractor file, data file, and style.
+    connection (Any): Multiprocessing pipe connection used to send the result to the parent.
+  """
+  try:
+    plt.clf()
+    module = loadNamedModule(job['addOnPath'], job['pyFile'][:-3])
+    if getattr(module, 'PASTA_ELN_EXTRACTOR_API', None) == 2:
+      def saveExtractorFigure(image:Image.Image | None=None) -> None:
+        saveFigure(job.get('saveFileName'), job['dataHash'], job['extractorHash'], image)
+      content = module.use(job['absFilePath'], job['style'], saveExtractorFigure)
+      connection.send({'status':'ok', 'content':content})
+    else:
+      logging.warning('Legacy extractor %s: update to PASTA_ELN_EXTRACTOR_API = 2 for marked exports.', job['pyFile'])
+      content = module.use(job['absFilePath'], job['style'])
+      connection.send({'status':'ok', 'content':content})
+  except Exception:
+    connection.send({'status':'error', 'traceback':traceback.format_exc()})
+  finally:
+    plt.close('all')
+    connection.close()
+
+
+# HASH FUNCTIONS
+def sha256File(path:Path) -> str:
+  """Return the SHA-256 digest of raw bytes in a reachable file."""
+  if str(path).startswith('http'):
+    req = request.Request(path.as_posix().replace(':/','://'), headers={'User-Agent': 'Mozilla/5.0'})
+    with request.urlopen(req, timeout=60) as stream:
+      return _sha256Stream(stream)
+  with open(path.resolve(), 'rb') as stream:
+    return _sha256Stream(stream)
+
+
+def _sha256Stream(stream:BinaryIO) -> str:
+  """Calculate a SHA-256 digest without loading the complete file."""
+  hasher = sha256()
+  while chunk := stream.read(65536):
+    hasher.update(chunk)
+  return hasher.hexdigest()

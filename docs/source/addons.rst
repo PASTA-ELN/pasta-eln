@@ -33,10 +33,8 @@ Metadata categories
 by the scientific instrument or its vendor, such as acquisition settings.
 
 ``metaUser`` contains metadata derived by the extractor that is useful for
-interpreting the scientific data, such as tensile strength. It can also contain
-technical provenance needed to reproduce extraction. In particular,
-``metaUser.extractorHash`` stores the hash of the extractor currently used for
-the item. This technical value need not be shown in the normal details view.
+interpreting the scientific data, such as tensile strength. Technical
+provenance is stored separately in the database.
 
 PASTA-ELN includes extractors for CSV, JPEG, JSON, MD, and PNG files. PNG and JPEG extractors serve as examples for custom development.
 
@@ -47,12 +45,35 @@ To test an extractor interactively, include the following code at the end of the
 
 .. code-block:: python
 
+  from pathlib import Path
+
   if __name__ == '__main__':
-    reply = use('datafile.abc', saveFileName='datafile.png')
+    reply = use(Path('datafile.abc'), {'main': ''}, print)
     print('User meta:', reply['metaUser'])
     print('Vendor meta:', reply['metaVendor'])
 
 Remove these lines before deployment.
+
+Saving exported figures
+^^^^^^^^^^^^^^^^^^^^^^^
+
+An extractor receives a ``Path`` as ``filePath``, a style dictionary, and
+PASTA-ELN's ``saveFigure`` callback, i.e. ordinary print in the case above. Do not write figures directly with
+``plt.savefig`` or ``image.save``.
+
+.. code-block:: python
+
+  PASTA_ELN_EXTRACTOR_API = 2
+
+  def use(filePath, style, saveFigure):
+      # Matplotlib: save the current figure
+      saveFigure()
+
+      # Pillow: save this image
+      saveFigure(image)
+
+``saveFigure`` supports PNG, JPEG, and SVG. It marks exported figures so
+PASTA-ELN does not add them again during a scan.
 
 Troubleshooting Extractor Issues
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

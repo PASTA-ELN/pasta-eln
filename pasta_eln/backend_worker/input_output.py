@@ -19,6 +19,7 @@ from ..misc_tools import flatten, isDocID
 from ..text_tools.html2markdown import html2markdown
 from ..text_tools.string_changes import camelCase
 from .backend import Backend
+from .extractor import sha256File
 from .html_string import htmlEnd, htmlStart, importantKeys
 
 # .eln file: common between all ELNs
@@ -47,7 +48,7 @@ pasta2json:dict[str,Any] = {
   'comment'     : 'description',
   'content'     : 'text',
   '.links'      : 'mentions',
-  'shasum'      : None,
+  'dataHash'    : None,
   'user'        : None,
   'externalId'  : None,
   'gui'         : None,
@@ -481,10 +482,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       # include content size, etc
       fullPath = backend.basePath/path
       if path is not None and fullPath.exists() and fullPath.is_file():
-        with open(fullPath, 'rb') as fIn:
-          fileContent = fIn.read()
-          docELN['contentSize'] = str(len(fileContent))
-          docELN['sha256']      = hashlib.sha256(fileContent).hexdigest()
+        docELN['contentSize'] = str(fullPath.stat().st_size)
+        docELN['sha256'] = sha256File(fullPath)
         # copy data-files
         elnFile.write(str(fullPath), f'{dirNameGlobal}/{path}')
         docELN['@type'] = 'File'

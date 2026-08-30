@@ -151,8 +151,8 @@ SQLiteTranslation     = str.maketrans(SQLiteTranslationDict)
 minimalDocInForm = {'tags':[], 'comment':'', '':{}}
 
 SORTED_KEYS     = ['name', 'tags', 'comment', 'metaUser', '']
-SORTED_DB_KEYS  = ['id', 'type', 'dateCreated','dateModified','dateSync', 'user','branch','gui','client','externalId','shasum']
-DO_NOT_RENDER   = ['image','content','metaVendor','shasum','type','branch','gui','dateCreated',
+SORTED_DB_KEYS  = ['id', 'type', 'dateCreated','dateModified','dateSync', 'user','branch','gui','client','externalId','dataHash','extractorHash']
+DO_NOT_RENDER   = ['image','content','metaVendor','dataHash','extractorHash','type','branch','gui','dateCreated',
                  'dateModified','id','user','name','externalId','client','elnIdentifier','oldIdentifier']
 
 aboutMessage  = '### PASTA-ELN | The favorite ELN for experimental scientists\n\nPASTA-ELN provides a streamlined '\
