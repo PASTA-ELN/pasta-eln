@@ -198,7 +198,7 @@ class TableView(Widget):
     self.reloadComboBoxFlag = True
 
     self.tableData, documentIds = self.filteredTableData()
-    tagsById = self.data.set_index('id')['tags' if 'tags' in self.data else '_tags'].to_dict()
+    tagsById = self.data.set_index('id')['tags'].to_dict() if 'tags' in self.data else {}
     colors = [nameColor(tagsById.get(docID, [])) for docID in documentIds]
     model = PandasTableModel(self.tableData, documentIds, colors)
     self.table.setModel(model)
