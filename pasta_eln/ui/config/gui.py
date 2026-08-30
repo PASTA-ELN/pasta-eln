@@ -33,8 +33,8 @@ class ConfigurationGUI(QDialog):
         for k,v in items.items():
           setattr(self, k, self.addRowList(sectionL, label=v[0], default=str(onDisk[k]), itemList=[str(i) for i in v[2]]))
         if label == 'appearance':
-          self.detailsLevel.currentTextChanged.connect(self.updateAdvancedVisibility)
-      self.updateAdvancedVisibility(self.detailsLevel.currentText())
+          self.detailsLevel.currentTextChanged.connect(self.updateAdvancedVisibility)# type: ignore[attr-defined]
+      self.updateAdvancedVisibility(self.detailsLevel.currentText())# type: ignore[attr-defined]
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
     buttonBox.clicked.connect(self.closeDialog)

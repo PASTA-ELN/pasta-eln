@@ -447,7 +447,8 @@ def isPastaExport(path:Path) -> bool:
       payload = '' if element is None or element.text is None else element.text
     else:
       with Image.open(path) as image:
-        payload = image.text.get(PROVENANCE_KEY, '') if path.suffix.lower() == '.png' else image.getexif().get(37510, b'')
+        payload = image.info.get(PROVENANCE_KEY, '') if path.suffix.lower() == '.png' else \
+                  image.getexif().get(37510, b'')
         if isinstance(payload, bytes):
           payload = payload.decode('utf-8')
     return json.loads(payload).get('PastaELNExport') is True

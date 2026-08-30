@@ -148,7 +148,8 @@ class Details(Widget):
     title = (elidedTitle if fontMetrics.horizontalAdvance(elidedTitle) < fontMetrics.horizontalAdvance(fullTitle)
              else fullTitle)
     self.titleLabel.setText(f'{title}<sup><span style="font-size: 24pt;">ℹ</span></sup>' if differs else title)
-    self.titleLabel.setStyleSheet(f'color: {nameColor(self.data.get('tags', [])).name()};' if color else '')
+    titleColor = nameColor(self.data.get('tags', []))
+    self.titleLabel.setStyleSheet(f'color: {titleColor.name()};' if titleColor else '')
 
     # BODY
     # clear old items

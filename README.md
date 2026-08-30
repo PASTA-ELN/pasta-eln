@@ -47,17 +47,15 @@ Open issues are the union of:
 Order of open issues that do not have a question
 
 - Version 3.4: New features that require minimal changes, possibly some config changes
-  1.  602 – Saving image preview leads to an empty text box
-  2.  570 – Version control for extractors
+  1.  41 – Spellcheck in form
+  2.  430 – Creating templates for items
   3.  612 – Restarting Pasta resets visibility setting
   4.  381 – Visualization of linked items
-  5.  570 – Version control for extractors
-  6.  41 – Spellcheck in form
-  7.  566 – Create GUI for attachments
-  8.  436 – Re-running of extractors whenever measurement details are saved
-  9.  528 – Feature Request: easily visible changelog
-  11. 430 – Creating templates for items
-  12. Guard oversized extractor `metaVendor` and `metaUser` with a user-configurable maximum size
+  5.  566 – Create GUI for attachments
+  6.  436 – Re-running of extractors whenever measurement details are saved
+  7.  Guard oversized extractor `metaVendor` and `metaUser` with a user-configurable maximum size
+  8.  528 – Feature Request: easily visible changelog
+
 
 - Tutorial
   - Create an interactive tutorial runner as a separate program launched from the main program. It should use a read-only SQLite connection, define a clear busy-timeout/WAL strategy for concurrent access, and maintain its own JSON file to track tutorial progress.

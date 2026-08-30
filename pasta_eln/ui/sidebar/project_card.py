@@ -30,7 +30,8 @@ class ProjectCard(QFrame):
 
     # Title-Label
     hidden = '     \U0001F441' if 'F' in self.project['show'] else ''
-    style = style=f'color: {nameColor(self.project.get('tags', [])).name()};' if color else ''
+    titleColor = nameColor(self.project.get('tags', []))
+    style = f'color: {titleColor.name()};' if titleColor else ''
     self.titleLabel = Label(makeStringWrappable(self.project['name'] + hidden), 'h3', style=style)
     self.titleLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     self.titleLabel.setWordWrap(True)

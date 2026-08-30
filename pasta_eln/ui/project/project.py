@@ -149,7 +149,8 @@ class Project(Widget):
     hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
                        if [b for b in self.docProj['branch'] if False in b['show']] else \
                        ('', 'Mark project as hidden')
-    style=f'color: {nameColor(self.docProj.get('tags', [])).name()};' if color else ''
+    titleColor = nameColor(self.docProj.get('tags', []))
+    style=f'color: {titleColor.name()};' if titleColor else ''
     topLineL.addWidget(Label(self.docProj['name']+hidden, 'h2', style=style))
     showStatus = '(Show all items)' if self.showAll else '(Hide hidden items)'
     topLineL.addWidget(QLabel(showStatus))
