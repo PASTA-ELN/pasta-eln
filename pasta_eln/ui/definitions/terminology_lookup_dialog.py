@@ -42,7 +42,7 @@ class TerminologyLookupDialog(QDialog):
 
     searchLayout = QHBoxLayout()
     self.terminologyLineEdit = QLineEdit(defaultLookupTerm or '', clearButtonEnabled=True)
-    self.terminologyLineEdit.setPlaceholderText('Search definitions in wikis and ontologies')
+    self.terminologyLineEdit.setPlaceholderText('Search terms in wikis and ontologies')
     self.terminologyLineEdit.returnPressed.connect(lambda: self.execute(Command.SEARCH))
     searchLayout.addWidget(self.terminologyLineEdit)
     self.searchButton = QPushButton('Search')

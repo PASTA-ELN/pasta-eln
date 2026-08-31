@@ -48,17 +48,17 @@ def main(comm, hierStack, widget, parameter={}):
         QMessageBox.critical(widget, 'Error', 'You have to have columns named "type" and "name"', 'Critical')
         return False
     if len(df['type'].unique()) > 1:
-        QMessageBox.critical(widget, 'Error', 'All items in the type column have to be the same', 'Critical')
+        QMessageBox.critical(widget, 'Error', 'All items in the "type" column must have the same item type', 'Critical')
         return False
     docType = df['type'].unique()[0]
     if docType not in comm.docTypesTitles:
-        QMessageBox.critical(widget, 'Error', 'The type does not exist in PASTA database', 'Critical')
+        QMessageBox.critical(widget, 'Error', 'The item type does not exist in the PASTA-ELN database', 'Critical')
         return False
     # columns that are in the Pasta-ELN
     colPasta = [f'{i["class"]}.{i["name"]}' for i in comm.dataHierarchyNodes[docType]]
     colPasta = [i[1:] if i[1:] in MAIN_ORDER+['tags','qrCodes'] else i for i in colPasta] + ['type']
     if set(colNames).difference(colPasta):
-        QMessageBox.critical(widget, 'Error', f'All columns must exist in the data schema. Offending: {set(colNames).difference(colPasta)}', 'Critical')
+        QMessageBox.critical(widget, 'Error', f'All columns must exist in the item type schema. Offending: {set(colNames).difference(colPasta)}', 'Critical')
         return False
 
     # Loop all rows

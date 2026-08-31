@@ -69,10 +69,10 @@ class MainWindow(QMainWindow):
         action('Import file(s)…',           self, Command.IMPORT_FILES, projectMenu),
         action('&Export project to .eln',   self, Command.EXPORT_ELN,   projectMenu),
         action('&Import .eln into project', self, Command.IMPORT_ELN,   projectMenu),
-        action('&Upload to repository',     self, Command.REPOSITORY,   projectMenu),
+        action('&Upload project to repository', self, Command.REPOSITORY, projectMenu),
     ]
     projectMenu.addSeparator()
-    self.projectActions.append(action('&Delete current project...', self, Command.DELETE_PROJECT, projectMenu))
+    self.projectActions.append(action('&Remove current project...', self, Command.DELETE_PROJECT, projectMenu))
     projectMenu.aboutToShow.connect(self.paintProjectActions)
     projectMenu.addSeparator()
     action('&Exit',                     self, Command.EXIT, projectMenu)
@@ -227,7 +227,7 @@ class MainWindow(QMainWindow):
       dialogR = UploadGUI(self.comm)
       dialogR.exec()
     elif commandType is Command.DELETE_PROJECT:
-      confirmation = QMessageBox.critical(self, 'Critical', 'Do you want to delete the current project?',
+      confirmation = QMessageBox.critical(self, 'Remove project?', 'Do you want to remove the current project?',
           QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  QMessageBox.StandardButton.No)
       if confirmation == QMessageBox.StandardButton.Yes:
         self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID': self.comm.projectID, 'stack': self.comm.projectID})

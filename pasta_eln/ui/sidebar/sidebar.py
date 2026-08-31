@@ -122,7 +122,7 @@ class ProjectSidebar(Widget):
     # 3. Fill projectList with Items = ProjectCards
     projects = self.visibleProjects()
     if projects.empty:
-      emptyWarning = Label('Create a Project by clicking on the "+"-button above.', 'h1',
+      emptyWarning = Label('Create a project by clicking the "+" button above.', 'h1',
                            style=f"color: {self.comm.palette.getThemeColor('foreground', 'disabled')};")
       emptyWarning.setWordWrap(True)
       self.projectListL.addWidget(emptyWarning)

@@ -506,7 +506,7 @@ class Form(QDialog):
         self.keyValueListL.setContentsMargins(0, 0, 0, 0)
         self.keyValueListL.setSpacing(SPACE.S)
         self.keyValueListW.hide()
-        self.keyValueLabel = QLabel('Key - values')
+        self.keyValueLabel = QLabel('Key-value pairs')
         self.keyValueLabel.hide()
         section.formL.addRow(self.keyValueLabel, self.keyValueListW)
       if sectionHasTextArea:
@@ -659,7 +659,7 @@ class Form(QDialog):
 
     elif commandType is Command.FORM_CANCEL:
       if self.comm. configuration['GUI']['autosave'] == 'Yes':
-        ret = QMessageBox.critical(self, 'Warning', 'You will lose the entered information. Do you want to '+
+        ret = QMessageBox.critical(self, 'Unsaved changes?', 'You will lose the entered information. Do you want to '+
           'save everything to a temporary location?',
           QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
           QMessageBox.StandardButton.No)
@@ -713,7 +713,7 @@ class Form(QDialog):
                     fOut.write(self.doc['content'])
                   logging.debug('Wrote new content to %s',branch['path'])
                 elif branch['path'] is not None:
-                  showMessage(self, 'Information', 'Did update the database but not the file on harddisk, since PASTA-ELN cannot write this format')
+                  showMessage(self, 'Information', 'Updated the database but not the local file, since PASTA-ELN cannot write this format')
         elif isinstance(valueOld, list):                     #items that are comma separated in the text-field
           self.doc[key] = getattr(self, elementName).text().strip().split(' ')
         elif isinstance(valueOld, str):
@@ -781,7 +781,7 @@ class Form(QDialog):
       self.keyValueListW.show()
       self.keyLabels.append(QLineEdit(''))
       self.keyLabels[-1].setPlaceholderText('key')
-      self.keyLabels[-1].setToolTip('Key (leave empty to delete key-value pair)')
+      self.keyLabels[-1].setToolTip('Key (leave empty to remove key-value pair)')
       self.keyLabels[-1].setValidator(QRegularExpressionValidator('[a-zA-Z0-9_]+'))
       self.values.append(QLineEdit(''))
       self.values[-1].setPlaceholderText('value')

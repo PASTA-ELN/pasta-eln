@@ -457,7 +457,7 @@ class BackendWorker(QObject):
     elif task is Task.OPEN_EXTERNAL and set(data.keys())=={'docID'}:
       doc   = self.backend.db.getDoc(data['docID'])
       if doc['branch'][0]['path'] is None:
-        QMessageBox.critical(None, 'ERROR', 'Cannot open file that is only in the database')
+        QMessageBox.critical(None, 'Error', 'This item has no local file.')
       else:
         path  = Path(self.backend.basePath)/doc['branch'][0]['path']
         self.beSendTaskReport.emit(task, '', '', str(path))

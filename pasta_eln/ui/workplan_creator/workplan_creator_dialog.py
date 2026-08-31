@@ -74,4 +74,4 @@ class WorkplanCreatorDialog(QDialog):
       doc: Document of the current project (contains name)
     """
     if doc['id'] == self.comm.projectID:
-      self.setWindowTitle('Workplan Creator - Current Project: ' + doc['name'])
+      self.setWindowTitle('Workplan Creator - Current project: ' + doc['name'])

@@ -25,11 +25,11 @@ class LeftMainWidget(QWidget):
     self.procedures: list[str] = []
 
     # headerLabel
-    self.headerLabel = Label('Choose Procedures', 'h1')
+    self.headerLabel = Label('Choose procedures', 'h1')
 
     # searchbar
     self.searchbar = QLineEdit(clearButtonEnabled=True)
-    self.searchbar.setPlaceholderText('Search Procedure or #tag')
+    self.searchbar.setPlaceholderText('Search procedure or #tag')
     self.searchbar.textEdited.connect(self.filterItems)
 
     # procedureList
@@ -84,7 +84,7 @@ class LeftMainWidget(QWidget):
     if not self.procedures:
       firstSeparator.hide()
       self.procedureListLayout.addWidget(
-        Label('No Procedure found in\ncurrent Project.', 'h1',
+        Label('No procedure found in\ncurrent project.', 'h1',
               style=f"color: {self.comm.palette.getThemeColor('foreground', 'disabled')};"))
     self.procedureListLayout.addStretch(1)
 

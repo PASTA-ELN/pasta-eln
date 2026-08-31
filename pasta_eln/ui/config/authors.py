@@ -54,7 +54,7 @@ class ConfigurationAuthors(QDialog):
       orgaL.addStretch(1)
       orgaL.addWidget(self.orgaCB, stretch=2)
       Button('', self, [Command.ADD],    orgaL, icon='ri.add-line', tooltip='Add organization', flat=True)
-      Button('', self, [Command.DELETE], orgaL, icon='ri.delete-bin-line', tooltip='Delete organization', flat=True)
+      Button('', self, [Command.DELETE], orgaL, icon='ri.delete-bin-line', tooltip='Remove organization', flat=True)
       self.tabAuthorL.addRow(orgaW)
 
       self.userRorid = self.addRowText('rorid','RORID')

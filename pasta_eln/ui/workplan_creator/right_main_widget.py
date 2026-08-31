@@ -26,10 +26,10 @@ class RightMainWidget(QWidget):
     if self.comm.storage is None:
       raise RuntimeError('Workplan storage must be initialized before the right widget')
     self.storage: Storage = self.comm.storage
-    self.headerLabel = Label('Current Workplan', 'h1')
+    self.headerLabel = Label('Current workplan', 'h1')
     self.workplanWidget = QWidget()
     self.workplanLayout = QVBoxLayout()
-    self.saveButton = QPushButton('Finish and Save Workplan')
+    self.saveButton = QPushButton('Finish and save workplan')
 
     self.comm.addProcedure.connect(self.addProcedure)
     self.setAcceptDrops(True)
@@ -94,8 +94,8 @@ class RightMainWidget(QWidget):
     Extracts info from the workplanItems and creates the json for saving it
     """
     dialog = QInputDialog()
-    filename, ok = dialog.getText(self, 'Choose Workplan Name',
-                                  'Choose a Name for your Workplan File:',
+    filename, ok = dialog.getText(self, 'Choose workplan name',
+                                  'Choose a name for your workplan file:',
                                   text='unnamed_workplan')
     if not ok:
       return

@@ -84,7 +84,7 @@ class ConfigurationSetup(QWidget):
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to INVALID folder' )
           self.text.setText(self.mainText)
         elif list(Path(dirName).iterdir()):
-          button = QMessageBox.question(self, 'PASTA-ELN configuration', 'Folder is not empty. Do you want to remove all content?',
+          button = QMessageBox.question(self, 'Remove all content?', 'Folder is not empty. Do you want to remove all content?',
                                         QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                         QMessageBox.StandardButton.No)
           if button == QMessageBox.StandardButton.Yes:
@@ -95,7 +95,7 @@ class ConfigurationSetup(QWidget):
         else:
           configuration('repair', dirName)
       #Shortcut
-      button = QMessageBox.question(self, 'Create shortcut', 'Do you want to create the shortcut for PASTA-ELN on desktop?',
+      button = QMessageBox.question(self, 'Create shortcut?', 'Do you want to create the shortcut for PASTA-ELN on desktop?',
                                     QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                     QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:
@@ -105,7 +105,7 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to NOT add a shortcut' )
       self.text.setText(self.mainText)
       #Example data
-      button = QMessageBox.question(self, 'Example data', exampleDataString,
+      button = QMessageBox.question(self, 'Create example project?', exampleDataString,
                                     QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                     QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:

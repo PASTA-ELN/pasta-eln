@@ -27,7 +27,7 @@ class ConfigurationAddOnParameter(QDialog):
     self.callbackFinished = callbackFinished
     mainL = QVBoxLayout(self)
     mainL.setContentsMargins(SPACE.S, 0, 0, 0)
-    Label('Define Add-On parameters','h2',mainL)
+    Label('Define add-on parameters','h2',mainL)
     mainL.addSpacing(SPACE.M)
 
     #GUI elements

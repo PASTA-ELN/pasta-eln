@@ -22,7 +22,7 @@ def main(comm, hierStack, widget, parameter={}):
       bool: success
   """
   maxNumberSorting = 100
-  res = QMessageBox.question(widget, 'Sort direction', 'Sort direct children in ascending order? '
+  res = QMessageBox.question(widget, 'Sort direction?', 'Sort direct children in ascending order? '
           'If you click no, sort in descending order.',
           buttons=QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel),
           defaultButton=QMessageBox.StandardButton.Yes)

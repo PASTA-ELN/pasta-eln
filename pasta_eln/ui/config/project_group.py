@@ -66,7 +66,7 @@ class ProjectGroup(QDialog):
 
     self.newButton = Button('', self, [Command.NEW], icon='ri.add-line', tooltip='New project group', flat=True)
     self.formL.addWidget(self.newButton, 0, 2)
-    self.delButton = Button('', self, [Command.DEL], icon='ri.delete-bin-line', tooltip='Delete project group', flat=True)
+    self.delButton = Button('', self, [Command.DEL], icon='ri.delete-bin-line', tooltip='Remove project group', flat=True)
     self.formL.addWidget(self.delButton, 0, 3)
 
     self.directoryLabel = QLabel('label')
@@ -83,7 +83,7 @@ class ProjectGroup(QDialog):
 
     self.formL.addItem(QSpacerItem(0, 5, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed), 3, 0, 1,
                        self.formL.columnCount())
-    self.formL.addWidget(QLabel('Central elabFTW server'), 4, 0)
+    self.formL.addWidget(QLabel('Central eLabFTW server'), 4, 0)
 
     self.formL.addWidget(QLabel('\tServer address:'),      5, 0)
     self.serverLabel = QLineEdit('server')
@@ -92,7 +92,7 @@ class ProjectGroup(QDialog):
     self.row3Button = Button('Verify', self, [Command.TEST_SERVER], tooltip='Check server')
     self.formL.addWidget(self.row3Button,                  5, 3)
 
-    self.formL.addWidget(QLabel('\tAPI-key:'),             6, 0)
+    self.formL.addWidget(QLabel('\tAPI key:'),             6, 0)
     self.apiKeyLabel = QTextEdit()
     self.apiKeyLabel.setPlaceholderText('Enter API key')
     self.apiKeyLabel.setFixedHeight(48)
@@ -100,7 +100,7 @@ class ProjectGroup(QDialog):
     self.formL.addWidget(self.apiKeyLabel,                 6, 1)
     self.row4Button1 = Button('', self, [Command.TEST_API_HELP], icon='ri.question-line', tooltip='Help on obtaining API key', flat=True)
     self.formL.addWidget(self.row4Button1,                 6, 2)
-    self.row4Button2 = Button('Verify', self, [Command.TEST_APIKEY], tooltip='Check API-key')
+    self.row4Button2 = Button('Verify', self, [Command.TEST_APIKEY], tooltip='Check API key')
     self.formL.addWidget(self.row4Button2,                 6, 3)
 
     self.formL.addWidget(QLabel('\tStorage block:'),       7, 0)
@@ -157,7 +157,7 @@ class ProjectGroup(QDialog):
       self.callbackFinished(False)
     elif 'Save' in btn.text() and not self.selectGroup.isHidden():
       if not self.comboboxActive:
-        showMessage(self, 'Error', 'Fill out data and add-on location, first.')
+        showMessage(self, 'Error', 'Fill out the data and add-on directories first.')
         return
       # all information (excl. storage block) is already in self.configuration saved
       key      = self.selectGroup.currentText()
@@ -217,13 +217,13 @@ class ProjectGroup(QDialog):
       if not answer:
         return
       if [i for i in Path(answer).iterdir() if i.name=='pastaELN.db']:
-        button = QMessageBox.question(self, 'Question', 'Do you want to use existing PASTA ELN data?',
+        button = QMessageBox.question(self, 'Use existing PASTA-ELN data?', 'Do you want to use existing PASTA-ELN data?',
                                       QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                       QMessageBox.StandardButton.No)
         if button == QMessageBox.StandardButton.No:
           return
       elif list(Path(answer).iterdir()):
-        button = QMessageBox.question(self, 'Question', 'Do you want to use folder, which is not empty? This is not recommended.',
+        button = QMessageBox.question(self, 'Use non-empty directory?', 'Do you want to use a non-empty directory despite the recommendation?',
                                       QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                       QMessageBox.StandardButton.No)
         if button == QMessageBox.StandardButton.No:
@@ -235,7 +235,7 @@ class ProjectGroup(QDialog):
       answer = QFileDialog.getExistingDirectory(self, 'Specify new add-on directory')
       if not answer:
         return
-      button = QMessageBox.question(self, 'Question', 'Do you want to copy the add-ons from the old directory (recommended)?',
+      button = QMessageBox.question(self, 'Copy add-ons?', 'Do you want to copy the add-ons from the old directory (recommended)?',
                                     QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                     QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:
@@ -268,7 +268,7 @@ class ProjectGroup(QDialog):
     elif command[0] is Command.TEST_API_HELP:
       link = f'Go to: {config["remote"]["url"][:-7]}ucp.php?tab=4\n\n' if config['remote'].get('url','') else ''
       showMessage(self, 'Help', f'### How to get an api key to access the server:\n\n{link}'
-                  'On the elabFTW server:\n\nClick on the User Symbol in the top right\n\nGo to "Settings"\n\n'
+                  'On the eLabFTW server:\n\nClick on the User Symbol in the top right\n\nGo to "Settings"\n\n'
                   'Open the tab "API keys"\n\nCreate a new API key:\n\n  a) Specify a name, like "pasta_eln"\n\n  b) '
                   'Change the permissions to "Read/Write"\n\n  c) Click on "Generate new API key"\n\nCopy+Paste that '
                   'key into the text box on the right-hand side')
@@ -283,13 +283,13 @@ class ProjectGroup(QDialog):
         if res.status_code==200:
           elabVersion = int(json.loads(res.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
           if elabVersion<5:
-            showMessage(self, 'Error', 'Old elabFTW server installation')
+            showMessage(self, 'Error', 'Old eLabFTW server installation')
           # success
           self.changeButtonOnTest(True, self.row4Button2)
           self.elabApi   = ElabFTWApi(url, config['remote']['key'])
           response = self.elabApi.readEntry('items?q=category%3AProjectGroup&archived=on')
           if not response:
-            showMessage(self, 'Error', 'Please ask your database admin to add your project-group(s).')
+            showMessage(self, 'Error', 'Please ask your database admin to add your project group or groups.')
           self.serverPG = {(i['title'],i['id'],i['canread'],i['canwrite']) for i in response}
           self.serverProjectGroupLabel.clear()
           self.serverProjectGroupLabel.addItems([i[0] for i in self.serverPG])
@@ -341,7 +341,7 @@ class ProjectGroup(QDialog):
       self.comboboxActive = False
 
     elif command[0] is Command.DEL:
-      button = QMessageBox.question(self, 'Question', 'Do you really want to delete this project group from the configuration (Data will remain)?',
+      button = QMessageBox.question(self, 'Remove project group?', 'Do you really want to remove this project group from the configuration (data will remain)?',
                                     QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                     QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:

@@ -105,9 +105,9 @@ class ConfigurationRepositories(QDialog):
     self.dataverseToggle.toggled.connect(_toggleDataverse)
     rightSide.addWidget(self.dataverseToggle, 2, 2)
     rightSide.addWidget(self.apiDataverse, 2, 1)
-    self.dataverseButton2 = Button('Check', self, [Command.CHECK_DV2], tooltip='Check Dataverse API-key')
+    self.dataverseButton2 = Button('Check', self, [Command.CHECK_DV2], tooltip='Check Dataverse API key')
     rightSide.addWidget(self.dataverseButton2, 2, 3)
-    rightSide.addWidget(QLabel('Sub dataverse'), 3, 0)
+    rightSide.addWidget(QLabel('Sub-dataverse'), 3, 0)
     self.dvDataverse = QComboBox()
     self.dvDataverse.addItem(conf['dataverse']['dataverse'])                             # type: ignore[index]
     self.dvDataverse.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
@@ -141,7 +141,7 @@ class ConfigurationRepositories(QDialog):
         return
       api = self.apiZenodo.text().strip()
       if re.match(r'\w{60}', api) is None:
-        showMessage(self, 'Error', 'API key is not valid')
+        showMessage(self, 'Error', 'API key is invalid')
         return
       clientZ = ZenodoClient(url, api)
       success, message = clientZ.checkServer()
@@ -172,7 +172,7 @@ class ConfigurationRepositories(QDialog):
         return
       api = self.apiDataverse.text().strip()
       if re.match(r'\w{8}-\w{4}-\w{4}-\w{4}-\w{12}', api) is None:
-        showMessage(self, 'Error', 'API key is not valid')
+        showMessage(self, 'Error', 'API key is invalid')
         return
       clientD = DataverseClient(url, api, '')
       if success := clientD.checkAPIKey():
@@ -183,7 +183,7 @@ class ConfigurationRepositories(QDialog):
           self.dvDataverse.addItem(f"{data.get('title')} - {data.get('id')}", data.get('id'))
       else:
         self.changeButtonOnTest(False, self.dataverseButton2)
-        showMessage(self, 'Error', 'API key invalid')
+        showMessage(self, 'Error', 'API key is invalid')
 
     elif command[0] is Command.CANCEL:
       self.reject()

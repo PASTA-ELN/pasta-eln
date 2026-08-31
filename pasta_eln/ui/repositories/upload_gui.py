@@ -61,7 +61,7 @@ class UploadGUI(QDialog):
     """ Paint the dialog with the current data """
     if not self.docProject:
       return
-    Label('Upload to a repository', 'h1', self.mainL)
+    Label('Upload project to repository', 'h1', self.mainL)
     centerW = QWidget(self)
     center = QHBoxLayout(centerW)
     center.setSpacing(SPACE.L)

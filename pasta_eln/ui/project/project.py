@@ -170,7 +170,7 @@ class Project(Widget):
     moreMenu = QMenu(self)
     action('Edit project',              self, Command.EDIT,            moreMenu, icon='ri.edit-2-fill')
     action('Scan',                      self, Command.SCAN,            moreMenu, icon='fa5s.search')
-    action('Show project on side',      self, Command.SHOW_IN_DETAILS, moreMenu, icon='ri.information-line')
+    action('Show project in Details',   self, Command.SHOW_IN_DETAILS, moreMenu, icon='ri.information-line')
     projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
       for label, description in sorted(projectAddOns.items(), key=lambda item: item[1].casefold()):

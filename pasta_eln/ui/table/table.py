@@ -57,11 +57,11 @@ class TableView(Widget):
     self.buttonbarL.setContentsMargins(SPACE.M, 10, SPACE.M, 10)
     self.subTypeCombo = QComboBox()
     self.subTypeCombo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
-    self.subTypeCombo.setPlaceholderText('Select Subtype')
+    self.subTypeCombo.setPlaceholderText('Select item subtype')
     self.subTypeCombo.currentTextChanged.connect(self.onSubTypeChanged)
     self.buttonbarL.addWidget(self.subTypeCombo)
     self.buttonbarL.addStretch()
-    self.newEntryButton = Button('New Entry', self, Command.NEW_ENTRY, self.buttonbarL, icon='ri.add-fill',
+    self.newEntryButton = Button('New item', self, Command.NEW_ENTRY, self.buttonbarL, icon='ri.add-fill',
                                  style=ButtonStyle.HIGHLIGHTED)
     self.actionButton   = Button('Actions',   self, layout=self.buttonbarL, icon='ri.task-line',
                                style=ButtonStyle.PRIMARY)

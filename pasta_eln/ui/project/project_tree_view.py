@@ -240,7 +240,7 @@ class TreeView(QTreeView):
     if event.mimeData().hasUrls():                                                    #file dropped onto pasta
       item = self.model().itemFromIndex(self.indexAt(event.pos()))                # type: ignore[attr-defined]
       if item is None or (item.data()['docType'][0][0]!='x' and item.data()['fPath']!='*'):
-        showMessage(self, 'Error', 'You can drop external files only onto folders or items without a file connected.')
+        showMessage(self, 'Error', 'You can drop external files only onto folders or items without a local file.')
         return
       # create a list of all items
       items = [url.toLocalFile() for url in event.mimeData().urls()]
@@ -248,7 +248,7 @@ class TreeView(QTreeView):
         showMessage(self, 'Error', 'The files / folders you dropped are empty.')
         return
       if item.data()['fPath']=='*' and (len(items)>1 or Path(items[0]).is_dir()):
-        showMessage(self, 'Error', 'You can drop only one file onto an item without a file connected.')
+        showMessage(self, 'Error', 'You can drop only one file onto an item without a local file.')
         return
       docID = item.data()['hierStack'].split('/')[-1]
       self.comm.uiRequestTask.emit(Task.DROP_EXTERNAL, {'docID':docID, 'items':items,
@@ -277,7 +277,7 @@ class TreeView(QTreeView):
           childIndex = self.model().index(row, 0, targetIndex)
           docIDchild = childIndex.data(Qt.ItemDataRole.UserRole+1)['hierStack'].split('/')[-1]
           if docIDchild == sourceDocID:
-            QMessageBox.critical(self, 'Error', 'You can drop this item here because a copy already exists here.')
+            QMessageBox.critical(self, 'Error', 'You cannot drop this item here because a copy already exists.')
             return
       super().dropEvent(event)
     else:

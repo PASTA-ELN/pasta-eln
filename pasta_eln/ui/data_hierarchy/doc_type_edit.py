@@ -82,11 +82,11 @@ class DocTypeEditor(QDialog):
       self.row1.setDisabled(True)
     else:
       self.row1.setValidator(QRegularExpressionValidator(r'(^[a-wyz][\w\/]{3,}$)'))
-    self.mainForm.addRow(QLabel('DocType '), self.row1)
+    self.mainForm.addRow(QLabel('Item type name '), self.row1)
 
     self.row2 = QLineEdit(self.initialData[2])
     self.row2.setToolTip('Label that the user reads: it is suggested to start with upper case and end with s as in "Samples"')
-    self.mainForm.addRow(QLabel('Label '), self.row2)
+    self.mainForm.addRow(QLabel('Display label '), self.row2)
 
     row3W = QWidget(self)
     row3L = QHBoxLayout(row3W)
@@ -140,7 +140,7 @@ class DocTypeEditor(QDialog):
       else:                                                  # create new docType, with default schema entries
         docType = self.row1.text()
         if not docType or docType in self.comm.docTypesTitles:
-          showMessage(self, 'Error', 'DocType name is not valid or already exists', 'Critical')
+          showMessage(self, 'Error', 'Item type name is not valid or already exists', 'Critical')
           return
         self.comm.uiSendSQL.emit([{'type':'one', 'cmd':'INSERT INTO docTypes VALUES (?, ?, ?, ?, ?, ?)',
                                    'list':[docType, '', label, icon, shortcut, '']},
