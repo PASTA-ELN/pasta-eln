@@ -1,25 +1,58 @@
-""" Plain text ediotr that has the special feature of Alt-Up/Down to move text """
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeyEvent, QTextCursor
-from PySide6.QtWidgets import QPlainTextEdit
+"""Plain text editor with line movement and inline spellchecking."""
+from PySide6.QtCore import Qt, QRegularExpression
+from PySide6.QtGui import (QAction, QContextMenuEvent, QKeyEvent, QSyntaxHighlighter, QTextCharFormat, QTextCursor,
+                           QTextDocument)
+from PySide6.QtWidgets import QMenu, QPlainTextEdit
+from spellchecker import SpellChecker
+
+
+class _SpellHighlighter(QSyntaxHighlighter):
+  """Highlight misspelled words in an editor document."""
+  def __init__(self, document:QTextDocument, checker:SpellChecker):
+    """Create a highlighter for a text document.
+    Args:
+      document: Document whose text should be highlighted.
+      checker: Spellchecker used to identify unknown words.
+    """
+    super().__init__(document)
+    self.checker = checker
+    self.wordPattern = QRegularExpression(r"\b[\w']+\b")
+    self.spellFormat = QTextCharFormat()
+    self.spellFormat.setUnderlineStyle(QTextCharFormat.UnderlineStyle.SpellCheckUnderline)
+    self.spellFormat.setUnderlineColor(Qt.GlobalColor.red)
+
+
+  def highlightBlock(self, text:str) -> None:
+    """Underline words absent from the configured dictionary.
+    Args:
+      text: One block of document text supplied by Qt.
+    """
+    match = self.wordPattern.match(text)
+    while match.hasMatch():
+      word = match.captured()
+      if word.lower() in self.checker.unknown([word]):
+        self.setFormat(match.capturedStart(), match.capturedLength(), self.spellFormat)
+      match = self.wordPattern.match(text, match.capturedEnd())
 
 
 class TextEditor(QPlainTextEdit):
-  """ Plain text ediotr that has the special feature of Alt-Up/Down to move text """
-  def __init__(self, text:str):
-    """Initialize the editor with the supplied plain text.
-
+  """Plain text editor with Alt-Up/Down line movement and spellchecking."""
+  def __init__(self, text:str = '', language:str = 'en'):
+    """Initialize the editor with text and a pyspellchecker language.
     Args:
-      text (str): Initial document content shown in the editor.
+      text: Initial plain text shown in the editor.
+      language: Language code used by the spellchecker dictionary.
     """
     super().__init__(text)
     self.setTabStopDistance(20)
+    self.checker = SpellChecker(language=language, distance=1)
+    self.highlighter = _SpellHighlighter(self.document(), self.checker)
 
 
-  def keyPressEvent(self, event: QKeyEvent) -> None:
-    """
-    Captures key press events. If Alt+Up is pressed, move selected lines up
-    Otherwise, call the default behavior
+  def keyPressEvent(self, event:QKeyEvent) -> None:
+    """Move selected lines with Alt-Up/Down, otherwise use normal editing.
+    Args:
+      event: Key event received from Qt.
     """
     if event.key() == Qt.Key_Up and event.modifiers() == Qt.AltModifier:          # type: ignore[attr-defined]
       self.moveSelectedLines(True)
@@ -29,8 +62,45 @@ class TextEditor(QPlainTextEdit):
       super().keyPressEvent(event)
 
 
+  def contextMenuEvent(self, event:QContextMenuEvent) -> None:
+    """Add spelling suggestions for the word under the context-menu cursor.
+    Args:
+      event: Context-menu event received from Qt.
+    """
+    menu = self.createStandardContextMenu()
+    cursor = self.cursorForPosition(event.pos())
+    cursor.select(QTextCursor.SelectionType.WordUnderCursor)
+    word = cursor.selectedText()
+    if word and word.lower() in self.checker.unknown([word]):
+      spellingMenu = QMenu('Spelling suggestions', menu)
+      menu.addMenu(spellingMenu)
+      suggestions = self.checker.candidates(word) or set()
+      for suggestion in sorted(suggestions)[:5]:
+        action = QAction(suggestion, menu)
+        action.triggered.connect(lambda _checked=False, replacement=suggestion, target=cursor:
+                                 self.replaceWord(target, replacement))
+        spellingMenu.addAction(action)
+    menu.exec(event.globalPos())
+
+
+  def replaceWord(self, cursor:QTextCursor, replacement:str) -> None:
+    """Replace one misspelled word selected for the context menu.
+    Args:
+      cursor: Cursor selecting the misspelled word.
+      replacement: Corrected text to insert.
+    """
+    current = self.textCursor()
+    current.setPosition(cursor.selectionStart())
+    current.setPosition(cursor.selectionEnd(), QTextCursor.MoveMode.KeepAnchor)
+    self.setTextCursor(current)
+    current.insertText(replacement)
+
+
   def moveSelectedLines(self, moveUp:bool) -> None:
-    """Moves the selected lines up by swapping them with the previous line."""
+    """Move the selected lines up or down by one line.
+    Args:
+      moveUp: Whether to move the selected lines towards the document start. Else move down
+    """
     # define cursor; initial start and end position
     cursor = self.textCursor()                                                   # Get the current text cursor
     if not cursor.hasSelection():                    # Expand selection to full lines if there is no selection

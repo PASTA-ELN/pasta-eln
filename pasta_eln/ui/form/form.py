@@ -431,7 +431,7 @@ class Form(QDialog):
                   textStr = fIn.read()
           for k,v in SQLiteTranslationDict.items():
             textStr = textStr.replace(v,k)
-          textEditor = TextEditor(textStr)
+          textEditor = TextEditor(textStr, self.comm.configuration['GUI']['spellcheckLanguage'])
           inputBackground = self.comm.palette.getThemeColor('background', 'input')
           textEditor.setStyleSheet(f'background-color: {inputBackground};')
           setattr(self, f'textEdit_{key}', textEditor)
