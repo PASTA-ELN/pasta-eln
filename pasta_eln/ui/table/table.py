@@ -289,7 +289,7 @@ class TableView(Widget):
         self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs': selected, 'recipe': ''})
         self.refresh()
     elif commandType is Command.DELETE and selected:
-      answer = QMessageBox.warning(self, 'Remove selected items', 'Remove the selected items everywhere?',
+      answer = QMessageBox.warning(self, 'Remove selected items?', 'Remove the selected items everywhere?',
                                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                    QMessageBox.StandardButton.No)
       if answer is QMessageBox.StandardButton.Yes:

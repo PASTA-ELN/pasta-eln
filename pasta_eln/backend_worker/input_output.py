@@ -102,14 +102,14 @@ def validate(elnFile:ZipFile) -> bool:
     else:
       rootFolders.add(path.parts[0])
   if entriesOutsideRoot:
-    return fail(f'eln archive entries are outside the root folder: {sorted(entriesOutsideRoot)}')
+    return fail(f'.eln archive entries are outside the root folder: {sorted(entriesOutsideRoot)}')
   if len(rootFolders) != 1:
-    return fail(f'eln archive must contain exactly one root folder: {sorted(rootFolders)}')
+    return fail(f'.eln archive must contain exactly one root folder: {sorted(rootFolders)}')
 
   dirName = next(iter(rootFolders))
   metadataPath = f'{dirName}/{metadataFile}'
   if metadataPath not in elnFile.namelist():
-    return fail('ro-crate does not exist in folder. EXIT')
+    return fail('The RO-Crate metadata file is missing.')
   try:
     graph = json.loads(elnFile.read(metadataPath))['@graph']
   except (KeyError, TypeError, ValueError):
@@ -170,10 +170,10 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
     elnFile = ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED)
   except Exception as error:
     logging.error('Cannot open import archive %s', elnFileName, exc_info=True)
-    return f'ERROR: cannot open .eln archive: {error}', statistics
+    return f'Cannot open .eln archive: {error}', statistics
   with elnFile:
     if not validate(elnFile):
-      return 'ERROR: ro-crate is invalid. Cannot process', {}
+      return 'RO-Crate is invalid and cannot be processed.', {}
     files = elnFile.namelist()
     dirName=Path(files[0]).parts[0]
     statistics['num. files'] = len([i for i in files if Path(i).parent!=Path(dirName)])
@@ -190,12 +190,12 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       elnName = publisherNode['name']
     logging.info('Import %s', elnName)
     if not projID:
-      return 'FAILURE: YOU CANNOT IMPORT AS PROJECT IF NON PASTA-ELN FILE',{}
+      return 'Cannot import a non-PASTA-ELN file as a project.',{}
     try:
       backend.changeHierarchy(projID)
     except Exception as error:
       logging.error('Cannot open import destination %s', projID, exc_info=True)
-      return f'ERROR: cannot open import destination: {error}', {}
+      return f'Cannot open import destination: {error}', {}
     childrenStack = [0]
     mainNode = [i for i in graph if i['@id']=='./'][0]
     # clean subchildren from mainNode: see https://github.com/TheELNConsortium/TheELNFileFormat/issues/98
@@ -624,7 +624,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         'datePublished':datetime.now().isoformat(), 'dateCreated': datetime.now().isoformat(),
         'sdPublisher': {'@id': 'PASTA-ELN'}}
     graphMaster.append(masterNodeInfo)
-    masterNodeInfo2 = {'@id':'PASTA-ELN','@type': 'Organization', 'name': 'PASTA ELN',
+    masterNodeInfo2 = {'@id':'PASTA-ELN','@type': 'Organization', 'name': 'PASTA-ELN',
             'logo': 'https://raw.githubusercontent.com/PASTA-ELN/desktop/main/pasta.png',
             'slogan': 'The favorite ELN for experimental scientists',
             'url': 'https://github.com/PASTA-ELN/', 'version': __version__
@@ -647,7 +647,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
                           'worksFor': affiliationNodes})
       authorNodes.append({'@id':authorID})
     masterNodeRoot:dict[str,Any] = {'@id': './', '@type': 'Dataset', 'hasPart': [{'@id':i} for i in masterParts],
-        'name': 'Exported from PASTA ELN', 'description': 'Exported content from PASTA ELN',
+        'name': 'Exported from PASTA-ELN', 'description': 'Exported content from PASTA-ELN',
         'license':'https://creativecommons.org/licenses/by-nc-sa/4.0/', 'datePublished':datetime.now().isoformat()}
     if authorNodes:
       masterNodeRoot = masterNodeRoot | {'creator': authorNodes}

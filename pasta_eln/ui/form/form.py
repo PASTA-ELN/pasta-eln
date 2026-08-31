@@ -60,9 +60,9 @@ class Form(QDialog):
 
     # GUI elements
     if self.flagNewDoc:
-      self.setWindowTitle('Create new entry')
+      self.setWindowTitle('Create new item')
     else:
-      self.setWindowTitle('Edit information')
+      self.setWindowTitle('Edit item')
     self.setMinimumSize(QSize(800, 600))
     self.mainL = QVBoxLayout(self)
     self.mainL.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
@@ -140,9 +140,8 @@ class Form(QDialog):
       with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
         if self.doc.get('id', '') in content:
-          ret = QMessageBox.information(self, 'Information', 'There is unsaved information from a prematurely '+
-                    'closed form. Do you want to restore it?\n If you decline, the unsaved information will be'+
-                    ' removed.',
+          ret = QMessageBox.information(self, 'Restore unsaved changes?', 'Unsaved changes were found from a form that '+
+                    'closed unexpectedly. Do you want to restore them?\nIf not, they will be removed.',
                   QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                   QMessageBox.StandardButton.Yes)
           if ret==QMessageBox.StandardButton.Yes:
@@ -556,7 +555,7 @@ class Form(QDialog):
       name = nameInput.text().casefold()
       differs = all(re.sub(r'^\d{3}_', '', filename).casefold() != name for filename in filenames)
     filenameIndicator.setVisible(differs)
-    filenameIndicator.setToolTip('The filename on disk is:\n' +
+    filenameIndicator.setToolTip('The local file name is:\n' +
                                  '\n'.join(filenames) if differs else '')
 
 

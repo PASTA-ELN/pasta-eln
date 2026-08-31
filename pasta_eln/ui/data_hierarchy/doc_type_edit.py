@@ -85,7 +85,7 @@ class DocTypeEditor(QDialog):
     self.mainForm.addRow(QLabel('Item type name '), self.row1)
 
     self.row2 = QLineEdit(self.initialData[2])
-    self.row2.setToolTip('Label that the user reads: it is suggested to start with upper case and end with s as in "Samples"')
+    self.row2.setToolTip('Display label shown to users. Start with an uppercase letter and end with s, as in "Samples".')
     self.mainForm.addRow(QLabel('Display label '), self.row2)
 
     row3W = QWidget(self)
@@ -128,7 +128,7 @@ class DocTypeEditor(QDialog):
     else:
       label    = self.row2.text()
       if not label or label in [v['title'] for _,v in self.comm.docTypesTitles.items()]:
-        showMessage(self, 'Error', 'The label has to be used and cannot be used already by another type.', 'Critical')
+        showMessage(self, 'Error', 'The display label is required and must be unique.', 'Critical')
         return
       icon     = '' if self.docType.startswith('x') else self.comboIcon.currentText()
       shortcut = '' if self.docType.startswith('x') else self.row4.text()

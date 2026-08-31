@@ -334,7 +334,7 @@ def createShortcut() -> None:
   """
   logging.info('Create shortcut starting')
   if platform.system()=='Linux':
-    content ='[Desktop Entry]\nName=PASTA ELN\nComment=PASTA electronic labnotebook\n'
+    content ='[Desktop Entry]\nName=PASTA-ELN\nComment=PASTA-ELN electronic lab notebook\n'
     if sys.prefix==sys.base_prefix:                                       #normal installation into user-space
       content+='Exec=pastaELN\n'
     else:                                                               #installation in a virtual environment

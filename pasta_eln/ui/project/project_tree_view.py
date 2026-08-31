@@ -245,7 +245,7 @@ class TreeView(QTreeView):
       # create a list of all items
       items = [url.toLocalFile() for url in event.mimeData().urls()]
       if not items:
-        showMessage(self, 'Error', 'The files / folders you dropped are empty.')
+        showMessage(self, 'Error', 'No files or folders were dropped.')
         return
       if item.data()['fPath']=='*' and (len(items)>1 or Path(items[0]).is_dir()):
         showMessage(self, 'Error', 'You can drop only one file onto an item without a local file.')

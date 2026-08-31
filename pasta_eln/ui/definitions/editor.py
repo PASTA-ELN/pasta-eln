@@ -124,21 +124,21 @@ class Editor(QDialog):
       command (list): list of commands
     """
     if command is Command.EXPORT:
-      fileName = QFileDialog.getSaveFileName(self, 'Save table to .csv file', str(Path.home()), '*.csv')[0]
+      fileName = QFileDialog.getSaveFileName(self, 'Export definitions CSV', str(Path.home()), '*.csv')[0]
       if fileName != '':
         self.getDataframe().to_csv(fileName, index=False)
     elif command is Command.IMPORT:
-      fileName = QFileDialog.getOpenFileName(self, 'Read table from .csv file', str(Path.home()), '*.csv')[0]
+      fileName = QFileDialog.getOpenFileName(self, 'Import definitions CSV', str(Path.home()), '*.csv')[0]
       if fileName != '':
         importedData = pd.read_csv(fileName, dtype=str).fillna('')
         requiredColumns = {'key', 'description', 'PURL', 'defType'}
         if set(importedData.columns) != requiredColumns:
           QMessageBox.warning(self, 'Invalid definitions file',
-                              'The CSV file must contain exactly the columns: key, description, PURL, defType.')
+                              'The CSV file must contain exactly the columns: key, description, PURL, and defType (definition type).')
           return
         if not importedData['defType'].isin({'class', 'attribute'}).all():
           QMessageBox.warning(self, 'Invalid definitions file',
-                              'The defType column may contain only "class" or "attribute".')
+                              'The defType (definition type) column may contain only "class" or "attribute".')
           return
         self.data = importedData.rename({'description':'label'}, axis=1)[['key', 'label', 'PURL', 'defType']]
         self.paint()

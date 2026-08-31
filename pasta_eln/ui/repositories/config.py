@@ -73,7 +73,7 @@ class ConfigurationRepositories(QDialog):
 
     self.zenodoToggle.toggled.connect(_toggleZenodo)
     leftSide.addWidget(self.zenodoToggle, 2, 2)
-    self.zenodoButton = Button('Check', self, [Command.CHECK_ZENODO], tooltip='Check Zenodo login details')
+    self.zenodoButton = Button('Verify', self, [Command.CHECK_ZENODO], tooltip='Verify Zenodo login details')
     leftSide.addWidget(self.zenodoButton, 3, 1)
 
     rightSideW = QWidget()
@@ -85,7 +85,7 @@ class ConfigurationRepositories(QDialog):
     self.urlDatavese = QLineEdit(conf['dataverse']['url'])                               # type: ignore[index]
     self.urlDatavese.setMinimumWidth(350)
     rightSide.addWidget(self.urlDatavese, 1, 1)
-    self.dataverseButton1 = Button('Check', self, [Command.CHECK_DV1], tooltip='Check Dataverse server details')
+    self.dataverseButton1 = Button('Verify', self, [Command.CHECK_DV1], tooltip='Verify Dataverse server details')
     self.dataverseButton1.setMinimumWidth(100)
     rightSide.addWidget(self.dataverseButton1, 1, 3)
     rightSide.addWidget(QLabel('API key'), 2, 0)
@@ -105,7 +105,7 @@ class ConfigurationRepositories(QDialog):
     self.dataverseToggle.toggled.connect(_toggleDataverse)
     rightSide.addWidget(self.dataverseToggle, 2, 2)
     rightSide.addWidget(self.apiDataverse, 2, 1)
-    self.dataverseButton2 = Button('Check', self, [Command.CHECK_DV2], tooltip='Check Dataverse API key')
+    self.dataverseButton2 = Button('Verify', self, [Command.CHECK_DV2], tooltip='Verify Dataverse API key')
     rightSide.addWidget(self.dataverseButton2, 2, 3)
     rightSide.addWidget(QLabel('Sub-dataverse'), 3, 0)
     self.dvDataverse = QComboBox()

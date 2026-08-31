@@ -72,13 +72,13 @@ class ProjectGroup(QDialog):
     self.directoryLabel = QLabel('label')
     self.directoryLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
     self.formL.addWidget(self.directoryLabel, 1, 0, 1, 2)
-    self.row1Button = Button('', self, [Command.CHANGE_DIR], icon='ri.edit-line', tooltip='Edit data path', flat=True)
+    self.row1Button = Button('', self, [Command.CHANGE_DIR], icon='ri.edit-line', tooltip='Edit data directory', flat=True)
     self.formL.addWidget(self.row1Button, 1, 3)
 
     self.addOnLabel = QLabel('add-on')
     self.addOnLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
     self.formL.addWidget(self.addOnLabel, 2, 0, 1, 2)
-    self.row2Button = Button('', self, [Command.CHANGE_ADDON], icon='ri.edit-line', tooltip='Edit add-on path', flat=True)
+    self.row2Button = Button('', self, [Command.CHANGE_ADDON], icon='ri.edit-line', tooltip='Edit add-on directory', flat=True)
     self.formL.addWidget(self.row2Button, 2, 3)
 
     self.formL.addItem(QSpacerItem(0, 5, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed), 3, 0, 1,
@@ -89,7 +89,7 @@ class ProjectGroup(QDialog):
     self.serverLabel = QLineEdit('server')
     self.serverLabel.setPlaceholderText('Enter server address')
     self.formL.addWidget(self.serverLabel,                 5, 1)
-    self.row3Button = Button('Verify', self, [Command.TEST_SERVER], tooltip='Check server')
+    self.row3Button = Button('Verify', self, [Command.TEST_SERVER], tooltip='Verify server')
     self.formL.addWidget(self.row3Button,                  5, 3)
 
     self.formL.addWidget(QLabel('\tAPI key:'),             6, 0)
@@ -100,13 +100,13 @@ class ProjectGroup(QDialog):
     self.formL.addWidget(self.apiKeyLabel,                 6, 1)
     self.row4Button1 = Button('', self, [Command.TEST_API_HELP], icon='ri.question-line', tooltip='Help on obtaining API key', flat=True)
     self.formL.addWidget(self.row4Button1,                 6, 2)
-    self.row4Button2 = Button('Verify', self, [Command.TEST_APIKEY], tooltip='Check API key')
+    self.row4Button2 = Button('Verify', self, [Command.TEST_APIKEY], tooltip='Verify API key')
     self.formL.addWidget(self.row4Button2,                 6, 3)
 
     self.formL.addWidget(QLabel('\tStorage block:'),       7, 0)
     self.serverProjectGroupLabel = QComboBox()
     self.formL.addWidget(self.serverProjectGroupLabel,     7, 1)
-    self.row5Button2 = Button('Verify', self, [Command.TEST_SERVERPG], tooltip='Check access to storage block')
+    self.row5Button2 = Button('Verify', self, [Command.TEST_SERVERPG], tooltip='Verify access to storage block')
     self.formL.addWidget(self.row5Button2,                 7, 3)
 
     self.formL.addItem(QSpacerItem(0, 25, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed), 8, 0, 1,
@@ -163,10 +163,10 @@ class ProjectGroup(QDialog):
       key      = self.selectGroup.currentText()
       config   = self.configuration['projectGroups'][key]
       if config['remote'].get('url','') and config['remote'].get('key','') and not self.projectGroupTested:
-        showMessage(self, 'Error', 'Error: You have to select and test the storage block once successfully.')
+        showMessage(self, 'Error', 'Select and test the storage block successfully first.')
         return
       if not config['local']['path']:
-        showMessage(self, 'Error', 'Error: path to data directory is not set.')
+        showMessage(self, 'Error', 'The data directory is not set.')
         return
       if not config['addOnDir']:
         config['addOnDir'] = Path(__file__).parent.parent/'add_ons'                               #set default
@@ -267,7 +267,7 @@ class ProjectGroup(QDialog):
 
     elif command[0] is Command.TEST_API_HELP:
       link = f'Go to: {config["remote"]["url"][:-7]}ucp.php?tab=4\n\n' if config['remote'].get('url','') else ''
-      showMessage(self, 'Help', f'### How to get an api key to access the server:\n\n{link}'
+      showMessage(self, 'Help', f'### How to get an API key to access the server:\n\n{link}'
                   'On the eLabFTW server:\n\nClick on the User Symbol in the top right\n\nGo to "Settings"\n\n'
                   'Open the tab "API keys"\n\nCreate a new API key:\n\n  a) Specify a name, like "pasta_eln"\n\n  b) '
                   'Change the permissions to "Read/Write"\n\n  c) Click on "Generate new API key"\n\nCopy+Paste that '

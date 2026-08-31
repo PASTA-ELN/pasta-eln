@@ -135,7 +135,7 @@ class Details(Widget):
       else:
         name = self.data['name'].casefold()
         differs = all(re.sub(r'^\d{3}_', '', filename).casefold() != name for filename in filenames)
-      self.titleLabel.setToolTip('The filename on disk is:\n' + '\n'.join(filenames) if differs else '')
+      self.titleLabel.setToolTip('The local file name is:\n' + '\n'.join(filenames) if differs else '')
     # create name that fits into the space by putting ... in the middle
     titleWidth = self.titleLabel.width() or self.width()
     if differs:
@@ -288,7 +288,7 @@ class Details(Widget):
       self.comm.changeDetails.emit(DetailContext())
     elif commandType is Command.REMOVE:
       message = QMessageBox(self)
-      message.setWindowTitle('Remove item')
+      message.setWindowTitle('Remove item?')
       message.setText(f'Remove “{self.data["name"]}”?')
       everywhereButton = message.addButton('Remove everywhere', QMessageBox.ButtonRole.DestructiveRole)
       currentButton = None

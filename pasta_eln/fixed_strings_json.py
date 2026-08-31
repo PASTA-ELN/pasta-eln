@@ -8,9 +8,9 @@ defaultDocTypes: list[list[str]] = [
   ['measurement',         'http://purl.obolibrary.org/obo/NCIT_C42790',      'Measurements', 'fa5s.thermometer-half', 'm',    'name,tags,comment,type,image,.sample,.workflow/procedure'],
   ['sample',              'http://purl.obolibrary.org/obo/NCIT_C19157',      'Samples',      'fa5s.vial',             's',    'name,tags,.chemistry,comment,qrCodes'],
   ['workflow',            'http://purl.obolibrary.org/obo/NCIT_C42753',      'Workflows',    'fa5s.list-ol',          'w',    'name,tags,comment'],
-  ['workflow/procedure',  'https://schema.org/procedure',                    'Procedure',    '',                      '',     'name,tags,comment,content'],
-  ['workflow/workplan' ,  'http://purl.obolibrary.org/obo/PROCO_0000093',    'Workplan',    '',                      '',     'name,tags,comment,content'],
-  ['workflow/worklog'  ,  'http://dicom.nema.org/resources/ontology/DCM/LOG','Worklog',     '',                      '',     'name,tags,comment,content'],
+  ['workflow/procedure',  'https://schema.org/procedure',                    'Procedures',   '',                      '',     'name,tags,comment,content'],
+  ['workflow/workplan' ,  'http://purl.obolibrary.org/obo/PROCO_0000093',    'Workplans',    '',                      '',     'name,tags,comment,content'],
+  ['workflow/worklog'  ,  'http://dicom.nema.org/resources/ontology/DCM/LOG','Worklogs',    '',                      '',     'name,tags,comment,content'],
   ['device',              'http://purl.obolibrary.org/obo/NCIT_C16742',      'Devices',  'ri.scales-2-line',          'd',    'name,tags,comment,.vendor'],
   ['device/extension',    'https://www.wikidata.org/wiki/Q19841649',         'Extensions',   '',                      '',     'name,tags,comment,.vendor'],
 ]
@@ -72,7 +72,7 @@ defaultDefinitions = [
   ['tags',               'What are the tags?',                                             ''],
   ['.status',            'What is the project status',                                     ''],
   ['.objective',         'What is the objective?',                                         ''],
-  ['comment',            'What are the comments?',                                         ''],
+  ['comment',            'What is the comment?',                                           ''],
   ['content',            'What is procedure (Markdown possible; autofill if file given)?', ''],
   ['.vendor',            'Who is the vendor?',                                             ''],
   ['.sample',            'Which sample was used?',                                         ''],
@@ -88,7 +88,7 @@ defaultDefinitions = [
 defaultDataHierarchyNode: list[dict[str, str]] = [
   {'docType':'-','class':'','idx':'0','name':'name',   'query':'What is the name?',     'unit':'','PURL':'','mandatory':'T','list':''},
   {'docType':'-','class':'','idx':'1','name':'tags',   'query':'What are the tags?',    'unit':'','PURL':'','mandatory':'','list':''},
-  {'docType':'-','class':'','idx':'2','name':'comment','query':'What are the comments?','unit':'','PURL':'','mandatory':'','list':''}
+  {'docType':'-','class':'','idx':'2','name':'comment','query':'What is the comment?','unit':'','PURL':'','mandatory':'','list':''}
   ]
 
 
@@ -196,7 +196,7 @@ shortcuts = """
 | **Ctrl+U** | Show unidentified items |
 
 Document unique one-letter shortcut are assigned in Item Editor and can hence vary from these defaults. Use
-**Ctrl+<letter>** to show that document type.
+**Ctrl+<letter>** to show that item type.
 
 ### Application actions
 

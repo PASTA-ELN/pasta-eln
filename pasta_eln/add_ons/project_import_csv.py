@@ -35,7 +35,7 @@ def main(comm, hierStack, widget, parameter={}):
     """
     # Read csv file as a dataframe
     if 'fileNames' not in parameter:
-        res = QFileDialog.getOpenFileName(widget,'Use this file for output', str(Path.home()))
+        res = QFileDialog.getOpenFileName(widget, 'Import CSV file', str(Path.home()))
         if not res[0]:
             return False
     else:

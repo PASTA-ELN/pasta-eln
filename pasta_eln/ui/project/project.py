@@ -149,13 +149,13 @@ class Project(Widget):
                        if [b for b in self.docProj['branch'] if False in b['show']] else \
                        ('', 'Mark project as hidden')
     topLineL.addWidget(Label(self.docProj['name']+hidden, 'h2'))
-    showStatus = '(Show all items)' if self.showAll else '(Hide hidden items)'
+    showStatus = '(All items shown)' if self.showAll else '(Hidden items not shown)'
     topLineL.addWidget(QLabel(showStatus))
     topLineL.addStretch(1)
     # buttons in top line
-    self.btnAddSubfolder = Button('Add subfolder', self, Command.ADD_CHILD, topLineL,
+    self.btnAddSubfolder = Button('Add child folder', self, Command.ADD_CHILD, topLineL,
                                   icon='ri.folder-add-line', style=ButtonStyle.HIGHLIGHTED)
-    self.btnVisibility = Button('Display', self, layout=topLineL,
+    self.btnVisibility = Button('View', self, layout=topLineL,
                                 icon='ri.eye-line', style=ButtonStyle.PRIMARY)
     visibilityMenu = QMenu(self)
     self.actHideDetail = action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
@@ -192,7 +192,7 @@ class Project(Widget):
     if sum(node.docType[0].startswith('x') for node in PreOrderIter(self.hierarchy)) <= 5:
       hint = 'Drag files onto a folder to add them.'
       if not self.hierarchy.children:
-        hint = 'Add a subfolder, then drag files onto it.'
+        hint = 'Add a child folder, then drag files onto it.'
       hintLabel = QLabel(hint)
       hintLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
       hintLabel.setFrameShape(QFrame.Shape.StyledPanel)

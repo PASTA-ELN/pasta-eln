@@ -420,7 +420,7 @@ class Backend(CliMixin):
               extractorJobs.append(job)
           else:
             self.db.updateBranch(view[0]['id'], -1, 9999, hierStack, path)
-            reply = 'Create a link to existing entry instead of new entry.'
+            reply = 'Create a link to the existing item instead of a new item.'
     for job, doc in self.extractors.applyResults(self.extractors.runJobs(extractorJobs), extractorJobs):
       view = self.db.getView('viewIdentify/viewSHAsum', job['shasum'])
       if len(view)==0:
@@ -428,7 +428,7 @@ class Backend(CliMixin):
         self.addData('/'.join(doc['type']), doc, job['hierStack'], runExtractors=False)
       else:
         self.db.updateBranch(view[0]['id'], -1, 9999, job['hierStack'], job['path'])
-        reply = 'Create a link to existing entry instead of new entry.'
+        reply = 'Create a link to the existing item instead of a new item.'
     #finish method
     self.cwd = self.basePath/projPath
     pathsInDbData = [i for i in pathsInDbData

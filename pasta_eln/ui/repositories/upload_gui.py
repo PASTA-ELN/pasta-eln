@@ -39,7 +39,7 @@ class UploadGUI(QDialog):
     self.allCheckboxes:list[QCheckBox] = []
 
     if not self.comm.projectID:
-      showMessage(self, 'Error', 'You have to have an open project to upload', 'Critical')
+      showMessage(self, 'Error', 'Open a project before uploading.', 'Critical')
       return
     self.comm.uiRequestDoc.emit(self.comm.projectID)
 
@@ -86,7 +86,7 @@ class UploadGUI(QDialog):
     leftSide.addWidget(QLabel('Keywords'), 3, 0)
     self.leKeywords = QLineEdit(', '.join(self.docProject['tags']))
     leftSide.addWidget(self.leKeywords, 3, 1)
-    leftSide.addWidget(QLabel('Category/Community'), 4, 0)
+    leftSide.addWidget(QLabel('Repository category or community.'), 4, 0)
     self.leCategory = QLineEdit(repositories.get('category',''))
     leftSide.addWidget(self.leCategory, 4, 1)
     leftSide.addWidget(QLabel('Additional'), 5, 0)

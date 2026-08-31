@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
     else:
       configWindow = Configuration(self.comm, 'setup')
       configWindow.exec()
-      self.setCentralWidget(QLabel('ERROR: No configuration present!'))
+      self.setCentralWidget(QLabel('Error: No configuration is available.'))
       return
     self.comm.formDoc.connect(self.formDoc)
     self.comm.changeSidebar.connect(self.paint)
@@ -213,13 +213,13 @@ class MainWindow(QMainWindow):
       if fileNames and isinstance(project, Project):
         project.execute([ProjectCommand.IMPORT_FILES, fileNames])
     elif commandType is Command.EXPORT_ELN:
-      fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
+      fileName = QFileDialog.getSaveFileName(self, 'Export project as .eln', str(Path.home()), '*.eln')[0]
       if fileName != '':
         docTypes = [i for i in self.comm.docTypesTitles if i[0] != 'x']
         self.comm.uiRequestTask.emit(Task.EXPORT_ELN,
                                      {'fileName': fileName, 'projID': self.comm.projectID, 'docTypes': docTypes})
     elif commandType is Command.IMPORT_ELN:
-      fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
+      fileName = QFileDialog.getOpenFileName(self, 'Import .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
         self.comm.uiRequestTask.emit(Task.IMPORT_ELN, {'fileName': fileName, 'projID': self.comm.projectID})
         self.comm.changeProject.emit(self.comm.projectID, '')

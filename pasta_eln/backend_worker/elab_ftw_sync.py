@@ -136,7 +136,7 @@ class Pasta2Elab:
     if hasattr(self,'api') and self.api.url:                               #only when you are connected to web
       report = []
       if progressCallback is not None:
-        progressCallback('text', '### Start syncing with elabFTW server\n#### Set up sync\nStart...')
+        progressCallback('text', '### Start syncing with eLabFTW server\n#### Set up sync\nStart...')
       self.syncDocTypes()                                                              # sync categories ~1sec
       self.createIdDict()
       if progressCallback is not None:

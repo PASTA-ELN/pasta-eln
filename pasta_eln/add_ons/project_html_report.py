@@ -51,7 +51,7 @@ def main(comm, hierStack, widget, parameter={}):
     """
     # get filename to write into
     if 'fileNames' not in parameter:
-        res = QFileDialog.getSaveFileName(widget,'Use this file for output', str(Path.home()))
+        res = QFileDialog.getSaveFileName(widget, 'Save HTML report', str(Path.home()))
         if not res[0]:
             return False
     else:
