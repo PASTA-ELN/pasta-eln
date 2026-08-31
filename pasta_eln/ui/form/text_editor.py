@@ -1,4 +1,5 @@
 """Plain text editor with line movement and inline spellchecking."""
+import re
 from PySide6.QtCore import Qt, QRegularExpression
 from PySide6.QtGui import (QAction, QContextMenuEvent, QKeyEvent, QSyntaxHighlighter, QTextCharFormat, QTextCursor,
                            QTextDocument)
@@ -41,11 +42,12 @@ class TextEditor(QPlainTextEdit):
     """Initialize the editor with text and a pyspellchecker language.
     Args:
       text: Initial plain text shown in the editor.
-      language: Language code used by the spellchecker dictionary.
+      language: Language name and code, such as ``English (en)``.
     """
     super().__init__(text)
     self.setTabStopDistance(20)
-    self.checker = SpellChecker(language=language, distance=1)
+    languageCode = re.search(r'\(([a-z]{2})\)$', language)
+    self.checker = SpellChecker(language=languageCode.group(1) if languageCode else 'en', distance=1)
     self.highlighter = _SpellHighlighter(self.document(), self.checker)
 
 

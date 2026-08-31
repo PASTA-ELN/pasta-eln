@@ -113,7 +113,10 @@ configurationGUI: dict[str, Any] = {
     'showHidden': ['Show hidden items by default', 'Yes', ['Yes','No']],
     'autosave': ['Autosave entries in form', 'No', ['Yes', 'No']],
     'checkForUpdates': ['Check for updates on startup', 'Yes', ['Yes', 'No']],
-    'spellcheckLanguage': ['Spellcheck language', 'en', ['en', 'de', 'es', 'fr', 'it', 'pt', 'ru', 'ar', 'eu', 'lv']]
+    'spellcheckLanguage': ['Spellcheck language', 'English (en)',
+                           ['Deutsch (de)', 'English (en)', 'Español (es)', 'Français (fr)', 'Italiano (it)',
+                            'Português (pt)', 'Русский (ru)', 'العربية (ar)', 'Euskara (eu)', 'Latviešu (lv)',
+                            'Nederlands (nl)', 'فارسی (fa)']]
   },
   'appearance': {
     'theme': ['Color style', 'automatic', ['automatic', 'dark', 'light']],
