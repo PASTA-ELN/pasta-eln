@@ -31,7 +31,7 @@
        <item>
         <widget class="QLineEdit" name="terminologyLineEdit">
          <property name="placeholderText">
-          <string>Search terms in wikis and ontologies</string>
+          <string>Search wikis and ontologies</string>
          </property>
          <property name="clearButtonEnabled">
           <bool>true</bool>

@@ -42,8 +42,8 @@ class Task(Enum):
   EXTRACTOR_TEST = (10, 'Testing extractor:')                      #keys: fileName, style, recipe, saveFig
   EXTRACTOR_RERUN= (11, 'Rerun extractors:')                       #keys: docIDs, recipe
   SYNC_ELAB      = (12, 'Sync data to eLabFTW server:')            #keys: projGroup, subtask
-  EXPORT_ELN     = (13, 'Exporting to .eln:')                      #keys: fileName, projID, docTypes
-  IMPORT_ELN     = (14, 'Importing an .eln file:')                 #keys: fileName, projID
+  EXPORT_ELN     = (13, 'Exporting to ELN:')                       #keys: fileName, projID, docTypes
+  IMPORT_ELN     = (14, 'Importing an ELN file:')                  #keys: fileName, projID
   SEND_REPOSITORY= (15, 'Uploading project to repository:')        #keys: projID, docTypes,repositories,metadata,uploadZenodo
   CHECK_DB       = (16, 'Checking database integrity:')            #keys: style
   OPEN_EXTERNAL  = (17, '')                                        #keys: docID
@@ -456,7 +456,7 @@ class BackendWorker(QObject):
     elif task is Task.OPEN_EXTERNAL and set(data.keys())=={'docID'}:
       doc   = self.backend.db.getDoc(data['docID'])
       if doc['branch'][0]['path'] is None:
-        QMessageBox.critical(None, 'Error', 'This item has no local file.')
+        QMessageBox.critical(None, 'Local file error', 'This item has no local file.')
       else:
         path  = Path(self.backend.basePath)/doc['branch'][0]['path']
         self.beSendTaskReport.emit(task, '', '', str(path))

@@ -240,15 +240,15 @@ class TreeView(QTreeView):
     if event.mimeData().hasUrls():                                                    #file dropped onto pasta
       item = self.model().itemFromIndex(self.indexAt(event.pos()))                # type: ignore[attr-defined]
       if item is None or (item.data()['docType'][0][0]!='x' and item.data()['fPath']!='*'):
-        showMessage(self, 'Error', 'You can drop external files only onto folders or items without a local file.')
+        showMessage(self, 'Drop error', 'You can drop external files only onto folders or items without a local file.')
         return
       # create a list of all items
       items = [url.toLocalFile() for url in event.mimeData().urls()]
       if not items:
-        showMessage(self, 'Error', 'No files or folders were dropped.')
+        showMessage(self, 'Drop error', 'No files or folders were dropped.')
         return
       if item.data()['fPath']=='*' and (len(items)>1 or Path(items[0]).is_dir()):
-        showMessage(self, 'Error', 'You can drop only one file onto an item without a local file.')
+        showMessage(self, 'Drop error', 'You can drop only one file onto an item without a local file.')
         return
       docID = item.data()['hierStack'].split('/')[-1]
       self.comm.uiRequestTask.emit(Task.DROP_EXTERNAL, {'docID':docID, 'items':items,
@@ -267,7 +267,7 @@ class TreeView(QTreeView):
       targetIndex = self.indexAt(event.position().toPoint())
       if self.dropIndicatorPosition() == QAbstractItemView.DropIndicatorPosition.OnItem and \
         (not targetIndex.isValid() or not targetIndex.data(Qt.ItemDataRole.UserRole + 1)['docType'][0].startswith('x')):# this is not a folder but an item with no path
-        QMessageBox.critical(self, 'Error', 'You can drop items only onto folders.')
+        QMessageBox.critical(self, 'Drop error', 'You can drop items only onto folders.')
         return
       if self.dropIndicatorPosition() in (QAbstractItemView.DropIndicatorPosition.AboveItem,
                                           QAbstractItemView.DropIndicatorPosition.BelowItem ):
@@ -277,7 +277,7 @@ class TreeView(QTreeView):
           childIndex = self.model().index(row, 0, targetIndex)
           docIDchild = childIndex.data(Qt.ItemDataRole.UserRole+1)['hierStack'].split('/')[-1]
           if docIDchild == sourceDocID:
-            QMessageBox.critical(self, 'Error', 'You cannot drop this item here because a copy already exists.')
+            QMessageBox.critical(self, 'Drop error', 'You cannot drop this item here because a copy already exists.')
             return
       super().dropEvent(event)
     else:

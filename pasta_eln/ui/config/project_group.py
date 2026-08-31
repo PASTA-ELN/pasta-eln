@@ -72,13 +72,13 @@ class ProjectGroup(QDialog):
     self.directoryLabel = QLabel('label')
     self.directoryLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
     self.formL.addWidget(self.directoryLabel, 1, 0, 1, 2)
-    self.row1Button = Button('', self, [Command.CHANGE_DIR], icon='ri.edit-line', tooltip='Edit data directory', flat=True)
+    self.row1Button = Button('', self, [Command.CHANGE_DIR], icon='ri.edit-line', tooltip='Edit data folder', flat=True)
     self.formL.addWidget(self.row1Button, 1, 3)
 
     self.addOnLabel = QLabel('add-on')
     self.addOnLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
     self.formL.addWidget(self.addOnLabel, 2, 0, 1, 2)
-    self.row2Button = Button('', self, [Command.CHANGE_ADDON], icon='ri.edit-line', tooltip='Edit add-on directory', flat=True)
+    self.row2Button = Button('', self, [Command.CHANGE_ADDON], icon='ri.edit-line', tooltip='Edit add-on folder', flat=True)
     self.formL.addWidget(self.row2Button, 2, 3)
 
     self.formL.addItem(QSpacerItem(0, 5, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed), 3, 0, 1,
@@ -157,16 +157,16 @@ class ProjectGroup(QDialog):
       self.callbackFinished(False)
     elif 'Save' in btn.text() and not self.selectGroup.isHidden():
       if not self.comboboxActive:
-        showMessage(self, 'Error', 'Fill out the data and add-on directories first.')
+        showMessage(self, 'Configuration error', 'Fill out the data and add-on folders first.')
         return
       # all information (excl. storage block) is already in self.configuration saved
       key      = self.selectGroup.currentText()
       config   = self.configuration['projectGroups'][key]
       if config['remote'].get('url','') and config['remote'].get('key','') and not self.projectGroupTested:
-        showMessage(self, 'Error', 'Select and test the storage block successfully first.')
+        showMessage(self, 'Configuration error', 'Select and test the storage block successfully first.')
         return
       if not config['local']['path']:
-        showMessage(self, 'Error', 'The data directory is not set.')
+        showMessage(self, 'Configuration error', 'The data folder is not set.')
         return
       if not config['addOnDir']:
         config['addOnDir'] = Path(__file__).parent.parent/'add_ons'                               #set default
@@ -213,7 +213,7 @@ class ProjectGroup(QDialog):
 
     #cases
     if command[0] is Command.CHANGE_DIR:
-      answer = QFileDialog.getExistingDirectory(self, 'Specify new data directory')
+      answer = QFileDialog.getExistingDirectory(self, 'Select data folder')
       if not answer:
         return
       if [i for i in Path(answer).iterdir() if i.name=='pastaELN.db']:
@@ -223,19 +223,19 @@ class ProjectGroup(QDialog):
         if button == QMessageBox.StandardButton.No:
           return
       elif list(Path(answer).iterdir()):
-        button = QMessageBox.question(self, 'Use non-empty directory?', 'Do you want to use a non-empty directory despite the recommendation?',
+        button = QMessageBox.question(self, 'Use non-empty folder?', 'Do you want to use a non-empty folder despite the recommendation?',
                                       QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                       QMessageBox.StandardButton.No)
         if button == QMessageBox.StandardButton.No:
           return
       config['local']['path'] = answer
-      self.directoryLabel.setText(f'Data directory: {answer}')
+      self.directoryLabel.setText(f'Data folder: {answer}')
 
     elif command[0] is Command.CHANGE_ADDON:
-      answer = QFileDialog.getExistingDirectory(self, 'Specify new add-on directory')
+      answer = QFileDialog.getExistingDirectory(self, 'Select add-on folder')
       if not answer:
         return
-      button = QMessageBox.question(self, 'Copy add-ons?', 'Do you want to copy the add-ons from the old directory (recommended)?',
+      button = QMessageBox.question(self, 'Copy add-ons?', 'Do you want to copy the add-ons from the old folder (recommended)?',
                                     QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                     QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:
@@ -244,7 +244,7 @@ class ProjectGroup(QDialog):
         self.requireHardRestart = True                                      #because python-path has to change
       config['addOnDir'] = answer
       config['addOns'] = {}
-      self.addOnLabel.setText('Add-on directory: ' + config['addOnDir'])
+      self.addOnLabel.setText('Add-on folder: ' + config['addOnDir'])
 
     elif command[0] is Command.TEST_SERVER:
       headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
@@ -267,7 +267,7 @@ class ProjectGroup(QDialog):
 
     elif command[0] is Command.TEST_API_HELP:
       link = f'Go to: {config["remote"]["url"][:-7]}ucp.php?tab=4\n\n' if config['remote'].get('url','') else ''
-      showMessage(self, 'Help', f'### How to get an API key to access the server:\n\n{link}'
+      showMessage(self, 'Help', f'### How to obtain an API key to access the server:\n\n{link}'
                   'On the eLabFTW server:\n\nClick on the User Symbol in the top right\n\nGo to "Settings"\n\n'
                   'Open the tab "API keys"\n\nCreate a new API key:\n\n  a) Specify a name, like "pasta_eln"\n\n  b) '
                   'Change the permissions to "Read/Write"\n\n  c) Click on "Generate new API key"\n\nCopy+Paste that '
@@ -283,13 +283,13 @@ class ProjectGroup(QDialog):
         if res.status_code==200:
           elabVersion = int(json.loads(res.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
           if elabVersion<5:
-            showMessage(self, 'Error', 'Old eLabFTW server installation')
+            showMessage(self, 'Configuration error', 'Old eLabFTW server installation')
           # success
           self.changeButtonOnTest(True, self.row4Button2)
           self.elabApi   = ElabFTWApi(url, config['remote']['key'])
           response = self.elabApi.readEntry('items?q=category%3AProjectGroup&archived=on')
           if not response:
-            showMessage(self, 'Error', 'Please ask your database admin to add your project group or groups.')
+            showMessage(self, 'Configuration error', 'Please ask your database admin to add your project group or groups.')
           self.serverPG = {(i['title'],i['id'],i['canread'],i['canwrite']) for i in response}
           self.serverProjectGroupLabel.clear()
           self.serverProjectGroupLabel.addItems([i[0] for i in self.serverPG])
@@ -319,7 +319,7 @@ class ProjectGroup(QDialog):
       try:
         path.mkdir(parents=True, exist_ok=True)
       except Exception as e:
-        showMessage(self, 'Error', f'Could not create folder {str(path)}.\n\n{str(e)}')
+        showMessage(self, 'Configuration error', f'Could not create folder {str(path)}.\n\n{str(e)}')
 
     elif command[0] is Command.CREATE_QRCODE:
       text   = json.dumps(config['remote'])
@@ -333,8 +333,8 @@ class ProjectGroup(QDialog):
       #
       self.formL.removeWidget(self.selectGroup)
       self.formL.addWidget(self.groupTextField, 0, 0)
-      self.directoryLabel.setText('Data directory: ')
-      self.addOnLabel.setText('Add-on directory: ')
+      self.directoryLabel.setText('Data folder: ')
+      self.addOnLabel.setText('Add-on folder: ')
       self.serverLabel.setText('')
       self.apiKeyLabel.setText('')
       self.image.setPixmap(QPixmap())
@@ -363,8 +363,8 @@ class ProjectGroup(QDialog):
       item (str): name of project group
     """
     config = self.configuration['projectGroups'].get(item, self.emptyConfig)
-    self.directoryLabel.setText('Data directory: ' + config['local'].get('path',''))
-    self.addOnLabel.setText('Add-on directory: ' + config.get('addOnDir',''))
+    self.directoryLabel.setText('Data folder: ' + config['local'].get('path',''))
+    self.addOnLabel.setText('Add-on folder: ' + config.get('addOnDir',''))
     self.serverLabel.setText(config['remote'].get('url', ''))
     if config['remote'].get('key', ''):
       self.apiKeyLabel.setText('--- API key hidden ---')
@@ -387,7 +387,7 @@ class ProjectGroup(QDialog):
       button.setIcon(qta.icon('fa5s.check-square', scale_factor=1))
     else:
       if message:
-        showMessage(self, 'Error', message)
+        showMessage(self, 'Configuration error', message)
       button.setStyleSheet('background: #FF0000')
       button.setText('')
       button.setIcon(qta.icon('fa5.times-circle', scale_factor=1))

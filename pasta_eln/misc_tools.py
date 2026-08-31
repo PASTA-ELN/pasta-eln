@@ -148,7 +148,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   configuration['projectGroups'][projectGroup]['addOns']['extractors'] = extractorsAll
   configuration['projectGroups'][projectGroup]['addOns'] |= otherAddOns
   saveConfiguration(configuration)
-  return {'addon directory':str(directory)} | errors | extractorsAll | otherAddOns
+  return {'addon folder':str(directory)} | errors | extractorsAll | otherAddOns
 
 
 def _moduleKey(modulePath:Path) -> str:

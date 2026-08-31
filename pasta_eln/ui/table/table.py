@@ -69,9 +69,9 @@ class TableView(Widget):
     self.actionButton.setMenu(self.actionMenu)
     self.toggleSelectionAction = action('Toggle selection', self, Command.TOGGLE_SELECTION, self.actionMenu)
     self.actionMenu.addSeparator()
-    self.groupEditAction = action('Group edit', self, Command.GROUP_EDIT, self.actionMenu)
-    self.sequentialEditAction = action('Sequential edit', self, Command.SEQUENTIAL_EDIT, self.actionMenu)
-    self.toggleHiddenAction = action('Hide/show selected', self, Command.TOGGLE_HIDDEN, self.actionMenu)
+    self.groupEditAction = action('Edit group', self, Command.GROUP_EDIT, self.actionMenu)
+    self.sequentialEditAction = action('Edit sequentially', self, Command.SEQUENTIAL_EDIT, self.actionMenu)
+    self.toggleHiddenAction = action('Hide/show selected items', self, Command.TOGGLE_HIDDEN, self.actionMenu)
     self.rerunExtractorsAction = action('Rerun extractors', self, Command.RERUN_EXTRACTORS, self.actionMenu)
     self.deleteAction = action('Remove selected items…', self, Command.DELETE, self.actionMenu)
 
@@ -79,18 +79,18 @@ class TableView(Widget):
     self.viewMenu = QMenu(self)
     self.viewButton.setMenu(self.viewMenu)
     action('Add filter', self, Command.ADD_FILTER, self.viewMenu)
-    self.showHiddenAction = action('Show hidden rows', self, Command.SHOW_HIDDEN, self.viewMenu)
+    self.showHiddenAction = action('Show hidden items', self, Command.SHOW_HIDDEN, self.viewMenu)
     self.galleryAction = action('Gallery view', self, Command.TOGGLE_GALLERY, self.viewMenu)
     self.galleryAction.setVisible(False)
 
     self.moreButton = Button('More', self, layout=self.buttonbarL, icon='ri.more-fill', style=ButtonStyle.PRIMARY)
     self.moreMenu = QMenu(self)
     self.moreButton.setMenu(self.moreMenu)
-    action('Export CSV', self, Command.EXPORT_CSV, self.moreMenu)
+    action('Export list as CSV', self, Command.EXPORT_CSV, self.moreMenu)
     self.moreMenu.addSeparator()
     self.tableAddOnMenu = self.moreMenu.addMenu('Table add-ons')
     self.moreMenu.addSeparator()
-    self.changeColumnsAction = action('Change list columns', self, Command.CHANGE_COLUMNS, self.moreMenu)
+    self.changeColumnsAction = action('Select list columns', self, Command.CHANGE_COLUMNS, self.moreMenu)
     self.paintTableAddOnsMenu()
 
     # Filter rows live directly above the document table.
@@ -211,7 +211,7 @@ class TableView(Widget):
 
     self.galleryAction.setVisible(self.docType.startswith('measurement'))
     self.changeColumnsAction.setVisible(self.docType not in ('-', '_tags_'))
-    self.showHiddenAction.setText('Hide hidden rows' if self.showAll else 'Show hidden rows')
+      self.showHiddenAction.setText('Hide hidden items' if self.showAll else 'Show hidden items')
     self.filterW.setVisible(bool(self.filterRows))
     if self.gallery.isVisible():
       self.paintGallery(documentIds)
@@ -310,7 +310,7 @@ class TableView(Widget):
       if self.gallery.isVisible():
         self.paintGallery(self.modelDocumentIds())
     elif commandType is Command.EXPORT_CSV:
-      fileName = QFileDialog.getSaveFileName(self, 'Export list to CSV', str(Path.home()), '*.csv')[0]
+      fileName = QFileDialog.getSaveFileName(self, 'Export list as CSV', str(Path.home()), '*.csv')[0]
       if not fileName:
         return
       if not fileName.endswith('.csv'):

@@ -54,7 +54,7 @@ class Editor(QDialog):
     self.df1:pd.DataFrame = pd.DataFrame()
     self.terminologyDialog: TerminologyLookupDialog | None = None
     self.setMinimumWidth(1000)
-    self.setWindowTitle('Edit definitions')
+    self.setWindowTitle('Definitions editor')
 
     ### GUI elements
     mainL = QVBoxLayout(self)
@@ -80,12 +80,12 @@ class Editor(QDialog):
     buttonLineL.setSpacing(SPACE.M)
     buttonLineL.setContentsMargins(0, 0, 0, 0)
     mainL.addWidget(buttonLineW)
-    Button('Import', self, Command.IMPORT, buttonLineL, tooltip='Import from CSV')
-    Button('Export', self, Command.EXPORT, buttonLineL, tooltip='Export to CSV')
+    Button('Import CSV file', self, Command.IMPORT, buttonLineL, tooltip='Import definitions from CSV')
+    Button('Export definitions as CSV', self, Command.EXPORT, buttonLineL, tooltip='Export definitions as CSV')
     buttonLineL.addStretch(1)
     projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if 'definition' in projectGroup.get('addOns',{}) and projectGroup['addOns']['definition']:
-      Button('Autofill PURL', self, Command.ADDON, buttonLineL, tooltip='Autofill by using add-on')
+      Button('Autofill PURL', self, Command.ADDON, buttonLineL, tooltip='Autofill PURL using add-on')
       buttonLineL.addStretch(1)
     self.saveBtn = Button('Save', self, Command.SAVE, buttonLineL, tooltip='Save changes',
                           style=ButtonStyle.HIGHLIGHTED)
@@ -124,11 +124,11 @@ class Editor(QDialog):
       command (list): list of commands
     """
     if command is Command.EXPORT:
-      fileName = QFileDialog.getSaveFileName(self, 'Export definitions CSV', str(Path.home()), '*.csv')[0]
+      fileName = QFileDialog.getSaveFileName(self, 'Export definitions as CSV', str(Path.home()), '*.csv')[0]
       if fileName != '':
         self.getDataframe().to_csv(fileName, index=False)
     elif command is Command.IMPORT:
-      fileName = QFileDialog.getOpenFileName(self, 'Import definitions CSV', str(Path.home()), '*.csv')[0]
+      fileName = QFileDialog.getOpenFileName(self, 'Import definitions from CSV', str(Path.home()), '*.csv')[0]
       if fileName != '':
         importedData = pd.read_csv(fileName, dtype=str).fillna('')
         requiredColumns = {'key', 'description', 'PURL', 'defType'}

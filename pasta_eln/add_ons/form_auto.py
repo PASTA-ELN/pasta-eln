@@ -32,7 +32,7 @@ def main(comm, doc, widget, parameter={}):
     if not apiKey:
         return 'API key not provided in parameters. Please configure it in the add-on settings.'
     if not doc['comment']:
-        return 'No comment provided in the document. Please add a comment to expand.'
+        return 'No comment provided in the item. Please add a comment to expand.'
     promptText = f"Expand the following text: '{doc['comment']}'."
     url        = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={apiKey}'
     headers    = {'Content-Type': 'application/json'}

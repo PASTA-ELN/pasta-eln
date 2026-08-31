@@ -39,7 +39,7 @@ class Details(Widget):
     self.titleLabel = Label('', 'h1')
     self.titleLabel.setWordWrap(False)
     self.editButton = Button('Edit', self, Command.EDIT, icon='ri.edit-2-fill', style=ButtonStyle.HIGHLIGHTED)
-    self.openButton = Button('Open', self,               icon='ri.external-link-line', style=ButtonStyle.PRIMARY)
+    self.openButton = Button('View', self,               icon='ri.external-link-line', style=ButtonStyle.PRIMARY)
     self.openMenu = QMenu(self)
     self.openMenu.aboutToShow.connect(self.paintOpenMenu)
     self.openButton.setMenu(self.openMenu)
@@ -198,19 +198,19 @@ class Details(Widget):
     if not self.docID:
       return
     if self.context.origin is DetailOrigin.TABLE:
-      addAction('Open in project', self, Command.OPEN_PROJECT, self.openMenu)
+      addAction('View in project', self, Command.OPEN_PROJECT, self.openMenu)
     elif self.context.origin is DetailOrigin.PROJECT and not self.data['type'][0].startswith('x'):
-      addAction('Open in list', self, Command.OPEN_LIST, self.openMenu)
+      addAction('View in list', self, Command.OPEN_LIST, self.openMenu)
     elif self.context.origin is DetailOrigin.LINK:
       if not self.data['type'][0].startswith('x'):
-        addAction('Open in list', self, Command.OPEN_LIST, self.openMenu)
-      addAction('Open in project', self, Command.OPEN_PROJECT, self.openMenu)
+        addAction('View in list', self, Command.OPEN_LIST, self.openMenu)
+      addAction('View in project', self, Command.OPEN_PROJECT, self.openMenu)
     sourcePath = self.sourcePath()
     if sourcePath is not None:
       self.openMenu.addSeparator()
       if sourcePath.is_file():
-        addAction('Open file with another application', self, Command.OPEN_EXTERNAL, self.openMenu)
-      addAction('Open folder in file browser', self, Command.OPEN_FOLDER, self.openMenu)
+        addAction('Open file in another application', self, Command.OPEN_EXTERNAL, self.openMenu)
+        addAction('Open folder in file browser', self, Command.OPEN_FOLDER, self.openMenu)
 
 
   def paintActionsMenu(self) -> None:
@@ -235,7 +235,7 @@ class Details(Widget):
     extractionMenu.addSeparator()
     addAction('Test extraction',        self, Command.TEST_EXTRACTION,      extractionMenu)
     if 'image' in self.data and self.sourcePath() is not None:
-      addAction('Save extracted image', self, Command.SAVE_EXTRACTED_IMAGE, extractionMenu)
+      addAction('Save image', self, Command.SAVE_EXTRACTED_IMAGE, extractionMenu)
     self.actionsMenu.addSeparator()
     addAction('Hide item', self,     Command.HIDE_ITEM,    self.actionsMenu)
     addAction('Close details', self, Command.HIDE_DETAILS, self.actionsMenu)

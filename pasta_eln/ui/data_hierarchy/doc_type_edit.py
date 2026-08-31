@@ -77,16 +77,16 @@ class DocTypeEditor(QDialog):
     if self.initialData is None:
       return
     self.row1 = QLineEdit(self.initialData[0])
-    self.row1.setToolTip('Name of item type: lower case letters only. Must be unique')
+    self.row1.setToolTip('Name of item type: lower case letters only. Must be unique.')
     if self.docType:
       self.row1.setDisabled(True)
     else:
       self.row1.setValidator(QRegularExpressionValidator(r'(^[a-wyz][\w\/]{3,}$)'))
-    self.mainForm.addRow(QLabel('Item type name '), self.row1)
+    self.mainForm.addRow(QLabel('Item type name'), self.row1)
 
     self.row2 = QLineEdit(self.initialData[2])
-    self.row2.setToolTip('Display label shown to users. Start with an uppercase letter and end with s, as in "Samples".')
-    self.mainForm.addRow(QLabel('Display label '), self.row2)
+    self.row2.setToolTip('Label shown to users. Start with an uppercase letter and end with s, as in "Samples".')
+    self.mainForm.addRow(QLabel('Display label'), self.row2)
 
     row3W = QWidget(self)
     row3L = QHBoxLayout(row3W)
@@ -105,7 +105,7 @@ class DocTypeEditor(QDialog):
     row3L.addWidget(self.comboIcon)
     if self.docType.startswith('x'):
       self.comboIcon.setDisabled(True)
-    self.mainForm.addRow(QLabel('Icon '), row3W)
+    self.mainForm.addRow(QLabel('Icon'), row3W)
 
     self.row4 = QLineEdit(self.initialData[4])
     self.row4.setToolTip('One-letter shortcut used with Ctrl+. Must be unique and cannot be T or U.')
@@ -114,7 +114,7 @@ class DocTypeEditor(QDialog):
     else:
       dataSet = set(string.ascii_lowercase).difference(self.shortcuts).difference(reservedDocTypeShortcuts)
       self.row4.setValidator(QRegularExpressionValidator(f'^[{"".join(dataSet)}]$'))
-    self.mainForm.addRow(QLabel('Shortcut '), self.row4)
+    self.mainForm.addRow(QLabel('Shortcut'), self.row4)
 
 
   def closeDialog(self, save:bool) -> None:
@@ -128,7 +128,7 @@ class DocTypeEditor(QDialog):
     else:
       label    = self.row2.text()
       if not label or label in [v['title'] for _,v in self.comm.docTypesTitles.items()]:
-        showMessage(self, 'Error', 'The display label is required and must be unique.', 'Critical')
+        showMessage(self, 'Item type error', 'The display label is required and must be unique.', 'Critical')
         return
       icon     = '' if self.docType.startswith('x') else self.comboIcon.currentText()
       shortcut = '' if self.docType.startswith('x') else self.row4.text()
@@ -140,7 +140,7 @@ class DocTypeEditor(QDialog):
       else:                                                  # create new docType, with default schema entries
         docType = self.row1.text()
         if not docType or docType in self.comm.docTypesTitles:
-          showMessage(self, 'Error', 'Item type name is not valid or already exists', 'Critical')
+          showMessage(self, 'Item type error', 'Item type name is not valid or already exists.', 'Critical')
           return
         self.comm.uiSendSQL.emit([{'type':'one', 'cmd':'INSERT INTO docTypes VALUES (?, ?, ?, ?, ?, ?)',
                                    'list':[docType, '', label, icon, shortcut, '']},

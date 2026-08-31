@@ -107,7 +107,7 @@ class Project(Widget):
       self.mainL.addWidget(self.tree)
       return
     if self.hierarchy.name == '__ERROR_in_getHierarchy__':
-      showMessage(self, 'Error', 'There is an error in the project hierarchy: a parent of a node is incorrect.', 'Critical')
+      showMessage(self, 'Project hierarchy error', 'There is an error in the project hierarchy: a parent of a node is incorrect.', 'Critical')
       return
     for node in PreOrderIter(self.hierarchy, maxlevel=2):
       if node is None or node.is_root:                                                        # Project header
@@ -145,9 +145,9 @@ class Project(Widget):
     topLineL.setSpacing(SPACE.M)
     topLineL.setContentsMargins(0, 0, 0, 0)
     self.mainL.addWidget(topLineW)
-    hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
+    hidden, menuTextHidden = ('     \U0001F441', 'Show project') \
                        if [b for b in self.docProj['branch'] if False in b['show']] else \
-                       ('', 'Mark project as hidden')
+                       ('', 'Hide project')
     topLineL.addWidget(Label(self.docProj['name']+hidden, 'h2'))
     showStatus = '(All items shown)' if self.showAll else '(Hidden items not shown)'
     topLineL.addWidget(QLabel(showStatus))
@@ -160,7 +160,7 @@ class Project(Widget):
     visibilityMenu = QMenu(self)
     self.actHideDetail = action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
     menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
-    minimizeItems = 'Show full view' if self.showDetailsAll else 'Compact view'
+    minimizeItems = 'Full view' if self.showDetailsAll else 'Compact view'
     action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
     action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
     self.actionFoldAll     = action( minimizeItems,    self, [Command.SHOW_DETAILS],     visibilityMenu)
@@ -169,7 +169,8 @@ class Project(Widget):
                           icon='ri.more-fill', style=ButtonStyle.PRIMARY)
     moreMenu = QMenu(self)
     action('Edit project',              self, Command.EDIT,            moreMenu, icon='ri.edit-2-fill')
-    action('Scan',                      self, Command.SCAN,            moreMenu, icon='fa5s.search')
+    action('Scan project',              self, Command.SCAN,            moreMenu, icon='fa5s.search')
+    # “Details” is the name of the Details pane; keep its capitalization here.
     action('Show project in Details',   self, Command.SHOW_IN_DETAILS, moreMenu, icon='ri.information-line')
     projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
@@ -223,7 +224,7 @@ class Project(Widget):
         if item is not None and item.data()['docType'][0].startswith('x'):
           selectedFolder = item.data()['hierStack'].split('/')[-1]
       current = next((index for index, node in enumerate(folders) if node.id == selectedFolder), 0)
-      label, accepted = QInputDialog.getItem(self, 'Import files', 'Destination folder:', labels, current, False)
+      label, accepted = QInputDialog.getItem(self, 'Import files', 'Destination folder', labels, current, False)
       if accepted:
         folder = folders[labels.index(label)]
         self.comm.uiRequestTask.emit(Task.DROP_EXTERNAL,
@@ -278,7 +279,7 @@ class Project(Widget):
       recursiveRowIteration(self.tree.model().index(-1,0))
       self.showDetailsAll = not self.showDetailsAll
       if self.showDetailsAll:
-        self.actionFoldAll.setText('Show full view')
+        self.actionFoldAll.setText('Full view')
       else:
         self.actionFoldAll.setText('Compact view')
     elif commandType is Command.HIDE_SHOW_ITEMS:

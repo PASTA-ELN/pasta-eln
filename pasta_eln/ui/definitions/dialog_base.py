@@ -93,7 +93,7 @@ class Ui_TerminologyLookupDialogBase:
   def retranslateUi(self, TerminologyLookupDialogBase):
     _translate = QtCore.QCoreApplication.translate
     TerminologyLookupDialogBase.setWindowTitle(_translate('TerminologyLookupDialogBase', 'Terminology lookup'))
-    self.terminologyLineEdit.setPlaceholderText(_translate('TerminologyLookupDialogBase', 'Search terms in wikis and ontologies'))
+    self.terminologyLineEdit.setPlaceholderText(_translate('TerminologyLookupDialogBase', 'Search wikis and ontologies'))
     self.terminologySearchPushButton.setText(_translate('TerminologyLookupDialogBase', 'Search'))
     self.errorConsoleBtn.setText(_translate('TerminologyLookupDialogBase', 'Hide/show errors'))
 

@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Commandline utility to admin local installation and convert from Pasta-ELN version 2"""
+"""Command-line utility to administer a local installation and convert from PASTA-ELN version 2."""
 import json
 import os
 import platform
@@ -17,7 +17,7 @@ from pasta_eln.text_tools.string_changes import outputString
 
 
 class Tools:
-  """Commandline utility to admin local installation and convert from Pasta-ELN version 2"""
+  """Command-line utility to administer a local installation and convert from PASTA-ELN version 2."""
 
 
   def __init__(self) -> None:
@@ -31,7 +31,7 @@ class Tools:
     Args:
       command (str): command
     """
-    helpString = 'Command line program to troubleshoot and possibly repair Pasta-ELN database\n'\
+    helpString = 'Command line program to troubleshoot and possibly repair the PASTA-ELN database\n'\
                 'Commands - general:\n'\
                 '  [h]elp: long help\n'\
                 '  [q]uit\n'
@@ -77,8 +77,8 @@ class Tools:
       self.createLostAndFound()
 
     helpString += 'Commands - clone from / to server:\n'
-    helpString += '  [ss]ync SEND ALL\n'
-    helpString += '  [sg]ync GET ALL\n'
+    helpString += '  [ss]ync UPLOAD ALL\n'
+    helpString += '  [sg]ync DOWNLOAD ALL\n'
     if command in {'ss','sg'}:
       self.sync('', command)
     helpString += '  [pL]urge local database: REMOVE EVERYTHING\n'

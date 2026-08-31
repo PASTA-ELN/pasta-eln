@@ -38,7 +38,7 @@ def genericHash(path:Path, forceFile:bool=False) -> str:
       logging.error('Could not download content / hashing issue %s',path.as_posix().replace(':/','://'), exc_info=True)
       return ''
   if path.is_dir():
-    raise ValueError(f'This seems to be a directory {path.as_posix()}')
+    raise ValueError(f'This seems to be a folder: {path.as_posix()}')
   if forceFile and path.is_symlink():
     path = path.resolve()
   shasum = ''

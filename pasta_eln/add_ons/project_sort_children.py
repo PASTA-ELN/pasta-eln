@@ -6,7 +6,7 @@ from pasta_eln.backend_worker.worker import Task
 from pasta_eln.misc_tools import getHierarchy
 
 # The following two variables are mandatory
-description  = 'Sort children'  #short description that is shown in the menu
+description  = 'Sort child items'  # short description shown in the menu
 reqParameter = {} #possibility for required parameters: like API-key, etc. {'API': 'text'}
 
 

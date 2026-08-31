@@ -50,7 +50,7 @@ class ConfigurationSetup(QWidget):
     footerL = QHBoxLayout()
     footerL.setContentsMargins(SPACE.L, SPACE.M, SPACE.L, 0)
     self.mainL.addLayout(footerL)
-    self.button1 = Button('Install or repair', self, [Command.ANALYSE], footerL,
+    self.button1 = Button('Install & repair', self, [Command.ANALYSE], footerL,
                           style=ButtonStyle.HIGHLIGHTED)
     self.button2 = Button('Finish setup', self, [Command.FINISHED], footerL,
                           style=ButtonStyle.HIGHLIGHTED)
@@ -79,12 +79,12 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration of preferences is acceptable' )
         self.text.setText(self.mainText)
       else:
-        dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
+        dirName = QFileDialog.getExistingDirectory(self, 'Select data folder', str(Path.home()))
         if not dirName:
-          self.mainText = self.mainText.replace('- Configuration of preferences', '- Configuration: no data directory selected')
+          self.mainText = self.mainText.replace('- Configuration of preferences', '- Configuration: no data folder selected')
           self.text.setText(self.mainText)
         elif list(Path(dirName).iterdir()):
-          button = QMessageBox.question(self, 'Remove all content?', 'Directory is not empty. Do you want to remove all content?',
+          button = QMessageBox.question(self, 'Remove all content?', 'Folder is not empty. Do you want to remove all content?',
                                         QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                         QMessageBox.StandardButton.No)
           if button == QMessageBox.StandardButton.Yes:
@@ -111,9 +111,9 @@ class ConfigurationSetup(QWidget):
       if button == QMessageBox.StandardButton.Yes:
         self.progressBar.show()
         exampleData(True, self.callbackProgress)
-        self.mainText = self.mainText.replace('- Example data', '- Example data was added')
+        self.mainText = self.mainText.replace('- Example project', '- Example project was added')
       else:
-        self.mainText = self.mainText.replace('- Example data', '- Example data was not added')
+        self.mainText = self.mainText.replace('- Example project', '- Example project was not added')
       self.text.setText(self.mainText)
       #at end
       self.button1.hide()

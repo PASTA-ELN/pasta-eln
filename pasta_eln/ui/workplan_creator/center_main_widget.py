@@ -53,7 +53,7 @@ class CenterMainWidget(QWidget):
     self.mainLayout = QGridLayout()
     self.mainLayout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
     color = self.comm.palette.getThemeColor('foreground', 'disabled')
-    self.mainLayout.addWidget(Label('Choose a procedure on the left side to begin.', 'h1', style=f"color: {color};"), 0, 0)
+    self.mainLayout.addWidget(Label('Select a procedure on the left side to begin.', 'h1', style=f"color: {color};"), 0, 0)
     self.setLayout(self.mainLayout)
 
   def changeActiveProcedure(self, toProcedure: str, sample: str | None = None, parameters: dict[str, str] | None = None,# pylint: disable=missing-param-doc
@@ -108,9 +108,9 @@ class CenterMainWidget(QWidget):
       self.formFrame.setFrameShape(QFrame.Shape.Panel)
       self.formFrame.setLayout(self.parameterForm)
       self.formScrollArea.setWidget(self.formFrame)
-      self.parameterForm.addRow(Label('Choose sample:', 'h2'))
+      self.parameterForm.addRow(Label('Select sample:', 'h2'))
       self.parameterForm.addRow(self.sampleBox)
-      self.parameterForm.addRow(Label('Choose parameters:', 'h2'))
+      self.parameterForm.addRow(Label('Select parameters:', 'h2'))
       self.mainLayout.addWidget(self.formScrollArea, 2, 1, 3, 1)
       self.comm.storageUpdated.connect(self._onProcedureTextUpdated)
       # Add-Button

@@ -1,4 +1,4 @@
-"""Input and output functions towards the .eln file-format"""
+"""Input and output functions towards the ELN file format."""
 import copy
 import hashlib
 import json
@@ -21,7 +21,7 @@ from ..text_tools.string_changes import camelCase
 from .backend import Backend
 from .html_string import htmlEnd, htmlStart, importantKeys
 
-# .eln file: common between all ELNs
+# ELN file: common between all ELNs
 # - can be exported / imported generally; not a 1:1 backup (just zip it)
 # - should be able to recreate the exported -> imported data (using the common addDoc)
 # - externalID is the only content that cannot be recreated
@@ -102,9 +102,9 @@ def validate(elnFile:ZipFile) -> bool:
     else:
       rootFolders.add(path.parts[0])
   if entriesOutsideRoot:
-    return fail(f'.eln archive entries are outside the root folder: {sorted(entriesOutsideRoot)}')
+    return fail(f'ELN archive entries are outside the root folder: {sorted(entriesOutsideRoot)}')
   if len(rootFolders) != 1:
-    return fail(f'.eln archive must contain exactly one root folder: {sorted(rootFolders)}')
+    return fail(f'ELN archive must contain exactly one root folder: {sorted(rootFolders)}')
 
   dirName = next(iter(rootFolders))
   metadataPath = f'{dirName}/{metadataFile}'
@@ -154,7 +154,7 @@ def validate(elnFile:ZipFile) -> bool:
 
 def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[str,Any]]:
   '''
-  import .eln file from other ELN or from PASTA
+  import ELN file from other ELN or from PASTA
 
   Args:
     backend (backend): backend
@@ -170,7 +170,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
     elnFile = ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED)
   except Exception as error:
     logging.error('Cannot open import archive %s', elnFileName, exc_info=True)
-    return f'Cannot open .eln archive: {error}', statistics
+    return f'Cannot open ELN archive: {error}', statistics
   with elnFile:
     if not validate(elnFile):
       return 'RO-Crate is invalid and cannot be processed.', {}
@@ -376,7 +376,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
   #return to home stack and path
   backend.cwd = Path(backend.basePath)
   backend.hierStack = []
-  return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName}', statistics
+  return f'Success: imported {str(addedDocuments)} items from file {elnFileName} from ELN {elnName}', statistics
 
 
 
