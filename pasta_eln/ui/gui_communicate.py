@@ -34,7 +34,8 @@ class Communicate(QObject):
   uiRequestDataHierarchy= Signal(str)           # get all entries in the data hierarchy for this docType
   uiRequestTable        = Signal(str, str, bool)# table: send docType, projectID, showAll to backend to get table
   uiRequestHierarchy    = Signal(str, bool)     # send project ID to backend
-  uiRequestDoc          = Signal(str)           # request doc
+  uiRequestDoc           = Signal(str)          # request doc
+  uiRequestRelationships = Signal()             # request project-group relationship graph
   uiRequestTask         = Signal(Task, dict)    # request to execute a task
   uiSendSQL             = Signal(list)          # request to execute SQL commands directly
   # signals that are emitted from this comm that data changed
@@ -88,6 +89,7 @@ class Communicate(QObject):
       self.uiRequestTable.connect(self.backendThread.worker.returnTable)
       self.uiRequestHierarchy.connect(self.backendThread.worker.returnHierarchy)
       self.uiRequestDoc.connect(self.backendThread.worker.returnDoc)
+      self.uiRequestRelationships.connect(self.backendThread.worker.returnRelationships)
       self.uiRequestTask.connect(self.backendThread.worker.returnTaskReport)
       self.uiSendSQL.connect(self.backendThread.worker.executeSQL)
 

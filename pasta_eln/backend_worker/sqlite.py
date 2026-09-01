@@ -16,7 +16,7 @@ import pandas as pd
 from anytree import Node
 from PIL import Image
 from ..fixed_strings_json import SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema
-from ..misc_tools import hierarchy
+from ..misc_tools import hierarchy, isDocID
 from ..text_tools.string_changes import camelCase, createDirName, outputString, tracebackString
 from .extractor import sha256File
 
@@ -280,6 +280,28 @@ class SqlLiteDB:
                 ) for i in res}
     doc |= hierarchy(metadataFlat)
     return doc
+
+
+  def getRelationships(self) -> dict[str, Any]:
+    """Return the project-group documents and their relationship edges."""
+    self.connection.row_factory = sqlite3.Row
+    cursor = self.connection.cursor()
+    cursor.execute('SELECT id, name, type FROM main')
+    nodes = [{'id': row['id'], 'name': row['name'], 'type': row['type'].split('/')[0]} for row in cursor.fetchall()]
+    nodeIDs = {node['id'] for node in nodes}
+    edges: list[dict[str, str]] = []
+    cursor.execute('SELECT id, stack FROM branches')
+    for row in cursor.fetchall():
+      chain = [item for item in row['stack'].split('/') if item] + [row['id']]
+      edges.extend({'source': parent, 'target': child, 'kind': 'hierarchy'}
+                   for parent, child in zip(chain, chain[1:]) if parent in nodeIDs and child in nodeIDs)
+    cursor.execute('SELECT id, value FROM properties')
+    edges.extend({'source': row['id'], 'target': row['value'], 'kind': 'link'}
+                 for row in cursor.fetchall() if isDocID(row['value']) and row['value'] in nodeIDs)
+    projectIDs = [node['id'] for node in nodes if node['type'] == 'x0']
+    nodes.insert(0, {'id': '__project_group__', 'name': self.basePath.name or 'Project group', 'type': 'group'})
+    edges.extend({'source': '__project_group__', 'target': projectID, 'kind': 'hierarchy'} for projectID in projectIDs)
+    return {'nodes': nodes, 'edges': edges}
 
 
   def saveDoc(self, doc:dict[str,Any]) -> dict[str,Any]:

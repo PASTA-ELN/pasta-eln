@@ -14,9 +14,10 @@ from pasta_eln.text_tools.string_changes import createDirName
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.details.details_hier_item import DetailsHierItem
 from pasta_eln.ui.details.resize_image import ResizeImage
+from pasta_eln.ui.details.relationship_view import RelationshipView
 from pasta_eln.ui.gui_actions import action as addAction
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, Label, Widget
+from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, CollapsibleSection, Label, Widget
 from pasta_eln.ui.palette import nameColor
 
 
@@ -70,6 +71,9 @@ class Details(Widget):
     self.contentPreviewL.setContentsMargins(0, 0, 0, 0)
     self.contentPreviewW = QWidget()
     self.contentPreviewW.setLayout(self.contentPreviewL)
+    self.relationshipView = RelationshipView(self.comm, self)
+    self.relationshipSection = CollapsibleSection('Relationships', self.relationshipView, expanded=False, outlined=True)
+    self.relationshipSection.toggle.clicked.connect(self.requestRelationships)
 
     # Body (Shows all the details of the current item)
     self.bodyL = QVBoxLayout()
@@ -116,6 +120,13 @@ class Details(Widget):
       self.paint()
 
 
+  @Slot()
+  def requestRelationships(self) -> None:
+    """Request relationship data when the section is expanded."""
+    if self.docID and self.relationshipView.isVisible():
+      self.comm.uiRequestRelationships.emit()
+
+
   def paint(self) -> None:
     """
     Fill in the things that change between displaying different items
@@ -155,6 +166,7 @@ class Details(Widget):
     # clear old items
     self.contentText = None
     clearLayout(self.contentPreviewL)
+    self.bodyL.removeWidget(self.relationshipSection)
     clearLayout(self.bodyL)
     self.contentPreviewW.hide()
     # Init the collapsible Items that contain all the details
@@ -192,6 +204,7 @@ class Details(Widget):
       self.bodyL.addWidget(userItem)
     if vendorItem.content:
       self.bodyL.addWidget(vendorItem)
+    self.bodyL.addWidget(self.relationshipSection)
     if elnItem.content:
       self.bodyL.addWidget(elnItem)
     self.bodyL.addStretch(0)
@@ -339,9 +352,11 @@ class Details(Widget):
     self.context = context
     if context.docID:
       self.docID = context.docID
+      self.relationshipView.setRootID(self.docID)
       self.comm.uiRequestDoc.emit(self.docID)
     else:
       self.docID = ''
+      self.relationshipView.setRootID('')
       self.hide()
 
   def showEvent(self, event: QShowEvent) -> None:

@@ -67,6 +67,7 @@ class BackendWorker(QObject):
   beSendTable             = Signal(pd.DataFrame, str)   # all tables
   beSendHierarchy         = Signal(Node, dict)
   beSendDoc               = Signal(dict)
+  beSendRelationships     = Signal(dict)
   beSendTaskReport        = Signal(Task, str, str, str)       # task, report, image, path
   beSendProgress          = Signal(str, str)
   beSendSQL               = Signal(str, pd.DataFrame)
@@ -145,6 +146,13 @@ class BackendWorker(QObject):
       doc = self.backend.db.getDoc(docID)
       expandDocID2tupleInDict(doc, self.backend.db)
       self.beSendDoc.emit(doc)
+
+
+  @Slot()
+  def returnRelationships(self) -> None:
+    """Return all relationship data for the active project group."""
+    if self.backend is not None:
+      self.beSendRelationships.emit(self.backend.db.getRelationships())
 
 
   @Slot(Task, dict)
