@@ -7,6 +7,7 @@ from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot
 from ..backend_worker.worker import BackendThread, Task
 from ..misc_tools import getConfiguration
+from ..configuration_file import saveConfiguration
 from .palette import Palette
 from .wait_dialog import WaitDialog, Worker
 
@@ -168,3 +169,13 @@ class Communicate(QObject):
       self.waitDialog.setFixedHeight(100)
       self.waitDialog.progressBar.setRange(0, 0)  # Indeterminate
     self.waitDialog.show()
+
+
+  def saveUIState(self, **changes: Any) -> None:
+    """Update and persist global GUI state.
+
+    Args:
+      **changes: State keys and their new values to merge into ``uiState``.
+    """
+    self.configuration.setdefault('uiState', {}).update(changes)
+    saveConfiguration(self.configuration)

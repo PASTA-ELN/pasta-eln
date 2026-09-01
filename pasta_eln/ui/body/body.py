@@ -116,7 +116,7 @@ class Body(QWidget):
   @Slot()
   def resizeDetailsSplitter(self) -> None:
     """Set the details sidebar to the configured width after it becomes visible."""
-    detailsWidth = int(self.comm.configuration['GUI']['detailsWidth'])
+    detailsWidth = int(self.comm.configuration['uiState']['detailsWidth'])
     self.splitter.setSizes([self.splitter.width() - detailsWidth, detailsWidth])
 
 

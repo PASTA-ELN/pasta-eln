@@ -116,11 +116,13 @@ class MainWindow(QMainWindow):
     self.sidebar = ProjectSidebar(self.comm)                                            # sidebar with buttons
     self.splitter.addWidget(self.sidebar)
     self.splitter.addWidget(self.body)
+    self.splitter.splitterMoved.connect(self.onMainSplitterMoved)
+    self.body.splitter.splitterMoved.connect(self.onDetailsSplitterMoved)
 
     self.paint()
     def _resizeSplitter() -> None:
       """Restore the sidebar width from the GUI configuration."""
-      sidebarWidth = self.comm.configuration['GUI']['sidebarWidth']
+      sidebarWidth = self.comm.configuration['uiState']['sidebarWidth']
       self.splitter.setSizes([sidebarWidth, self.splitter.width() - sidebarWidth])
     QTimer.singleShot(0, _resizeSplitter)
 
@@ -142,6 +144,16 @@ class MainWindow(QMainWindow):
     for name in self.comm.configuration['projectGroups'].keys():
       action(name, self, [Command.CHANGE_PG, name], self.changeProjectGroups)
     return
+
+
+  def onMainSplitterMoved(self, _position: int, _index: int) -> None:
+    """Persist the global sidebar width after it is resized."""
+    self.comm.saveUIState(sidebarWidth=self.splitter.sizes()[0])
+
+
+  def onDetailsSplitterMoved(self, _position: int, _index: int) -> None:
+    """Persist the global details-pane width after it is resized."""
+    self.comm.saveUIState(detailsWidth=self.body.splitter.sizes()[1])
 
 
   def paintProjectActions(self) -> None:

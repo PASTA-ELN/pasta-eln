@@ -28,7 +28,7 @@ class ProjectSidebar(Widget):
     self.comm = comm
     self.projects = pd.DataFrame()
     self._initialProjectSelected = False
-    self.showHiddenProjects = self.comm.configuration['GUI']['showHidden'] == 'Yes'
+    self.showHiddenProjects = self.comm.configuration['uiState']['showHiddenProjects']
 
     # Header: project label and button
     self.headerLabel = Label('Projects', 'h2')
@@ -147,6 +147,7 @@ class ProjectSidebar(Widget):
     """Handle commands emitted by the sidebar controls."""
     if command is Command.TOGGLE_HIDDEN_PROJECTS:
       self.showHiddenProjects = not self.showHiddenProjects
+      self.comm.saveUIState(showHiddenProjects=self.showHiddenProjects)
       self.showHiddenBtn.setChecked(self.showHiddenProjects)
       self.paintHiddenProjectButton()
       self.paint()

@@ -9,7 +9,7 @@ import keyring
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox
-from .fixed_strings_json import configurationGUI
+from .fixed_strings_json import configurationGUI, defaultScanExcludePatterns, defaultUIState
 
 CONFIGURATION_FILE_NAME = '.pastaELN.json'
 CONFIGURATION_VERSION = 4
@@ -120,7 +120,11 @@ def loadConfiguration(fileName:Path|None=None) -> dict[str, Any]:
       gui.pop('maxProjectLeafHeight', None)
     for section in configurationGUI.values():
       for key, value in section.items():
+        if key == 'scanExcludePatterns':
+          continue
         gui.setdefault(key, value[1])
+    configuration.setdefault('uiState', dict(defaultUIState))
+    configuration.setdefault('scanExcludePatterns', list(defaultScanExcludePatterns))
     # Update version
     configuration['version'] = CONFIGURATION_VERSION
     saveConfiguration(configuration, fileName)

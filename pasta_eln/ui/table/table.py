@@ -44,7 +44,7 @@ class TableView(Widget):
     self.docType = docType
     self.data = pd.DataFrame()                                               # raw data received from database
     self.tableData = pd.DataFrame()                                             # data to display in the table
-    self.showAll = self.comm.configuration['GUI']['showHidden'] == 'Yes'
+    self.showAll = self.comm.configuration['uiState']['showHiddenListItems']
     self.filterRows: list[FilterRow] = []
     self.detailsDocID = ''
     self.reloadComboBoxFlag = True                           # prevent combobox reloads after sub-type changes
@@ -312,6 +312,7 @@ class TableView(Widget):
       self.paint()
     elif commandType is Command.SHOW_HIDDEN:
       self.showAll = not self.showAll
+      self.comm.saveUIState(showHiddenListItems=self.showAll)
       self.refresh()
     elif commandType is Command.TOGGLE_GALLERY:
       self.gallery.setVisible(not self.gallery.isVisible())

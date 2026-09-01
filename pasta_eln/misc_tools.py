@@ -30,7 +30,7 @@ from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QLayout, QWidget
 import pasta_eln
 from .configuration_file import CONFIGURATION_VERSION, loadConfiguration, saveConfiguration
-from .fixed_strings_json import configurationGUI, defaultConfiguration
+from .fixed_strings_json import configurationGUI, defaultConfiguration, defaultScanExcludePatterns, defaultUIState
 
 
 class Bcolors:
@@ -424,8 +424,14 @@ def getConfiguration(defaultProjectGroup:str='') -> tuple[dict[str, Any],str]:
     pass
   for _, items in configurationGUI.items():
     for k,v in items.items():
+      if k == 'scanExcludePatterns':
+        continue
       if k not in configuration['GUI']:
         configuration['GUI'][k] = v[1]
+  uiState = configuration.setdefault('uiState', copy.deepcopy(defaultUIState))
+  for key, value in defaultUIState.items():
+    uiState.setdefault(key, value)
+  configuration.setdefault('scanExcludePatterns', list(defaultScanExcludePatterns))
   if configuration['version'] != CONFIGURATION_VERSION:
     print(f'**Info: configuration file does not exist or version is != {CONFIGURATION_VERSION}')
     return {},''

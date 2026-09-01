@@ -1,5 +1,6 @@
 """ Python Backend: all operations with the filesystem are here """
 import json
+import fnmatch
 import logging
 import os
 import sys
@@ -330,6 +331,7 @@ class Backend(CliMixin):
     filesCountSum = sum(len(files) for (_, _, files) in os.walk(self.cwd))
     filesCount = 0
     ignoredFolders = []
+    excludePatterns = self.configuration.get('scanExcludePatterns', [])
     extractorJobs:list[dict[str,Any]] = []
     for root, dirs, files in os.walk(self.cwd, topdown=True):
       #find parent-document
@@ -346,11 +348,11 @@ class Backend(CliMixin):
       parentDoc = self.db.getDoc(parentID)
       hierStack = parentDoc['branch'][0]['stack']+[parentID]
       # handle directories and prevent going into them if they should be ignored.
+      excludedDirs = [i for i in dirs if any(fnmatch.fnmatch(i, pattern) for pattern in excludePatterns)]
+      dirs[:] = [i for i in dirs if i not in excludedDirs]
+      ignoredFolders += [(Path(root)/i).relative_to(self.basePath).as_posix() for i in excludedDirs]
       ignoredFolders += [(Path(root)/i).relative_to(self.basePath).as_posix()
                          for i in dirs if (Path(root)/i/'.pastaELN_ignore').is_file()]
-      dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i not in ('__pycache__')
-                 and not (Path(root)/i/'pyvenv.cfg').is_file()
-                 and not (Path(root)/i/'.pastaELN_ignore').is_file()]
       for dirName in dirs[::-1]:                                                     # sorted forward in Linux
         path = (Path(root)/dirName).relative_to(self.basePath).as_posix()
         if path in pathsInDbX:                                                      # path already in database
@@ -398,7 +400,8 @@ class Backend(CliMixin):
         filesCount += 1
         if progressBar is not None:
           progressBar(int(100*filesCount/filesCountSum))
-        if fileName.startswith(('.', 'trash_')) or isPastaExport(Path(root)/fileName):
+        if (any(fnmatch.fnmatch(fileName, pattern) for pattern in excludePatterns)
+            or isPastaExport(Path(root)/fileName)):
           continue
         path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
         if path in pathsInDbData:

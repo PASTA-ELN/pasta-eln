@@ -81,5 +81,22 @@ class TestIgnoreMarker(unittest.TestCase):
     self.assertNotIn('**ERROR', self.backend.checkDB(outputStyle='text'))
 
 
+  def test_configured_exclusions_skip_matching_tree_items(self):
+    self.backend.configuration['scanExcludePatterns'] = ['excluded', '*.tmp']
+    excludedPath = self.projectPath/'excluded'
+    excludedPath.mkdir()
+    (excludedPath/'inside.txt').write_text('ignored', encoding='utf-8')
+    (self.projectPath/'keep.tmp').write_text('ignored', encoding='utf-8')
+    (self.projectPath/'keep.txt').write_text('included', encoding='utf-8')
+
+    self.backend.scanProject(None, self.projectID)
+
+    paths = [i['key'] for i in self.backend.db.getView('viewHierarchy/viewPathsAll')]
+    self.assertNotIn(excludedPath.relative_to(self.backend.basePath).as_posix(), paths)
+    self.assertNotIn((excludedPath/'inside.txt').relative_to(self.backend.basePath).as_posix(), paths)
+    self.assertNotIn((self.projectPath/'keep.tmp').relative_to(self.backend.basePath).as_posix(), paths)
+    self.assertIn((self.projectPath/'keep.txt').relative_to(self.backend.basePath).as_posix(), paths)
+
+
 if __name__ == '__main__':
   unittest.main()

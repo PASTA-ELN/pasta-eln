@@ -108,8 +108,10 @@ class TestConfigSecrets(unittest.TestCase):
     self.fileName.write_text(json.dumps(legacy), encoding='utf-8')
     migrated = configurationWithSecrets(4)
     migrated['GUI'] = {key: value[1] for section in configuration_file.configurationGUI.values()
-                       for key, value in section.items()}
+                       for key, value in section.items() if key != 'scanExcludePatterns'}
     migrated['GUI']['projectItemHeight'] = 300
+    migrated['uiState'] = dict(configuration_file.defaultUIState)
+    migrated['scanExcludePatterns'] = list(configuration_file.defaultScanExcludePatterns)
     self.assertEqual(configuration_file.loadConfiguration(self.fileName), migrated)
     stored = json.loads(self.fileName.read_text(encoding='utf-8'))
     self.assertEqual(stored['version'], 4)
@@ -153,7 +155,7 @@ class TestConfigSecrets(unittest.TestCase):
     self.assertNotIn('maxTableColumnWidth', migrated['GUI'])
     self.assertNotIn('imageWidthProject', migrated['GUI'])
     self.assertEqual(migrated['GUI']['projectItemHeight'], 300)
-    self.assertEqual(migrated['GUI']['detailsWidth'], 360)
+    self.assertEqual(migrated['uiState']['detailsWidth'], 360)
 
 
   def test_invalid_ciphertext_and_keyring_errors_raise(self) -> None:

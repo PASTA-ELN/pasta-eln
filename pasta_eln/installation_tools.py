@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 from .backend_worker.backend import Backend
 from .configuration_file import CONFIGURATION_VERSION, loadConfiguration, saveConfiguration
-from .fixed_strings_json import configurationGUI, defaultConfiguration
+from .fixed_strings_json import configurationGUI, defaultConfiguration, defaultScanExcludePatterns, defaultUIState
 from .text_tools.string_changes import outputString
 
 
@@ -50,7 +50,8 @@ def createDefaultConfiguration(pathPasta:Path | None=None) -> dict[str,Any]:
   addOnDir = Path(__file__).parent/'add_ons'
   conf: dict[str, Any] = {
       'defaultProjectGroup': 'research',
-      'GUI': {key: value[1] for section in configurationGUI.values() for key, value in section.items()},
+      'GUI': {key: value[1] for section in configurationGUI.values() for key, value in section.items()
+              if key != 'scanExcludePatterns'},
       'projectGroups': {
           'research': {
               'local': {'database': 'research', 'path': str(pathPasta)},
@@ -59,6 +60,8 @@ def createDefaultConfiguration(pathPasta:Path | None=None) -> dict[str,Any]:
               'addOns': {'project': {}, 'extractors':{}, 'table':{}}
           }},
       'version': CONFIGURATION_VERSION}
+  conf['uiState'] = dict(defaultUIState)
+  conf['scanExcludePatterns'] = list(defaultScanExcludePatterns)
   try:
     conf['userID']      = os.getlogin()
   except Exception:                                                                             #github action
@@ -110,11 +113,23 @@ def configuration(command:str, pathData:str) -> str:
       output += outputString('text','error', 'No GUI in config file')
   for _, items in configurationGUI.items():
     for k,v in items.items():
+      if k == 'scanExcludePatterns': # it is in GUI items in configuration, but not in GUI in .json, see below
+        continue
       if 'GUI' in conf and k not in conf['GUI']:
         if command == 'repair':
           conf['GUI'][k] = v[1]
         else:
           output += outputString('text','error', f'No {k} in GUI part of config file')
+  if 'uiState' not in conf:
+    if command == 'repair':
+      conf['uiState'] = dict(defaultUIState)
+    else:
+      output += outputString('text','error', 'No uiState in config file')
+  if 'scanExcludePatterns' not in conf:
+    if command == 'repair':
+      conf['scanExcludePatterns'] = list(defaultScanExcludePatterns)
+    else:
+      output += outputString('text','error', 'No scanExcludePatterns in config file')
   if command == 'repair':
     saveConfiguration(conf)
   logging.info('Configuration ending')

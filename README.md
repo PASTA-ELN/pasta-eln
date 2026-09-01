@@ -47,12 +47,11 @@ Open issues are the union of:
 Order of open issues that do not have a question
 
 - Version 3.4: New features that require minimal changes, possibly some config changes
-  1.  612 – Restarting Pasta resets visibility setting
-  2.  381 – Visualization of linked items
-  3.  566 – Create GUI for attachments
-  4.  436 – Re-running of extractors whenever measurement details are saved
-  5.  Guard oversized extractor `metaVendor` and `metaUser` with a user-configurable maximum size
-  6.  528 – Feature Request: easily visible changelog
+  1.  381 – Visualization of linked items
+  2.  566 – Create GUI for attachments
+  3.  436 – Re-running of extractors whenever measurement details are saved
+  4.  Guard oversized extractor `metaVendor` and `metaUser` with a user-configurable maximum size
+  5.  528 – Feature Request: easily visible changelog
 
 
 - Tutorial

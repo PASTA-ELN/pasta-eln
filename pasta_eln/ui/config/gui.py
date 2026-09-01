@@ -1,7 +1,7 @@
 """ config tab on GUI / Appearance / Interface elements """
 from collections.abc import Callable
 from PySide6.QtWidgets import (QAbstractButton, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QGroupBox, QLabel,
-                               QVBoxLayout)
+                               QLineEdit, QVBoxLayout)
 from ...configuration_file import saveConfiguration
 from ...fixed_strings_json import configurationGUI
 from ..gui_communicate import Communicate
@@ -31,7 +31,12 @@ class ConfigurationGUI(QDialog):
         mainL.addWidget(groupbox)
         sectionL = QFormLayout(groupbox)
         for k,v in items.items():
-          setattr(self, k, self.addRowList(sectionL, label=v[0], default=str(onDisk[k]), itemList=[str(i) for i in v[2]]))
+          if k == 'scanExcludePatterns':
+            widget = QLineEdit(', '.join(str(item) for item in self.comm.configuration['scanExcludePatterns']))
+            sectionL.addRow(QLabel(v[0]), widget)
+          else:
+            widget = self.addRowList(sectionL, label=v[0], default=str(onDisk[k]), itemList=[str(i) for i in v[2]])
+          setattr(self, k, widget)
         if label == 'appearance':
           self.detailsLevel.currentTextChanged.connect(self.updateAdvancedVisibility)# type: ignore[attr-defined]
       self.updateAdvancedVisibility(self.detailsLevel.currentText())# type: ignore[attr-defined]
@@ -55,7 +60,12 @@ class ConfigurationGUI(QDialog):
       for items in configurationGUI.values():
         for k in items.keys():
           try:
-            self.comm.configuration['GUI'][k] = int(getattr(self, k).currentText())
+            widget = getattr(self, k)
+            if k == 'scanExcludePatterns':
+              newList = [item.strip() for item in widget.text().split(',') if item.strip()]
+              self.comm.configuration['scanExcludePatterns'] = newList
+            else:
+              self.comm.configuration['GUI'][k] = int(widget.currentText())
           except Exception:
             self.comm.configuration['GUI'][k] = getattr(self, k).currentText()
           if k == 'theme':

@@ -40,7 +40,7 @@ class Project(Widget):
     self.projID = ''
     self.docIDHighlight = ''
     self.detailsDocID = ''
-    self.showAll= self.comm.configuration['GUI']['showHidden']=='Yes'
+    self.showAll = self.comm.configuration['uiState']['showHiddenProjectTreeItems']
 
     self.mainL = QVBoxLayout()
     self.setLayout(self.mainL)
@@ -50,7 +50,7 @@ class Project(Widget):
     self.allDetails:QTextEdit | None       = None
     self.actHideDetail                     = QAction()
     self.actionFoldAll                     = QAction()
-    self.showDetailsAll                    = False
+    self.showDetailsAll                    = self.comm.configuration['uiState']['showDetailsAll']
     self.btnAddSubfolder:Button | None     = None
     self.btnMore:        Button | None     = None
     self.btnVisibility:  Button | None     = None
@@ -183,7 +183,7 @@ class Project(Widget):
     self.allDetails = QTextEdit(self)
     self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, self.comm.dataHierarchyNodes['x0'],
                                              self))
-    if not self.docProj['gui'][0]:
+    if not self.comm.configuration['uiState']['showProjectDetails']:
       self.allDetails.hide()
       self.actHideDetail.setText('Show project details')
     self.allDetails.resizeEvent = self.commentResize                                            # type: ignore
@@ -247,8 +247,7 @@ class Project(Widget):
       self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.projID})
       self.comm.changeProject.emit(self.projID,'')
     elif commandType is Command.SHOW_PROJ_DETAILS:
-      self.docProj['gui'][0] = not self.docProj['gui'][0]
-      self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':self.projID, 'gui':self.docProj['gui']})
+      self.comm.saveUIState(showProjectDetails=not self.comm.configuration['uiState']['showProjectDetails'])
       if self.allDetails is not None and self.allDetails.isHidden():
         self.allDetails.show()
         self.actHideDetail.setText('Hide project details')
@@ -280,12 +279,14 @@ class Project(Widget):
           recursiveRowIteration(subIndex)
       recursiveRowIteration(self.tree.model().index(-1,0))
       self.showDetailsAll = not self.showDetailsAll
+      self.comm.saveUIState(showDetailsAll=self.showDetailsAll)
       if self.showDetailsAll:
         self.actionFoldAll.setText('Show full view')
       else:
         self.actionFoldAll.setText('Compact view')
     elif commandType is Command.HIDE_SHOW_ITEMS:
       self.showAll = not self.showAll
+      self.comm.saveUIState(showHiddenProjectTreeItems=self.showAll)
       self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
     elif commandType is Command.ADD_CHILD:
       self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':[self.projID], 'docType':'x1', 'doc':{'name':'new item'}})

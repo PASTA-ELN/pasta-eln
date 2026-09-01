@@ -106,6 +106,19 @@ defaultConfiguration: dict[str, Any] = {
   'addOnParameter': {}
 }
 
+defaultUIState: dict[str, Any] = {
+  'showHiddenProjects': True,
+  'showHiddenListItems': True,
+  'showHiddenProjectTreeItems': True,
+  'showDetailsAll': False,
+  'showProjectDetails': True,
+  'sidebarWidth': 280,
+  'detailsWidth': 360,
+}
+
+defaultScanExcludePatterns = ['.*', 'trash_*', 'venv', 'env', '__pycache__', 'node_modules', 'dist', 'build',
+  '.DS_Store', 'Thumbs.db']
+
 # level 1: type of property
 #   within each: array of 3: description, default, all_choices
 configurationGUI: dict[str, Any] = {
@@ -121,8 +134,6 @@ configurationGUI: dict[str, Any] = {
   'appearance': {
     'theme': ['Color style', 'automatic', ['automatic', 'dark', 'light']],
     'detailsLevel': ['Interface detail level', 'Default', ['Default', 'Advanced']],
-    'sidebarWidth': ['Sidebar width', 280, [220, 280, 340]],
-    'detailsWidth': ['Details panel width', 360, [280, 360, 440]],
     'imageSizeDetails': ['Image size in form', 600, [300, 400, 500, 600]],
     'projectItemHeight': ['Project item height', 250, [200, 250, 300, 400]],
   },
@@ -130,6 +141,7 @@ configurationGUI: dict[str, Any] = {
     'loggingLevel': ['Logging level (more->less)', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR']],
     'maxUploadSize': ['Maximum upload size', '100 MB', ['50 MB', '100 MB', '500 MB', '1 GB']],
     'maxExtractionDuration': ['Maximum duration of extractor', '1 min', ['10 sec', '1 min', '10 min']],
+    'scanExcludePatterns': ['Scan exclusions (comma-separated)', defaultScanExcludePatterns, []],
   }
 }
 
