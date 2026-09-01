@@ -94,7 +94,7 @@ class Backend(CliMixin):
   ######################################################
   def editData(self, doc:dict[str,Any]) -> None:
     """
-    Edit data from version 2 information flow by wrapping addData
+    Edit data from Form by wrapping addData
 
     Args:
       doc (dict): dict to save
@@ -105,8 +105,7 @@ class Backend(CliMixin):
       self.cwd     = self.basePath/doc['branch'][0]['path']
     self.hierStack = doc['branch'][0]['stack']+[doc['id']]
     doc['childNum']= doc['branch'][0]['child']
-    # change content
-    doc = self.addData('-edit-', doc)
+    doc = self.addData('-edit-', doc, runExtractors=False)
     if doc['id'].startswith('x'):
       pathStr = '' if self.cwd is None else str(self.cwd.relative_to(self.basePath))
       self.db.updateChildrenOfParentsChanges(pathStr, doc['branch'][0]['path'], '/'.join(self.hierStack),'')
