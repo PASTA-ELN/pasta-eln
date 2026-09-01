@@ -141,6 +141,7 @@ configurationGUI: dict[str, Any] = {
     'loggingLevel': ['Logging level (more->less)', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR']],
     'maxUploadSize': ['Maximum upload size', '100 MB', ['50 MB', '100 MB', '500 MB', '1 GB']],
     'maxExtractionDuration': ['Maximum duration of extractor', '1 min', ['10 sec', '1 min', '10 min']],
+    'maxExtractionMetadataSize': ['Maximum metadata size for User and Vendor', '64 kB', ['32 kB', '128 kB', '512 kB']],
     'scanExcludePatterns': ['Scan exclusions (comma-separated)', defaultScanExcludePatterns, []],
   }
 }

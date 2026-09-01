@@ -31,12 +31,13 @@ class ConfigurationGUI(QDialog):
         mainL.addWidget(groupbox)
         sectionL = QFormLayout(groupbox)
         for k,v in items.items():
+          self.widget: QLineEdit | QComboBox
           if k == 'scanExcludePatterns':
-            widget = QLineEdit(', '.join(str(item) for item in self.comm.configuration['scanExcludePatterns']))
-            sectionL.addRow(QLabel(v[0]), widget)
+            self.widget = QLineEdit(', '.join(str(item) for item in self.comm.configuration['scanExcludePatterns']))
+            sectionL.addRow(QLabel(v[0]), self.widget)
           else:
-            widget = self.addRowList(sectionL, label=v[0], default=str(onDisk[k]), itemList=[str(i) for i in v[2]])
-          setattr(self, k, widget)
+            self.widget = self.addRowList(sectionL, label=v[0], default=str(onDisk[k]), itemList=[str(i) for i in v[2]])
+          setattr(self, k, self.widget)
         if label == 'appearance':
           self.detailsLevel.currentTextChanged.connect(self.updateAdvancedVisibility)# type: ignore[attr-defined]
       self.updateAdvancedVisibility(self.detailsLevel.currentText())# type: ignore[attr-defined]

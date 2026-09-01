@@ -20,28 +20,33 @@ import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
 from PIL import Image, PngImagePlugin
 from ..misc_tools import loadNamedModule
+from ..text_tools.handle_dictionaries import truncateMetadata, jsonSize
 from ..text_tools.string_changes import outputString
 
 matplotlib.use('Agg')
 matplotlib.rcParams['svg.fonttype'] = 'none'
 
 PROVENANCE_KEY = 'PastaELNProvenance'
+TRUNC_WARNING = 'Metadata truncated to configured maximum size.'
 
 
 class ExtractorManager:
   """Manage extractor jobs independently from database workflows."""
-  def __init__(self, basePath:Path, addOnPath:Path, timeout:str, dataHierarchy:Callable[[str,str],Any]) -> None:
+  def __init__(self, basePath:Path, addOnPath:Path, timeout:str, metadataLimit:str,
+               dataHierarchy:Callable[[str,str],Any]) -> None:
     """Create an extractor manager for one backend/project-group context.
 
     Args:
       basePath (Path): Root path of the local project data tree.
       addOnPath (Path): Directory containing extractor_*.py add-ons.
       timeout (str): Maximum extractor runtime, e.g. "10 sec" or "1 min".
+      metadataLimit (str): Maximum serialized metadata size, e.g. "80 kB".
       dataHierarchy (Callable): Backend callback for looking up valid document types.
     """
     self.basePath = basePath
     self.addOnPath = addOnPath
     self.timeoutSeconds = int(timeout[:-3]) if timeout.endswith('sec') else int(timeout[:-3])*60
+    self.metadataLimit = int(metadataLimit[:-3]) * 1024
     self.dataHierarchy = dataHierarchy
 
 
@@ -116,6 +121,8 @@ class ExtractorManager:
             if meta not in doc:
               doc[meta] = {}
             if isinstance(doc[meta], dict):                                                   #convenient type
+              if meta == 'metaVendor' and 'fileExtension' not in doc[meta]:
+                doc[meta]['fileExtension'] = result['extension'].lower()
               for item in doc[meta]:
                 if isinstance(doc[meta][item], tuple):
                   doc[meta][item] = list(doc[meta][item])
@@ -128,14 +135,15 @@ class ExtractorManager:
               for item in doc[meta]:
                 if not (isinstance(item, dict) and 'key' in item and 'value' in item and 'unit' in item):
                   logging.error('Complicated extractor return wrong', exc_info=True)
+            doc[meta], truncated, oldSize, newSize = truncateMetadata(doc[meta], self.metadataLimit)
+            if truncated:
+              logging.warning('%s %s (%d -> %d bytes).', TRUNC_WARNING, meta, oldSize, newSize)
           if doc['style']['main'].startswith(doc['type'][0]):
             doc['type'] = doc['style']['main'].split('/')
           else:
             #user has strange wish: trust him/her
             logging.info('user has strange wish: trust him/her: %s  %s','/'.join(doc['type']),'  '+doc['style']['main'])
           del doc['style']
-          if 'fileExtension' not in doc['metaVendor']:
-            doc['metaVendor']['fileExtension'] = result['extension'].lower()
           if 'links' in doc and len(doc['links'])==0:
             del doc['links']
           doc['dataHash'] = job['dataHash']
@@ -327,8 +335,7 @@ class ExtractorManager:
         matches = [i for i in possibleDocTypes if content['style']['main'].startswith(i)]
         if matches or content['style']['main'] in {'', '-'}:
           report += outputString(outputStyle, 'info', 'Style is good: '+content['style']['main'])
-          size = len(str(content))
-          report += outputString(outputStyle, 'info', f'Entire extracted size: {size // 1024}kB')
+          report += outputString(outputStyle, 'info', f'Entire extracted size: {jsonSize(content) // 1024}kB')
         else:
           report += outputString(outputStyle, 'error', 'Style does not follow doctype in dataHierarchy.')
       else:
@@ -338,6 +345,12 @@ class ExtractorManager:
         _ = json.dumps(content)
       except Exception:
         report += outputString(outputStyle,'error','Extractor reply not json dumpable.')
+    if success:
+      for meta in ['metaVendor', 'metaUser']:
+        if meta in content:
+          content[meta], truncated, oldSize, newSize = truncateMetadata(content[meta], self.metadataLimit)
+          if truncated:
+            report += outputString(outputStyle, 'warning', f'{TRUNC_WARNING} {meta}: {oldSize}->{newSize} bytes.')
     if success:
       metaVendor = content.get('metaVendor')
       if isinstance(metaVendor, (dict)):

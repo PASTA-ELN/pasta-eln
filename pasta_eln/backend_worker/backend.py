@@ -74,7 +74,7 @@ class Backend(CliMixin):
     # start database
     self.dbRaw = SqlLiteDB(basePath=self.basePath)
     self.extractors = ExtractorManager(self.basePath, self.addOnPath, self.configuration['GUI']['maxExtractionDuration'],
-                                       self.db.dataHierarchy)
+                                       self.configuration['GUI']['maxExtractionMetadataSize'], self.db.dataHierarchy)
     # internal hierarchy structure
     self.hierStack = []
     return

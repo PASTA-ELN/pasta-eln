@@ -14,6 +14,7 @@ from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.backend_worker.extractor import isPastaExport, saveFigure
 from pasta_eln.backend_worker.sqlite import SqlLiteDB
 from pasta_eln.configuration_file import CONFIGURATION_FILE_NAME
+from pasta_eln.text_tools.handle_dictionaries import truncateMetadata
 
 
 class TestExtractorTimeoutParallel(unittest.TestCase):
@@ -39,7 +40,7 @@ class TestExtractorTimeoutParallel(unittest.TestCase):
         },
         'version': 4,
         'userID': 'test_user',
-        'GUI': {'maxExtractionDuration': '1 sec'}
+        'GUI': {'maxExtractionDuration': '1 sec', 'maxExtractionMetadataSize': '20 kB'}
     }
     self._writeConfiguration()
     self.backend = Backend('research')
@@ -81,6 +82,15 @@ class TestExtractorTimeoutParallel(unittest.TestCase):
         'def use(filePath, style, saveFigure):\n'
         '  saveFigure(Image.new("RGB", (2, 2), "white"))\n'
         f'  return {{"style": {{"main": "measurement/v2"}}, "metaVendor": {{}}, "metaUser": {{"value": "{value}"}}}}\n',
+        encoding='utf-8')
+
+
+  def _writeOversizedExtractor(self) -> None:
+    (self.addOnPath/'extractor_slow.py').write_text(
+        'def use(filePath, style={\'main\':\'\'}, saveFileName=None):\n'
+        '  values = {f\'grandchild_{idx}\': \'x\' * 100 for idx in range(300)}\n'
+        '  return {\'style\': {\'main\': \'measurement/slow\'}, \'image\': \'\', '
+        '\'metaVendor\': {\'child\': values}, \'metaUser\': {\'child\': values}}\n',
         encoding='utf-8')
 
 
@@ -176,15 +186,50 @@ class TestExtractorTimeoutParallel(unittest.TestCase):
     self.assertIn('metaVendor must be a dictionary not str.', report)
 
 
+  def test_metadata_truncation_recurses_and_keeps_json_valid(self):
+    metadata = {'child': {f'grandchild_{idx}': 'x' * 100 for idx in range(300)}}
+
+    truncated, wasTruncated, originalSize, finalSize = truncateMetadata(metadata, 1024)
+
+    self.assertTrue(wasTruncated)
+    self.assertGreater(originalSize, finalSize)
+    self.assertLessEqual(finalSize, 1024)
+    self.assertIn('child', truncated)
+    self.assertLess(len(truncated['child']), len(metadata['child']))
+    json.dumps(truncated)
+
+
+  def test_extractor_test_reports_metadata_truncation(self):
+    self._writeOversizedExtractor()
+    dataPath = self.basePath/'data.slow'
+    dataPath.write_text('slow data', encoding='utf-8')
+    report, _ = self.backend.extractors.test(dataPath)
+    self.assertIn('Metadata truncated to configured maximum size. metaVendor', report)
+    self.assertIn('Metadata truncated to configured maximum size. metaUser', report)
+
+
+  def test_extractor_persists_each_metadata_category_within_limit(self):
+    self._writeOversizedExtractor()
+    self.configuration['GUI']['maxExtractionDuration'] = '5 sec'
+    self._writeConfiguration()
+    self.backend.exit()
+    self.backend = Backend('research')
+    dataPath = self.basePath/'data.slow'
+    dataPath.write_text('slow data', encoding='utf-8')
+
+    doc = self.backend.addData('', {'name':'data.slow'})
+
+    self.assertLessEqual(len(json.dumps(doc['metaVendor'], ensure_ascii=False).encode('utf-8')), 20 * 1024)
+    self.assertLessEqual(len(json.dumps(doc['metaUser'], ensure_ascii=False).encode('utf-8')), 20 * 1024)
+
+
   def test_extractor_timeout_marks_document_stopped(self):
     self._writeExtractor(5)
     dataPath = self.basePath/'data.slow'
     dataPath.write_text('slow data', encoding='utf-8')
-
     start = time.monotonic()
     doc = self.backend.addData('', {'name':'data.slow'})
     duration = time.monotonic()-start
-
     self.assertLess(duration, 3)
     self.assertEqual(doc['metaUser']['extractorStatus'], 'stopped')
     self.assertEqual(doc['metaUser']['extractorError'], 'Extractor stopped after 1 seconds.')

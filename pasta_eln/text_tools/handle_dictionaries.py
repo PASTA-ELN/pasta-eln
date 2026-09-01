@@ -5,11 +5,13 @@ import logging
 import re
 import uuid
 from datetime import datetime
-from typing import Any
-from ..backend_worker.sqlite import SqlLiteDB
+from typing import TYPE_CHECKING, Any
 from ..fixed_strings_json import SORTED_KEYS, SQLiteTranslation
 from ..misc_tools import isDocID
 from .string_changes import markdownEqualizer
+
+if TYPE_CHECKING:
+  from ..backend_worker.sqlite import SqlLiteDB
 
 
 def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
@@ -25,7 +27,7 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     docType (list): type of document, e.g. project=['x0']
 
   Returns:
-    str: document
+    dict: document with common fields filled and nested fields flattened
   """
   protectedKeys = ['comment','tags','image','externalId']
   # Handle the important entries: type, id, dateCreated, branch, gui
@@ -180,7 +182,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
   return markdown
 
 
-def expandDocID2tupleInDict(d:dict[str,Any], database:SqlLiteDB) -> None:
+def expandDocID2tupleInDict(d:dict[str,Any], database:'SqlLiteDB') -> None:
   """ Expand docIDs in docs to be a tuple (value, type, unit, description)
   Args:
     d (dict): doc
@@ -323,3 +325,93 @@ def truncateDictForElabFTW(data:dict[str,Any], maxChars:int=900) -> dict[str,Any
         result[key] = nested
     break
   return result | marker
+
+
+def jsonSize(value:Any) -> int:
+  """Return the UTF-8 size of a JSON value.
+
+  Args:
+    value (Any): JSON-serializable value
+
+  Returns:
+    int: serialized UTF-8 size in bytes
+  """
+  return len(json.dumps(value, ensure_ascii=False).encode('utf-8'))
+
+
+def truncateMetadata(metadata:Any, limit:int) -> tuple[Any, bool, int, int]:
+  """Main function: truncate one metadata category and report its serialized sizes.
+
+  Args:
+    metadata (Any): metadata value to prune
+    limit (int): maximum serialized UTF-8 size in bytes
+
+  Returns:
+    tuple: pruned value, truncation flag, original size, and final size
+  """
+  oldSize = jsonSize(metadata)
+  if oldSize <= limit:
+    return metadata, False, oldSize, oldSize
+  truncated, wasTruncated = _truncateJsonValue(metadata, limit)
+  return truncated, wasTruncated, oldSize, jsonSize(truncated)
+
+
+
+def _truncateJsonValue(value:Any, limit:int) -> tuple[Any, bool]:
+  """Recursive prune JSON values from the end until their serialized size fits.
+
+  Args:
+    value (Any): JSON value to prune
+    limit (int): maximum serialized UTF-8 size in bytes
+
+  Returns:
+    tuple: pruned value and whether content was removed
+  """
+  if isinstance(value, dict):
+    dictResult:dict[Any, Any] = {}
+    truncated = False
+    for key, child in value.items():
+      candidate = dict(dictResult)
+      candidate[key] = child
+      if jsonSize(candidate) <= limit:
+        dictResult[key] = child
+        continue
+      if isinstance(child, (dict, list)):
+        remaining = max(0, limit - jsonSize({**dictResult, key: {} if isinstance(child, dict) else []}))
+        child, childTruncated = _truncateJsonValue(child, remaining)
+        candidate = dict(dictResult)
+        candidate[key] = child
+        if jsonSize(candidate) <= limit:
+          dictResult[key] = child
+        else:
+          truncated = True
+        truncated |= childTruncated
+      else:
+        truncated = True
+      if jsonSize(dictResult) >= limit:
+        truncated |= len(value) > len(dictResult)
+        break
+    truncated |= len(dictResult) != len(value)
+    return dictResult, truncated
+  if isinstance(value, list):
+    listResult:list[Any] = []
+    truncated = False
+    for child in value:
+      listCandidate = listResult + [child]
+      if jsonSize(listCandidate) <= limit:
+        listResult.append(child)
+        continue
+      if isinstance(child, (dict, list)):
+        remaining = max(0, limit - jsonSize(listResult + [{} if isinstance(child, dict) else []]))
+        child, childTruncated = _truncateJsonValue(child, remaining)
+        if jsonSize(listResult + [child]) <= limit:
+          listResult.append(child)
+        else:
+          truncated = True
+        truncated |= childTruncated
+      else:
+        truncated = True
+      break
+    truncated |= len(listResult) != len(value)
+    return listResult, truncated
+  return value, jsonSize(value) > limit

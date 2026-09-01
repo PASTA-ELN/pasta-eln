@@ -25,14 +25,14 @@ class RelationshipView(QWidget):
     self.view = QGraphicsView(self.scene)
     self.view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
     self.view.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
-    self.depth = QSpinBox()
-    self.depth.setRange(1, 10)
-    self.depth.setValue(2)
-    self.depth.setToolTip('Number of relationship levels shown from the selected item')
-    self.neighbours = QSpinBox()
-    self.neighbours.setRange(1, 500)
-    self.neighbours.setValue(50)
-    self.neighbours.setToolTip('Maximum neighbours considered for each node')
+    self.depthSpinBox = QSpinBox()
+    self.depthSpinBox.setRange(1, 10)
+    self.depthSpinBox.setValue(2)
+    self.depthSpinBox.setToolTip('Number of relationship levels shown from the selected item')
+    self.neighboursSpinBox = QSpinBox()
+    self.neighboursSpinBox.setRange(1, 500)
+    self.neighboursSpinBox.setValue(50)
+    self.neighboursSpinBox.setToolTip('Maximum neighbours considered for each node')
     self.showHierarchy = QCheckBox('Hierarchy')
     self.showHierarchy.setChecked(True)
     self.showLinks = QCheckBox('Links')
@@ -41,17 +41,17 @@ class RelationshipView(QWidget):
     controls = QVBoxLayout()
     controls.setContentsMargins(0, 0, 0, 0)
     controls.addWidget(QLabel('Levels from selected item'))
-    controls.addWidget(self.depth)
+    controls.addWidget(self.depthSpinBox)
     controls.addWidget(QLabel('Neighbours per node'))
-    controls.addWidget(self.neighbours)
+    controls.addWidget(self.neighboursSpinBox)
     controls.addWidget(self.showHierarchy)
     controls.addWidget(self.showLinks)
     layout = QVBoxLayout(self)
     layout.addLayout(controls)
     layout.addWidget(self.view)
     # Signals -> always paint
-    self.depth.valueChanged.connect(self.paint)
-    self.neighbours.valueChanged.connect(self.paint)
+    self.depthSpinBox.valueChanged.connect(self.paint)
+    self.neighboursSpinBox.valueChanged.connect(self.paint)
     self.showHierarchy.toggled.connect(self.paint)
     self.showLinks.toggled.connect(self.paint)
 
@@ -91,13 +91,13 @@ class RelationshipView(QWidget):
       if edge['source'] in adjacency and edge['target'] in adjacency:
         adjacency[edge['source']].append((edge['target'], edge['kind']))
         adjacency[edge['target']].append((edge['source'], edge['kind']))
-    limit = self.neighbours.value()
+    limit = self.neighboursSpinBox.value()
     adjacency = {docID: values[:limit] for docID, values in adjacency.items()}
     distances = {self.rootID: 0}
     queue = deque([self.rootID])
     while queue:
       current = queue.popleft()
-      if distances[current] >= self.depth.value():
+      if distances[current] >= self.depthSpinBox.value():
         continue
       for neighbour, _ in adjacency.get(current, []):
         if neighbour not in distances:
@@ -105,7 +105,7 @@ class RelationshipView(QWidget):
           queue.append(neighbour)
     visible = {docID for docID in distances if docID in nodes}
     positions: dict[str, QPointF] = {self.rootID: QPointF(0, 0)}
-    for level in range(1, self.depth.value() + 1):
+    for level in range(1, self.depthSpinBox.value() + 1):
       levelNodes = sorted(docID for docID in visible if distances[docID] == level)
       for index, docID in enumerate(levelNodes):
         angle = (index / max(1, len(levelNodes))) * 6.28318
