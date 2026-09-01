@@ -1,4 +1,6 @@
 import logging
+from pathlib import Path
+from types import SimpleNamespace
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.details.details import Command, Details
@@ -66,3 +68,22 @@ def test_rerun_extractors_uses_table_request(qtbot):
 
   assert requests == [(Task.EXTRACTOR_RERUN, {'docIDs': [docID], 'recipe': ''})]
   comm.shutdownBackendThread()
+
+
+def test_shared_locations_use_selected_project_branch():
+  """Details describes and acts on the branch selected in the project tree."""
+  class DetailState:
+    currentBranch = Details.currentBranch
+    sourcePath = Details.sourcePath
+
+  window = DetailState()
+  docID = 'm-shared'
+  firstBranch = {'stack': ['x-project', 'x-analysis'], 'path': 'Project/Analysis/first.csv', 'child': 0, 'show': [True]}
+  secondBranch = {'stack': ['x-project', 'x-archive'], 'path': 'Project/Archive/second.csv', 'child': 1, 'show': [True]}
+  window.docID = docID
+  window.context = DetailContext(docID, 'x-project/x-archive/m-shared', DetailOrigin.PROJECT)
+  window.comm = SimpleNamespace(basePath=Path('/database'))
+  window.data = {'id': docID, 'name': 'shared data', 'type': ['measurement'],
+                 'branch': [firstBranch, secondBranch], 'tags': []}
+
+  assert window.sourcePath() == window.comm.basePath / secondBranch['path']

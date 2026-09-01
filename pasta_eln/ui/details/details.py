@@ -123,11 +123,10 @@ class Details(Widget):
 
     # HEADER
     # Show the filename indicator when every stored path differs from the item name
-    paths = [branch['path'] for branch in self.data.get('branch', [])]
+    paths = [branch['path'] for branch in self.data['branch']]
     differs = False
-    if not paths or any(path is None for path in paths):
-      self.titleLabel.setToolTip('')
-    else:
+    filenames: list[str] = []
+    if paths and all(isinstance(path, str) for path in paths):
       filenames = [Path(path).name for path in paths]
       if self.data['type'][0].startswith('x'):
         differs = any(createDirName(self.data, branch['child'], Path(branch['path']).parent).casefold()
@@ -135,17 +134,33 @@ class Details(Widget):
       else:
         name = self.data['name'].casefold()
         differs = all(re.sub(r'^\d{3}_', '', filename).casefold() != name for filename in filenames)
-      self.titleLabel.setToolTip('The filename on disk is:\n' + '\n'.join(filenames) if differs else '')
+    tooltip = ''
+    if len(self.data['branch']) > 1:
+      tooltip = f'Item is stored in {len(self.data['branch'])} locations. Metadata, tags, comments, and preview are shared.\n\n'
+    if differs or len(self.data['branch']) > 1:
+      if filenames:
+        tooltip += 'The filenames on disk are:\n' + '\n'.join(filenames)
+      self.titleLabel.setToolTip(tooltip)
+    else:
+      self.titleLabel.setToolTip('')
     # create name that fits into the space by putting ... in the middle
     titleWidth = self.titleLabel.width() or self.width()
+    indicatorWidth = QFontMetrics(self.titleLabel.font()).height()
     if differs:
-      titleWidth -= QFontMetrics(self.titleLabel.font()).height()
+      titleWidth -= indicatorWidth
+    if len(self.data['branch']) > 1:
+      titleWidth -= indicatorWidth
     fontMetrics = QFontMetrics(self.titleLabel.font())
     fullTitle = self.data['name']
     elidedTitle = fontMetrics.elidedText(fullTitle, Qt.TextElideMode.ElideMiddle, max(0, titleWidth))
     title = (elidedTitle if fontMetrics.horizontalAdvance(elidedTitle) < fontMetrics.horizontalAdvance(fullTitle)
              else fullTitle)
-    self.titleLabel.setText(f'{title}<sup><span style="font-size: 24pt;">ℹ</span></sup>' if differs else title)
+    indicators = ''
+    if differs:
+      indicators += '<sup><span style="font-size: 24pt;">ℹ</span></sup>'
+    if len(self.data['branch']) > 1:
+      indicators += '<sup><span style="font-size: 20pt;">⚠</span></sup>'
+    self.titleLabel.setText(title + indicators)
 
     # BODY
     # clear old items
@@ -219,8 +234,7 @@ class Details(Widget):
     if not self.docID:
       return
     extractionMenu = self.actionsMenu.addMenu('Extraction')
-    branch = self.data.get('branch', [{}])
-    path = branch[0].get('path') if branch else None
+    path = self.currentBranch().get('path')
     documentTypes = self.data.get('type', [])
     extractorChoices: dict[str, str] = {}
     if isinstance(path, str) and path and documentTypes and self.sourcePath(False) is not None:
@@ -250,8 +264,7 @@ class Details(Widget):
     if commandType is Command.EDIT:
       self.onEditButtonClicked()
     elif commandType is Command.OPEN_PROJECT:
-      branch = self.data.get('branch', [{}])
-      stack = branch[0].get('stack', []) if branch else []
+      stack = self.currentBranch().get('stack', [])
       if stack:
         self.comm.changeProject.emit(stack[0], self.docID)
     elif commandType is Command.OPEN_LIST:
@@ -355,8 +368,7 @@ class Details(Widget):
       (Path|str|None): None representing an invalid path, str is representing URLs, Path is
                    representing local files
     """
-    branch = self.data.get('branch', [{}])
-    path = branch[0].get('path') if branch else None
+    path = self.currentBranch().get('path')
     if not path or not isinstance(path, str):
       return None
     if onlyLocal and path.startswith('http'):
@@ -364,6 +376,15 @@ class Details(Widget):
     if not onlyLocal and path.startswith('http'):
       return path
     return self.comm.basePath / path
+
+
+  def currentBranch(self) -> dict[str, Any]:
+    """Return the branch selected in the project tree, or the first branch."""
+    for branch in self.data.get('branch', []):
+      if '/'.join(branch['stack'] + [self.docID]) == self.context.treeStack:
+        return branch
+    branches = self.data.get('branch', [])
+    return branches[0] if branches else {}
 
 
 class Command(Enum):
