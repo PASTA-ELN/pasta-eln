@@ -90,6 +90,11 @@ class TestStringMethods(unittest.TestCase):
     self.assertEqual(output.split('\n')[0][:82], 'name           | tags | comment                                  | vendor    | id ')
     self.assertIn('Big instrument |      | Instrument onto which attachments can... | Company A | d-', output)
     self.assertIn('        Sensor |      | Attachment that increases functionali... | Company B | d-', output)
+    deviceID = self.be.db.getView('viewDocType/device').query("name == 'Big instrument'").iloc[0]['id']
+    attachments = self.be.db.getDoc(deviceID)['_attachments']
+    self.assertEqual(attachments[0]['location'], 'Right side of instrument')
+    self.assertEqual(attachments[0]['history'][0]['remark'], 'Service')
+    self.assertEqual(attachments[0]['candidates'][0]['name'], 'Sensor')
 
     output = self.be.output('measurement')
     self.assertIn('https://download.samplelib.com/jpeg/s... | _3   | - Remote image from samplelib. Used f... |            measurement/image | Y     |        ', output)

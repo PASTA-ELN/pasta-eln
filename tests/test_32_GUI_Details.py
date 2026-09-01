@@ -3,6 +3,7 @@ from pasta_eln.backend_worker.worker import Task
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.details.details import Command, Details
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin
+from pasta_eln.ui.details.details_hier_item import DetailsHierItem
 from .test_34_GUI_Form import getTable
 
 def test_simple(qtbot, caplog):
@@ -96,4 +97,35 @@ def test_advanced_folder_scan_action_toggles_ignore_marker(qtbot, tmp_path):
   includeAction = next(item for item in window.actionsMenu.actions() if 'Include folder' in item.text())
   includeAction.trigger()
   assert not (folder / '.pastaELN_ignore').exists()
+  comm.shutdownBackendThread()
+
+
+def test_advanced_attachments_show_current_state_and_request_addition(qtbot):
+  """Advanced device details expose the default example's immutable attachment history."""
+  comm = Communicate('research')
+  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
+    qtbot.wait(100)
+  window = Details(comm)
+  qtbot.addWidget(window)
+  deviceID = getTable(qtbot, comm, 'device').query("name == 'Big instrument'").iloc[0]['id']
+
+  comm.configuration['GUI']['detailsLevel'] = 'Default'
+  comm.changeDetails.emit(DetailContext(deviceID, origin=DetailOrigin.TABLE))
+  qtbot.waitUntil(lambda: window.data.get('id') == deviceID)
+  assert window.attachmentSection is None
+
+  comm.configuration['GUI']['detailsLevel'] = 'Advanced'
+  window.paint()
+  assert window.attachmentSection is not None
+  location = window.attachmentSection.findChild(DetailsHierItem, 'attachment:Right side of instrument')
+  assert location is not None
+  assert 'Service' in location.content
+
+  requests: list[tuple[Task, dict[str, object]]] = []
+  comm.uiRequestTask.disconnect(comm.backendThread.worker.returnTaskReport)
+  comm.uiRequestTask.connect(lambda task, data: requests.append((task, data)))
+  sensorID = window.data['_attachments'][0]['candidates'][0]['id']
+  window.addAttachment('Right side of instrument', sensorID, 'Installed')
+  assert requests == [(Task.ADD_ATTACHMENT, {'docID': deviceID, 'location': 'Right side of instrument',
+                                              'attachmentID': sensorID, 'remark': 'Installed'})]
   comm.shutdownBackendThread()

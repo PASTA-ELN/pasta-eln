@@ -279,6 +279,20 @@ class SqlLiteDB:
                 ('' if i[4] is None else i[4])                                                           #PURL
                 ) for i in res}
     doc |= hierarchy(metadataFlat)
+    self.cursor.execute('SELECT location, guest FROM attachments WHERE id=? AND date=? ORDER BY location', (docID, ''))
+    if attachmentLocations := self.cursor.fetchall():
+      doc['_attachments'] = []
+      for location, docType in attachmentLocations:
+        self.cursor.execute('SELECT attachments.date, attachments.guest, attachments.remark, attachments.user, main.name '
+                            'FROM attachments LEFT JOIN main ON attachments.guest=main.id '
+                            'WHERE attachments.id=? AND attachments.location=? AND attachments.date!=? '
+                            'ORDER BY attachments.date DESC', (docID, location, ''))
+        history = [{'date': row[0], 'id': row[1], 'remark': row[2], 'user': row[3], 'name': row[4]}
+                   for row in self.cursor.fetchall()]
+        self.cursor.execute('SELECT id, name, type FROM main WHERE type=? OR type LIKE ? ORDER BY name',
+                            (docType, f'{docType}/%'))
+        candidates = [{'id': row[0], 'name': row[1], 'type': row[2]} for row in self.cursor.fetchall()]
+        doc['_attachments'].append({'location': location, 'docType': docType, 'history': history, 'candidates': candidates})
     return doc
 
 

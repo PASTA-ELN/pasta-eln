@@ -12,6 +12,8 @@ from pasta_eln.fixed_strings_json import SORTED_DB_KEYS, defaultDataHierarchyNod
 from pasta_eln.misc_tools import clearLayout
 from pasta_eln.text_tools.string_changes import createDirName
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin
+from pasta_eln.ui.details.add_attachment_dialog import AddAttachmentDialog
+from pasta_eln.ui.details.attachment_view import AttachmentView
 from pasta_eln.ui.details.details_hier_item import DetailsHierItem
 from pasta_eln.ui.details.resize_image import ResizeImage
 from pasta_eln.ui.details.relationship_view import RelationshipView
@@ -37,6 +39,7 @@ class Details(Widget):
     self.context = DetailContext()
     self.data: dict[str, Any] = {'content': ''}
     self.contentText: QTextEdit | None = None
+    self.attachmentSection: CollapsibleSection | None = None
 
     ### HEADER WIDGETS
     self.titleLabel = Label('', 'h1')
@@ -168,6 +171,7 @@ class Details(Widget):
     clearLayout(self.contentPreviewL)
     self.bodyL.removeWidget(self.relationshipSection)
     clearLayout(self.bodyL)
+    self.attachmentSection = None
     self.contentPreviewW.hide()
     # Init the collapsible Items that contain all the details
     detailsItem = DetailsHierItem(self.comm, 'Details', dataHierarchyNode)
@@ -193,6 +197,8 @@ class Details(Widget):
         vendorItem.addContent('metaVendor', self.data['metaVendor'])
       elif key == 'metaUser':
         userItem.addContent('metaUser', self.data['metaUser'])
+      elif key == '_attachments':
+        continue
       elif key in SORTED_DB_KEYS:
         elnItem.addContent(key, self.data[key])
       else:
@@ -204,6 +210,11 @@ class Details(Widget):
       self.bodyL.addWidget(userItem)
     if vendorItem.content:
       self.bodyL.addWidget(vendorItem)
+    attachments = self.data.get('_attachments', [])
+    if self.comm.configuration['GUI']['detailsLevel'] == 'Advanced' and attachments:
+      attachmentView = AttachmentView(attachments, self, Command.ADD_ATTACHMENT)
+      self.attachmentSection = CollapsibleSection('Attachments', attachmentView, expanded=True, outlined=True)
+      self.bodyL.addWidget(self.attachmentSection)
     self.bodyL.addWidget(self.relationshipSection)
     if elnItem.content:
       self.bodyL.addWidget(elnItem)
@@ -317,6 +328,12 @@ class Details(Widget):
       else:
         markerPath.touch()
       self.paintActionsMenu()
+    elif commandType is Command.ADD_ATTACHMENT:
+      attachments = self.data.get('_attachments', [])
+      dialog = AddAttachmentDialog(attachments, self)
+      if dialog.exec():
+        location, attachmentID, remark = dialog.selectedAttachment()
+        self.addAttachment(location, attachmentID, remark)
     elif commandType is Command.HIDE_ITEM:
       self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID': self.docID})
       self.comm.changeDetails.emit(DetailContext())
@@ -358,6 +375,11 @@ class Details(Widget):
       self.docID = ''
       self.relationshipView.setRootID('')
       self.hide()
+
+  def addAttachment(self, location: str, attachmentID: str, remark: str) -> None:
+    """Request insertion of one immutable instrument attachment history record."""
+    self.comm.uiRequestTask.emit(Task.ADD_ATTACHMENT, {'docID': self.docID, 'location': location,
+                                                       'attachmentID': attachmentID, 'remark': remark})
 
   def showEvent(self, event: QShowEvent) -> None:
     """Notify the containing splitter when the details panel first becomes visible
@@ -416,3 +438,4 @@ class Command(Enum):
   OPEN_EXTERNAL        = 10
   REMOVE               = 11
   TOGGLE_SCAN          = 12
+  ADD_ATTACHMENT       = 13

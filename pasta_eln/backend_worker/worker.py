@@ -47,6 +47,7 @@ class Task(Enum):
   SEND_REPOSITORY= (15, 'Sending data to repository:')             #keys: projID, docTypes,repositories,metadata,uploadZenodo
   CHECK_DB       = (16, 'Checking database integrity:')            #keys: style
   OPEN_EXTERNAL  = (17, '')                                        #keys: docID
+  ADD_ATTACHMENT = (18, '')                                        #keys: docID, location, attachmentID, remark
 
   def __init__(self, num:int, msgWaitDialog:str='') -> None:
     """Initialize the task with a number and an optional message for the wait dialog
@@ -177,6 +178,13 @@ class BackendWorker(QObject):
       for _ in range(2):                                                         #scan twice: convert, extract
         self.backend.scanProject(None, data['docID'])
       self.beSendTaskReport.emit(task, 'Scanning finished successfully', '', '')
+
+    elif task is Task.ADD_ATTACHMENT and set(data.keys())=={'docID', 'location', 'attachmentID', 'remark'}:
+      self.backend.db.addAttachment(data['docID'], data['location'], {'date': datetime.now().isoformat(),
+            'docID': data['attachmentID'], 'remark': data['remark'], 'user': self.backend.userID})
+      doc = self.backend.db.getDoc(data['docID'])
+      expandDocID2tupleInDict(doc, self.backend.db)
+      self.beSendDoc.emit(doc)
 
     elif task is Task.ADD_DOC      and set(data.keys())=={'hierStack','docType','doc'}:
       if data['hierStack'] and data['hierStack'][-1]:
