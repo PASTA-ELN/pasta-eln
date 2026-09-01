@@ -97,6 +97,7 @@ class MainWindow(QMainWindow):
 
     helpMenu = menu.addMenu('&Other')
     action('&Website',                  self, Command.WEBSITE, helpMenu)
+    action('&Changelog',                self, Command.CHANGELOG, helpMenu)
     action('Shortcuts',                 self, Command.SHORTCUTS, helpMenu)
     action('About',                     self, Command.ABOUT, helpMenu)
     helpMenu.addSeparator()
@@ -280,6 +281,8 @@ class MainWindow(QMainWindow):
     # remainder
     elif commandType is Command.WEBSITE:
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
+    elif commandType is Command.CHANGELOG:
+      webbrowser.open('https://github.com/PASTA-ELN/pasta-eln/blob/main/CHANGELOG.md')
     elif commandType is Command.CHECK_DB:
       self.comm.uiRequestTask.emit(Task.CHECK_DB, {'style': 'json'})
     elif commandType is Command.SHORTCUTS:
@@ -325,27 +328,28 @@ class MainWindow(QMainWindow):
 
 class Command(Enum):
   """ Commands used in this file """
-  EXPORT_ELN = 1
-  IMPORT_ELN = 2
-  EXIT = 3
-  VIEW = 4
-  CHANGE_PG = 6
-  SYNC_SEND = 7
-  SYNC_GET = 8
-  SYNC_SMART = 9
-  SCHEMA = 10
-  TEST1 = 11
-  UPDATE = 13
-  CONFIG = 14
-  WEBSITE = 15
-  CHECK_DB = 16
-  SHORTCUTS = 17
-  RESTART = 18
-  SCREENSHOT = 19
-  ABOUT = 20
-  DEFINITIONS = 21
-  REPOSITORY = 22
-  SYNC_SEND_ALL = 24
-  SYNC_GET_ALL = 25
-  DELETE_PROJECT = 26
-  IMPORT_FILES = 27
+  EXPORT_ELN     = 1
+  IMPORT_ELN     = 2
+  EXIT           = 3
+  VIEW           = 4
+  CHANGE_PG      = 5
+  SYNC_SEND      = 6
+  SYNC_GET       = 7
+  SYNC_SMART     = 8
+  SCHEMA         = 9
+  TEST1          = 10
+  UPDATE         = 11
+  CONFIG         = 12
+  WEBSITE        = 13
+  CHANGELOG      = 14
+  CHECK_DB       = 15
+  SHORTCUTS      = 16
+  RESTART        = 17
+  SCREENSHOT     = 18
+  ABOUT          = 19
+  DEFINITIONS    = 20
+  REPOSITORY     = 21
+  SYNC_SEND_ALL  = 22
+  SYNC_GET_ALL   = 23
+  DELETE_PROJECT = 24
+  IMPORT_FILES   = 25
