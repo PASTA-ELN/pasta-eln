@@ -47,13 +47,12 @@ Open issues are the union of:
 Order of open issues that do not have a question
 
 - Version 3.4: New features that require minimal changes, possibly some config changes
-  1.  430 – Creating templates for items
-  2.  612 – Restarting Pasta resets visibility setting
-  3.  381 – Visualization of linked items
-  4.  566 – Create GUI for attachments
-  5.  436 – Re-running of extractors whenever measurement details are saved
-  6.  Guard oversized extractor `metaVendor` and `metaUser` with a user-configurable maximum size
-  7.  528 – Feature Request: easily visible changelog
+  1.  612 – Restarting Pasta resets visibility setting
+  2.  381 – Visualization of linked items
+  3.  566 – Create GUI for attachments
+  4.  436 – Re-running of extractors whenever measurement details are saved
+  5.  Guard oversized extractor `metaVendor` and `metaUser` with a user-configurable maximum size
+  6.  528 – Feature Request: easily visible changelog
 
 
 - Tutorial
