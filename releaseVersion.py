@@ -5,6 +5,8 @@ import datetime
 import io
 import json
 import os
+import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -90,6 +92,90 @@ def prevVersionsFromPypi(k:int=15) -> None:
   return
 
 
+def createChangelog(version: str) -> Path:
+  """Write a Git-based changelog draft for the new stable release ``version``.
+
+  - The previous stable release is determined from the merged Git tags and  defines the beginning of the commit range.
+  - The current ``HEAD`` defines the release source commit and the end of that range.
+  - Beta-version tags are ignored.
+
+  Args:
+    version: Release currently being prepared.
+
+  Returns:
+    The path to the generated Markdown draft.
+  """
+  stableTags = [tag for tag in subprocess.run(['git', '--no-pager', 'tag', '--merged', 'HEAD', '--list', 'v*'],
+                                                capture_output=True, text=True, check=True).stdout.splitlines()
+                if re.fullmatch(r'v\d+\.\d+\.\d+', tag) and tag != f'v{version}']
+  stableTags.sort(key=lambda tag: tuple(int(part) for part in tag[1:].split('.')))
+  if not stableTags:
+    raise RuntimeError('Cannot create a stable changelog without a previous stable tag.')
+  previousTag = stableTags[-1]
+  previousHash = subprocess.run(['git', 'rev-parse', previousTag], capture_output=True, text=True, check=True).stdout.strip()
+  releaseHash = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True, check=True).stdout.strip()
+
+  commitText = subprocess.run(['git', '--no-pager', 'log', '--reverse', '--format=%H%x1f%s%x1f%b%x1e', f'{previousTag}..{releaseHash}'],
+                              capture_output=True, text=True, check=True).stdout
+  commits = []
+  for record in commitText.split('\x1e'):
+    if not record.strip():
+      continue
+    commitHash, subject, body = record.strip().split('\x1f', 2)
+    changedFiles = subprocess.run(['git', 'diff-tree', '--no-commit-id', '--name-status', '-r', commitHash],
+                                  capture_output=True, text=True, check=True).stdout.strip()
+    commits.append(f'- {subject} ([`{commitHash[:8]}`](https://github.com/PASTA-ELN/pasta-eln/commit/{commitHash}))\n'
+                   '  Commit body:\n'
+                   f'  {body.replace(chr(10), chr(10) + "  ")}\n'
+                   f'  Changed files:\n'
+                   f'  {changedFiles.replace(chr(10), chr(10) + "  ")}')
+  if not commits:
+    raise RuntimeError(f'No commits found between {previousTag} and {releaseHash}.')
+  draftPath = Path(f'CHANGELOG_DRAFT_v{version}.md')
+  draftPath.write_text(
+      f'## [v{version}](https://github.com/PASTA-ELN/pasta-eln/tree/v{version}) '
+      f'({datetime.date.today().isoformat()})\n\n'
+      f'**Release source commit:** `{releaseHash}`\n'
+      f'**Previous stable release:** `{previousTag}` (`{previousHash}`)\n\n'
+      + '\n'.join(commits) + '\n', encoding='utf-8')
+  return draftPath
+
+
+LLM_INSTRUCTION = """
+Rewrite this Git-generated changelog draft into polished release notes.
+
+The draft describes the new PASTA-ELN release. Preserve exactly:
+
+- the release heading and date;
+- the “Release source commit” line;
+- the “Previous stable release” line;
+- the commit link and hash for every change retained in the release notes. Internal-only commits may be omitted.
+
+Improve only the release-note content:
+
+- group related commits under concise headings such as “New features”, “Improvements”, “Bug fixes”, and “Maintenance”;
+- rewrite commit subjects into clear, user-facing descriptions;
+- combine related commits where appropriate;
+- remove purely internal or unhelpful commits if they do not represent a user-visible change;
+- do not invent functionality, behavior, or reasons not supported by the commit subjects;
+- do not mention GitHub issues unless they are already present in the input;
+- retain commit links for all summarized changes;
+- treat “Commit body” and “Changed files” as source context only; do not copy those labels into the published release notes;
+- return valid Markdown only.
+
+Exclude internal development work from the release notes. Do not mention:
+
+- code-quality improvements, type checking, linting, spelling, formatting, or pre-commit checks;
+- CI, test-only, or build-pipeline changes;
+- refactoring or application-structure changes;
+- removal of obsolete widgets, files, or other internal cleanup.
+
+If a commit contains both internal work and a user-visible change, describe only the user-visible change. Omit a commit entirely when it has no meaningful user-facing effect.
+
+Output the complete replacement file, including the preserved metadata.
+"""
+
+
 def newVersion(level:int=2) -> None:
   """
   Create a new version
@@ -100,17 +186,22 @@ def newVersion(level:int=2) -> None:
   print('Create new version...')
   prevVersionsFromPypi()
   #get old version number
-  versionList = [int(i) for i in getVersion()[1:].replace('b','.').split('.')]
-  #create new version number
-  versionList[level] += 1
-  for i in range(level+1,3):
-    versionList[i] = 0
-  version = '.'.join([str(i) for i in versionList])
+  currentVersion = getVersion()[1:]
+  # A beta version does not define a release boundary. Its base version is
+  # therefore the default stable version proposed by the release script.
+  if 'b' in currentVersion:
+    version = currentVersion.split('b', 1)[0]
+  else:
+    versionList = [int(i) for i in currentVersion.split('.')]
+    versionList[level] += 1
+    for i in range(level+1,3):
+      versionList[i] = 0
+    version = '.'.join([str(i) for i in versionList])
   reply = input(f'Create version (2.5, 3.1.4b1): [{version}]: ')
   version = version if not reply or len(reply.split('.'))<2 else reply
   print(f'======== Version {version} =======')
   #git commands and update python files
-  os.system('git pull')
+  subprocess.run(['git', 'pull'], check=True)
   filesToUpdate = {'pasta_eln/__init__.py':'__version__ = ',
                    'docs/source/conf.py':'version = '}
   for path,text in filesToUpdate.items():
@@ -124,18 +215,33 @@ def newVersion(level:int=2) -> None:
       fileNew.append(line)
     with open(path,'w', encoding='utf-8') as fOut:
       fOut.write('\n'.join(fileNew)+'\n')
-  os.system('git commit -a -m "update version numbers"')
-  os.system(f'git tag -a v{version} -m "Version {version}; see CHANGELOG for details"')
-  #create CHANGELOG / Contributor-list
-  with open(Path.home()/'.ssh'/'github.token', encoding='utf-8') as fIn:
-    token = fIn.read().strip()
-  os.system(f'github_changelog_generator -u PASTA-ELN -p pasta-eln -t {token}')
+  subprocess.run(['git', 'commit', '-a', '-m', 'update version numbers'], check=True)
+  # must not add entries to the changelog.
+  if re.fullmatch(r'\d+\.\d+\.\d+', version):
+    draftPath = createChangelog(version)
+    print(f'Changelog draft written to {draftPath}. Replace it with the reviewed changelog before continuing.')
+    print(LLM_INSTRUCTION)
+    if input('Insert reviewed changelog draft and continue? [y/N]: ').lower() != 'y':
+      raise RuntimeError('Release stopped before changelog publication.')
+    changelogPath = Path('CHANGELOG.md')
+    reviewedDraft = draftPath.read_text(encoding='utf-8').rstrip()
+    requiredMetadata = (f'## [v{version}]', r'\*\*Release source commit:\*\* `[0-9a-f]{40}`',
+                        r'\*\*Previous stable release:\*\* `v\d+\.\d+\.\d+` \(`[0-9a-f]{40}`\)')
+    if any(re.search(metadata, reviewedDraft) is None for metadata in requiredMetadata):
+      raise RuntimeError(f'Reviewed changelog draft {draftPath} is missing required release metadata.')
+    changelog = changelogPath.read_text(encoding='utf-8')
+    stableHeading = changelog.find('\n## [v')
+    insertion = reviewedDraft + '\n\n'
+    changelogPath.write_text(changelog[:stableHeading] + '\n' + insertion + changelog[stableHeading + 1:]
+                             if stableHeading >= 0 else changelog.rstrip() + '\n\n' + insertion, encoding='utf-8')
+    draftPath.unlink()
   addition = input('\n\nWhat do you want to add to the push message (do not use \' or \")? ')
-  os.system(f'git commit -a -m "updated changelog; {addition}"')
+  subprocess.run(['git', 'commit', '-a', '-m', f'updated changelog; {addition}'], check=True)
+  subprocess.run(['git', 'tag', '-a', f'v{version}', '-m', f'Version {version}; see CHANGELOG for details'], check=True)
   #push and publish
   print('\n\nWill bypass rule violation\n\n')
-  os.system('git push')
-  os.system(f'git push origin v{version}')
+  subprocess.run(['git', 'push'], check=True)
+  subprocess.run(['git', 'push', 'origin', f'v{version}'], check=True)
   return
 
 
@@ -303,20 +409,9 @@ def runSourceVerification() -> None:
            'sphinx-doc': 'make -C docs'}
   for label, cmd in tools.items():
     print(f'------------------ start {label} -----------------')
-    os.system(cmd)
+    subprocess.run(shlex.split(cmd), check=False)
     print(f'---------------- end {label} ---------------')
   rightAlignComments()
-  return
-
-
-def updateTutorialJson() -> None:
-  """ Update all yml -> json """
-  for root, _, files in os.walk('pasta_eln/Resources/Tutorials'):
-    for file in files:
-      if file.endswith('.yml'):
-        inPath = Path(root) / file
-        outPath = inPath.with_suffix('.json')
-        os.system(f'yq . {inPath} > {outPath}')
   return
 
 
@@ -352,7 +447,8 @@ def getArtifacts() -> None:
     for chunk in response.iter_content(chunk_size=8192):
       if chunk:
         f.write(chunk)
-  os.system('cd artifacts && unzip -o artifact.zip && rm artifact.zip')
+  subprocess.run(['unzip', '-o', 'artifact.zip'], cwd='artifacts', check=False)
+  Path('artifacts/artifact.zip').unlink()
   return
 
 
@@ -362,7 +458,6 @@ if __name__=='__main__':
   if not successTests:
     sys.exit(1)
   #create files automatically
-  updateTutorialJson()
   createContributors()
   runSourceVerification()
   createRequirementsFile()

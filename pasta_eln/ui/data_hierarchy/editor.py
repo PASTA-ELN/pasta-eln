@@ -21,7 +21,7 @@ from .mandatory_column_delegate import MandatoryColumnDelegate
 from .name_column_delegate import NameColumnDelegate
 
 #                0       1            2      3           4      5         6
-COLUMN_NAMES = ['name','description','unit','mandatory','item list','free list','move up','delete']
+COLUMN_NAMES = ['name','description','unit','mandatory','item list','free list','move up','remove']
 COLUMN_WIDTH = [100,   250,          60,    80,         150,        200,        60,       50]
 pd.options.mode.copy_on_write = True
 
@@ -62,7 +62,7 @@ class SchemeEditor(QDialog):
     mainL.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
     mainL.setSpacing(SPACE.S)
     Label('Item type editor', 'h1', mainL)
-    Label('Warning: every change of the item type saves that content', 'h3', mainL)
+    Label('Changes to an item type are saved immediately.', 'h3', mainL)
     docTypeW = QWidget(self)
     docTypeL = QHBoxLayout(docTypeW)
     docTypeL.setSpacing(SPACE.S)
@@ -76,7 +76,7 @@ class SchemeEditor(QDialog):
     docTypeL.addStretch(1)
     Button('', self, Command.NEW, docTypeL, icon='ri.add-line', tooltip='New item type', flat=True)
     Button('', self, Command.EDIT, docTypeL, icon='ri.edit-line', tooltip='Edit item type', flat=True)
-    Button('', self, Command.DEL, docTypeL, icon='ri.delete-bin-line', tooltip='Delete item type', flat=True)
+    Button('', self, Command.DEL, docTypeL, icon='ri.delete-bin-line', tooltip='Remove item type', flat=True)
     Button('', self, Command.IMPORT, docTypeL, icon='fa5s.download', tooltip='Import item type template', flat=True)
     Button('', self, Command.EXPORT, docTypeL, icon='fa5s.upload', tooltip='Export item type template', flat=True)
 
@@ -221,7 +221,7 @@ class SchemeEditor(QDialog):
     self.closeButtons.clear()
     for idx in range(1, self.tabW.count()):
       self.closeButtons.append(Button('', self, (Command.DEL_GROUP, idx), icon='ri.close-line',
-                                      tooltip='Delete group', flat=True))
+                                      tooltip='Remove group', flat=True))
       self.tabW.tabBar().setTabButton(idx, QTabBar.ButtonPosition.RightSide, self.closeButtons[-1])
       header = table.horizontalHeader()
       header.setStretchLastSection(True)
@@ -238,8 +238,8 @@ class SchemeEditor(QDialog):
     # verification: uniqueness in names. etc
     unique = ( df.groupby('class')['name'].nunique() == df.groupby('class')['name'].count()  ).all()
     if not unique:
-      showMessage(self, 'Error', 'Within each table, the text in the first column has to be unique. E.g. no '
-                  'two "tags" are allowed.', 'Critical')
+      showMessage(self, 'Invalid item type', 'Within each item type, property names must be unique. For example, '
+                  'two "tags" properties are not allowed.', 'Critical')
       return
     # SAVE DATA
     dfSchema = df.drop('description', axis=1)
@@ -249,7 +249,7 @@ class SchemeEditor(QDialog):
     dfDef.rename(columns={'description':'long'}, inplace=True)
     nonUnique = dict(dfDef.groupby(['key'])['long'].apply(lambda x: len(np.unique(x))))
     if nonUniqueStr:= ', '.join(k for k,v in nonUnique.items() if v>1):
-      button = QMessageBox.question(self, 'Non unique definitions',
+      button = QMessageBox.question(self, 'Flatten non-unique definitions?',
                                   f'The definitions are non-unique for {nonUniqueStr}. Do you want to flatten?',
                                   QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                   QMessageBox.StandardButton.No)
@@ -343,7 +343,7 @@ class SchemeEditor(QDialog):
       dialog = DocTypeEditor(self.comm, self.selectDocType.currentData())
       dialog.exec()
     elif action is Command.DEL:
-      button = QMessageBox.question(self, 'Question', 'Do you really want to remove the doc-type?',
+      button = QMessageBox.question(self, 'Remove item type?', 'Do you really want to remove this item type?',
                                     QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                     QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.No:
@@ -356,7 +356,7 @@ class SchemeEditor(QDialog):
       self.selectDocType.clear()
     elif action is Command.DEL_GROUP:
       docLabel = str(self.docLabel)
-      button = QMessageBox.question(self, 'Question', 'Do you really want to remove this group?',
+      button = QMessageBox.question(self, 'Remove group?', 'Do you really want to remove this group?',
                                     QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                     QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:

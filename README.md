@@ -44,17 +44,7 @@ Open issues are the union of:
 - this README section, which records repository-wide maintenance items that need visibility before or alongside an issue.
 
 ### Repository maintenance items
-Order of open issues that do not have a question
-
-- Version 3.4: New features that require minimal changes, possibly some config changes
-  1.  528 – Feature Request: easily visible changelog
-
 
 - Tutorial
   - Create an interactive tutorial runner as a separate program launched from the main program. It should use a read-only SQLite connection, define a clear busy-timeout/WAL strategy for concurrent access, and maintain its own JSON file to track tutorial progress.
   - Rewrite the tutorial content with more steps, details, screenshots, contextual help, and clear expected results.
-
-- Redesign of Pasta
-  1.  421 – Data hierarchy structure
-  2.  451 – Should items with the same ...
-  3.  644 – Linking multiple items = list

@@ -36,7 +36,7 @@ def cliCallback(api:ElabFTWApi , entry:str, idx:int) -> str:
 
 
 MERGE_LABELS = {
-     -2:'-2: Non-existante elabFTW entry',
+     -2:'-2: Non-existent eLabFTW item',
      -1:'-1: ERROR',
       1:'1: client -> server',
       2:'2: other client -> client',
@@ -136,17 +136,17 @@ class Pasta2Elab:
     if hasattr(self,'api') and self.api.url:                               #only when you are connected to web
       report = []
       if progressCallback is not None:
-        progressCallback('text', '### Start syncing with elabFTW server\n#### Set up sync\nStart...')
+        progressCallback('text', '### Start syncing with eLabFTW server\n#### Set up sync\nStart...')
       self.syncDocTypes()                                                              # sync categories ~1sec
       self.createIdDict()
       if progressCallback is not None:
-        progressCallback('append', 'Done\n#### Sync each document\nStart...')
+        progressCallback('append', 'Done\n#### Sync each item\nStart...')
       for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
         projHierarchy, _ = self.backend.db.getHierarchy(projID)
         count = len(list(PreOrderIter(projHierarchy)))
         report += [updateEntryLocal(i, mode, callback, idx, count) for idx, i in enumerate(PreOrderIter(projHierarchy))]
       if progressCallback is not None:
-        progressCallback('append', 'Done\n#### Sync missing entries\nStart...')
+        progressCallback('append', 'Done\n#### Sync missing items\nStart...')
       report += self.syncMissingEntries(mode, callback, progressCallback)
     else:
       logging.error('Not connected to elab server!', exc_info=True)
@@ -155,7 +155,7 @@ class Pasta2Elab:
       reportSum = Counter([i[1] for i in report])
       reportText = '\n  - '.join(['']+[f'{v:>4}:{MERGE_LABELS[k][2:]}' for k,v in reportSum.items()])
       progressCallback('count', '100')
-      progressCallback('append', f'Done\n#### Summary\nSend all data to server: success\n{reportText}')
+      progressCallback('append', f'Done\n#### Summary\nUpload all items to server: success\n{reportText}')
     return report
 
 
@@ -242,7 +242,7 @@ class Pasta2Elab:
     entryType = 'experiments' if self.docID2elabID[node.id][1] else 'items'
     dataFromElab = self.api.readEntry(entryType, elabID)[0]
     if not dataFromElab:
-      logging.error('Empty server document for %s %s/%s', node.id, entryType, elabID, exc_info=True)
+      logging.error('Empty server item for %s %s/%s', node.id, entryType, elabID, exc_info=True)
       self.backend.db.cursor.execute('UPDATE main SET externalId=? WHERE id=?', ['', node.id])
       self.backend.db.connection.commit()
       self.docID2elabID.pop(node.id)
@@ -520,7 +520,7 @@ class Pasta2Elab:
       dict: elabFTW entry
     """
     if not doc:
-      raise ValueError('Cannot convert / process empty document')
+      raise ValueError('Cannot convert or process an empty item')
     image     = doc.pop('image') if 'image' in doc else ''
     title     = doc.pop('name')
     bodyMD    = ''

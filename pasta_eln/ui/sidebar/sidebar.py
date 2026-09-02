@@ -39,7 +39,7 @@ class ProjectSidebar(Widget):
     self.headerL.addWidget(self.headerLabel, stretch=1)
     self.showHiddenBtn = Button('', self, Command.TOGGLE_HIDDEN_PROJECTS, self.headerL,
                                 icon='fa5s.eye-slash', style=ButtonStyle.PRIMARY,
-                                tooltip='Show hidden projects', checkable=True)
+                                tooltip='Hide/show hidden projects', checkable=True)
     self.showHiddenBtn.setChecked(self.showHiddenProjects)
     self.paintHiddenProjectButton()
     self.headerL.addWidget(self.newProjectBtn)
@@ -122,7 +122,7 @@ class ProjectSidebar(Widget):
     # 3. Fill projectList with Items = ProjectCards
     projects = self.visibleProjects()
     if projects.empty:
-      emptyWarning = Label('Create a Project by clicking on the "+"-button above.', 'h1',
+      emptyWarning = Label('Create a project by clicking the "+" button above.', 'h1',
                            style=f"color: {self.comm.palette.getThemeColor('foreground', 'disabled')};")
       emptyWarning.setWordWrap(True)
       self.projectListL.addWidget(emptyWarning)
@@ -137,7 +137,7 @@ class ProjectSidebar(Widget):
   def paintHiddenProjectButton(self) -> None:
     """Update the visibility toggle's icon and tooltip."""
     iconName = 'fa5s.eye' if self.showHiddenProjects else 'fa5s.eye-slash'
-    tooltip = 'Hide hidden projects' if self.showHiddenProjects else 'Show hidden projects'
+    tooltip = 'Hide/show hidden projects'
     color = self.comm.palette.getThemeColor('primary', 'base')
     self.showHiddenBtn.setIcon(qta.icon(iconName, color=color))
     self.showHiddenBtn.setToolTip(tooltip)

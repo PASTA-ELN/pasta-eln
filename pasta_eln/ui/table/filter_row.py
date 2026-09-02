@@ -21,7 +21,7 @@ class FilterRow(QWidget):
     self.column = QComboBox(self)
     self.column.addItems(tableView.tableData.columns.to_list())
     self.text = QLineEdit(self)
-    self.text.setPlaceholderText('Filter text')
+    self.text.setPlaceholderText('Enter filter text')
     self.removeButton = Button('', tableView, icon='ri.subtract-line', tooltip='Remove filter', flat=True)
     self.removeButton.clicked.connect(lambda: tableView.removeFilter(self))
     self.column.currentTextChanged.connect(lambda _: tableView.paint())

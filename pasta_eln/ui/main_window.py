@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
     else:
       configWindow = Configuration(self.comm, 'setup')
       configWindow.exec()
-      self.setCentralWidget(QLabel('ERROR: No configuration present!'))
+      self.setCentralWidget(QLabel('Error: No configuration is available.'))
       return
     self.comm.formDoc.connect(self.formDoc)
     self.comm.changeSidebar.connect(self.paint)
@@ -66,13 +66,13 @@ class MainWindow(QMainWindow):
     menu = self.menuBar()
     projectMenu = menu.addMenu('&Project')
     self.projectActions = [
-        action('Import file(s)…',           self, Command.IMPORT_FILES, projectMenu),
-        action('&Export project to .eln',   self, Command.EXPORT_ELN,   projectMenu),
-        action('&Import .eln into project', self, Command.IMPORT_ELN,   projectMenu),
-        action('&Upload to repository',     self, Command.REPOSITORY,   projectMenu),
+        action('Import files…',            self, Command.IMPORT_FILES, projectMenu),
+        action('&Export project as ELN',   self, Command.EXPORT_ELN,   projectMenu),
+        action('&Import ELN into project', self, Command.IMPORT_ELN,   projectMenu),
+        action('&Upload project to repository', self, Command.REPOSITORY, projectMenu),
     ]
     projectMenu.addSeparator()
-    self.projectActions.append(action('&Delete current project...', self, Command.DELETE_PROJECT, projectMenu))
+    self.projectActions.append(action('&Remove current project…', self, Command.DELETE_PROJECT, projectMenu))
     projectMenu.aboutToShow.connect(self.paintProjectActions)
     projectMenu.addSeparator()
     action('&Exit',                     self, Command.EXIT, projectMenu)
@@ -82,11 +82,11 @@ class MainWindow(QMainWindow):
     systemMenu = menu.addMenu('Project &group')
     self.changeProjectGroups = systemMenu.addMenu('&Change project group')
     syncMenu = systemMenu.addMenu('&Synchronize')
-    action('Send all',                  self, Command.SYNC_SEND_ALL, syncMenu)
-    action('Send',                      self, Command.SYNC_SEND, syncMenu, keySequence='F5')
+    action('Upload all',              self, Command.SYNC_SEND_ALL, syncMenu)
+    action('Upload',                  self, Command.SYNC_SEND, syncMenu, keySequence='F5')
     if 'develop' in self.comm.configuration:
-      action('Get all',                 self, Command.SYNC_GET_ALL, syncMenu)
-      action('Get',                     self, Command.SYNC_GET, syncMenu, keySequence='F4')
+      action('Download all',            self, Command.SYNC_GET_ALL, syncMenu)
+      action('Download',                self, Command.SYNC_GET, syncMenu, keySequence='F4')
       action('Smart sync',              self, Command.SYNC_SMART, syncMenu)
     configureMenu = systemMenu.addMenu('&Configure')
     action('&Item type editor',         self, Command.SCHEMA, configureMenu, keySequence='F8')
@@ -97,6 +97,7 @@ class MainWindow(QMainWindow):
 
     helpMenu = menu.addMenu('&Other')
     action('&Website',                  self, Command.WEBSITE, helpMenu)
+    action('&Changelog',                self, Command.CHANGELOG, helpMenu)
     action('Shortcuts',                 self, Command.SHORTCUTS, helpMenu)
     action('About',                     self, Command.ABOUT, helpMenu)
     helpMenu.addSeparator()
@@ -225,13 +226,13 @@ class MainWindow(QMainWindow):
       if fileNames and isinstance(project, Project):
         project.execute([ProjectCommand.IMPORT_FILES, fileNames])
     elif commandType is Command.EXPORT_ELN:
-      fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
+      fileName = QFileDialog.getSaveFileName(self, 'Export project as ELN', str(Path.home()), '*.eln')[0]
       if fileName != '':
         docTypes = [i for i in self.comm.docTypesTitles if i[0] != 'x']
         self.comm.uiRequestTask.emit(Task.EXPORT_ELN,
                                      {'fileName': fileName, 'projID': self.comm.projectID, 'docTypes': docTypes})
     elif commandType is Command.IMPORT_ELN:
-      fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
+      fileName = QFileDialog.getOpenFileName(self, 'Import ELN file', str(Path.home()), '*.eln')[0]
       if fileName != '':
         self.comm.uiRequestTask.emit(Task.IMPORT_ELN, {'fileName': fileName, 'projID': self.comm.projectID})
         self.comm.changeProject.emit(self.comm.projectID, '')
@@ -239,7 +240,7 @@ class MainWindow(QMainWindow):
       dialogR = UploadGUI(self.comm)
       dialogR.exec()
     elif commandType is Command.DELETE_PROJECT:
-      confirmation = QMessageBox.critical(self, 'Critical', 'Do you want to delete the current project?',
+      confirmation = QMessageBox.critical(self, 'Remove project?', 'Do you want to remove the current project?',
           QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  QMessageBox.StandardButton.No)
       if confirmation == QMessageBox.StandardButton.Yes:
         self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID': self.comm.projectID, 'stack': self.comm.projectID})
@@ -292,6 +293,8 @@ class MainWindow(QMainWindow):
     # remainder
     elif commandType is Command.WEBSITE:
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
+    elif commandType is Command.CHANGELOG:
+      webbrowser.open('https://github.com/PASTA-ELN/pasta-eln/blob/main/CHANGELOG.md')
     elif commandType is Command.CHECK_DB:
       self.comm.uiRequestTask.emit(Task.CHECK_DB, {'style': 'json'})
     elif commandType is Command.SHORTCUTS:
@@ -337,27 +340,28 @@ class MainWindow(QMainWindow):
 
 class Command(Enum):
   """ Commands used in this file """
-  EXPORT_ELN = 1
-  IMPORT_ELN = 2
-  EXIT = 3
-  VIEW = 4
-  CHANGE_PG = 6
-  SYNC_SEND = 7
-  SYNC_GET = 8
-  SYNC_SMART = 9
-  SCHEMA = 10
-  TEST1 = 11
-  UPDATE = 13
-  CONFIG = 14
-  WEBSITE = 15
-  CHECK_DB = 16
-  SHORTCUTS = 17
-  RESTART = 18
-  SCREENSHOT = 19
-  ABOUT = 20
-  DEFINITIONS = 21
-  REPOSITORY = 22
-  SYNC_SEND_ALL = 24
-  SYNC_GET_ALL = 25
-  DELETE_PROJECT = 26
-  IMPORT_FILES = 27
+  EXPORT_ELN     = 1
+  IMPORT_ELN     = 2
+  EXIT           = 3
+  VIEW           = 4
+  CHANGE_PG      = 5
+  SYNC_SEND      = 6
+  SYNC_GET       = 7
+  SYNC_SMART     = 8
+  SCHEMA         = 9
+  TEST1          = 10
+  UPDATE         = 11
+  CONFIG         = 12
+  WEBSITE        = 13
+  CHANGELOG      = 14
+  CHECK_DB       = 15
+  SHORTCUTS      = 16
+  RESTART        = 17
+  SCREENSHOT     = 18
+  ABOUT          = 19
+  DEFINITIONS    = 20
+  REPOSITORY     = 21
+  SYNC_SEND_ALL  = 22
+  SYNC_GET_ALL   = 23
+  DELETE_PROJECT = 24
+  IMPORT_FILES   = 25

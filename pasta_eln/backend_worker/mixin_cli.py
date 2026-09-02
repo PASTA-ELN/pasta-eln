@@ -48,7 +48,7 @@ class CliMixin:
     """
     from anytree import PreOrderIter
     if len(self.hierStack) == 0:
-      return 'Warning: pasta.outputHierarchy No project selected'
+      return 'Warning: no project is selected for pasta.outputHierarchy.'
     hierString = ' '.join(self.hierStack)
     hierarchy, _ = self.db.getHierarchy(hierString)
     return ''.join('  '*node.depth + node.name + ' | ' + '/'.join(node.docType) + (f' | {node.id}' if addID else '') +'\n'

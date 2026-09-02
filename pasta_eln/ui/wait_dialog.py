@@ -22,7 +22,7 @@ class WaitDialog(QDialog):
     self.mainL.setSpacing(SPACE.S)
     self.setMinimumWidth(500)
     self.setMinimumHeight(600)
-    self.setWindowTitle('Wait for processes...')
+    self.setWindowTitle('Processing...')
 
     self.text = QTextBrowser()
     self.text.setFixedHeight(450)
