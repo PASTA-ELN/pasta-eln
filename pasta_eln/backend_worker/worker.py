@@ -503,8 +503,9 @@ class BackendWorker(QObject):
 
   def exit(self) -> None:
     """ Exit the worker thread """
-    if self.backend is not None:
-      self.deleteLater()
+    if self.backend.dbRaw is not None:
+      self.backend.exit()
+    self.deleteLater()
 
 
 class BackendThread(QThread):
