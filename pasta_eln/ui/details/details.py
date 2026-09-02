@@ -136,7 +136,7 @@ class Details(Widget):
         differs = all(re.sub(r'^\d{3}_', '', filename).casefold() != name for filename in filenames)
     tooltip = ''
     if len(self.data['branch']) > 1:
-      tooltip = f'Item is stored in {len(self.data['branch'])} locations. Metadata, tags, comments, and preview are shared.\n\n'
+      tooltip = f"Item is stored in {len(self.data['branch'])} locations. Metadata, tags, comments, and preview are shared.\n\n"
     if differs or len(self.data['branch']) > 1:
       if filenames:
         tooltip += 'The local filenames are:\n' + '\n'.join(filenames)
@@ -268,8 +268,7 @@ class Details(Widget):
     if commandType is Command.EDIT:
       self.onEditButtonClicked()
     elif commandType is Command.OPEN_PROJECT:
-      stack = self.currentBranch().get('stack', [])
-      if stack:
+      if stack := self.currentBranch().get('stack', []):
         self.comm.changeProject.emit(stack[0], self.docID)
     elif commandType is Command.OPEN_LIST:
       self.comm.changeTable.emit(self.data['type'][0], '', self.docID)

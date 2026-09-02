@@ -126,9 +126,9 @@ def createChangelog(version: str) -> Path:
                                   capture_output=True, text=True, check=True).stdout.strip()
     commits.append(f'- {subject} ([`{commitHash[:8]}`](https://github.com/PASTA-ELN/pasta-eln/commit/{commitHash}))\n'
                    '  Commit body:\n'
-                   f'  {body.replace(chr(10), chr(10) + "  ")}\n'
-                   f'  Changed files:\n'
-                   f'  {changedFiles.replace(chr(10), chr(10) + "  ")}')
+                   f'  {body.replace(chr(10), f"{chr(10)}  ")}\n'
+                   '  Changed files:\n'
+                   f'  {changedFiles.replace(chr(10), f"{chr(10)}  ")}')
   if not commits:
     raise RuntimeError(f'No commits found between {previousTag} and {releaseHash}.')
   draftPath = Path(f'CHANGELOG_DRAFT_v{version}.md')

@@ -162,12 +162,12 @@ def test_core_gui_workflow(qtbot, caplog):
     project = window.body.tabWidget.widget(0)
     assert isinstance(project, Project)
     qtbot.waitUntil(lambda: project.docProj.get('name') == 'PASTAs Example Project', timeout=30_000)
-    # Toggle project details and the full tree view through the visibility menu.
+    # Toggle the project header and the full tree view through the visibility menu.
     project.btnVisibility.click()
-    trigger_menu_action(project.btnVisibility.menu(), 'project details')
+    trigger_menu_action(project.btnVisibility.menu(), 'project header')
     capture_step(window, frames)
     project.btnVisibility.click()
-    trigger_menu_action(project.btnVisibility.menu(), 'project details')
+    trigger_menu_action(project.btnVisibility.menu(), 'project header')
     capture_step(window, frames)
     project.btnVisibility.click()
     trigger_menu_action(project.btnVisibility.menu(), 'view')
