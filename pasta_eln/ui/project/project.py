@@ -157,9 +157,9 @@ class Project(Widget):
     self.btnVisibility = Button('View', self, layout=topLineL,
                                 icon='ri.eye-line', style=ButtonStyle.PRIMARY)
     visibilityMenu = QMenu(self)
-    self.actHideDetail = action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
+    self.actHideDetail = action('Compact project header',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
     menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
-    minimizeItems = 'Full view' if self.showDetailsAll else 'Compact view'
+    minimizeItems = 'Compact view' if self.showDetailsAll else 'Full view'
     action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
     action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
     self.actionFoldAll     = action( minimizeItems,    self, [Command.SHOW_DETAILS],     visibilityMenu)
@@ -182,7 +182,7 @@ class Project(Widget):
                                              self))
     if not self.docProj['gui'][0]:
       self.allDetails.hide()
-      self.actHideDetail.setText('Show project details')
+      self.actHideDetail.setText('Full project header')
     self.allDetails.resizeEvent = self.commentResize                                            # type: ignore
     bgColor = f"background-color: {self.comm.palette.getThemeColor('background', 'base')};"
     fgColor = self.comm.palette.get('secondaryText', 'color')
@@ -248,10 +248,10 @@ class Project(Widget):
       self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':self.projID, 'gui':self.docProj['gui']})
       if self.allDetails is not None and self.allDetails.isHidden():
         self.allDetails.show()
-        self.actHideDetail.setText('Hide project details')
+        self.actHideDetail.setText('Compact project header')
       elif self.allDetails is not None:
         self.allDetails.hide()
-        self.actHideDetail.setText('Show project details')
+        self.actHideDetail.setText('Full project header')
     elif commandType is Command.HIDE:
       self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':self.projID})
       self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
@@ -271,16 +271,13 @@ class Project(Widget):
             continue
           docID    = meta['hierStack'].split('/')[-1]
           gui      = meta['gui']
-          gui[0]   = self.showDetailsAll
+          gui[0]   = not self.showDetailsAll
           subItem.setData({ **meta, **{'gui':gui}}, self.metaRole)
           self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
           recursiveRowIteration(subIndex)
       recursiveRowIteration(self.tree.model().index(-1,0))
       self.showDetailsAll = not self.showDetailsAll
-      if self.showDetailsAll:
-        self.actionFoldAll.setText('Full view')
-      else:
-        self.actionFoldAll.setText('Compact view')
+      self.actionFoldAll.setText('Compact view' if self.showDetailsAll else 'Full view')
     elif commandType is Command.HIDE_SHOW_ITEMS:
       self.showAll = not self.showAll
       self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)

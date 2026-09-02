@@ -140,7 +140,7 @@ class Details(Widget):
     if differs or len(self.data['branch']) > 1:
       if filenames:
         tooltip += 'The local filenames are:\n' + '\n'.join(filenames)
-      self.titleLabel.setToolTip(tooltip)
+      self.titleLabel.setToolTip(f'<span style="font-size: 11pt;">{tooltip}</span>')
     else:
       self.titleLabel.setToolTip('')
     # create name that fits into the space by putting ... in the middle
@@ -178,7 +178,11 @@ class Details(Widget):
       if key == 'name':
         continue
       if key == 'image':
-        ResizeImage(self.data['image'], self.contentPreviewL)
+        image = ResizeImage(self.data['image'], self.contentPreviewL)
+        sourcePixmap = image.sourcePixmap()
+        if not sourcePixmap.isNull():
+          imageHeight = sourcePixmap.height() * self.contentPreviewW.width() // sourcePixmap.width()
+          self.splitter.setSizes([imageHeight, self.splitter.height() - imageHeight])
         self.contentPreviewW.show()
       elif key == 'content':
         self.contentText = QTextEdit()

@@ -403,7 +403,7 @@ class Form(QDialog):
           labelL.setContentsMargins(0, 0, 0, 0)
           labelL.setSpacing(SPACE.S)
           labelL.addWidget(QLabel(key.capitalize()))
-          Button('Preview', self, [Command.FOCUS_AREA, key], labelL, checkable=True)
+          Button('Preview', self, [Command.PREVIEW, key], labelL, checkable=True)
           projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
           if 'form' in projectGroup.get('addOns',{}) and projectGroup['addOns']['form']:
             Button('Auto', self, Command.AUTO_COMMENT, labelL)
@@ -638,9 +638,10 @@ class Form(QDialog):
       elif str(payload[0]).startswith('heading'):
         getattr(self, f'textEdit_{payload[1]}').insertPlainText('#' * int(str(payload[0])[-1]) +' Heading\n')
 
-    elif commandType is Command.FOCUS_AREA:
+    elif commandType is Command.PREVIEW:
       preview = getattr(self, f'textShow_{payload[0]}')
       preview.setVisible(not preview.isVisible())
+      getattr(self, f'buttonBarW_{payload[0]}').setVisible(preview.isVisible())
 
     elif commandType is Command.SHOW_ADVANCED:
       self.showAdvanced = True
@@ -912,7 +913,7 @@ class Form(QDialog):
 class Command(Enum):
   """ Commands used in this file """
   BUTTON_BAR     = 1
-  FOCUS_AREA     = 2
+  PREVIEW        = 2
   AUTO_COMMENT   = 3
   FORM_SAVE      = 4
   FORM_CANCEL    = 5

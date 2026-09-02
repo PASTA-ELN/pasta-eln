@@ -99,7 +99,7 @@ class TreeView(QTreeView):
       action('Add child folder',                   self, [Command.ADD_CHILD],      context)
     action('Add sibling folder',                   self, [Command.ADD_SIBLING],    context)
     context.addSeparator()
-    action('Hide/show item details',               self, [Command.SHOW_DETAILS], context)
+    action('Compact/Full item view',               self, [Command.SHOW_DETAILS],   context)
     if folder:
       projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
       if projectAddOns := projectGroup.get('addOns',{}).get('project',''):

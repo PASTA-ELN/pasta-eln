@@ -303,10 +303,10 @@ class ExtractorManager:
       extractorPath = self.addOnPath
     #start testing
     if (extractorPath/pyFile).is_file():
-    report += outputString(outputStyle, 'info', f'Use extractor: {str(extractorPath / pyFile)}.')
+      report += outputString(outputStyle, 'info', f'Use extractor: {str(extractorPath / pyFile)}.')
     else:
       success = False
-        report += outputString(outputStyle, 'error', f'No suitable extractor was found: {pyFile}')
+      report += outputString(outputStyle, 'error', f'No suitable extractor was found: {pyFile}')
     if success:
       try:
         module  = loadNamedModule(extractorPath, pyFile[:-3])

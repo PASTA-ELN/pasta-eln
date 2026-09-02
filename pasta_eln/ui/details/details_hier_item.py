@@ -80,10 +80,10 @@ class DetailsHierItem(CollapsibleSection):
     if key == 'tags':
       rating = ['\u2605' * int(i[1]) for i in value if re.match(r'^_\d$', i)]
       tags = [i for i in value if not re.match(r'^_\d$', i)]
-      labelStr = f'<b>Rating:</b><br>{rating[0]}<br><br>' if rating else ''
-      labelStr = f'{labelStr}   <b>Tags:</b><br>' + ', '.join(tags) + '<br><br>'
+      labelStr = f'<b>Rating: </b>{rating[0]}<br><br>' if rating else ''
+      labelStr = f'{labelStr}   <b>Tags: </b>' + ', '.join(tags) + '<br><br>'
     elif isMarkdown:                                                                 # long values or comments
-      labelStr = f'<b>{key.capitalize()}:</b><br>{markdown2html(markdownEqualizer(value))}<br><br>'
+      labelStr = f'<b>{key.capitalize()}:</b>{markdown2html(markdownEqualizer(value))}'
     else:
       dataHierarchyItems = [dict(i) for i in self.dataHierarchyNode if i['name'] == key]
       if len(dataHierarchyItems) == 1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
