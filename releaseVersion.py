@@ -236,7 +236,11 @@ def newVersion(level:int=2) -> None:
                              if stableHeading >= 0 else changelog.rstrip() + '\n\n' + insertion, encoding='utf-8')
     draftPath.unlink()
   addition = input('\n\nWhat do you want to add to the push message (do not use \' or \")? ')
-  subprocess.run(['git', 'commit', '-a', '-m', f'updated changelog; {addition}'], check=True)
+  changeCheck = subprocess.run(['git', 'diff', '--quiet', 'HEAD', '--'], check=False)
+  if changeCheck.returncode == 1:
+    subprocess.run(['git', 'commit', '-a', '-m', f'updated changelog; {addition}'], check=True)
+  elif changeCheck.returncode != 0:
+    raise subprocess.CalledProcessError(changeCheck.returncode, changeCheck.args)
   subprocess.run(['git', 'tag', '-a', f'v{version}', '-m', f'Version {version}; see CHANGELOG for details'], check=True)
   #push and publish
   print('\n\nWill bypass rule violation\n\n')
