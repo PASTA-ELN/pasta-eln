@@ -11,7 +11,7 @@ from scipy import stats
 from pasta_eln.misc_tools import MplCanvas, dfConvertColumns, isFloat
 
 # The following two variables are mandatory
-description  = 'Default metadata plot'  #short description that is shown in the menu
+description  = 'Analyze metadata'  # short description shown in the menu
 reqParameter = {} #possibility for required parameters: like API-key, etc. {'API': 'text'}
 
 
@@ -60,16 +60,16 @@ class DataAnalyse(QDialog):
     rowType.setSpacing(10)
     rowType.setContentsMargins(5, 5, 0, 5)
     mainL.addLayout(rowType)
-    graphTypeTitle = QLabel('graph type:')
+    graphTypeTitle = QLabel('Graph type:')
     graphTypeTitle.setStyleSheet('border: none; font-size: 14pt;')
     rowType.addWidget(graphTypeTitle)
     self.typeCB = QComboBox()
-    self.typeCB.addItems(['x-y plot','histogram'])
+    self.typeCB.addItems(['X-Y plot','Histogram'])
     self.typeCB.currentTextChanged.connect(self.changePlotType)
     rowType.addWidget(self.typeCB)
     rowType.addSpacing(1)
     self.subtypeCB = QComboBox()
-    self.subtypeCB.addItems(['points','points & lines','lines'])
+    self.subtypeCB.addItems(['Points','Points & lines','Lines'])
     self.subtypeCB.currentTextChanged.connect(self.refresh)
     rowType.addWidget(self.subtypeCB)
     rowType.addSpacing(1)
@@ -80,22 +80,22 @@ class DataAnalyse(QDialog):
     rowXL.setSpacing(10)
     rowXL.setContentsMargins(5, 5, 0, 5)
     mainL.addWidget(self.rowXW)
-    xAxisTitle = QLabel('x-axis:')
+    xAxisTitle = QLabel('X-axis:')
     xAxisTitle.setStyleSheet('border: none; font-size: 14pt;')
     rowXL.addWidget(xAxisTitle)
     self.xAxisCB = QComboBox()
     self.xAxisCB.addItems(columns)
     self.xAxisCB.currentTextChanged.connect(self.refresh)
     rowXL.addWidget(self.xAxisCB)
-    rowXL.addWidget(QLabel('min:'))
+    rowXL.addWidget(QLabel('Minimum:'))
     self.xAxisMin = QLineEdit('')
     self.xAxisMin.textChanged.connect(self.refresh)
     rowXL.addWidget(self.xAxisMin)
-    rowXL.addWidget(QLabel('max:'))
+    rowXL.addWidget(QLabel('Maximum:'))
     self.xAxisMax = QLineEdit('')
     self.xAxisMax.textChanged.connect(self.refresh)
     rowXL.addWidget(self.xAxisMax)
-    rowXL.addWidget(QLabel('label:'))
+    rowXL.addWidget(QLabel('Label:'))
     self.xAxisLabel = QLineEdit('')
     self.xAxisLabel.textChanged.connect(self.refresh)
     rowXL.addWidget(self.xAxisLabel)
@@ -106,22 +106,22 @@ class DataAnalyse(QDialog):
     rowYL.setSpacing(10)
     rowYL.setContentsMargins(5, 5, 0, 5)
     mainL.addWidget(self.rowYW)
-    yAxisTitle = QLabel('y-axis:')
+    yAxisTitle = QLabel('Y-axis:')
     yAxisTitle.setStyleSheet('border: none; font-size: 14pt;')
     rowYL.addWidget(yAxisTitle)
     self.yAxisCB = QComboBox()
     self.yAxisCB.addItems(columns)
     self.yAxisCB.currentTextChanged.connect(self.refresh)
     rowYL.addWidget(self.yAxisCB)
-    rowYL.addWidget(QLabel('min:'))
+    rowYL.addWidget(QLabel('Minimum:'))
     self.yAxisMin = QLineEdit('')
     self.yAxisMin.textChanged.connect(self.refresh)
     rowYL.addWidget(self.yAxisMin)
-    rowYL.addWidget(QLabel('max:'))
+    rowYL.addWidget(QLabel('Maximum:'))
     self.yAxisMax = QLineEdit('')
     self.yAxisMax.textChanged.connect(self.refresh)
     rowYL.addWidget(self.yAxisMax)
-    rowYL.addWidget(QLabel('label:'))
+    rowYL.addWidget(QLabel('Label:'))
     self.yAxisLabel = QLineEdit('')
     self.yAxisLabel.textChanged.connect(self.refresh)
     rowYL.addWidget(self.yAxisLabel)
@@ -131,14 +131,14 @@ class DataAnalyse(QDialog):
     rowCL.setSpacing(10)
     rowCL.setContentsMargins(5, 5, 0, 5)
     mainL.addLayout(rowCL)
-    colorTitle = QLabel('color:')
+    colorTitle = QLabel('Color:')
     colorTitle.setStyleSheet('border: none; font-size: 14pt;')
     rowCL.addWidget(colorTitle)
     self.cAxisCB = QComboBox()
     self.cAxisCB.addItems(df.columns)
     self.cAxisCB.currentTextChanged.connect(self.refresh)
     rowCL.addWidget(self.cAxisCB)
-    rowCL.addWidget(QLabel('label:'))
+    rowCL.addWidget(QLabel('Label:'))
     self.cAxisLabel = QLineEdit('')
     self.cAxisLabel.textChanged.connect(self.refresh)
     rowCL.addWidget(self.cAxisLabel)
@@ -154,14 +154,14 @@ class DataAnalyse(QDialog):
 
   def changePlotType(self):
     """ change the main plot-type: changes also the list in subType and hence refreshes the graph"""
-    if self.typeCB.currentText()=='x-y plot':
+    if self.typeCB.currentText()=='X-Y plot':
       self.rowYW.show()
       self.subtypeCB.clear()
-      self.subtypeCB.addItems(['points','points & lines','lines'])
-    if self.typeCB.currentText()=='histogram':
+      self.subtypeCB.addItems(['Points','Points & lines','Lines'])
+    if self.typeCB.currentText()=='Histogram':
       self.rowYW.hide()
       self.subtypeCB.clear()
-      self.subtypeCB.addItems(['histogram','cumulative distribution','distribution'])
+      self.subtypeCB.addItems(['Histogram','Cumulative distribution','Distribution'])
 
 
   def refresh(self):
@@ -192,7 +192,7 @@ class DataAnalyse(QDialog):
     matplotlib.pyplot.close('all')
     self.graph.axes.cla()
     #SCATTER PLOT
-    if self.typeCB.currentText()=='x-y plot':
+    if self.typeCB.currentText()=='X-Y plot':
       try:
         fit = np.polyfit(x, y, 1) if len(x) >= 2 else [np.nan, np.nan]
       except np.linalg.LinAlgError:
@@ -205,25 +205,25 @@ class DataAnalyse(QDialog):
       self.graph.axes.set_ylabel(self.yAxisLabel.text() or self.yAxisCB.currentText())
       # real plot
       subType = self.subtypeCB.currentText()
-      plotType = 'o' if subType=='points' else 'o-' if subType=='points & lines' else '-'
+      plotType = 'o' if subType=='Points' else 'o-' if subType=='Points & lines' else '-'
       for ci in np.unique(c):
         mask = c==ci
         self.graph.axes.plot(x[mask],y[mask], plotType, label=ci)
 
     # HISTOGRAM
-    if self.typeCB.currentText()=='histogram':
+    if self.typeCB.currentText()=='Histogram':
       for ci in np.unique(c):
         mask = c==ci
         if not np.any(mask):
           continue
         label = f'{ci} {np.mean(x[mask]):.2e}$\\pm${np.std(x[mask]):.2e}'
-        if self.subtypeCB.currentText()=='histogram':
+        if self.subtypeCB.currentText()=='Histogram':
           self.graph.axes.hist(x[mask], 20, label=label, alpha=0.5)
           self.graph.axes.set_ylabel('count')
-        if self.subtypeCB.currentText()=='cumulative distribution':
+        if self.subtypeCB.currentText()=='Cumulative distribution':
           self.graph.axes.ecdf(x[mask], label=label)
           self.graph.axes.set_ylabel('cumulative distribution')
-        if self.subtypeCB.currentText()=='distribution':
+        if self.subtypeCB.currentText()=='Distribution':
           res = stats.ecdf(x[mask])
           y_ = (res.cdf.probabilities[1:]-res.cdf.probabilities[:-1])/(res.cdf.quantiles[1:]-res.cdf.quantiles[:-1])
           x_ = (res.cdf.quantiles[1:]+res.cdf.quantiles[:-1])/2

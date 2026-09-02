@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Terminology Lookup</string>
+   <string>Terminology lookup</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="2" column="0">
@@ -31,7 +31,7 @@
        <item>
         <widget class="QLineEdit" name="terminologyLineEdit">
          <property name="placeholderText">
-          <string>&quot;Search for Definitions in Wikis/Ontologies&quot;</string>
+          <string>Search wikis and ontologies</string>
          </property>
          <property name="clearButtonEnabled">
           <bool>true</bool>
@@ -111,7 +111,7 @@
             </size>
            </property>
            <property name="text">
-            <string>Show/Hide Errors</string>
+            <string>Hide/show errors</string>
            </property>
           </widget>
          </item>

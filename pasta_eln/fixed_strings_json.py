@@ -8,9 +8,9 @@ defaultDocTypes: list[list[str]] = [
   ['measurement',         'http://purl.obolibrary.org/obo/NCIT_C42790',      'Measurements', 'fa5s.thermometer-half', 'm',    'name,tags,comment,type,image,.sample,.workflow/procedure'],
   ['sample',              'http://purl.obolibrary.org/obo/NCIT_C19157',      'Samples',      'fa5s.vial',             's',    'name,tags,.chemistry,comment,qrCodes'],
   ['workflow',            'http://purl.obolibrary.org/obo/NCIT_C42753',      'Workflows',    'fa5s.list-ol',          'w',    'name,tags,comment'],
-  ['workflow/procedure',  'https://schema.org/procedure',                    'Procedure',    '',                      '',     'name,tags,comment,content'],
-  ['workflow/workplan' ,  'http://purl.obolibrary.org/obo/PROCO_0000093',    'Workplan',    '',                      '',     'name,tags,comment,content'],
-  ['workflow/worklog'  ,  'http://dicom.nema.org/resources/ontology/DCM/LOG','Worklog',     '',                      '',     'name,tags,comment,content'],
+  ['workflow/procedure',  'https://schema.org/procedure',                    'Procedures',   '',                      '',     'name,tags,comment,content'],
+  ['workflow/workplan' ,  'http://purl.obolibrary.org/obo/PROCO_0000093',    'Workplans',    '',                      '',     'name,tags,comment,content'],
+  ['workflow/worklog'  ,  'http://dicom.nema.org/resources/ontology/DCM/LOG','Worklogs',    '',                      '',     'name,tags,comment,content'],
   ['device',              'http://purl.obolibrary.org/obo/NCIT_C16742',      'Devices',  'ri.scales-2-line',          'd',    'name,tags,comment,.vendor'],
   ['device/extension',    'https://www.wikidata.org/wiki/Q19841649',         'Extensions',   '',                      '',     'name,tags,comment,.vendor'],
 ]
@@ -68,12 +68,12 @@ defaultSchema: list[list[str|int]] = [
 
 
 defaultDefinitions = [
-  ['name',               'What is the name this item?',                                    ''],
+  ['name',               'What is the name of this item?',                                ''],
   ['tags',               'What are the tags?',                                             ''],
-  ['.status',            'What is the project status',                                     ''],
+  ['.status',            'What is the project status?',                                    ''],
   ['.objective',         'What is the objective?',                                         ''],
-  ['comment',            'What are the comments?',                                         ''],
-  ['content',            'What is procedure (Markdown possible; autofill if file given)?', ''],
+  ['comment',            'What is the comment?',                                           ''],
+  ['content',            'What is the procedure? Markdown is supported, and the content can be filled from a file.', ''],
   ['.vendor',            'Who is the vendor?',                                             ''],
   ['.sample',            'Which sample was used?',                                         ''],
   ['.workflow/procedure','Which procedure was used?',                                      ''],
@@ -88,7 +88,7 @@ defaultDefinitions = [
 defaultDataHierarchyNode: list[dict[str, str]] = [
   {'docType':'-','class':'','idx':'0','name':'name',   'query':'What is the name?',     'unit':'','PURL':'','mandatory':'T','list':''},
   {'docType':'-','class':'','idx':'1','name':'tags',   'query':'What are the tags?',    'unit':'','PURL':'','mandatory':'','list':''},
-  {'docType':'-','class':'','idx':'2','name':'comment','query':'What are the comments?','unit':'','PURL':'','mandatory':'','list':''}
+  {'docType':'-','class':'','idx':'2','name':'comment','query':'What is the comment?','unit':'','PURL':'','mandatory':'','list':''}
   ]
 
 
@@ -111,7 +111,7 @@ defaultConfiguration: dict[str, Any] = {
 configurationGUI: dict[str, Any] = {
   'general': {
     'showHidden': ['Show hidden items by default', 'Yes', ['Yes','No']],
-    'autosave': ['Autosave entries in form', 'No', ['Yes', 'No']],
+    'autosave': ['Autosave items in form', 'No', ['Yes', 'No']],
     'checkForUpdates': ['Check for updates on startup', 'Yes', ['Yes', 'No']]
   },
   'appearance': {
@@ -163,22 +163,22 @@ setupText = """
 Three components are needed for proper functioning of PASTA-ELN:
 - Configuration of preferences
 - Shortcut creation
-- Example project creation
+- Example project
 
-This setup will analyse and (possibly) correct these items
-If an attempt fails: please follow to this [website](https://pasta-eln.github.io/pasta-eln/install.html#troubleshooting-instructions)
+This setup will analyze and (possibly) correct these items.
+If an attempt fails, please follow the instructions on this [website](https://pasta-eln.github.io/pasta-eln/install.html#troubleshooting-instructions).
 """
 
 
 exampleDataString = """
 Do you want to create an example project?
 
-This step helps to verify the installation and provides an helpful example for new users
+This step helps to verify the installation and provides a helpful example for new users.
 
-!WARNING! This process will RESET everything and thereby DELETE EVERYTHING since you installed pastaELN
+!WARNING! This process will reset everything and thereby remove all content created since you installed PASTA-ELN.
 
-This step usually takes up to 20sec, so please be patient. Sometimes, Linux mentions that the program
-is not responding and asks if to close/wait. Please WAIT
+This step usually takes up to 20 sec, so please be patient. Sometimes, Linux reports that the program
+is not responding and asks whether to close or wait. Please wait.
 """
 
 shortcuts = """
@@ -195,21 +195,21 @@ shortcuts = """
 | **Ctrl+T** | Show tags |
 | **Ctrl+U** | Show unidentified items |
 
-Document unique one-letter shortcut are assigned in Item Editor and can hence vary from these defaults. Use
-**Ctrl+<letter>** to show that document type.
+One-letter item type shortcuts are assigned in the item type editor and can vary from these defaults. Use
+**Ctrl+<letter>** to show that item type.
 
 ### Application actions
 
 | Shortcut | Action |
 |---|---|
 | **F2** | Test extraction for the selected item |
-| **F4** | Get data from the repository (development mode) |
-| **F5** | Send data to the repository |
+| **F4** | Download data from the eLabFTW (development mode) |
+| **F5** | Upload data to the eLabFTW |
 | **F8** | Open the item type editor |
 | **F9** | Restart PASTA-ELN |
 | **F12** | Capture a screenshot of the main window |
 | **Ctrl+?** | Verify database integrity |
-| **Ctrl+0** | Open configuration |
+| **Ctrl+0** | Configuration |
 
 ### Dialog actions
 
@@ -227,7 +227,7 @@ tableHeaderHelp = """
 ## You can add custom rows via bottom text area
 
 If you want to add a column:
-- to add a normal data-field (comment, content, name, type, tags, user, date), enter this field : 'comment'
+- to add a normal data field (comment, content, name, type, tags, user, date), enter this field: 'comment'
 - to check the existence of an image: enter 'image'
 - to get metadata, use a ".": e.g. "metaVendor.fileExtension", "metaUser.stress". Capitalization is important
 </ul>

@@ -29,7 +29,7 @@ class RightMainWidget(QWidget):
     self.headerLabel = Label('Current workplan', 'h1')
     self.workplanWidget = QWidget()
     self.workplanLayout = QVBoxLayout()
-    self.saveButton = QPushButton('Finish and save workplan')
+    self.saveButton = QPushButton('Finish & save workplan')
 
     self.comm.addProcedure.connect(self.addProcedure)
     self.setAcceptDrops(True)
@@ -94,8 +94,7 @@ class RightMainWidget(QWidget):
     Extracts info from the workplanItems and creates the json for saving it
     """
     dialog = QInputDialog()
-    filename, ok = dialog.getText(self, 'Choose workplan name',
-                                  'Choose a name for your workplan file:',
+    filename, ok = dialog.getText(self, 'Select workplan name', 'Select a name for your workplan file:',
                                   text='unnamed_workplan')
     if not ok:
       return

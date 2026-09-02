@@ -50,9 +50,9 @@ class ConfigurationSetup(QWidget):
     footerL = QHBoxLayout()
     footerL.setContentsMargins(SPACE.L, SPACE.M, SPACE.L, 0)
     self.mainL.addLayout(footerL)
-    self.button1 = Button('Click to install / repair', self, [Command.ANALYSE], footerL,
+    self.button1 = Button('Install & repair', self, [Command.ANALYSE], footerL,
                           style=ButtonStyle.HIGHLIGHTED)
-    self.button2 = Button('Click to finish', self, [Command.FINISHED], footerL,
+    self.button2 = Button('Finish setup', self, [Command.FINISHED], footerL,
                           style=ButtonStyle.HIGHLIGHTED)
     self.button2.hide()
 
@@ -79,9 +79,9 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration of preferences is acceptable' )
         self.text.setText(self.mainText)
       else:
-        dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
+        dirName = QFileDialog.getExistingDirectory(self, 'Select data folder', str(Path.home()))
         if not dirName:
-          self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to INVALID folder' )
+          self.mainText = self.mainText.replace('- Configuration of preferences', '- Configuration: no data folder selected')
           self.text.setText(self.mainText)
         elif list(Path(dirName).iterdir()):
           button = QMessageBox.question(self, 'Remove all content?', 'Folder is not empty. Do you want to remove all content?',
@@ -90,7 +90,7 @@ class ConfigurationSetup(QWidget):
           if button == QMessageBox.StandardButton.Yes:
             configuration('repair', dirName)
           else:
-            self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
+            self.mainText = self.mainText.replace('- Configuration of preferences', '- Configuration: installation was not started')
             self.text.setText(self.mainText)
         else:
           configuration('repair', dirName)
@@ -100,9 +100,9 @@ class ConfigurationSetup(QWidget):
                                     QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:
         createShortcut()
-        self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to add a shortcut' )
+        self.mainText = self.mainText.replace('- Shortcut creation', '- Shortcut was created')
       else:
-        self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to NOT add a shortcut' )
+        self.mainText = self.mainText.replace('- Shortcut creation', '- Shortcut was not created')
       self.text.setText(self.mainText)
       #Example data
       button = QMessageBox.question(self, 'Create example project?', exampleDataString,
@@ -111,9 +111,9 @@ class ConfigurationSetup(QWidget):
       if button == QMessageBox.StandardButton.Yes:
         self.progressBar.show()
         exampleData(True, self.callbackProgress)
-        self.mainText = self.mainText.replace('- Example data', '- Example data was added')
+        self.mainText = self.mainText.replace('- Example project', '- Example project was added')
       else:
-        self.mainText = self.mainText.replace('- Example data', '- Example data was NOT added, per user choice')
+        self.mainText = self.mainText.replace('- Example project', '- Example project was not added')
       self.text.setText(self.mainText)
       #at end
       self.button1.hide()

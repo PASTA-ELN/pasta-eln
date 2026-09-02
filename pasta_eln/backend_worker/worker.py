@@ -41,10 +41,10 @@ class Task(Enum):
   SEND_TBL_COLUMN= (9 , '')                                        #keys: docType, newList
   EXTRACTOR_TEST = (10, 'Testing extractor:')                      #keys: fileName, style, recipe, saveFig
   EXTRACTOR_RERUN= (11, 'Rerun extractors:')                       #keys: docIDs, recipe
-  SYNC_ELAB      = (12, 'Sync data to elabFTW server:')            #keys: projGroup, subtask
-  EXPORT_ELN     = (13, 'Exporting to .eln:')                      #keys: fileName, projID, docTypes
-  IMPORT_ELN     = (14, 'Importing an .eln file:')                 #keys: fileName, projID
-  SEND_REPOSITORY= (15, 'Sending data to repository:')             #keys: projID, docTypes,repositories,metadata,uploadZenodo
+  SYNC_ELAB      = (12, 'Sync data to eLabFTW server:')            #keys: projGroup, subtask
+  EXPORT_ELN     = (13, 'Exporting to ELN:')                       #keys: fileName, projID, docTypes
+  IMPORT_ELN     = (14, 'Importing an ELN file:')                  #keys: fileName, projID
+  SEND_REPOSITORY= (15, 'Uploading project to repository:')        #keys: projID, docTypes,repositories,metadata,uploadZenodo
   CHECK_DB       = (16, 'Checking database integrity:')            #keys: style
   OPEN_EXTERNAL  = (17, '')                                        #keys: docID
 
@@ -369,7 +369,7 @@ class BackendWorker(QObject):
       errorState = self.backend.checkDB(minimal=True)
       errorState = errorState.replace('**ERROR  bch01: These paths of database not on filesystem(3):','')# ignore because large files not copied
       if 'ERROR' in errorState:
-        self.beSendTaskReport.emit(task, 'ERRORs are present in your database. Fix them before uploading', '', '')
+        self.beSendTaskReport.emit(task, 'Errors are present in the database. Fix them before uploading.', '', '')
       else:
         try:
           sync = Pasta2Elab(self.backend, data['projGroup'])
@@ -389,10 +389,10 @@ class BackendWorker(QObject):
                               if statsCount.get(k, 0))
             self.beSendTaskReport.emit(task, f'<p>{headline}<br><br><b>Items per action:</b><br>{msg}</p>', '', '')
           else:                                                                                  #if not given
-            self.beSendTaskReport.emit(task, 'ERROR: Please specify a server address and API-key in the Configuration', '', '')
+            self.beSendTaskReport.emit(task, 'Specify a server address and API key in the configuration.', '', '')
         except ConnectionError as e:
           logging.error('Connection-Error connecting to elabFTW server')
-          self.beSendTaskReport.emit(task, f'ERROR: Connection error to elabFTW server\n{e}', '', '')
+          self.beSendTaskReport.emit(task, f'Error: Connection error to eLabFTW server\n{e}', '', '')
 
     elif task is Task.SEND_TBL_COLUMN and set(data.keys())=={'docType','newList'}:
       self.backend.db.dataHierarchyChangeView(data['docType'], data['newList'])
@@ -411,16 +411,15 @@ class BackendWorker(QObject):
                                 repositories['dataverse']['dataverse'])
         metadataD = clientD.prepareMetadata(data['metadata'])
         res = clientD.uploadRepository(metadataD, tempELN)
-      msg = 'Successful upload to repository\n'
       # update project with upload details
       if res[0]:
         docProject = self.backend.db.getDoc(data['projID'])
         docProject['.repository_upload'] = f'{datetime.now().strftime("%Y-%m-%d")} {res[1]}'
         docProject['branch'] = docProject['branch'][0] | {'op':'u'}
         self.backend.db.updateDoc(docProject, data['projID'])
-        msg += 'Saved information to project'
+        msg = 'Upload completed successfully.\nSaved upload information to the project.'
       else:
-        msg += 'Error while writing project information to database'
+        msg = f'Upload failed: {res[1]}'
       self.beSendTaskReport.emit(task, msg, '', '')
 
     elif task is Task.EXTRACTOR_RERUN and set(data.keys())=={'docIDs','recipe'}:
@@ -457,7 +456,7 @@ class BackendWorker(QObject):
     elif task is Task.OPEN_EXTERNAL and set(data.keys())=={'docID'}:
       doc   = self.backend.db.getDoc(data['docID'])
       if doc['branch'][0]['path'] is None:
-        QMessageBox.critical(None, 'Error', 'This item has no local file.')
+        QMessageBox.critical(None, 'Local file error', 'This item has no local file.')
       else:
         path  = Path(self.backend.basePath)/doc['branch'][0]['path']
         self.beSendTaskReport.emit(task, '', '', str(path))

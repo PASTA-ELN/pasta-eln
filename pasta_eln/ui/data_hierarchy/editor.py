@@ -213,8 +213,8 @@ class SchemeEditor(QDialog):
     # verification: uniqueness in names. etc
     unique = ( df.groupby('class')['name'].nunique() == df.groupby('class')['name'].count()  ).all()
     if not unique:
-      showMessage(self, 'Error', 'Within each table, the text in the first column has to be unique. E.g. no '
-                  'two "tags" are allowed.', 'Critical')
+      showMessage(self, 'Invalid item type', 'Within each item type, property names must be unique. For example, '
+                  'two "tags" properties are not allowed.', 'Critical')
       return
     # SAVE DATA
     dfSchema = df.drop('description', axis=1)

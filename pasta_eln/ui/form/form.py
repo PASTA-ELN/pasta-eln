@@ -60,9 +60,9 @@ class Form(QDialog):
 
     # GUI elements
     if self.flagNewDoc:
-      self.setWindowTitle('Create new entry')
+      self.setWindowTitle('Create new item')
     else:
-      self.setWindowTitle('Edit information')
+      self.setWindowTitle('Edit item')
     self.setMinimumSize(QSize(800, 600))
     self.mainL = QVBoxLayout(self)
     self.mainL.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
@@ -86,8 +86,8 @@ class Form(QDialog):
     action('Add key-value pair', self, Command.FORM_ADD_KV, moreMenu)
     action('Show advanced fields', self, Command.SHOW_ADVANCED, moreMenu)
     if not self.flagNewDoc:                                                                  #existing dataset
-      action('Show all information', self, Command.FORM_SHOW_DOC, moreMenu)
-      action('Duplicate data set', self, Command.FORM_SAVE_DUPL, moreMenu)
+      action('Show all fields', self, Command.FORM_SHOW_DOC, moreMenu)
+      action('Duplicate item', self, Command.FORM_SAVE_DUPL, moreMenu)
     self.cancelBtn = Button('Cancel', self, Command.FORM_CANCEL, buttonLineL, tooltip='Discard changes')
     self.saveBtn = Button('Save', self, Command.FORM_SAVE, buttonLineL, tooltip='Save changes',
                           style=ButtonStyle.HIGHLIGHTED)
@@ -140,9 +140,8 @@ class Form(QDialog):
       with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
         if self.doc.get('id', '') in content:
-          ret = QMessageBox.information(self, 'Information', 'There is unsaved information from a prematurely '+
-                    'closed form. Do you want to restore it?\n If you decline, the unsaved information will be'+
-                    ' removed.',
+          ret = QMessageBox.information(self, 'Restore unsaved changes?', 'Unsaved changes were found from a form that '+
+                    'closed unexpectedly. Do you want to restore them?\nIf not, they will be removed.',
                   QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                   QMessageBox.StandardButton.Yes)
           if ret==QMessageBox.StandardButton.Yes:
@@ -383,7 +382,7 @@ class Form(QDialog):
           self.tagsBarSubL = flow
           tagsBarMainL.addWidget(tagsBarSubW)
           self.otherChoices = QComboBox()                             #part/combobox that allow user to select
-          self.otherChoices.setToolTip('Choose a tag or type a new one')
+          self.otherChoices.setToolTip('Select a tag or type a new one')
           self.otherChoices.setEditable(True)
           self.otherChoices.setMinimumWidth(80)
           self.otherChoices.setValidator(QRegularExpressionValidator('[a-zA-Z]\\w{1,12}'))
@@ -391,7 +390,7 @@ class Form(QDialog):
           self.otherChoices.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
           self.otherChoices.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
           tagsBarMainL.addWidget(self.otherChoices)
-          section.formL.addRow(QLabel('Rating and tags:'), self.tagsBarMainW)
+          section.formL.addRow(QLabel('Rating & tags:'), self.tagsBarMainW)
           self.allUserElements.append(('tags',''))
           self.updateTagsBar()
           self.otherChoices.currentIndexChanged.connect(self.addTag)   #connect to slot after painting is done
@@ -556,7 +555,7 @@ class Form(QDialog):
       name = nameInput.text().casefold()
       differs = all(re.sub(r'^\d{3}_', '', filename).casefold() != name for filename in filenames)
     filenameIndicator.setVisible(differs)
-    filenameIndicator.setToolTip('The filename on disk is:\n' +
+    filenameIndicator.setToolTip('The local filename is:\n' +
                                  '\n'.join(filenames) if differs else '')
 
 
@@ -659,7 +658,7 @@ class Form(QDialog):
 
     elif commandType is Command.FORM_CANCEL:
       if self.comm. configuration['GUI']['autosave'] == 'Yes':
-        ret = QMessageBox.critical(self, 'Unsaved changes?', 'You will lose the entered information. Do you want to '+
+        ret = QMessageBox.critical(self, 'Unsaved changes?', 'You will lose the entered changes. Do you want to '+
           'save everything to a temporary location?',
           QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
           QMessageBox.StandardButton.No)
@@ -693,7 +692,7 @@ class Form(QDialog):
         if [i['mandatory'] for i in self.dataHierarchyNode if i['class']==group and i['name']==subItem] == ['T'] and \
           getattr(self, elementName).text().strip()=='':
           print(f'**ERROR group:{group}| key:{key}| subItem:{subItem}: mandatory field is empty')
-          showMessage(self, 'Error', f'The created item must have a valid {subItem}')
+          showMessage(self, 'Item validation error', f'The created item must have a valid {subItem}.')
           return
         if key=='name':
           self.doc['name'] = getattr(self, elementName).text().strip()

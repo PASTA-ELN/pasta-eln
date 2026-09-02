@@ -125,8 +125,8 @@ class DataverseClient(RepositoryClient):
         headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.apiToken}, timeout=10)
       if resp.status_code == 200:
         return resp.json().get('data')
-      return f"Error publishing dataset, Info: {resp.text}"
-    return f"Error creating dataset, Info: {resp.text}"
+      return f"Error publishing the project in the repository. Info: {resp.text}"
+    return f"Error creating the project in the repository. Info: {resp.text}"
 
 
   def uploadFile(self, dsPid: str, dfFilePath: str, dfDescription: str, dfCategories: list[str]) -> dict[Any, Any] | Any:
@@ -167,7 +167,7 @@ class DataverseClient(RepositoryClient):
                   'dataset_publish_result': pubResp.json().get('data')}
         return f"Error publishing dataset: {dsPid} as part of file ({dfFilePath}) upload on server: "\
                f"{self.serverUrl}, Info: {pubResp.json()}"
-      return f"Error uploading file: {dfFilePath} to dataset: {dsPid} Info: {resp.json()}"
+      return f"Error uploading file: {dfFilePath} to dataset: {dsPid}. Info: {resp.json()}"
 
 
   def uploadRepository(self, metadata:dict[str,Any], filePath:str) -> tuple[bool, str]:
@@ -183,9 +183,9 @@ class DataverseClient(RepositoryClient):
     """
     res= self.createDataset(metadata)
     if isinstance(res, str):
-      return False, f'Error publishing the dataset: {res}'
+      return False, f'Error publishing the project in the repository: {res}'
     doi = f"{res['protocol']}:{res['authority']}/{res['identifier']}"
-    reply = self.uploadFile(doi, filePath, '.eln file', ['file'])
+    reply = self.uploadFile(doi, filePath, 'ELN file', ['file'])
     if isinstance(reply, str):
       return False, 'Error publishing the file'
     return True, f'Published: {doi}, {res["persistentUrl"]}'

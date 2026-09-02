@@ -13,7 +13,7 @@ from pasta_eln.backend_worker.sqlite import MAIN_ORDER
 from pasta_eln.backend_worker.worker import Task
 
 # The following two variables are mandatory
-description  = 'Import csv-data'  #short description that is shown in the menu
+description  = 'Import CSV file'  # short description shown in the menu
 reqParameter = {} #possibility for required parameters: like API-key, etc. {'API': 'text'}
 
 ## Example csv file
@@ -35,7 +35,7 @@ def main(comm, hierStack, widget, parameter={}):
     """
     # Read csv file as a dataframe
     if 'fileNames' not in parameter:
-        res = QFileDialog.getOpenFileName(widget,'Use this file for output', str(Path.home()))
+        res = QFileDialog.getOpenFileName(widget, 'Import CSV file', str(Path.home()))
         if not res[0]:
             return False
     else:
@@ -45,20 +45,20 @@ def main(comm, hierStack, widget, parameter={}):
     # verify the columns are correct
     colNames = list(df.columns)
     if 'type' not in colNames or 'name' not in colNames:
-        QMessageBox.critical(widget, 'Error', 'You have to have columns named "type" and "name"', 'Critical')
+        QMessageBox.critical(widget, 'Invalid CSV file', 'The CSV file must contain columns named "type" and "name".', 'Critical')
         return False
     if len(df['type'].unique()) > 1:
-        QMessageBox.critical(widget, 'Error', 'All items in the "type" column must have the same item type', 'Critical')
+        QMessageBox.critical(widget, 'Invalid CSV file', 'All items in the "type" column must have the same item type.', 'Critical')
         return False
     docType = df['type'].unique()[0]
     if docType not in comm.docTypesTitles:
-        QMessageBox.critical(widget, 'Error', 'The item type does not exist in the PASTA-ELN database', 'Critical')
+        QMessageBox.critical(widget, 'Invalid CSV file', 'The item type does not exist in the PASTA-ELN database.', 'Critical')
         return False
-    # columns that are in the Pasta-ELN
+    # Columns supported by PASTA-ELN.
     colPasta = [f'{i["class"]}.{i["name"]}' for i in comm.dataHierarchyNodes[docType]]
     colPasta = [i[1:] if i[1:] in MAIN_ORDER+['tags','qrCodes'] else i for i in colPasta] + ['type']
     if set(colNames).difference(colPasta):
-        QMessageBox.critical(widget, 'Error', f'All columns must exist in the item type schema. Offending: {set(colNames).difference(colPasta)}', 'Critical')
+        QMessageBox.critical(widget, 'Invalid CSV file', f'All columns must exist in the item type schema. Unknown columns: {set(colNames).difference(colPasta)}.', 'Critical')
         return False
 
     # Loop all rows

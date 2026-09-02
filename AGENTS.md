@@ -53,6 +53,10 @@ For a visual check of the user's actual desktop, ask them to press `F12` in PAST
 ## UI
 
 - Prefer standard PySide6 widgets and `palette.py`; style only for readability or a clear need. Use icon plus text when practical, and check light/dark themes with empty, short, and long content. Theme changes require reload.
+- Use uppercase names for file types in user-visible text (for example, CSV and ELN); retain lowercase extensions only where required by filenames, filters, or APIs.
+- “Details” is the name of the Details pane; preserve that capitalization in user-visible references to the pane.
+- Visibility controls should use state-specific labels when the resulting state is clear; otherwise use the general “Hide/show” form for toggles.
+- Prefer “Select” over “Choose” in user-facing controls and prompts.
 - Keep project, table, sample, and edit/view context clear. Important actions should be visible, low-click, and usually available by context menu. Prefer native Qt behaviour, resilient layouts, and resizable columns.
 - At most one button per area may have the `default` property.
 - Keep substantial widgets focused and colocated; create a custom widget when warranted. In UI classes, order methods as `__init__`, `onGetData`, `paint`, `execute`, then slots, events, and helpers. Define/configure widgets, assemble layouts, connect signals, then run immediate code in `__init__`. Make runtime changes in `paint`.

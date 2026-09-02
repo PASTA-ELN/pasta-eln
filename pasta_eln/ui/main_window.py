@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
     else:
       configWindow = Configuration(self.comm, 'setup')
       configWindow.exec()
-      self.setCentralWidget(QLabel('ERROR: No configuration present!'))
+      self.setCentralWidget(QLabel('Error: No configuration is available.'))
       return
     self.comm.formDoc.connect(self.formDoc)
     self.comm.changeSidebar.connect(self.paint)
@@ -66,13 +66,13 @@ class MainWindow(QMainWindow):
     menu = self.menuBar()
     projectMenu = menu.addMenu('&Project')
     self.projectActions = [
-        action('Import file(s)…',           self, Command.IMPORT_FILES, projectMenu),
-        action('&Export project to .eln',   self, Command.EXPORT_ELN,   projectMenu),
-        action('&Import .eln into project', self, Command.IMPORT_ELN,   projectMenu),
+        action('Import files…',            self, Command.IMPORT_FILES, projectMenu),
+        action('&Export project as ELN',   self, Command.EXPORT_ELN,   projectMenu),
+        action('&Import ELN into project', self, Command.IMPORT_ELN,   projectMenu),
         action('&Upload project to repository', self, Command.REPOSITORY, projectMenu),
     ]
     projectMenu.addSeparator()
-    self.projectActions.append(action('&Remove current project...', self, Command.DELETE_PROJECT, projectMenu))
+    self.projectActions.append(action('&Remove current project…', self, Command.DELETE_PROJECT, projectMenu))
     projectMenu.aboutToShow.connect(self.paintProjectActions)
     projectMenu.addSeparator()
     action('&Exit',                     self, Command.EXIT, projectMenu)
@@ -82,11 +82,11 @@ class MainWindow(QMainWindow):
     systemMenu = menu.addMenu('Project &group')
     self.changeProjectGroups = systemMenu.addMenu('&Change project group')
     syncMenu = systemMenu.addMenu('&Synchronize')
-    action('Send all',                  self, Command.SYNC_SEND_ALL, syncMenu)
-    action('Send',                      self, Command.SYNC_SEND, syncMenu, keySequence='F5')
+    action('Upload all',              self, Command.SYNC_SEND_ALL, syncMenu)
+    action('Upload',                  self, Command.SYNC_SEND, syncMenu, keySequence='F5')
     if 'develop' in self.comm.configuration:
-      action('Get all',                 self, Command.SYNC_GET_ALL, syncMenu)
-      action('Get',                     self, Command.SYNC_GET, syncMenu, keySequence='F4')
+      action('Download all',            self, Command.SYNC_GET_ALL, syncMenu)
+      action('Download',                self, Command.SYNC_GET, syncMenu, keySequence='F4')
       action('Smart sync',              self, Command.SYNC_SMART, syncMenu)
     configureMenu = systemMenu.addMenu('&Configure')
     action('&Item type editor',         self, Command.SCHEMA, configureMenu, keySequence='F8')
@@ -214,13 +214,13 @@ class MainWindow(QMainWindow):
       if fileNames and isinstance(project, Project):
         project.execute([ProjectCommand.IMPORT_FILES, fileNames])
     elif commandType is Command.EXPORT_ELN:
-      fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
+      fileName = QFileDialog.getSaveFileName(self, 'Export project as ELN', str(Path.home()), '*.eln')[0]
       if fileName != '':
         docTypes = [i for i in self.comm.docTypesTitles if i[0] != 'x']
         self.comm.uiRequestTask.emit(Task.EXPORT_ELN,
                                      {'fileName': fileName, 'projID': self.comm.projectID, 'docTypes': docTypes})
     elif commandType is Command.IMPORT_ELN:
-      fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
+      fileName = QFileDialog.getOpenFileName(self, 'Import ELN file', str(Path.home()), '*.eln')[0]
       if fileName != '':
         self.comm.uiRequestTask.emit(Task.IMPORT_ELN, {'fileName': fileName, 'projID': self.comm.projectID})
         self.comm.changeProject.emit(self.comm.projectID, '')

@@ -42,7 +42,7 @@ class TerminologyLookupDialog(QDialog):
 
     searchLayout = QHBoxLayout()
     self.terminologyLineEdit = QLineEdit(defaultLookupTerm or '', clearButtonEnabled=True)
-    self.terminologyLineEdit.setPlaceholderText('Search terms in wikis and ontologies')
+    self.terminologyLineEdit.setPlaceholderText('Search wikis and ontologies')
     self.terminologyLineEdit.returnPressed.connect(lambda: self.execute(Command.SEARCH))
     searchLayout.addWidget(self.terminologyLineEdit)
     self.searchButton = QPushButton('Search')
@@ -70,7 +70,7 @@ class TerminologyLookupDialog(QDialog):
     footer = QHBoxLayout()
     footer.addStretch()
     Button('Cancel', self, Command.CANCEL, footer)
-    Button('Use selected', self, Command.ACCEPT, footer, style=ButtonStyle.HIGHLIGHTED)
+    Button('Use selected identifiers', self, Command.ACCEPT, footer, style=ButtonStyle.HIGHLIGHTED)
     mainLayout.addLayout(footer)
 
     if defaultLookupTerm:

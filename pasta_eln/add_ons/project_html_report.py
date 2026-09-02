@@ -26,7 +26,7 @@ from pasta_eln.Resources import Icons as icons
 from pasta_eln.text_tools.string_changes import markdownEqualizer
 
 # The following two variables are mandatory
-description  = 'Create html report'  #short description that is shown in the menu
+description  = 'Create HTML report'  # short description shown in the menu
 reqParameter = {} #possibility for required parameters: like API-key, etc. {'API': 'text'}
 
 HTML_HEADER = '<!DOCTYPE html>\n<html>\n<head>\n<style>'\
@@ -51,7 +51,7 @@ def main(comm, hierStack, widget, parameter={}):
     """
     # get filename to write into
     if 'fileNames' not in parameter:
-        res = QFileDialog.getSaveFileName(widget,'Use this file for output', str(Path.home()))
+        res = QFileDialog.getSaveFileName(widget, 'Save HTML report', str(Path.home()))
         if not res[0]:
             return False
     else:
@@ -94,7 +94,7 @@ def main(comm, hierStack, widget, parameter={}):
     iconImg.save(figfile, format='PNG')
     imageB64 = base64.b64encode(figfile.getvalue()).decode()
     imageB64 = f"data:image/png;base64,{imageB64}"
-    out += f'<div class="footline">Created with Pasta-ELN {pasta_eln.__version__} and the default HTML export&nbsp;&nbsp;&nbsp;<image src="{imageB64}"/></div>'
+    out += f'<div class="footline">Created with PASTA-ELN {pasta_eln.__version__} and the default HTML export&nbsp;&nbsp;&nbsp;<image src="{imageB64}"/></div>'
 
     # save everything to the html file
     with open(res[0], 'w', encoding='utf-8') as f:

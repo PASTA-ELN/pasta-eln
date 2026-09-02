@@ -1,4 +1,4 @@
-""" HTML string parts for HTML export of .eln files """
+"""HTML string parts for HTML export of ELN files."""
 
 
 htmlStart = """
@@ -7,7 +7,7 @@ htmlStart = """
 <head>
   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
   <meta name='viewport' content='width=device-width, initial-scale=1'>
-  <meta name='description' content='This is a .eln export from PASTA-ELN'>
+  <meta name='description' content='This is an ELN export from PASTA-ELN'>
   <title>ELN archive HTML preview - PASTA-ELN</title>
   <style>
     body {font-family: 'sans-serif';}

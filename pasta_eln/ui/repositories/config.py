@@ -73,7 +73,7 @@ class ConfigurationRepositories(QDialog):
 
     self.zenodoToggle.toggled.connect(_toggleZenodo)
     leftSide.addWidget(self.zenodoToggle, 2, 2)
-    self.zenodoButton = Button('Check', self, [Command.CHECK_ZENODO], tooltip='Check Zenodo login details')
+    self.zenodoButton = Button('Verify', self, [Command.CHECK_ZENODO], tooltip='Verify Zenodo login details')
     leftSide.addWidget(self.zenodoButton, 3, 1)
 
     rightSideW = QWidget()
@@ -85,7 +85,7 @@ class ConfigurationRepositories(QDialog):
     self.urlDatavese = QLineEdit(conf['dataverse']['url'])                               # type: ignore[index]
     self.urlDatavese.setMinimumWidth(350)
     rightSide.addWidget(self.urlDatavese, 1, 1)
-    self.dataverseButton1 = Button('Check', self, [Command.CHECK_DV1], tooltip='Check Dataverse server details')
+    self.dataverseButton1 = Button('Verify', self, [Command.CHECK_DV1], tooltip='Verify Dataverse server details')
     self.dataverseButton1.setMinimumWidth(100)
     rightSide.addWidget(self.dataverseButton1, 1, 3)
     rightSide.addWidget(QLabel('API key'), 2, 0)
@@ -105,9 +105,9 @@ class ConfigurationRepositories(QDialog):
     self.dataverseToggle.toggled.connect(_toggleDataverse)
     rightSide.addWidget(self.dataverseToggle, 2, 2)
     rightSide.addWidget(self.apiDataverse, 2, 1)
-    self.dataverseButton2 = Button('Check', self, [Command.CHECK_DV2], tooltip='Check Dataverse API key')
+    self.dataverseButton2 = Button('Verify', self, [Command.CHECK_DV2], tooltip='Verify Dataverse API key')
     rightSide.addWidget(self.dataverseButton2, 2, 3)
-    rightSide.addWidget(QLabel('Sub-dataverse'), 3, 0)
+    rightSide.addWidget(QLabel('Sub-Dataverse'), 3, 0)
     self.dvDataverse = QComboBox()
     self.dvDataverse.addItem(conf['dataverse']['dataverse'])                             # type: ignore[index]
     self.dvDataverse.setStyleSheet(self.comm.palette.get('secondaryText', 'color'))
@@ -137,11 +137,11 @@ class ConfigurationRepositories(QDialog):
     if command[0] is Command.CHECK_ZENODO:
       url = self.urlZenodo.text().strip()
       if re.match(r'(http:|https:)+\/\/[\w\.]+', url) is None:
-        showMessage(self, 'Error', 'URL is not valid')
+        showMessage(self, 'Repository configuration error', 'Invalid URL')
         return
       api = self.apiZenodo.text().strip()
       if re.match(r'\w{60}', api) is None:
-        showMessage(self, 'Error', 'API key is invalid')
+        showMessage(self, 'Repository configuration error', 'Invalid API key')
         return
       clientZ = ZenodoClient(url, api)
       success, message = clientZ.checkServer()
@@ -150,12 +150,12 @@ class ConfigurationRepositories(QDialog):
         self.checkedZenodo = True
       else:
         self.changeButtonOnTest(False, self.zenodoButton)
-        showMessage(self, 'Error', message)
+        showMessage(self, 'Repository configuration error', message)
 
     elif command[0] is Command.CHECK_DV1:
       url = self.urlDatavese.text().strip()
       if re.match(r'(http:|https:)+\/\/[\w\.]+', url) is None:
-        showMessage(self, 'Error', 'URL is not valid')
+        showMessage(self, 'Repository configuration error', 'Invalid URL')
         return
       clientD = DataverseClient(url, '', '')
       success, message = clientD.checkServer()
@@ -163,16 +163,16 @@ class ConfigurationRepositories(QDialog):
         self.changeButtonOnTest(True, self.dataverseButton1)
       else:
         self.changeButtonOnTest(False, self.dataverseButton1)
-        showMessage(self, 'Error', message)
+        showMessage(self, 'Repository configuration error', message)
 
     elif command[0] is Command.CHECK_DV2:
       url = self.urlDatavese.text().strip()
       if re.match(r'(http:|https:)+\/\/[\w\.]+', url) is None:
-        showMessage(self, 'Error', 'URL is not valid')
+        showMessage(self, 'Repository configuration error', 'Invalid URL')
         return
       api = self.apiDataverse.text().strip()
       if re.match(r'\w{8}-\w{4}-\w{4}-\w{4}-\w{12}', api) is None:
-        showMessage(self, 'Error', 'API key is invalid')
+        showMessage(self, 'Repository configuration error', 'Invalid API key')
         return
       clientD = DataverseClient(url, api, '')
       if success := clientD.checkAPIKey():
@@ -183,7 +183,7 @@ class ConfigurationRepositories(QDialog):
           self.dvDataverse.addItem(f"{data.get('title')} - {data.get('id')}", data.get('id'))
       else:
         self.changeButtonOnTest(False, self.dataverseButton2)
-        showMessage(self, 'Error', 'API key is invalid')
+        showMessage(self, 'Repository configuration error', 'Invalid API key')
 
     elif command[0] is Command.CANCEL:
       self.reject()
@@ -222,7 +222,7 @@ class ConfigurationRepositories(QDialog):
       button.setIcon(qta.icon('fa5s.check-square', scale_factor=1))
     else:
       if message:
-        showMessage(self, 'Error', message)
+        showMessage(self, 'Repository configuration error', message)
       button.setStyleSheet('background: #FF0000')
       button.setText('')
       button.setIcon(qta.icon('fa5.times-circle', scale_factor=1))

@@ -296,17 +296,17 @@ class ExtractorManager:
         report += outputString(outputStyle, 'error', f'{htmlStr}download-error">website</a>')
         return report, ''
       filePath = tempFilePath
-    report += outputString(outputStyle, 'info', f'check file: {str(filePath)}')
+    report += outputString(outputStyle, 'info', f'Check file: {str(filePath)}')
     extension = filePath.suffix[1:]
     pyFile = f'extractor_{extension.lower()}.py'
     if extractorPath is None:
       extractorPath = self.addOnPath
     #start testing
     if (extractorPath/pyFile).is_file():
-      report += outputString(outputStyle, 'info', f'use extractor: {str(extractorPath / pyFile)}')
+    report += outputString(outputStyle, 'info', f'Use extractor: {str(extractorPath / pyFile)}.')
     else:
       success = False
-      report += outputString(outputStyle, 'error', f'No fitting extractor found:{pyFile}')
+        report += outputString(outputStyle, 'error', f'No suitable extractor was found: {pyFile}')
     if success:
       try:
         module  = loadNamedModule(extractorPath, pyFile[:-3])
@@ -324,9 +324,9 @@ class ExtractorManager:
         possibleDocTypes = [] if self.dataHierarchy is None else [i for i in self.dataHierarchy('', '') if i[0]!='x']
         matches = [i for i in possibleDocTypes if content['style']['main'].startswith(i)]
         if matches or content['style']['main'] in {'', '-'}:
-          report += outputString(outputStyle, 'info', 'Style is good: '+content['style']['main'])
+          report += outputString(outputStyle, 'info', 'Style is valid: '+content['style']['main']+'.')
           size = len(str(content))
-          report += outputString(outputStyle, 'info', f'Entire extracted size: {size // 1024}kB')
+          report += outputString(outputStyle, 'info', f'Extracted size: {size // 1024} kB.')
         else:
           report += outputString(outputStyle, 'error', 'Style does not follow doctype in dataHierarchy.')
       else:
@@ -341,7 +341,7 @@ class ExtractorManager:
       if isinstance(metaVendor, (dict)):
         try:
           _ = json.dumps(metaVendor)
-          report += outputString(outputStyle, 'info', f'Number of vendor entries: {len(metaVendor)}')
+          report += outputString(outputStyle, 'info', f'Vendor entries: {len(metaVendor)}.')
         except (TypeError, ValueError):
           success = False
           report += outputString(outputStyle, 'error', 'Some JSON format does not fit in metaVendor')
@@ -360,7 +360,7 @@ class ExtractorManager:
         _ = json.dumps(content['metaUser'])
         if not isinstance(content['metaUser'], (dict,list)):
           raise TypeError(' Meta user: wrong type')
-        report += 'Number of user entries: '+str(len(content['metaUser']))+'<br>'
+        report += 'User entries: '+str(len(content['metaUser']))+'.<br>'
       except Exception:
         report += outputString(outputStyle,'error', 'Some json format does not fit in metaUser')
         report += outputString(outputStyle, 'error', f'{htmlStr}metadata-error">website</a>')
@@ -393,7 +393,7 @@ class ExtractorManager:
       # print('image = figfile.getvalue()')
     if success and isinstance(content.get('image',''), str):#show content
       size = len(content['image'])
-      report += outputString(outputStyle, 'info', f'Image size {str(size // 1024)}kB')
+      report += outputString(outputStyle, 'info', f'Image size: {str(size // 1024)} kB.')
     if outputStyle=='print':
       logging.info('Identified metadata %s',content)
     return report, content.get('image','')

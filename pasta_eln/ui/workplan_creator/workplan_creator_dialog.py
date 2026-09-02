@@ -57,7 +57,7 @@ class WorkplanCreatorDialog(QDialog):
       self.comm.backendThread.worker.beSendDoc.connect(self._onGetProjectDoc)
       self.comm.uiRequestDoc.emit(self.comm.projectID)
     else:
-      self.setWindowTitle('Workplan Creator')
+      self.setWindowTitle('Create workplan')
     screen = QApplication.primaryScreen().availableGeometry()
     self.resize(int(screen.width() * 0.75), int(screen.height() * 0.75))
 
@@ -74,4 +74,4 @@ class WorkplanCreatorDialog(QDialog):
       doc: Document of the current project (contains name)
     """
     if doc['id'] == self.comm.projectID:
-      self.setWindowTitle('Workplan Creator - Current project: ' + doc['name'])
+      self.setWindowTitle('Create workplan — Current project: ' + doc['name'])
