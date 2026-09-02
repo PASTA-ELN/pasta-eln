@@ -215,7 +215,11 @@ def newVersion(level:int=2) -> None:
       fileNew.append(line)
     with open(path,'w', encoding='utf-8') as fOut:
       fOut.write('\n'.join(fileNew)+'\n')
-  subprocess.run(['git', 'commit', '-a', '-m', 'update version numbers'], check=True)
+  changeCheck = subprocess.run(['git', 'diff', '--quiet', 'HEAD', '--'], check=False)
+  if changeCheck.returncode == 1:
+    subprocess.run(['git', 'commit', '-a', '-m', 'update version numbers'], check=True)
+  elif changeCheck.returncode != 0:
+    raise subprocess.CalledProcessError(changeCheck.returncode, changeCheck.args)
   # must not add entries to the changelog.
   if re.fullmatch(r'\d+\.\d+\.\d+', version):
     draftPath = createChangelog(version)
