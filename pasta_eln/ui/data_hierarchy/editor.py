@@ -46,6 +46,7 @@ class SchemeEditor(QDialog):
     super().__init__()
     self.comm = comm
     self.comm.backendThread.worker.beSendSQL.connect(self.onGetData)
+    self.finished.connect(self._cleanup)
     self.docType = ''
     self.docLabel= ''
     self.cmd     = ''
@@ -438,16 +439,9 @@ class SchemeEditor(QDialog):
     self.selectDocType.setCurrentText(label)
     return
 
-  def reject(self) -> None:
-    """ Reject the dialog, stop the thread and disconnect signals """
+  def _cleanup(self, _result: int) -> None:
+    """Disconnect backend signals when the dialog closes."""
     self.comm.backendThread.worker.beSendSQL.disconnect(self.onGetData)
-    super().reject()
-
-
-  def accept(self) -> None:
-    """ Accept the dialog, stop the thread and disconnect signals """
-    self.comm.backendThread.worker.beSendSQL.disconnect(self.onGetData)
-    super().accept()
 
 
 class Command(Enum):

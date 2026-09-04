@@ -5,7 +5,6 @@ import json
 import logging
 import re
 import time
-import warnings
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -165,6 +164,7 @@ class Form(QDialog):
     self.checkThreadTimer.setInterval(1*60*1000)                                                       # 1 min
     self.checkThreadTimer.timeout.connect(self.autosave)
     self.checkThreadTimer.start()
+    self.finished.connect(self._cleanup)
 
 
   @Slot(dict)
@@ -877,36 +877,19 @@ class Form(QDialog):
     return
 
 
-  def reject(self) -> None:
-    """ Reject the dialog, stop the thread and disconnect signals """
-    warnings.filterwarnings('ignore', category=RuntimeWarning)
+  def _cleanup(self, _result: int) -> None:
+    """Stop timers and disconnect backend signals when the dialog closes."""
     if hasattr(self.comm, 'backendThread') and self.comm.backendThread.worker is not None:
-      try:
-        self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
-      except RuntimeError:
-        pass
+      if not self.flagNewDoc:
+        try:
+          self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
+        except RuntimeError:
+          pass
       try:
         self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
       except RuntimeError:
         pass
     self.checkThreadTimer.stop()
-    super().reject()
-
-
-  def accept(self) -> None:
-    """ Accept the dialog, stop the thread and disconnect signals """
-    warnings.filterwarnings('ignore', category=RuntimeWarning)
-    if hasattr(self.comm, 'backendThread') and self.comm.backendThread.worker is not None:
-      try:
-        self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
-      except RuntimeError:
-        pass
-      try:
-        self.comm.backendThread.worker.beSendTable.disconnect(self.onGetTable)
-      except RuntimeError:
-        pass
-    self.checkThreadTimer.stop()
-    super().accept()
 
 
 class Command(Enum):

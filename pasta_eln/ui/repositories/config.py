@@ -1,10 +1,11 @@
 """ Config for Zenodo and Dataverse """
 import re
-import webbrowser
 from collections.abc import Callable
 from enum import Enum
 from typing import Any
 import qtawesome as qta
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (QComboBox, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QToolButton,
                                QVBoxLayout, QWidget)
 from ...backend_worker.dataverse import DataverseClient
@@ -146,10 +147,10 @@ class ConfigurationRepositories(QDialog):
       clientZ = ZenodoClient(url, api)
       success, message = clientZ.checkServer()
       if success:
-        self.changeButtonOnTest(True, self.zenodoButton)
+        self.zenodoButton.setTestResult(True)
         self.checkedZenodo = True
       else:
-        self.changeButtonOnTest(False, self.zenodoButton)
+        self.zenodoButton.setTestResult(False)
         showMessage(self, 'Repository configuration error', message)
 
     elif command[0] is Command.CHECK_DV1:
@@ -160,9 +161,9 @@ class ConfigurationRepositories(QDialog):
       clientD = DataverseClient(url, '', '')
       success, message = clientD.checkServer()
       if success:
-        self.changeButtonOnTest(True, self.dataverseButton1)
+        self.dataverseButton1.setTestResult(True)
       else:
-        self.changeButtonOnTest(False, self.dataverseButton1)
+        self.dataverseButton1.setTestResult(False)
         showMessage(self, 'Repository configuration error', message)
 
     elif command[0] is Command.CHECK_DV2:
@@ -176,13 +177,13 @@ class ConfigurationRepositories(QDialog):
         return
       clientD = DataverseClient(url, api, '')
       if success := clientD.checkAPIKey():
-        self.changeButtonOnTest(True, self.dataverseButton2)
+        self.dataverseButton2.setTestResult(True)
         self.checkedDataverse = True
         self.dvDataverse.clear()
         for data in clientD.getDataverseList():
           self.dvDataverse.addItem(f"{data.get('title')} - {data.get('id')}", data.get('id'))
       else:
-        self.changeButtonOnTest(False, self.dataverseButton2)
+        self.dataverseButton2.setTestResult(False)
         showMessage(self, 'Repository configuration error', 'Invalid API key')
 
     elif command[0] is Command.CANCEL:
@@ -202,30 +203,9 @@ class ConfigurationRepositories(QDialog):
       saveConfiguration(self.comm.configuration)
       self.accept()
     elif command[0] is Command.HELP:
-      webbrowser.open('https://pasta-eln.github.io/pasta-eln/repositories.html')
+      QDesktopServices.openUrl(QUrl('https://pasta-eln.github.io/pasta-eln/repositories.html'))
     else:
       print('Got some button, without definition', command)
-    return
-
-
-  def changeButtonOnTest(self, success:bool, button:Button, message:str='') -> None:
-    """ Helper function to change buttons upon success/failure
-
-    Args:
-      success (bool): change to successful state
-      button (TextBotton): button to change
-      message (str): optional message on failure
-    """
-    if success:
-      button.setStyleSheet('background: #00FF00')
-      button.setText('')
-      button.setIcon(qta.icon('fa5s.check-square', scale_factor=1))
-    else:
-      if message:
-        showMessage(self, 'Repository configuration error', message)
-      button.setStyleSheet('background: #FF0000')
-      button.setText('')
-      button.setIcon(qta.icon('fa5.times-circle', scale_factor=1))
     return
 
 

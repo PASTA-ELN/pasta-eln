@@ -9,7 +9,6 @@ import logging
 import os
 import platform
 import re
-import socket
 import subprocess
 import sys
 import tempfile
@@ -453,21 +452,6 @@ def hardRestart() -> None:
   return
 
 
-def isConnectedToInternet() -> bool:
-  """Check if the system is connected to the internet
-
-  Returns:
-    bool: True if connected, False otherwise
-  """
-  try:
-    socket.setdefaulttimeout(3)
-    socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(('8.8.8.8', 53))
-    return True
-  except OSError:
-    pass
-  return False
-
-
 def getRORIDLabel(idString:str) -> str :
   """ Get label from RORID
   Args:
@@ -506,17 +490,15 @@ def testNewPastaVersion(update:bool=False) -> bool:
   Returns:
     bool: if up-to-date or if current version is a beta
   """
-  if not isConnectedToInternet():
-    return True
-  if update:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pasta-eln'])
-    hardRestart()
   try:
     url = 'https://pypi.org/pypi/pasta-eln/json'
     with request.urlopen(url) as response:
       data = json.loads(response.read())
   except Exception:
     return True
+  if update:
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pasta-eln'])
+    hardRestart()
   releases = [i for i in list(data['releases'].keys()) if 'b' not in i]                 # remove beta versions
   largestVersionOnPypi = sorted(releases, key=parse_version)[-1]
   return largestVersionOnPypi == pasta_eln.__version__ or 'b' in pasta_eln.__version__

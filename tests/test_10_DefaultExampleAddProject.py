@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """TEST the form """
-import logging, warnings, shutil
+import logging, shutil
 from pathlib import Path
 from PySide6.QtCore import QEventLoop, Slot
 from pasta_eln.backend_worker.worker import Task
@@ -14,16 +14,6 @@ def test_simple(qtbot, caplog, request):
   """
   main function
   """
-  # initialization: create database, destroy on filesystem and database and then create new one
-  warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
-  warnings.filterwarnings('ignore', message='invalid escape sequence')
-  warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
-  warnings.filterwarnings('ignore', category=ImportWarning)
-  logPath = Path.home()/'pastaELN.log'
-  logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
-                      datefmt='%m-%d %H:%M:%S')   #This logging is always info, since for installation only
-  for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
-    logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start 10 test')
 
   # start app and create project

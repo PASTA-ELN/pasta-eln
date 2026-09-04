@@ -1,3 +1,4 @@
+import logging
 import re
 import os
 from typing import Any
@@ -10,6 +11,8 @@ TEST_ORDER_PATTERN = re.compile(r'^test_(\d+)_')
 def pytest_configure():
     """TEMPORARY SAFEGUARD: Allow tests that intentionally open legacy fixture databases to migrate them."""
     os.environ.setdefault('PASTA_ELN_ALLOW_DATAHASH_MIGRATION', '1')
+    for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
+        logging.getLogger(package).setLevel(logging.WARNING)
 
 def pytest_addoption(parser):
     parser.addoption(NO_SKIP_OPTION, action='store_true', default=False, help='also run skipped tests')

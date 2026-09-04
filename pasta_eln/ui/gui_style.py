@@ -87,6 +87,12 @@ class Button(QPushButton):
     if layout is not None:
       layout.addWidget(self)
 
+  def setTestResult(self, success: bool) -> None:
+    """Show whether a connection or credential test succeeded."""
+    self.setStyleSheet('background: #00FF00' if success else 'background: #FF0000')
+    self.setText('')
+    self.setIcon(qta.icon('fa5s.check-square' if success else 'fa5.times-circle', scale_factor=1))
+
 
 class CollapsibleSection(QFrame):
   """A titled section whose content can be shown or hidden."""

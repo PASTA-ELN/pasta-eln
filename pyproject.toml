@@ -14,3 +14,9 @@ log_cli_level = "INFO"
 log_cli_format = "%(asctime)s|%(levelname)s:%(message)s (%(filename)s:%(lineno)s)"
 log_cli_date_format = "%m-%d %H:%M:%S"
 addopts = "-ra -q --tb=short"
+filterwarnings = [
+  "ignore:numpy.ufunc size changed",
+  "ignore:invalid escape sequence",
+  "ignore::ResourceWarning:PIL",
+  "ignore::ImportWarning",
+]

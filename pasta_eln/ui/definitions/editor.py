@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 import qtawesome as qta
-from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, Slot
+from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, QUrl, Slot
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (QDialog, QFileDialog, QHBoxLayout, QMessageBox, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
 from ...misc_tools import callAddOn
@@ -27,8 +28,7 @@ def _hasOnlineLink(index: QModelIndex) -> bool:
 
 def _openOnlineLink(_: QAbstractItemModel, index: QModelIndex) -> None:
   """Open the first online identifier from the selected row."""
-  import webbrowser
-  webbrowser.open(index.model().index(index.row(), 2).data().split(', ')[0])
+  QDesktopServices.openUrl(QUrl(index.model().index(index.row(), 2).data().split(', ')[0]))
 
 
 def _hasKeyOrLabel(index: QModelIndex) -> bool:
@@ -49,6 +49,7 @@ class Editor(QDialog):
     super().__init__()
     self.comm = comm
     self.comm.backendThread.worker.beSendSQL.connect(self.onGetData)
+    self.finished.connect(self._cleanup)
     self.data:pd.DataFrame = pd.DataFrame()
     self.df0:pd.DataFrame = pd.DataFrame()
     self.df1:pd.DataFrame = pd.DataFrame()
@@ -215,16 +216,9 @@ class Editor(QDialog):
     return df
 
 
-  def reject(self) -> None:
-    """ Reject the dialog, stop the thread and disconnect signals """
+  def _cleanup(self, _result: int) -> None:
+    """Disconnect backend signals when the dialog closes."""
     self.comm.backendThread.worker.beSendSQL.disconnect(self.onGetData)
-    super().reject()
-
-
-  def accept(self) -> None:
-    """ Accept the dialog, stop the thread and disconnect signals """
-    self.comm.backendThread.worker.beSendSQL.disconnect(self.onGetData)
-    super().accept()
 
 
 class Command(Enum):

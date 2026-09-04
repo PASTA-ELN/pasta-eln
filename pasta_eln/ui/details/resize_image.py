@@ -81,14 +81,3 @@ class ResizeImage(QLabel):
     self._svgRenderer.render(painter, QRect(x, y, scaled.width(), scaled.height()))
     painter.end()
     super().setPixmap(pixmap)
-
-
-  def setSourcePixmap(self, pixmap: QPixmap) -> None:
-    """Replace the source image."""
-    self._sourcePixmap = pixmap
-    self._updatePixmap()
-
-
-  def sourcePixmap(self) -> QPixmap:
-    """Return the original image."""
-    return self._sourcePixmap

@@ -4,7 +4,6 @@ import json
 import logging
 import sys
 import tempfile
-import webbrowser
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -292,9 +291,9 @@ class MainWindow(QMainWindow):
       dialogC.exec()
     # remainder
     elif commandType is Command.WEBSITE:
-      webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
+      QDesktopServices.openUrl(QUrl('https://pasta-eln.github.io/pasta-eln/'))
     elif commandType is Command.CHANGELOG:
-      webbrowser.open('https://github.com/PASTA-ELN/pasta-eln/blob/main/CHANGELOG.md')
+      QDesktopServices.openUrl(QUrl('https://github.com/PASTA-ELN/pasta-eln/blob/main/CHANGELOG.md'))
     elif commandType is Command.CHECK_DB:
       self.comm.uiRequestTask.emit(Task.CHECK_DB, {'style': 'json'})
     elif commandType is Command.SHORTCUTS:

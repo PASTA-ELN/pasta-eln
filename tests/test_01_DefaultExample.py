@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create the default example that all installations create and verify it thoroughly """
 import logging
-import warnings
 import unittest
-from pathlib import Path
 from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.misc_tools import getConfiguration
 from pasta_eln.installation_tools import exampleData
@@ -21,16 +19,6 @@ class TestStringMethods(unittest.TestCase):
     """
     main function
     """
-    # initialization: create database, destroy on filesystem and database and then create new one
-    warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
-    warnings.filterwarnings('ignore', message='invalid escape sequence')
-    warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
-    warnings.filterwarnings('ignore', category=ImportWarning)
-    logPath = Path.home()/'pastaELN.log'
-    logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
-                        datefmt='%m-%d %H:%M:%S')   #This logging is always info, since for installation only
-    for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
-      logging.getLogger(package).setLevel(logging.WARNING)
     logging.info('Start 01 test')
 
     log_records = []

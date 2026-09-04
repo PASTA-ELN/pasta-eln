@@ -511,10 +511,6 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
           varMeasured['value'] = v[0]
           if v[1]:
             varMeasured['unitText'] = v[1]
-        if isinstance(v, tuple):
-          varMeasured['value'] = v[0]
-          if v[1]:
-            varMeasured['unitText'] = v[1]
           if v[2]:
             varMeasured['description'] = v[2]
           if v[3]:

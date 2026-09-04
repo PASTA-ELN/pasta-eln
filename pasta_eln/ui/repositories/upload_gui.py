@@ -2,7 +2,6 @@
 import json
 from enum import Enum
 from typing import Any
-import qtawesome as qta
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QCheckBox, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 from ...backend_worker.worker import Task
@@ -25,6 +24,7 @@ class UploadGUI(QDialog):
     super().__init__()
     self.comm    = comm
     self.comm.backendThread.worker.beSendDoc.connect(self.onGetData)
+    self.finished.connect(self._cleanup)
     self.docProject:dict[str,Any] = {}
     self.setWindowTitle('Upload project to repository')
 
@@ -161,37 +161,9 @@ class UploadGUI(QDialog):
     return
 
 
-  def changeButtonOnTest(self, success:bool, button:Button, message:str='') -> None:
-    """ Helper function to change buttons upon success/failure
-
-    Args:
-      success (bool): change to successful state
-      button (TextBotton): button to change
-      message (str): optional message on failure
-    """
-    if success:
-      button.setStyleSheet('background: #00FF00')
-      button.setText('')
-      button.setIcon(qta.icon('fa5s.check-square', scale_factor=1))
-    else:
-      if message:
-        showMessage(self, 'Repository upload error', message)
-      button.setStyleSheet('background: #FF0000')
-      button.setText('')
-      button.setIcon(qta.icon('fa5.times-circle', scale_factor=1))
-    return
-
-
-  def reject(self) -> None:
-    """ Reject the dialog, stop the thread and disconnect signals """
+  def _cleanup(self, _result: int) -> None:
+    """Disconnect backend signals when the dialog closes."""
     self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
-    super().reject()
-
-
-  def accept(self) -> None:
-    """ Accept the dialog, stop the thread and disconnect signals """
-    self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
-    super().accept()
 
 
 class Command(Enum):

@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 """TEST the project view: drag drop randomly items around """
-import logging, warnings, random
-from pathlib import Path
+import logging, random
 from anytree import PreOrderIter
 from PySide6.QtCore import QModelIndex                         # pylint: disable=no-name-in-module
 from pasta_eln.ui.project.project import Project
@@ -13,16 +12,6 @@ def test_simple(qtbot, caplog, request):
   """
   main function
   """
-  # initialization: create database, destroy on filesystem and database and then create new one
-  warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
-  warnings.filterwarnings('ignore', message='invalid escape sequence')
-  warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
-  warnings.filterwarnings('ignore', category=ImportWarning)
-  logPath = Path.home()/'pastaELN.log'
-  logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
-                      datefmt='%m-%d %H:%M:%S')   #This logging is always info, since for installation only
-  for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
-    logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start 03 test')
 
   # start app and load project
