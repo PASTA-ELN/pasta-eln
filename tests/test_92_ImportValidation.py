@@ -18,7 +18,7 @@ class TestImportValidation(unittest.TestCase):
 
       report, statistics = importELN(object(), str(archivePath), 'project')
 
-      self.assertEqual(report, 'ERROR: ro-crate is invalid. Cannot process')
+      self.assertEqual(report, 'RO-Crate is invalid and cannot be processed.')
       self.assertEqual(statistics, {})
 
 
