@@ -9,7 +9,7 @@ import keyring
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox
-from .fixed_strings_json import configurationGUI, defaultScanExcludePatterns, defaultUIState
+from .constants import configurationGUI, defaultScanExcludePatterns, defaultUIState
 
 CONFIGURATION_FILE_NAME = '.pastaELN.json'
 CONFIGURATION_VERSION = 4
@@ -50,6 +50,7 @@ def _secretPaths(configuration:dict[str, Any]) -> list[tuple[tuple[str, ...], st
   Returns:
     list[tuple[tuple[str, ...], str]]: list of secret paths and their AAD paths
   """
+  # This Unicode representation is cryptographic AAD in configuration version 4; changing it would break decryption.
   paths:list[tuple[tuple[str, ...], str]] = []
   for groupName, group in configuration.get('projectGroups', {}).items():
     remote = group.get('remote', {})

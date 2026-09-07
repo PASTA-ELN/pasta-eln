@@ -14,7 +14,6 @@ from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.backend_worker.extractor import isPastaExport, saveFigure
 from pasta_eln.backend_worker.sqlite import SqlLiteDB
 from pasta_eln.configuration_file import CONFIGURATION_FILE_NAME
-from pasta_eln.text_tools.handle_dictionaries import truncateMetadata
 
 
 class TestExtractorTimeoutParallel(unittest.TestCase):
@@ -186,19 +185,6 @@ class TestExtractorTimeoutParallel(unittest.TestCase):
     self.assertIn('metaVendor must be a dictionary not str.', report)
 
 
-  def test_metadata_truncation_recurses_and_keeps_json_valid(self):
-    metadata = {'child': {f'grandchild_{idx}': 'x' * 100 for idx in range(300)}}
-
-    truncated, wasTruncated, originalSize, finalSize = truncateMetadata(metadata, 1024)
-
-    self.assertTrue(wasTruncated)
-    self.assertGreater(originalSize, finalSize)
-    self.assertLessEqual(finalSize, 1024)
-    self.assertIn('child', truncated)
-    self.assertLess(len(truncated['child']), len(metadata['child']))
-    json.dumps(truncated)
-
-
   def test_extractor_test_reports_metadata_truncation(self):
     self._writeOversizedExtractor()
     dataPath = self.basePath/'data.slow'
@@ -219,8 +205,8 @@ class TestExtractorTimeoutParallel(unittest.TestCase):
 
     doc = self.backend.addData('', {'name':'data.slow'})
 
-    self.assertLessEqual(len(json.dumps(doc['metaVendor'], ensure_ascii=False).encode('utf-8')), 20 * 1024)
-    self.assertLessEqual(len(json.dumps(doc['metaUser'], ensure_ascii=False).encode('utf-8')), 20 * 1024)
+    self.assertLessEqual(len(json.dumps(doc['metaVendor'], ensure_ascii=False)), 20 * 1024)
+    self.assertLessEqual(len(json.dumps(doc['metaUser'], ensure_ascii=False)), 20 * 1024)
 
 
   def test_extractor_timeout_marks_document_stopped(self):

@@ -379,7 +379,7 @@ class BackendWorker(QObject):
 
     elif task is Task.IMPORT_ELN and set(data.keys())=={'fileName','projID'}:
       report, statistics = importELN(self.backend, data['fileName'], data['projID'])
-      self.beSendTaskReport.emit(task, f'{report}\n{json.dumps(statistics,indent=2)}', '', '')
+      self.beSendTaskReport.emit(task, f'{report}\n{json.dumps(statistics, indent=2, ensure_ascii=False)}', '', '')
 
     elif task is Task.SYNC_ELAB and set(data.keys())=={'projGroup','subtask'}:
       errorState = self.backend.checkDB(minimal=True)

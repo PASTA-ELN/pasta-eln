@@ -7,7 +7,7 @@ import qtawesome as qta
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
-from ...fixed_strings_json import allIcons, reservedDocTypeShortcuts
+from ...constants import allIcons, reservedDocTypeShortcuts
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle
 from ..message_dialog import showMessage

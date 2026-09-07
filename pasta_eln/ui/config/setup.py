@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFileDialog, QHBoxLayout, QLabel, QMessageBox, QProgressBar, QVBoxLayout, QWidget
-from ...fixed_strings_json import exampleDataString, setupText
+from ...constants import exampleDataString, setupText
 from ...installation_tools import configuration, createShortcut, exampleData
 from ...misc_tools import hardRestart
 from ..gui_communicate import Communicate

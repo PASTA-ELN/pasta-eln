@@ -15,7 +15,7 @@ from typing import Any
 import pandas as pd
 from anytree import Node
 from PIL import Image
-from ..fixed_strings_json import SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema
+from ..constants import DIR_META_FILE, SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema
 from ..misc_tools import hierarchy, isDocID
 from ..text_tools.string_changes import camelCase, createDirName, outputString, tracebackString
 from .extractor import sha256File
@@ -554,7 +554,8 @@ class SqlLiteDB:
         self.cursor.execute(f'UPDATE main SET {assignments} WHERE id=?',
                             (*changesDB['main'].values(), docID))
       if 'name' not in changesDict or changesDict['name']!='new item':#don't save initial change from new item
-        self.cursor.execute('INSERT INTO changes VALUES (?,?,?)', [docID, datetime.now().isoformat(), json.dumps(changesDict)])
+        self.cursor.execute('INSERT INTO changes VALUES (?,?,?)',
+                            [docID, datetime.now().isoformat(), json.dumps(changesDict, ensure_ascii=False)])
       self.connection.commit()
     return mainOld | mainNew | {'branch':branchOld, '__version__':'short'}
 
@@ -711,8 +712,8 @@ class SqlLiteDB:
       else:
         shutil.move(self.basePath/pathOld, self.basePath/path)
     if docID[0]=='x' and path is not None:
-      with open(self.basePath/path/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
-        fOut.write(json.dumps(self.getDoc(docID)))
+      (self.basePath/path/DIR_META_FILE).write_text(
+        json.dumps(self.getDoc(docID), ensure_ascii=False), encoding='utf-8')
       self.updateChildrenOfParentsChanges(pathOld, path,  stackOld,'/'.join(stack+[docID]))
     return (None if pathOld=='*' else pathOld, None if path=='*' else path)
 
@@ -782,7 +783,8 @@ class SqlLiteDB:
       doc.pop('content','')
       for table in ('main', 'branches', 'properties', 'tags', 'qrCodes', 'attachments'):
         self.cursor.execute(f'DELETE FROM {table} WHERE id=?', (docID,))
-      self.cursor.execute('INSERT INTO changes VALUES (?,?,?)', [docID, datetime.now().isoformat(), json.dumps(doc)])
+      self.cursor.execute('INSERT INTO changes VALUES (?,?,?)',
+                          [docID, datetime.now().isoformat(), json.dumps(doc, ensure_ascii=False)])
     self.connection.commit()
     return doc
 

@@ -7,7 +7,7 @@ from PySide6.QtCore import (QAbstractItemModel, QEvent, QMargins, QModelIndex, Q
 from PySide6.QtGui import QMouseEvent, QPainter, QPen, QPixmap, QStaticText, QTextDocument
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QAbstractItemView, QStyle, QStyledItemDelegate, QStyleOptionViewItem
-from ...fixed_strings_json import DO_NOT_RENDER, defaultDataHierarchyNode
+from ...constants import DO_NOT_RENDER, defaultDataHierarchyNode
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import markdownEqualizer
 from ..gui_communicate import Communicate
@@ -231,7 +231,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     else:
       dataHierarchyNode = self.comm.dataHierarchyNodes[doc['type'][0]]
     textDoc = QTextDocument()
-    markdownStr = doc2markdown(doc, DO_NOT_RENDER, dataHierarchyNode, self)
+    markdownStr = doc2markdown(doc, DO_NOT_RENDER, dataHierarchyNode)
     textDoc.setMarkdown(markdownStr)
     textDoc.setTextWidth(self.leafWidth)
     _, widthImage, _ = layoutWidths(max(self.leafWidth * 2, MIN_CONTENT_WIDTH * 2))

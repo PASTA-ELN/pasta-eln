@@ -15,6 +15,7 @@ import requests
 from anytree import Node
 from pasta_eln import __version__, minisign
 from ..configuration_file import saveConfiguration
+from ..constants import DIR_META_FILE
 from ..misc_tools import flatten, isDocID
 from ..text_tools.html2markdown import html2markdown
 from ..text_tools.string_changes import camelCase
@@ -357,8 +358,8 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       if docID[0]=='x' and backend.cwd is not None:
         backend.changeHierarchy(docID)
         childrenStack.append(0)
-        with open(backend.basePath/backend.cwd/'.id_pastaELN.json','w', encoding='utf-8') as f:#local path, update in any case
-          f.write(json.dumps(backend.db.getDoc(docID)))
+        (backend.basePath/backend.cwd/DIR_META_FILE).write_text(
+          json.dumps(backend.db.getDoc(docID), ensure_ascii=False), encoding='utf-8')
         # children, aka recursive part
         for child in children:
           if child['@id'].endswith('/metadata.json') or child['@id'].endswith('_metadata.json'):#skip own metadata
@@ -650,7 +651,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
 
     #finalize file
     index['@graph'] = graphMaster+graph+graphMisc
-    elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json', json.dumps(index, indent=2))
+    metadataJson = json.dumps(index, indent=2, ensure_ascii=False)
+    elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json', metadataJson)
     elnFile.writestr(f'{dirNameGlobal}/ro-crate-preview.html',  createHTML(index['@graph']))
     # find nodes that could be defined
     possDefined = [(i['@id'], i['@type'],i.get('identifier','')) for i in index['@graph'] if not isDocID(i.get('identifier',''))]
@@ -674,7 +676,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
                  'name': f"{backend.configuration['authors'][0]['title']} {backend.configuration['authors'][0]['first']} {backend.configuration['authors'][0]['last']}",
                  'email': backend.configuration['authors'][0]['email'],
                  'orcid': backend.configuration['authors'][0]['orcid']}
-    signature = secretKey.sign(json.dumps(index).encode(), trusted_comment=json.dumps(comment))
+    signature = secretKey.sign(metadataJson.encode(), trusted_comment=json.dumps(comment, ensure_ascii=False))
     elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json.minisig', bytes(signature).decode())
     elnFile.writestr(f'{dirNameGlobal}/ro-crate.pubkey', keyPair['public'])
   # end writing zip file
@@ -682,7 +684,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
   # temporary json output
   if verbose:
     with open(f'{fileName[:-3]}json', 'w', encoding='utf-8') as fOut:
-      fOut.write( json.dumps(index, indent=2) )
+      fOut.write(metadataJson)
   return f'Success: exported {len(graph)} nodes into file {fileName}. '\
     'Count of defined nodes: {n1}, count of undefined properties: {n2}, count of undefined others: {n3}'.format(
     n1=len(definedStr.split('\n')),
@@ -723,7 +725,8 @@ def validateSignature(fileName:str) -> bool:
           else:
             logging.error('remote and local key differ', exc_info=True)
             raise minisign.VerifyError
-      print('Signature is acceptable:\n', json.dumps(json.loads(signature.trusted_comment), indent=2))
+      print('Signature is acceptable:\n',
+            json.dumps(json.loads(signature.trusted_comment), indent=2, ensure_ascii=False))
       return True
     except minisign.VerifyError:
       logging.error('VERIFICATION', exc_info=True)

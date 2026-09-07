@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 from .backend_worker.backend import Backend
 from .configuration_file import CONFIGURATION_VERSION, loadConfiguration, saveConfiguration
-from .fixed_strings_json import configurationGUI, defaultConfiguration, defaultScanExcludePatterns, defaultUIState
+from .constants import configurationGUI, defaultConfiguration, defaultScanExcludePatterns, defaultUIState
 from .text_tools.string_changes import outputString
 
 

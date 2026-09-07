@@ -8,8 +8,9 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 from anytree import Node, PreOrderIter
+from ..constants import DIR_META_FILE
 from ..misc_tools import flatten
-from ..text_tools.handle_dictionaries import squashTupleIntoValue, truncateDictForElabFTW
+from ..text_tools.handle_dictionaries import squashTupleIntoValue, truncateMetadata
 from ..text_tools.html2markdown import html2markdown
 from ..text_tools.markdown2html import markdown2html  # type: ignore[attr-defined]
 from .backend import Backend
@@ -178,7 +179,7 @@ class Pasta2Elab:
     for docType in self.backend.db.dataHierarchy('',''):
       dataHierarchy += copy.deepcopy([dict(i) for i in self.backend.db.dataHierarchy(docType,'meta')])
     self.elabProjectGroupData = self.api.readEntry('items', self.elabProjGroupID)[0]
-    metadata = json.dumps(dataHierarchy)
+    metadata = json.dumps(dataHierarchy, ensure_ascii=False)
     if self.elabProjectGroupData.get('metadata', '') != metadata:
       self.api.updateEntry('items', self.elabProjGroupID, {'metadata':metadata})
       self.elabProjectGroupData['metadata'] = metadata
@@ -371,8 +372,8 @@ class Pasta2Elab:
       success = self.api.updateEntry(entryType, elabID, content|self.readWriteAccess)
       if not success:
         content.pop('metadata')
-        logging.error('Could not sync data %s, %s  %s',entryType, elabID, json.dumps(content|self.readWriteAccess,
-                                                                                     indent=2), exc_info=True)
+        logging.error('Could not sync data %s, %s  %s',entryType, elabID,
+                      json.dumps(content|self.readWriteAccess, indent=2, ensure_ascii=False), exc_info=True)
         return node.id, -1
       # create links
       _ = [self.api.createLink(entryType, elabID,
@@ -385,7 +386,7 @@ class Pasta2Elab:
     for upload in uploads:
       if upload['real_name'] in uploadsToDelete:
         self.api.uploadDelete(entryType, elabID, upload['id'])
-    self.api.upload(entryType, elabID, jsonContent=json.dumps(docMerged))
+    self.api.upload(entryType, elabID, jsonContent=json.dumps(docMerged, ensure_ascii=False))
     if flagUpdateServer:
       if image:
         self.api.upload(entryType, elabID, image)
@@ -463,8 +464,8 @@ class Pasta2Elab:
                 if branch['path'] is not None:
                   if docOther['type'][0][0]=='x':
                     (self.backend.basePath/branch['path']).mkdir(parents=True, exist_ok=True)
-                    with open(self.backend.basePath/branch['path']/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
-                      json.dump({'id':docOther['id']}, fOut)
+                    (self.backend.basePath/branch['path']/DIR_META_FILE).write_text(
+                      json.dumps({'id':docOther['id']}, ensure_ascii=False), encoding='utf-8')
                   else:
                     (self.backend.basePath/branch['path']).parent.mkdir(parents=True, exist_ok=True)
                 docOther['branch'] = branch | {'op':'c'}                               #TODO: one remains only
@@ -483,8 +484,8 @@ class Pasta2Elab:
                 for k in list(docOther.keys()):
                   if k.startswith('metaVendor.'):
                     docOther.pop(k,'')
-                logging.error('Tried to add to client elab:%s %s: %s', entryType, idx, json.dumps(docOther,indent=2),
-                              exc_info=True)
+                logging.error('Tried to add to client elab:%s %s: %s', entryType, idx,
+                              json.dumps(docOther, indent=2, ensure_ascii=False), exc_info=True)
                 report.append((docOther['id'], -1))
     return report
 
@@ -526,7 +527,7 @@ class Pasta2Elab:
     bodyMD    = ''
     if 'content' in doc:
       bodyMD += doc.pop('content')+'\n\n__DO NOT CHANGE THIS DELIMITER between content (top) and comment (bottom)__\n\n'
-    bodyMD    = doc.pop('comment')
+    bodyMD   += doc.pop('comment')
     body      = markdown2html(bodyMD)
     # created_at= doc.pop('dateCreated')
     # modified_at=doc.pop('dateModified')
@@ -539,8 +540,8 @@ class Pasta2Elab:
     if doc:
       doc.pop('dateSync')
       metadata |= {'__':doc}
-    metadata = truncateDictForElabFTW(metadata)
-    elab = {'body':body, 'title':title, 'metadata':json.dumps(metadata), 'tags':tags,
+    metadata, _, _, _ = truncateMetadata(metadata, 900)
+    elab = {'body':body, 'title':title, 'metadata':json.dumps(metadata, ensure_ascii=False), 'tags':tags,
             # 'created_at':created_at, 'modified_at':modified_at,
             'rating': ratings[0] if ratings else '0'}
     return elab, image

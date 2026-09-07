@@ -8,7 +8,7 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QLabel, QSizePolicy
 from pasta_eln.misc_tools import isDocID, makeStringWrappable
 from pasta_eln.text_tools.markdown2html import markdown2html  # type: ignore[attr-defined]
-from pasta_eln.text_tools.string_changes import markdownEqualizer, tuple2html
+from pasta_eln.text_tools.string_changes import markdownEqualizer, tuple2text
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import CollapsibleSection
@@ -96,7 +96,7 @@ class DetailsHierItem(CollapsibleSection):
         value = ', '.join([str(i) for i in value])
       labelStr = f'<b>{key}:</b><br>{value}<br><br>'
       if isinstance(value, tuple) and len(value) == 4:
-        k, v = tuple2html(key, value)
+        k, v = tuple2text(key, value)
         if isDocID(value[0]):
           k = key
           valueText = f'<a href="pasta-eln://{value[0]}">{value[2] or value[1]}</a>'

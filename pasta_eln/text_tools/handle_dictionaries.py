@@ -6,9 +6,9 @@ import re
 import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
-from ..fixed_strings_json import SORTED_KEYS, SQLiteTranslation
+from ..constants import SORTED_KEYS, SQLiteTranslation
 from ..misc_tools import isDocID
-from .string_changes import markdownEqualizer
+from .string_changes import markdownEqualizer, tuple2text
 
 if TYPE_CHECKING:
   from ..backend_worker.sqlite import SqlLiteDB
@@ -102,11 +102,9 @@ def dict2ul(aDict:dict[str,Any], fmt:str='html') -> str:
       except Exception:
         pass
     if isinstance(value, dict):
-      valueString = dict2ul(value)
+      valueString = dict2ul(value, fmt)
     elif isinstance(value, tuple) and len(value)==4:                        #tuple of value, unit, label, PURL
-      key = key if value[2] is None or value[2]=='' else value[2]
-      valueString = f'{value[0]} {value[1]}'
-      valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
+      key, valueString = tuple2text(key, value) if fmt == 'html' else tuple2text(key, value, 'markdown')
     elif isinstance(value, (list, tuple)):
       valueString = ',&nbsp;&nbsp;&nbsp;'.join([str(i) for i in value])
     else:
@@ -115,7 +113,7 @@ def dict2ul(aDict:dict[str,Any], fmt:str='html') -> str:
   return f'{text}</ul>' if fmt=='html' else f'{text}\n'
 
 
-def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list[dict[str,str]], widget:Any) -> str:
+def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list[dict[str,str]]) -> str:
   """
   Convert document to markdown representation
 
@@ -123,8 +121,6 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
     doc (dict): document to be converted
     ignoreKeys (list): keys to be ignored
     dataHierarchyNode (dict): data hierarchy node
-    widget (Any): widget to get comm and backend from
-
   Returns:
     str: markdown representation
   """
@@ -132,7 +128,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
   for key in [i for i in SORTED_KEYS if i in doc]+[i for i in doc if i not in SORTED_KEYS]:
     value = doc[key]
     if key == '' and isinstance(value,dict):                                              #handle only key==''
-      markdown += doc2markdown(value, ignoreKeys, dataHierarchyNode, widget)
+      markdown += doc2markdown(value, ignoreKeys, dataHierarchyNode)
       continue
     if key in ignoreKeys or not value:
       continue
@@ -162,20 +158,22 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
             logging.warning('Value[2] not given for %s', value)
             value = '\u260D link to entry'                                                          #safeguard
           markdown += f'{key.capitalize()}: {value}\n\n'
-        elif isinstance(value, list):
+          continue
+        if isinstance(value, list):
           value = ', '.join([str(i) for i in value])
           markdown += f'{key.capitalize()}: {value}\n\n'
+          continue
         if isinstance(value, tuple) and len(value)==4:
-          key = key if value[2] is None or value[2]=='' else value[2]
           if isDocID(value[0]):
             valueString = 'Cannot resolve link'
           else:
-            valueString = f'{value[0]} {value[1]}'
-            valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;**[&uArr;]({value[3]})**'
+            key, valueString = tuple2text(key, value, 'markdown')
           markdown += f'{key.capitalize()}: {valueString}\n\n'
-        if isinstance(value, dict):
+        elif isinstance(value, dict):
           value = dict2ul({k:(v[0]  if isinstance(v, (list,tuple)) else v) for k,v in value.items()}, 'markdown')
           markdown += f'{key.capitalize()}: {value}'
+        else:
+          markdown += f'{key.capitalize()}: {value}\n\n'
     except Exception:
       doc.pop('image','')
       logging.error('Could not convert to markdown value: %s\n  doc: %s',value, doc, exc_info=True, stack_info=True)
@@ -232,25 +230,21 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any], onlyEssentials:bool=True
         if len(value) != len(dict2Copy[key]):
           outString += 'branches have different lengths\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
         else:
-          for idx,_ in enumerate(value):
-            branch1 = value[idx]
-            branch2 = dict2Copy['branch'][idx]
-            if 'show' in branch1:
-              del branch1['show']
-            if 'show' in branch2:
-              del branch2['show']
+          for branch1Raw, branch2Raw in zip(value, dict2Copy[key]):
+            branch1 = {k:v for k,v in branch1Raw.items() if k != 'show'}
+            branch2 = {k:v for k,v in branch2Raw.items() if k != 'show'}
             if branch1!=branch2:
               outString += 'branches differ\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
       elif isinstance(value, list):
         try:
-          if set(value).difference(set(dict2Copy[key])):
+          if set(value) != set(dict2Copy[key]):
             outString += (f'lists differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
-        except Exception:
-          if str(value)!= str(dict2Copy[key]).replace('(' ,'[').replace(')' ,']'):
+        except TypeError:
+          if json.loads(json.dumps(value, ensure_ascii=False)) != json.loads(json.dumps(dict2Copy[key],
+                                                                                        ensure_ascii=False)):
             outString += f'Difference in key: {key}\n{str(value)}\n{str(dict2Copy[key])}\n'
       elif isinstance(value, dict):
-        if json.dumps(value) != json.dumps(dict2Copy[key]):
-          outString += (f'dicts differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
+        outString += (f'dicts differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
       elif isinstance(dict2Copy[key], tuple) and len(dict2Copy[key])==4:
         if value != dict2Copy[key][0]:
           outString += (f'property values differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
@@ -287,82 +281,41 @@ def squashTupleIntoValue(doc:dict[str,Any]) -> None:
   return
 
 
-def truncateDictForElabFTW(data:dict[str,Any], maxChars:int=900) -> dict[str,Any]:
-  """Truncate a dictionary to complete JSON key/value pairs within a character limit. Goal is to fit into the elabFTW size limit
-  Args:
-    data (dict): dictionary to be truncated
-    maxChars (int): maximum number of characters
+def truncateMetadata(metadata:Any, maxChars:int) -> tuple[Any, bool, int, int]:
+  """Truncate a JSON value, mark truncated content, and report serialized lengths.
 
-  Returns:
-    dict: truncated dictionary
-  """
-  marker = {'WARNING':'TRUNCATED'}
-  result:dict[str,Any] = {}
-
-  def fits(candidate:dict[str,Any]) -> bool:
-    """Check whether a candidate dictionary fits within the JSON size limit.
-
-    Args:
-      candidate (dict[str, Any]): Reduced dictionary being tested for serialized length.
-
-    Returns:
-      bool: ``True`` when the serialized candidate is at most ``maxChars`` long.
-    """
-    return len(json.dumps(candidate)) <= maxChars
-
-  for key, value in data.items():
-    if fits(result | {key:value} | marker):
-      result[key] = value
-      continue
-    if isinstance(value, dict):
-      nested:dict[str,Any] = {}
-      for nestedKey, nestedValue in value.items():
-        if fits(result | {key:(nested | {nestedKey:nestedValue})} | marker):
-          nested[nestedKey] = nestedValue
-          continue
-        break
-      if nested:
-        result[key] = nested
-    break
-  return result | marker
-
-
-def jsonSize(value:Any) -> int:
-  """Return the UTF-8 size of a JSON value.
-
-  Args:
-    value (Any): JSON-serializable value
-
-  Returns:
-    int: serialized UTF-8 size in bytes
-  """
-  return len(json.dumps(value, ensure_ascii=False).encode('utf-8'))
-
-
-def truncateMetadata(metadata:Any, limit:int) -> tuple[Any, bool, int, int]:
-  """Main function: truncate one metadata category and report its serialized sizes.
+  The warning marker is added after truncation and can make the final length exceed
+  ``maxChars``.
 
   Args:
     metadata (Any): metadata value to prune
-    limit (int): maximum serialized UTF-8 size in bytes
+    maxChars (int): maximum serialized JSON length in characters
 
   Returns:
-    tuple: pruned value, truncation flag, original size, and final size
+    tuple: pruned value, truncation flag, original length, and final length
   """
-  oldSize = jsonSize(metadata)
-  if oldSize <= limit:
-    return metadata, False, oldSize, oldSize
-  truncated, wasTruncated = _truncateJsonValue(metadata, limit)
-  return truncated, wasTruncated, oldSize, jsonSize(truncated)
+  oldLength = len(json.dumps(metadata, ensure_ascii=False))
+  if oldLength <= maxChars:
+    return metadata, False, oldLength, oldLength
+  truncated, wasTruncated = _truncateJsonValue(metadata, maxChars)
+  if wasTruncated:
+    if isinstance(truncated, dict):
+      truncated['WARNING'] = 'TRUNCATED'
+    elif isinstance(truncated, list):
+      truncated.append({'WARNING':'TRUNCATED'})
+    else:
+      truncated = {'WARNING':'TRUNCATED'}
+  newLength = len(json.dumps(truncated, ensure_ascii=False))
+  return truncated, wasTruncated, oldLength, newLength
 
 
 
-def _truncateJsonValue(value:Any, limit:int) -> tuple[Any, bool]:
+def _truncateJsonValue(value:Any, maxChars:int) -> tuple[Any, bool]:
   """Recursive prune JSON values from the end until their serialized size fits.
 
   Args:
     value (Any): JSON value to prune
-    limit (int): maximum serialized UTF-8 size in bytes
+    maxChars (int): maximum serialized JSON length in characters
 
   Returns:
     tuple: pruned value and whether content was removed
@@ -373,22 +326,23 @@ def _truncateJsonValue(value:Any, limit:int) -> tuple[Any, bool]:
     for key, child in value.items():
       candidate = dict(dictResult)
       candidate[key] = child
-      if jsonSize(candidate) <= limit:
+      if len(json.dumps(candidate, ensure_ascii=False)) <= maxChars:
         dictResult[key] = child
         continue
       if isinstance(child, (dict, list)):
-        remaining = max(0, limit - jsonSize({**dictResult, key: {} if isinstance(child, dict) else []}))
+        remaining = max(0, maxChars - len(json.dumps({**dictResult, key: {} if isinstance(child, dict) else []},
+                                                     ensure_ascii=False)))
         child, childTruncated = _truncateJsonValue(child, remaining)
         candidate = dict(dictResult)
         candidate[key] = child
-        if jsonSize(candidate) <= limit:
+        if len(json.dumps(candidate, ensure_ascii=False)) <= maxChars:
           dictResult[key] = child
         else:
           truncated = True
         truncated |= childTruncated
       else:
         truncated = True
-      if jsonSize(dictResult) >= limit:
+      if len(json.dumps(dictResult, ensure_ascii=False)) >= maxChars:
         truncated |= len(value) > len(dictResult)
         break
     truncated |= len(dictResult) != len(value)
@@ -398,13 +352,14 @@ def _truncateJsonValue(value:Any, limit:int) -> tuple[Any, bool]:
     truncated = False
     for child in value:
       listCandidate = listResult + [child]
-      if jsonSize(listCandidate) <= limit:
+      if len(json.dumps(listCandidate, ensure_ascii=False)) <= maxChars:
         listResult.append(child)
         continue
       if isinstance(child, (dict, list)):
-        remaining = max(0, limit - jsonSize(listResult + [{} if isinstance(child, dict) else []]))
+        remaining = max(0, maxChars - len(json.dumps(listResult + [{} if isinstance(child, dict) else []],
+                                                     ensure_ascii=False)))
         child, childTruncated = _truncateJsonValue(child, remaining)
-        if jsonSize(listResult + [child]) <= limit:
+        if len(json.dumps(listResult + [child], ensure_ascii=False)) <= maxChars:
           listResult.append(child)
         else:
           truncated = True
@@ -414,4 +369,4 @@ def _truncateJsonValue(value:Any, limit:int) -> tuple[Any, bool]:
       break
     truncated |= len(listResult) != len(value)
     return listResult, truncated
-  return value, jsonSize(value) > limit
+  return value, len(json.dumps(value, ensure_ascii=False)) > maxChars

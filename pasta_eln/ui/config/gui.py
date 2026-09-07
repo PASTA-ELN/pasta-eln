@@ -3,7 +3,7 @@ from collections.abc import Callable
 from PySide6.QtWidgets import (QAbstractButton, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QGroupBox, QLabel,
                                QLineEdit, QVBoxLayout)
 from ...configuration_file import saveConfiguration
-from ...fixed_strings_json import configurationGUI
+from ...constants import configurationGUI
 from ..gui_communicate import Communicate
 
 

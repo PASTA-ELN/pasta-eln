@@ -1,4 +1,4 @@
-""" Long strings and dictionaries/JSON that would obfuscate code """
+"""Application defaults, display text, and shared constants."""
 from typing import Any
 
 defaultDocTypes: list[list[str]] = [
@@ -164,6 +164,7 @@ DEFAULT_COLORS_PALETTE:dict[str,dict[str,str]] = {
 
 SQLiteTranslationDict = {"'":'&prime;'}
 SQLiteTranslation     = str.maketrans(SQLiteTranslationDict)
+DIR_META_FILE = '.id_pastaELN.json'
 
 minimalDocInForm = {'tags':[], 'comment':'', '':{}}
 

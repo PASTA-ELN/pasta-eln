@@ -8,6 +8,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 from urllib import request
+from ..constants import DIR_META_FILE
 from ..misc_tools import Bcolors, getConfiguration
 from ..text_tools.handle_dictionaries import diffDicts, fillDocBeforeCreate
 from ..text_tools.string_changes import camelCase, createDirName, outputString
@@ -261,8 +262,7 @@ class Backend(CliMixin):
           (self.basePath/oldPath).rename(self.basePath/path)
       else:
         (self.basePath/path).mkdir(exist_ok=True)#if exist, create again; moving not necessary since directory moved in changeHierarchy
-      with open(self.basePath/path/'.id_pastaELN.json','w', encoding='utf-8') as f:#local path, update in any case
-        f.write(json.dumps(doc))
+      (self.basePath/path/DIR_META_FILE).write_text(json.dumps(doc, ensure_ascii=False), encoding='utf-8')
     return doc
 
 
@@ -357,12 +357,11 @@ class Backend(CliMixin):
         if path in pathsInDbX:                                                      # path already in database
           pathsInDbX.remove(path)
           continue
-        if (self.basePath/path/'.id_pastaELN.json').is_file():                 # update branch: path and stack
-          with open(self.basePath/path/'.id_pastaELN.json', encoding='utf-8') as fIn:
-            doc = json.loads(fIn.read())
-            doc = self.db.getDoc(doc['id'])
+        if (self.basePath/path/DIR_META_FILE).is_file():                 # update branch: path and stack
+          metadata = json.loads((self.basePath/path/DIR_META_FILE).read_text(encoding='utf-8'))
+          doc = self.db.getDoc(metadata['id'])
           if len(doc)==0:
-            (self.basePath/path/'.id_pastaELN.json').unlink()
+            (self.basePath/path/DIR_META_FILE).unlink()
             rerunScanTree = True
             continue
           if (self.basePath/doc['branch'][0]['path']).parent.as_posix()  == root and \
@@ -390,7 +389,7 @@ class Backend(CliMixin):
         else:
           currentID = self.addData('x1', {'name': dirName}, hierStack)['id']
           newDir = self.basePath/self.db.getDoc(currentID)['branch'][0]['path']
-          (newDir/'.id_pastaELN.json').rename(self.basePath/root/dirName/'.id_pastaELN.json')#move index file into old folder
+          (newDir/DIR_META_FILE).rename(self.basePath/root/dirName/DIR_META_FILE)#move index file into old folder
           newDir.rmdir()                                                                  #remove created path
           (self.basePath/root/dirName).rename(newDir)                                    #move old to new path
         rerunScanTree = True
@@ -526,26 +525,24 @@ class Backend(CliMixin):
               output += outputString(outputStyle, 'error', f'Path of folder is non-unique (1): {path} in '\
                                       f'{" ".join([i["id"] for i in listDocs])}')
             docDB   = self.db.getDoc(listDocs[0]['id'])
-            if (self.basePath/root/dirName/'.id_pastaELN.json').is_file():
-              with open(self.basePath/root/dirName/'.id_pastaELN.json',encoding='utf-8') as fIn:
-                docDisk = json.loads(fIn.read())
-                difference = diffDicts(docDisk,docDB)
-                if len(difference)>1:
-                  errorStr = outputString(outputStyle,'error',f'disk(1) and db(2) content do not match*: {docDB["id"]}\n{difference}')
-                  if repair is None:
-                    output += errorStr
-                  elif repair(errorStr):
-                    with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
-                      json.dump(docDB, fOut)
-                  #use only for resetting the content in the .id_pastaELN.json
+            metadataPath = self.basePath/root/dirName/DIR_META_FILE
+            if metadataPath.is_file():
+              docDisk = json.loads(metadataPath.read_text(encoding='utf-8'))
+              difference = diffDicts(docDisk,docDB)
+              if len(difference)>1:
+                errorStr = outputString(outputStyle,'error',f'disk(1) and db(2) content do not match*: {docDB["id"]}\n{difference}')
+                if repair is None:
+                  output += errorStr
+                elif repair(errorStr):
+                  metadataPath.write_text(json.dumps(docDB, ensure_ascii=False), encoding='utf-8')
+                #use only for resetting the content in the .id_pastaELN.json
             else:
               count += 1
               errorStr = outputString(outputStyle, 'error', f'Folder has no .id_pastaELN.json:{path}')
               if repair is None:
                 output += errorStr
               elif repair(errorStr):
-                with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
-                  json.dump({'id':docDB['id']}, fOut)
+                metadataPath.write_text(json.dumps({'id':docDB['id']}, ensure_ascii=False), encoding='utf-8')
     pathsInDbData =   [path for path in pathsInDbData if not any(path == folder or path.startswith(f'{folder}/')
                                                                 for folder in ignoredFolders)]
     pathsInDbFolder = [path for path in pathsInDbFolder if not any(path == folder or path.startswith(f'{folder}/')
@@ -561,11 +558,12 @@ class Backend(CliMixin):
                                  'FROM main JOIN branches USING(id) WHERE branches.path=?', (orphan,))
           res = self.db.cursor.fetchall()
           resString = '\n  '.join(str(i) for i in res)
-          if repair(f'Path of database not on filesystem:\n  {resString}. Repair: file-remove path; folder-create folder and .id_pastaELN'):
+          if repair(f'Path of database not on filesystem:\n  {resString}. Repair: file-remove path; folder-create '
+                    'folder and .id_pastaELN'):
             if res[0][1].startswith('x'):
               (self.basePath/orphan).mkdir(parents=True)
-              with open(self.basePath/orphan/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
-                json.dump({'id':res[0][3]}, fOut)
+              (self.basePath/orphan/DIR_META_FILE).write_text(json.dumps({'id':res[0][3]}, ensure_ascii=False),
+                                                              encoding='utf-8')
             else:
               self.db.cursor.execute("UPDATE branches SET path='*' WHERE id=? AND path=?", (res[0][3], orphan))
               self.db.connection.commit()
@@ -610,4 +608,4 @@ class Backend(CliMixin):
           if not message or message.startswith('***') or message.startswith(('Green:', 'Blue:')):
             continue
           report[category].append(message)
-    return json.dumps(report)
+    return json.dumps(report, ensure_ascii=False)

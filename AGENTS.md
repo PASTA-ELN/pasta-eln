@@ -27,7 +27,7 @@ pre-commit run --all-files
 make -C docs html
 ```
 
-Before editing, run `git status --short`; preserve unrelated changes. Run the smallest relevant test, then the standard suite when practical. Numbered `test_XX_` modules must retain their order. Run pytest and pylint outside the sandbox: tests use multiprocessing and pylint writes its cache under the user home. Use Qt's offscreen platform for headless GUI tests.
+Before editing, run `git status --short`; preserve unrelated changes. Do not run pytest (focused or full), mypy, or pylint unless the user explicitly requests that check in the current task; an instruction to implement or verify does not authorize these commands. Run the standard pytest suite only when the user explicitly requests the full suite. When explicitly authorized, run pytest and pylint outside the sandbox: tests use multiprocessing and pylint writes its cache under the user home. Use Qt's offscreen platform for headless GUI tests. Numbered `test_XX_` modules must retain their order.
 
 Do not run `releaseVersion.py` routinely: it regenerates files and may prompt for release actions.
 
@@ -45,7 +45,7 @@ For a visual check of the user's actual desktop, ask them to press `F12` in PAST
 
 - Make the minimum change required to achieve the goal. Never overengineer: do not add handling, workflows, abstractions, or validation for unlikely or impossible cases.
 - Trust internal data passed between application components. Validate it only when needed for correct typing/mypy; do not add defensive runtime validation.
-- Inline a short function when its length `L` satisfies `L < 4N/(N-1)`, where `N > 1` is its number of calls.
+- Inline every one-call function unless it is a required framework override, signal/slot, callback, or makes a materially complex expression clearer. For functions called `N > 1` times, inline when their executable length `L` satisfies `L < 4N/(N-1)`; do not count docstrings or comments. Do not introduce a function solely to wrap one expression.
 - Add type hints to new and changed public code; keep mypy and pylint clean. Use descriptive names.
 - Use parameterized SQL. Treat SQLite data, user files, configuration, and repository uploads as durable; destructive changes require explicit validation and authorization.
 - Keep the README concise and user-facing; put detail in `docs/`. Update this file if commands, structure, or safety constraints change.

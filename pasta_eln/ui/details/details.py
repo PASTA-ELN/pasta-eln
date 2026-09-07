@@ -8,7 +8,7 @@ from PySide6.QtCore import QUrl, Signal, Slot
 from PySide6.QtGui import QDesktopServices, QFontMetrics, QShowEvent, Qt
 from PySide6.QtWidgets import QHBoxLayout, QMenu, QMessageBox, QScrollArea, QSplitter, QTextEdit, QVBoxLayout, QWidget
 from pasta_eln.backend_worker.worker import Task
-from pasta_eln.fixed_strings_json import SORTED_DB_KEYS, defaultDataHierarchyNode
+from pasta_eln.constants import SORTED_DB_KEYS, defaultDataHierarchyNode
 from pasta_eln.misc_tools import clearLayout
 from pasta_eln.text_tools.string_changes import createDirName
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin

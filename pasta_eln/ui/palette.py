@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, TypeAlias, TypedDict, cast
 import darkdetect
 import qdarktheme
 from PySide6.QtGui import QColor
-from ..fixed_strings_json import THEME_COLOR_VALUES
+from ..constants import THEME_COLOR_VALUES
 from ..misc_tools import rgba2argb
 
 if TYPE_CHECKING:
@@ -128,7 +128,7 @@ class Palette:
   def getThemeColor(self, category: str, subcategory: str) -> str:
     """
     Returns the computed QColor from the PyQtDarkTheme dict.
-    Look at THEME_COLOR_VALUES in fixedStringsJson.py for all possible Categories
+    Look at THEME_COLOR_VALUES in constants.py for all possible categories.
 
     Args:
         category: first level of dict, e.g., "background", "foreground", "primary"

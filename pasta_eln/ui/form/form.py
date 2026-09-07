@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QIn
                                QMenu, QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTextEdit, QVBoxLayout, QWidget)
 from ...backend_worker.sqlite import MAIN_ORDER
 from ...backend_worker.worker import Task
-from ...fixed_strings_json import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
+from ...constants import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
 from ...misc_tools import callAddOn, isDocID
 from ...text_tools.string_changes import createDirName, markdownEqualizer
 from .._context_menu import CommandMenu, executeContextMenu, initContextMenu
@@ -121,6 +121,7 @@ class Form(QDialog):
     self.comboBoxDocTypeList:dict[str, tuple[QComboBox,str]] = {}# dict of docType:.. for links to other items
     self.projectTableData:pd.DataFrame|None = None
     self.showAdvanced = False
+    self.autosavePath = Path.home()/'.pastaELN.temp'
 
     # Request data
     if not self.flagNewDoc:
@@ -135,32 +136,30 @@ class Form(QDialog):
     self.paint()
 
     # setup Autosave, start it and paint form
-    if (Path.home()/'.pastaELN.temp').is_file():
-      with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:
-        content = json.loads(fTemp.read())
-        if self.doc.get('id', '') in content:
-          ret = QMessageBox.information(self, 'Restore unsaved changes?', 'Unsaved changes were found from a form that '+
-                    'closed unexpectedly. Do you want to restore them?\nIf not, they will be removed.',
-                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
-                  QMessageBox.StandardButton.Yes)
-          if ret==QMessageBox.StandardButton.Yes:
-            subContent = content[self.doc.get('id', '')]
-            for key in subContent.keys():
-              try:
-                elementName = f'key_{[idx for idx, (k,_) in enumerate(self.allUserElements) if key==k][0]}'
-              except Exception:
-                continue
-              if key in ('comment', 'content'):
-                getattr(self, f'textEdit_{key}').setPlainText(subContent[key])
-              elif key in ('tags'):
-                self.doc[key] = subContent[key]
-                self.updateTagsBar()
-              elif isinstance(getattr(self, elementName), QLineEdit):
-                getattr(self, elementName).setText(subContent[key])
-              # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
-          del content[self.doc.get('id', '')]
-      with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
-        fTemp.write(json.dumps(content))
+    if self.autosavePath.is_file():
+      content = json.loads(self.autosavePath.read_text(encoding='utf-8'))
+      if self.doc.get('id', '') in content:
+        ret = QMessageBox.information(self, 'Restore unsaved changes?', 'Unsaved changes were found from a form that '+
+                  'closed unexpectedly. Do you want to restore them?\nIf not, they will be removed.',
+                QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                QMessageBox.StandardButton.Yes)
+        if ret==QMessageBox.StandardButton.Yes:
+          subContent = content[self.doc.get('id', '')]
+          for key in subContent.keys():
+            try:
+              elementName = f'key_{[idx for idx, (k,_) in enumerate(self.allUserElements) if key==k][0]}'
+            except Exception:
+              continue
+            if key in ('comment', 'content'):
+              getattr(self, f'textEdit_{key}').setPlainText(subContent[key])
+            elif key in ('tags'):
+              self.doc[key] = subContent[key]
+              self.updateTagsBar()
+            elif isinstance(getattr(self, elementName), QLineEdit):
+              getattr(self, elementName).setText(subContent[key])
+            # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
+        del content[self.doc.get('id', '')]
+      self.autosavePath.write_text(json.dumps(content, ensure_ascii=False), encoding='utf-8')
     self.checkThreadTimer.setInterval(1*60*1000)                                                       # 1 min
     self.checkThreadTimer.timeout.connect(self.autosave)
     self.checkThreadTimer.start()
@@ -600,14 +599,9 @@ class Form(QDialog):
       else:                                                                                 #normal text field
         subContent[key] = getattr(self, elementName).text().strip()
     # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
-    if (Path.home()/'.pastaELN.temp').is_file():
-      with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:
-        content = json.loads(fTemp.read())
-    else:
-      content = {}
+    content = json.loads(self.autosavePath.read_text(encoding='utf-8')) if self.autosavePath.is_file() else {}
     content[self.doc.get('id', '')] = subContent
-    with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
-      fTemp.write(json.dumps(content))
+    self.autosavePath.write_text(json.dumps(content, ensure_ascii=False), encoding='utf-8')
     return
 
 
@@ -671,13 +665,11 @@ class Form(QDialog):
 
     elif commandType in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT, Command.FORM_SAVE_DUPL):
       self.checkThreadTimer.stop()
-      if (Path.home()/'.pastaELN.temp').is_file():                               #if there is a temporary file
-        with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:
-          content = json.loads(fTemp.read())
-          if self.doc.get('id', '') in content:            #if there is an ID in content -> unique identifier?
-            del content[self.doc.get('id', '')]                                                # delete the ID
-        with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:  #reopen temporary file again
-          fTemp.write(json.dumps(content))
+      if self.autosavePath.is_file():                               #if there is a temporary file
+        content = json.loads(self.autosavePath.read_text(encoding='utf-8'))
+        if self.doc.get('id', '') in content:            #if there is an ID in content -> unique identifier?
+          del content[self.doc.get('id', '')]                                                # delete the ID
+        self.autosavePath.write_text(json.dumps(content, ensure_ascii=False), encoding='utf-8')
 
       # loop through all the subitems
       # rating

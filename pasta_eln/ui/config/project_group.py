@@ -281,7 +281,7 @@ class ProjectGroup(QDialog):
       try:
         res = requests.get(f'{url}info', headers=headers, verify=True, timeout=15)
         if res.status_code==200:
-          elabVersion = int(json.loads(res.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
+          elabVersion = int(res.json().get('elabftw_version','0.0.0').split('.')[0])
           if elabVersion<5:
             showMessage(self, 'Configuration error', 'Old eLabFTW server installation')
           # success

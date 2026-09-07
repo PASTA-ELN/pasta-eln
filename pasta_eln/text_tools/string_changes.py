@@ -78,22 +78,25 @@ def markdownEqualizer(text:str) -> str:
   return re.sub(r'(^|\n)(#+)', r'\1##\2', text.strip())
 
 
-def tuple2html(key:str, value:tuple[str,str,str,str]) -> tuple[str,str]:
+def tuple2text(key:str, value:tuple[str,str,str,str], fmt:str='html') -> tuple[str,str]:
   """
-  Convert tuple to html string
+  Convert a property tuple to HTML or Markdown display text.
 
   Args:
     key   (str): key/label to add
     value (tuple): tuple to convert
+    fmt (str): output format, either ``html`` or ``markdown``
 
   Returns:
     str,str: key, html string
   """
-  key = key if value[2] is None or value[2]=='' else value[2]
-  valueString = f'{value[0]} {value[1]}'
-  valueString = valueString if value[3] is None or value[3]=='' else \
-                f'{valueString}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
-  return key, valueString
+  label = value[2] or key
+  valueString = f'{value[0]} {value[1]}'.strip()
+  if value[3] and fmt == 'html':
+    valueString += f'&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
+  elif value[3] and fmt == 'markdown':
+    valueString += f' **[&uArr;]({value[3]})**'
+  return label, valueString
 
 
 def camelCase(text:str) -> str:
@@ -130,7 +133,7 @@ def createDirName(doc:dict[str,Any], thisChildNumber:int, parentDir:Path) -> str
     return name
   idx = 0
   nameTest = name
-  while (parentDir/name).exists():
+  while (parentDir/nameTest).exists():
     idx += 1
     nameTest = f'{name}_{idx:02d}'
   logging.debug('createDirName: %s created', nameTest)

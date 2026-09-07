@@ -11,7 +11,7 @@ from collections.abc import Callable
 from sqlite3 import IntegrityError
 from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.backend_worker.elab_ftw_sync import Pasta2Elab
-from pasta_eln.fixed_strings_json import defaultDocTypes, defaultSchema
+from pasta_eln.constants import defaultDocTypes, defaultSchema
 from pasta_eln.misc_tools import getConfiguration
 from pasta_eln.text_tools.string_changes import outputString
 
@@ -196,7 +196,7 @@ class Tools:
     if not docID:
       docID = input('Enter docID: ').strip()
     if output:
-      print(json.dumps(self.backend.db.getDoc(docID), indent=2))
+      print(json.dumps(self.backend.db.getDoc(docID), indent=2, ensure_ascii=False))
     else:
       self.backend.db.remove(docID)
     return

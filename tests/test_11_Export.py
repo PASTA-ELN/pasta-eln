@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create the default example that all installations create and verify it thoroughly """
 import logging, unittest, tempfile, os
+from unittest.mock import patch
 from zipfile import ZipFile
 from pasta_eln.backend_worker.backend import Backend
-from pasta_eln.backend_worker.input_output import exportELN
+from pasta_eln.backend_worker.input_output import exportELN, validateSignature
 
 
 class TestStringMethods(unittest.TestCase):
@@ -42,6 +43,10 @@ class TestStringMethods(unittest.TestCase):
     allDocTypes = self.be.db.dataHierarchy('','')+['-']
     print(f'Filename {fileName}: docTypes: {", ".join(allDocTypes)}')
     exportELN(self.be, [projID], fileName, allDocTypes)
+    # change network request to pretend to validate signature: now validation verification can happen
+    with patch('pasta_eln.backend_worker.input_output.requests.get') as remoteKeyRequest:
+      remoteKeyRequest.return_value.ok = False
+      self.assertTrue(validateSignature(fileName))
 
     # test file
     with ZipFile(fileName, 'r') as zObject:

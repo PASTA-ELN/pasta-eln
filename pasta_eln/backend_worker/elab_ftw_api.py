@@ -39,7 +39,7 @@ class ElabFTWApi:
     try:
       response = self.session.get(f'{url}info', **self.param)
       if response.status_code == 200:
-        elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
+        elabVersion = int(response.json().get('elabftw_version','0.0.0').split('.')[0])
         if elabVersion<5:
           logging.error('Old elab-ftw version', exc_info=True)
         else:
@@ -66,12 +66,11 @@ class ElabFTWApi:
     Returns:
       int: elabFTW id
     """
-    response = self.session.post(self.url+entryType, data=json.dumps({} if content is None else content), **self.param)
+    response = self.session.post(self.url+entryType, json={} if content is None else content, **self.param)
     if response.status_code == 201:
       return int(response.headers['Location'].split('/')[-1])
     if response.status_code == 400:
-      logging.error("Occurred in touch of url '%s': %s",entryType, json.loads(response.content.decode('utf-8'))
-                    ['description'], exc_info=True)
+      logging.error("Occurred in touch of url '%s': %s",entryType, response.json()['description'], exc_info=True)
     return -1
 
 
@@ -90,7 +89,7 @@ class ElabFTWApi:
     url = f'{self.url}{entryType}' if identifier==-1 else f'{self.url}{entryType}/{identifier}'
     response = self.session.get(url, **self.param)
     if response.status_code == 200:
-      res = json.loads(response.content.decode('utf-8'))
+      res = response.json()
       return res if identifier == -1 else [res]
     logging.error('Occurred in get of url %s / %s',entryType, identifier, exc_info=True)
     return [{}]
@@ -110,16 +109,16 @@ class ElabFTWApi:
     """
     content = {} if content is None else content.copy()
     tags = content.pop('tags',[])
-    response = self.session.patch(f'{self.url}{entryType}/{identifier}', data=json.dumps(content), **self.param)
+    response = self.session.patch(f'{self.url}{entryType}/{identifier}', json=content, **self.param)
     if response.status_code != 200:
       logging.error('Update failed for %s/%s: HTTP %s: %s. Content: %s', entryType, identifier,
-                    response.status_code, response.text, {k: len(json.dumps(v)) for k, v in content.items()},)
+                    response.status_code, response.text, {k: len(json.dumps(v, ensure_ascii=False))
+                                                          for k, v in content.items()},)
       return False
     # separate tags handling
     # response = requests.get(f'{self.url}{entryType}/{identifier}/tags', **self.param) #allow to check existing tags
     for tag in tags:
-      response = self.session.post(f'{self.url}{entryType}/{identifier}/tags', data=json.dumps({'tag':tag}),
-                                   **self.param)
+      response = self.session.post(f'{self.url}{entryType}/{identifier}/tags', json={'tag':tag}, **self.param)
       if response.status_code != 201:
         logging.error('Tag update failed for %s/%s tag=%s: HTTP %s: %s', entryType, identifier, tag,
                       response.status_code, response.text)
@@ -165,7 +164,7 @@ class ElabFTWApi:
     if response.status_code == 201:
       return True
     logging.error('Occurred in create of url %s%s/%s/%s_links/%s : %s',self.url,entryType,identifier,targetType,
-                  linkTarget,response.json, exc_info=True)
+                  linkTarget,response.json(), exc_info=True)
     return False
 
 
@@ -215,7 +214,7 @@ class ElabFTWApi:
     if response.status_code == 201:
       return int(response.headers['Location'].split('/')[-1])
     logging.error('occurred in upload of url %s/%s : %s',entryType,identifier,
-                  json.loads(response.content.decode('utf-8'))['description'], exc_info=True)
+                  response.json()['description'], exc_info=True)
     return -1
 
 
@@ -253,6 +252,6 @@ class ElabFTWApi:
     response = self.session.get(url, **self.param)
     if response.status_code == 200:
       if elabData['real_name']== 'do_not_change.json':
-        return json.loads(response.content.decode('utf-8'))
+        return response.json()
       return {'data':response.content}
     return {}

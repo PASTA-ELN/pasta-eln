@@ -33,7 +33,7 @@ def generateAndSaveWorkplan(comm: Communicate, workplan: Workplan, filename: str
     filename: name of the file that is saved
 
   """
-  jsonWorkplan = json.dumps(workplan, indent=2)
+  jsonWorkplan = json.dumps(workplan, indent=2, ensure_ascii=False)
   comm.uiRequestTask.emit(Task.ADD_DOC, {
     'hierStack': [comm.projectID],
     'docType': 'workflow/workplan',

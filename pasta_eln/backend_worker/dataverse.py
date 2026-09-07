@@ -144,7 +144,7 @@ class DataverseClient(RepositoryClient):
       } for successful request, otherwise the error message is returned
     """
     filename = basename(dfFilePath)
-    metadata = dumps({'description': dfDescription, 'categories': dfCategories})
+    metadata = dumps({'description': dfDescription, 'categories': dfCategories}, ensure_ascii=False)
     data:Any = {}
     with open(dfFilePath, 'rb') as fileStream:
       data['file'] = (filename, fileStream, 'multipart/form-data')

@@ -20,7 +20,7 @@ import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
 from PIL import Image, PngImagePlugin
 from ..misc_tools import loadNamedModule
-from ..text_tools.handle_dictionaries import truncateMetadata, jsonSize
+from ..text_tools.handle_dictionaries import truncateMetadata
 from ..text_tools.string_changes import outputString
 
 matplotlib.use('Agg')
@@ -40,12 +40,13 @@ class ExtractorManager:
       basePath (Path): Root path of the local project data tree.
       addOnPath (Path): Directory containing extractor_*.py add-ons.
       timeout (str): Maximum extractor runtime, e.g. "10 sec" or "1 min".
-      metadataLimit (str): Maximum serialized metadata size, e.g. "80 kB".
+      metadataLimit (str): Maximum serialized metadata length, e.g. "80 kB".
       dataHierarchy (Callable): Backend callback for looking up valid document types.
     """
     self.basePath = basePath
     self.addOnPath = addOnPath
     self.timeoutSeconds = int(timeout[:-3]) if timeout.endswith('sec') else int(timeout[:-3])*60
+    # Keep the historical user-facing kB unit; each kB means 1024 serialized JSON characters.
     self.metadataLimit = int(metadataLimit[:-3]) * 1024
     self.dataHierarchy = dataHierarchy
 
@@ -127,7 +128,7 @@ class ExtractorManager:
                 if isinstance(doc[meta][item], tuple):
                   doc[meta][item] = list(doc[meta][item])
                 try:
-                  _ = json.dumps(doc[meta][item])
+                  _ = json.dumps(doc[meta][item], ensure_ascii=False)
                 except (ValueError, TypeError):
                   doc[meta][item] = str(doc[meta][item])
                   logging.warning('stringified  %s %s',meta, item)
@@ -137,7 +138,7 @@ class ExtractorManager:
                   logging.error('Complicated extractor return wrong', exc_info=True)
             doc[meta], truncated, oldSize, newSize = truncateMetadata(doc[meta], self.metadataLimit)
             if truncated:
-              logging.warning('%s %s (%d -> %d bytes).', TRUNC_WARNING, meta, oldSize, newSize)
+              logging.warning('%s %s (%d -> %d characters).', TRUNC_WARNING, meta, oldSize, newSize)
           if doc['style']['main'].startswith(doc['type'][0]):
             doc['type'] = doc['style']['main'].split('/')
           else:
@@ -335,14 +336,15 @@ class ExtractorManager:
         matches = [i for i in possibleDocTypes if content['style']['main'].startswith(i)]
         if matches or content['style']['main'] in {'', '-'}:
           report += outputString(outputStyle, 'info', 'Style is valid: '+content['style']['main']+'.')
-          report += outputString(outputStyle, 'info', f'Extracted size: {jsonSize(content) // 1024} kB.')
+          contentLength = len(json.dumps(content, ensure_ascii=False))
+          report += outputString(outputStyle, 'info', f'Extracted size: {contentLength // 1024} kB.')
         else:
           report += outputString(outputStyle, 'error', 'Style does not follow doctype in dataHierarchy.')
       else:
         report += outputString(outputStyle,'error','Style not included in extractor.')
     if success:
       try:
-        _ = json.dumps(content)
+        _ = json.dumps(content, ensure_ascii=False)
       except Exception:
         report += outputString(outputStyle,'error','Extractor reply not json dumpable.')
     if success:
@@ -350,12 +352,12 @@ class ExtractorManager:
         if meta in content:
           content[meta], truncated, oldSize, newSize = truncateMetadata(content[meta], self.metadataLimit)
           if truncated:
-            report += outputString(outputStyle, 'warning', f'{TRUNC_WARNING} {meta}: {oldSize}->{newSize} bytes.')
+            report += outputString(outputStyle, 'warning', f'{TRUNC_WARNING} {meta}: {oldSize}->{newSize} characters.')
     if success:
       metaVendor = content.get('metaVendor')
       if isinstance(metaVendor, (dict)):
         try:
-          _ = json.dumps(metaVendor)
+          _ = json.dumps(metaVendor, ensure_ascii=False)
           report += outputString(outputStyle, 'info', f'Vendor entries: {len(metaVendor)}.')
         except (TypeError, ValueError):
           success = False
@@ -363,7 +365,7 @@ class ExtractorManager:
           report += outputString(outputStyle, 'error', f'{htmlStr}metadata-error">website</a>')
           for key, value in metaVendor.items():
             try:
-              _ = json.dumps(value)
+              _ = json.dumps(value, ensure_ascii=False)
             except (TypeError, ValueError):
               report += outputString(outputStyle, 'error', f'FAIL {key}: {value!r} ({type(value).__name__})')
       else:
@@ -372,17 +374,17 @@ class ExtractorManager:
                                f'metaVendor must be a dictionary not {type(metaVendor).__name__}.')
     if success:
       try:
-        _ = json.dumps(content['metaUser'])
+        _ = json.dumps(content['metaUser'], ensure_ascii=False)
         if not isinstance(content['metaUser'], (dict,list)):
           raise TypeError(' Meta user: wrong type')
         report += 'User entries: '+str(len(content['metaUser']))+'.<br>'
       except Exception:
-        report += outputString(outputStyle,'error', 'Some json format does not fit in metaUser')
+        report += outputString(outputStyle,'error', 'Some JSON format does not fit in metaUser')
         report += outputString(outputStyle, 'error', f'{htmlStr}metadata-error">website</a>')
         #iterate keys
         for key in content['metaUser']:
           try:
-            _ = json.dumps(content['metaUser'][key])
+            _ = json.dumps(content['metaUser'][key], ensure_ascii=False)
           except Exception:
             report += outputString(outputStyle,'error',f'FAIL {key}:'+str(content['metaUser'][key])+' type:') + str(type(content['metaUser'][key]))
       if 'image' not in content:
@@ -428,7 +430,8 @@ def saveFigure(path:Path | None, dataHash:str, extractorHash:str, image:Any=None
     plt.savefig(output, format=imageType, dpi=150, bbox_inches='tight')
   else:
     image.save(output, format='JPEG' if imageType == 'jpg' else imageType)
-  payload = json.dumps({'PastaELNExport':True, 'dataHash':dataHash, 'extractorHash':extractorHash}, separators=(',', ':'))
+  payload = json.dumps({'PastaELNExport':True, 'dataHash':dataHash, 'extractorHash':extractorHash},
+                       ensure_ascii=False, separators=(',', ':'))
   if imageType == 'svg':
     root = ET.fromstring(output.getvalue())
     metadata = ET.Element('{http://www.w3.org/2000/svg}metadata', {'id':PROVENANCE_KEY})

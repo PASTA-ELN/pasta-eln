@@ -9,7 +9,7 @@ from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, Slot
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QHBoxLayout, QInputDialog,
                                QListWidget, QListWidgetItem, QMessageBox, QTabBar, QTableWidget, QTableWidgetItem,
                                QTabWidget, QVBoxLayout, QWidget)
-from ...fixed_strings_json import defaultDataHierarchyNode
+from ...constants import defaultDataHierarchyNode
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label
 from ..icon_button_delegate import IconButtonDelegate

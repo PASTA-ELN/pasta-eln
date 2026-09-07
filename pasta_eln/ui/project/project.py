@@ -9,7 +9,7 @@ from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot
 from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QInputDialog, QLabel, QMenu, QTextEdit, QVBoxLayout, QWidget
 from ...backend_worker.worker import Task
-from ...fixed_strings_json import DO_NOT_RENDER
+from ...constants import DO_NOT_RENDER
 from ...misc_tools import callAddOn
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import createDirName
@@ -181,8 +181,7 @@ class Project(Widget):
     self.btnMore.setMenu(moreMenu)
 
     self.allDetails = QTextEdit(self)
-    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, self.comm.dataHierarchyNodes['x0'],
-                                             self))
+    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, self.comm.dataHierarchyNodes['x0']))
     if not self.comm.configuration['uiState']['showProjectDetails']:
       self.allDetails.hide()
       self.actHideDetail.setText('Show project details')
