@@ -46,8 +46,11 @@ For a visual check of the user's actual desktop, ask them to press `F12` in PAST
 - Make the minimum change required to achieve the goal. Never overengineer: do not add handling, workflows, abstractions, or validation for unlikely or impossible cases.
 - Trust internal data passed between application components. Validate it only when needed for correct typing/mypy; do not add defensive runtime validation.
 - Inline every one-call function unless it is a required framework override, signal/slot, callback, or makes a materially complex expression clearer. For functions called `N > 1` times, inline when their executable length `L` satisfies `L < 4N/(N-1)`; do not count docstrings or comments. Do not introduce a function solely to wrap one expression.
+- Prefer proximity and a linear, front-to-back reading experience over decomposition for its own sake. A long method is not a defect when its workflow is locally comprehensible; extract only when reuse, a framework boundary, or genuine complexity warrants it.
+- Keep user-defined `metaUser` and `metaVendor` dictionaries flexible: their hierarchy is intentionally not schema-bound. For stable internal dictionaries, reliable producers, consumers, and tests are sufficient unless stronger types or validation materially improve correctness.
 - Add type hints to new and changed public code; keep mypy and pylint clean. Use descriptive names.
 - Use parameterized SQL. Treat SQLite data, user files, configuration, and repository uploads as durable; destructive changes require explicit validation and authorization.
+- Handle filesystem and SQLite consistency proportionately to the realistic risk. Do not add elaborate pseudo-atomic workflows for merely theoretical failures; retain repair paths and add ordering, recovery, or validation only where likely divergence or destructive impact justifies the complexity.
 - Keep the README concise and user-facing; put detail in `docs/`. Update this file if commands, structure, or safety constraints change.
 
 ## UI

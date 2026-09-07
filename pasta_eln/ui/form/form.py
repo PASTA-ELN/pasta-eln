@@ -16,8 +16,8 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QIn
 from ...backend_worker.sqlite import MAIN_ORDER
 from ...backend_worker.worker import Task
 from ...constants import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
-from ...misc_tools import callAddOn, isDocID
-from ...text_tools.string_changes import createDirName, markdownEqualizer
+from ...addons import callAddOn
+from ...text_tools.string_changes import createDirName, isDocID, markdownEqualizer
 from .._context_menu import CommandMenu, executeContextMenu, initContextMenu
 from ..gui_actions import action
 from ..gui_communicate import Communicate

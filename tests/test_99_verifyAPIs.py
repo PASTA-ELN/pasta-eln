@@ -4,7 +4,7 @@ import asyncio
 import logging
 import unittest
 import warnings
-from pasta_eln.misc_tools import getRORIDLabel, getORCIDName
+from pasta_eln.configuration_file import getRORIDLabel, getORCIDName
 from pasta_eln.add_ons.definition_autofill import getFirstWikidataEntry
 from pasta_eln.ui.definitions.terminology_lookup_service import TerminologyLookupService
 

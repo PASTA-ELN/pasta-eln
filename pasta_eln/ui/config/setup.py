@@ -7,8 +7,7 @@ from typing import Any
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFileDialog, QHBoxLayout, QLabel, QMessageBox, QProgressBar, QVBoxLayout, QWidget
 from ...constants import exampleDataString, setupText
-from ...installation_tools import configuration, createShortcut, exampleData
-from ...misc_tools import hardRestart
+from ...installation_tools import configuration, createShortcut, exampleData, hardRestart
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle
 

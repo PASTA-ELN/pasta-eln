@@ -141,28 +141,6 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.paintMenuButton(painter, option)
     return
 
-  def paintMenuButton(self, painter:QPainter, option:QStyleOptionViewItem) -> None:
-    """Paint a compact overflow button that exposes the item's context menu.
-
-    Args:
-      painter (QPainter): painter
-      option (QStyleOptionViewItem): option
-    """
-    if not option.state & QStyle.StateFlag.State_MouseOver:
-      return
-    buttonRect = QRect(option.rect.right() - MENU_BUTTON_SIZE - MENU_BUTTON_MARGIN,
-                       option.rect.top() + MENU_BUTTON_MARGIN,
-                       MENU_BUTTON_SIZE, MENU_BUTTON_SIZE)
-    painter.save()
-    painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(option.palette.base())
-    painter.drawRoundedRect(buttonRect, 4, 4)
-    painter.setPen(self.comm.palette.primary)
-    painter.setBrush(Qt.BrushStyle.NoBrush)
-    painter.drawText(buttonRect, Qt.AlignmentFlag.AlignCenter, '\N{VERTICAL ELLIPSIS}')
-    painter.restore()
-
-
   def editorEvent(self, event:QEvent, model:QAbstractItemModel, option:QStyleOptionViewItem,
                   index:QModelIndex | QPersistentModelIndex) -> bool:
     """Open the item's context menu when its overflow button is clicked.
@@ -290,3 +268,25 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if result.height()>self.maxHeight:
       result = result.scaledToHeight(self.maxHeight-FRAME_SIZE*2)
     return result
+
+
+  def paintMenuButton(self, painter:QPainter, option:QStyleOptionViewItem) -> None:
+    """Paint a compact overflow button that exposes the item's context menu.
+
+    Args:
+      painter (QPainter): painter
+      option (QStyleOptionViewItem): option
+    """
+    if not option.state & QStyle.StateFlag.State_MouseOver:
+      return
+    buttonRect = QRect(option.rect.right() - MENU_BUTTON_SIZE - MENU_BUTTON_MARGIN,
+                       option.rect.top() + MENU_BUTTON_MARGIN,
+                       MENU_BUTTON_SIZE, MENU_BUTTON_SIZE)
+    painter.save()
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(option.palette.base())
+    painter.drawRoundedRect(buttonRect, 4, 4)
+    painter.setPen(self.comm.palette.primary)
+    painter.setBrush(Qt.BrushStyle.NoBrush)
+    painter.drawText(buttonRect, Qt.AlignmentFlag.AlignCenter, '\N{VERTICAL ELLIPSIS}')
+    painter.restore()

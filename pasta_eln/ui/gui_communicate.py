@@ -6,8 +6,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot
 from ..backend_worker.worker import BackendThread, Task
-from ..misc_tools import getConfiguration
-from ..configuration_file import saveConfiguration
+from ..configuration_file import getConfiguration, saveConfiguration
 from .palette import Palette
 from .wait_dialog import WaitDialog, Worker
 

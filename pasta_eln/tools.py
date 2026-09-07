@@ -12,7 +12,7 @@ from sqlite3 import IntegrityError
 from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.backend_worker.elab_ftw_sync import Pasta2Elab
 from pasta_eln.constants import defaultDocTypes, defaultSchema
-from pasta_eln.misc_tools import getConfiguration
+from pasta_eln.configuration_file import getConfiguration
 from pasta_eln.text_tools.string_changes import outputString
 
 

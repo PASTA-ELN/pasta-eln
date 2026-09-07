@@ -16,7 +16,7 @@ import pandas as pd
 from anytree import Node
 from PIL import Image
 from ..constants import DIR_META_FILE, SQLiteTranslation, defaultDefinitions, defaultDocTypes, defaultSchema
-from ..misc_tools import hierarchy, isDocID
+from ..text_tools.handle_dictionaries import hierarchy, isDocID
 from ..text_tools.string_changes import camelCase, createDirName, outputString, tracebackString
 from .extractor import sha256File
 
@@ -596,7 +596,7 @@ class SqlLiteDB:
 
   def _flattenMetadata(self, data:dict[str,Any], parentKeys:str='', skipEmpty:bool=True) -> dict[str, tuple[Any, str, str, str]]:
     """Flatten nested metadata into a key -> (value, unit, label, purl) map
-    Different from misc_tools flatten which flattens a dict -> list; this one is only for changing sqlite-db
+    Different from handle_dictionaries.flatten which flattens a dict -> list; this one is only for changing sqlite-db
     Args:
       data (dict): hierarchical data
       parentKeys (str): keys of parent, e.g. .userMetadata

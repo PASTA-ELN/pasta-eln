@@ -8,7 +8,7 @@ from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as Navigation
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget
 from scipy import stats
-from pasta_eln.misc_tools import MplCanvas, dfConvertColumns, isFloat
+from pasta_eln.addons import MplCanvas, dfConvertColumns, isFloat
 
 # The following two variables are mandatory
 description  = 'Analyze metadata'  # short description shown in the menu

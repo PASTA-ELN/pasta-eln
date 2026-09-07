@@ -16,7 +16,7 @@ from anytree import Node
 from pasta_eln import __version__, minisign
 from ..configuration_file import saveConfiguration
 from ..constants import DIR_META_FILE
-from ..misc_tools import flatten, isDocID
+from ..text_tools.handle_dictionaries import flatten, isDocID
 from ..text_tools.html2markdown import html2markdown
 from ..text_tools.string_changes import camelCase
 from .backend import Backend

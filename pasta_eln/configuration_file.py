@@ -9,7 +9,52 @@ import keyring
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox
-from .constants import configurationGUI, defaultScanExcludePatterns, defaultUIState
+from .constants import (configurationGUI, defaultConfiguration, defaultScanExcludePatterns, defaultUIState)
+
+
+def getConfiguration(defaultProjectGroup: str = '') -> tuple[dict[str, Any], str]:
+  """Load configuration, apply defaults, and select the active project group."""
+  configuration = copy.deepcopy(defaultConfiguration)
+  try:
+    configuration |= loadConfiguration()
+  except FileNotFoundError:
+    pass
+  for _, items in configurationGUI.items():
+    for key, value in items.items():
+      if key != 'scanExcludePatterns' and key not in configuration['GUI']:
+        configuration['GUI'][key] = value[1]
+  uiState = configuration.setdefault('uiState', copy.deepcopy(defaultUIState))
+  for key, value in defaultUIState.items():
+    uiState.setdefault(key, value)
+  configuration.setdefault('scanExcludePatterns', list(defaultScanExcludePatterns))
+  if configuration['version'] != CONFIGURATION_VERSION:
+    print(f'**Info: configuration file does not exist or version is != {CONFIGURATION_VERSION}')
+    return {}, ''
+  defaultProjectGroup = defaultProjectGroup or configuration['defaultProjectGroup']
+  if defaultProjectGroup not in configuration['projectGroups']:
+    possibleGroups = list(configuration['projectGroups'].keys())
+    raise ValueError(f'BadProjectGroup: {defaultProjectGroup}. Possible: {possibleGroups}')
+  return configuration, defaultProjectGroup
+
+
+def getRORIDLabel(idString: str) -> str:
+  """Get an organization label from a ROR ID."""
+  import requests
+  reply = requests.get(f'https://api.ror.org/organizations/{idString}', timeout=10)
+  labels = [item for item in reply.json()['names'] if 'ror_display' in item['types']]
+  labels = labels or [item for item in reply.json()['names'] if 'acronym' not in item['types']]
+  labels = labels or reply.json()['names']
+  return labels[0]['value'] if labels else ''
+
+
+def getORCIDName(idString: str) -> tuple[str, str]:
+  """Get first and family names from an ORCID."""
+  import requests
+  reply = requests.get(f'https://pub.orcid.org/v3.0/{idString}', timeout=10)
+  text = reply.content.decode()
+  first = text.split('<personal-details:given-names>')[1].split('</personal-details:given-names>')[0]
+  last = text.split('<personal-details:family-name>')[1].split('</personal-details:family-name>')[0]
+  return first, last
 
 CONFIGURATION_FILE_NAME = '.pastaELN.json'
 CONFIGURATION_VERSION = 4

@@ -1,10 +1,30 @@
 """ Functions that modify strings into the appropriate format """
 import logging
+import platform
 import re
 import traceback
 from pathlib import Path
 from typing import Any
-from ..misc_tools import Bcolors
+
+
+class Bcolors:
+  """ANSI colors used by command-line output (disabled on Windows)."""
+  if platform.system() == 'Windows':
+    HEADER = OKBLUE = OKGREEN = WARNING = FAIL = ENDC = BOLD = UNDERLINE = ''
+  else:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+def isDocID(value: str) -> bool:
+  """Return whether a value has the PASTA-ELN document-ID format."""
+  return re.match(r'^[a-z\-]-[a-z0-9]{32}$', value) is not None
 
 
 def outputString(fmt:str='print', level:str='info', message:str='') -> str:
@@ -138,3 +158,22 @@ def createDirName(doc:dict[str,Any], thisChildNumber:int, parentDir:Path) -> str
     nameTest = f'{name}_{idx:02d}'
   logging.debug('createDirName: %s created', nameTest)
   return nameTest
+
+
+def makeStringWrappable(text: str, string: str = '\u200B', nChars: int = 25) -> str:
+  """Insert break opportunities into long unwrappable strings."""
+  result = text
+  for char in '-._':
+    result = result.replace(char, char + string)
+  i = 0
+  while i < len(result) - nChars:
+    textSlice = result[i:i + nChars]
+    for char in (' ', '\t', '\n', '\r', '\u00AD', '\u200B'):
+      position = textSlice.find(char)
+      if position != -1:
+        i += position + 1
+        break
+    else:
+      result = string.join([result[:i + nChars], result[i + nChars:]])
+      i += nChars + len(string)
+  return result

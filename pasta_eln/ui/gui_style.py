@@ -1,5 +1,6 @@
 """ all styling of buttons and other general widgets, some defined colors... """
 import logging
+import re
 from collections.abc import Callable
 from enum import Enum, auto
 from typing import Any, Final, Literal, Protocol
@@ -277,3 +278,21 @@ class HSeparator(QFrame):
     self.setFrameShape(QFrame.Shape.HLine)
     self.setFrameShadow(QFrame.Shadow.Sunken)
     self.setLineWidth(1)
+
+
+def clearLayout(layout: QLayout, start: int = 0) -> None:
+  """Remove widgets from a layout, retaining the first ``start`` items."""
+  while layout.count() > start:
+    item = layout.takeAt(start)
+    if item is not None and (widget := item.widget()):
+      widget.deleteLater()
+
+
+def formatTag(tag: str) -> str:
+  """Format internal rating tags for display in the tags table
+  Args:
+    tag (str): tag to be formated
+  Returns:
+    str: formated string
+  """
+  return '\u2605' * int(tag[1]) if re.fullmatch(r'_\d', tag) else tag

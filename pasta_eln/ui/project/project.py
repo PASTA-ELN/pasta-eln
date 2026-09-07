@@ -10,7 +10,7 @@ from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QInputDialog, QLabel, QMenu, QTextEdit, QVBoxLayout, QWidget
 from ...backend_worker.worker import Task
 from ...constants import DO_NOT_RENDER
-from ...misc_tools import callAddOn
+from ...addons import callAddOn
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import createDirName
 from ..details.context import DetailContext, DetailOrigin

@@ -6,9 +6,8 @@ from typing import Any
 from PySide6.QtCore import QSize, Qt, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QLabel, QSizePolicy
-from pasta_eln.misc_tools import isDocID, makeStringWrappable
 from pasta_eln.text_tools.markdown2html import markdown2html  # type: ignore[attr-defined]
-from pasta_eln.text_tools.string_changes import markdownEqualizer, tuple2text
+from pasta_eln.text_tools.string_changes import isDocID, markdownEqualizer, makeStringWrappable, tuple2text
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import CollapsibleSection

@@ -10,7 +10,7 @@ from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, QUrl, Slot
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (QDialog, QFileDialog, QHBoxLayout, QMessageBox, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
-from ...misc_tools import callAddOn
+from ...addons import callAddOn
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle
 from ..icon_button_delegate import IconButtonDelegate

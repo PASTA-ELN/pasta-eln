@@ -14,21 +14,6 @@ from .constants import configurationGUI, defaultConfiguration, defaultScanExclud
 from .text_tools.string_changes import outputString
 
 
-def getOS() -> str:
-  '''
-  Get operating system and python environment
-
-  Returns:
-    string: os + pythonEnvironment
-  '''
-  operatingSys = platform.system()
-  # Get base/real prefix, or sys.prefix if there is none
-  getBasePrefixCompat = getattr(sys, 'base_prefix', None) or getattr(sys, 'real_prefix', None) or sys.prefix
-  inVirtualenv = getBasePrefixCompat != sys.prefix
-  environment = sys.prefix if inVirtualenv else '_system_'
-  return f'{operatingSys} {environment}'
-
-
 def createDefaultConfiguration(pathPasta:Path | None=None) -> dict[str,Any]:
   '''
   Create base of configuration file
@@ -145,7 +130,7 @@ def exampleData(force:bool=False, callbackPercent:Callable[[int],None] | None=No
     force (bool): force creation by removing content before creation
     callbackPercent (function): callback function given to exampleData, such that exampleData can report progress back
     projectGroup (str): project group to create example data in
-    outputFormat (str): output of the example data creation, see misc_tools.outputString()
+    outputFormat (str): output of the example data creation, see string_changes.outputString()
   '''
   logging.info('Start example data creation')
   if callbackPercent is not None:
@@ -433,6 +418,30 @@ def main() -> None:
 
   logging.info('End PASTA Install')
   return
+
+
+def getOS() -> str:
+  '''
+  Get operating system and python environment
+
+  Returns:
+    string: os + pythonEnvironment
+  '''
+  operatingSys = platform.system()
+  # Get base/real prefix, or sys.prefix if there is none
+  getBasePrefixCompat = getattr(sys, 'base_prefix', None) or getattr(sys, 'real_prefix', None) or sys.prefix
+  inVirtualenv = getBasePrefixCompat != sys.prefix
+  environment = sys.prefix if inVirtualenv else '_system_'
+  return f'{operatingSys} {environment}'
+
+
+def hardRestart() -> None:
+  """Restart the installed or development application."""
+  try:
+    os.execv('pastaELN', [''])
+  except Exception:
+    os.execv(sys.executable, [sys.executable, '-m', 'pasta_eln.gui'])
+
 
 # called by python3 -m pasta_eln.installTools
 if __name__ == '__main__':

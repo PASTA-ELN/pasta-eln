@@ -9,7 +9,8 @@ from pathlib import Path
 from typing import Any
 from urllib import request
 from ..constants import DIR_META_FILE
-from ..misc_tools import Bcolors, getConfiguration
+from ..configuration_file import getConfiguration
+from ..text_tools.string_changes import Bcolors
 from ..text_tools.handle_dictionaries import diffDicts, fillDocBeforeCreate
 from ..text_tools.string_changes import camelCase, createDirName, outputString
 from .extractor import ExtractorManager, isPastaExport, sha256File

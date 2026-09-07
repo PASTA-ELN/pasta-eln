@@ -1,59 +1,26 @@
-""" Misc functions that do not require instances """
-import copy
+"""Helpers for discovering, loading, and using PASTA-ELN add-ons."""
 import hashlib
 import importlib
 import importlib.util
 from inspect import signature
-import json
 import logging
 import os
-import platform
-import re
 import subprocess
 import sys
 import tempfile
 import time
 import traceback
-from collections.abc import Mapping
 from pathlib import Path
 from types import ModuleType
 from typing import Any
 from urllib import request
 import pandas as pd
-import requests
 from anytree import Node
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from packaging.version import parse as parse_version
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QLayout, QWidget
-import pasta_eln
-from .configuration_file import CONFIGURATION_VERSION, loadConfiguration, saveConfiguration
-from .constants import configurationGUI, defaultConfiguration, defaultScanExcludePatterns, defaultUIState
-
-
-class Bcolors:
-  """
-  Colors for Command-Line-Interface and output
-  """
-  if platform.system()=='Windows':
-    HEADER = ''
-    OKBLUE = ''
-    OKGREEN = ''
-    WARNING = ''
-    FAIL = ''
-    ENDC = ''
-    BOLD = ''
-    UNDERLINE = ''
-  else:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+from PySide6.QtWidgets import QWidget
+from .configuration_file import loadConfiguration, saveConfiguration
 
 
 def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
@@ -367,16 +334,6 @@ def isFloat(val:str) -> bool:
     return False
 
 
-def isDocID(val:str) -> bool:
-  """Check if a value is a docID
-  Args:
-    val (str): value to check
-  Returns:
-    bool: True if value is a docID, False otherwise
-  """
-  return re.match(r'^[a-z\-]-[a-z0-9]{32}$', val) is not None
-
-
 def dfConvertColumns(df:pd.DataFrame, ratio:int=10) -> pd.DataFrame:
   """Convert columns in a DataFrame to numeric if a significant
   portion of the column can be converted
@@ -407,254 +364,3 @@ class MplCanvas(FigureCanvas):
     self.figure = Figure(figsize=(width, height), dpi=dpi)
     self.axes   = self.figure.add_subplot(111)
     super().__init__(self.figure)
-
-
-def getConfiguration(defaultProjectGroup:str='') -> tuple[dict[str, Any],str]:
-  """ Get configuration from home directory
-  Args:
-    defaultProjectGroup (str): project group to use, if not given, use default
-  Returns:
-    tuple: configuration dict and default project group
-  """
-  configuration = copy.deepcopy(defaultConfiguration)
-  try:
-    configuration |= loadConfiguration()
-  except FileNotFoundError:
-    pass
-  for _, items in configurationGUI.items():
-    for k,v in items.items():
-      if k == 'scanExcludePatterns':
-        continue
-      if k not in configuration['GUI']:
-        configuration['GUI'][k] = v[1]
-  uiState = configuration.setdefault('uiState', copy.deepcopy(defaultUIState))
-  for key, value in defaultUIState.items():
-    uiState.setdefault(key, value)
-  configuration.setdefault('scanExcludePatterns', list(defaultScanExcludePatterns))
-  if configuration['version'] != CONFIGURATION_VERSION:
-    print(f'**Info: configuration file does not exist or version is != {CONFIGURATION_VERSION}')
-    return {},''
-  defaultProjectGroup = defaultProjectGroup or configuration['defaultProjectGroup']
-  if defaultProjectGroup not in configuration['projectGroups']:
-    listPossible = list(configuration['projectGroups'].keys())
-    raise ValueError(f'BadProjectGroup: {defaultProjectGroup}. Possible: {listPossible}')
-  return configuration, defaultProjectGroup
-
-
-def hardRestart() -> None:
-  """
-  Complete restart: cold restart
-  """
-  try:
-    os.execv('pastaELN',[''])                                                               #installed version
-  except Exception:
-    os.execv(sys.executable, [sys.executable,'-m','pasta_eln.gui'])      #started for programming or debugging
-  return
-
-
-def getRORIDLabel(idString:str) -> str :
-  """ Get label from RORID
-  Args:
-    idString (str): RORID
-  Returns:
-    str: label of the RORID
-  """
-  reply = requests.get(f'https://api.ror.org/organizations/{idString}', timeout=10)
-  labels = [i for i in reply.json()['names'] if 'ror_display' in i['types']]
-  labels = labels or [i for i in reply.json()['names'] if 'acronym' not in i['types']]
-  labels = labels or reply.json()['names']
-  return labels[0]['value'] if labels else ''
-
-
-def getORCIDName(idString:str) -> tuple[str, str]:
-  """ Get name from ORCID
-  Args:
-    idString (str): ORCID
-  Returns:
-    tuple: (first name, last name)
-  """
-  reply = requests.get(f'https://pub.orcid.org/v3.0/{idString}', timeout=10)
-  text = reply.content.decode()
-  first = text.split('<personal-details:given-names>')[1].split('</personal-details:given-names>')[0]
-  last = text.split('<personal-details:family-name>')[1].split('</personal-details:family-name>')[0]
-  return first, last
-
-
-def testNewPastaVersion(update:bool=False) -> bool:
-  """ Test if this version is up to date with the latest version on pypi
-  - variable largestVersionOnPypi is the latest NON-BETA version on pypi
-
-  Args:
-    update (bool): update to latest version
-
-  Returns:
-    bool: if up-to-date or if current version is a beta
-  """
-  try:
-    url = 'https://pypi.org/pypi/pasta-eln/json'
-    with request.urlopen(url) as response:
-      data = json.loads(response.read())
-  except Exception:
-    return True
-  if update:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pasta-eln'])
-    hardRestart()
-  releases = [i for i in list(data['releases'].keys()) if 'b' not in i]                 # remove beta versions
-  largestVersionOnPypi = sorted(releases, key=parse_version)[-1]
-  return largestVersionOnPypi == pasta_eln.__version__ or 'b' in pasta_eln.__version__
-
-
-# adapted from flatten-dict https://github.com/ianlini/flatten-dict
-# - reduce dependencies and only have python 3 code
-# - add conversion of dict to list if applicable
-def flatten(d:dict[Any,Any], keepPastaStruct:bool=False) -> dict[object, Any]:
-  """Flatten `Mapping` object
-
-  Args:
-    d : dict-like object
-        The dict that will be flattened
-    keepPastaStruct : bool
-        keep pasta elements from flattening
-
-  Returns:
-    flat_dict : dict
-  """
-  enumerateTypes=(list,)
-  flattenTypes = (Mapping,) + enumerateTypes
-  flatDict = {}
-
-
-  def dotReducer(k1:object, k2:object) -> str | object:
-    """ Reducer function """
-    return k2 if k1 is None else f"{k1}.{k2}"
-
-
-  def _flatten(_d:Mapping[Any, Any] | list[Any], depth:int, parent:object=None) -> bool:
-    """ Recursive function """
-    keyValueIterable = enumerate(_d) if isinstance(_d, enumerateTypes) else _d.items()
-    hasItem = False
-    for key, value in keyValueIterable:
-      hasItem = True
-      flatKey = dotReducer(parent, key)
-      if isinstance(value, flattenTypes):
-        # recursively build the result
-        hasChild = _flatten(value, depth=depth + 1, parent=flatKey)
-        if hasChild or not isinstance(value, ()):# ignore key in this level because it already has child key or its value is empty
-          continue
-      if flatKey in flatDict and parent is not None:
-        continue  # skip if key already exists and if data comes from database after merging with changed data
-      # add an item to the result
-      flatDict[flatKey] = value
-    return hasItem
-
-  # start recursive calling
-  backup = {'type':d.pop('type',None), 'branch':d.pop('branch',None),   'tags':d.pop('tags',None),
-            'gui':d.pop('gui',None),   'qrCodes':d.pop('qrCodes',None), '_ids':d.pop('_ids',None)} \
-           if keepPastaStruct else {}
-  _flatten(d, depth=1)
-  return flatDict | {k:v for k,v in backup.items() if v is not None}
-
-
-def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
-  """Reverse flattening of dict-like object
-
-  Args:
-    d : dict-like object
-      The dict that will be reversed
-
-  Returns
-    normalDict : dict
-  """
-  def dotSplitter(flatKey:str) -> tuple[str, ...]:
-    """ split using the . symbol """
-    keys = tuple(flatKey.split('.'))
-    return keys
-
-  def nestedSetDict(d:dict[str,Any], keys:tuple[str, ...], value:Any) -> None:
-    """Set a value to a sequence of nested keys
-
-    Args:
-      d : Mapping
-      keys : Sequence[str]
-      value : Any
-    """
-    key = keys[0]
-    if len(keys) == 1:
-      if key in d:
-        raise ValueError(f"duplicated key '{key}'")
-      try:
-        d[key] = value
-      except TypeError as e:
-        print('TypeError:', type(d), d, type(key), key, type(value), value)
-        raise e
-      return
-    d = d.setdefault(key, {})
-    nestedSetDict(d, keys[1:], value)
-    return
-
-  def dict2list(d:dict[str,Any]) -> list[dict[str,Any]] | dict[str,Any]:
-    """ convert a dictionary to list if all keys are numbers """
-    for key in d:
-      if isinstance(d[key], dict):
-        d[key] = dict2list(d[key])
-    if all(i.isdigit() for i in d):
-      d = list(d.values())                                                          # type: ignore[assignment]
-    return d
-
-  # start recursion
-  normalDict:dict[str,Any] = {}
-  for flatKey, value in d.items():
-    keyTuple = dotSplitter(flatKey)
-    nestedSetDict(normalDict, keyTuple, value)
-  normalDict =  dict2list(normalDict)                                               # type: ignore[assignment]
-  return normalDict
-
-def makeStringWrappable(text: str, string: str = '\u200B', nChars: int = 25) -> str:
-  """
-  Inserts string into a text so that no nChar-long sequence of unwrappable chars may exist in text.
-  Inserts string behind all "-._"-characters for additional wrapping.
-  Great if you want to enforce Wordwrapping for Strings that have few characters that are automatically wrapped.
-
-  Args:
-    text: Text to put strings into
-    string: String that gets inserted into text where automatic word wrap should wrap (\u200B is an invisible char)
-    nChars: max number of chars that can not be wrapped
-  """
-  result = text
-  wrappableChars = [' ', '\t', '\n', '\r', '\u00AD','\u200B']
-  altWrappableChars = list('-._')
-  for char in altWrappableChars:
-    result = result.replace(char, char+string)
-  i = 0
-  while i < len(result)-nChars:
-    textSlice = result[i:i+nChars]
-    for char in wrappableChars:
-      pos = textSlice.find(char)
-      if pos != -1:
-        i += pos+1
-        break
-    else:
-      result = string.join([result[:i+nChars], result[i+nChars:]])
-      i += nChars+len(string)
-  return result
-
-def rgba2argb(hexColor: str) -> str:
-  """
-  Converts RRGGBBAA to AARRGGBB in a hexcolor-string
-  """
-  hexColor = hexColor.lstrip('#')
-  r, g, b, a = hexColor[:2], hexColor[2:4], hexColor[4:6], hexColor[6:8]
-  return f"#{a}{r}{g}{b}"
-
-
-def clearLayout(layout: QLayout, start:int = 0) -> None:
-  """
-  removes all widgets from the given layout
-  Args:
-    layout: QLayout that should be emptied
-    start: number of items in layout that should be skipped in front
-  """
-  while layout.count() > start:
-    item = layout.takeAt(start)
-    if item is not None and (widget := item.widget()):
-      widget.deleteLater()

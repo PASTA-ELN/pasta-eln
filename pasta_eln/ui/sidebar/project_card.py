@@ -6,7 +6,7 @@ from PySide6.QtCore import QPointF, Qt, Signal
 from PySide6.QtGui import QColor, QMouseEvent
 from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QVBoxLayout
 from typing_extensions import override
-from pasta_eln.misc_tools import makeStringWrappable
+from pasta_eln.text_tools.string_changes import makeStringWrappable
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import Label
 from pasta_eln.ui.palette import nameColor

@@ -6,7 +6,6 @@ import darkdetect
 import qdarktheme
 from PySide6.QtGui import QColor
 from ..constants import THEME_COLOR_VALUES
-from ..misc_tools import rgba2argb
 
 if TYPE_CHECKING:
   from .gui_communicate import Communicate
@@ -212,3 +211,10 @@ class Palette:
     newColor = QColor(colorHex)
     r, g, b, _ = cast(ColorChannels, newColor.getRgb())
     return f"rgba({r}, {g}, {b}, {newAlpha})"
+
+
+def rgba2argb(hexColor: str) -> str:
+  """Convert an RRGGBBAA color string to AARRGGBB."""
+  hexColor = hexColor.lstrip('#')
+  red, green, blue, alpha = hexColor[:2], hexColor[2:4], hexColor[4:6], hexColor[6:8]
+  return f'#{alpha}{red}{green}{blue}'

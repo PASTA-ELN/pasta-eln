@@ -19,7 +19,7 @@ import matplotlib
 import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
 from PIL import Image, PngImagePlugin
-from ..misc_tools import loadNamedModule
+from ..addons import loadNamedModule
 from ..text_tools.handle_dictionaries import truncateMetadata
 from ..text_tools.string_changes import outputString
 

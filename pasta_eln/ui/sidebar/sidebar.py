@@ -6,7 +6,7 @@ import qtawesome as qta
 from PySide6.QtCore import Slot
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
-from pasta_eln.misc_tools import clearLayout
+from pasta_eln.ui.gui_style import clearLayout
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, HSeparator, Label, Widget
 from pasta_eln.ui.sidebar.project_card import ProjectCard
@@ -134,15 +134,6 @@ class ProjectSidebar(Widget):
       self.projectListL.addWidget(projectCard)
 
 
-  def paintHiddenProjectButton(self) -> None:
-    """Update the visibility toggle's icon and tooltip."""
-    iconName = 'fa5s.eye' if self.showHiddenProjects else 'fa5s.eye-slash'
-    tooltip = 'Hide/show hidden projects'
-    color = self.comm.palette.getThemeColor('primary', 'base')
-    self.showHiddenBtn.setIcon(qta.icon(iconName, color=color))
-    self.showHiddenBtn.setToolTip(tooltip)
-
-
   def execute(self, command: Command) -> None:
     """Handle commands emitted by the sidebar controls."""
     if command is Command.TOGGLE_HIDDEN_PROJECTS:
@@ -183,6 +174,15 @@ class ProjectSidebar(Widget):
         item.lowlight()
         if item.project['id'] == projectID:
           item.highlight()
+
+
+  def paintHiddenProjectButton(self) -> None:
+    """Update the visibility toggle's icon and tooltip."""
+    iconName = 'fa5s.eye' if self.showHiddenProjects else 'fa5s.eye-slash'
+    tooltip = 'Hide/show hidden projects'
+    color = self.comm.palette.getThemeColor('primary', 'base')
+    self.showHiddenBtn.setIcon(qta.icon(iconName, color=color))
+    self.showHiddenBtn.setToolTip(tooltip)
 
 
 class Command(Enum):

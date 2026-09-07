@@ -2,7 +2,6 @@
 from __future__ import annotations
 import csv
 import logging
-import re
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -13,21 +12,17 @@ from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (QComboBox, QFileDialog, QHBoxLayout, QListWidget, QListWidgetItem, QMenu, QMessageBox,
                                QTableView, QVBoxLayout, QWidget)
 from pasta_eln.backend_worker.worker import Task
-from pasta_eln.misc_tools import callAddOn, isDocID
+from pasta_eln.addons import callAddOn
+from pasta_eln.text_tools.handle_dictionaries import isDocID
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.gui_actions import action
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, Widget
+from pasta_eln.ui.gui_style import SPACE, formatTag, Button, ButtonStyle, Widget
 from pasta_eln.ui.table.filter_row import FilterRow
 from pasta_eln.ui.table.pandas_table_model import PandasTableModel
 from pasta_eln.ui.table.table_header import TableHeader
 from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
 from pasta_eln.ui.palette import nameColor
-
-
-def formatTag(tag: str) -> str:
-  """Format internal rating tags for display in the tags table."""
-  return '\u2605' * int(tag[1]) if re.fullmatch(r'_\d', tag) else tag
 
 
 class TableView(Widget):

@@ -9,7 +9,7 @@ from pasta_eln.backend_worker.dataverse import DataverseClient
 from pasta_eln.backend_worker.elab_ftw_api import ElabFTWApi
 from pasta_eln.backend_worker.zenodo import ZenodoClient
 from pasta_eln.installation_tools import exampleData
-from pasta_eln.misc_tools import getConfiguration
+from pasta_eln.configuration_file import getConfiguration
 from pasta_eln.tools import Tools
 
 

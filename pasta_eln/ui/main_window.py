@@ -14,7 +14,8 @@ from pasta_eln import __version__
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.configuration_file import saveConfiguration
 from pasta_eln.constants import aboutMessage, shortcuts
-from pasta_eln.misc_tools import hardRestart, installPythonPackages, updateAddOnList
+from pasta_eln.addons import installPythonPackages, updateAddOnList
+from pasta_eln.installation_tools import hardRestart
 from pasta_eln.ui.body.body import Body
 from pasta_eln.ui.config.main import Configuration
 from pasta_eln.ui.data_hierarchy.editor import SchemeEditor

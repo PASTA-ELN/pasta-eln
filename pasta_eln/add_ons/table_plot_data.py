@@ -12,7 +12,7 @@ from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as Navigation
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget,
                                QTableWidgetItem, QVBoxLayout, QWidget)
-from pasta_eln.misc_tools import MplCanvas, callDataExtractor, isFloat
+from pasta_eln.addons import MplCanvas, callDataExtractor, isFloat
 
 # The following two variables are mandatory
 description  = 'Analyze data'  # short description shown in the menu

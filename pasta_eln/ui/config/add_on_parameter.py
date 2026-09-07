@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtWidgets import QApplication, QDialog, QGroupBox, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
 from ...configuration_file import saveConfiguration
-from ...misc_tools import loadNamedModule
+from ...addons import loadNamedModule
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label, shortcut
 from ..message_dialog import showMessage

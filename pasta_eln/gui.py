@@ -1,14 +1,18 @@
 """ Main methods that start the gui """
 import logging
+import json
 import sys
+import subprocess
 import traceback
 from pathlib import Path
+from urllib import request
 import qdarktheme
+from packaging.version import parse as parse_version
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 from pasta_eln import __version__
-from .misc_tools import testNewPastaVersion
+from .installation_tools import hardRestart
 from .ui.gui_communicate import Communicate
 from .ui.main_window import MainWindow
 
@@ -68,6 +72,20 @@ def startMain(projectGroup:str='') -> None:
   except Exception as e:
     traceback.print_exc()
     logging.error('Error in mainGUI: %s', e, exc_info=True)
+
+
+def testNewPastaVersion(update: bool = False) -> bool:
+  """Check whether this version matches the latest non-beta PyPI release."""
+  try:
+    with request.urlopen('https://pypi.org/pypi/pasta-eln/json') as response:
+      data = json.loads(response.read())
+  except Exception:
+    return True
+  if update:
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pasta-eln'])
+    hardRestart()
+  releases = [release for release in data['releases'] if 'b' not in release]
+  return max(releases, key=parse_version) == __version__ or 'b' in __version__
 
 
 # called by python3 -m pasta_eln.gui

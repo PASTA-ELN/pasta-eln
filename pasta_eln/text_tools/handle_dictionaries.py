@@ -4,11 +4,11 @@ import json
 import logging
 import re
 import uuid
+from collections.abc import Mapping
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 from ..constants import SORTED_KEYS, SQLiteTranslation
-from ..misc_tools import isDocID
-from .string_changes import markdownEqualizer, tuple2text
+from .string_changes import isDocID, markdownEqualizer, tuple2text
 
 if TYPE_CHECKING:
   from ..backend_worker.sqlite import SqlLiteDB
@@ -178,6 +178,58 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
       doc.pop('image','')
       logging.error('Could not convert to markdown value: %s\n  doc: %s',value, doc, exc_info=True, stack_info=True)
   return markdown
+
+
+def flatten(data: dict[Any, Any], keepPastaStruct: bool = False) -> dict[object, Any]:
+  """Flatten nested dictionaries and lists using dotted keys."""
+  flattenTypes = (Mapping, list)
+  flatDict: dict[object, Any] = {}
+
+  def dotReducer(key1: object, key2: object) -> str | object:
+    return key2 if key1 is None else f'{key1}.{key2}'
+
+  def flattenValue(value: Mapping[Any, Any] | list[Any], parent: object = None) -> bool:
+    items = enumerate(value) if isinstance(value, list) else value.items()
+    hasItem = False
+    for key, item in items:
+      hasItem = True
+      flatKey = dotReducer(parent, key)
+      if isinstance(item, flattenTypes):
+        hasChild = flattenValue(item, flatKey)
+        if hasChild or not isinstance(item, ()):
+          continue
+      if flatKey in flatDict and parent is not None:
+        continue
+      flatDict[flatKey] = item
+    return hasItem
+
+  backup = {key: data.pop(key, None) for key in ('type', 'branch', 'tags', 'gui', 'qrCodes', '_ids')} \
+      if keepPastaStruct else {}
+  flattenValue(data)
+  return flatDict | {key: value for key, value in backup.items() if value is not None}
+
+
+def hierarchy(data: dict[str, Any]) -> dict[str, Any]:
+  """Reverse dotted-key flattening into nested dictionaries and lists."""
+  def nestedSetDict(target: dict[str, Any], keys: tuple[str, ...], value: Any) -> None:
+    key = keys[0]
+    if len(keys) == 1:
+      if key in target:
+        raise ValueError(f"duplicated key '{key}'")
+      target[key] = value
+      return
+    nestedSetDict(target.setdefault(key, {}), keys[1:], value)
+
+  def dict2list(value: dict[str, Any]) -> list[dict[str, Any]] | dict[str, Any]:
+    for key in value:
+      if isinstance(value[key], dict):
+        value[key] = dict2list(value[key])
+    return list(value.values()) if all(key.isdigit() for key in value) else value
+
+  normalDict: dict[str, Any] = {}
+  for flatKey, value in data.items():
+    nestedSetDict(normalDict, tuple(flatKey.split('.')), value)
+  return dict2list(normalDict)  # type: ignore[return-value]
 
 
 def expandDocID2tupleInDict(d:dict[str,Any], database:'SqlLiteDB') -> None:

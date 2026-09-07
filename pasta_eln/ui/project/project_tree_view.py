@@ -7,7 +7,7 @@ from PySide6.QtCore import QItemSelectionModel, QModelIndex, QPoint, Qt, QTimer,
 from PySide6.QtGui import QContextMenuEvent, QDropEvent, QMouseEvent, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget
 from ...backend_worker.worker import Task
-from ...misc_tools import callAddOn
+from ...addons import callAddOn
 from ..gui_actions import action
 from ..gui_communicate import Communicate
 from ..message_dialog import showMessage

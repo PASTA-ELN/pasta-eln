@@ -3,7 +3,7 @@
 import logging
 import unittest
 from pasta_eln.backend_worker.backend import Backend
-from pasta_eln.misc_tools import getConfiguration
+from pasta_eln.configuration_file import getConfiguration
 from pasta_eln.installation_tools import exampleData
 
 class TestStringMethods(unittest.TestCase):

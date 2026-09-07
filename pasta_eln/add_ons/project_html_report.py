@@ -21,7 +21,7 @@ from PIL import Image
 from PySide6.QtGui import QTextDocument  # This is used for html-markdown conversion: works fine here
 from PySide6.QtWidgets import QFileDialog
 import pasta_eln
-from pasta_eln.misc_tools import getDoc, getHierarchy
+from pasta_eln.addons import getDoc, getHierarchy
 from pasta_eln.Resources import Icons as icons
 from pasta_eln.text_tools.string_changes import markdownEqualizer
 
