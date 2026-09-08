@@ -36,9 +36,8 @@ class SqlLiteDB:
   def __init__(self, resetDataHierarchy:bool=False, basePath:Path=Path()):
     """
     Args:
-      configuration (dict): configuration of GUI elements
-      resetDataHierarchy (bool): reset dataHierarchy
       basePath (Path): path of project group
+      resetDataHierarchy (bool): whether to reset the data hierarchy
     """
     isNewDatabaseFile = not (basePath/'pastaELN.db').is_file()
     self.connection = sqlite3.connect(basePath/'pastaELN.db', check_same_thread=False)
@@ -71,7 +70,10 @@ class SqlLiteDB:
 
 
   def migrateDatabase(self, databaseVersion:int) -> None:
-    """Migrate a version-0 database from Git SHA-1 to raw SHA-256 identities."""
+    """Migrate a version-0 database from Git SHA-1 to raw SHA-256 identities.
+      Args:
+        databaseVersion (int): database version to migrate
+    """
     if os.environ.get('PASTA_ELN_ALLOW_DATAHASH_MIGRATION') != '1':
       self.connection.close()
       raise RuntimeError(
@@ -167,6 +169,9 @@ class SqlLiteDB:
       columns (list): list of column names
       primary (str): primary keys as comma-separated
       colTypes (list): optional list of data-types of the columns
+
+    Returns:
+      list[str]: Names of the created SQL columns.
     """
     if colTypes is None:
       colTypes = ['TEXT']*len(columns)
@@ -297,7 +302,10 @@ class SqlLiteDB:
 
 
   def getRelationships(self) -> dict[str, Any]:
-    """Return the project-group documents and their relationship edges."""
+    """Return the project-group documents and their relationship edges.
+      Returns:
+        dict[str, Any]: Documents and relationship edges for the active project group.
+    """
     self.connection.row_factory = sqlite3.Row
     cursor = self.connection.cursor()
     cursor.execute('SELECT id, name, type FROM main')

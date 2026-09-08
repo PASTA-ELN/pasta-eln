@@ -77,7 +77,10 @@ class ProjectSidebar(Widget):
 
   @Slot(str)
   def onSidebarChange(self, projectChoice: str) -> None:
-    """Refresh projects after a visibility or project-selection change."""
+    """Refresh projects after a visibility or project-selection change.
+      Args:
+        projectChoice (str): selected project visibility option
+    """
     if projectChoice not in ('', 'redraw'):
       self.comm.projectID = projectChoice
     self.paint()
@@ -135,7 +138,10 @@ class ProjectSidebar(Widget):
 
 
   def execute(self, command: Command) -> None:
-    """Handle commands emitted by the sidebar controls."""
+    """Handle commands emitted by the sidebar controls.
+      Args:
+        command (Command): command emitted by the associated control
+    """
     if command is Command.TOGGLE_HIDDEN_PROJECTS:
       self.showHiddenProjects = not self.showHiddenProjects
       self.comm.saveUIState(showHiddenProjects=self.showHiddenProjects)
@@ -149,7 +155,10 @@ class ProjectSidebar(Widget):
 
 
   def visibleProjects(self) -> pd.DataFrame:
-    """Return projects allowed by the current sidebar visibility policy."""
+    """Return projects allowed by the current sidebar visibility policy.
+      Returns:
+        pd.DataFrame: Projects visible under the current sidebar policy.
+    """
     if self.showHiddenProjects or self.projects.empty:
       return self.projects
     isActive = self.projects['id'] == self.comm.projectID

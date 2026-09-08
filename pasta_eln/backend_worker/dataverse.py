@@ -21,9 +21,9 @@ class DataverseClient(RepositoryClient):
     Initializes the client
 
     Args:
-        server_url (str): The URL of the server
-        api_token (str): The API token for authentication
-        identifier (str): sub-dataverse, category; use '' for void
+      serverUrl (str): Dataverse server URL
+      apiToken (str): repository API token
+      identifier (str): sub-dataverse identifier, category; use '' for void
     """
     super().__init__(serverUrl, apiToken)
     self.identifier = identifier
@@ -36,6 +36,9 @@ class DataverseClient(RepositoryClient):
 
     Returns (tuple(bool, Any)):
       A tuple of (success, a message) is returned
+
+    Returns:
+      tuple[bool, str]: Connection-test success and its diagnostic message.
     """
     resp = requests.get(f"{self.serverUrl}/api/info/version", headers={'Accept': 'application/json'}, timeout=10)
     success = (resp.status_code == 200 and resp.json().get('data').get('version') is not None)
@@ -52,10 +55,6 @@ class DataverseClient(RepositoryClient):
         This method checks if the provided API token is valid by making a request to the server
         It logs the server URL and sends a GET request to the token endpoint with the API token
         It returns True if the response is successful and the status code is not 401, 403, or 500
-
-    Args:
-        self: The instance of the class
-
     Returns:
         bool: True if the API token is valid, False otherwise
     """

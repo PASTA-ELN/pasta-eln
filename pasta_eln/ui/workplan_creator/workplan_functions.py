@@ -28,9 +28,9 @@ def generateAndSaveWorkplan(comm: Communicate, workplan: Workplan, filename: str
   """
   Write the given parameters of a workplan in a file with the format of the common workplan description.
   Args:
-    comm: Shared communication object.
-    workplan: workplan dictionary that contains all important workplan information
-    filename: name of the file that is saved
+    comm (Communicate): Shared communication object.
+    workplan (Workplan): workplan dictionary that contains all important workplan information
+    filename (str): name of the file that is saved
 
   """
   jsonWorkplan = json.dumps(workplan, indent=2, ensure_ascii=False)
@@ -62,7 +62,7 @@ class Storage:
     Requests the procedureTable from Backend and saves it in self.procedureTable.
     Emits storageUpdated Signal for Callback
     Args:
-      projectID: ID of the Project for which the table should be requested.
+      projectID (str): ID of the Project for which the table should be requested.
 
     """
 
@@ -84,15 +84,19 @@ class Storage:
     """
     Returns: IDs of all the Procedures of the current Project
 
+
+    Returns:
+      list[str]: Available procedure identifiers.
     """
     return self.procedureTable['id'].to_list()
 
   def getProcedureTitle(self, procedureID: str) -> str:
     """
     Args:
-      procedureID: docID for the procedure
+      procedureID (str): docID for the procedure
 
-    Returns: The title or name of the procedure with the given procedureID
+    Returns:
+      str: Procedure title.
     """
     row = self.procedureTable.loc[self.procedureTable['id'] == procedureID]
     return '' if row.empty else row['name'].iloc[0]
@@ -100,9 +104,10 @@ class Storage:
   def getProcedureTags(self, procedureID: str) -> list[str]:
     """
     Args:
-      procedureID: docID for the procedure
+      procedureID (str): docID for the procedure
 
-    Returns: The tags of the procedure with the given procedureID
+    Returns:
+      list[str]: Procedure tags.
     """
     tags = self.procedureTable[self.procedureTable['id'] == procedureID]['tags'].iloc[0]
     return ['#' + tag for tag in tags.split(', ')]
@@ -114,7 +119,7 @@ class Storage:
     emits self.comm.storageUpdated(procedureID) to notify when it is ready (with procedureID as identifier)
 
     Args:
-      procedureID: docID for the procedure
+      procedureID (str): docID for the procedure
     """
     def onGetDoc(doc: dict[str, Any]) -> None:
       """Load full procedure text from the document's referenced file.
@@ -141,9 +146,10 @@ class Storage:
     get Text/Content of procedure, if the content is cut off because of character-limit, call requestProcedureText()
     first
     Args:
-      procedureID: docID for the procedure
+      procedureID (str): docID for the procedure
 
-    Returns: Currently stored text of procedure with the procedureID.
+    Returns:
+      str: Procedure text.
     """
     row = self.procedureTable.loc[self.procedureTable['id'] == procedureID]
     return '' if row.empty else row['content'].iloc[0]
@@ -152,9 +158,10 @@ class Storage:
   def getProcedureDefaultParameters(self, procedureID: str) -> dict[str, str]:
     """
     Args:
-      procedureID: docID for the procedure
+      procedureID (str): docID for the procedure
 
-    Returns: The default tags of the procedure with the given procedureID
+    Returns:
+      dict[str, str]: Procedure default parameter values.
     """
     parameters: dict[str, str] = {}
     text = self.getProcedureText(procedureID)
@@ -168,10 +175,11 @@ class Storage:
   def getProcedureShortDescription(self, procedureID: str) -> str:
     """
     Args:
-      procedureID: docID for the procedure
+      procedureID (str): docID for the procedure
 
-    Returns: short description / comment of the procedure with the given procedureID
 
+    Returns:
+      str: Procedure short description.
     """
     row = self.procedureTable.loc[self.procedureTable['id'] == procedureID]
     return '' if row.empty else row['comment'].iloc[0]

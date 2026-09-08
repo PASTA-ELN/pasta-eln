@@ -25,6 +25,7 @@ class PandasTableModel(QAbstractTableModel):
     Args:
       df (pd.DataFrame): The dataframe to display.
       documentIds (list[str] | None): A list of document IDs
+      nameColors (list[QColor | None] | None): optional per-row name colors
     """
     super().__init__()
     self.df          = df

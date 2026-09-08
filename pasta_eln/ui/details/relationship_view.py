@@ -17,6 +17,11 @@ class RelationshipView(QWidget):
   """Interactive, bounded relationship view for a selected document."""
 
   def __init__(self, comm: Communicate, parent: QWidget | None = None) -> None:
+    """Create the relationship graph view.
+    Args:
+      comm (Communicate): shared communication object
+      parent (QWidget | None): parent widget
+    """
     super().__init__(parent)
     self.comm = comm
     self.graph: dict[str, Any] = {'nodes': [], 'edges': []}
@@ -56,19 +61,28 @@ class RelationshipView(QWidget):
     self.showLinks.toggled.connect(self.paint)
 
   def setRootID(self, rootID: str) -> None:
-    """Set the document around which the relationship graph is rendered."""
+    """Set the document around which the relationship graph is rendered.
+      Args:
+        rootID (str): root document identifier
+    """
     self.rootID = rootID
     self.paint()
 
   @Slot(dict)
   def onGetRelationships(self, graph: dict[str, Any]) -> None:
-    """Store backend relationship data and render it for the selected document."""
+    """Store backend relationship data and render it for the selected document.
+      Args:
+        graph (dict[str, Any]): relationship graph to render
+    """
     if self.rootID:
       self.graph = graph
       self.paint()
 
   def centreOnNode(self, docID: str) -> None:
-    """Centre the view on a visible node."""
+    """Centre the view on a visible node.
+      Args:
+        docID (str): document identifier
+    """
     for item in self.scene.items():
       if isinstance(item, NodeItem) and item.docID == docID:
         self.view.centerOn(item)

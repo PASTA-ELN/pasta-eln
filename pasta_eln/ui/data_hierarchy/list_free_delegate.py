@@ -19,7 +19,8 @@ class ListFreeDelegate(QStyledItemDelegate):
       option (QStyleOptionViewItem): Style option for the cell represented by index
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index
 
-    Returns: QLineEdit widget
+    Returns:
+      QWidget: Editor widget for the selected model item.
     """
     #remove listItem data
     indexListItem = index.model().index(index.row(), 4)

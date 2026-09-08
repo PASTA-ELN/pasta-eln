@@ -32,7 +32,12 @@ class IconButtonDelegate(QStyledItemDelegate):
     self.button = QPushButton()
 
   def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: CellIndex) -> None:
-    """Draw the configured button when the row supports its action."""
+    """Draw the configured button when the row supports its action.
+      Args:
+        painter (QPainter): painter used for rendering
+        option (QStyleOptionViewItem): item-view options
+        index (CellIndex): model index associated with the event
+    """
     if not self.isVisible(index):                                                     # type: ignore[arg-type]
       return
     buttonOption = QStyleOptionButton()
@@ -43,12 +48,25 @@ class IconButtonDelegate(QStyledItemDelegate):
     QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, buttonOption, painter, self.button)
 
   def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: CellIndex) -> QWidget:
-    """Icon buttons do not create in-place editors."""
+    """Icon buttons do not create in-place editors.
+      Args:
+        parent (QWidget): parent widget
+        option (QStyleOptionViewItem): item-view options
+        index (CellIndex): model index associated with the event
+    """
     return None                                                                   # type: ignore[return-value]
 
   def editorEvent(self, event: QEvent, model: QAbstractItemModel, option: QStyleOptionViewItem,
                   index: CellIndex) -> bool:
-    """Run the configured action for clicks inside a visible button cell."""
+    """Run the configured action for clicks inside a visible button cell.
+      Args:
+        event (QEvent): Qt event being handled
+        model (QAbstractItemModel): model being queried or updated
+        option (QStyleOptionViewItem): item-view options
+        index (CellIndex): model index associated with the event
+      Returns:
+        bool: Whether the delegate handled the event.
+    """
     if self.isVisible(index):                                                         # type: ignore[arg-type]
       if not isClickWithinBounds(event, option):
         return False

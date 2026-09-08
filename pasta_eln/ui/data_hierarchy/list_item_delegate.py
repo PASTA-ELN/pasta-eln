@@ -10,7 +10,7 @@ class ListItemDelegate(QStyledItemDelegate):
   def __init__(self, docTypesLabels:list[tuple[str,str]]):
     """
     Args:
-      docTypeLabels (list): list of docTypes and docLabels
+      docTypesLabels (list[tuple[str, str]]): document-type labels shown by the delegate
     """
     super().__init__()
     self.docTypesLabels = docTypesLabels
@@ -27,7 +27,8 @@ class ListItemDelegate(QStyledItemDelegate):
       option (QStyleOptionViewItem): Style option for the cell represented by index
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index
 
-    Returns: QLineEdit widget
+    Returns:
+      QWidget: Editor widget for the selected model item.
     """
     # skip last row
     indexName = index.model().index(index.row(), 0)

@@ -72,10 +72,10 @@ class RightMainWidget(QWidget):
     """
     Add a new workPlanListItem to the list
     Args:
-      procedureID: ID of the procedure that is represented by this item
-      sample: the user-chosen sample for this particular Item
-      parameters: the filled-out parameters for this item
-      at: Optional. Position where to insert the Item into the list. Default: at the end.
+      procedureID (str): ID of the procedure that is represented by this item
+      sample (str): the user-chosen sample for this particular Item
+      parameters (dict[str, str]): the filled-out parameters for this item
+      at (int | None): Optional. Position where to insert the Item into the list. Default: at the end.
     """
     listItem = WorkplanListItem(
       self.comm,
@@ -121,7 +121,7 @@ class RightMainWidget(QWidget):
     """
     Highlights the WorkplanListItem in the argument and lowlights every other one
     Args:
-      listItem: The WorkplanListItem to highlight
+      listItem (WorkplanListItem): The WorkplanListItem to highlight
     """
     for i in range(self.workplanLayout.count()):
       layoutItem = self.workplanLayout.itemAt(i)
@@ -137,7 +137,7 @@ class RightMainWidget(QWidget):
     Adds all the procedures from a given workplan-dict to the Workplan in the Creator.
     What happens when the procedure, sample or parameters are not in Pasta? -Currently not handled
     Args:
-      workplan: Currently a json-like dict containing the serialized Workplan
+      workplan (Workplan): Currently a json-like dict containing the serialized Workplan
     """
     for procedure in workplan['procedures']:
       procedureID: str = procedure['procedure']

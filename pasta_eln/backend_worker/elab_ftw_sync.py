@@ -127,7 +127,16 @@ class Pasta2Elab:
     """
     def updateEntryLocal(i:Node, mode:str, callback:Callable[[ElabFTWApi,str,int],str]=cliCallback,
                          idx:int=-1, count:int=-1) -> tuple[str,int]:
-      """Intermediate function used in list comprehension"""
+      """Intermediate function used in list comprehension
+        Args:
+          i (Node): document being synchronized
+          mode (str): synchronization mode
+          callback (Callable[[ElabFTWApi, str, int], str]): callback used to report progress
+          idx (int): position of the document being synchronized
+          count (int): number of documents being processed
+        Returns:
+          tuple[str, int]: Updated external entry identifier and its list position.
+      """
       res = self.updateEntry(i, mode, callback, progressCallback)
       if progressCallback is not None:
         progressCallback('count', str(int(idx/count*100)))

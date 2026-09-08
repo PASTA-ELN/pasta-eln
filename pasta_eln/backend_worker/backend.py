@@ -28,7 +28,8 @@ class Backend(CliMixin):
     open server and define database
 
     Args:
-        defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
+      projectGroupName (str | None): project group to load; ``None`` creates an uninitialized backend for
+        ``BackendWorker`` to initialize with GUI-supplied configuration.
     """
     #initialize basic values
     self.configuration: dict[str, Any] = {}
@@ -46,7 +47,10 @@ class Backend(CliMixin):
 
   @property
   def db(self) -> SqlLiteDB:
-    """ Allow default access while allowing for dbRaw = None """
+    """ Allow default access while allowing for dbRaw = None
+      Returns:
+        SqlLiteDB: Initialized SQLite database instance.
+    """
     if self.dbRaw is None:
       raise RuntimeError('Backend is not initialized')
     return self.dbRaw

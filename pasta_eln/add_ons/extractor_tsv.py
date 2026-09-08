@@ -20,7 +20,7 @@ def use(filePath, style, saveFigure):
     style    (dict): supplied to guide the display / extraction style = recipe
                      main is / separated hierarchical elements parent->child
                      can contain more elements
-    saveFileName (string): if given, save the image to this file-name
+    saveFigure (Any): callback used to save an extracted figure
   Returns:
     dict: containing image, metaVendor, metaUser, style
   """

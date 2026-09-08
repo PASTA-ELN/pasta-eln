@@ -61,7 +61,8 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
       option (QStyleOptionViewItem): QStyleOption for the table cell
       index (Union[QModelIndex, QPersistentModelIndex]): Table cell index
 
-    Returns (bool): True/False
+    Returns:
+      bool: Whether the delegate handled the event.
     """
     if event.type() == QEvent.Type.MouseButtonRelease:
       indexName = model.index(index.row(), 0)
@@ -81,7 +82,5 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
       parent (QWidget): Parent table view
       option (QStyleOptionViewItem): Style option for the cell represented by index
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index
-
-    Returns: None
     """
     return None                                                                   # type: ignore[return-value]

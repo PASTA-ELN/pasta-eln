@@ -148,12 +148,13 @@ class MainWindow(QMainWindow):
 
 
   def onMainSplitterMoved(self, _position: int, _index: int) -> None:
-    """Persist the global sidebar width after it is resized."""
+    """Persist the global sidebar width after it is resized.
+    """
     self.comm.saveUIState(sidebarWidth=self.splitter.sizes()[0])
 
 
   def onDetailsSplitterMoved(self, _position: int, _index: int) -> None:
-    """Persist the global details-pane width after it is resized."""
+    """Persist the global details-pane width after it is resized """
     self.comm.saveUIState(detailsWidth=self.body.splitter.sizes()[1])
 
 
@@ -168,7 +169,7 @@ class MainWindow(QMainWindow):
     Handle window close event - cleanup of backend thread
 
     Args:
-      event: close event
+      event (QEvent): close event
     """
     if self.application is not None:
       self.application.removeEventFilter(self)
@@ -180,8 +181,8 @@ class MainWindow(QMainWindow):
   def eventFilter(self, watched: QObject, event: QEvent) -> bool:
     """Handle F12 even when a modal dialog owns the keyboard focus.
     Args:
-      watched: object that was watched
-      event: event
+      watched (QObject): object that was watched
+      event (QEvent): event
     Returns:
       bool: True if the event was handled, False otherwise
     """

@@ -48,7 +48,10 @@ class ResizeImage(QLabel):
 
 
   def resizeEvent(self, event: QResizeEvent) -> None:
-    """Scale the preview after the widget size changes."""
+    """Scale the preview after the widget size changes.
+      Args:
+        event (QResizeEvent): Qt event being handled
+    """
     super().resizeEvent(event)
     self._updatePixmap()
 

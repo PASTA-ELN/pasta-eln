@@ -60,6 +60,8 @@ class ProcedureListItem(QFrame):
   def mousePressEvent(self, event: QMouseEvent) -> None:
     """
     Override Event to register clicks
+    Args:
+      event (QMouseEvent): Qt event being handled
     """
     if event.button() == event.button().LeftButton:
       self.clicked.emit()

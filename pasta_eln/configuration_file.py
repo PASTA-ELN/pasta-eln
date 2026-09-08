@@ -13,7 +13,12 @@ from .constants import (configurationGUI, defaultConfiguration, defaultScanExclu
 
 
 def getConfiguration(defaultProjectGroup: str = '') -> tuple[dict[str, Any], str]:
-  """Load configuration, apply defaults, and select the active project group."""
+  """Load configuration, apply defaults, and select the active project group.
+    Args:
+      defaultProjectGroup (str): project group selected when none is configured
+    Returns:
+      tuple[dict[str, Any], str]: The configuration dictionary and selected project group.
+  """
   configuration = copy.deepcopy(defaultConfiguration)
   try:
     configuration |= loadConfiguration()
@@ -38,7 +43,12 @@ def getConfiguration(defaultProjectGroup: str = '') -> tuple[dict[str, Any], str
 
 
 def getRORIDLabel(idString: str) -> str:
-  """Get an organization label from a ROR ID."""
+  """Get an organization label from a ROR ID.
+    Args:
+      idString (str): ROR or ORCID identifier to resolve
+    Returns:
+      str: Organization label resolved from the ROR identifier.
+  """
   import requests
   reply = requests.get(f'https://api.ror.org/organizations/{idString}', timeout=10)
   labels = [item for item in reply.json()['names'] if 'ror_display' in item['types']]
@@ -48,7 +58,12 @@ def getRORIDLabel(idString: str) -> str:
 
 
 def getORCIDName(idString: str) -> tuple[str, str]:
-  """Get first and family names from an ORCID."""
+  """Get first and family names from an ORCID.
+    Args:
+      idString (str): ROR or ORCID identifier to resolve
+    Returns:
+      tuple[str, str]: Given and family names resolved from the ORCID identifier.
+  """
   import requests
   reply = requests.get(f'https://pub.orcid.org/v3.0/{idString}', timeout=10)
   text = reply.content.decode()
@@ -140,6 +155,8 @@ def saveConfiguration(configuration:dict[str, Any], fileName:Path|None=None) -> 
 
 def loadConfiguration(fileName:Path|None=None) -> dict[str, Any]:
   """Load configuration and migrate version 3 plaintext API keys.
+  Args:
+    fileName (Path | None): configuration file to load
   Returns:
     dict[str, Any]: configuration dictionary
   """

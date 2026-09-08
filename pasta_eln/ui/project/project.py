@@ -211,7 +211,7 @@ class Project(Widget):
     Event if user clicks button in the center
 
     Args:
-      command: command emitted by a button or legacy menu action
+      command (Command | list[Any]): command emitted by a button or menu action
     """
     commandType = command if isinstance(command, Command) else command[0]
     payload = [] if isinstance(command, Command) else command[1:]
@@ -348,19 +348,28 @@ class Project(Widget):
 
   @Slot(QModelIndex)
   def onTreeExpanded(self, index:QModelIndex) -> None:
-    """Persist the expanded state of a folder item."""
+    """Persist the expanded state of a folder item.
+      Args:
+        index (QModelIndex): model index associated with the event
+    """
     self.actionExpandCollapse(index, True)
 
 
   @Slot(QModelIndex)
   def onTreeCollapsed(self, index:QModelIndex) -> None:
-    """Persist the collapsed state of a folder item."""
+    """Persist the collapsed state of a folder item.
+      Args:
+        index (QModelIndex): model index associated with the event
+    """
     self.actionExpandCollapse(index, False)
 
 
   @Slot(QModelIndex, QModelIndex)
   def onTreeSelectionChanged(self, current:QModelIndex, _:QModelIndex) -> None:
-    """Show the selected project item in the shared details pane."""
+    """Show the selected project item in the shared details pane.
+      Args:
+        current (QModelIndex): newly selected model index
+    """
     if not current.isValid():                                # hide details when user clicks in between leaves
       self.comm.changeDetails.emit(DetailContext())
       return
@@ -371,7 +380,10 @@ class Project(Widget):
 
   @Slot(object)
   def onDetailsChanged(self, context:DetailContext) -> None:
-    """Track in this project.py the document currently shown in the shared details pane."""
+    """Track in this project.py the document currently shown in the shared details pane.
+      Args:
+        context (DetailContext): Details-pane context
+    """
     self.detailsDocID = context.docID
 
 
@@ -380,6 +392,8 @@ class Project(Widget):
     """Toggle details when the current project item is clicked again
     -'' = close when self.detailsDocID == docID
     - docID = open else
+    Args:
+      index (QModelIndex): model index associated with the event
     """
     docID = index.data(self.metaRole)['hierStack'].split('/')[-1]
     self.comm.changeDetails.emit(DetailContext() if self.detailsDocID == docID

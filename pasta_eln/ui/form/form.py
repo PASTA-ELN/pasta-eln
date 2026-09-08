@@ -818,6 +818,8 @@ class Form(QDialog):
   def delTag(self, _:str, tag:str) -> None:
     """
     Clicked button to delete tag
+    Args:
+      tag (str): tag to remove
     """
     self.doc['tags'].remove(tag)
     self.updateTagsBar()
@@ -870,7 +872,7 @@ class Form(QDialog):
 
 
   def _cleanup(self, _result: int) -> None:
-    """Stop timers and disconnect backend signals when the dialog closes."""
+    """Stop timers and disconnect backend signals when the dialog closes """
     if hasattr(self.comm, 'backendThread') and self.comm.backendThread.worker is not None:
       if not self.flagNewDoc:
         try:

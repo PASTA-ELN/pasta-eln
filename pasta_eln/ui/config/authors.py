@@ -147,6 +147,8 @@ class ConfigurationAuthors(QDialog):
   def execute(self, command:list[Any]) -> None:
     """
     Save changes to hard-disk
+    Args:
+      command (list[Any]): command emitted by the associated control
     """
     if command[0] is Command.ADD:
       self.orgaCB.addItem('- new -')

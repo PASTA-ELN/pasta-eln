@@ -61,7 +61,7 @@ class LeftMainWidget(QWidget):
     """
     Add all Procedures from the current project to the list
     Args:
-      projID: Identifier, if the Signal is meant for this function
+      projID (str): Identifier, if the Signal is meant for this function
     """
     if projID != self.currentProjectID:
       return
@@ -92,7 +92,7 @@ class LeftMainWidget(QWidget):
     """
     hides/shows the procedures that match the phrase in the searchbar
     Args:
-      filterText: text that is used to filter the procedures in the list (e.g. Content of the Searchbar)
+      filterText (str): text that is used to filter the procedures in the list (e.g. Content of the Searchbar)
     """
     filterWords = [word.strip() for word in filterText.lower().split(',')]
     for i in range(1, self.procedureListLayout.count() - 1, 2):

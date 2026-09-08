@@ -13,7 +13,13 @@ class WorkplanContainer(Protocol):
   """Operations a list item needs from its containing workplan widget."""
 
   def addProcedure(self, procedureID: str, sample: str, parameters: dict[str, str], at: int | None = None) -> None:
-    """Add a procedure to the workplan at an optional position."""
+    """Add a procedure to the workplan at an optional position.
+      Args:
+        procedureID (str): procedure document identifier
+        sample (str): selected sample value
+        parameters (dict[str, str]): procedure parameter values
+        at (int | None): optional insertion position
+    """
 
 
 class WorkplanListItem(QFrame):
@@ -127,24 +133,34 @@ class WorkplanListItem(QFrame):
     self.mainLayout.setContentsMargins(0, 0, 0, 0)
     self.setLayout(self.mainLayout)
 
+
   def mousePressEvent(self, event: QMouseEvent) -> None:
     """
     Override Event to simulate click and Position of potential drag start.
+    Args:
+      event (QMouseEvent): Qt event being handled
     """
     if event.button() == Qt.MouseButton.LeftButton:
       self.dragStartPos = event.pos()
       self.clicked.emit()
     super().mousePressEvent(event)
 
+
   def updateParameter(self, text: str, parameter: str) -> None:
     """
     Setter of the value (text) for the given parameter
+    Args:
+      text (str): text to process
+      parameter (str): procedure parameter to update
     """
     self.parameters[parameter] = text
+
 
   def updateSample(self, text: str) -> None:
     """
     Setter for the Sample. updates sampleLabel, too.
+    Args:
+      text (str): text to process
     """
     self.sample = text
     self.sampleLabel.setText(f'Sample: {makeStringWrappable(self.sample)}')
@@ -163,6 +179,7 @@ class WorkplanListItem(QFrame):
     self.frame.setProperty('highlight', False)
     self.setStyleSheet(self.defaultCSS)
 
+
   def _onDeleteClicked(self) -> None:
     """
     Deletes this widget.
@@ -170,9 +187,12 @@ class WorkplanListItem(QFrame):
     self.hide()
     self.deleteLater()
 
+
   def mouseMoveEvent(self, event: QMouseEvent) -> None:
     """
     Override event to implement drag and drop
+    Args:
+      event (QMouseEvent): Qt event being handled
     """
     if event.buttons() != Qt.MouseButton.LeftButton:
       return
@@ -182,21 +202,26 @@ class WorkplanListItem(QFrame):
     self.frame.render(pixmap)
     drag = QDrag(self)
     mimeData = QMimeData()
-
     drag.setMimeData(mimeData)
     drag.setPixmap(pixmap)
     drag.setHotSpot(event.pos())
     drag.exec(Qt.DropAction.MoveAction)
 
+
   def dragEnterEvent(self, event: QDragEnterEvent) -> None:
     """
     Override event to accept drops
+    Args:
+      event (QDragEnterEvent): Qt event being handled
     """
     event.acceptProposedAction()
+
 
   def dragMoveEvent(self, event: QDragMoveEvent) -> None:
     """
     Override event to visualize drag and drop indicators
+    Args:
+      event (QDragMoveEvent): Qt event being handled
     """
     midheight = self.height() // 2
     if event.position().y() < midheight:
@@ -208,15 +233,21 @@ class WorkplanListItem(QFrame):
         WorkplanListItem{{
         border-bottom-color: {self.comm.palette.getThemeColor("primary", "base")};}}""")
 
+
   def dragLeaveEvent(self, event: QDragLeaveEvent) -> None:
     """
     Override event to remove drag and drop indicators
+    Args:
+      event (QDragLeaveEvent): Qt event being handled
     """
     self.setStyleSheet(self.defaultCSS)
+
 
   def dropEvent(self, event: QDropEvent) -> None:
     """
     Override event to implement drag and drop
+    Args:
+      event (QDropEvent): Qt event being handled
     """
     droppedItem = event.source()
     if not isinstance(droppedItem, WorkplanListItem):

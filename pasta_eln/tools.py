@@ -30,6 +30,9 @@ class Tools:
     """  depending on choice, execute command
     Args:
       command (str): command
+
+    Returns:
+      str: help-string or done
     """
     helpString = 'Command line program to troubleshoot and possibly repair the PASTA-ELN database\n'\
                 'Commands - general:\n'\
@@ -162,6 +165,9 @@ class Tools:
 
     Return:
       bool: repair should be done
+
+    Returns:
+      bool: Whether the user confirmed the repair.
     """
     print(errorMessage)
     return True if allYes else input('Repair [yN]: ')=='y'
@@ -296,7 +302,7 @@ class Tools:
     """ Do the default verification of PastaELN. Adopted to CLI
       Args:
       projectGroup (str): name of project group
-      repair (function): repair
+      repair (None | Callable[[str], bool]): whether to repair the schema
     """
     if not self.projectGroup:
       self.__setBackend__(projectGroup)
@@ -315,7 +321,6 @@ class Tools:
     """ Do the default verification of PastaELN. Adopted to CLI
       Args:
       projectGroup (str): name of project group
-      repair (function): repair
     """
     if not self.projectGroup:
       self.__setBackend__(projectGroup)

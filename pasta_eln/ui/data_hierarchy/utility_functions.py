@@ -20,9 +20,8 @@ def isClickWithinBounds(event: QEvent,
   Args:
     event (QEvent): Mouse event captured from the view
     option (QStyleOptionViewItem): Option send during the edit event
-
-  Returns (bool): True/False
-
+  Returns:
+    bool: Whether the mouse event is inside the item-view bounds.
   """
   if (event and option
       and event.type() == QEvent.Type.MouseButtonRelease

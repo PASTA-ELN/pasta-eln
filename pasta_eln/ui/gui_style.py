@@ -25,7 +25,10 @@ class Widget(QWidget):
   comm: Any
 
   def execute(self, command: Any) -> None:
-    """Handle a command issued by a child control."""
+    """Handle a command issued by a child control.
+      Args:
+        command (Any): command emitted by the associated control
+    """
     raise NotImplementedError(f'{type(self).__name__} does not handle commands')
 
 
@@ -34,7 +37,10 @@ class CommandHost(Protocol):
   comm: Any
 
   def execute(self, command: Any) -> None:
-    """Handle a command issued by a child control."""
+    """Handle a command issued by a child control.
+      Args:
+        command (Any): command emitted by the associated control
+    """
 
 
 class ButtonStyle(Enum):
@@ -89,7 +95,10 @@ class Button(QPushButton):
       layout.addWidget(self)
 
   def setTestResult(self, success: bool) -> None:
-    """Show whether a connection or credential test succeeded."""
+    """Show whether a connection or credential test succeeded.
+      Args:
+        success (bool): whether the operation succeeded
+    """
     self.setStyleSheet('background: #00FF00' if success else 'background: #FF0000')
     self.setText('')
     self.setIcon(qta.icon('fa5s.check-square' if success else 'fa5.times-circle', scale_factor=1))
@@ -153,6 +162,9 @@ def shortcut(key: str, parent: QWidget, function: Callable[[], None]) -> QShortc
       key (str): shortcut key (e.g. Ctrl+K)
       parent (QWidget): widget / dialog that host the button and that has the execute function
       function (callable): function to be called when shortcut is triggered
+
+  Returns:
+    QShortcut: Configured keyboard shortcut.
   """
   shortcutObject = QShortcut(key, parent)                                    # pylint: disable=qt-local-widget
   shortcutObject.activated.connect(function)
@@ -168,6 +180,9 @@ def image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,
       width (int): width of image, dominant if both are given
       height (int): height of image
       anyDimension (int): maximum size in any direction
+
+  Returns:
+    QWidget | None: Image widget, or ``None`` when no image data is available.
   """
   if data.startswith('data:image/'):
     try:
@@ -281,7 +296,11 @@ class HSeparator(QFrame):
 
 
 def clearLayout(layout: QLayout, start: int = 0) -> None:
-  """Remove widgets from a layout, retaining the first ``start`` items."""
+  """Remove widgets from a layout, retaining the first ``start`` items.
+    Args:
+      layout (QLayout): layout to update
+      start (int): number of layout items to retain
+  """
   while layout.count() > start:
     item = layout.takeAt(start)
     if item is not None and (widget := item.widget()):

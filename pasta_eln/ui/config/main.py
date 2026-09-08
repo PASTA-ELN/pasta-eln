@@ -25,8 +25,8 @@ class Configuration(QDialog):
     - if sidebar.py notices no database, it will call this dialog with 'setup' as only tab
 
     Args:
-      backend (Pasta): backend, not communication
-      startTab (str): tab to show initially
+      comm (Communicate): shared communication object
+      startTab (str): configuration tab to show initially
     """
     super().__init__()
     self.comm = comm

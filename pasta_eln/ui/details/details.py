@@ -293,7 +293,10 @@ class Details(Widget):
 
 
   def execute(self, command: Command | list[Any]) -> None:
-    """Handle commands emitted by the details controls."""
+    """Handle commands emitted by the details controls.
+      Args:
+        command (Command | list[Any]): command emitted by the associated control
+    """
     commandType = command if isinstance(command, Command) else command[0]
     payload = [] if isinstance(command, Command) else command[1:]
     if commandType is Command.EDIT:
@@ -389,10 +392,17 @@ class Details(Widget):
       self.relationshipView.setRootID('')
       self.hide()
 
+
   def addAttachment(self, location: str, attachmentID: str, remark: str) -> None:
-    """Request insertion of one immutable instrument attachment history record."""
+    """Request insertion of one immutable instrument attachment history record.
+      Args:
+        location (str): attachment location
+        attachmentID (str): attachment document identifier
+        remark (str): attachment remark
+    """
     self.comm.uiRequestTask.emit(Task.ADD_ATTACHMENT, {'docID': self.docID, 'location': location,
                                                        'attachmentID': attachmentID, 'remark': remark})
+
 
   def showEvent(self, event: QShowEvent) -> None:
     """Notify the containing splitter when the details panel first becomes visible
@@ -437,7 +447,10 @@ class Details(Widget):
 
 
   def currentBranch(self) -> dict[str, Any]:
-    """Return the branch selected in the project tree, or the first branch."""
+    """Return the branch selected in the project tree, or the first branch.
+      Returns:
+        dict[str, Any]: Currently selected branch data.
+    """
     for branch in self.data.get('branch', []):
       if '/'.join(branch['stack'] + [self.docID]) == self.context.treeStack:
         return branch

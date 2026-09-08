@@ -125,8 +125,8 @@ class Body(QWidget):
     """What happens when the currently chosen project is changed
 
     Args:
-      docID: from Signal: Which doc should be shown.
-      projectID: from Signal: Which Project it was changed to.
+      docID (str): from Signal: Which doc should be shown.
+      projectID (str): from Signal: Which Project it was changed to.
     """
     self.comm.changeDetails.emit(DetailContext())                                              # close details
     self.tabWidget.setCurrentIndex(0)
@@ -134,7 +134,11 @@ class Body(QWidget):
 
   @Slot(str, str, str)
   def onChangeTable(self, docType: str, _projectID: str, docID: str) -> None:
-    """Select the table tab targeted by a table-change request."""
+    """Select the table tab targeted by a table-change request.
+      Args:
+        docType (str): document type to select or edit
+        docID (str): document identifier
+    """
     if docType == 'x0':                         # to return to Home after large changes: e.g. project creation
       self.tabWidget.setCurrentIndex(0)
       return
@@ -152,7 +156,7 @@ class Body(QWidget):
     """What happens when tab is changed -> new table
 
     Args:
-      index: index of the now active tab after change.
+      index (int): index of the now active tab after change.
     """
     if self._tableChangingInProgress:
       return

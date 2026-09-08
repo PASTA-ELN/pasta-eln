@@ -176,7 +176,7 @@ class Communicate(QObject):
     """Update and persist global GUI state.
 
     Args:
-      **changes: State keys and their new values to merge into ``uiState``.
+      changes (Any): State keys and their new values to merge into ``uiState``.
     """
     self.configuration.setdefault('uiState', {}).update(changes)
     saveConfiguration(self.configuration)

@@ -80,7 +80,11 @@ class TableHeader(QDialog):
 
   @Slot(str, pd.DataFrame)
   def onGetData(self, query: str, data: pd.DataFrame) -> None:
-    """Receive the saved view or the available custom properties."""
+    """Receive the saved view or the available custom properties.
+      Args:
+        query (str): backend query that resulted in data
+        data (pd.DataFrame): data to process
+    """
     if query == self.viewQuery and not data.empty:
       value = data.iloc[0, 0]
       self.selected = [column.removeprefix('.') for column in value.split(',')] if value else ['name']
@@ -106,7 +110,10 @@ class TableHeader(QDialog):
 
 
   def execute(self, command:'Command') -> None:
-    """Handle a column-selection command."""
+    """Handle a column-selection command.
+      Args:
+        command ('Command'): command emitted by the associated control
+    """
     if command is Command.ADD:
       self.selected.extend(item.text() for item in self.availableList.selectedItems())
       self.paint()

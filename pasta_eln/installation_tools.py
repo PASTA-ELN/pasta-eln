@@ -131,6 +131,9 @@ def exampleData(force:bool=False, callbackPercent:Callable[[int],None] | None=No
     callbackPercent (function): callback function given to exampleData, such that exampleData can report progress back
     projectGroup (str): project group to create example data in
     outputFormat (str): output of the example data creation, see string_changes.outputString()
+
+  Returns:
+    str: summary text describing success / failure
   '''
   logging.info('Start example data creation')
   if callbackPercent is not None:

@@ -230,7 +230,10 @@ class TableView(Widget):
 
 
   def paintGallery(self, documentIds: list[str]) -> None:
-    """Show image cards and request their previews from the backend."""
+    """Show image cards and request their previews from the backend.
+      Args:
+        documentIds (list[str]): document identifiers to display
+    """
     self.gallery.clear()
     self.galleryDocumentIds = set(documentIds)
     for row, docID in enumerate(documentIds):

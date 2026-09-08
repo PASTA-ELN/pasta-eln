@@ -316,6 +316,10 @@ class ExtractorManager:
 
           # assemble callback function with known content
           def saveExtractorFigure(image:Image.Image | None=None) -> None:
+            """Save an extractor figure with the current export provenance.
+            Args:
+              image (Image.Image | None): image to save or process
+            """
             saveFigure(Path(saveFig) if saveFig else None, dataHash, extractorHash, image)
 
           content = module.use(filePath, style, saveExtractorFigure)
@@ -418,7 +422,13 @@ class ExtractorManager:
 
 # OTHER FUNCTIONS
 def saveFigure(path:Path | None, dataHash:str, extractorHash:str, image:Any=None) -> None:
-  """Save an extractor figure with PASTA-ELN provenance."""
+  """Save an extractor figure with PASTA-ELN provenance.
+    Args:
+      path (Path | None): file path to process
+      dataHash (str): SHA-256 hash of the extracted data
+      extractorHash (str): SHA-256 hash of the extractor source
+      image (Any): image to save or process
+  """
   if path is None:
     return
   imageType = path.suffix.lower().removeprefix('.')
@@ -453,7 +463,12 @@ def saveFigure(path:Path | None, dataHash:str, extractorHash:str, image:Any=None
 
 
 def isPastaExport(path:Path) -> bool:
-  """Return whether a file is a legacy-named or metadata-marked PASTA export."""
+  """Return whether a file is a legacy-named or metadata-marked PASTA export.
+    Args:
+      path (Path): file path to process
+    Returns:
+      bool: Whether the file is a PASTA-ELN export.
+  """
   if '_PastaExport' in path.name:
     return True
   try:
@@ -484,6 +499,10 @@ def runExtractorInSubprocess(job:dict[str,Any], connection:Any) -> None:
     module = loadNamedModule(job['addOnPath'], job['pyFile'][:-3])
     if getattr(module, 'PASTA_ELN_EXTRACTOR_API', None) == 2:
       def saveExtractorFigure(image:Image.Image | None=None) -> None:
+        """Save an extractor figure with the subprocess job provenance.
+        Args:
+          image (Image.Image | None): image to save or process
+        """
         saveFigure(job.get('saveFileName'), job['dataHash'], job['extractorHash'], image)
       content = module.use(job['absFilePath'], job['style'], saveExtractorFigure)
       connection.send({'status':'ok', 'content':content})
@@ -500,7 +519,12 @@ def runExtractorInSubprocess(job:dict[str,Any], connection:Any) -> None:
 
 # HASH FUNCTIONS
 def sha256File(path:Path) -> str:
-  """Return the SHA-256 digest of raw bytes in a reachable file."""
+  """Return the SHA-256 digest of raw bytes in a reachable file.
+    Args:
+      path (Path): file path to process
+    Returns:
+      str: SHA-256 digest of the file contents.
+  """
   if str(path).startswith('http'):
     req = request.Request(path.as_posix().replace(':/','://'), headers={'User-Agent': 'Mozilla/5.0'})
     with request.urlopen(req, timeout=60) as stream:
@@ -510,7 +534,12 @@ def sha256File(path:Path) -> str:
 
 
 def _sha256Stream(stream:BinaryIO) -> str:
-  """Calculate a SHA-256 digest without loading the complete file."""
+  """Calculate a SHA-256 digest without loading the complete file.
+    Args:
+      stream (BinaryIO): binary stream to hash
+    Returns:
+      str: SHA-256 digest of the stream contents.
+  """
   hasher = sha256()
   while chunk := stream.read(65536):
     hasher.update(chunk)

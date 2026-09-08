@@ -65,7 +65,10 @@ class WaitDialog(QDialog):
 
 
   def execute(self, command:'Command') -> None:
-    """Handle completion actions from the dialog footer."""
+    """Handle completion actions from the dialog footer.
+      Args:
+        command (Command): command emitted by the associated control
+    """
     if command is Command.CLOSE:
       self.close()
 

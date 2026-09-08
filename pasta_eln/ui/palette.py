@@ -24,7 +24,12 @@ ThemeColorValues: TypeAlias = dict[str, dict[str, str | ColorCategory]]
 ColorChannels: TypeAlias = tuple[int, int, int, int]
 
 def nameColor(tags: str | Iterable[str]) -> QColor | None:
-  """Return the first configured name color represented by ``tags``."""
+  """Return the first configured name color represented by ``tags``.
+    Args:
+      tags (str | Iterable[str]): tags used to select a color
+    Returns:
+      QColor | None: Configured color for the first matching tag, if any.
+  """
   namedColors = {
     '#red': '#d32f2f',
     '#orange': '#ef6c00',
@@ -47,6 +52,7 @@ class Palette:
   def __init__(self, comm: 'Communicate', theme: str) -> None:
     """ Initialize the color palette
     Args:
+      comm ('Communicate'): shared communication object
       theme (str): 'light' or 'dark' or 'automatic'
     """
     self.comm = comm
@@ -70,8 +76,8 @@ class Palette:
     """
     Update the theme of the whole App.
     Args:
-      theme: 'automatic'/'dark'/'light' for the dark/light theme. Empty String ('') for update without changing the theme.
-      saveTheme: Whether the theme should be changed permanently or just until theme is updated again.
+      theme (str): 'automatic'/'dark'/'light' for the dark/light theme. Empty String ('') for update without changing the theme.
+      saveTheme (bool): Whether the theme should be changed permanently or just until theme is updated again.
     """
     cornershape = 'sharp'                                                                   # rounded or sharp
     css = """
@@ -130,8 +136,8 @@ class Palette:
     Look at THEME_COLOR_VALUES in constants.py for all possible categories.
 
     Args:
-        category: first level of dict, e.g., "background", "foreground", "primary"
-        subcategory: second level of dict, e.g., "base", "panel", "icon", "button.hoverBackground"
+        category (str): first level of dict, e.g., "background", "foreground", "primary"
+        subcategory (str): second level of dict, e.g., "base", "panel", "icon", "button.hoverBackground"
     Returns:
         QColor: the computed color
     """
@@ -202,8 +208,8 @@ class Palette:
     """ Change the color
 
     Args:
-      colorHex:  hex value of the color
-      newAlpha:  alpha value of the new color
+      colorHex (str): hex value of the color
+      newAlpha (int): alpha value of the new color
 
     Returns:
       str: new color
@@ -214,7 +220,12 @@ class Palette:
 
 
 def rgba2argb(hexColor: str) -> str:
-  """Convert an RRGGBBAA color string to AARRGGBB."""
+  """Convert an RRGGBBAA color string to AARRGGBB.
+    Args:
+      hexColor (str): RRGGBBAA color string to convert
+    Returns:
+      str: The color string reordered from RRGGBBAA to AARRGGBB.
+  """
   hexColor = hexColor.lstrip('#')
   red, green, blue, alpha = hexColor[:2], hexColor[2:4], hexColor[4:6], hexColor[6:8]
   return f'#{alpha}{red}{green}{blue}'

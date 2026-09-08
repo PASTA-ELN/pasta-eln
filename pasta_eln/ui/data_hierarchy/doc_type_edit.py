@@ -21,8 +21,8 @@ class DocTypeEditor(QDialog):
 
     Args:
       comm (Communicate): Shared communication object.
-      doc (dict):  document to change / create
-      callback (function): callback to allow sending the new doc-type
+      docType (str): document type to select or edit
+      callback (Callable[[str, str], None] | None): optional completion callback
     """
     super().__init__()
     self.comm = comm
@@ -122,7 +122,7 @@ class DocTypeEditor(QDialog):
     """Cancel or save entered data.
 
     Args:
-      save: Whether to validate and save the edited item type.
+      save (bool): Whether to validate and save the edited item type.
     """
     if not save:
       self.reject()
@@ -158,12 +158,15 @@ class DocTypeEditor(QDialog):
 
 
   def execute(self, command:'Command') -> None:
-    """Handle the dialog footer commands."""
+    """Handle the dialog footer commands.
+      Args:
+        command (Command): command emitted by the associated control
+    """
     self.closeDialog(command is Command.SAVE)
 
 
   def _cleanup(self, _result: int) -> None:
-    """Disconnect backend signals when the dialog closes."""
+    """Disconnect backend signals when the dialog closes"""
     self.comm.backendThread.worker.beSendSQL.disconnect(self.onGetData)
 
 

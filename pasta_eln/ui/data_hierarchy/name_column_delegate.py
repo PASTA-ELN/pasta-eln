@@ -19,8 +19,8 @@ class NameColumnDelegate(QStyledItemDelegate):
       parent (QWidget): Parent table view
       option (QStyleOptionViewItem): Style option for the cell represented by index
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index
-
-    Returns: QLineEdit widget
+    Returns:
+      QWidget: Editor widget for the selected model item.
     """
     if index.data() in ['name','tags','comment']:
       return QWidget(parent)

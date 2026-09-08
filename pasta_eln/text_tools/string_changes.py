@@ -23,7 +23,12 @@ class Bcolors:
 
 
 def isDocID(value: str) -> bool:
-  """Return whether a value has the PASTA-ELN document-ID format."""
+  """Return whether a value has the PASTA-ELN document-ID format.
+    Args:
+      value (str): value to process
+    Returns:
+      bool: Whether the value has the PASTA-ELN document-ID format.
+  """
   return re.match(r'^[a-z\-]-[a-z0-9]{32}$', value) is not None
 
 
@@ -35,6 +40,13 @@ def outputString(fmt:str='print', level:str='info', message:str='') -> str:
     - html: return html string https://doc.qt.io/qtforpython/overviews/richtext-html-subset.html#supported-html-subset
     - else: no output
     - formats can be union ('print,text')
+  Args:
+    fmt (str): requested output format
+    level (str): message severity level
+    message (str): message text to format
+
+  Returns:
+    str: Message formatted for the requested output target.
   """
   prefixes = {'h2':f'{Bcolors.UNDERLINE}\n*** ','bold':f'{Bcolors.BOLD}\n*** ', \
               'perfect':f'{Bcolors.OKGREEN}', 'ok':f'{Bcolors.OKBLUE}', 'unsure':f'{Bcolors.HEADER}',\
@@ -161,7 +173,14 @@ def createDirName(doc:dict[str,Any], thisChildNumber:int, parentDir:Path) -> str
 
 
 def makeStringWrappable(text: str, string: str = '\u200B', nChars: int = 25) -> str:
-  """Insert break opportunities into long unwrappable strings."""
+  """Insert break opportunities into long unwrappable strings.
+    Args:
+      text (str): text to process
+      string (str): string to make wrappable
+      nChars (int): maximum unbroken character count
+    Returns:
+      str: Text with break opportunities inserted.
+  """
   result = text
   for char in '-._':
     result = result.replace(char, char + string)

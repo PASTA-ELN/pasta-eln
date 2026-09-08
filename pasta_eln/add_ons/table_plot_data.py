@@ -26,9 +26,9 @@ class DataAnalyse(QDialog):
     Initialization
 
     Args:
-      comm (Communicate): Shared communication object.
-      df (pandas dataframe): all metadata
       data (list): all data
+      widget (Any): host widget for the action or dialog
+      df (Any): dataframe to display
     """
     super().__init__()
     self.df = df
@@ -161,7 +161,10 @@ class DataAnalyse(QDialog):
 
 
   def cellClicked(self, item):
-    """ after table is clicked: refresh graph """
+    """ after table is clicked: refresh graph
+      Args:
+        item (Any): layout or model item being handled
+    """
     self.refresh()
 
 

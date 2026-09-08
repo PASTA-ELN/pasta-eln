@@ -77,8 +77,8 @@ class ProjectTabBar(QTabBar):
     """Move Home back if another tab was dragged before it.
 
     Args:
-      oldIndex: The old index of the moved tab
-      newIndex: The new index of the moved tab
+      oldIndex (int): The old index of the moved tab
+      newIndex (int): The new index of the moved tab
     """
     for index in range(self.count()):
       if self.tabData(index) == self._HOME_TAB_DATA:

@@ -59,7 +59,10 @@ class TreeView(QTreeView):
 
 
   def mousePressEvent(self, event:QMouseEvent) -> None:
-    """Notify the project view when the current item is clicked again."""
+    """Notify the project view when the current item is clicked again.
+      Args:
+        event (QMouseEvent): Qt event being handled
+    """
     clickedIndex = self.indexAt(event.position().toPoint())
     # save the item that was previously selected
     sameItem = event.button() == Qt.MouseButton.LeftButton and clickedIndex.isValid() and clickedIndex == self.currentIndex()

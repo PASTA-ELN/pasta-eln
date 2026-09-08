@@ -21,7 +21,7 @@ class ElabFTWApi:
     Args:
       url (str): url
       apiKey (str): API key
-      veifySSL (bool): verify SSL certificate
+      verifySSL (bool): whether to verify TLS certificates
     '''
     if url=='invalid':
       url = input('Please enter the url: ').strip()

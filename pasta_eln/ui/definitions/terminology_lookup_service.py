@@ -34,9 +34,8 @@ class TerminologyLookupService:
     Do the lookup for the search term using the services in the lookupConfig
     Args:
       searchTerm (str): Search term used for the lookup
-
-    Returns: List of IRI information for the search term crawled online using the services in the lookupConfig
-    In case of error, an empty list is returned and errors is updated with failures
+    Returns:
+      list[dict[str, Any]]: Terminology matches returned by the configured services.
     """
     if not searchTerm.strip():
       return []
@@ -88,7 +87,8 @@ class TerminologyLookupService:
       webResult (dict[str, Any]): Web result returned by querying the lookup service
       lookupService (dict[str, Any]): Lookup service taken from the lookupConfig
 
-    Returns (dict[str, Any]): Dictionary containing the name, search term and results which is a list of dict(iri, information)
+    Returns:
+      dict[str, Any]: Parsed terminology result.
     """
     if (not searchTerm or not webResult or not lookupService):
       logging.error('Invalid search term or web result or lookup service!', exc_info=True)
@@ -119,6 +119,9 @@ class TerminologyLookupService:
     """
     Get the icon names for the lookup services
     Returns (list[str]): List of icon names for the lookup services
+
+    Returns:
+      dict[str, QPixmap]: Icons keyed by terminology service.
     """
     currentPath = realpath(join(getcwd(), dirname(__file__)))
     resourcesPath = join(currentPath, '../../Resources/Icons')

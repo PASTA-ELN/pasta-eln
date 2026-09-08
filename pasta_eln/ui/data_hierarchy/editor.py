@@ -41,7 +41,6 @@ class SchemeEditor(QDialog):
 
     Args:
       comm (Communicate): Shared communication object.
-      doc (dict):  document to change / create
     """
     super().__init__()
     self.comm = comm
@@ -268,7 +267,10 @@ class SchemeEditor(QDialog):
 
 
   def closeDialog(self, save:bool) -> None:
-    """Close the editor, optionally persisting the current item type."""
+    """Close the editor, optionally persisting the current item type.
+      Args:
+        save (bool): whether to persist changes before closing
+    """
     if not save:
       self.reject()
     else:
@@ -373,7 +375,10 @@ class SchemeEditor(QDialog):
 
 
   def table2schema(self) -> pd.DataFrame:
-    """ save text content of tables """
+    """ save text content of tables
+      Returns:
+        pd.DataFrame: Schema dataframe built from the editor table.
+    """
     df = pd.DataFrame()
     lastRow = 0
     for tabID in range(self.tabW.count()-1):                                           # -1: ignore last tab +
@@ -440,7 +445,10 @@ class SchemeEditor(QDialog):
     return
 
   def _cleanup(self, _result: int) -> None:
-    """Disconnect backend signals when the dialog closes."""
+    """Disconnect backend signals when the dialog closes.
+      Args:
+        _result (int): dialog result code
+    """
     self.comm.backendThread.worker.beSendSQL.disconnect(self.onGetData)
 
 
@@ -457,17 +465,31 @@ class Command(Enum):
 
 
 def _hasEditableName(index: QModelIndex) -> bool:
-  """Return whether a schema row represents an editable property."""
+  """Return whether a schema row represents an editable property.
+    Args:
+      index (QModelIndex): model index associated with the event
+    Returns:
+      bool: Whether the schema row has an editable name.
+  """
   return bool(index.model().index(index.row(), 0).data())
 
 
 def _canDeleteRow(index: QModelIndex) -> bool:
-  """Keep the schema's required name, tags, and comment rows."""
+  """Keep the schema's required name, tags, and comment rows.
+    Args:
+      index (QModelIndex): model index associated with the event
+    Returns:
+      bool: Whether the schema row may be deleted.
+  """
   return index.model().index(index.row(), 0).data() not in ['name', 'tags', 'comment']
 
 
 def _moveRowUp(model: QAbstractItemModel, index: QModelIndex) -> None:
-  """Exchange a schema row with the preceding row."""
+  """Exchange a schema row with the preceding row.
+    Args:
+      model (QAbstractItemModel): model being queried or updated
+      index (QModelIndex): model index associated with the event
+  """
   for column in range(7):
     top = model.index(index.row() - 1, column)
     current = model.index(index.row(), column)
@@ -478,7 +500,11 @@ def _moveRowUp(model: QAbstractItemModel, index: QModelIndex) -> None:
 
 
 def _deleteRow(model: QAbstractItemModel, index: QModelIndex) -> None:
-  """Remove the selected schema row."""
+  """Remove the selected schema row.
+    Args:
+      model (QAbstractItemModel): model being queried or updated
+      index (QModelIndex): model index associated with the event
+  """
   model.removeRow(index.row())
 
 
@@ -486,7 +512,7 @@ def _validateItemTypeTemplate(template:Any) -> list[dict[str, Any]]:
   """Validate one item-type template and return valid
 
   Args:
-    template: Parsed JSON value from an item-type template file.
+    template (Any): Parsed JSON value from an item-type template file.
 
   Returns:
     The validated item-type records.

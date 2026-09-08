@@ -70,6 +70,8 @@ class ConfigurationSetup(QWidget):
   def execute(self, command:list[Any]) -> None:
     """
     Main method that does all the analysis: open dialogs, ..
+    Args:
+      command (list[Any]): command emitted by the associated control
     """
     if command[0] is Command.ANALYSE:
       #Configuration

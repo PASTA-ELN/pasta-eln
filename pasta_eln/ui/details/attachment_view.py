@@ -14,9 +14,9 @@ class AttachmentView(QWidget):
     """Create the attachment history view.
 
     Args:
-      attachments: Attachment locations with history and compatible candidates.
-      host: Command host that handles the add-attachment action.
-      addCommand: Command dispatched when the add button is clicked.
+      attachments (list[dict[str, Any]]): Attachment locations with history and compatible candidates.
+      host (CommandHost): Command host that handles the add-attachment action.
+      addCommand (Any): Command dispatched when the add button is clicked.
     """
     super().__init__()
     layout = QVBoxLayout(self)
@@ -38,7 +38,7 @@ class AttachmentView(QWidget):
     """Return a concise description for a collapsed attachment location.
 
     Args:
-      entry: Latest history entry, or None when no history exists.
+      entry (dict[str, Any] | None): Latest history entry, or None when no history exists.
 
     Returns:
       The current attachment name, remark, or an empty-state label.
@@ -55,7 +55,7 @@ class AttachmentView(QWidget):
     """Format one immutable attachment history record as safe rich text.
 
     Args:
-      entry: History record containing date, item, remark, and user fields.
+      entry (dict[str, Any]): History record containing date, item, remark, and user fields.
 
     Returns:
       Rich text for the history entry.

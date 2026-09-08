@@ -36,10 +36,6 @@ class RepositoryClient(ABC):
         This method checks if the provided API token is valid by making a request to the server
         It logs the server URL and sends a GET request to the token endpoint with the API token
         It returns True if the response is successful and the status code is not 401, 403, or 500
-
-    Args:
-        self: The instance of the class
-
     Returns:
         bool: True if the API token is valid, False otherwise
     """

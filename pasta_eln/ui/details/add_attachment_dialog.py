@@ -11,8 +11,8 @@ class AddAttachmentDialog(QDialog):
     """Create the attachment selection dialog.
 
     Args:
-      attachments: Attachment locations and their compatible existing items.
-      parent: Parent widget for the modal dialog.
+      attachments (list[dict[str, Any]]): Attachment locations and their compatible existing items.
+      parent (QWidget): Parent widget for the modal dialog.
     """
     super().__init__(parent)
     self.attachments = attachments
@@ -43,7 +43,7 @@ class AddAttachmentDialog(QDialog):
     """Update compatible candidates after the location changes.
 
     Args:
-      index: Index of the selected attachment location.
+      index (int): Index of the selected attachment location.
     """
     self.item.clear()
     if index < 0:

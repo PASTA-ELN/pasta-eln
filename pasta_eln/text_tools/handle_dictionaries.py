@@ -181,14 +181,36 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
 
 
 def flatten(data: dict[Any, Any], keepPastaStruct: bool = False) -> dict[object, Any]:
-  """Flatten nested dictionaries and lists using dotted keys."""
+  """Flatten nested dictionaries and lists using dotted keys.
+    Args:
+      data (dict[Any, Any]): data to process
+      keepPastaStruct (bool): whether to retain PASTA-ELN structural keys
+    Returns:
+      dict[object, Any]: Flattened dictionary with dotted keys.
+  """
   flattenTypes = (Mapping, list)
   flatDict: dict[object, Any] = {}
 
+
   def dotReducer(key1: object, key2: object) -> str | object:
+    """Combine a parent key and child key into a dotted key.
+    Args:
+      key1 (object): first dictionary key to combine
+      key2 (object): second dictionary key to combine
+    Returns:
+      str | object: Combined key or the retained key object.
+    """
     return key2 if key1 is None else f'{key1}.{key2}'
 
+
   def flattenValue(value: Mapping[Any, Any] | list[Any], parent: object = None) -> bool:
+    """Flatten one nested mapping or list into the enclosing result.
+    Args:
+      value (Mapping[Any, Any] | list[Any]): value to process
+      parent (object): parent key for the flattened value
+    Returns:
+      bool: Whether the value was flattened into the result.
+    """
     items = enumerate(value) if isinstance(value, list) else value.items()
     hasItem = False
     for key, item in items:
@@ -210,8 +232,19 @@ def flatten(data: dict[Any, Any], keepPastaStruct: bool = False) -> dict[object,
 
 
 def hierarchy(data: dict[str, Any]) -> dict[str, Any]:
-  """Reverse dotted-key flattening into nested dictionaries and lists."""
+  """Reverse dotted-key flattening into nested dictionaries and lists.
+    Args:
+      data (dict[str, Any]): data to process
+    Returns:
+      dict[str, Any]: Nested dictionary reconstructed from dotted keys.
+  """
   def nestedSetDict(target: dict[str, Any], keys: tuple[str, ...], value: Any) -> None:
+    """Store a value at a nested dictionary key path.
+    Args:
+      target (dict[str, Any]): dictionary receiving nested values
+      keys (tuple[str, ...]): nested dictionary key path
+      value (Any): value to process
+    """
     key = keys[0]
     if len(keys) == 1:
       if key in target:
@@ -220,7 +253,14 @@ def hierarchy(data: dict[str, Any]) -> dict[str, Any]:
       return
     nestedSetDict(target.setdefault(key, {}), keys[1:], value)
 
+
   def dict2list(value: dict[str, Any]) -> list[dict[str, Any]] | dict[str, Any]:
+    """Convert dictionaries with numeric keys into lists recursively.
+    Args:
+      value (dict[str, Any]): value to process
+    Returns:
+      list[dict[str, Any]] | dict[str, Any]: List-converted value or the original dictionary.
+    """
     for key in value:
       if isinstance(value[key], dict):
         value[key] = dict2list(value[key])

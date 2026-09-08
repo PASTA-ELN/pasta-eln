@@ -69,6 +69,11 @@ def validate(elnFile:ZipFile) -> bool:
   This is deliberately a preflight check.  Once it succeeds, the importer can
   operate on the archive and graph without repeating structural checks while
   processing individual documents.
+  Args:
+    elnFile (ZipFile): ELN archive to validate
+
+  Returns:
+    bool: Whether the archive has the required ELN structure.
   """
   maxArchiveMembers = 10_000
   maxArchiveBytes = 4 * 1024**3
@@ -432,8 +437,6 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
 
       Args:
         node (Anytree.Node): anytree node with properties
-            name (incl. that of parents), childNum, docType, gui, id
-
       Returns:
         str: tree node id
       """

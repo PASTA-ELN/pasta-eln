@@ -103,7 +103,10 @@ class MessageDialog(QDialog):
 
 
   def execute(self, command:'Command') -> None:
-    """Handle actions in the message footer."""
+    """Handle actions in the message footer.
+      Args:
+        command ('Command'): command emitted by the associated control
+    """
     if command is Command.COPY:
       self.copyToClipboard(self.messageText)
     elif command is Command.ACCEPT:

@@ -64,8 +64,8 @@ class DetailsHierItem(CollapsibleSection):
     """ Format content
 
     Args:
-      key: key of the datapoint to add. E.g. 'user'
-      value: value of the corresponding datapoint. E.g. 'rroeske'
+      key (str): key of the datapoint to add. E.g. 'user'
+      value (Any): value of the corresponding datapoint. E.g. 'rroeske'
 
     Returns:
       The formatted String that can be displayed in the Label of this Widget or appended using self.addContent
@@ -110,8 +110,8 @@ class DetailsHierItem(CollapsibleSection):
     """Append a formatted metadata value to the section.
 
     Args:
-      key: Metadata field name.
-      value: Metadata field value.
+      key (str): Metadata field name.
+      value (Any): Metadata field value.
     """
     self.content += self.formatContent(key, value)
     self.contentLabel.setText(self.content.removesuffix('<br><br>'))
@@ -121,7 +121,7 @@ class DetailsHierItem(CollapsibleSection):
     """Open an internal item link in Details or delegate an external URL to Qt.
 
     Args:
-      link: URL activated in the rich-text label.
+      link (str): URL activated in the rich-text label.
     """
     if link.startswith('pasta-eln://') and isDocID(link.removeprefix('pasta-eln://')):
       self.comm.changeDetails.emit(DetailContext(link.removeprefix('pasta-eln://'), origin=DetailOrigin.LINK))

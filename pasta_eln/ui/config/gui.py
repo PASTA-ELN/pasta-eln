@@ -52,6 +52,8 @@ class ConfigurationGUI(QDialog):
   def closeDialog(self, btn: QAbstractButton) -> None:
     """
     Save changes to hard-disk
+    Args:
+      btn (QAbstractButton): button that closed the dialog
     """
     if btn.text().endswith('Cancel'):
       self.comm.palette.setTheme()
@@ -94,7 +96,7 @@ class ConfigurationGUI(QDialog):
       layout (QLayout): layout to add row to
       label (str): label used in form
       default (str): default value
-      itemList (list(str)): items to choose from
+      itemList (list[str]): items to choose from
 
     Returns:
       QCombobox: filled combobox

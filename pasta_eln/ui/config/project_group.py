@@ -27,8 +27,8 @@ class ProjectGroup(QDialog):
     Initialization
 
     Args:
-      backend (Backend): PASTA-ELN backend
-      callbackFinished (function): callback function to call upon end
+      comm (Communicate): shared communication object
+      callbackFinished (Callable[[bool], None]): callback invoked when the operation finishes
     """
     super().__init__()
     self.comm    = comm

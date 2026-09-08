@@ -204,7 +204,7 @@ def callAddOn(name:str, comm:Any, content:Any, widget:QWidget) -> Any:
     name (str): name of the add-on
     comm (Any): Shared communication object.
     content (Any): content to be consumed by addon, e.g. projectID, document
-    widget: widget to be used
+    widget (QWidget): widget to be used
 
   Returns:
     Any: result of the add-on

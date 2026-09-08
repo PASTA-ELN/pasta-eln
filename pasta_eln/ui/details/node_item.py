@@ -17,8 +17,8 @@ class NodeItem(QGraphicsObject):
     """Create a node identified by ``docID`` and filled with ``color``.
 
     Args:
-      docID: Document identifier represented by this node.
-      color: Fill colour used when painting the node.
+      docID (str): Document identifier represented by this node.
+      color (QColor): Fill colour used when painting the node.
     """
     super().__init__()
     self.docID = docID
@@ -26,25 +26,31 @@ class NodeItem(QGraphicsObject):
     self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
     self.setCursor(Qt.CursorShape.PointingHandCursor)
 
+
   def boundingRect(self) -> QRectF:
-    """Return the node's painted bounds."""
+    """Return the node's painted bounds.
+      Returns:
+        QRectF: Bounds of the painted node.
+    """
     return QRectF(-RADIUS - 1, -RADIUS - 1, 2 * RADIUS + 2, 2 * RADIUS + 2)
+
 
   def paint(self, painter: QPainter, _option: Any, _widget: Any = None) -> None:
     """Paint the node circle.
 
     Args:
-      painter: Painter used to draw the node.
+      painter (QPainter): Painter used to draw the node
     """
     painter.setBrush(self.color)
     painter.setPen(QPen(QColor('#404040'), 1.0))
     painter.drawEllipse(QRectF(-RADIUS, -RADIUS, 2 * RADIUS, 2 * RADIUS))
 
+
   def mousePressEvent(self, event: Any) -> None:
     """Emit the single-click signal and pass the event to Qt.
 
     Args:
-      event: Mouse event supplied by Qt.
+      event (Any): Mouse event supplied by Qt.
     """
     self.clicked.emit(self.docID)
     super().mousePressEvent(event)

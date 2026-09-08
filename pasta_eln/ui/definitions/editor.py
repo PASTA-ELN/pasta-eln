@@ -19,24 +19,6 @@ from .terminology_lookup_dialog import TerminologyLookupDialog
 COLUMN_NAMES = ['key','label','PURL','', '']
 COLUMN_WIDTH = [200,  400,   250, 50, 50]
 
-
-def _hasOnlineLink(index: QModelIndex) -> bool:
-  """Return whether the row contains a usable online identifier."""
-  link = index.model().index(index.row(), 2).data()
-  return bool(link and 'http' in link and '://' in link)
-
-
-def _openOnlineLink(_: QAbstractItemModel, index: QModelIndex) -> None:
-  """Open the first online identifier from the selected row."""
-  QDesktopServices.openUrl(QUrl(index.model().index(index.row(), 2).data().split(', ')[0]))
-
-
-def _hasKeyOrLabel(index: QModelIndex) -> bool:
-  """Return whether terminology lookup has a search term."""
-  model = index.model()
-  return bool(model.index(index.row(), 0).data() or model.index(index.row(), 1).data())
-
-
 class Editor(QDialog):
   """ widget that shows the table of the items """
   def __init__(self, comm:Communicate):
@@ -184,7 +166,10 @@ class Editor(QDialog):
 
 
   def openTerminologyLookup(self, _: QAbstractItemModel, index: QModelIndex) -> None:
-    """Show terminology lookup and store selected identifiers in the PURL column."""
+    """Show terminology lookup and store selected identifiers in the PURL column.
+      Args:
+        index (QModelIndex): model index associated with the event
+    """
     model = index.model()
     key = model.index(index.row(), 0).data()
     label = model.index(index.row(), 1).data()
@@ -202,7 +187,10 @@ class Editor(QDialog):
 
 
   def getDataframe(self) -> pd.DataFrame:
-    """ Get dataframe from table """
+    """ Get dataframe from table
+      Returns:
+        pd.DataFrame: Dataframe represented by the editor table.
+    """
     model = self.table.model()
     data = []
     for row in range(model.rowCount()):
@@ -217,8 +205,38 @@ class Editor(QDialog):
 
 
   def _cleanup(self, _result: int) -> None:
-    """Disconnect backend signals when the dialog closes."""
+    """Disconnect backend signals when the dialog closes """
     self.comm.backendThread.worker.beSendSQL.disconnect(self.onGetData)
+
+
+def _hasOnlineLink(index: QModelIndex) -> bool:
+  """Return whether the row contains a usable online identifier.
+    Args:
+      index (QModelIndex): model index associated with the event
+    Returns:
+      bool: Whether the row has a usable online identifier.
+  """
+  link = index.model().index(index.row(), 2).data()
+  return bool(link and 'http' in link and '://' in link)
+
+
+def _openOnlineLink(_: QAbstractItemModel, index: QModelIndex) -> None:
+  """Open the first online identifier from the selected row.
+    Args:
+      index (QModelIndex): model index associated with the event
+  """
+  QDesktopServices.openUrl(QUrl(index.model().index(index.row(), 2).data().split(', ')[0]))
+
+
+def _hasKeyOrLabel(index: QModelIndex) -> bool:
+  """Return whether terminology lookup has a search term.
+    Args:
+      index (QModelIndex): model index associated with the event
+    Returns:
+      bool: Whether the row has a terminology lookup term.
+  """
+  model = index.model()
+  return bool(model.index(index.row(), 0).data() or model.index(index.row(), 1).data())
 
 
 class Command(Enum):

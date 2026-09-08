@@ -18,8 +18,7 @@ class UploadGUI(QDialog):
     Initialization
 
     Args:
-      backend (Backend): PASTA-ELN backend
-      callbackFinished (function): callback function to call upon end
+      comm (Communicate): communication object
     """
     super().__init__()
     self.comm    = comm
@@ -162,7 +161,7 @@ class UploadGUI(QDialog):
 
 
   def _cleanup(self, _result: int) -> None:
-    """Disconnect backend signals when the dialog closes."""
+    """Disconnect backend signals when the dialog closes"""
     self.comm.backendThread.worker.beSendDoc.disconnect(self.onGetData)
 
 

@@ -22,8 +22,8 @@ class DataAnalyse(QDialog):
     Initialization
 
     Args:
-      comm (Communicate): Shared communication object.
-      df (pandas dataframe): all data
+      widget (Any): host widget for the action or dialog
+      df (Any): dataframe to display
     """
     super().__init__()
     prop_cycle = matplotlib.pyplot.rcParams['axes.prop_cycle']

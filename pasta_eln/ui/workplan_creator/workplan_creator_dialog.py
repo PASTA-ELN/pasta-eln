@@ -71,7 +71,7 @@ class WorkplanCreatorDialog(QDialog):
     """
     Callback function to set the window Title
     Args:
-      doc: Document of the current project (contains name)
+      doc (dict[str, Any]): Document of the current project (contains name)
     """
     if doc['id'] == self.comm.projectID:
       self.setWindowTitle('Create workplan — Current project: ' + doc['name'])

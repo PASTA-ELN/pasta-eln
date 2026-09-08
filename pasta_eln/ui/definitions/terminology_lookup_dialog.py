@@ -77,7 +77,12 @@ class TerminologyLookupDialog(QDialog):
       self.terminologySearchButtonClicked()
 
   def addScrollAreaEntry(self, pixmap: QPixmap, checkboxText: str, checkboxTooltip: str) -> None:
-    """Add one searchable terminology result."""
+    """Add one searchable terminology result.
+      Args:
+        pixmap (QPixmap): icon pixmap for the search result
+        checkboxText (str): text shown beside the result checkbox
+        checkboxTooltip (str): tooltip for the result checkbox
+    """
     entryWidget = QWidget()
     entryLayout = QHBoxLayout(entryWidget)
     entryLayout.setContentsMargins(SPACE.S, SPACE.S, SPACE.S, SPACE.S)
@@ -131,7 +136,10 @@ class TerminologyLookupDialog(QDialog):
     self.selectedIris.clear()
 
   def execute(self, command: 'Command') -> None:
-    """Handle dialog actions."""
+    """Handle dialog actions.
+      Args:
+        command ('Command'): command emitted by the associated control
+    """
     if command is Command.SEARCH:
       self.terminologySearchButtonClicked()
     elif command is Command.CANCEL:
