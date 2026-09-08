@@ -1,4 +1,4 @@
-"""Resizable image preview widget for item details."""
+"""Resizable image preview widget for item details"""
 import logging
 from PySide6.QtCore import QByteArray, QRect, Qt
 from PySide6.QtGui import QImage, QPainter, QPixmap, QResizeEvent
@@ -7,13 +7,13 @@ from PySide6.QtWidgets import QLabel, QLayout, QSizePolicy
 
 
 class ResizeImage(QLabel):
-  """QLabel that displays a base64 image and automatically rescales it."""
+  """QLabel that displays a base64 image and automatically rescales it"""
   def __init__(self, data: str, layout: QLayout|None = None) -> None:
-    """Initialize an image label from encoded raster or SVG data.
+    """Initialize an image label from encoded raster or SVG data
 
     Args:
-      data (str): Base64-encoded image data to display.
-      layout (QLayout | None): Optional layout that should receive this label.
+      data (str): Base64-encoded image data to display
+      layout (QLayout | None): Optional layout that should receive this label
     """
     super().__init__()
     self._sourcePixmap = QPixmap()
@@ -48,7 +48,7 @@ class ResizeImage(QLabel):
 
 
   def resizeEvent(self, event: QResizeEvent) -> None:
-    """Scale the preview after the widget size changes.
+    """Scale the preview after the widget size changes
       Args:
         event (QResizeEvent): Qt event being handled
     """
@@ -57,7 +57,7 @@ class ResizeImage(QLabel):
 
 
   def _updatePixmap(self) -> None:
-    """Refresh the displayed pixmap using the currently stored image data."""
+    """Refresh the displayed pixmap using the currently stored image data"""
     if self._isSvg:
       self._renderSvg()
       return
@@ -69,7 +69,7 @@ class ResizeImage(QLabel):
 
 
   def _renderSvg(self) -> None:
-    """Render the stored SVG into the label's current display size."""
+    """Render the stored SVG into the label's current display size"""
     if self._svgRenderer is None or not self._svgRenderer.isValid():
       return
     size = self.size()

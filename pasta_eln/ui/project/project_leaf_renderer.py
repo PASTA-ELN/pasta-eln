@@ -41,7 +41,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
 
     Args:
       parent (QAbstractItemView): parent widget
-      comm (Communication): Shared communication object.
+      comm (Communication): Shared communication object
     """
     super().__init__(parent)
     self.comm               = comm
@@ -143,7 +143,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
 
   def editorEvent(self, event:QEvent, model:QAbstractItemModel, option:QStyleOptionViewItem,
                   index:QModelIndex | QPersistentModelIndex) -> bool:
-    """Open the item's context menu when its overflow button is clicked.
+    """Open the item's context menu when its overflow button is clicked
 
     Args:
       event (QEvent): event
@@ -271,7 +271,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
 
 
   def paintMenuButton(self, painter:QPainter, option:QStyleOptionViewItem) -> None:
-    """Paint a compact overflow button that exposes the item's context menu.
+    """Paint a compact overflow button that exposes the item's context menu
 
     Args:
       painter (QPainter): painter

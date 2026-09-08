@@ -1,4 +1,4 @@
-"""Read-only instrument attachment history displayed in the Details view."""
+"""Read-only instrument attachment history displayed in the Details view"""
 from __future__ import annotations
 from html import escape
 from typing import Any
@@ -8,15 +8,15 @@ from pasta_eln.ui.gui_style import Button, CommandHost
 
 
 class AttachmentView(QWidget):
-  """Show instrument attachment locations, current state, and immutable histories."""
+  """Show instrument attachment locations, current state, and immutable histories"""
 
   def __init__(self, attachments: list[dict[str, Any]], host: CommandHost, addCommand: Any):
-    """Create the attachment history view.
+    """Create the attachment history view
 
     Args:
-      attachments (list[dict[str, Any]]): Attachment locations with history and compatible candidates.
-      host (CommandHost): Command host that handles the add-attachment action.
-      addCommand (Any): Command dispatched when the add button is clicked.
+      attachments (list[dict[str, Any]]): Attachment locations with history and compatible candidates
+      host (CommandHost): Command host that handles the add-attachment action
+      addCommand (Any): Command dispatched when the add button is clicked
     """
     super().__init__()
     layout = QVBoxLayout(self)
@@ -35,13 +35,13 @@ class AttachmentView(QWidget):
 
   @staticmethod
   def currentText(entry: dict[str, Any] | None) -> str:
-    """Return a concise description for a collapsed attachment location.
+    """Return a concise description for a collapsed attachment location
 
     Args:
-      entry (dict[str, Any] | None): Latest history entry, or None when no history exists.
+      entry (dict[str, Any] | None): Latest history entry, or None when no history exists
 
     Returns:
-      The current attachment name, remark, or an empty-state label.
+      The current attachment name, remark, or an empty-state label
     """
     if entry is None:
       return 'No attachment'
@@ -52,13 +52,13 @@ class AttachmentView(QWidget):
 
   @staticmethod
   def historyText(entry: dict[str, Any]) -> str:
-    """Format one immutable attachment history record as safe rich text.
+    """Format one immutable attachment history record as safe rich text
 
     Args:
-      entry (dict[str, Any]): History record containing date, item, remark, and user fields.
+      entry (dict[str, Any]): History record containing date, item, remark, and user fields
 
     Returns:
-      Rich text for the history entry.
+      Rich text for the history entry
     """
     item = (f'<a href="pasta-eln://{escape(str(entry["id"]))}">{escape(str(entry["name"]))}</a>'
             if entry['id'] and entry['name'] else '')

@@ -24,7 +24,7 @@ def test_simple(qtbot, caplog):
 
 
 def test_detail_level_controls_advanced_settings(qtbot):
-  """The Appearance detail level controls visibility of the advanced section."""
+  """The Appearance detail level controls visibility of the advanced section"""
   comm = Communicate('research')
   while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
     qtbot.wait(100)

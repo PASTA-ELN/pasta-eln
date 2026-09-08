@@ -1,4 +1,4 @@
-""" Dataverse default metadata dictionary. """
+""" Dataverse default metadata dictionary """
 DATAVERSE_METADATA = {
   'datasetVersion': {
     'license': {

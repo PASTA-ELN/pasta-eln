@@ -23,11 +23,11 @@ class WorkplanCreatorDialog(QDialog):
   """
 
   def __init__(self, comm: Communicate, displayWorkplan: Workplan | None = None):
-    """Initialize the dialog used to create or edit a workplan.
+    """Initialize the dialog used to create or edit a workplan
 
     Args:
-      comm (Communicate): Shared communication object.
-      displayWorkplan (Workplan | None): Existing workplan to edit, or ``None`` for a new one.
+      comm (Communicate): Shared communication object
+      displayWorkplan (Workplan | None): Existing workplan to edit, or ``None`` for a new one
     """
     super().__init__()
 

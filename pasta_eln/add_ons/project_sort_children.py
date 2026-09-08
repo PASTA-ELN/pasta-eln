@@ -13,7 +13,7 @@ reqParameter = {} #possibility for required parameters: like API-key, etc. {'API
 def main(comm, hierStack, widget, parameter={}):
   """ main function: has to exist and is called by the menu
   Args:
-    comm (Communicate): Shared communication object.
+    comm (Communicate): Shared communication object
     hierStack (str): node in hierarchy to start the creation
     widget (QWidget): allows to create new gui dialogs
     parameter (dict): ability to pass parameters
@@ -32,7 +32,7 @@ def main(comm, hierStack, widget, parameter={}):
   hierStackI = hierStack.split('/')
 
   # Issue: previous sorting steps influence later steps. Hence after one sorting step, always get the updated order and look for changes
-  # One could use a 'while True' loop but that would risk erroneous endless loops. Better, max. number and then user has to sort again.
+  # One could use a 'while True' loop but that would risk erroneous endless loops. Better, max. number and then user has to sort again
   for idx in range(maxNumberSorting):
     hierarchy, _ = getHierarchy(comm, hierStack)
     noChange = True

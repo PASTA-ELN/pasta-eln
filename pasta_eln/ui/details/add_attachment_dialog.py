@@ -1,18 +1,18 @@
-"""Dialog for adding an existing compatible item to an instrument attachment location."""
+"""Dialog for adding an existing compatible item to an instrument attachment location"""
 from __future__ import annotations
 from typing import Any
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFormLayout, QLineEdit, QVBoxLayout, QWidget
 
 
 class AddAttachmentDialog(QDialog):
-  """Choose a compatible existing item and add it to an attachment location."""
+  """Choose a compatible existing item and add it to an attachment location"""
 
   def __init__(self, attachments: list[dict[str, Any]], parent: QWidget):
-    """Create the attachment selection dialog.
+    """Create the attachment selection dialog
 
     Args:
-      attachments (list[dict[str, Any]]): Attachment locations and their compatible existing items.
-      parent (QWidget): Parent widget for the modal dialog.
+      attachments (list[dict[str, Any]]): Attachment locations and their compatible existing items
+      parent (QWidget): Parent widget for the modal dialog
     """
     super().__init__(parent)
     self.attachments = attachments
@@ -40,10 +40,10 @@ class AddAttachmentDialog(QDialog):
 
 
   def updateItems(self, index: int) -> None:
-    """Update compatible candidates after the location changes.
+    """Update compatible candidates after the location changes
 
     Args:
-      index (int): Index of the selected attachment location.
+      index (int): Index of the selected attachment location
     """
     self.item.clear()
     if index < 0:
@@ -54,9 +54,9 @@ class AddAttachmentDialog(QDialog):
 
 
   def selectedAttachment(self) -> tuple[str, str, str]:
-    """Return the location, item ID, and optional remark selected by the user.
+    """Return the location, item ID, and optional remark selected by the user
 
     Returns:
-      A tuple containing location, existing item ID, and trimmed remark.
+      A tuple containing location, existing item ID, and trimmed remark
     """
     return self.location.currentText(), str(self.item.currentData()), self.remark.text().strip()

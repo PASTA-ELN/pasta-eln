@@ -1,11 +1,11 @@
-"""A tab bar which keeps the project overview tab visually separate."""
+"""A tab bar which keeps the project overview tab visually separate"""
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QTabBar
 
 
 class ProjectTabBar(QTabBar):
-  """A tab bar which keeps the project overview tab visually separate."""
+  """A tab bar which keeps the project overview tab visually separate"""
   _HOME_TAB_DATA = 'project-home'
   _HOME_TAB_GAP = 12
 
@@ -23,7 +23,7 @@ class ProjectTabBar(QTabBar):
 
 
   def paintEvent(self, event: QPaintEvent) -> None:
-    """Draw a separator in the gap following the Home tab.
+    """Draw a separator in the gap following the Home tab
 
     Args:
       event (QPaintEvent): The paint event
@@ -43,7 +43,7 @@ class ProjectTabBar(QTabBar):
 
 
   def mousePressEvent(self, event: QMouseEvent) -> None:
-    """Remember whether a drag was initiated on the Home tab.
+    """Remember whether a drag was initiated on the Home tab
 
     Args:
       event (QMouseEvent): The mouse press event
@@ -74,7 +74,7 @@ class ProjectTabBar(QTabBar):
 
   @Slot(int, int)
   def keepHomeTabFirst(self, oldIndex: int, newIndex: int) -> None:
-    """Move Home back if another tab was dragged before it.
+    """Move Home back if another tab was dragged before it
 
     Args:
       oldIndex (int): The old index of the moved tab

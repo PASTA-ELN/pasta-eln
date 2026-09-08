@@ -4,7 +4,7 @@ THIS IS A VERY ADVANCED ADD-ON TUTORIAL
 This tutorial teaches
 - how to plot the data from files
 """
-# This tutorial follows the conventional four-space indentation style.
+# This tutorial follows the conventional four-space indentation style
 # pylint: disable=bad-indentation
 import matplotlib
 import pandas as pd
@@ -136,7 +136,7 @@ class DataAnalyse(QDialog):
     self.refresh()
 
   def refresh(self):
-    """Refresh the plot from the selected data."""
+    """Refresh the plot from the selected data"""
     matplotlib.pyplot.close('all')
     self.graph.axes.cla()
     for idx, iData in enumerate(self.data):
@@ -171,7 +171,7 @@ class DataAnalyse(QDialog):
 def main(comm, df, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        comm (communication): Shared communication object.
+        comm (communication): Shared communication object
         df (Dataframe): dataframe with the data to plot. The docIDand path columns are of most interest
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters

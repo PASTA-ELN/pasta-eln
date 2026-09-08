@@ -439,7 +439,7 @@ def getOS() -> str:
 
 
 def hardRestart() -> None:
-  """Restart the installed or development application."""
+  """Restart the installed or development application"""
   try:
     os.execv('pastaELN', [''])
   except Exception:

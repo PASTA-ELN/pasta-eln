@@ -15,11 +15,11 @@ class RightMainWidget(QWidget):
   """
 
   def __init__(self, comm: Communicate, displayWorkplan: Workplan | None = None) -> None:
-    """Initialize the workplan preview pane.
+    """Initialize the workplan preview pane
 
     Args:
-      comm (Communicate): Shared communication object.
-      displayWorkplan (Workplan | None): Workplan currently selected for display, if any.
+      comm (Communicate): Shared communication object
+      displayWorkplan (Workplan | None): Workplan currently selected for display, if any
     """
     super().__init__()
     self.comm = comm
@@ -75,7 +75,7 @@ class RightMainWidget(QWidget):
       procedureID (str): ID of the procedure that is represented by this item
       sample (str): the user-chosen sample for this particular Item
       parameters (dict[str, str]): the filled-out parameters for this item
-      at (int | None): Optional. Position where to insert the Item into the list. Default: at the end.
+      at (int | None): Optional. Position where to insert the Item into the list. Default: at the end
     """
     listItem = WorkplanListItem(
       self.comm,
@@ -134,7 +134,7 @@ class RightMainWidget(QWidget):
 
   def displayWorkplan(self, workplan: Workplan) -> None:
     """
-    Adds all the procedures from a given workplan-dict to the Workplan in the Creator.
+    Adds all the procedures from a given workplan-dict to the Workplan in the Creator
     What happens when the procedure, sample or parameters are not in Pasta? -Currently not handled
     Args:
       workplan (Workplan): Currently a json-like dict containing the serialized Workplan

@@ -35,7 +35,7 @@ class TerminologyLookupService:
     Args:
       searchTerm (str): Search term used for the lookup
     Returns:
-      list[dict[str, Any]]: Terminology matches returned by the configured services.
+      list[dict[str, Any]]: Terminology matches returned by the configured services
     """
     if not searchTerm.strip():
       return []
@@ -44,13 +44,13 @@ class TerminologyLookupService:
 
     # Define a function to perform the HTTP request
     def fetchService(service: dict[str, Any]) -> dict[str, str] | None:
-      """Query one terminology service using the current search term.
+      """Query one terminology service using the current search term
 
       Args:
-        service (dict[str, Any]): Service configuration containing the URL and request mappings.
+        service (dict[str, Any]): Service configuration containing the URL and request mappings
 
       Returns:
-        dict[str, str] | None: Parsed service response, or ``None`` when the request fails.
+        dict[str, str] | None: Parsed service response, or ``None`` when the request fails
       """
       try:
         service['request_params'][service['search_term_key']] = searchTerm
@@ -88,7 +88,7 @@ class TerminologyLookupService:
       lookupService (dict[str, Any]): Lookup service taken from the lookupConfig
 
     Returns:
-      dict[str, Any]: Parsed terminology result.
+      dict[str, Any]: Parsed terminology result
     """
     if (not searchTerm or not webResult or not lookupService):
       logging.error('Invalid search term or web result or lookup service!', exc_info=True)
@@ -121,7 +121,7 @@ class TerminologyLookupService:
     Returns (list[str]): List of icon names for the lookup services
 
     Returns:
-      dict[str, QPixmap]: Icons keyed by terminology service.
+      dict[str, QPixmap]: Icons keyed by terminology service
     """
     currentPath = realpath(join(getcwd(), dirname(__file__)))
     resourcesPath = join(currentPath, '../../Resources/Icons')

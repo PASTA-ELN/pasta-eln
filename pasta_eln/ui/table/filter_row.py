@@ -1,4 +1,4 @@
-"""A filter row used to filter a document table."""
+"""A filter row used to filter a document table"""
 from typing import TYPE_CHECKING
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLineEdit, QWidget
 from pasta_eln.ui.gui_style import Button
@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 
 class FilterRow(QWidget):
-  """A field selector and text input used to filter a document table."""
+  """A field selector and text input used to filter a document table"""
 
   def __init__(self, tableView: 'TableView') -> None:
     """

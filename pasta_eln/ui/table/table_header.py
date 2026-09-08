@@ -1,4 +1,4 @@
-"""Dialog for choosing and ordering the columns displayed in a document list."""
+"""Dialog for choosing and ordering the columns displayed in a document list"""
 from collections import defaultdict
 from enum import Enum, auto
 import pandas as pd
@@ -11,14 +11,14 @@ from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle
 
 
 class TableHeader(QDialog):
-  """Choose the stored list columns for one document type."""
+  """Choose the stored list columns for one document type"""
 
   def __init__(self, comm: Communicate, docType: str) -> None:
-    """Initialize the table-header dialog for a document type.
+    """Initialize the table-header dialog for a document type
 
     Args:
-      comm (Communicate): Shared communication object.
-      docType (str): Document type whose table columns are being configured.
+      comm (Communicate): Shared communication object
+      docType (str): Document type whose table columns are being configured
     """
     super().__init__()
     self.comm = comm
@@ -80,7 +80,7 @@ class TableHeader(QDialog):
 
   @Slot(str, pd.DataFrame)
   def onGetData(self, query: str, data: pd.DataFrame) -> None:
-    """Receive the saved view or the available custom properties.
+    """Receive the saved view or the available custom properties
       Args:
         query (str): backend query that resulted in data
         data (pd.DataFrame): data to process
@@ -102,7 +102,7 @@ class TableHeader(QDialog):
 
 
   def paint(self) -> None:
-    """Refresh both column lists."""
+    """Refresh both column lists"""
     self.availableList.clear()
     self.availableList.addItems(sorted(self.available.difference(self.selected)))
     self.selectedList.clear()
@@ -110,7 +110,7 @@ class TableHeader(QDialog):
 
 
   def execute(self, command:'Command') -> None:
-    """Handle a column-selection command.
+    """Handle a column-selection command
       Args:
         command ('Command'): command emitted by the associated control
     """
@@ -163,7 +163,7 @@ class TableHeader(QDialog):
 
 
   def save(self) -> None:
-    """Persist the selected column order and close the dialog."""
+    """Persist the selected column order and close the dialog"""
     mainColumns = set(MAIN_ORDER) | {'tags', 'qrCodes'}
     columns = [column if column in mainColumns or '.' in column else f'.{column}' for column in self.selected]
     self.comm.uiRequestTask.emit(Task.SEND_TBL_COLUMN, {'docType': self.docType, 'newList': columns})
@@ -184,7 +184,7 @@ class TableHeader(QDialog):
 
 
 class Command(Enum):
-  """Commands available in the column-selection dialog."""
+  """Commands available in the column-selection dialog"""
   ADD = auto()
   REMOVE = auto()
   MOVE_UP = auto()

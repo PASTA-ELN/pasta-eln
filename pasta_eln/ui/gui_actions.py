@@ -1,4 +1,4 @@
-"""Helpers for creating menu actions."""
+"""Helpers for creating menu actions"""
 import logging
 import traceback
 from html import escape
@@ -11,7 +11,7 @@ from .message_dialog import showMessage
 
 def action(label: str, widget: QWidget, command: Any, menu: QMenu, keySequence: str | None = None,
            icon: str = '') -> QAction:
-  """Create a menu action that forwards a command to its owning widget.
+  """Create a menu action that forwards a command to its owning widget
     Args:
       label (str): visible action label
       widget (QWidget): host widget for the action or dialog
@@ -20,12 +20,12 @@ def action(label: str, widget: QWidget, command: Any, menu: QMenu, keySequence: 
       keySequence (str | None): optional keyboard shortcut
       icon (str): icon name for the action
     Returns:
-      QAction: Configured menu action.
+      QAction: Configured menu action
   """
   actionObject = QAction(widget)
   actionObject.setText(label)
   def triggered() -> None:
-    """Dispatch the configured command through the host widget."""
+    """Dispatch the configured command through the host widget"""
     try:
       widget.execute(command)                                                     # type: ignore[attr-defined]
     except Exception:

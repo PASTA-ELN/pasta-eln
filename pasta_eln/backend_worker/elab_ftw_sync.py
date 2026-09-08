@@ -88,7 +88,7 @@ class Pasta2Elab:
 
   def rawDataUploadAllowed(self, rawDataPath:Any, docID:str) -> bool:
     """
-    Check whether a raw data file is within the configured upload size limit.
+    Check whether a raw data file is within the configured upload size limit
 
     Args:
       rawDataPath (Path): raw data path
@@ -135,7 +135,7 @@ class Pasta2Elab:
           idx (int): position of the document being synchronized
           count (int): number of documents being processed
         Returns:
-          tuple[str, int]: Updated external entry identifier and its list position.
+          tuple[str, int]: Updated external entry identifier and its list position
       """
       res = self.updateEntry(i, mode, callback, progressCallback)
       if progressCallback is not None:
@@ -202,13 +202,11 @@ class Pasta2Elab:
     elabTypes = {i['title'].lower():i['id'] for i in self.api.readEntry('items_types')}  |  {'measurement':-1}
     elabTypes |= {'x0':elabTypes.pop('project'), 'x1':elabTypes.pop('folder'), '-':elabTypes.pop('default')}
     def getNewEntry(elabType:str) -> int:
-      """Create a remote eLabFTW entry and link it to the current project group.
-
+      """Create a remote eLabFTW entry and link it to the current project group
       Args:
-        elabType (str): eLabFTW category used to choose an item or experiment entry.
-
+        elabType (str): eLabFTW category used to choose an item or experiment entry
       Returns:
-        int: ID assigned to the newly created remote entry.
+        int: ID assigned to the newly created remote entry
       """
       urlSuffix = 'items'                  if int(elabType)>0 else 'experiments'
       content   = {'category_id':elabType} | self.readWriteAccess

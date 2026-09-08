@@ -22,17 +22,17 @@ class TreeView(QTreeView):
   paints each project item. This is more efficient for large project views and
   requires less code than embedding widgets in every item. The trade-off is
   that per-item buttons are more difficult to implement. Anyhow, buttons could visually
-  clutter the interface.
+  clutter the interface
   """
   sameItemClicked = Signal(QModelIndex)
 
   def __init__(self, parent:QWidget, comm:Communicate, model:QStandardItemModel):
-    """Initialize the project tree view with its model and communication state.
+    """Initialize the project tree view with its model and communication state
 
     Args:
-      parent (QWidget): Widget that owns this tree view.
-      comm (Communicate): Shared communication object.
-      model (QStandardItemModel): Standard item model containing the project hierarchy.
+      parent (QWidget): Widget that owns this tree view
+      comm (Communicate): Shared communication object
+      model (QStandardItemModel): Standard item model containing the project hierarchy
     """
     super().__init__(parent)
     self.aParentWidget: Any = parent
@@ -59,7 +59,7 @@ class TreeView(QTreeView):
 
 
   def mousePressEvent(self, event:QMouseEvent) -> None:
-    """Notify the project view when the current item is clicked again.
+    """Notify the project view when the current item is clicked again
       Args:
         event (QMouseEvent): Qt event being handled
     """
@@ -84,7 +84,7 @@ class TreeView(QTreeView):
 
 
   def showContextMenu(self, clickedIndex:QModelIndex, globalPos:QPoint) -> None:
-    """Show the context menu for the item at ``clickedIndex``.
+    """Show the context menu for the item at ``clickedIndex``
 
     Args:
       clickedIndex (QModelIndex): index of the item
@@ -192,7 +192,7 @@ class TreeView(QTreeView):
       return None
     item = iterate(self.model().invisibleRootItem())                              # type: ignore[attr-defined]
     if item is not None:
-      parents: list[QModelIndex] = []                                     # list of parents, grandparents, ...
+      parents: list[QModelIndex] = []                                     # list of parents, grandparents,
       parent = item.index().parent()
       while parent.isValid():
         parents.append(parent)

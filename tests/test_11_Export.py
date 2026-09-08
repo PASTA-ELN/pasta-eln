@@ -33,7 +33,7 @@ class TestStringMethods(unittest.TestCase):
     handler = ErrorHandler()
     logging.getLogger().addHandler(handler)
 
-    # create .
+    # create
     self.be = Backend('research')
     projID = self.be.output('x0').split('\n')
     projID = [x for x in projID if 'PASTAs Example Project' in x]

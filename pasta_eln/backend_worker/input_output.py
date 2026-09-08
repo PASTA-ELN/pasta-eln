@@ -1,4 +1,4 @@
-"""Input and output functions towards the ELN file format."""
+"""Input and output functions towards the ELN file format"""
 import copy
 import hashlib
 import json
@@ -64,16 +64,16 @@ metadataFile = 'ro-crate-metadata.json'
 ###           VALIDATIONS              ###
 ##########################################
 def validate(elnFile:ZipFile) -> bool:
-  """Validate the archive structure needed by :func:`importELN`.
+  """Validate the archive structure needed by :func:`importELN`
 
   This is deliberately a preflight check.  Once it succeeds, the importer can
   operate on the archive and graph without repeating structural checks while
-  processing individual documents.
+  processing individual documents
   Args:
     elnFile (ZipFile): ELN archive to validate
 
   Returns:
-    bool: Whether the archive has the required ELN structure.
+    bool: Whether the archive has the required ELN structure
   """
   maxArchiveMembers = 10_000
   maxArchiveBytes = 4 * 1024**3
@@ -88,13 +88,13 @@ def validate(elnFile:ZipFile) -> bool:
     return False
 
   def fail(message:str) -> bool:
-    """Log an archive validation error and report that validation failed.
+    """Log an archive validation error and report that validation failed
 
     Args:
-      message (str): Human-readable explanation of the invalid archive condition.
+      message (str): Human-readable explanation of the invalid archive condition
 
     Returns:
-      bool: Always ``False``, allowing the caller to return the failure directly.
+      bool: Always ``False``, allowing the caller to return the failure directly
     """
     logging.error(message)
     return False

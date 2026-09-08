@@ -1,4 +1,4 @@
-"""Dialog for selecting terminology IRIs from online lookup services."""
+"""Dialog for selecting terminology IRIs from online lookup services"""
 import asyncio
 import textwrap
 from collections.abc import Callable
@@ -12,15 +12,15 @@ from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, Label
 
 
 class TerminologyLookupDialog(QDialog):
-  """Search terminology services and return the IRIs selected by the user."""
+  """Search terminology services and return the IRIs selected by the user"""
 
   def __init__(self, defaultLookupTerm: str | None = None,
                acceptedCallback: Callable[[list[str]], None] | None = None) -> None:
-    """Initialize the terminology lookup dialog and its optional callback.
+    """Initialize the terminology lookup dialog and its optional callback
 
     Args:
-      defaultLookupTerm (str | None): Initial text placed in the lookup field, if provided.
-      acceptedCallback (Callable[[list[str]], None] | None): Callback function called with the selected terminology identifiers.
+      defaultLookupTerm (str | None): Initial text placed in the lookup field, if provided
+      acceptedCallback (Callable[[list[str]], None] | None): Callback function called with the selected terminology identifiers
     """
     super().__init__()
     self.comm: Any = None
@@ -77,7 +77,7 @@ class TerminologyLookupDialog(QDialog):
       self.terminologySearchButtonClicked()
 
   def addScrollAreaEntry(self, pixmap: QPixmap, checkboxText: str, checkboxTooltip: str) -> None:
-    """Add one searchable terminology result.
+    """Add one searchable terminology result
       Args:
         pixmap (QPixmap): icon pixmap for the search result
         checkboxText (str): text shown beside the result checkbox
@@ -94,7 +94,7 @@ class TerminologyLookupDialog(QDialog):
     self.resultCheckboxes.append(self.checkBox)
 
   def clearScrollArea(self) -> None:
-    """Remove all current search results while preserving the layout stretch."""
+    """Remove all current search results while preserving the layout stretch"""
     while self.scrollAreaContentsVerticalLayout.count() > 1:
       item = self.scrollAreaContentsVerticalLayout.takeAt(0)
       if item is not None and (widget := item.widget()):
@@ -102,14 +102,14 @@ class TerminologyLookupDialog(QDialog):
     self.resultCheckboxes.clear()
 
   def setSelectedIris(self) -> None:
-    """Collect the IRIs represented by checked search results."""
+    """Collect the IRIs represented by checked search results"""
     self.selectedIris = []
     for checkBox in self.resultCheckboxes:
       if checkBox.isChecked():
         self.selectedIris.append(checkBox.toolTip())
 
   def terminologySearchButtonClicked(self) -> None:
-    """Look up the entered term and populate the result list."""
+    """Look up the entered term and populate the result list"""
     self.resetUi()
     searchTerm = self.terminologyLineEdit.text().strip()
     if not searchTerm:
@@ -129,14 +129,14 @@ class TerminologyLookupDialog(QDialog):
     self.searchProgressBar.setValue(100)
 
   def resetUi(self) -> None:
-    """Reset result and progress state before a search."""
+    """Reset result and progress state before a search"""
     self.searchProgressBar.setValue(0)
     self.clearScrollArea()
     self.errorConsole.clear()
     self.selectedIris.clear()
 
   def execute(self, command: 'Command') -> None:
-    """Handle dialog actions.
+    """Handle dialog actions
       Args:
         command ('Command'): command emitted by the associated control
     """
@@ -152,7 +152,7 @@ class TerminologyLookupDialog(QDialog):
 
 
 class Command(Enum):
-  """Commands available in the terminology lookup dialog."""
+  """Commands available in the terminology lookup dialog"""
   SEARCH = auto()
   CANCEL = auto()
   ACCEPT = auto()

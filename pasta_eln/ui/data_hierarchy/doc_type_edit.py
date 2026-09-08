@@ -20,7 +20,7 @@ class DocTypeEditor(QDialog):
     Initialization
 
     Args:
-      comm (Communicate): Shared communication object.
+      comm (Communicate): Shared communication object
       docType (str): document type to select or edit
       callback (Callable[[str, str], None] | None): optional completion callback
     """
@@ -119,10 +119,10 @@ class DocTypeEditor(QDialog):
 
 
   def closeDialog(self, save:bool) -> None:
-    """Cancel or save entered data.
+    """Cancel or save entered data
 
     Args:
-      save (bool): Whether to validate and save the edited item type.
+      save (bool): Whether to validate and save the edited item type
     """
     if not save:
       self.reject()
@@ -158,7 +158,7 @@ class DocTypeEditor(QDialog):
 
 
   def execute(self, command:'Command') -> None:
-    """Handle the dialog footer commands.
+    """Handle the dialog footer commands
       Args:
         command (Command): command emitted by the associated control
     """
@@ -171,6 +171,6 @@ class DocTypeEditor(QDialog):
 
 
 class Command(Enum):
-  """Commands available in the item-type properties dialog."""
+  """Commands available in the item-type properties dialog"""
   SAVE = auto()
   CANCEL = auto()

@@ -1,4 +1,4 @@
-"""Regression tests for import preflight validation."""
+"""Regression tests for import preflight validation"""
 import json
 import tempfile
 import unittest

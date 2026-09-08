@@ -1,4 +1,4 @@
-"""Write the given parameters of a workplan in a file with the format of the common workplan description."""
+"""Write the given parameters of a workplan in a file with the format of the common workplan description"""
 import json
 import re
 from pathlib import Path
@@ -10,7 +10,7 @@ from pasta_eln.ui.gui_communicate import Communicate
 
 
 class WorkplanProcedure(TypedDict):
-  """A procedure entry stored in a serialized workplan."""
+  """A procedure entry stored in a serialized workplan"""
 
   procedure: str
   sample: str
@@ -18,7 +18,7 @@ class WorkplanProcedure(TypedDict):
 
 
 class Workplan(TypedDict):
-  """The JSON-compatible workplan format saved by the Workplan Creator."""
+  """The JSON-compatible workplan format saved by the Workplan Creator"""
 
   name: str
   procedures: list[WorkplanProcedure]
@@ -26,9 +26,9 @@ class Workplan(TypedDict):
 
 def generateAndSaveWorkplan(comm: Communicate, workplan: Workplan, filename: str) -> None:
   """
-  Write the given parameters of a workplan in a file with the format of the common workplan description.
+  Write the given parameters of a workplan in a file with the format of the common workplan description
   Args:
-    comm (Communicate): Shared communication object.
+    comm (Communicate): Shared communication object
     workplan (Workplan): workplan dictionary that contains all important workplan information
     filename (str): name of the file that is saved
 
@@ -46,11 +46,11 @@ class Storage:
   """
 
   def __init__(self, comm: Communicate, projectID: str):
-    """Initialize procedure storage and request the current project procedures.
+    """Initialize procedure storage and request the current project procedures
 
     Args:
-      comm (Communicate): Shared communication object.
-      projectID (str): Project document ID whose procedures should be stored.
+      comm (Communicate): Shared communication object
+      projectID (str): Project document ID whose procedures should be stored
     """
     self.comm = comm
     self.procedureTable = pd.DataFrame()
@@ -59,19 +59,19 @@ class Storage:
 
   def updateStorage(self, projectID: str) -> None:
     """
-    Requests the procedureTable from Backend and saves it in self.procedureTable.
+    Requests the procedureTable from Backend and saves it in self.procedureTable
     Emits storageUpdated Signal for Callback
     Args:
-      projectID (str): ID of the Project for which the table should be requested.
+      projectID (str): ID of the Project for which the table should be requested
 
     """
 
     def onGetTable(table: pd.DataFrame, docType: str) -> None:
-      """Store a received procedure table and notify listeners when it is ready.
+      """Store a received procedure table and notify listeners when it is ready
 
       Args:
-        table (pd.DataFrame): Data frame returned by the backend table request.
-        docType (str): Document type represented by ``table``.
+        table (pd.DataFrame): Data frame returned by the backend table request
+        docType (str): Document type represented by ``table``
       """
       if docType == 'workflow/procedure':
         self.procedureTable = table
@@ -86,7 +86,7 @@ class Storage:
 
 
     Returns:
-      list[str]: Available procedure identifiers.
+      list[str]: Available procedure identifiers
     """
     return self.procedureTable['id'].to_list()
 
@@ -96,7 +96,7 @@ class Storage:
       procedureID (str): docID for the procedure
 
     Returns:
-      str: Procedure title.
+      str: Procedure title
     """
     row = self.procedureTable.loc[self.procedureTable['id'] == procedureID]
     return '' if row.empty else row['name'].iloc[0]
@@ -107,7 +107,7 @@ class Storage:
       procedureID (str): docID for the procedure
 
     Returns:
-      list[str]: Procedure tags.
+      list[str]: Procedure tags
     """
     tags = self.procedureTable[self.procedureTable['id'] == procedureID]['tags'].iloc[0]
     return ['#' + tag for tag in tags.split(', ')]
@@ -122,10 +122,10 @@ class Storage:
       procedureID (str): docID for the procedure
     """
     def onGetDoc(doc: dict[str, Any]) -> None:
-      """Load full procedure text from the document's referenced file.
+      """Load full procedure text from the document's referenced file
 
       Args:
-        doc (dict[str, Any]): Procedure document returned by the backend.
+        doc (dict[str, Any]): Procedure document returned by the backend
       """
       if procedureID != doc['id']:
         return
@@ -149,7 +149,7 @@ class Storage:
       procedureID (str): docID for the procedure
 
     Returns:
-      str: Procedure text.
+      str: Procedure text
     """
     row = self.procedureTable.loc[self.procedureTable['id'] == procedureID]
     return '' if row.empty else row['content'].iloc[0]
@@ -161,7 +161,7 @@ class Storage:
       procedureID (str): docID for the procedure
 
     Returns:
-      dict[str, str]: Procedure default parameter values.
+      dict[str, str]: Procedure default parameter values
     """
     parameters: dict[str, str] = {}
     text = self.getProcedureText(procedureID)
@@ -179,7 +179,7 @@ class Storage:
 
 
     Returns:
-      str: Procedure short description.
+      str: Procedure short description
     """
     row = self.procedureTable.loc[self.procedureTable['id'] == procedureID]
     return '' if row.empty else row['comment'].iloc[0]

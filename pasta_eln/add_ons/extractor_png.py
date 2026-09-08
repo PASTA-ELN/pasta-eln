@@ -73,7 +73,7 @@ def use(filePath, style, saveFigure):
   return {'image':imageB64, 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser}
 
   #other datatypes could follow here if statements are used
-  #..
+  #
 
   #final return if nothing successful
   #return {'style': '-', 'metaVendor':{}, 'metaUser':{}}

@@ -14,7 +14,7 @@ class ConfigurationGUI(QDialog):
     Initialization
 
     Args:
-      comm (Communicate): Shared communication object.
+      comm (Communicate): Shared communication object
       callbackFinished (function): callback function to call upon end
     """
     super().__init__()
@@ -80,10 +80,10 @@ class ConfigurationGUI(QDialog):
 
 
   def updateAdvancedVisibility(self, detailsLevel:str) -> None:
-    """Update visibility of the Advanced configuration group.
+    """Update visibility of the Advanced configuration group
 
     Args:
-      detailsLevel (str): Selected interface detail level.
+      detailsLevel (str): Selected interface detail level
     """
     self.sectionGroups['advanced'].setVisible(detailsLevel == 'Advanced')
 

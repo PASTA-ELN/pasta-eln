@@ -1,4 +1,4 @@
-"""Application defaults, display text, and shared constants."""
+"""Application defaults, display text, and shared constants"""
 from typing import Any
 
 defaultDocTypes: list[list[str]] = [
@@ -238,7 +238,7 @@ One-letter item type shortcuts are assigned in the item type editor and can vary
 """
 
 
-# Reserved by fixed main-window shortcuts.
+# Reserved by fixed main-window shortcuts
 reservedDocTypeShortcuts = {'t', 'u'}
 
 

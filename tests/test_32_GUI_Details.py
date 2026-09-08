@@ -35,7 +35,7 @@ def test_simple(qtbot, caplog):
 
 
 def test_edit_requests_document_by_id(qtbot):
-  """The form must fetch the full document instead of treating it as a group edit."""
+  """The form must fetch the full document instead of treating it as a group edit"""
   comm = Communicate('research')
   while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
     qtbot.wait(100)
@@ -54,7 +54,7 @@ def test_edit_requests_document_by_id(qtbot):
 
 
 def test_rerun_extractors_uses_table_request(qtbot):
-  """Rerunning from Details uses the same all-recipes request as the table."""
+  """Rerunning from Details uses the same all-recipes request as the table"""
   comm = Communicate('research')
   while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
     qtbot.wait(100)
@@ -72,7 +72,7 @@ def test_rerun_extractors_uses_table_request(qtbot):
 
 
 def test_advanced_folder_scan_action_toggles_ignore_marker(qtbot, tmp_path):
-  """Advanced Details actions create and remove the scanner's existing marker."""
+  """Advanced Details actions create and remove the scanner's existing marker"""
   comm = Communicate('research')
   while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
     qtbot.wait(100)
@@ -103,7 +103,7 @@ def test_advanced_folder_scan_action_toggles_ignore_marker(qtbot, tmp_path):
 
 
 def test_advanced_attachments_show_current_state_and_request_addition(qtbot):
-  """Advanced device details expose the default example's immutable attachment history."""
+  """Advanced device details expose the default example's immutable attachment history"""
   comm = Communicate('research')
   while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
     qtbot.wait(100)
@@ -132,7 +132,7 @@ def test_advanced_attachments_show_current_state_and_request_addition(qtbot):
                                               'attachmentID': sensorID, 'remark': 'Installed'})]
   comm.shutdownBackendThread()
 def test_shared_locations_use_selected_project_branch():
-  """Details describes and acts on the branch selected in the project tree."""
+  """Details describes and acts on the branch selected in the project tree"""
   class DetailState:
     currentBranch = Details.currentBranch
     sourcePath = Details.sourcePath

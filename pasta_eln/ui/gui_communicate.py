@@ -56,7 +56,7 @@ class Communicate(QObject):
     """Initialize the signals and shared state used by the GUI and backend
 
     Args:
-      projectGroup (str): Configuration key identifying the active project group.
+      projectGroup (str): Configuration key identifying the active project group
     """
     super().__init__()
     self.waitDialog            = WaitDialog()
@@ -173,10 +173,10 @@ class Communicate(QObject):
 
 
   def saveUIState(self, **changes: Any) -> None:
-    """Update and persist global GUI state.
+    """Update and persist global GUI state
 
     Args:
-      changes (Any): State keys and their new values to merge into ``uiState``.
+      changes (Any): State keys and their new values to merge into ``uiState``
     """
     self.configuration.setdefault('uiState', {}).update(changes)
     saveConfiguration(self.configuration)

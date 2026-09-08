@@ -20,7 +20,7 @@ class NameColumnDelegate(QStyledItemDelegate):
       option (QStyleOptionViewItem): Style option for the cell represented by index
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index
     Returns:
-      QWidget: Editor widget for the selected model item.
+      QWidget: Editor widget for the selected model item
     """
     if index.data() in ['name','tags','comment']:
       return QWidget(parent)

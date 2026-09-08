@@ -17,7 +17,7 @@ class TestStringMethods(unittest.TestCase):
     main function
     """
     # These are deliberately live integration checks. They verify that the public services
-    # currently work; an outage or changed response should be reported rather than masked.
+    # currently work; an outage or changed response should be reported rather than masked
     warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
     warnings.filterwarnings('ignore', message='invalid escape sequence')
     warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')

@@ -1,4 +1,4 @@
-"""Tests for encrypted API keys in the version-4 configuration."""
+"""Tests for encrypted API keys in the version-4 configuration"""
 # pylint: disable=consider-using-with,invalid-name,missing-function-docstring
 import json
 import tempfile
@@ -12,7 +12,7 @@ from pasta_eln import configuration_file
 
 
 def configurationWithSecrets(version:int=4) -> dict:
-  """Return a minimal configuration containing every supported secret field."""
+  """Return a minimal configuration containing every supported secret field"""
   return {
       'version': version,
       'projectGroups': {'research': {'remote': {'key': 'elab-secret'}}},
@@ -25,7 +25,7 @@ def configurationWithSecrets(version:int=4) -> dict:
 
 
 class TestConfigSecrets(unittest.TestCase):
-  """Envelope encryption stays confined to the configuration serializer."""
+  """Envelope encryption stays confined to the configuration serializer"""
 
   def setUp(self) -> None:
     self.tempDir = tempfile.TemporaryDirectory()

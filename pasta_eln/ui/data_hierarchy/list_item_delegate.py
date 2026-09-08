@@ -28,7 +28,7 @@ class ListItemDelegate(QStyledItemDelegate):
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index
 
     Returns:
-      QWidget: Editor widget for the selected model item.
+      QWidget: Editor widget for the selected model item
     """
     # skip last row
     indexName = index.model().index(index.row(), 0)

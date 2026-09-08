@@ -1,4 +1,4 @@
-"""Graphics item representing one document in a relationship view."""
+"""Graphics item representing one document in a relationship view"""
 from __future__ import annotations
 
 from typing import Any
@@ -10,15 +10,15 @@ from PySide6.QtWidgets import QGraphicsItem, QGraphicsObject
 RADIUS = 24
 
 class NodeItem(QGraphicsObject):
-  """Selectable circular document node for the relationship scene."""
+  """Selectable circular document node for the relationship scene"""
   clicked = Signal(str)
 
   def __init__(self, docID: str, color: QColor) -> None:
-    """Create a node identified by ``docID`` and filled with ``color``.
+    """Create a node identified by ``docID`` and filled with ``color``
 
     Args:
-      docID (str): Document identifier represented by this node.
-      color (QColor): Fill colour used when painting the node.
+      docID (str): Document identifier represented by this node
+      color (QColor): Fill colour used when painting the node
     """
     super().__init__()
     self.docID = docID
@@ -28,15 +28,15 @@ class NodeItem(QGraphicsObject):
 
 
   def boundingRect(self) -> QRectF:
-    """Return the node's painted bounds.
+    """Return the node's painted bounds
       Returns:
-        QRectF: Bounds of the painted node.
+        QRectF: Bounds of the painted node
     """
     return QRectF(-RADIUS - 1, -RADIUS - 1, 2 * RADIUS + 2, 2 * RADIUS + 2)
 
 
   def paint(self, painter: QPainter, _option: Any, _widget: Any = None) -> None:
-    """Paint the node circle.
+    """Paint the node circle
 
     Args:
       painter (QPainter): Painter used to draw the node
@@ -47,10 +47,10 @@ class NodeItem(QGraphicsObject):
 
 
   def mousePressEvent(self, event: Any) -> None:
-    """Emit the single-click signal and pass the event to Qt.
+    """Emit the single-click signal and pass the event to Qt
 
     Args:
-      event (Any): Mouse event supplied by Qt.
+      event (Any): Mouse event supplied by Qt
     """
     self.clicked.emit(self.docID)
     super().mousePressEvent(event)

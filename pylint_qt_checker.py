@@ -11,10 +11,10 @@ class QtLocalWidgetChecker(BaseChecker):
                 'QTreeView', 'QTimer', 'QShortcut'}
 
   def visit_assign(self, node: astroid.nodes.Assign):
-    """Inspect an assignment for Qt widget patterns relevant to this checker.
+    """Inspect an assignment for Qt widget patterns relevant to this checker
 
     Args:
-      node (astroid.nodes.Assign): AST assignment node visited by pylint.
+      node (astroid.nodes.Assign): AST assignment node visited by pylint
     """
     try:
       rhs = node.value

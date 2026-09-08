@@ -38,7 +38,7 @@ class DataverseClient(RepositoryClient):
       A tuple of (success, a message) is returned
 
     Returns:
-      tuple[bool, str]: Connection-test success and its diagnostic message.
+      tuple[bool, str]: Connection-test success and its diagnostic message
     """
     resp = requests.get(f"{self.serverUrl}/api/info/version", headers={'Accept': 'application/json'}, timeout=10)
     success = (resp.status_code == 200 and resp.json().get('data').get('version') is not None)

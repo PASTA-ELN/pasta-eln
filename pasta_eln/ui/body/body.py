@@ -21,10 +21,10 @@ class Body(QWidget):
   """
 
   def __init__(self, comm: Communicate):
-    """Initialize the main body widget with its communication object.
+    """Initialize the main body widget with its communication object
 
     Args:
-      comm (Communicate): Shared communication object.
+      comm (Communicate): Shared communication object
     """
     super().__init__()
     self.comm = comm
@@ -68,7 +68,7 @@ class Body(QWidget):
   @Slot()
   def paint(self) -> None:
     """
-    Create the changeable things in the Widget.
+    Create the changeable things in the Widget
     """
     iconColor         = self.comm.palette.getThemeColor('foreground', 'base')
     selectedIconColor = self.comm.palette.getThemeColor('primary', 'base')
@@ -115,7 +115,7 @@ class Body(QWidget):
 
   @Slot()
   def resizeDetailsSplitter(self) -> None:
-    """Set the details sidebar to the configured width after it becomes visible."""
+    """Set the details sidebar to the configured width after it becomes visible"""
     detailsWidth = int(self.comm.configuration['uiState']['detailsWidth'])
     self.splitter.setSizes([self.splitter.width() - detailsWidth, detailsWidth])
 
@@ -125,8 +125,8 @@ class Body(QWidget):
     """What happens when the currently chosen project is changed
 
     Args:
-      docID (str): from Signal: Which doc should be shown.
-      projectID (str): from Signal: Which Project it was changed to.
+      docID (str): from Signal: Which doc should be shown
+      projectID (str): from Signal: Which Project it was changed to
     """
     self.comm.changeDetails.emit(DetailContext())                                              # close details
     self.tabWidget.setCurrentIndex(0)
@@ -134,7 +134,7 @@ class Body(QWidget):
 
   @Slot(str, str, str)
   def onChangeTable(self, docType: str, _projectID: str, docID: str) -> None:
-    """Select the table tab targeted by a table-change request.
+    """Select the table tab targeted by a table-change request
       Args:
         docType (str): document type to select or edit
         docID (str): document identifier
@@ -156,7 +156,7 @@ class Body(QWidget):
     """What happens when tab is changed -> new table
 
     Args:
-      index (int): index of the now active tab after change.
+      index (int): index of the now active tab after change
     """
     if self._tableChangingInProgress:
       return

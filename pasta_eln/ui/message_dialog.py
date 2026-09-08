@@ -103,7 +103,7 @@ class MessageDialog(QDialog):
 
 
   def execute(self, command:'Command') -> None:
-    """Handle actions in the message footer.
+    """Handle actions in the message footer
       Args:
         command ('Command'): command emitted by the associated control
     """
@@ -114,7 +114,7 @@ class MessageDialog(QDialog):
 
 
 class Command(Enum):
-  """Commands available in the message dialog."""
+  """Commands available in the message dialog"""
   COPY = auto()
   ACCEPT = auto()
 

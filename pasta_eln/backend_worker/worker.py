@@ -150,7 +150,7 @@ class BackendWorker(QObject):
 
   @Slot()
   def returnRelationships(self) -> None:
-    """Return all relationship data for the active project group."""
+    """Return all relationship data for the active project group"""
     if self.backend is not None:
       self.beSendRelationships.emit(self.backend.db.getRelationships())
 

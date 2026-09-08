@@ -29,7 +29,7 @@ class Backend(CliMixin):
 
     Args:
       projectGroupName (str | None): project group to load; ``None`` creates an uninitialized backend for
-        ``BackendWorker`` to initialize with GUI-supplied configuration.
+        ``BackendWorker`` to initialize with GUI-supplied configuration
     """
     #initialize basic values
     self.configuration: dict[str, Any] = {}
@@ -49,7 +49,7 @@ class Backend(CliMixin):
   def db(self) -> SqlLiteDB:
     """ Allow default access while allowing for dbRaw = None
       Returns:
-        SqlLiteDB: Initialized SQLite database instance.
+        SqlLiteDB: Initialized SQLite database instance
     """
     if self.dbRaw is None:
       raise RuntimeError('Backend is not initialized')
@@ -300,7 +300,7 @@ class Backend(CliMixin):
 
 
   def scanProject(self, progressBar:Callable[...,None]|None, projID:str, projPath:Path|None=None) -> str:
-    """ Scan directory tree recursively from project/... or project/task/...
+    """ Scan directory tree recursively from project/... or project/task/
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
     - use dataHash to track changes of measurements (one file=one hash=one entry in DB)
@@ -351,7 +351,7 @@ class Backend(CliMixin):
       parentID = parentIDs[0]['id']
       parentDoc = self.db.getDoc(parentID)
       hierStack = parentDoc['branch'][0]['stack']+[parentID]
-      # handle directories and prevent going into them if they should be ignored.
+      # handle directories and prevent going into them if they should be ignored
       excludedDirs = [i for i in dirs if any(fnmatch.fnmatch(i, pattern) for pattern in excludePatterns)]
       dirs[:] = [i for i in dirs if i not in excludedDirs]
       ignoredFolders += [(Path(root)/i).relative_to(self.basePath).as_posix() for i in excludedDirs]
@@ -476,7 +476,7 @@ class Backend(CliMixin):
         minimal (bool): true=only show warnings and errors; else=also show information
 
     Returns:
-        string: output incl. \n
+        string: output incl \n
     """
     jsonOutput = outputStyle == 'json'
     if jsonOutput:

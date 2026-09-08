@@ -34,7 +34,7 @@ class WaitDialog(QDialog):
     self.mainL.addWidget(self.progressBar)
     self.mainL.addStretch(1)
 
-    # Completion action is shown only once the worker has finished.
+    # Completion action is shown only once the worker has finished
     self.closeButton = Button('Close', self, Command.CLOSE, self.mainL, style=ButtonStyle.HIGHLIGHTED)
     self.closeButton.hide()
 
@@ -65,7 +65,7 @@ class WaitDialog(QDialog):
 
 
   def execute(self, command:'Command') -> None:
-    """Handle completion actions from the dialog footer.
+    """Handle completion actions from the dialog footer
       Args:
         command (Command): command emitted by the associated control
     """
@@ -74,26 +74,26 @@ class WaitDialog(QDialog):
 
 
 class Command(Enum):
-  """Commands available in the wait dialog."""
+  """Commands available in the wait dialog"""
   CLOSE = auto()
 
 
 
 class Worker(QThread):
-  """A generic worker thread that runs a given function."""
+  """A generic worker thread that runs a given function"""
   progress = Signal(str, str)                                              # Signal to update the progress bar
 
   def __init__(self, taskFunction:Callable[[Callable[[str,str],None]],Any]):
-    """Initialize a worker thread with the task it should execute.
+    """Initialize a worker thread with the task it should execute
 
     Args:
-      taskFunction (Callable[[Callable[[str, str], None]], Any]): Callable receiving a progress callback and performing the background task.
+      taskFunction (Callable[[Callable[[str, str], None]], Any]): Callable receiving a progress callback and performing the background task
     """
     super().__init__()
     self.taskFunction = taskFunction                                                     # Function to execute
 
   def run(self) -> None:
-    """Runs the assigned function, providing a callback for progress updates."""
+    """Runs the assigned function, providing a callback for progress updates"""
     try:
       self.taskFunction(self.progress.emit)                                # Pass progress emitter as callback
     except Exception:

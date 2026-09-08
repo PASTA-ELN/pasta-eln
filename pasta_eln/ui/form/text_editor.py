@@ -1,4 +1,4 @@
-"""Plain text editor with line movement and inline spellchecking."""
+"""Plain text editor with line movement and inline spellchecking"""
 import re
 from PySide6.QtCore import Qt, QRegularExpression
 from PySide6.QtGui import (QAction, QContextMenuEvent, QKeyEvent, QSyntaxHighlighter, QTextCharFormat, QTextCursor,
@@ -8,12 +8,12 @@ from spellchecker import SpellChecker
 
 
 class _SpellHighlighter(QSyntaxHighlighter):
-  """Highlight misspelled words in an editor document."""
+  """Highlight misspelled words in an editor document"""
   def __init__(self, document:QTextDocument, checker:SpellChecker):
-    """Create a highlighter for a text document.
+    """Create a highlighter for a text document
     Args:
-      document (QTextDocument): Document whose text should be highlighted.
-      checker (SpellChecker): Spellchecker used to identify unknown words.
+      document (QTextDocument): Document whose text should be highlighted
+      checker (SpellChecker): Spellchecker used to identify unknown words
     """
     super().__init__(document)
     self.checker = checker
@@ -24,9 +24,9 @@ class _SpellHighlighter(QSyntaxHighlighter):
 
 
   def highlightBlock(self, text:str) -> None:
-    """Underline words absent from the configured dictionary.
+    """Underline words absent from the configured dictionary
     Args:
-      text (str): One block of document text supplied by Qt.
+      text (str): One block of document text supplied by Qt
     """
     match = self.wordPattern.match(text)
     while match.hasMatch():
@@ -37,12 +37,12 @@ class _SpellHighlighter(QSyntaxHighlighter):
 
 
 class TextEditor(QPlainTextEdit):
-  """Plain text editor with Alt-Up/Down line movement and spellchecking."""
+  """Plain text editor with Alt-Up/Down line movement and spellchecking"""
   def __init__(self, text:str = '', language:str = 'en'):
-    """Initialize the editor with text and a pyspellchecker language.
+    """Initialize the editor with text and a pyspellchecker language
     Args:
-      text (str): Initial plain text shown in the editor.
-      language (str): Language name and code, such as ``English (en)``.
+      text (str): Initial plain text shown in the editor
+      language (str): Language name and code, such as ``English (en)``
     """
     super().__init__(text)
     self.setTabStopDistance(20)
@@ -52,9 +52,9 @@ class TextEditor(QPlainTextEdit):
 
 
   def keyPressEvent(self, event:QKeyEvent) -> None:
-    """Move selected lines with Alt-Up/Down, otherwise use normal editing.
+    """Move selected lines with Alt-Up/Down, otherwise use normal editing
     Args:
-      event (QKeyEvent): Key event received from Qt.
+      event (QKeyEvent): Key event received from Qt
     """
     if event.key() == Qt.Key_Up and event.modifiers() == Qt.AltModifier:          # type: ignore[attr-defined]
       self.moveSelectedLines(True)
@@ -65,9 +65,9 @@ class TextEditor(QPlainTextEdit):
 
 
   def contextMenuEvent(self, event:QContextMenuEvent) -> None:
-    """Add spelling suggestions for the word under the context-menu cursor.
+    """Add spelling suggestions for the word under the context-menu cursor
     Args:
-      event (QContextMenuEvent): Context-menu event received from Qt.
+      event (QContextMenuEvent): Context-menu event received from Qt
     """
     menu = self.createStandardContextMenu()
     cursor = self.cursorForPosition(event.pos())
@@ -86,10 +86,10 @@ class TextEditor(QPlainTextEdit):
 
 
   def replaceWord(self, cursor:QTextCursor, replacement:str) -> None:
-    """Replace one misspelled word selected for the context menu.
+    """Replace one misspelled word selected for the context menu
     Args:
-      cursor (QTextCursor): Cursor selecting the misspelled word.
-      replacement (str): Corrected text to insert.
+      cursor (QTextCursor): Cursor selecting the misspelled word
+      replacement (str): Corrected text to insert
     """
     current = self.textCursor()
     current.setPosition(cursor.selectionStart())
@@ -99,7 +99,7 @@ class TextEditor(QPlainTextEdit):
 
 
   def moveSelectedLines(self, moveUp:bool) -> None:
-    """Move the selected lines up or down by one line.
+    """Move the selected lines up or down by one line
     Args:
       moveUp (bool): Whether to move the selected lines towards the document start. Else move down
     """

@@ -16,7 +16,7 @@ class CliMixin:
       printID (bool):  include docID in output string
 
     Returns:
-        string: output incl. \n
+        string: output incl \n
     """
     df = self.db.getView(f'viewDocType/{docType}')
     if not printID:
@@ -44,7 +44,7 @@ class CliMixin:
        addID (bool): add docID to output
 
     Returns:
-        string: output incl. \n
+        string: output incl \n
     """
     from anytree import PreOrderIter
     if len(self.hierStack) == 0:
@@ -60,7 +60,7 @@ class CliMixin:
     output list of sample qr-codes
 
     Returns:
-        string: output incl. \n
+        string: output incl \n
     """
     outString = f"{'QR': <36}|{'Name': <36}|{'ID': <36}\n"
     outString += '-'*110+'\n'

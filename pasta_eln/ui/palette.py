@@ -1,4 +1,4 @@
-"""Color palette allows easy colour access and manages the application theme."""
+"""Color palette allows easy colour access and manages the application theme"""
 
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, TypeAlias, TypedDict, cast
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class ColorModifiers(TypedDict, total=False):
-  """Transformations applied to a category's base colour."""
+  """Transformations applied to a category's base colour"""
   darken: float
   lighten: float
   transparent: float
@@ -24,11 +24,11 @@ ThemeColorValues: TypeAlias = dict[str, dict[str, str | ColorCategory]]
 ColorChannels: TypeAlias = tuple[int, int, int, int]
 
 def nameColor(tags: str | Iterable[str]) -> QColor | None:
-  """Return the first configured name color represented by ``tags``.
+  """Return the first configured name color represented by ``tags``
     Args:
       tags (str | Iterable[str]): tags used to select a color
     Returns:
-      QColor | None: Configured color for the first matching tag, if any.
+      QColor | None: Configured color for the first matching tag, if any
   """
   namedColors = {
     '#red': '#d32f2f',
@@ -74,10 +74,10 @@ class Palette:
 
   def setTheme(self, theme: str = '', saveTheme: bool = True) -> None:
     """
-    Update the theme of the whole App.
+    Update the theme of the whole App
     Args:
-      theme (str): 'automatic'/'dark'/'light' for the dark/light theme. Empty String ('') for update without changing the theme.
-      saveTheme (bool): Whether the theme should be changed permanently or just until theme is updated again.
+      theme (str): 'automatic'/'dark'/'light' for the dark/light theme. Empty String ('') for update without changing the theme
+      saveTheme (bool): Whether the theme should be changed permanently or just until theme is updated again
     """
     cornershape = 'sharp'                                                                   # rounded or sharp
     css = """
@@ -132,8 +132,8 @@ class Palette:
 
   def getThemeColor(self, category: str, subcategory: str) -> str:
     """
-    Returns the computed QColor from the PyQtDarkTheme dict.
-    Look at THEME_COLOR_VALUES in constants.py for all possible categories.
+    Returns the computed QColor from the PyQtDarkTheme dict
+    Look at THEME_COLOR_VALUES in constants.py for all possible categories
 
     Args:
         category (str): first level of dict, e.g., "background", "foreground", "primary"
@@ -160,28 +160,28 @@ class Palette:
 
     # Helper functions
     def _darken(color: QColor, amount: float) -> QColor:
-      """Reduce the value channel of a color by the requested fraction.
+      """Reduce the value channel of a color by the requested fraction
 
       Args:
-        color (QColor): Color whose brightness should be reduced.
-        amount (float): Fraction by which the HSV value channel is reduced.
+        color (QColor): Color whose brightness should be reduced
+        amount (float): Fraction by which the HSV value channel is reduced
 
       Returns:
-        QColor: Color with the adjusted value and original hue, saturation, and alpha.
+        QColor: Color with the adjusted value and original hue, saturation, and alpha
       """
       h, s, v, a = cast(ColorChannels, color.getHsv())
       v = max(0, int(v * (1 - amount)))
       return QColor.fromHsv(h, s, v, a)
 
     def _lighten(color: QColor, amount: float) -> QColor:
-      """Increase the value channel of a color by the requested fraction.
+      """Increase the value channel of a color by the requested fraction
 
       Args:
-        color (QColor): Color whose brightness should be increased.
-        amount (float): Fraction by which the HSV value channel is increased.
+        color (QColor): Color whose brightness should be increased
+        amount (float): Fraction by which the HSV value channel is increased
 
       Returns:
-        QColor: Color with the adjusted value and original hue, saturation, and alpha.
+        QColor: Color with the adjusted value and original hue, saturation, and alpha
       """
       h, s, v, a = cast(ColorChannels, color.getHsv())
       v = min(255, int(v * (1 + amount)))
@@ -220,11 +220,11 @@ class Palette:
 
 
 def rgba2argb(hexColor: str) -> str:
-  """Convert an RRGGBBAA color string to AARRGGBB.
+  """Convert an RRGGBBAA color string to AARRGGBB
     Args:
       hexColor (str): RRGGBBAA color string to convert
     Returns:
-      str: The color string reordered from RRGGBBAA to AARRGGBB.
+      str: The color string reordered from RRGGBBAA to AARRGGBB
   """
   hexColor = hexColor.lstrip('#')
   red, green, blue, alpha = hexColor[:2], hexColor[2:4], hexColor[4:6], hexColor[6:8]

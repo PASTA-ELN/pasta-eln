@@ -11,10 +11,10 @@ from pasta_eln.backend_worker.input_output import importELN
 
 
 def test_simple(qtbot, caplog):
-  """Verify imports against the upstream ELN-format examples.
+  """Verify imports against the upstream ELN-format examples
 
   This intentionally downloads current upstream fixtures so format compatibility
-  is checked against the consortium's published examples.
+  is checked against the consortium's published examples
   """
 
   # remove old data

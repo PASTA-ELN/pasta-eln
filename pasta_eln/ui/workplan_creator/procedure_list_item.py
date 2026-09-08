@@ -14,11 +14,11 @@ class ProcedureListItem(QFrame):
   clicked = Signal()
 
   def __init__(self, comm: Communicate, procedureID: str) -> None:
-    """Initialize a list item representing one procedure.
+    """Initialize a list item representing one procedure
 
     Args:
-      comm (Communicate): Shared communication object.
-      procedureID (str): Document ID of the represented procedure.
+      comm (Communicate): Shared communication object
+      procedureID (str): Document ID of the represented procedure
     """
     super().__init__()
     self.comm = comm

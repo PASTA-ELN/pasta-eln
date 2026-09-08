@@ -1,7 +1,7 @@
-"""Test a realistic, stateful workflow through the main GUI.
+"""Test a realistic, stateful workflow through the main GUI
 - Aim to increase the coverage
   - ignore external python code like markdown2html.py, etc
-- Every workflow step must be followed immediately by capture_step().
+- Every workflow step must be followed immediately by capture_step()
 """
 import io
 import logging
@@ -27,12 +27,12 @@ from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreato
 
 
 def wait_for_backend(qtbot, comm) -> None:
-  """Wait until the communication object has a usable backend."""
+  """Wait until the communication object has a usable backend"""
   qtbot.waitUntil(lambda: comm.backendThread.worker.backend.dbRaw is not None, timeout=30_000)
 
 
 def table_for(window: MainWindow, docType: str) -> TableView:
-  """Return the table widget for a document type from the main window."""
+  """Return the table widget for a document type from the main window"""
   for index in range(window.body.tabWidget.count()):
     widget = window.body.tabWidget.widget(index)
     if isinstance(widget, TableView) and widget.docType == docType:
@@ -41,18 +41,18 @@ def table_for(window: MainWindow, docType: str) -> TableView:
 
 
 def wait_for_table(qtbot, table: TableView, predicate) -> None:
-  """Wait until a table has received data satisfying ``predicate``."""
+  """Wait until a table has received data satisfying ``predicate``"""
   qtbot.waitUntil(lambda: not table.data.empty and predicate(table.data), timeout=30_000)
 
 
 def trigger_menu_action(menu, text: str) -> None:
-  """Trigger the first menu action containing the requested text."""
+  """Trigger the first menu action containing the requested text"""
   menuAction = next(action for action in menu.actions() if text in action.text())
   menuAction.trigger()
 
 
 def run_modal_step(qtbot, trigger, dialogClass: type[QDialog], frames: list[Image.Image], action=None) -> None:
-  """Open a modal dialog, exercise its supplied action, capture it, and cancel."""
+  """Open a modal dialog, exercise its supplied action, capture it, and cancel"""
   def interact() -> None:
     dialog = QApplication.activeModalWidget()
     if not isinstance(dialog, dialogClass):
@@ -69,7 +69,7 @@ def run_modal_step(qtbot, trigger, dialogClass: type[QDialog], frames: list[Imag
 
 
 def exercise_schema_editor(qtbot, dialog: SchemeEditor, frames: list[Image.Image]) -> None:
-  """Exercise reversible schema table edits before the dialog is cancelled."""
+  """Exercise reversible schema table edits before the dialog is cancelled"""
   qtbot.waitUntil(lambda: dialog.tabW.count() > 1, timeout=30_000)
   capture_step(dialog, frames)
   table = next(dialog.tabW.widget(index) for index in range(dialog.tabW.count() - 1)
@@ -77,25 +77,25 @@ def exercise_schema_editor(qtbot, dialog: SchemeEditor, frames: list[Image.Image
   editableRows = [row for row in range(table.rowCount() - 1)
                   if table.item(row, 0) is not None and table.item(row, 0).text() not in {'name', 'tags', 'comment'}]
   row = editableRows[0]
-  # Edit a field description in the schema table.
+  # Edit a field description in the schema table
   table.item(row, 1).setText('Temporary coverage description')
   capture_step(dialog, frames)
-  # Toggle the field's mandatory radio-button delegate.
+  # Toggle the field's mandatory radio-button delegate
   qtbot.mouseClick(table.viewport(), Qt.LeftButton,
                    pos=table.visualRect(table.model().index(row, 3)).center())
   capture_step(dialog, frames)
-  # Move the editable field upward with the arrow delegate.
+  # Move the editable field upward with the arrow delegate
   qtbot.mouseClick(table.viewport(), Qt.LeftButton,
                    pos=table.visualRect(table.model().index(row, 6)).center())
   capture_step(dialog, frames)
-  # Delete the temporary field with the trash delegate.
+  # Delete the temporary field with the trash delegate
   qtbot.mouseClick(table.viewport(), Qt.LeftButton,
                    pos=table.visualRect(table.model().index(row, 7)).center())
   capture_step(dialog, frames)
 
 
 def click_form_trigger_and_save(qtbot, trigger, formName: str, comment: str) -> None:
-  """Click a real GUI trigger, fill the modal form, and click Save."""
+  """Click a real GUI trigger, fill the modal form, and click Save"""
   def fill() -> None:
     dialog = QApplication.activeModalWidget()
     if (not isinstance(dialog, Form) or not dialog.allUserElements
@@ -114,7 +114,7 @@ def click_form_trigger_and_save(qtbot, trigger, formName: str, comment: str) -> 
 
 
 def capture_step(window: QWidget, frames: list[Image.Image]) -> None:
-  """Capture a workflow step in memory for the final GIF."""
+  """Capture a workflow step in memory for the final GIF"""
   buffer = QBuffer()
   buffer.open(QIODevice.OpenModeFlag.WriteOnly)
   window.grab().save(buffer, 'PNG')
@@ -134,8 +134,8 @@ def capture_step(window: QWidget, frames: list[Image.Image]) -> None:
 
 
 def test_core_gui_workflow(qtbot, caplog):
-  """Create and edit an entry through the composed application GUI."""
-  # Reset the disposable research project group to the standard example data.
+  """Create and edit an entry through the composed application GUI"""
+  # Reset the disposable research project group to the standard example data
   exampleData(True, None, 'research', '')
   comm = None
   window = None
@@ -143,10 +143,10 @@ def test_core_gui_workflow(qtbot, caplog):
   try:
     from pasta_eln.ui.gui_communicate import Communicate
 
-    # Start communication with the backend and wait for it to initialize.
+    # Start communication with the backend and wait for it to initialize
     comm = Communicate('research')
     wait_for_backend(qtbot, comm)
-    # Open the main window and wait until the project sidebar is populated.
+    # Open the main window and wait until the project sidebar is populated
     window = MainWindow(comm)
     window.setMinimumSize(1600, 1200)
     window.show()
@@ -154,7 +154,7 @@ def test_core_gui_workflow(qtbot, caplog):
     qtbot.waitUntil(lambda: window.sidebar.projectListL.count() > 0, timeout=30_000)
     capture_step(window, frames)
 
-    # Select the example project through its real sidebar card.
+    # Select the example project through its real sidebar card
     projectCard = window.sidebar.projectListL.itemAt(0).widget()
     assert isinstance(projectCard, ProjectCard)
     qtbot.mouseClick(projectCard, Qt.LeftButton)
@@ -162,7 +162,7 @@ def test_core_gui_workflow(qtbot, caplog):
     project = window.body.tabWidget.widget(0)
     assert isinstance(project, Project)
     qtbot.waitUntil(lambda: project.docProj.get('name') == 'PASTAs Example Project', timeout=30_000)
-    # Toggle project details and the full tree view through the visibility menu.
+    # Toggle project details and the full tree view through the visibility menu
     project.btnVisibility.click()
     trigger_menu_action(project.btnVisibility.menu(), 'project details')
     capture_step(window, frames)
@@ -175,12 +175,12 @@ def test_core_gui_workflow(qtbot, caplog):
     project.btnVisibility.click()
     trigger_menu_action(project.btnVisibility.menu(), 'view')
     capture_step(window, frames)
-    # Toggle hidden projects and restore the normal sidebar state.
+    # Toggle hidden projects and restore the normal sidebar state
     qtbot.mouseClick(window.sidebar.showHiddenBtn, Qt.LeftButton)
     capture_step(window, frames)
     qtbot.mouseClick(window.sidebar.showHiddenBtn, Qt.LeftButton)
     capture_step(window, frames)
-    # Visit the Tags list and return to the selected project.
+    # Visit the Tags list and return to the selected project
     trigger_menu_action(window.viewMenu, 'Tags')
     capture_step(window, frames)
     qtbot.wait(500)
@@ -190,14 +190,14 @@ def test_core_gui_workflow(qtbot, caplog):
     qtbot.waitUntil(lambda: project.docProj.get('name') == 'PASTAs Example Project', timeout=30_000)
     capture_step(window, frames)
 
-    # Open the measurement table and wait for its initial data.
+    # Open the measurement table and wait for its initial data
     table = table_for(window, 'measurement')
     comm.changeTable.emit('measurement', comm.projectID, '')
     qtbot.waitUntil(lambda: not table.data.empty, timeout=30_000)
     capture_step(window, frames)
-    # Create a new measurement through the table's New Entry button.
+    # Create a new measurement through the table's New Entry button
     originalNames = set(table.data['name'])
-    # Add and remove a table filter without changing the displayed data.
+    # Add and remove a table filter without changing the displayed data
     table.viewButton.click()
     trigger_menu_action(table.viewMenu, 'Add filter')
     qtbot.waitUntil(lambda: len(table.filterRows) == 1, timeout=30_000)
@@ -205,7 +205,7 @@ def test_core_gui_workflow(qtbot, caplog):
     table.filterRows[0].removeButton.click()
     qtbot.waitUntil(lambda: not table.filterRows, timeout=30_000)
     capture_step(window, frames)
-    # Switch to gallery view and return to the table view.
+    # Switch to gallery view and return to the table view
     table.viewButton.click()
     trigger_menu_action(table.viewMenu, 'Gallery view')
     qtbot.waitUntil(table.gallery.isVisible, timeout=30_000)
@@ -217,12 +217,12 @@ def test_core_gui_workflow(qtbot, caplog):
     click_form_trigger_and_save(qtbot, table.newEntryButton, 'GUI workflow entry',
                                 'Created by the core GUI workflow test.')
     capture_step(window, frames)
-    # Refresh the table after the worker commits the new document.
+    # Refresh the table after the worker commits the new document
     comm.changeTable.emit('measurement', comm.projectID, '')
     wait_for_table(qtbot, table, lambda data: 'GUI workflow entry' in set(data['name']))
     capture_step(window, frames)
 
-    # Select the created row to display it in the Details pane.
+    # Select the created row to display it in the Details pane
     createdID = table.data.loc[table.data['name'] == 'GUI workflow entry', 'id'].iloc[0]
     modelRow = table.table.model().documentIds.index(createdID)
     index = table.table.model().index(modelRow, 0)
@@ -231,7 +231,7 @@ def test_core_gui_workflow(qtbot, caplog):
     qtbot.waitUntil(lambda: details.data.get('name') == 'GUI workflow entry', timeout=30_000)
     assert details.isVisible()
     capture_step(window, frames)
-    # Close and reopen the details pane through its Actions menu.
+    # Close and reopen the details pane through its Actions menu
     details.actionsButton.click()
     trigger_menu_action(details.actionsMenu, 'Close details')
     qtbot.waitUntil(lambda: not details.isVisible(), timeout=30_000)
@@ -242,31 +242,31 @@ def test_core_gui_workflow(qtbot, caplog):
     qtbot.waitUntil(lambda: details.data.get('name') == 'GUI workflow entry', timeout=30_000)
     capture_step(window, frames)
 
-    # Edit the selected document through the Details pane's Edit button.
+    # Edit the selected document through the Details pane's Edit button
     click_form_trigger_and_save(qtbot, details.editButton, 'GUI workflow entry edited',
                                 'Edited through the Details pane.')
     capture_step(window, frames)
-    # Refresh after the worker commits the edited document.
+    # Refresh after the worker commits the edited document
     comm.changeTable.emit('measurement', comm.projectID, '')
     wait_for_table(qtbot, table, lambda data: 'GUI workflow entry edited' in set(data['name']))
     capture_step(window, frames)
 
-    # Verify the original data remains and the edited entry is persisted.
+    # Verify the original data remains and the edited entry is persisted
     assert originalNames <= set(table.data['name'])
     assert 'GUI workflow entry edited' in set(table.data['name'])
     assert 'GUI workflow entry' not in set(table.data['name'])
 
-    # Open the item type editor and cancel without changing the example schema.
+    # Open the item type editor and cancel without changing the example schema
     run_modal_step(qtbot, next(action for action in window.findChildren(QAction)
                                if 'Item type editor' in action.text()),
                    SchemeEditor, frames, lambda dialog: exercise_schema_editor(qtbot, dialog, frames))
 
-    # Open the definitions editor and cancel without changing definitions.
+    # Open the definitions editor and cancel without changing definitions
     run_modal_step(qtbot, next(action for action in window.findChildren(QAction)
                                if 'Definitions editor' in action.text()),
                    DefinitionsEditor, frames)
 
-    # Open every configuration tab and cancel without persisting settings.
+    # Open every configuration tab and cancel without persisting settings
     configAction = next(action for action in window.findChildren(QAction)
                         if 'Configuration' in action.text())
     def visitConfigurationTabs(dialog: Configuration) -> None:
@@ -276,7 +276,7 @@ def test_core_gui_workflow(qtbot, caplog):
         capture_step(dialog, frames)
     run_modal_step(qtbot, configAction, Configuration, frames, visitConfigurationTabs)
 
-    # Open the workplan editor, select a procedure, and add it to the workplan.
+    # Open the workplan editor, select a procedure, and add it to the workplan
     workplanDialog = WorkplanCreatorDialog(comm)
     qtbot.addWidget(workplanDialog)
     workplanDialog.show()
@@ -300,7 +300,7 @@ def test_core_gui_workflow(qtbot, caplog):
       logging.error('GUI workflow failed; main-window screenshot saved to %s', failurePath)
     raise
   finally:
-    # Save the captured workflow steps as one inspectable repository artifact.
+    # Save the captured workflow steps as one inspectable repository artifact
     if frames:
       animationPath = Path('artifacts') / 'pasta-eln-test-50-workflow.gif'
       animationPath.parent.mkdir(exist_ok=True)

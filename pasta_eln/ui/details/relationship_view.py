@@ -1,4 +1,4 @@
-"""Qt relationship graph used by the Details pane."""
+"""Qt relationship graph used by the Details pane"""
 from __future__ import annotations
 
 import math
@@ -14,10 +14,10 @@ from pasta_eln.ui.gui_communicate import Communicate
 
 
 class RelationshipView(QWidget):
-  """Interactive, bounded relationship view for a selected document."""
+  """Interactive, bounded relationship view for a selected document"""
 
   def __init__(self, comm: Communicate, parent: QWidget | None = None) -> None:
-    """Create the relationship graph view.
+    """Create the relationship graph view
     Args:
       comm (Communicate): shared communication object
       parent (QWidget | None): parent widget
@@ -61,7 +61,7 @@ class RelationshipView(QWidget):
     self.showLinks.toggled.connect(self.paint)
 
   def setRootID(self, rootID: str) -> None:
-    """Set the document around which the relationship graph is rendered.
+    """Set the document around which the relationship graph is rendered
       Args:
         rootID (str): root document identifier
     """
@@ -70,7 +70,7 @@ class RelationshipView(QWidget):
 
   @Slot(dict)
   def onGetRelationships(self, graph: dict[str, Any]) -> None:
-    """Store backend relationship data and render it for the selected document.
+    """Store backend relationship data and render it for the selected document
       Args:
         graph (dict[str, Any]): relationship graph to render
     """
@@ -79,7 +79,7 @@ class RelationshipView(QWidget):
       self.paint()
 
   def centreOnNode(self, docID: str) -> None:
-    """Centre the view on a visible node.
+    """Centre the view on a visible node
       Args:
         docID (str): document identifier
     """
@@ -89,7 +89,7 @@ class RelationshipView(QWidget):
         return
 
   def paint(self) -> None:
-    """Render the selected neighbourhood using a compact radial layout."""
+    """Render the selected neighbourhood using a compact radial layout"""
     self.scene.clear()
     if not self.rootID:
       return

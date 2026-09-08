@@ -13,11 +13,11 @@ from .constants import (configurationGUI, defaultConfiguration, defaultScanExclu
 
 
 def getConfiguration(defaultProjectGroup: str = '') -> tuple[dict[str, Any], str]:
-  """Load configuration, apply defaults, and select the active project group.
+  """Load configuration, apply defaults, and select the active project group
     Args:
       defaultProjectGroup (str): project group selected when none is configured
     Returns:
-      tuple[dict[str, Any], str]: The configuration dictionary and selected project group.
+      tuple[dict[str, Any], str]: The configuration dictionary and selected project group
   """
   configuration = copy.deepcopy(defaultConfiguration)
   try:
@@ -43,11 +43,11 @@ def getConfiguration(defaultProjectGroup: str = '') -> tuple[dict[str, Any], str
 
 
 def getRORIDLabel(idString: str) -> str:
-  """Get an organization label from a ROR ID.
+  """Get an organization label from a ROR ID
     Args:
       idString (str): ROR or ORCID identifier to resolve
     Returns:
-      str: Organization label resolved from the ROR identifier.
+      str: Organization label resolved from the ROR identifier
   """
   import requests
   reply = requests.get(f'https://api.ror.org/organizations/{idString}', timeout=10)
@@ -58,11 +58,11 @@ def getRORIDLabel(idString: str) -> str:
 
 
 def getORCIDName(idString: str) -> tuple[str, str]:
-  """Get first and family names from an ORCID.
+  """Get first and family names from an ORCID
     Args:
       idString (str): ROR or ORCID identifier to resolve
     Returns:
-      tuple[str, str]: Given and family names resolved from the ORCID identifier.
+      tuple[str, str]: Given and family names resolved from the ORCID identifier
   """
   import requests
   reply = requests.get(f'https://pub.orcid.org/v3.0/{idString}', timeout=10)
@@ -76,7 +76,7 @@ CONFIGURATION_VERSION = 4
 NONCE_SIZE = 12
 
 def _masterKey() -> bytes:
-  """Return the master key, creating and disclosing it once when absent.
+  """Return the master key, creating and disclosing it once when absent
   Returns:
     bytes: master key
   """
@@ -104,13 +104,13 @@ def _masterKey() -> bytes:
 
 
 def _secretPaths(configuration:dict[str, Any]) -> list[tuple[tuple[str, ...], str]]:
-  """Return all configured API-key fields and their stable AAD paths.
+  """Return all configured API-key fields and their stable AAD paths
   Args:
     configuration (dict[str, Any]): configuration dictionary
   Returns:
     list[tuple[tuple[str, ...], str]]: list of secret paths and their AAD paths
   """
-  # This Unicode representation is cryptographic AAD in configuration version 4; changing it would break decryption.
+  # This Unicode representation is cryptographic AAD in configuration version 4; changing it would break decryption
   paths:list[tuple[tuple[str, ...], str]] = []
   for groupName, group in configuration.get('projectGroups', {}).items():
     remote = group.get('remote', {})
@@ -130,7 +130,7 @@ def _secretPaths(configuration:dict[str, Any]) -> list[tuple[tuple[str, ...], st
 
 
 def saveConfiguration(configuration:dict[str, Any], fileName:Path|None=None) -> None:
-  """Encrypt API keys and save the version-4 configuration.
+  """Encrypt API keys and save the version-4 configuration
   Args:
     configuration (dict[str, Any]): configuration dictionary
     fileName (Path | None): configuration file, or the default home-directory file
@@ -154,7 +154,7 @@ def saveConfiguration(configuration:dict[str, Any], fileName:Path|None=None) -> 
 
 
 def loadConfiguration(fileName:Path|None=None) -> dict[str, Any]:
-  """Load configuration and migrate version 3 plaintext API keys.
+  """Load configuration and migrate version 3 plaintext API keys
   Args:
     fileName (Path | None): configuration file to load
   Returns:

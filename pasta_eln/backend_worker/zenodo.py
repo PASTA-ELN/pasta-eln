@@ -30,7 +30,7 @@ class ZenodoClient(RepositoryClient):
       A tuple of (success, a message) is returned
 
     Returns:
-      tuple[bool, str]: Connection-test success and its diagnostic message.
+      tuple[bool, str]: Connection-test success and its diagnostic message
     """
     return True, 'VOID TEST'
 

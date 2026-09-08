@@ -1,4 +1,4 @@
-"""Document list views and their table-specific commands."""
+"""Document list views and their table-specific commands"""
 from __future__ import annotations
 import csv
 import logging
@@ -26,13 +26,13 @@ from pasta_eln.ui.palette import nameColor
 
 
 class TableView(Widget):
-  """Displays a document list with selection, view, and export commands."""
+  """Displays a document list with selection, view, and export commands"""
 
   def __init__(self, comm: Communicate, docType: str):
     """ Initializes TableView
     Args:
-      comm (Communicate): Shared communication object.
-      docType (str): The type of documents to display.
+      comm (Communicate): Shared communication object
+      docType (str): The type of documents to display
     """
     super().__init__()
     self.comm = comm
@@ -89,14 +89,14 @@ class TableView(Widget):
     self.changeColumnsAction = action('Select list columns', self, Command.CHANGE_COLUMNS, self.moreMenu)
     self.paintTableAddOnsMenu()
 
-    # Filter rows live directly above the document table.
+    # Filter rows live directly above the document table
     self.filterW = QWidget()
     self.filterL = QVBoxLayout(self.filterW)
     self.filterL.setContentsMargins(SPACE.M, 0, SPACE.M, 0)
     self.filterL.setSpacing(SPACE.S)
     self.filterW.hide()
 
-    # Table and gallery occupy the same content area.
+    # Table and gallery occupy the same content area
     self.table = QTableView()
     self.table.clicked.connect(self.onCellClicked)
     self.table.doubleClicked.connect(self.onCellDoubleClicked)
@@ -141,10 +141,10 @@ class TableView(Widget):
 
   @Slot(str, str, str)
   def onTableChange(self, docType: str, projID: str, docID: str) -> None:
-    """React to table change requests.
+    """React to table change requests
     Args:
-      docType (str): The type of documents to display.
-      projID (str): The ID of the project.
+      docType (str): The type of documents to display
+      projID (str): The ID of the project
       docID (str): ID of the row that is being highlighted
     """
     if docType != self.docType:
@@ -165,10 +165,10 @@ class TableView(Widget):
 
   @Slot(pd.DataFrame, str)
   def onGetData(self, data: pd.DataFrame, docType: str) -> None:
-    """React to table data requests.
+    """React to table data requests
     Args:
-      data (pd.DataFrame): The table data.
-      docType (str): The type of documents.
+      data (pd.DataFrame): The table data
+      docType (str): The type of documents
     """
     if docType == self.docType:
       self.data = data
@@ -178,7 +178,7 @@ class TableView(Widget):
 
 
   def paint(self) -> None:
-    """Rebuild the list after data, filtering, or visibility changes."""
+    """Rebuild the list after data, filtering, or visibility changes"""
     header = self.table.horizontalHeader()
     sortSection = header.sortIndicatorSection()
     sortOrder = header.sortIndicatorOrder()
@@ -222,7 +222,7 @@ class TableView(Widget):
 
 
   def paintTableAddOnsMenu(self) -> None:
-    """Populate the table add-on submenu for the active project group."""
+    """Populate the table add-on submenu for the active project group"""
     addOns = self.comm.configuration['projectGroups'][self.comm.projectGroup].get('addOns', {}).get('table', {})
     for label, description in sorted(addOns.items(), key=lambda item: item[1].casefold()):
       action(description, self, [Command.ADD_ON, label], self.tableAddOnMenu)
@@ -230,7 +230,7 @@ class TableView(Widget):
 
 
   def paintGallery(self, documentIds: list[str]) -> None:
-    """Show image cards and request their previews from the backend.
+    """Show image cards and request their previews from the backend
       Args:
         documentIds (list[str]): document identifiers to display
     """
@@ -255,7 +255,7 @@ class TableView(Widget):
   def execute(self, command: Command | list[object]) -> None:
     """Handle commands from the table toolbar and its menus
     Args:
-      command (Command | list[object]): The command to execute.
+      command (Command | list[object]): The command to execute
     """
     commandType = command if isinstance(command, Command) else command[0]
     payload = [] if isinstance(command, Command) else command[1:]
@@ -488,11 +488,11 @@ class TableView(Widget):
 
 
   def filteredTableData(self) -> tuple[pd.DataFrame, list[str]]:
-    """Return formatted rows matching all active filters, plus their document IDs.
+    """Return formatted rows matching all active filters, plus their document IDs
 
     Returns:
-      pd.DataFrame: The filtered table data.
-      list[str]: The document IDs corresponding to the filtered rows.
+      pd.DataFrame: The filtered table data
+      list[str]: The document IDs corresponding to the filtered rows
     """
     if self.data.empty:
       return pd.DataFrame(), []
@@ -516,9 +516,9 @@ class TableView(Widget):
 
 
   def selectedDocumentIds(self) -> list[str]:
-    """Return checked rows, or gallery selections while gallery mode is active.
+    """Return checked rows, or gallery selections while gallery mode is active
     Returns:
-      list[str]: The document IDs corresponding to the selected rows.
+      list[str]: The document IDs corresponding to the selected rows
     """
     if self.gallery.isVisible():
       return [str(item.data(Qt.ItemDataRole.UserRole)) for item in self.gallery.selectedItems()]
@@ -529,9 +529,9 @@ class TableView(Widget):
 
 
   def modelDocumentIds(self) -> list[str]:
-    """Return all document IDs in the table model.
+    """Return all document IDs in the table model
     Returns:
-      list[str]: The document IDs corresponding to the table model.
+      list[str]: The document IDs corresponding to the table model
     """
     model = self.table.model()
     if not isinstance(model, PandasTableModel):
@@ -558,7 +558,7 @@ class TableView(Widget):
 
 
 def normalizeColumns(view: QTableView) -> None:
-  """Scale content-sized columns to the available viewport width.
+  """Scale content-sized columns to the available viewport width
 
   Args:
     view (QTableView): The table view to normalize columns for
@@ -576,7 +576,7 @@ def normalizeColumns(view: QTableView) -> None:
 
 
 class Command(Enum):
-  """Commands exposed by the document list toolbar."""
+  """Commands exposed by the document list toolbar"""
   NEW_ENTRY = 1
   TOGGLE_SELECTION = 2
   GROUP_EDIT = 3

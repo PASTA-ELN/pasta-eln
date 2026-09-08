@@ -45,7 +45,7 @@ class ProjectGroup(QDialog):
     mainL = QVBoxLayout(self)
     Label('Project group editor', 'h1', mainL)
 
-    # Keep the QR preview independent from the form's grid row heights.
+    # Keep the QR preview independent from the form's grid row heights
     contentL = QHBoxLayout()
     contentL.setContentsMargins(0, 0, 0, 0)
     contentL.setSpacing(SPACE.L)

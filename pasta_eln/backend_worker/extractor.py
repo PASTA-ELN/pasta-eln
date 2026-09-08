@@ -1,4 +1,4 @@
-"""Extractor discovery, execution, timeout handling, and result merging."""
+"""Extractor discovery, execution, timeout handling, and result merging"""
 import json
 import logging
 import multiprocessing
@@ -31,36 +31,36 @@ TRUNC_WARNING = 'Metadata truncated to configured maximum size.'
 
 
 class ExtractorManager:
-  """Manage extractor jobs independently from database workflows."""
+  """Manage extractor jobs independently from database workflows"""
   def __init__(self, basePath:Path, addOnPath:Path, timeout:str, metadataLimit:str,
                dataHierarchy:Callable[[str,str],Any]) -> None:
-    """Create an extractor manager for one backend/project-group context.
+    """Create an extractor manager for one backend/project-group context
 
     Args:
-      basePath (Path): Root path of the local project data tree.
-      addOnPath (Path): Directory containing extractor_*.py add-ons.
-      timeout (str): Maximum extractor runtime, e.g. "10 sec" or "1 min".
-      metadataLimit (str): Maximum serialized metadata length, e.g. "80 kB".
-      dataHierarchy (Callable): Backend callback for looking up valid document types.
+      basePath (Path): Root path of the local project data tree
+      addOnPath (Path): Directory containing extractor_*.py add-ons
+      timeout (str): Maximum extractor runtime, e.g. "10 sec" or "1 min"
+      metadataLimit (str): Maximum serialized metadata length, e.g. "80 kB"
+      dataHierarchy (Callable): Backend callback for looking up valid document types
     """
     self.basePath = basePath
     self.addOnPath = addOnPath
     self.timeoutSeconds = int(timeout[:-3]) if timeout.endswith('sec') else int(timeout[:-3])*60
-    # Keep the historical user-facing kB unit; each kB means 1024 serialized JSON characters.
+    # Keep the historical user-facing kB unit; each kB means 1024 serialized JSON characters
     self.metadataLimit = int(metadataLimit[:-3]) * 1024
     self.dataHierarchy = dataHierarchy
 
 
   def prepareJob(self, filePath:Path, docType:None | list[str]=None, jobID:Any=None) -> dict[str,Any] | None:
-    """Resolve paths/downloads and build one extractor job.
+    """Resolve paths/downloads and build one extractor job
 
     Args:
-      filePath (Path): Local or remote file path to extract.
-      docType (None, list): Current document type used as extractor style input.
-      jobID (Any): Identifier used to map returned results back to the job list.
+      filePath (Path): Local or remote file path to extract
+      docType (None, list): Current document type used as extractor style input
+      jobID (Any): Identifier used to map returned results back to the job list
 
     Returns:
-      dict, None: Extractor job dictionary, or None if no matching extractor exists or download failed.
+      dict, None: Extractor job dictionary, or None if no matching extractor exists or download failed
     """
     docType = [''] if docType is None else docType
     docName = filePath.relative_to(self.basePath).as_posix() if filePath.is_absolute() else filePath.as_posix()
@@ -94,14 +94,14 @@ class ExtractorManager:
 
 
   def applyResults(self, results:list[dict[str,Any]], jobs:list[dict[str,Any]]) -> list[tuple[dict[str,Any],dict[str,Any]]]:
-    """Merge extractor results into their job documents.
+    """Merge extractor results into their job documents
 
     Args:
-      results (list): Results returned by runJobs.
-      jobs (list): Original extractor jobs, indexed by each result id.
+      results (list): Results returned by runJobs
+      jobs (list): Original extractor jobs, indexed by each result id
 
     Returns:
-      list: Tuples of job and mutated document for each applied result.
+      list: Tuples of job and mutated document for each applied result
     """
     applied = []
     for result in results:
@@ -172,13 +172,13 @@ class ExtractorManager:
 
 
   def runJobs(self, jobs:list[dict[str,Any]]) -> list[dict[str,Any]]:
-    """Run extractor jobs in parallel child processes.
+    """Run extractor jobs in parallel child processes
 
     Args:
-      jobs (list): Prepared extractor jobs from prepareJob.
+      jobs (list): Prepared extractor jobs from prepareJob
 
     Returns:
-      list: Result dictionaries containing status and extractor metadata.
+      list: Result dictionaries containing status and extractor metadata
     """
     if not jobs:
       return []
@@ -188,10 +188,10 @@ class ExtractorManager:
     results:list[dict[str,Any]] = []
 
     def startJob(job:dict[str,Any]) -> None:
-      """Start one extractor child process and add it to the active job list.
+      """Start one extractor child process and add it to the active job list
 
       Args:
-        job (dict): Prepared extractor job to start.
+        job (dict): Prepared extractor job to start
       """
       parentConnection, childConnection = multiprocessing.Pipe(duplex=False)
       process = multiprocessing.Process(target=runExtractorInSubprocess, args=(job, childConnection))
@@ -240,12 +240,12 @@ class ExtractorManager:
 
 
   def use(self, filePath:Path, dataHash:str, doc:dict[str,Any]) -> None:
-    """Run the matching extractor for one document and merge its result.
+    """Run the matching extractor for one document and merge its result
 
     Args:
-      filePath (Path): Local or remote file path to extract.
-      dataHash (str): SHA-256 of the data file to store in the document.
-      doc (dict): Document to mutate with extractor output.
+      filePath (Path): Local or remote file path to extract
+      dataHash (str): SHA-256 of the data file to store in the document
+      doc (dict): Document to mutate with extractor output
     """
     job = self.prepareJob(filePath, doc['type'], 0)
     if job is not None:
@@ -266,7 +266,7 @@ class ExtractorManager:
 
   def test(self, filePath:Path |str, extractorPath:Path | None=None, style:dict[str,Any]={'main':''},
            outputStyle:str='text', saveFig:str='') -> tuple[str, str]:
-    """Test one extractor and return a human-readable report.
+    """Test one extractor and return a human-readable report
 
     Args:
       filePath (Path, str): path to the file to be tested
@@ -316,7 +316,7 @@ class ExtractorManager:
 
           # assemble callback function with known content
           def saveExtractorFigure(image:Image.Image | None=None) -> None:
-            """Save an extractor figure with the current export provenance.
+            """Save an extractor figure with the current export provenance
             Args:
               image (Image.Image | None): image to save or process
             """
@@ -422,7 +422,7 @@ class ExtractorManager:
 
 # OTHER FUNCTIONS
 def saveFigure(path:Path | None, dataHash:str, extractorHash:str, image:Any=None) -> None:
-  """Save an extractor figure with PASTA-ELN provenance.
+  """Save an extractor figure with PASTA-ELN provenance
     Args:
       path (Path | None): file path to process
       dataHash (str): SHA-256 hash of the extracted data
@@ -463,11 +463,11 @@ def saveFigure(path:Path | None, dataHash:str, extractorHash:str, image:Any=None
 
 
 def isPastaExport(path:Path) -> bool:
-  """Return whether a file is a legacy-named or metadata-marked PASTA export.
+  """Return whether a file is a legacy-named or metadata-marked PASTA export
     Args:
       path (Path): file path to process
     Returns:
-      bool: Whether the file is a PASTA-ELN export.
+      bool: Whether the file is a PASTA-ELN export
   """
   if '_PastaExport' in path.name:
     return True
@@ -488,18 +488,18 @@ def isPastaExport(path:Path) -> bool:
 
 
 def runExtractorInSubprocess(job:dict[str,Any], connection:Any) -> None:
-  """Actually run one extractor in a child process and send the result through a pipe.
+  """Actually run one extractor in a child process and send the result through a pipe
 
   Args:
-    job (dict): Extractor job with add-on path, extractor file, data file, and style.
-    connection (Any): Multiprocessing pipe connection used to send the result to the parent.
+    job (dict): Extractor job with add-on path, extractor file, data file, and style
+    connection (Any): Multiprocessing pipe connection used to send the result to the parent
   """
   try:
     plt.clf()
     module = loadNamedModule(job['addOnPath'], job['pyFile'][:-3])
     if getattr(module, 'PASTA_ELN_EXTRACTOR_API', None) == 2:
       def saveExtractorFigure(image:Image.Image | None=None) -> None:
-        """Save an extractor figure with the subprocess job provenance.
+        """Save an extractor figure with the subprocess job provenance
         Args:
           image (Image.Image | None): image to save or process
         """
@@ -519,11 +519,11 @@ def runExtractorInSubprocess(job:dict[str,Any], connection:Any) -> None:
 
 # HASH FUNCTIONS
 def sha256File(path:Path) -> str:
-  """Return the SHA-256 digest of raw bytes in a reachable file.
+  """Return the SHA-256 digest of raw bytes in a reachable file
     Args:
       path (Path): file path to process
     Returns:
-      str: SHA-256 digest of the file contents.
+      str: SHA-256 digest of the file contents
   """
   if str(path).startswith('http'):
     req = request.Request(path.as_posix().replace(':/','://'), headers={'User-Agent': 'Mozilla/5.0'})
@@ -534,11 +534,11 @@ def sha256File(path:Path) -> str:
 
 
 def _sha256Stream(stream:BinaryIO) -> str:
-  """Calculate a SHA-256 digest without loading the complete file.
+  """Calculate a SHA-256 digest without loading the complete file
     Args:
       stream (BinaryIO): binary stream to hash
     Returns:
-      str: SHA-256 digest of the stream contents.
+      str: SHA-256 digest of the stream contents
   """
   hasher = sha256()
   while chunk := stream.read(65536):

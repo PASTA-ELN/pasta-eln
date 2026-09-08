@@ -1,4 +1,4 @@
-"""Item inside the list of the rightMainWidget."""
+"""Item inside the list of the rightMainWidget"""
 from typing import Protocol
 import qtawesome
 from PySide6.QtCore import QMimeData, QPoint, Qt, Signal
@@ -10,10 +10,10 @@ from pasta_eln.ui.gui_style import Label
 
 
 class WorkplanContainer(Protocol):
-  """Operations a list item needs from its containing workplan widget."""
+  """Operations a list item needs from its containing workplan widget"""
 
   def addProcedure(self, procedureID: str, sample: str, parameters: dict[str, str], at: int | None = None) -> None:
-    """Add a procedure to the workplan at an optional position.
+    """Add a procedure to the workplan at an optional position
       Args:
         procedureID (str): procedure document identifier
         sample (str): selected sample value
@@ -24,21 +24,21 @@ class WorkplanContainer(Protocol):
 
 class WorkplanListItem(QFrame):
   """
-  Item inside the list of the rightMainWidget.
+  Item inside the list of the rightMainWidget
   """
   clicked = Signal()
   dragStartPos = QPoint()
 
   def __init__(self, comm: Communicate, procedureID: str, sample: str, parameters: dict[str, str],
                rightMainWidget: WorkplanContainer) -> None:
-    """Initialize a workplan list item with its procedure and parameters.
+    """Initialize a workplan list item with its procedure and parameters
 
     Args:
-      comm (Communicate): Shared communication object.
-      procedureID (str): Document ID of the selected procedure.
-      sample (str): Sample name associated with this procedure step.
-      parameters (dict[str, str]): Parameter values entered for the procedure step.
-      rightMainWidget (WorkplanContainer): Preview container updated when this item changes.
+      comm (Communicate): Shared communication object
+      procedureID (str): Document ID of the selected procedure
+      sample (str): Sample name associated with this procedure step
+      parameters (dict[str, str]): Parameter values entered for the procedure step
+      rightMainWidget (WorkplanContainer): Preview container updated when this item changes
     """
     super().__init__()
     self.comm = comm
@@ -136,7 +136,7 @@ class WorkplanListItem(QFrame):
 
   def mousePressEvent(self, event: QMouseEvent) -> None:
     """
-    Override Event to simulate click and Position of potential drag start.
+    Override Event to simulate click and Position of potential drag start
     Args:
       event (QMouseEvent): Qt event being handled
     """
@@ -158,7 +158,7 @@ class WorkplanListItem(QFrame):
 
   def updateSample(self, text: str) -> None:
     """
-    Setter for the Sample. updates sampleLabel, too.
+    Setter for the Sample. updates sampleLabel, too
     Args:
       text (str): text to process
     """
@@ -182,7 +182,7 @@ class WorkplanListItem(QFrame):
 
   def _onDeleteClicked(self) -> None:
     """
-    Deletes this widget.
+    Deletes this widget
     """
     self.hide()
     self.deleteLater()

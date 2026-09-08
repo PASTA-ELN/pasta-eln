@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Command-line utility to administer a local installation and convert from PASTA-ELN version 2."""
+"""Command-line utility to administer a local installation and convert from PASTA-ELN version 2"""
 import json
 import os
 import platform
@@ -17,7 +17,7 @@ from pasta_eln.text_tools.string_changes import outputString
 
 
 class Tools:
-  """Command-line utility to administer a local installation and convert from PASTA-ELN version 2."""
+  """Command-line utility to administer a local installation and convert from PASTA-ELN version 2"""
 
 
   def __init__(self) -> None:
@@ -167,7 +167,7 @@ class Tools:
       bool: repair should be done
 
     Returns:
-      bool: Whether the user confirmed the repair.
+      bool: Whether the user confirmed the repair
     """
     print(errorMessage)
     return True if allYes else input('Repair [yN]: ')=='y'
@@ -225,7 +225,7 @@ class Tools:
 
 
   def printAllProjectHierarchies(self, projectGroup:str='', outputFormat:str='print') -> None:
-    """ Print the hierarchy of all projects.
+    """ Print the hierarchy of all projects
 
       Args:
         projectGroup (str): name of project group

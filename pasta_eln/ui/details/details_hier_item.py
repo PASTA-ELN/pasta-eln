@@ -1,4 +1,4 @@
-""" Widgets inside the details-sidebar that consist of a button and a collapsible area that shows info.
+""" Widgets inside the details-sidebar that consist of a button and a collapsible area that shows info
 """
 import logging
 import re
@@ -15,7 +15,7 @@ from pasta_eln.ui.gui_style import CollapsibleSection
 
 class DetailsHierItem(CollapsibleSection):
   """
-  Widget inside the details-sidebar that consists of a button and a collapsible area that shows info.
+  Widget inside the details-sidebar that consists of a button and a collapsible area that shows info
   """
 
   def __init__(self, comm: Communicate, categoryName: str, dataHierarchyNode: list[dict[str, Any]],
@@ -23,11 +23,11 @@ class DetailsHierItem(CollapsibleSection):
     """Initialize a collapsible section for one entry
 
     Args:
-      comm (Communicate): Shared communication object.
-      categoryName (str): Display label of the entry.
-      dataHierarchyNode (list[dict[str, Any]]): Hierarchy data used to populate the section.
-      initialContent (str): Text shown before additional content is loaded.
-      startCollapsed (bool): Whether the section starts in its collapsed state.
+      comm (Communicate): Shared communication object
+      categoryName (str): Display label of the entry
+      dataHierarchyNode (list[dict[str, Any]]): Hierarchy data used to populate the section
+      initialContent (str): Text shown before additional content is loaded
+      startCollapsed (bool): Whether the section starts in its collapsed state
     """
     self.comm = comm
     self.categoryName = categoryName
@@ -51,12 +51,12 @@ class DetailsHierItem(CollapsibleSection):
 
 
   def collapse(self) -> None:
-    """Hide this section's content."""
+    """Hide this section's content"""
     self.setExpanded(False)
 
 
   def expand(self) -> None:
-    """Show this section's content."""
+    """Show this section's content"""
     self.setExpanded(True)
 
 
@@ -86,7 +86,7 @@ class DetailsHierItem(CollapsibleSection):
     else:
       dataHierarchyItems = [dict(i) for i in self.dataHierarchyNode if i['name'] == key]
       if len(dataHierarchyItems) == 1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
-        ',' not in dataHierarchyItems[0]['list'] and ' ' not in dataHierarchyItems[0]['list']:# A single-choice docType is represented as a tuple.
+        ',' not in dataHierarchyItems[0]['list'] and ' ' not in dataHierarchyItems[0]['list']:# A single-choice docType is represented as a tuple
         if not isinstance(value, tuple):
           logging.info('Not a tuple: %s : %s', key, value)
         if not isDocID(value[0]):
@@ -107,21 +107,21 @@ class DetailsHierItem(CollapsibleSection):
 
 
   def addContent(self, key: str, value: Any) -> None:
-    """Append a formatted metadata value to the section.
+    """Append a formatted metadata value to the section
 
     Args:
-      key (str): Metadata field name.
-      value (Any): Metadata field value.
+      key (str): Metadata field name
+      value (Any): Metadata field value
     """
     self.content += self.formatContent(key, value)
     self.contentLabel.setText(self.content.removesuffix('<br><br>'))
 
 
   def openLink(self, link: str) -> None:
-    """Open an internal item link in Details or delegate an external URL to Qt.
+    """Open an internal item link in Details or delegate an external URL to Qt
 
     Args:
-      link (str): URL activated in the rich-text label.
+      link (str): URL activated in the rich-text label
     """
     if link.startswith('pasta-eln://') and isDocID(link.removeprefix('pasta-eln://')):
       self.comm.changeDetails.emit(DetailContext(link.removeprefix('pasta-eln://'), origin=DetailOrigin.LINK))

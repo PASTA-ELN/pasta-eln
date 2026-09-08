@@ -1,4 +1,4 @@
-""" Analyser add-on with much functionality: shows how complex add-ons can be. But do not have to."""
+""" Analyser add-on with much functionality: shows how complex add-ons can be. But do not have to"""
 import itertools
 import matplotlib
 import matplotlib.pyplot
@@ -250,7 +250,7 @@ class DataAnalyse(QDialog):
 def main(comm, df, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        comm (communication): Shared communication object.
+        comm (communication): Shared communication object
         df (Dataframe): dataframe with the data to plot
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters

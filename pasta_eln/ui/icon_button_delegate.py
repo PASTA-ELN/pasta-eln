@@ -1,4 +1,4 @@
-"""Reusable delegate for icon buttons embedded in table cells."""
+"""Reusable delegate for icon buttons embedded in table cells"""
 from collections.abc import Callable
 from typing import TypeAlias
 import qtawesome as qta
@@ -14,16 +14,16 @@ OnClick: TypeAlias = Callable[[QAbstractItemModel, QModelIndex], None]
 
 
 class IconButtonDelegate(QStyledItemDelegate):
-  """Paint an icon button and invoke a supplied action when it is clicked."""
+  """Paint an icon button and invoke a supplied action when it is clicked"""
 
   def __init__(self, icon: str, isVisible: IsVisible, onClick: OnClick, parent: QObject | None = None) -> None:
-    """Initialize a table delegate that displays and activates an icon button.
+    """Initialize a table delegate that displays and activates an icon button
 
     Args:
-      icon (str): QtAwesome icon name rendered in the delegate button.
-      isVisible (IsVisible): Callback deciding whether a cell should show the button.
-      onClick (OnClick): Callback invoked with the clicked table index.
-      parent (QObject | None): Optional Qt parent object.
+      icon (str): QtAwesome icon name rendered in the delegate button
+      isVisible (IsVisible): Callback deciding whether a cell should show the button
+      onClick (OnClick): Callback invoked with the clicked table index
+      parent (QObject | None): Optional Qt parent object
     """
     super().__init__(parent)
     self.icon = icon
@@ -32,7 +32,7 @@ class IconButtonDelegate(QStyledItemDelegate):
     self.button = QPushButton()
 
   def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: CellIndex) -> None:
-    """Draw the configured button when the row supports its action.
+    """Draw the configured button when the row supports its action
       Args:
         painter (QPainter): painter used for rendering
         option (QStyleOptionViewItem): item-view options
@@ -48,7 +48,7 @@ class IconButtonDelegate(QStyledItemDelegate):
     QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, buttonOption, painter, self.button)
 
   def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: CellIndex) -> QWidget:
-    """Icon buttons do not create in-place editors.
+    """Icon buttons do not create in-place editors
       Args:
         parent (QWidget): parent widget
         option (QStyleOptionViewItem): item-view options
@@ -58,14 +58,14 @@ class IconButtonDelegate(QStyledItemDelegate):
 
   def editorEvent(self, event: QEvent, model: QAbstractItemModel, option: QStyleOptionViewItem,
                   index: CellIndex) -> bool:
-    """Run the configured action for clicks inside a visible button cell.
+    """Run the configured action for clicks inside a visible button cell
       Args:
         event (QEvent): Qt event being handled
         model (QAbstractItemModel): model being queried or updated
         option (QStyleOptionViewItem): item-view options
         index (CellIndex): model index associated with the event
       Returns:
-        bool: Whether the delegate handled the event.
+        bool: Whether the delegate handled the event
     """
     if self.isVisible(index):                                                         # type: ignore[arg-type]
       if not isClickWithinBounds(event, option):

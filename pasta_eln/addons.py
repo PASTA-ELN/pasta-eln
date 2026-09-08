@@ -1,4 +1,4 @@
-"""Helpers for discovering, loading, and using PASTA-ELN add-ons."""
+"""Helpers for discovering, loading, and using PASTA-ELN add-ons"""
 import hashlib
 import importlib
 import importlib.util
@@ -129,7 +129,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
 
 
 def _moduleKey(modulePath:Path) -> str:
-  """Create a deterministic private module name for a file path.
+  """Create a deterministic private module name for a file path
   Args:
     modulePath (Path): path to the module
   Returns:
@@ -141,7 +141,7 @@ def _moduleKey(modulePath:Path) -> str:
 
 
 def loadNamedModule(directory:Path, moduleName:str) -> ModuleType:
-  """Load a Python module directly from the configured file path.
+  """Load a Python module directly from the configured file path
   Args:
     directory (Path): path to the add-on folder
     moduleName (str): name of the module
@@ -202,7 +202,7 @@ def callAddOn(name:str, comm:Any, content:Any, widget:QWidget) -> Any:
   """ Call add-ons
   Args:
     name (str): name of the add-on
-    comm (Any): Shared communication object.
+    comm (Any): Shared communication object
     content (Any): content to be consumed by addon, e.g. projectID, document
     widget (QWidget): widget to be used
 
@@ -229,7 +229,7 @@ def callDataExtractor(docID:str, comm:Any) -> Any:
 
   Args:
     docID (str): docID
-    comm (Communication): Shared communication object.
+    comm (Communication): Shared communication object
 
   Returns:
     Any: result of the data extractor
@@ -266,7 +266,7 @@ def callDataExtractor(docID:str, comm:Any) -> Any:
 def getHierarchy(comm:Any, docID:str, showAll:bool=True) -> tuple[Node, dict[str, Any]]:
   """ Helper for add-ons: get hierarchy of a project from backend
   Args:
-    comm (Communicate): Shared communication object.
+    comm (Communicate): Shared communication object
     docID (str): project ID
     showAll (bool): show all nodes, even hidden ones
 
@@ -277,11 +277,11 @@ def getHierarchy(comm:Any, docID:str, showAll:bool=True) -> tuple[Node, dict[str
   projDoc   = None
   @Slot(Node, dict)
   def receiveData(h:Node, doc:dict[str,Any]) -> None:
-    """Callback: store the hierarchy and project document returned by the backend signal.
+    """Callback: store the hierarchy and project document returned by the backend signal
 
     Args:
-      h (Node): Root node of the requested project hierarchy.
-      doc (dict[str, Any]): Project document associated with that hierarchy.
+      h (Node): Root node of the requested project hierarchy
+      doc (dict[str, Any]): Project document associated with that hierarchy
     """
     nonlocal hierarchyI
     hierarchyI = h
@@ -298,7 +298,7 @@ def getDoc(comm:Any, docID:str) -> dict[str, Any]:
   """ Helper for add-ons: get document from backend
 
   Args:
-    comm (Communicate): Shared communication object.
+    comm (Communicate): Shared communication object
     docID (str): document ID
 
   Returns:

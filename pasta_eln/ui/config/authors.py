@@ -22,7 +22,7 @@ class ConfigurationAuthors(QDialog):
     Initialization
 
     Args:
-      comm (Communicate): Shared communication object.
+      comm (Communicate): Shared communication object
       callbackFinished (function): callback function to call upon end
     """
     super().__init__()

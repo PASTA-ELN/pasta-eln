@@ -1,4 +1,4 @@
-""" API for accessing an elabFTW server. That's API is inconvenient, complicated, ..."""
+""" API for accessing an elabFTW server. That's API is inconvenient, complicated, """
 import base64
 import copy
 import json
@@ -10,7 +10,7 @@ import requests  # only requirement; could be replaced with urllib to eliminate 
 
 
 class ElabFTWApi:
-  """ API for accessing an elabFTW server. That's API is inconvenient, complicated, ..."""
+  """ API for accessing an elabFTW server. That's API is inconvenient, complicated, """
 
 
   def __init__(self, url:str='invalid', apiKey:str='', verifySSL:bool=True):

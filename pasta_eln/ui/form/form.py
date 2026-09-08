@@ -35,7 +35,7 @@ class Form(QDialog):
     Initialization
 
     Args:
-      comm (Communicate): Shared communication object.
+      comm (Communicate): Shared communication object
       doc (dict):  document to change / create
     """
     super().__init__()
@@ -126,7 +126,7 @@ class Form(QDialog):
     # Request data
     if not self.flagNewDoc:
       self.comm.backendThread.worker.beSendDoc.connect(self.onGetData)    # do not wait for data if not needed
-    self.comm.backendThread.worker.beSendTable.connect(self.onGetTable)          # tags, docTypes to link, ...
+    self.comm.backendThread.worker.beSendTable.connect(self.onGetTable)          # tags, docTypes to link,
     for docID in self.allDocIDs:
       self.comm.uiRequestDoc.emit(docID)
     self.comm.uiRequestTable.emit('_tags_','', True)
@@ -197,10 +197,10 @@ class Form(QDialog):
 
 
   def _fillProjectComboBox(self, data: pd.DataFrame) -> None:
-    """Replace the project selector contents with projects from a data frame.
+    """Replace the project selector contents with projects from a data frame
 
     Args:
-      data (pd.DataFrame): Table containing the project names and docIDs to display.
+      data (pd.DataFrame): Table containing the project names and docIDs to display
     """
     self.projectComboBox.clear()
     if self.groupEdit:
@@ -265,7 +265,7 @@ class Form(QDialog):
       visibilityIcon = all(all(branch['show']) for branch in self.doc['branch'])
       self.visibilityText.setText('' if visibilityIcon else 'Hidden')
 
-    # Image preview and scrollable sectioned editor.
+    # Image preview and scrollable sectioned editor
     if 'image' in self.doc:
       imageWSA = QScrollArea()
       imageWSA.setWidgetResizable(True)
@@ -293,7 +293,7 @@ class Form(QDialog):
     editorScroll.setWidget(bodyW)
     self.splitter.addWidget(editorScroll)
     if 'image' in self.doc:
-      # Start image forms evenly split; the user can still drag the handle afterwards.
+      # Start image forms evenly split; the user can still drag the handle afterwards
       self.splitter.setStretchFactor(0, 1)
       self.splitter.setStretchFactor(1, 1)
       self.splitter.setSizes([1, 1])
@@ -327,7 +327,7 @@ class Form(QDialog):
     orderedGroups = [''] + sorted(groups.difference({''}))
     self.formsL = []
 
-    # Create a stable, vertically scrollable section for every hierarchy group.
+    # Create a stable, vertically scrollable section for every hierarchy group
     for group in orderedGroups:
       section = FormSection('General' if group == '' else group, expanded=group == '')
       bodyL.addWidget(section)
@@ -537,7 +537,7 @@ class Form(QDialog):
 
 
   def updateFilenameIndicator(self) -> None:
-    """Show the filename indicator when every stored path differs from the edited name."""
+    """Show the filename indicator when every stored path differs from the edited name"""
     if ('name', 'LineEdit') not in self.allUserElements:
       return
     nameInput = getattr(self, f"key_{self.allUserElements.index(('name', 'LineEdit'))}")

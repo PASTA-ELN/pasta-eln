@@ -21,7 +21,7 @@ class ProjectCard(QFrame):
     Create a new project card
 
     Args:
-      comm (Communicate): Shared communication object.
+      comm (Communicate): Shared communication object
       project (pd.Series[Any]): The project data
     """
     super().__init__()

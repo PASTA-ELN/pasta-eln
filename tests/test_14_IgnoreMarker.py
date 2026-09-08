@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Test recursive folder ignore marker during scan and database checks."""
+"""Test recursive folder ignore marker during scan and database checks"""
 import json
 import tempfile
 import unittest
@@ -11,7 +11,7 @@ from pasta_eln.configuration_file import CONFIGURATION_FILE_NAME
 
 class TestIgnoreMarker(unittest.TestCase):
   """
-  Tests for folders containing .pastaELN_ignore.
+  Tests for folders containing .pastaELN_ignore
   """
 
   def setUp(self):

@@ -64,10 +64,10 @@ class ConfigurationRepositories(QDialog):
     self.zenodoToggle.setIcon(qta.icon('fa5s.eye-slash'))                                  # hidden by default
 
     def _toggleZenodo(checked: bool) -> None:
-      """Show or mask the configured Zenodo API token.
+      """Show or mask the configured Zenodo API token
 
       Args:
-        checked (bool): Whether the Zenodo token should be visible.
+        checked (bool): Whether the Zenodo token should be visible
       """
       self.apiZenodo.setEchoMode(QLineEdit.EchoMode.Normal if checked else QLineEdit.EchoMode.Password)
       self.zenodoToggle.setIcon(qta.icon('fa5s.eye' if checked else 'fa5s.eye-slash'))
@@ -96,10 +96,10 @@ class ConfigurationRepositories(QDialog):
     self.dataverseToggle.setCheckable(True)
     self.dataverseToggle.setIcon(qta.icon('fa5s.eye-slash'))
     def _toggleDataverse(checked: bool) -> None:
-      """Show or mask the configured Dataverse API token.
+      """Show or mask the configured Dataverse API token
 
       Args:
-        checked (bool): Whether the Dataverse token should be visible.
+        checked (bool): Whether the Dataverse token should be visible
       """
       self.apiDataverse.setEchoMode(QLineEdit.EchoMode.Normal if checked else QLineEdit.EchoMode.Password)
       self.dataverseToggle.setIcon(qta.icon('fa5s.eye' if checked else 'fa5s.eye-slash'))

@@ -1,4 +1,4 @@
-""" all styling of buttons and other general widgets, some defined colors... """
+""" all styling of buttons and other general widgets, some defined colors """
 import logging
 import re
 from collections.abc import Callable
@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QFrame, QLabel, QLayout, QPushButton, QSizePolicy,
 
 
 class _Spacing:
-  """Shared layout distances, in logical pixels."""
+  """Shared layout distances, in logical pixels"""
   S: Final[int]  = 4
   M: Final[int]  = 12
   L: Final[int]  = 36
@@ -21,11 +21,11 @@ SPACE = _Spacing()
 
 
 class Widget(QWidget):
-  """Base class for widgets that receive commands from child controls."""
+  """Base class for widgets that receive commands from child controls"""
   comm: Any
 
   def execute(self, command: Any) -> None:
-    """Handle a command issued by a child control.
+    """Handle a command issued by a child control
       Args:
         command (Any): command emitted by the associated control
     """
@@ -33,43 +33,43 @@ class Widget(QWidget):
 
 
 class CommandHost(Protocol):
-  """Minimal interface required by controls that dispatch commands."""
+  """Minimal interface required by controls that dispatch commands"""
   comm: Any
 
   def execute(self, command: Any) -> None:
-    """Handle a command issued by a child control.
+    """Handle a command issued by a child control
       Args:
         command (Any): command emitted by the associated control
     """
 
 
 class ButtonStyle(Enum):
-  """The visual role of a :class:`Button`."""
+  """The visual role of a :class:`Button`"""
   DEFAULT     = auto()
   HIGHLIGHTED = auto()
   PRIMARY     = auto()
 
 
 class Button(QPushButton):
-  """A command button that optionally adds itself to a layout."""
+  """A command button that optionally adds itself to a layout"""
   def __init__(self, label: str, widget: CommandHost, command: Any | None = None,
                layout: QLayout | None = None, *, icon: str | None = None,
                tooltip: str = '', style: ButtonStyle = ButtonStyle.DEFAULT,
                iconSize: Literal['m', 'l'] = 'm', flat: bool = False,
                checkable: bool = False) -> None:
-    """Create a command button and optionally add it to a layout.
+    """Create a command button and optionally add it to a layout
 
     Args:
-      label (str): Text shown on the button; an empty label creates an icon-only button.
-      widget (CommandHost): Command host that receives the button's command.
-      command (Any | None): Command passed to the host when the button is clicked.
-      layout (QLayout | None): Optional layout to which the button is added.
-      icon (str | None): Optional QtAwesome icon name.
-      tooltip (str): Optional explanatory text shown on hover.
-      style (ButtonStyle): Visual role controlling button emphasis and icon color.
-      iconSize (Literal['m', 'l']): Named size of the icon-only or displayed icon button.
-      flat (bool): Whether the button should omit its default frame.
-      checkable (bool): Whether the button maintains a checked state.
+      label (str): Text shown on the button; an empty label creates an icon-only button
+      widget (CommandHost): Command host that receives the button's command
+      command (Any | None): Command passed to the host when the button is clicked
+      layout (QLayout | None): Optional layout to which the button is added
+      icon (str | None): Optional QtAwesome icon name
+      tooltip (str): Optional explanatory text shown on hover
+      style (ButtonStyle): Visual role controlling button emphasis and icon color
+      iconSize (Literal['m', 'l']): Named size of the icon-only or displayed icon button
+      flat (bool): Whether the button should omit its default frame
+      checkable (bool): Whether the button maintains a checked state
     """
     super().__init__(label)
     self.buttonIconSize = QSize(32,32) if iconSize=='l' else QSize(20,20)
@@ -95,7 +95,7 @@ class Button(QPushButton):
       layout.addWidget(self)
 
   def setTestResult(self, success: bool) -> None:
-    """Show whether a connection or credential test succeeded.
+    """Show whether a connection or credential test succeeded
       Args:
         success (bool): whether the operation succeeded
     """
@@ -105,7 +105,7 @@ class Button(QPushButton):
 
 
 class CollapsibleSection(QFrame):
-  """A titled section whose content can be shown or hidden."""
+  """A titled section whose content can be shown or hidden"""
 
   def __init__(self, title: str, contentWidget: QWidget, *, expanded: bool = True,
                iconSize: QSize = QSize(16, 16), boldTitle: bool = False,
@@ -157,14 +157,14 @@ class CollapsibleSection(QFrame):
 
 
 def shortcut(key: str, parent: QWidget, function: Callable[[], None]) -> QShortcut:
-  """Create a keyboard shortcut owned by ``parent``.
+  """Create a keyboard shortcut owned by ``parent``
     Args:
       key (str): shortcut key (e.g. Ctrl+K)
       parent (QWidget): widget / dialog that host the button and that has the execute function
       function (callable): function to be called when shortcut is triggered
 
   Returns:
-    QShortcut: Configured keyboard shortcut.
+    QShortcut: Configured keyboard shortcut
   """
   shortcutObject = QShortcut(key, parent)                                    # pylint: disable=qt-local-widget
   shortcutObject.activated.connect(function)
@@ -173,7 +173,7 @@ def shortcut(key: str, parent: QWidget, function: Callable[[], None]) -> QShortc
 
 def image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,
           anyDimension: int = -1) -> QWidget | None:
-  """Create an image widget from base64 raster or SVG data and add it to a layout.
+  """Create an image widget from base64 raster or SVG data and add it to a layout
     Args:
       data (str): image data in byte64-encoding or svg-encoding
       layout (QLayout): to be added to this layout
@@ -182,7 +182,7 @@ def image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,
       anyDimension (int): maximum size in any direction
 
   Returns:
-    QWidget | None: Image widget, or ``None`` when no image data is available.
+    QWidget | None: Image widget, or ``None`` when no image data is available
   """
   if data.startswith('data:image/'):
     try:
@@ -296,7 +296,7 @@ class HSeparator(QFrame):
 
 
 def clearLayout(layout: QLayout, start: int = 0) -> None:
-  """Remove widgets from a layout, retaining the first ``start`` items.
+  """Remove widgets from a layout, retaining the first ``start`` items
     Args:
       layout (QLayout): layout to update
       start (int): number of layout items to retain

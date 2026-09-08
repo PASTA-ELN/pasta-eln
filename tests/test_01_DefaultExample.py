@@ -29,9 +29,9 @@ class TestStringMethods(unittest.TestCase):
     handler = ErrorHandler()
     logging.getLogger().addHandler(handler)
 
-    # Intended: ``research`` is the temporary, hard-coded test project-group label.
+    # Intended: ``research`` is the temporary, hard-coded test project-group label
     # force=True intentionally replaces that group's storage; it must be configured as
-    # disposable test data for this checkout.
+    # disposable test data for this checkout
     exampleData(True, None, 'research', '')
     self.be = Backend('research')
     output = self.be.output('x0')

@@ -25,10 +25,10 @@ from ..palette import nameColor
 class Project(Widget):
   """ Widget that shows the content of project in a electronic labnotebook """
   def __init__(self, comm:Communicate):
-    """Initialize the project widget and connect it to shared communication state.
+    """Initialize the project widget and connect it to shared communication state
 
     Args:
-      comm (Communicate): Shared communication object.
+      comm (Communicate): Shared communication object
     """
     super().__init__()
     self.comm = comm
@@ -172,7 +172,7 @@ class Project(Widget):
     moreMenu = QMenu(self)
     action('Edit project',              self, Command.EDIT,            moreMenu, icon='ri.edit-2-fill')
     action('Scan project',              self, Command.SCAN,            moreMenu, icon='fa5s.search')
-    # “Details” is the name of the Details pane; keep its capitalization here.
+    # “Details” is the name of the Details pane; keep its capitalization here
     action('Show project in Details',   self, Command.SHOW_IN_DETAILS, moreMenu, icon='ri.information-line')
     projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
     if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
@@ -219,7 +219,7 @@ class Project(Widget):
       folders = [node for node in PreOrderIter(self.hierarchy) if node.docType[0].startswith('x')]
       labels = ['/'.join(node.name for node in (*node.ancestors, node)) for node in folders]
       selectedFolder = self.projID                                             # use project id as the default
-      # if the user has selected another folder, use that as default....
+      # if the user has selected another folder, use that as default
       if self.tree is not None and self.tree.currentIndex().isValid():
         item = self.model.itemFromIndex(self.tree.currentIndex()) if self.model is not None else None
         if item is not None and item.data()['docType'][0].startswith('x'):
@@ -259,10 +259,10 @@ class Project(Widget):
       self.comm.changeSidebar.emit('')
     elif commandType is Command.SHOW_DETAILS and self.tree is not None:
       def recursiveRowIteration(index:QModelIndex) -> None:
-        """Visit descendants of a tree index and apply the current row action.
+        """Visit descendants of a tree index and apply the current row action
 
         Args:
-          index (QModelIndex): Parent index whose child rows should be traversed.
+          index (QModelIndex): Parent index whose child rows should be traversed
         """
         for subRow in range(self.tree.model().rowCount(index)):                     # type: ignore[union-attr]
           subIndex = self.tree.model().index(subRow,0, index)                       # type: ignore[union-attr]
@@ -299,7 +299,7 @@ class Project(Widget):
 
 
   def _clearProjectWidgets(self) -> None:
-    """Disconnect and delete old project widgets on the GUI thread."""
+    """Disconnect and delete old project widgets on the GUI thread"""
     if self.tree is not None:
       try:
         self.tree.selectionModel().currentChanged.disconnect(self.onTreeSelectionChanged)
@@ -348,7 +348,7 @@ class Project(Widget):
 
   @Slot(QModelIndex)
   def onTreeExpanded(self, index:QModelIndex) -> None:
-    """Persist the expanded state of a folder item.
+    """Persist the expanded state of a folder item
       Args:
         index (QModelIndex): model index associated with the event
     """
@@ -357,7 +357,7 @@ class Project(Widget):
 
   @Slot(QModelIndex)
   def onTreeCollapsed(self, index:QModelIndex) -> None:
-    """Persist the collapsed state of a folder item.
+    """Persist the collapsed state of a folder item
       Args:
         index (QModelIndex): model index associated with the event
     """
@@ -366,7 +366,7 @@ class Project(Widget):
 
   @Slot(QModelIndex, QModelIndex)
   def onTreeSelectionChanged(self, current:QModelIndex, _:QModelIndex) -> None:
-    """Show the selected project item in the shared details pane.
+    """Show the selected project item in the shared details pane
       Args:
         current (QModelIndex): newly selected model index
     """
@@ -380,7 +380,7 @@ class Project(Widget):
 
   @Slot(object)
   def onDetailsChanged(self, context:DetailContext) -> None:
-    """Track in this project.py the document currently shown in the shared details pane.
+    """Track in this project.py the document currently shown in the shared details pane
       Args:
         context (DetailContext): Details-pane context
     """

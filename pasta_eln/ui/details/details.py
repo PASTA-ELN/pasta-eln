@@ -31,7 +31,7 @@ class Details(Widget):
   def __init__(self, comm: Communicate):
     """Create a details pane on the right-hand side
     Args:
-      comm (Communicate): Shared communication object.
+      comm (Communicate): Shared communication object
     """
     super().__init__()
     self.comm = comm
@@ -125,7 +125,7 @@ class Details(Widget):
 
   @Slot()
   def requestRelationships(self) -> None:
-    """Request relationship data when the section is expanded."""
+    """Request relationship data when the section is expanded"""
     if self.docID and self.relationshipView.isVisible():
       self.comm.uiRequestRelationships.emit()
 
@@ -236,7 +236,7 @@ class Details(Widget):
     self.bodyL.addStretch(0)
 
   def paintOpenMenu(self) -> None:
-    """Build navigation and local-file actions for the selected item."""
+    """Build navigation and local-file actions for the selected item"""
     self.openMenu.clear()
     if not self.docID:
       return
@@ -257,7 +257,7 @@ class Details(Widget):
 
 
   def paintActionsMenu(self) -> None:
-    """Build item actions that are neither editing nor navigation."""
+    """Build item actions that are neither editing nor navigation"""
     self.actionsMenu.clear()
     if not self.docID:
       return
@@ -293,7 +293,7 @@ class Details(Widget):
 
 
   def execute(self, command: Command | list[Any]) -> None:
-    """Handle commands emitted by the details controls.
+    """Handle commands emitted by the details controls
       Args:
         command (Command | list[Any]): command emitted by the associated control
     """
@@ -378,9 +378,9 @@ class Details(Widget):
   @Slot(object)
   def onDetailsChanged(self, context: DetailContext) -> None:
     """
-    What happens when the displayed item changes.
+    What happens when the displayed item changes
     Args:
-      context (DetailContext): Document, origin, and optional tree location to display.
+      context (DetailContext): Document, origin, and optional tree location to display
     """
     self.context = context
     if context.docID:
@@ -394,7 +394,7 @@ class Details(Widget):
 
 
   def addAttachment(self, location: str, attachmentID: str, remark: str) -> None:
-    """Request insertion of one immutable instrument attachment history record.
+    """Request insertion of one immutable instrument attachment history record
       Args:
         location (str): attachment location
         attachmentID (str): attachment document identifier
@@ -429,7 +429,7 @@ class Details(Widget):
   def sourcePath(self, onlyLocal: Literal[False]) -> Path | str | None: ...
 
   def sourcePath(self, onlyLocal: bool = True) -> Path | str | None:
-    """Return the local source-file path, excluding database-only items.
+    """Return the local source-file path, excluding database-only items
     Args:
       onlyLocal (bool): if to allow remote parts, if true only local paths get a path, and remote get a None
     Returns:
@@ -447,9 +447,9 @@ class Details(Widget):
 
 
   def currentBranch(self) -> dict[str, Any]:
-    """Return the branch selected in the project tree, or the first branch.
+    """Return the branch selected in the project tree, or the first branch
       Returns:
-        dict[str, Any]: Currently selected branch data.
+        dict[str, Any]: Currently selected branch data
     """
     for branch in self.data.get('branch', []):
       if '/'.join(branch['stack'] + [self.docID]) == self.context.treeStack:
@@ -459,7 +459,7 @@ class Details(Widget):
 
 
 class Command(Enum):
-  """Commands handled by :class:`Details`."""
+  """Commands handled by :class:`Details`"""
   EDIT                 = 1
   OPEN_PROJECT         = 2
   RERUN_EXTRACTOR      = 3

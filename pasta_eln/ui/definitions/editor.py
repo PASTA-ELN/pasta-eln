@@ -26,7 +26,7 @@ class Editor(QDialog):
     Initialization
 
     Args:
-      comm (Communicate): Shared communication object.
+      comm (Communicate): Shared communication object
     """
     super().__init__()
     self.comm = comm
@@ -166,7 +166,7 @@ class Editor(QDialog):
 
 
   def openTerminologyLookup(self, _: QAbstractItemModel, index: QModelIndex) -> None:
-    """Show terminology lookup and store selected identifiers in the PURL column.
+    """Show terminology lookup and store selected identifiers in the PURL column
       Args:
         index (QModelIndex): model index associated with the event
     """
@@ -175,10 +175,10 @@ class Editor(QDialog):
     label = model.index(index.row(), 1).data()
 
     def setPURL(iris: list[str]) -> None:
-      """Write the selected persistent URLs into the current definition row.
+      """Write the selected persistent URLs into the current definition row
 
       Args:
-        iris (list[str]): Persistent identifiers selected by the terminology lookup.
+        iris (list[str]): Persistent identifiers selected by the terminology lookup
       """
       model.setData(model.index(index.row(), 2), ', '.join(iris))
 
@@ -189,7 +189,7 @@ class Editor(QDialog):
   def getDataframe(self) -> pd.DataFrame:
     """ Get dataframe from table
       Returns:
-        pd.DataFrame: Dataframe represented by the editor table.
+        pd.DataFrame: Dataframe represented by the editor table
     """
     model = self.table.model()
     data = []
@@ -210,18 +210,18 @@ class Editor(QDialog):
 
 
 def _hasOnlineLink(index: QModelIndex) -> bool:
-  """Return whether the row contains a usable online identifier.
+  """Return whether the row contains a usable online identifier
     Args:
       index (QModelIndex): model index associated with the event
     Returns:
-      bool: Whether the row has a usable online identifier.
+      bool: Whether the row has a usable online identifier
   """
   link = index.model().index(index.row(), 2).data()
   return bool(link and 'http' in link and '://' in link)
 
 
 def _openOnlineLink(_: QAbstractItemModel, index: QModelIndex) -> None:
-  """Open the first online identifier from the selected row.
+  """Open the first online identifier from the selected row
     Args:
       index (QModelIndex): model index associated with the event
   """
@@ -229,11 +229,11 @@ def _openOnlineLink(_: QAbstractItemModel, index: QModelIndex) -> None:
 
 
 def _hasKeyOrLabel(index: QModelIndex) -> bool:
-  """Return whether terminology lookup has a search term.
+  """Return whether terminology lookup has a search term
     Args:
       index (QModelIndex): model index associated with the event
     Returns:
-      bool: Whether the row has a terminology lookup term.
+      bool: Whether the row has a terminology lookup term
   """
   model = index.model()
   return bool(model.index(index.row(), 0).data() or model.index(index.row(), 1).data())

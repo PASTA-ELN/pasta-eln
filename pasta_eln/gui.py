@@ -75,11 +75,11 @@ def startMain(projectGroup:str='') -> None:
 
 
 def testNewPastaVersion(update: bool = False) -> bool:
-  """Check whether this version matches the latest non-beta PyPI release.
+  """Check whether this version matches the latest non-beta PyPI release
     Args:
       update (bool): whether to check for updates
     Returns:
-      bool: Whether the installed version is current (true) or a beta (false) release.
+      bool: Whether the installed version is current (true) or a beta (false) release
   """
   try:
     with request.urlopen('https://pypi.org/pypi/pasta-eln/json') as response:

@@ -4,7 +4,7 @@ THIS IS A VERY ADVANCED ADD-ON TUTORIAL
 This tutorial teaches
 - how to group import metadata
 """
-# This tutorial follows the conventional four-space indentation style.
+# This tutorial follows the conventional four-space indentation style
 # pylint: disable=bad-indentation
 from pathlib import Path
 import pandas as pd
@@ -25,7 +25,7 @@ reqParameter = {} #possibility for required parameters: like API-key, etc. {'API
 def main(comm, hierStack, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        comm (Communicate): Shared communication object.
+        comm (Communicate): Shared communication object
         hierStack (str): node in hierarchy to start the creation
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters
@@ -54,7 +54,7 @@ def main(comm, hierStack, widget, parameter={}):
     if docType not in comm.docTypesTitles:
         QMessageBox.critical(widget, 'Invalid CSV file', 'The item type does not exist in the PASTA-ELN database.', 'Critical')
         return False
-    # Columns supported by PASTA-ELN.
+    # Columns supported by PASTA-ELN
     colPasta = [f'{i["class"]}.{i["name"]}' for i in comm.dataHierarchyNodes[docType]]
     colPasta = [i[1:] if i[1:] in MAIN_ORDER+['tags','qrCodes'] else i for i in colPasta] + ['type']
     if set(colNames).difference(colPasta):

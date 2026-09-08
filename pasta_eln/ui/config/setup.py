@@ -21,7 +21,7 @@ class ConfigurationSetup(QWidget):
     Initialization
 
     Args:
-      comm (Communicate): Shared communication object.
+      comm (Communicate): Shared communication object
       callbackFinished (function): callback function to call upon end
     """
     super().__init__()
@@ -68,8 +68,7 @@ class ConfigurationSetup(QWidget):
 
 
   def execute(self, command:list[Any]) -> None:
-    """
-    Main method that does all the analysis: open dialogs, ..
+    """Main method that does all the analysis: open dialogs
     Args:
       command (list[Any]): command emitted by the associated control
     """

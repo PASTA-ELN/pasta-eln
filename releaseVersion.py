@@ -93,17 +93,17 @@ def prevVersionsFromPypi(k:int=15) -> None:
 
 
 def createChangelog(version: str) -> Path:
-  """Write a Git-based changelog draft for the new stable release ``version``.
+  """Write a Git-based changelog draft for the new stable release ``version``
 
-  - The previous stable release is determined from the merged Git tags and  defines the beginning of the commit range.
-  - The current ``HEAD`` defines the release source commit and the end of that range.
-  - Beta-version tags are ignored.
+  - The previous stable release is determined from the merged Git tags and  defines the beginning of the commit range
+  - The current ``HEAD`` defines the release source commit and the end of that range
+  - Beta-version tags are ignored
 
   Args:
-    version: Release currently being prepared.
+    version: Release currently being prepared
 
   Returns:
-    The path to the generated Markdown draft.
+    The path to the generated Markdown draft
   """
   stableTags = [tag for tag in subprocess.run(['git', '--no-pager', 'tag', '--merged', 'HEAD', '--list', 'v*'],
                                                 capture_output=True, text=True, check=True).stdout.splitlines()
@@ -188,7 +188,7 @@ def newVersion(level:int=2) -> None:
   #get old version number
   currentVersion = getVersion()[1:]
   # A beta version does not define a release boundary. Its base version is
-  # therefore the default stable version proposed by the release script.
+  # therefore the default stable version proposed by the release script
   if 'b' in currentVersion:
     version = currentVersion.split('b', 1)[0]
   else:
@@ -216,7 +216,7 @@ def newVersion(level:int=2) -> None:
     with open(path,'w', encoding='utf-8') as fOut:
       fOut.write('\n'.join(fileNew)+'\n')
   subprocess.run(['git', 'commit', '-a', '-m', 'update version numbers'], check=True)
-  # must not add entries to the changelog.
+  # must not add entries to the changelog
   if re.fullmatch(r'\d+\.\d+\.\d+', version):
     draftPath = createChangelog(version)
     print(f'Changelog draft written to {draftPath}. Replace it with the reviewed changelog before continuing.')
@@ -368,8 +368,8 @@ def rightAlignComments() -> None:
 
 
 def findTasks() -> None:
-  """ Find all tasks in the pasta_eln codebase that are emitted by the UI.
-  This is used to find discrepancies in keys.
+  """ Find all tasks in the pasta_eln codebase that are emitted by the UI
+  This is used to find discrepancies in keys
   - information also in guiCommunicate
   """
   target:dict[str,list[str]] = {}

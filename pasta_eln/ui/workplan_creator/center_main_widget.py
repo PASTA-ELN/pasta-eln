@@ -15,10 +15,10 @@ class CenterMainWidget(QWidget):
   """
 
   def __init__(self, comm: Communicate) -> None:
-    """Initialize the central workplan editor with shared communication state.
+    """Initialize the central workplan editor with shared communication state
 
     Args:
-      comm (Communicate): Shared communication object.
+      comm (Communicate): Shared communication object
     """
     super().__init__()
     self.comm = comm
@@ -164,12 +164,12 @@ class CenterMainWidget(QWidget):
 
   def getFilledParameters(self) -> dict[str, str]:
     """
-    Iterates through all Rows of the QFormLayout and extracts the parameter-value pairs of filled-in QLineEdits.
+    Iterates through all Rows of the QFormLayout and extracts the parameter-value pairs of filled-in QLineEdits
 
     Returns: dictionary of only the filled-in parameter-value pairs from the QFormLayout
 
     Returns:
-      dict[str, str]: Filled procedure parameter values.
+      dict[str, str]: Filled procedure parameter values
     """
     filledParameters = {}
     for i in range(3, self.parameterForm.rowCount()):                   # 3 because the sample part is skipped
@@ -187,8 +187,8 @@ class CenterMainWidget(QWidget):
   def _onProcedureTextUpdated(self, docID: str) -> None:
     """
     Callback for when the Storage-Object has read the files for the content; This function works as an extension to
-    changeActiveProcedure() and contains the changes to description and parameters.
-    Both the description and the parameters are dependent on this Storage update caused by storage.requestProcedureText.
+    changeActiveProcedure() and contains the changes to description and parameters
+    Both the description and the parameters are dependent on this Storage update caused by storage.requestProcedureText
     Args:
       docID (str): identifier, if the signal is meant for this function. Has to match self.currentActiveProcedureID
     """
@@ -197,7 +197,7 @@ class CenterMainWidget(QWidget):
     self.description.setMarkdown(self.storage.getProcedureText(self.activeProcedureID))
     # Sample and Parameter Form
     for _ in range(self.parameterForm.rowCount() - 3):
-      # Remove old parameter rows after the sample row.
+      # Remove old parameter rows after the sample row
       self.parameterForm.removeRow(3)
     if self.activeListItem:
       # Connect Sample Changes to WorkplanItem (For Saving edits on selected Procedure in Workplan)
@@ -222,11 +222,11 @@ class CenterMainWidget(QWidget):
 
   def _addSampleBoxItems(self, table: pd.DataFrame, docType: str) -> None:
     """
-    Callback after request for the sample table, to fill the ComboBox with Samples from the Storage.
-    This Function as a lambda causes weird C++ Storage access problems.
+    Callback after request for the sample table, to fill the ComboBox with Samples from the Storage
+    This Function as a lambda causes weird C++ Storage access problems
     Args:
       table (pd.DataFrame): The sample table from the backend
-      docType (str): identifier, to check if the signal is meant for this function.
+      docType (str): identifier, to check if the signal is meant for this function
     """
     if docType == 'sample':
       self.sampleBox.addItems(table['name'])

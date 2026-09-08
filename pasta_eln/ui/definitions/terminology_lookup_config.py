@@ -1,4 +1,4 @@
-""" Configuration for terminology lookup services. """
+""" Configuration for terminology lookup services """
 from typing import Any
 
 lookupConfig:list[dict[str, Any]] = []

@@ -1,4 +1,4 @@
-"""The Toplevel Sidebar on the left that displays the projects to choose."""
+"""The Toplevel Sidebar on the left that displays the projects to choose"""
 from __future__ import annotations
 from enum import Enum
 import pandas as pd
@@ -14,14 +14,14 @@ from pasta_eln.ui.sidebar.project_card import ProjectCard
 
 class ProjectSidebar(Widget):
   """
-  The Toplevel Sidebar on the left that displays the projects to choose.
+  The Toplevel Sidebar on the left that displays the projects to choose
   """
 
   def __init__(self, comm: Communicate, parent: QWidget | None = None) -> None:
-    """Initialize the project sidebar and connect it to the GUI state.
+    """Initialize the project sidebar and connect it to the GUI state
 
     Args:
-      comm (Communicate): Shared communication object.
+      comm (Communicate): Shared communication object
       parent (QWidget | None): Optional Qt parent widget, aka main window
     """
     super().__init__(parent)
@@ -77,7 +77,7 @@ class ProjectSidebar(Widget):
 
   @Slot(str)
   def onSidebarChange(self, projectChoice: str) -> None:
-    """Refresh projects after a visibility or project-selection change.
+    """Refresh projects after a visibility or project-selection change
       Args:
         projectChoice (str): selected project visibility option
     """
@@ -138,7 +138,7 @@ class ProjectSidebar(Widget):
 
 
   def execute(self, command: Command) -> None:
-    """Handle commands emitted by the sidebar controls.
+    """Handle commands emitted by the sidebar controls
       Args:
         command (Command): command emitted by the associated control
     """
@@ -155,9 +155,9 @@ class ProjectSidebar(Widget):
 
 
   def visibleProjects(self) -> pd.DataFrame:
-    """Return projects allowed by the current sidebar visibility policy.
+    """Return projects allowed by the current sidebar visibility policy
       Returns:
-        pd.DataFrame: Projects visible under the current sidebar policy.
+        pd.DataFrame: Projects visible under the current sidebar policy
     """
     if self.showHiddenProjects or self.projects.empty:
       return self.projects
@@ -186,7 +186,7 @@ class ProjectSidebar(Widget):
 
 
   def paintHiddenProjectButton(self) -> None:
-    """Update the visibility toggle's icon and tooltip."""
+    """Update the visibility toggle's icon and tooltip"""
     iconName = 'fa5s.eye' if self.showHiddenProjects else 'fa5s.eye-slash'
     tooltip = 'Hide/show hidden projects'
     color = self.comm.palette.getThemeColor('primary', 'base')
@@ -195,6 +195,6 @@ class ProjectSidebar(Widget):
 
 
 class Command(Enum):
-  """Commands handled by :class:`ProjectSidebar`."""
+  """Commands handled by :class:`ProjectSidebar`"""
   TOGGLE_HIDDEN_PROJECTS = 1
   CREATE_PROJECT = 2

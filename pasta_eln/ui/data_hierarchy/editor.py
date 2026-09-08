@@ -40,7 +40,7 @@ class SchemeEditor(QDialog):
     Initialization
 
     Args:
-      comm (Communicate): Shared communication object.
+      comm (Communicate): Shared communication object
     """
     super().__init__()
     self.comm = comm
@@ -267,7 +267,7 @@ class SchemeEditor(QDialog):
 
 
   def closeDialog(self, save:bool) -> None:
-    """Close the editor, optionally persisting the current item type.
+    """Close the editor, optionally persisting the current item type
       Args:
         save (bool): whether to persist changes before closing
     """
@@ -355,7 +355,7 @@ class SchemeEditor(QDialog):
         {'type':'one', 'cmd':f"DELETE FROM docTypes WHERE docType == '{self.selectDocType.currentData()}'"},
         {'type':'one', 'cmd':f"DELETE FROM docTypeSchema WHERE docType == '{self.selectDocType.currentData()}'"}
       ])
-      self.comm.commSendConfiguration.emit(self.comm.configuration, self.comm.projectGroup)#reset docTypes, etc.
+      self.comm.commSendConfiguration.emit(self.comm.configuration, self.comm.projectGroup)#reset docTypes, etc
       self.selectDocType.clear()
     elif action is Command.DEL_GROUP:
       docLabel = str(self.docLabel)
@@ -377,7 +377,7 @@ class SchemeEditor(QDialog):
   def table2schema(self) -> pd.DataFrame:
     """ save text content of tables
       Returns:
-        pd.DataFrame: Schema dataframe built from the editor table.
+        pd.DataFrame: Schema dataframe built from the editor table
     """
     df = pd.DataFrame()
     lastRow = 0
@@ -445,7 +445,7 @@ class SchemeEditor(QDialog):
     return
 
   def _cleanup(self, _result: int) -> None:
-    """Disconnect backend signals when the dialog closes.
+    """Disconnect backend signals when the dialog closes
       Args:
         _result (int): dialog result code
     """
@@ -465,27 +465,27 @@ class Command(Enum):
 
 
 def _hasEditableName(index: QModelIndex) -> bool:
-  """Return whether a schema row represents an editable property.
+  """Return whether a schema row represents an editable property
     Args:
       index (QModelIndex): model index associated with the event
     Returns:
-      bool: Whether the schema row has an editable name.
+      bool: Whether the schema row has an editable name
   """
   return bool(index.model().index(index.row(), 0).data())
 
 
 def _canDeleteRow(index: QModelIndex) -> bool:
-  """Keep the schema's required name, tags, and comment rows.
+  """Keep the schema's required name, tags, and comment rows
     Args:
       index (QModelIndex): model index associated with the event
     Returns:
-      bool: Whether the schema row may be deleted.
+      bool: Whether the schema row may be deleted
   """
   return index.model().index(index.row(), 0).data() not in ['name', 'tags', 'comment']
 
 
 def _moveRowUp(model: QAbstractItemModel, index: QModelIndex) -> None:
-  """Exchange a schema row with the preceding row.
+  """Exchange a schema row with the preceding row
     Args:
       model (QAbstractItemModel): model being queried or updated
       index (QModelIndex): model index associated with the event
@@ -500,7 +500,7 @@ def _moveRowUp(model: QAbstractItemModel, index: QModelIndex) -> None:
 
 
 def _deleteRow(model: QAbstractItemModel, index: QModelIndex) -> None:
-  """Remove the selected schema row.
+  """Remove the selected schema row
     Args:
       model (QAbstractItemModel): model being queried or updated
       index (QModelIndex): model index associated with the event
@@ -512,13 +512,13 @@ def _validateItemTypeTemplate(template:Any) -> list[dict[str, Any]]:
   """Validate one item-type template and return valid
 
   Args:
-    template (Any): Parsed JSON value from an item-type template file.
+    template (Any): Parsed JSON value from an item-type template file
 
   Returns:
-    The validated item-type records.
+    The validated item-type records
 
   Raises:
-    ValueError: If the template cannot be imported safely.
+    ValueError: If the template cannot be imported safely
   """
   # define local
   templateSchemeColumns = {'docType', 'class', 'idx', 'name', 'unit', 'mandatory', 'list', 'long'}

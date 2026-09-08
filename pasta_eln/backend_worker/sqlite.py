@@ -70,7 +70,7 @@ class SqlLiteDB:
 
 
   def migrateDatabase(self, databaseVersion:int) -> None:
-    """Migrate a version-0 database from Git SHA-1 to raw SHA-256 identities.
+    """Migrate a version-0 database from Git SHA-1 to raw SHA-256 identities
       Args:
         databaseVersion (int): database version to migrate
     """
@@ -133,7 +133,7 @@ class SqlLiteDB:
       command = f"INSERT INTO docTypes ({', '.join(DOC_TYPES)}) VALUES ({', '.join(['?']*len(DOC_TYPES))});"
       self.cursor.executemany(command, defaultDocTypes)
       # docTypeSchema table (see below)
-      # - define the key of the metadata table, units, icons, ..
+      # - define the key of the metadata table, units, icons,
       if 'docTypeSchema' in tables:
         logging.info('Remove old docTypeSchema')
         self.cursor.execute('DROP TABLE docTypeSchema')
@@ -171,7 +171,7 @@ class SqlLiteDB:
       colTypes (list): optional list of data-types of the columns
 
     Returns:
-      list[str]: Names of the created SQL columns.
+      list[str]: Names of the created SQL columns
     """
     if colTypes is None:
       colTypes = ['TEXT']*len(columns)
@@ -193,7 +193,7 @@ class SqlLiteDB:
 
     Args:
       docType (str): document typ
-      column (str): column name as in meta, title, shortcut, ..
+      column (str): column name as in meta, title, shortcut, ...
       group (str): group of metadata rows; if group not given: return all
     Returns:
       list: information inquired
@@ -302,9 +302,9 @@ class SqlLiteDB:
 
 
   def getRelationships(self) -> dict[str, Any]:
-    """Return the project-group documents and their relationship edges.
+    """Return the project-group documents and their relationship edges
       Returns:
-        dict[str, Any]: Documents and relationship edges for the active project group.
+        dict[str, Any]: Documents and relationship edges for the active project group
     """
     self.connection.row_factory = sqlite3.Row
     cursor = self.connection.cursor()
@@ -348,7 +348,7 @@ class SqlLiteDB:
         content:# Put sample in instrument
         shasum: 74fd0aea706e0c51d1fd92e9c8e731f83cf92009
         qrCodes: ['13214124', '99698708']
-        image: data:image/jpg;base64..
+        image: data:image/jpg;base64
 
         .objective: Test if everything is working as intended
         .status: active
@@ -979,7 +979,7 @@ class SqlLiteDB:
 
   def getHierarchy(self, start:str, allItems:bool=False) -> tuple[Node,bool]:
     """
-    get hierarchy tree for projects, ..
+    get hierarchy tree for projects
 
     Args:
       start (str): start of the hierarchy (most parent)

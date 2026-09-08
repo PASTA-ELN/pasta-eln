@@ -1,4 +1,4 @@
-"""A Qt table model that exposes a pandas DataFrame to a QTableView."""
+"""A Qt table model that exposes a pandas DataFrame to a QTableView"""
 from typing import Any
 import pandas as pd
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt, Signal
@@ -8,14 +8,14 @@ from typing_extensions import override
 
 class PandasTableModel(QAbstractTableModel):
   """
-  A Qt table model that exposes a pandas DataFrame to a QTableView.
+  A Qt table model that exposes a pandas DataFrame to a QTableView
 
   This model provides a read-only interface to a pandas DataFrame,
   mapping rows/columns directly to the underlying DataFrame structure
-  without copying data.
+  without copying data
 
   Attributes:
-      _df (pd.DataFrame): The underlying pandas DataFrame.
+      _df (pd.DataFrame): The underlying pandas DataFrame
   """
   rowCheckChanged = Signal(int, bool)
 
@@ -23,7 +23,7 @@ class PandasTableModel(QAbstractTableModel):
                nameColors: list[QColor | None] | None = None) -> None:
     """ Initializes a new PandasTableModel
     Args:
-      df (pd.DataFrame): The dataframe to display.
+      df (pd.DataFrame): The dataframe to display
       documentIds (list[str] | None): A list of document IDs
       nameColors (list[QColor | None] | None): optional per-row name colors
     """
@@ -35,29 +35,29 @@ class PandasTableModel(QAbstractTableModel):
 
 
   def rowCount(self, _: QModelIndex | QPersistentModelIndex = QModelIndex()) -> int:
-    """ Returns the number of rows in the table.
+    """ Returns the number of rows in the table
     Returns:
-      int: The number of rows in the table.
+      int: The number of rows in the table
     """
     return self.df.shape[0]
 
 
   def columnCount(self, _: QModelIndex | QPersistentModelIndex = QModelIndex()) -> int:
-    """ Returns the number of columns in the table.
+    """ Returns the number of columns in the table
     Returns:
-      int: The number of columns in the table.
+      int: The number of columns in the table
     """
     return self.df.shape[1] + 1                                                       # +1 for checkbox-column
 
 
   def data(self, index: QModelIndex | QPersistentModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
-    """ Returns the data for the given index and role.
+    """ Returns the data for the given index and role
     Args:
-      index (QModelIndex | QPersistentModelIndex): The index.
-      role (int, optional): The role.
-        Defaults to Qt.ItemDataRole.DisplayRole.
+      index (QModelIndex | QPersistentModelIndex): The index
+      role (int, optional): The role
+        Defaults to Qt.ItemDataRole.DisplayRole
     Returns:
-      Any: The data.
+      Any: The data
     """
     if not index.isValid():
       return None
@@ -75,11 +75,11 @@ class PandasTableModel(QAbstractTableModel):
 
 
   def flags(self, index: QModelIndex | QPersistentModelIndex) -> Qt.ItemFlag:
-    """ Returns the flags for the given index.
+    """ Returns the flags for the given index
     Args:
-      index (QModelIndex | QPersistentModelIndex): The index.
+      index (QModelIndex | QPersistentModelIndex): The index
     Returns:
-      Qt.ItemFlag: The flags.
+      Qt.ItemFlag: The flags
     """
     if not index.isValid():
       return Qt.ItemFlag.NoItemFlags
@@ -92,16 +92,16 @@ class PandasTableModel(QAbstractTableModel):
 
   def setData(self, index: QModelIndex | QPersistentModelIndex, value: Any,
               role: int = Qt.ItemDataRole.EditRole) -> bool:
-    """ Set the data for the given index and role.
+    """ Set the data for the given index and role
     Args:
-      index (QModelIndex | QPersistentModelIndex): The index.
-      value (Any): The value.
-      role (int, optional): The role.
-        Defaults to Qt.ItemDataRole.EditRole.
+      index (QModelIndex | QPersistentModelIndex): The index
+      value (Any): The value
+      role (int, optional): The role
+        Defaults to Qt.ItemDataRole.EditRole
     Returns:
-      bool: True if the data was set successfully, False otherwise.
+      bool: True if the data was set successfully, False otherwise
     """
-    # When a row is checked, this method is called and updates the object.
+    # When a row is checked, this method is called and updates the object
     if index.column() == 0 and role == Qt.ItemDataRole.CheckStateRole:
       checked = value == Qt.CheckState.Checked.value
       self.checkedRows[index.row()] = checked
@@ -112,14 +112,14 @@ class PandasTableModel(QAbstractTableModel):
 
 
   def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
-    """ Returns the header data for the given section and orientation.
+    """ Returns the header data for the given section and orientation
     Args:
-      section (int): The section.
-      orientation (Qt.Orientation): The orientation.
-      role (int, optional): The role.
-        Defaults to Qt.ItemDataRole.DisplayRole.
+      section (int): The section
+      orientation (Qt.Orientation): The orientation
+      role (int, optional): The role
+        Defaults to Qt.ItemDataRole.DisplayRole
     Returns:
-      Any: The header data.
+      Any: The header data
     """
     if role != Qt.ItemDataRole.DisplayRole:
       return None
@@ -132,8 +132,8 @@ class PandasTableModel(QAbstractTableModel):
     """
     Setter for self.checkedRows
     Args:
-      row (int): The row index.
-      checked (bool): Whether the row should be checked.
+      row (int): The row index
+      checked (bool): Whether the row should be checked
     """
     self.checkedRows[row] = checked
     index = self.index(row, 0)
@@ -142,10 +142,10 @@ class PandasTableModel(QAbstractTableModel):
 
   @override
   def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
-    """ Sorts the table by the given column and order.
+    """ Sorts the table by the given column and order
     Args:
-      column (int): The column to sort by.
-      order (Qt.SortOrder): The order to sort by. Defaults to Qt.SortOrder.AscendingOrder.
+      column (int): The column to sort by
+      order (Qt.SortOrder): The order to sort by. Defaults to Qt.SortOrder.AscendingOrder
     """
     if column == 0:
       # ignore the first column (checkboxes) maybe implement later

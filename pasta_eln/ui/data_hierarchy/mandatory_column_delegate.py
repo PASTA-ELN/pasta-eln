@@ -62,7 +62,7 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
       index (Union[QModelIndex, QPersistentModelIndex]): Table cell index
 
     Returns:
-      bool: Whether the delegate handled the event.
+      bool: Whether the delegate handled the event
     """
     if event.type() == QEvent.Type.MouseButtonRelease:
       indexName = model.index(index.row(), 0)

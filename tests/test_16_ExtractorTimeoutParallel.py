@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Tests for extractor timeout handling and parallel scan extraction."""
+"""Tests for extractor timeout handling and parallel scan extraction"""
 import hashlib
 import json
 import sqlite3
@@ -17,7 +17,7 @@ from pasta_eln.configuration_file import CONFIGURATION_FILE_NAME
 
 
 class TestExtractorTimeoutParallel(unittest.TestCase):
-  """Timeout and parallel extractor behavior."""
+  """Timeout and parallel extractor behavior"""
 
   def setUp(self):
     self.tempDir = tempfile.TemporaryDirectory()

@@ -4,7 +4,7 @@ from typing import Any
 
 
 class RepositoryClient(ABC):
-  """Required interface shared by repository clients."""
+  """Required interface shared by repository clients"""
   def __init__(self, serverUrl: str, apiToken: str) -> None:
     """
     Initializes the client

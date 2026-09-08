@@ -1,4 +1,4 @@
-"""HTML string parts for HTML export of ELN files."""
+"""HTML string parts for HTML export of ELN files"""
 
 
 htmlStart = """

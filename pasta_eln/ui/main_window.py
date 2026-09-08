@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
   def __init__(self, comm: Communicate) -> None:
     """ Init main window
     Args:
-      comm (Communicate): Shared communication object.
+      comm (Communicate): Shared communication object
     """
     # global setting
     super().__init__()
@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
     self.application = QApplication.instance()
     if self.comm.configuration:
       self.comm.palette = Palette(comm, self.comm.configuration['GUI']['theme'])
-      # Apply the Qt palette before constructing child widgets.
+      # Apply the Qt palette before constructing child widgets
       self.comm.palette.setTheme()
       self.comm.docTypesChanged.connect(self.paint)
     else:
@@ -106,7 +106,7 @@ class MainWindow(QMainWindow):
     action('Verify database',           self, Command.CHECK_DB, developerMenu, keySequence='Ctrl+?')
     action('Restart application',       self, Command.RESTART, developerMenu, keySequence='F9')
     action('Capture window screenshot', self, Command.SCREENSHOT, developerMenu, keySequence='F12')
-    # F12 must remain available while a modal dialog (for example Form) is open.
+    # F12 must remain available while a modal dialog (for example Form) is open
     if self.application is not None:
       self.application.installEventFilter(self)
 
@@ -122,7 +122,7 @@ class MainWindow(QMainWindow):
 
     self.paint()
     def _resizeSplitter() -> None:
-      """Restore the sidebar width from the GUI configuration."""
+      """Restore the sidebar width from the GUI configuration"""
       sidebarWidth = self.comm.configuration['uiState']['sidebarWidth']
       self.splitter.setSizes([sidebarWidth, self.splitter.width() - sidebarWidth])
     QTimer.singleShot(0, _resizeSplitter)
@@ -148,7 +148,7 @@ class MainWindow(QMainWindow):
 
 
   def onMainSplitterMoved(self, _position: int, _index: int) -> None:
-    """Persist the global sidebar width after it is resized.
+    """Persist the global sidebar width after it is resized
     """
     self.comm.saveUIState(sidebarWidth=self.splitter.sizes()[0])
 
@@ -159,7 +159,7 @@ class MainWindow(QMainWindow):
 
 
   def paintProjectActions(self) -> None:
-    """Enable project-scoped menu actions only when a project is open."""
+    """Enable project-scoped menu actions only when a project is open"""
     for projectAction in self.projectActions:
       projectAction.setEnabled(bool(self.comm.projectID))
 
@@ -179,7 +179,7 @@ class MainWindow(QMainWindow):
 
 
   def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-    """Handle F12 even when a modal dialog owns the keyboard focus.
+    """Handle F12 even when a modal dialog owns the keyboard focus
     Args:
       watched (QObject): object that was watched
       event (QEvent): event
