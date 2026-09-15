@@ -65,7 +65,7 @@ class TestStringMethods(unittest.TestCase):
     story.odt | -
     simple.png | measurement/image
     example.tif | measurement/image
-    https://download.samplelib.com/jpeg/sample-clouds-400x300.jpg | measurement/image
+    https://www.fz-juelich.de/en/ibg/ibg-1/images/research_groups/general/fz-juelich-logo/@@images/image-261-9d3b36703de5ad2157c50aa585e7d2bf.jpeg | measurement/image
     simple.csv | measurement/csv/linesAndDots
   procedure.md | workflow/procedure/markdown
   workplan.py | workflow/workplan
@@ -92,7 +92,7 @@ class TestStringMethods(unittest.TestCase):
     self.assertIn('        Sensor |      | Attachment that increases functionali... | Company B | d-', output)
 
     output = self.be.output('measurement')
-    self.assertIn('https://download.samplelib.com/jpeg/s... | _3   | - Remote image from samplelib. Used f... |            measurement/image | Y     |        ', output)
+    self.assertIn('https://www.fz-juelich.de/en/ibg/ibg-... | _3   | - Remote image from samplelib. Used f... |            measurement/image | Y     |        ', output)
     self.assertIn('simple.csv |      | # These .csv files use the simple con... | measurement/csv/linesAndDots | Y     |        |                                    | m-', output)
     self.assertIn('simple.png |      | # File with two locations', output)
     self.assertIn('- The sam... |            measurement/image | Y     |        |                                    | m-', output)

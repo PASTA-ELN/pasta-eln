@@ -287,7 +287,7 @@ def exampleData(force:bool=False, callbackPercent:Callable[[int],None] | None=No
 
   backend.addData('measurement', {
     #'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
-    'name'   :'https://download.samplelib.com/jpeg/sample-clouds-400x300.jpg',\
+    'name'   :'https://www.fz-juelich.de/en/ibg/ibg-1/images/research_groups/general/fz-juelich-logo/@@images/image-261-9d3b36703de5ad2157c50aa585e7d2bf.jpeg',\
     'comment':'- Remote image from samplelib. Used for testing and reference\n- This item links to a procedure that was used for its creation.'
               '\n- One can link to samples, etc. to create complex metadata\n- This item also has a rating', 'tags':['_3'],
     '.workflow/procedure':procedureID })
