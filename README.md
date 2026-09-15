@@ -38,10 +38,12 @@ For maintainer release work, `releaseVersion.py` provides a broader verification
 
 ## Open issues
 
-Open issues are the union of:
+Open issues are the union of
+1. [GitHub Issues](https://github.com/PASTA-ELN/pasta-eln/issues), which tracks actionable bugs, enhancements, and discussion; and
+2. this README section, which records repository-wide maintenance items that need visibility before or alongside an issue.
 
-- [GitHub Issues](https://github.com/PASTA-ELN/pasta-eln/issues), which tracks actionable bugs, enhancements, and discussion; and
-- this README section, which records repository-wide maintenance items that need visibility before or alongside an issue.
+Open issue list:
+
 
 ### Repository maintenance items
 
