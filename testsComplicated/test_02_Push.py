@@ -2,8 +2,8 @@
 """TEST set up elabFTW server and test repetition of sync """
 import logging, warnings, unittest
 from pathlib import Path
-from pasta_eln.backendWorker.backend import Backend
-from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
+from pasta_eln.backend_worker.backend import Backend
+from pasta_eln.backend_worker.elab_ftw_sync import Pasta2Elab
 from .misc import verify, handleReport
 
 
