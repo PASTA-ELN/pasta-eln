@@ -6,7 +6,7 @@ import re
 from collections import Counter
 from collections.abc import Callable
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 from anytree import Node, PreOrderIter
 from ..misc_tools import flatten
 from ..text_tools.handle_dictionaries import squashTupleIntoValue, truncateDictForElabFTW
@@ -361,7 +361,7 @@ class Pasta2Elab:
       if 'metaVendor' in docUpdate:
         del docUpdate['metaVendor']
       squashTupleIntoValue(docUpdate)
-      docUpdate = flatten(docUpdate, keepPastaStruct=True)
+      docUpdate = cast(dict[str, Any], flatten(docUpdate, keepPastaStruct=True))
       self.backend.db.updateDoc(docUpdate, node.id)
     else:
       self.backend.db.cursor.execute('UPDATE main SET dateSync=? WHERE id=?', (docMerged['dateSync'], node.id))
@@ -457,7 +457,7 @@ class Pasta2Elab:
               docOther = self.api.download(entryType, idx, listDoNotChange[0])
               docOther['dateSync'] = datetime.now().isoformat()
               squashTupleIntoValue(docOther)
-              docOther = flatten(docOther, keepPastaStruct=True)                     #type: ignore[assignment]
+              docOther = cast(dict[str, Any], flatten(docOther, keepPastaStruct=True))
               try:
                 branch = copy.deepcopy(docOther['branch'][0])
                 # create folder

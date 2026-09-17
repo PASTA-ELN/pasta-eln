@@ -11,7 +11,7 @@ from collections import Counter
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 import pandas as pd
 from anytree import Node
 from PySide6.QtCore import QObject, QThread, Signal, Slot
@@ -200,7 +200,7 @@ class BackendWorker(QObject):
       if '_projectID' in data['doc']:
         del data['doc']['_projectID']
       doc.update(data['doc'])
-      doc = flatten(doc, True)                                                      # type: ignore[assignment]
+      doc = cast(dict[str, Any], flatten(doc, True))
       self.backend.editData(doc)
       self.beSendDoc.emit(self.backend.db.getDoc(data['doc']['id']))            # send updated doc back to GUI
 
