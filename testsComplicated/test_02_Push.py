@@ -44,12 +44,12 @@ class TestStringMethods(unittest.TestCase):
     sync = Pasta2Elab(self.be, 'research', True)
     sync.verbose = False
     report = sync.sync('sA')
-    handleReport(report, [15,0,0,0,0])
+    handleReport(report, [19,0,0,0,0])
 
     # sync again: nothing should change
     print('\n\n=============================\nSecond sync: everything the same since HARD SEND\n============================')
     report = sync.sync('sA')
-    handleReport(report, [15,0,0,0,0])
+    handleReport(report, [19,0,0,0,0])
 
     # verify
     verify(self.be)

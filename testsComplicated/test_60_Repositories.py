@@ -2,9 +2,9 @@
 """TEST the form """
 import logging, warnings, json, tempfile
 from pathlib import Path
-from pasta_eln.backendWorker.repository import RepositoryClient
-from pasta_eln.backendWorker.dataverse import DataverseClient
-from pasta_eln.backendWorker.zenodo import ZenodoClient
+from pasta_eln.backend_worker.repository import RepositoryClient
+from pasta_eln.backend_worker.dataverse import DataverseClient
+from pasta_eln.backend_worker.zenodo import ZenodoClient
 
 
 def test_simple(qtbot, caplog):

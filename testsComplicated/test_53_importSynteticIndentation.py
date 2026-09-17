@@ -5,8 +5,8 @@ import warnings
 import unittest
 import re
 from pathlib import Path
-from pasta_eln.backendWorker.backend import Backend
-from pasta_eln.textTools.stringChanges import outputString
+from pasta_eln.backend_worker.backend import Backend
+from pasta_eln.text_tools.string_changes import outputString
 
 
 class TestStringMethods(unittest.TestCase):

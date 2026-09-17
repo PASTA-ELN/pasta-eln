@@ -361,6 +361,7 @@ class Pasta2Elab:
       if 'metaVendor' in docUpdate:
         del docUpdate['metaVendor']
       squashTupleIntoValue(docUpdate)
+      docUpdate = flatten(docUpdate, keepPastaStruct=True)
       self.backend.db.updateDoc(docUpdate, node.id)
     else:
       self.backend.db.cursor.execute('UPDATE main SET dateSync=? WHERE id=?', (docMerged['dateSync'], node.id))
@@ -390,7 +391,7 @@ class Pasta2Elab:
       if image:
         self.api.upload(entryType, elabID, image)
       if docMerged['branch'][0]['path'] is not None and docMerged['type'][0][0]!='x' \
-            and not docMerged['branch'][0]['path'].startswith('http') and \
+            and not docMerged['branch'][0]['path'].startswith(('http://', 'https://')) and \
             (self.backend.basePath/docMerged['branch'][0]['path']).name not in {i['real_name'] for i in uploads}:
         rawDataPath = self.backend.basePath/docMerged['branch'][0]['path']
         if self.rawDataUploadAllowed(rawDataPath, node.id):
@@ -460,7 +461,7 @@ class Pasta2Elab:
               try:
                 branch = copy.deepcopy(docOther['branch'][0])
                 # create folder
-                if branch['path'] is not None:
+                if branch['path'] is not None and not branch['path'].startswith(('http://', 'https://')):
                   if docOther['type'][0][0]=='x':
                     (self.backend.basePath/branch['path']).mkdir(parents=True, exist_ok=True)
                     with open(self.backend.basePath/branch['path']/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
@@ -472,11 +473,12 @@ class Pasta2Elab:
                   docOther['tags'] = []
                 self.backend.db.saveDoc(docOther)
                 # save datafile if exists
-                if listFile := [i for i in uploads if i['real_name']!='do_not_change.json' and \
-                                not i['real_name'].startswith('thumbnail.')]:
-                  data = self.api.download(listFile[0]['type'], idx, listFile[0])
-                  with open(self.backend.basePath/branch['path'], 'wb') as fOut:
-                    fOut.write(data['data'])
+                if branch['path'] is not None and not branch['path'].startswith(('http://', 'https://')):
+                  if listFile := [i for i in uploads if i['real_name']!='do_not_change.json' and \
+                                  not i['real_name'].startswith('thumbnail.')]:
+                    data = self.api.download(listFile[0]['type'], idx, listFile[0])
+                    with open(self.backend.basePath/branch['path'], 'wb') as fOut:
+                      fOut.write(data['data'])
                 report.append((docOther['id'], 2))
               except Exception:
                 docOther.pop('image','')

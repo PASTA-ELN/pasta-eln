@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 from pasta_eln.ui.gui_communicate import Communicate
-from .test_34_GUI_Form import getTable
+from tests.test_34_GUI_Form import getTable
 
 LINE = "  return {'image':image, 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser"
 def test_simple(qtbot, caplog):
