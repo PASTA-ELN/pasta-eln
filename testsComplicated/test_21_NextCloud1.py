@@ -57,7 +57,6 @@ class TestNextcloud(unittest.TestCase):
     # 5. Check scan is correct
     view = backend.db.getView('viewHierarchy/viewPathsAll', startKey=linkPath.relative_to(backend.basePath).as_posix())
     scanned = backend.db.getDoc(view[0]['id'])
-    print('New doc: ',scanned)
     self.assertEqual(scanned['metaVendor']['nextcloudFileId'][0], targetFile['fileId'])
     self.assertEqual(scanned['metaVendor']['nextcloudETag'][0], targetFile['nextcloudETag'])
 
