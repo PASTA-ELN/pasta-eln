@@ -11,9 +11,10 @@ import requests
 
 from pasta_eln.configuration_file import loadConfiguration
 from pasta_eln.misc_tools import loadNamedModule
-from .nextcloud_common import readNclink
+from testsComplicated.nextcloud_common import readNclink
 
-MAX_AUTOMATIC_SIZE = 100 * 1024 * 1024
+
+MAX_AUTOMATIC_SIZE = 100 * 1024 * 1024  #100MB
 DAV = '{DAV:}'
 OC = '{http://owncloud.org/ns}'
 
@@ -69,7 +70,7 @@ def use(filePath:Path, style:dict[str,Any], saveFileName:str|None=None) -> dict[
              'nextcloudSize':remote['size']}
   changed = [key for key, value in current.items() if value != link[key]]
   if changed:
-    raise ValueError(f'Nextcloud file changed: {", ".join(changed)}')
+    raise ValueError(f'Nextcloud file changed: {", ".join(changed)} to {current}')
 
   # create metaVendor
   metaVendor = {'nextcloudInstance':link['instance'], 'nextcloudFileId':link['fileId'],

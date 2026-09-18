@@ -7,6 +7,8 @@ from pathlib import Path
 from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.configuration_file import saveConfiguration
 
+from testsComplicated.nextcloud_common import readNclink, writeNclink
+from testsComplicated.extractor_nclink import use
 
 class TestNextcloud(unittest.TestCase):
   """Test Nextcloud access, link creation, and extraction."""
@@ -34,22 +36,30 @@ class TestNextcloud(unittest.TestCase):
     backend.changeHierarchy(projID1)
 
     # 1. Create the pointer from the selected-file information
-    from .nextcloud_common import readNclink, writeNclink
-    targetFile = {'name':'Al1.TXT', 'fileId':'1580', 'nextcloudETag': '"fb39837ff04d4fe55fa338a14357ae33"',
-                  'nextcloudContentType': 'text/plain', 'nextcloudSize': 43580}
+    targetFile = {'name':'scratch.png', 'fileId':'1568', 'nextcloudETag': '"b4766562a8467914ce3ce8354946bfa2"',
+                  'nextcloudContentType': 'image/png', 'nextcloudSize': 314033}
     linkPath = writeNclink(backend.cwd, config['instance'], targetFile)  #assemble nclink-path
 
-    # 1b. Verify only: Read it back and verify its durable identity.
+    # 2. Verify only - not in production: Read it back and verify its durable identity.
     link = readNclink(linkPath)
     self.assertEqual(link['fileId'], targetFile['fileId'])
     self.assertEqual(link['name'], targetFile['name'])
 
-    # 2. Exercise the extractor.
-    from .extractor_nclink import use
+    # 3. Verify only - not in production: Exercise the extractor.
     result = use(linkPath, {'main':''})
     self.assertIn('metaVendor', result)
     self.assertIn('metaUser', result)
 
+    # 4. Scan
+    backend.extractors.addOnPath = Path(__file__).parent
+    backend.scanProject(None, projID1)
+
+    # 5. Check scan is correct
+    view = backend.db.getView('viewHierarchy/viewPathsAll', startKey=linkPath.relative_to(backend.basePath).as_posix())
+    scanned = backend.db.getDoc(view[0]['id'])
+    print('New doc: ',scanned)
+    self.assertEqual(scanned['metaVendor']['nextcloudFileId'][0], targetFile['fileId'])
+    self.assertEqual(scanned['metaVendor']['nextcloudETag'][0], targetFile['nextcloudETag'])
 
 if __name__ == '__main__':
   unittest.main()
