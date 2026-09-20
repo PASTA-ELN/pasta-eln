@@ -26,7 +26,7 @@ class TerminologyLookupService:
   and the results (dict(information, iri)) are returned
   """
   def __init__(self) -> None:
-    self.sessionTimeout = 10                 # Timeout in seconds for the requests send to the lookup services
+    self.sessionTimeout = 20                 # Timeout in seconds for the requests send to the lookup services
 
 
   async def doLookup(self, searchTerm: str) -> list[dict[str, Any]]:
