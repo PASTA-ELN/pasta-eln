@@ -8,7 +8,7 @@ from urllib import request
 from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.backend_worker.input_output import importELN
-from .helpers import waitForBackend
+from .helpers import waitForBackend, waitForWorker
 
 
 def test_simple(qtbot, caplog):
@@ -55,8 +55,9 @@ def test_simple(qtbot, caplog):
     comm.uiRequestTask.emit(Task.ADD_DOC, {'docType':'x0', 'doc':{'name':projName}, 'hierStack':[]})
     df = getTable(qtbot, comm, 'x0')
     projID = df[df['name']==projName]['id'].values[0]
-    comm.uiRequestTask.emit(Task.IMPORT_ELN, {'fileName':elnFileName, 'projID':projID})
-    qtbot.wait(2000)  # wait until import is done
+    waitForWorker(qtbot, comm.backendThread.worker.beSendTaskReport,
+                  lambda: comm.uiRequestTask.emit(Task.IMPORT_ELN, {'fileName':elnFileName, 'projID':projID}),
+                  lambda task, *_: task is Task.IMPORT_ELN)
 
     comm.changeProject.emit(projID, '')
     qtbot.addWidget(window)

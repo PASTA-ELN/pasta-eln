@@ -306,8 +306,8 @@ class SqlLiteDB:
       Returns:
         dict[str, Any]: Documents and relationship edges for the active project group
     """
-    self.connection.row_factory = sqlite3.Row
     cursor = self.connection.cursor()
+    cursor.row_factory = sqlite3.Row
     cursor.execute('SELECT id, name, type FROM main')
     nodes = [{'id': row['id'], 'name': row['name'], 'type': row['type'].split('/')[0]} for row in cursor.fetchall()]
     nodeIDs = {node['id'] for node in nodes}

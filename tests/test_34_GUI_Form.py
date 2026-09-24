@@ -1,18 +1,11 @@
 import logging
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.form.form import Form
-from .helpers import waitForBackend
+from .helpers import waitForBackend, waitForWorker
 
 def getTable(qtbot, comm, docType):
-  table = None
-  def receiveTable(t):
-    nonlocal table
-    table = t
-  comm.backendThread.worker.beSendTable.connect(receiveTable)
-  comm.uiRequestTable.emit(docType,'',True)
-  while table is None:
-    qtbot.wait(100)
-  return table
+  return waitForWorker(qtbot, comm.backendThread.worker.beSendTable, lambda: comm.uiRequestTable.emit(docType,'',True),
+                       lambda _, tableDocType: tableDocType==docType)[0]
 
 
 def test_simple(qtbot, caplog):

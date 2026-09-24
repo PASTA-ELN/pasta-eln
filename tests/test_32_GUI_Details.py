@@ -72,8 +72,7 @@ def test_rerun_extractors_uses_table_request(qtbot):
 def test_advanced_folder_scan_action_toggles_ignore_marker(qtbot, tmp_path):
   """Advanced Details actions create and remove the scanner's existing marker"""
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
-    qtbot.wait(100)
+  waitForBackend(qtbot, comm)
   window = Details(comm)
   qtbot.addWidget(window)
   folder = tmp_path / 'folder'
@@ -103,8 +102,7 @@ def test_advanced_folder_scan_action_toggles_ignore_marker(qtbot, tmp_path):
 def test_advanced_attachments_show_current_state_and_request_addition(qtbot):
   """Advanced device details expose the default example's immutable attachment history"""
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
-    qtbot.wait(100)
+  waitForBackend(qtbot, comm)
   window = Details(comm)
   qtbot.addWidget(window)
   deviceID = getTable(qtbot, comm, 'device').query("name == 'Big instrument'").iloc[0]['id']

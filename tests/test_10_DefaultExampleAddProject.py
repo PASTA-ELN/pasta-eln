@@ -2,14 +2,13 @@
 """TEST the form """
 import logging, shutil
 from pathlib import Path
-from PySide6.QtCore import QEventLoop, Slot
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.installation_tools import exampleData
 from pasta_eln.configuration_file import getConfiguration
 from pasta_eln.ui.form.form import Form
 from pasta_eln.ui.gui_communicate import Communicate
 from .test_03_dragDrop import verify
-from .helpers import waitForBackend
+from .helpers import waitForBackend, waitForWorker
 
 def test_simple(qtbot, caplog, request):
   """
@@ -31,41 +30,26 @@ def test_simple(qtbot, caplog, request):
     elementName = f"key_{idx}"
     if key=='name':
       getattr(window, elementName).setText('A testing project')
-  with qtbot.waitSignal(comm.backendThread.worker.beSendTable, timeout=30_000,   # backend only in worker thread
-                        check_params_cb=lambda df, docType: docType=='x0' and
-                                                            (df['name']=='A testing project').any()) as tableSignal:
-    window.saveBtn.click()
+  df, _ = waitForWorker(qtbot, comm.backendThread.worker.beSendTable, window.saveBtn.click,  # backend only in worker thread
+                        lambda df, docType: docType=='x0' and (df['name']=='A testing project').any())
 
   # add a comment
-  df = tableSignal.args[0]
   projID = df[df['name']=='A testing project']['id'].values[0]
   doc = {'comment':'# PASTA-ELN | The favorite ELN for experimental scientists\n - This is an example .eln output for sharing between different ELNs.',
          'id': projID}
-  comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':doc, 'newProjID':''})
+  waitForWorker(qtbot, comm.backendThread.worker.beSendDoc,          # its reply must not be taken as the next one
+                lambda: comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':doc, 'newProjID':''}))
 
   # test scanning
-  qtbot.wait(1000)  # wait for backend to finish
-  loop = QEventLoop()# now use event loop to wait for backend to finish, nicer if using functions
-  @Slot(dict)
-  def getDoc(doc):
-    dirName = comm.basePath/doc['branch'][0]['path']
-    shutil.copy(Path(__file__).parent.parent/'pasta_eln'/'Resources'/'Icons'/'pasta512.png', dirName)
-    loop.quit()
-  comm.backendThread.worker.beSendDoc.connect(getDoc)
-  comm.uiRequestDoc.emit(projID)
-  loop.exec()
-  @Slot(str)
-  def didScan(_):
-    loop.quit()
-  comm.backendThread.worker.beSendTaskReport.connect(didScan)
-  comm.uiRequestTask.emit(Task.SCAN, {'docID':projID})
-  loop.exec()
+  doc = waitForWorker(qtbot, comm.backendThread.worker.beSendDoc, lambda: comm.uiRequestDoc.emit(projID))[0]
+  shutil.copy(Path(__file__).parent.parent/'pasta_eln'/'Resources'/'Icons'/'pasta512.png',
+              comm.basePath/doc['branch'][0]['path'])
+  waitForWorker(qtbot, comm.backendThread.worker.beSendTaskReport,
+                lambda: comm.uiRequestTask.emit(Task.SCAN, {'docID':projID}), lambda task, *_: task is Task.SCAN)
 
   # move to top: directly in the database: not sure why
   cmd = "UPDATE branches SET child='-1' WHERE path=='PastasExampleProject/pasta512.png'"
-  comm.uiSendSQL.emit([{'type':'one', 'cmd':cmd}])
-
-  qtbot.wait(1000)  # wait for backend to finish
+  comm.uiSendSQL.emit([{'type':'one', 'cmd':cmd}])     # no reply; worker handles verify's requests after it
   verify(qtbot, comm, projID, 0)
   print(f'{"*"*40}\nEND TEST 10\n{"*"*40}')
 

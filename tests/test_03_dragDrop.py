@@ -6,7 +6,7 @@ from PySide6.QtCore import QModelIndex                         # pylint: disable
 from pasta_eln.ui.project.project import Project
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.backend_worker.worker import Task
-from .helpers import waitForBackend
+from .helpers import waitForBackend, waitForWorker
 
 
 def test_simple(qtbot, caplog, request):
@@ -21,10 +21,9 @@ def test_simple(qtbot, caplog, request):
   window = Project(comm)
   qtbot.addWidget(window)
   waitForBackend(qtbot, comm)
-  with qtbot.waitSignal(comm.backendThread.worker.beSendTable, timeout=30_000,   # backend only in worker thread
-                        check_params_cb=lambda _, docType: docType=='x0') as tableSignal:
-    comm.uiRequestTable.emit('x0', '', False)
-  projID = tableSignal.args[0]['id'].iloc[-1]
+  table, _ = waitForWorker(qtbot, comm.backendThread.worker.beSendTable,          # backend only in worker thread
+                           lambda: comm.uiRequestTable.emit('x0', '', False), lambda _, docType: docType=='x0')
+  projID = table['id'].iloc[-1]
   window.change(projID,'')
 
   choices = random.choices(range(100), k=16)
@@ -73,16 +72,15 @@ def test_simple(qtbot, caplog, request):
 
 
 def verify(qtbot, comm, projID, epoch): # Output hierarchy and verify DB
-  with qtbot.waitSignal(comm.backendThread.worker.beSendHierarchy, timeout=30_000) as hierarchySignal:
-    comm.uiRequestHierarchy.emit(projID, True)
-  hierarchy = hierarchySignal.args[0]
+  hierarchy, _ = waitForWorker(qtbot, comm.backendThread.worker.beSendHierarchy,
+                               lambda: comm.uiRequestHierarchy.emit(projID, True))
   print(f'{"*"*40}\nHierarchy after drag-drop {epoch}\n{"*"*40}')
   print(''.join('  '*node.depth + node.name + ' | ' + '/'.join(node.docType) + (f' | {node.id}') +'\n'
                 for node in PreOrderIter(hierarchy)))
 
-  with qtbot.waitSignal(comm.backendThread.worker.beSendTaskReport, timeout=30_000) as reportSignal:
-    comm.uiRequestTask.emit(Task.CHECK_DB, {'style':'text'})
-  output = reportSignal.args[1]
+  output = waitForWorker(qtbot, comm.backendThread.worker.beSendTaskReport,
+                         lambda: comm.uiRequestTask.emit(Task.CHECK_DB, {'style':'text'}),
+                         lambda task, *_: task is Task.CHECK_DB)[1]
   print(f'{"*"*40}\nCheckDB after drag-drop {epoch}\n{"*"*40}')
   print(output)
   output = '\n'.join(output.split('\n')[8:])

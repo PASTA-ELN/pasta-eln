@@ -26,8 +26,7 @@ def test_simple(qtbot, caplog):
 def test_detail_level_controls_advanced_settings(qtbot):
   """The Appearance detail level controls visibility of the advanced section"""
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
-    qtbot.wait(100)
+  waitForBackend(qtbot, comm)
   comm.configuration['GUI']['detailsLevel'] = 'Default'
   dialog = ConfigurationGUI(comm, lambda _: None)
   qtbot.addWidget(dialog)
