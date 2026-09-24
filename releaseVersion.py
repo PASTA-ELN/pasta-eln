@@ -119,9 +119,11 @@ def createChangelog(version: str) -> Path:
                               capture_output=True, text=True, check=True).stdout
   commits = []
   for record in commitText.split('\x1e'):
-    if not record.strip():
+    record = record.strip('\n')                          # str.strip() would also remove the \x1f separators
+    if not record:
       continue
-    commitHash, subject, body = record.strip().split('\x1f', 2)
+    commitHash, subject, body = record.split('\x1f', 2)
+    body = body.strip()
     changedFiles = subprocess.run(['git', 'diff-tree', '--no-commit-id', '--name-status', '-r', commitHash],
                                   capture_output=True, text=True, check=True).stdout.strip()
     commits.append(f'- {subject} ([`{commitHash[:8]}`](https://github.com/PASTA-ELN/pasta-eln/commit/{commitHash}))\n'
@@ -488,4 +490,6 @@ if __name__=='__main__':
 - Open new milestone on github and fill in few issues
 """)
     else:
-      print('You have to be on main branch to continue.')
+      print('Aborted: no new version created.')
+  else:
+    print('You have to be on main branch to continue.')
