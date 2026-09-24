@@ -95,6 +95,7 @@ class Project(Widget):
     selectedIndex = None
     self.model = QStandardItemModel()
     self.tree = TreeView(self, self.comm, self.model)
+    self.model.setParent(self.tree)
     # self.tree.setSelectionBehavior(QAbstractItemView.SelectRows)
     # self.tree.setSelectionMode(QAbstractItemView.SingleSelection)
     self.model.itemChanged.connect(self.modelChanged)

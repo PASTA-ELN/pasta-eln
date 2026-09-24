@@ -2,8 +2,9 @@
 """TEST the project view: drag drop randomly items around """
 import logging, warnings, random
 from pathlib import Path
+from typing import Any
 from anytree import PreOrderIter
-from PySide6.QtCore import QModelIndex                         # pylint: disable=no-name-in-module
+from PySide6.QtCore import QModelIndex, QObject, Signal       # pylint: disable=no-name-in-module
 from pasta_eln.ui.project.project import Project
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.backend_worker.worker import Task
@@ -80,17 +81,44 @@ def test_simple(qtbot, caplog, request):
   return
 
 
-def verify(qtbot, comm, projID, epoch): # Output hierarchy and verify DB
-  with qtbot.waitSignal(comm.backendThread.worker.beSendHierarchy, timeout=30_000) as hierarchySignal:
+class MainThreadRelay(QObject):
+  """ Re-emit a backend-thread signal on the GUI thread
+
+  qtbot.waitSignal on a worker signal runs its callback in the worker thread, which stops GUI-thread timers
+  and quits the GUI event loop from the wrong thread (killTimer warnings, sporadic segfaults)
+  """
+  received = Signal(tuple)
+
+  def __init__(self, workerSignal:Any) -> None:
+    super().__init__()
+    self.workerSignal = workerSignal
+    workerSignal.connect(self.relay)                           # receiver lives in GUI thread: queued connection
+
+  def relay(self, *args:Any) -> None:
+    """ Forward arguments of worker signal """
+    self.received.emit(args)
+
+  def close(self) -> None:
+    """ Disconnect from worker signal """
+    self.workerSignal.disconnect(self.relay)
+
+
+def verify(qtbot, comm, projID, epoch):
+  """ Output hierarchy and verify DB """
+  relay = MainThreadRelay(comm.backendThread.worker.beSendHierarchy)
+  with qtbot.waitSignal(relay.received, timeout=30_000) as hierarchySignal:
     comm.uiRequestHierarchy.emit(projID, True)
-  hierarchy = hierarchySignal.args[0]
+  relay.close()
+  hierarchy = hierarchySignal.args[0][0]
   print(f'{"*"*40}\nHierarchy after drag-drop {epoch}\n{"*"*40}')
   print(''.join('  '*node.depth + node.name + ' | ' + '/'.join(node.docType) + (f' | {node.id}') +'\n'
                 for node in PreOrderIter(hierarchy)))
 
-  with qtbot.waitSignal(comm.backendThread.worker.beSendTaskReport, timeout=30_000) as reportSignal:
+  relay = MainThreadRelay(comm.backendThread.worker.beSendTaskReport)
+  with qtbot.waitSignal(relay.received, timeout=30_000) as reportSignal:
     comm.uiRequestTask.emit(Task.CHECK_DB, {'style':'text'})
-  output = reportSignal.args[1]
+  relay.close()
+  output = reportSignal.args[0][1]
   print(f'{"*"*40}\nCheckDB after drag-drop {epoch}\n{"*"*40}')
   print(output)
   output = '\n'.join(output.split('\n')[8:])
