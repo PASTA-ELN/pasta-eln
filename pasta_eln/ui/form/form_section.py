@@ -18,4 +18,4 @@ class FormSection(CollapsibleSection):
     self.formL.setContentsMargins(SPACE.M, SPACE.S, SPACE.M, SPACE.M)
     self.formL.setSpacing(SPACE.S)
     self.formL.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
-    super().__init__(title, self.formW, expanded=expanded, boldTitle=True)
+    super().__init__(title, self.formW, expanded=expanded, boldTitle=False)

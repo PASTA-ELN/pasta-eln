@@ -108,6 +108,7 @@ class TableView(Widget):
     self.table.horizontalHeader().setStretchLastSection(True)
     self.table.horizontalHeader().setSectionsMovable(True)
     self.table.horizontalHeader().setSortIndicatorShown(True)
+    self.table.horizontalHeader().setHighlightSections(False)
     self.table.verticalHeader().hide()
     self.table.setSortingEnabled(True)
     self.table.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
