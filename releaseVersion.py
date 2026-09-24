@@ -231,7 +231,7 @@ def newVersion(level:int=2) -> None:
       raise RuntimeError('Release stopped before changelog publication.')
     changelogPath = Path('CHANGELOG.md')
     reviewedDraft = draftPath.read_text(encoding='utf-8').rstrip()
-    requiredMetadata = (f'## [v{version}]', r'\*\*Release source commit:\*\* `[0-9a-f]{40}`',
+    requiredMetadata = (re.escape(f'## [v{version}]'), r'\*\*Release source commit:\*\* `[0-9a-f]{40}`',
                         r'\*\*Previous stable release:\*\* `v\d+\.\d+\.\d+` \(`[0-9a-f]{40}`\)')
     if any(re.search(metadata, reviewedDraft) is None for metadata in requiredMetadata):
       raise RuntimeError(f'Reviewed changelog draft {draftPath} is missing required release metadata.')
