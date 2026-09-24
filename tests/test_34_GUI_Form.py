@@ -1,6 +1,7 @@
 import logging
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.form.form import Form
+from .helpers import waitForBackend
 
 def getTable(qtbot, comm, docType):
   table = None
@@ -17,8 +18,7 @@ def getTable(qtbot, comm, docType):
 def test_simple(qtbot, caplog):
 
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
-    qtbot.wait(100)
+  waitForBackend(qtbot, comm)
 
   table = getTable(qtbot, comm, 'measurement')
   docID = table[table['name']=='simple.png']['id'].values[0]

@@ -40,7 +40,7 @@ class SqlLiteDB:
       resetDataHierarchy (bool): whether to reset the data hierarchy
     """
     isNewDatabaseFile = not (basePath/'pastaELN.db').is_file()
-    self.connection = sqlite3.connect(basePath/'pastaELN.db', check_same_thread=False)
+    self.connection = sqlite3.connect(basePath/'pastaELN.db')
     self.basePath   = basePath
     self.cursor     = self.connection.cursor()
     databaseVersion = self.cursor.execute('PRAGMA user_version').fetchone()[0]# V0 predates SQLite version marker
@@ -208,8 +208,8 @@ class SqlLiteDB:
       return [i[0] for i in results] if column=='' else results
     ### if metadata = docTypeSchema of data
     if column == 'meta':
-      self.connection.row_factory = sqlite3.Row                                                  #default None
       cursor = self.connection.cursor()
+      cursor.row_factory = sqlite3.Row
       if group:
         cursor.execute('SELECT * FROM docTypeSchema WHERE docType=? AND class=?', (docType, group))
       else:
@@ -247,8 +247,8 @@ class SqlLiteDB:
     Returns:
         dict: json representation of document
     """
-    self.connection.row_factory = sqlite3.Row                                                    #default None
     cursor = self.connection.cursor()
+    cursor.row_factory = sqlite3.Row
     cursor.execute('SELECT * FROM main WHERE id=?', (docID,))
     res = cursor.fetchone()
     if res is None:
@@ -461,8 +461,8 @@ class SqlLiteDB:
     if 'edit' in dataNew:                                                                           #if delete
       dataNew = {'id':dataNew['id'], 'branch':dataNew['branch'], 'user':dataNew['user'], 'externalId':dataNew['externalId'], 'name':''}
     changesDict:dict[str,Any]         = {}
-    self.connection.row_factory = sqlite3.Row                                                    #default None
     cursor = self.connection.cursor()
+    cursor.row_factory = sqlite3.Row
 
     # tags and qrCodes
     tagsNew= set(dataNew.pop('tags'))

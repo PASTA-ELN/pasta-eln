@@ -8,6 +8,7 @@ from urllib import request
 from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.backend_worker.input_output import importELN
+from .helpers import waitForBackend
 
 
 def test_simple(qtbot, caplog):
@@ -28,8 +29,7 @@ def test_simple(qtbot, caplog):
     pass
 
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
-    qtbot.wait(100)
+  waitForBackend(qtbot, comm)
   window = Project(comm)
   window.setMinimumSize(1024,800)
   window.show()

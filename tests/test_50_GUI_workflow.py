@@ -24,11 +24,7 @@ from pasta_eln.ui.sidebar.project_card import ProjectCard
 from pasta_eln.ui.table.table import TableView
 from pasta_eln.ui.workplan_creator.procedure_list_item import ProcedureListItem
 from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
-
-
-def wait_for_backend(qtbot, comm) -> None:
-  """Wait until the communication object has a usable backend"""
-  qtbot.waitUntil(lambda: comm.backendThread.worker.backend.dbRaw is not None, timeout=30_000)
+from .helpers import waitForBackend
 
 
 def table_for(window: MainWindow, docType: str) -> TableView:
@@ -143,14 +139,14 @@ def test_core_gui_workflow(qtbot, caplog):
   try:
     from pasta_eln.ui.gui_communicate import Communicate
 
-    # Start communication with the backend and wait for it to initialize
+    # Start communication with the backend and open the main window before the backend sends docTypes,
+    #   like the real GUI: the body builds its tabs on docTypesChanged
     comm = Communicate('research')
-    wait_for_backend(qtbot, comm)
-    # Open the main window and wait until the project sidebar is populated
     window = MainWindow(comm)
     window.setMinimumSize(1600, 1200)
     window.show()
     qtbot.addWidget(window)
+    waitForBackend(qtbot, comm)
     qtbot.waitUntil(lambda: window.sidebar.projectListL.count() > 0, timeout=30_000)
     capture_step(window, frames)
 

@@ -1,6 +1,7 @@
 import logging
 from pasta_eln.ui.main_window import MainWindow
 from pasta_eln.ui.gui_communicate import Communicate
+from .helpers import waitForBackend
 
 def test_simple(qtbot, caplog):
 
@@ -10,8 +11,7 @@ def test_simple(qtbot, caplog):
     window.setMinimumSize(1024,800)
     window.show()
     qtbot.addWidget(window)
-    while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
-      qtbot.wait(100)
+    waitForBackend(qtbot, comm)
     qtbot.wait(1000)
 
     # projID1 = window.comm.backend.output('x0').split('|')[-1].strip()

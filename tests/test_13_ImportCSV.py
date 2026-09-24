@@ -3,6 +3,7 @@ from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.project.project import Project
 from pasta_eln.add_ons.project_import_csv import main
 from .test_34_GUI_Form import getTable
+from .helpers import waitForBackend
 
 def verify(self):
   #Verify DB
@@ -16,8 +17,7 @@ def verify(self):
 def test_simple(qtbot, caplog):
   # start and wait to be up
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
-    qtbot.wait(100)
+  waitForBackend(qtbot, comm)
   window = Project(comm)
   window.show()
 

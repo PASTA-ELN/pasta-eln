@@ -6,6 +6,7 @@ from PySide6.QtCore import QModelIndex                         # pylint: disable
 from pasta_eln.ui.project.project import Project
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.backend_worker.worker import Task
+from .helpers import waitForBackend
 
 
 def test_simple(qtbot, caplog, request):
@@ -19,9 +20,11 @@ def test_simple(qtbot, caplog, request):
   request.addfinalizer(comm.shutdownBackendThread)
   window = Project(comm)
   qtbot.addWidget(window)
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
-    qtbot.wait(100)
-  projID = comm.backendThread.worker.backend.output('x0').split('|')[-2].strip()  #for testing purposes
+  waitForBackend(qtbot, comm)
+  with qtbot.waitSignal(comm.backendThread.worker.beSendTable, timeout=30_000,   # backend only in worker thread
+                        check_params_cb=lambda _, docType: docType=='x0') as tableSignal:
+    comm.uiRequestTable.emit('x0', '', False)
+  projID = tableSignal.args[0]['id'].iloc[-1]
   window.change(projID,'')
 
   choices = random.choices(range(100), k=16)

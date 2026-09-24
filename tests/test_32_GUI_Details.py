@@ -7,12 +7,12 @@ from pasta_eln.ui.details.details import Command, Details
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.details.details_hier_item import DetailsHierItem
 from .test_34_GUI_Form import getTable
+from .helpers import waitForBackend
 
 def test_simple(qtbot, caplog):
 
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
-    qtbot.wait(100)
+  waitForBackend(qtbot, comm)
   window = Details(comm)
   window.setMinimumSize(300, 800)
   window.show()
@@ -37,8 +37,7 @@ def test_simple(qtbot, caplog):
 def test_edit_requests_document_by_id(qtbot):
   """The form must fetch the full document instead of treating it as a group edit"""
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
-    qtbot.wait(100)
+  waitForBackend(qtbot, comm)
   window = Details(comm)
   qtbot.addWidget(window)
   formDocs: list[dict[str, str]] = []
@@ -56,8 +55,7 @@ def test_edit_requests_document_by_id(qtbot):
 def test_rerun_extractors_uses_table_request(qtbot):
   """Rerunning from Details uses the same all-recipes request as the table"""
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
-    qtbot.wait(100)
+  waitForBackend(qtbot, comm)
   window = Details(comm)
   qtbot.addWidget(window)
   requests: list[tuple[Task, dict[str, object]]] = []

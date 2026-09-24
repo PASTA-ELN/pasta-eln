@@ -9,6 +9,7 @@ from pasta_eln.configuration_file import getConfiguration
 from pasta_eln.ui.form.form import Form
 from pasta_eln.ui.gui_communicate import Communicate
 from .test_03_dragDrop import verify
+from .helpers import waitForBackend
 
 def test_simple(qtbot, caplog, request):
   """
@@ -25,17 +26,18 @@ def test_simple(qtbot, caplog, request):
   request.addfinalizer(comm.shutdownBackendThread)
   window = Form(comm, {'_projectID': '', 'type': ['x0']})
   qtbot.addWidget(window)
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
-    qtbot.wait(100)
+  waitForBackend(qtbot, comm)
   for idx, (key, _) in enumerate(window.allUserElements):
     elementName = f"key_{idx}"
     if key=='name':
       getattr(window, elementName).setText('A testing project')
-  window.saveBtn.click()
+  with qtbot.waitSignal(comm.backendThread.worker.beSendTable, timeout=30_000,   # backend only in worker thread
+                        check_params_cb=lambda df, docType: docType=='x0' and
+                                                            (df['name']=='A testing project').any()) as tableSignal:
+    window.saveBtn.click()
 
   # add a comment
-  qtbot.wait(1000)  # wait for backend to finish
-  df = comm.backendThread.worker.backend.db.getView(f'viewDocType/x0')               # easy method for testing
+  df = tableSignal.args[0]
   projID = df[df['name']=='A testing project']['id'].values[0]
   doc = {'comment':'# PASTA-ELN | The favorite ELN for experimental scientists\n - This is an example .eln output for sharing between different ELNs.',
          'id': projID}

@@ -2,12 +2,12 @@ import logging
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.config.main import Configuration
 from pasta_eln.ui.config.gui import ConfigurationGUI
+from .helpers import waitForBackend
 
 def test_simple(qtbot, caplog):
 
   comm = Communicate('research')
-  while comm.backendThread.worker.backend is None or comm.backendThread.worker.backend.dbRaw is None:
-    qtbot.wait(100)
+  waitForBackend(qtbot, comm)
 
   dialog = Configuration(comm)
   dialog.setMinimumSize(1024,800)
