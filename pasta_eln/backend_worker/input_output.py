@@ -240,6 +240,8 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         elif value:                                                 #keep name, only prevent causes for errors
           doc[f'.{key}'] = value
       # change into Pasta's native format
+      if 'comment' in doc and doc['comment'] in (doc.get('name'), inputData['@id']): #drop export's fallback description
+        del doc['comment']
       if isinstance(doc.get('comment',''), (dict,list)):
         if isinstance(doc['comment'], dict):
           doc['comment'] = [doc['comment']]
@@ -494,6 +496,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       elif path.startswith('http'):
         response = requests.get(path, timeout=10)
         if response.ok:
+          docELN['sdDatePublished'] = datetime.now().isoformat()
           docELN['contentSize'] = str(response.headers['content-length'])
           docELN['sha256']      = hashlib.sha256(response.content).hexdigest()
         else:
@@ -503,11 +506,14 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         docELN['@type'] = 'Dataset'
         docELN['@id'] = docELN['@id'] if docELN['@id'].endswith('/') else f"{docELN['@id']}/"
         mkDirectory(docELN['@id'][:-1])
+      if docELN['@type'] == 'Dataset':                                     #list contents, even if empty
+        docELN.setdefault('hasPart', [])
       # move docSupp into separate nodes
       variableMeasuredIDs = []
       for kObject, v in flatten(docSupp).items():
+        propertyValueID = f"#{docELN['@id'].removeprefix('./')}_{kObject}".replace(' ','_')
         name = ' \u2192 '.join([i.replace('_','').replace('-','').capitalize() for i in str(kObject).split('.')])
-        varMeasured = {'value':v, 'propertyID':kObject, 'name':name, '@type': 'PropertyValue','@id':f'{docELN["@id"]}_{kObject}'}
+        varMeasured = {'value':v, 'propertyID':kObject, 'name':name, '@type': 'PropertyValue','@id':propertyValueID}
         if isinstance(v, tuple):
           varMeasured['value'] = v[0]
           if v[1]:
@@ -521,7 +527,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
           if v[3]:
             varMeasured['identifier'] = v[3]
         graph.append(varMeasured)
-        variableMeasuredIDs.append({'@id':f'{docELN["@id"]}_{kObject}'})
+        variableMeasuredIDs.append({'@id':propertyValueID})
       if variableMeasuredIDs:
         docELN['variableMeasured'] = variableMeasuredIDs
       graph.append(docELN)
@@ -614,17 +620,21 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     # FOR ALL PROJECTS
     # ------------------- create ro-crate-metadata.json header -----------------------
     index:dict[str,Any] = {}
-    index['@context']= 'https://w3id.org/ro/crate/1.1/context'
+    index['@context']= 'https://w3id.org/ro/crate/1.2/context'
     # master node ro-crate-metadata.json
     graphMaster:list[dict[str,Any]] = []
-    graphMisc:list[dict[str,Any]] = []
+    graphMisc:list[dict[str,Any]] = [{'@id': 'https://w3id.org/ro/crate/1.2', '@type': ['CreativeWork','Profile'],
+      'name': 'RO-Crate 1.2 Specification'},{'@id': 'https://purl.archive.org/purl/elnconsortium/eln-spec/1.2+202609',
+      '@type': ['CreativeWork','Profile'],'name': 'ELN-File Format 1.2+202609 Specification'},
+      {'@id': 'https://creativecommons.org/licenses/by-nc-sa/4.0/', '@type': 'CreativeWork', 'name': 'CC BY-NC-SA 4.0',
+      'description': 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International'}]
     masterNodeInfo = {'@id': 'ro-crate-metadata.json', '@type': 'CreativeWork', 'about': {'@id': './'},
-        'conformsTo': {'@id': 'https://w3id.org/ro/crate/1.1'}, 'version': '1.0',
-        'additionalType': 'https://purl.archive.org/purl/elnconsortium/eln-spec/1.1',
+        'name': 'RO-Crate metadata descriptor',
+        'conformsTo': { '@id': 'https://w3id.org/ro/crate/1.2'}, 'version': '1.0',
         'datePublished':datetime.now().isoformat(), 'dateCreated': datetime.now().isoformat(),
-        'sdPublisher': {'@id': 'PASTA-ELN'}}
+        'sdPublisher': {'@id': '#PASTA-ELN'}}
     graphMaster.append(masterNodeInfo)
-    masterNodeInfo2 = {'@id':'PASTA-ELN','@type': 'Organization', 'name': 'PASTA-ELN',
+    masterNodeInfo2 = {'@id':'#PASTA-ELN','@type': 'Organization', 'name': 'PASTA-ELN',
             'logo': 'https://raw.githubusercontent.com/PASTA-ELN/desktop/main/pasta.png',
             'slogan': 'The favorite ELN for experimental scientists',
             'url': 'https://github.com/PASTA-ELN/', 'version': __version__
@@ -634,23 +644,24 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     for author in backend.configuration['authors']:
       affiliationNodes = []
       for affiliation in author['organizations']:
-        affiliationId    = f"affiliation_{affiliation['organization']}"
-        if affiliationId not in graphMaster:
-          data = {'@id':affiliationId, '@type':'Organization', 'name':affiliation['organization']}
-          if 'rorid' in affiliation and affiliation['rorid']:
-            data['identifier'] = f"https://ror.org/{affiliation['rorid']}"
-          graphMaster.append(data)
-          affiliationNodes.append({'@id':affiliationId})
-      authorID = f"author_{author['first']}_{author['last']}"
-      graphMaster.append({'@id':authorID, '@type':'Person', 'givenName': author['first'], 'familyName': author['last'],
+        if affiliation.get('rorid'):
+          affiliationId  = f"https://ror.org/{affiliation['rorid']}"
+        else:
+          affiliationId  = f"#affiliation_{affiliation['organization']}".replace(' ','_')
+        if affiliationId not in [i['@id'] for i in graphMaster]:
+          graphMaster.append({'@id':affiliationId, '@type':'Organization', 'name':affiliation['organization']})
+        affiliationNodes.append({'@id':affiliationId})
+      authorID = f"#author_{author['first']}_{author['last']}".replace(' ','_')
+      graphMaster.append({'@id':authorID, '@type':'Person', 'name': f"{author['first']} {author['last']}", 'givenName': author['first'], 'familyName': author['last'],
                           'honorificPrefix': author['title'], 'email': author['email'], 'identifier': f"https://orcid.org/{author['orcid']}",
                           'worksFor': affiliationNodes})
       authorNodes.append({'@id':authorID})
     masterNodeRoot:dict[str,Any] = {'@id': './', '@type': 'Dataset', 'hasPart': [{'@id':i} for i in masterParts],
         'name': 'Exported from PASTA-ELN', 'description': 'Exported content from PASTA-ELN',
-        'license':'https://creativecommons.org/licenses/by-nc-sa/4.0/', 'datePublished':datetime.now().isoformat()}
+        'conformsTo': [{'@id': 'https://w3id.org/ro/crate/1.2'},{'@id':'https://purl.archive.org/purl/elnconsortium/eln-spec/1.2+202609'}],
+        'license':{'@id': 'https://creativecommons.org/licenses/by-nc-sa/4.0/'}, 'datePublished':datetime.now().isoformat()}
     if authorNodes:
-      masterNodeRoot = masterNodeRoot | {'creator': authorNodes}
+      masterNodeRoot = masterNodeRoot | {'creator': authorNodes, 'publisher': authorNodes[0]}
     graphMaster.append(masterNodeRoot)
 
     #finalize file
