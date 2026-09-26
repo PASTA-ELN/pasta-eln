@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from cryptography.exceptions import InvalidTag
+from keyring.errors import InitError, PasswordSetError
 
 from pasta_eln import configuration_file
 
@@ -165,6 +166,13 @@ class TestConfigSecrets(unittest.TestCase):
       configuration_file.loadConfiguration(self.fileName)
     with patch('pasta_eln.configuration_file.keyring.get_password', side_effect=RuntimeError('keyring unavailable')):
       with self.assertRaises(RuntimeError):
+        configuration_file.saveConfiguration(configurationWithSecrets(), self.fileName)
+    with patch('pasta_eln.configuration_file.keyring.get_password', side_effect=InitError('no secret service')):
+      with self.assertRaisesRegex(RuntimeError, 'System keyring unavailable.*read'):
+        configuration_file.saveConfiguration(configurationWithSecrets(), self.fileName)
+    self.keyring.clear()
+    with patch('pasta_eln.configuration_file.keyring.set_password', side_effect=PasswordSetError('locked')):
+      with self.assertRaisesRegex(RuntimeError, 'System keyring unavailable.*store'):
         configuration_file.saveConfiguration(configurationWithSecrets(), self.fileName)
 
 

@@ -28,7 +28,9 @@ class TestNextcloud(unittest.TestCase):
   def test_main(self) -> None:
     """Rescan the link and exercise authentication and change failures."""
     backend = Backend('research')
-    linkPath = next(backend.basePath.rglob('*.nclink'))
+    linkPath = next(backend.basePath.rglob('*.nclink'), None)
+    if linkPath is None:
+      self.fail('No .nclink file in project group "research": run testsComplicated/test_20 and test_21 first')
     link = readNclink(linkPath)
     relativePath = linkPath.relative_to(backend.basePath).as_posix()
     view = backend.db.getView('viewHierarchy/viewPathsAll', preciseKey=relativePath)

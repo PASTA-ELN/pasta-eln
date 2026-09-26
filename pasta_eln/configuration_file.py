@@ -6,6 +6,7 @@ import secrets
 from pathlib import Path
 from typing import Any
 import keyring
+from keyring.errors import KeyringError
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox
@@ -22,10 +23,16 @@ def _masterKey() -> bytes:
   """
   keyringService = 'com.github.pasta-eln'
   keyringAccount = 'configuration-master-key'
-  storedKey = keyring.get_password(keyringService, keyringAccount)
+  try:
+    storedKey = keyring.get_password(keyringService, keyringAccount)
+  except KeyringError as exc:
+    raise RuntimeError(f'System keyring unavailable, cannot read the configuration master key: {exc}') from exc
   if storedKey is None:
     masterKey = secrets.token_bytes(32)
-    keyring.set_password(keyringService, keyringAccount, base64.b64encode(masterKey).decode('ascii'))
+    try:
+      keyring.set_password(keyringService, keyringAccount, base64.b64encode(masterKey).decode('ascii'))
+    except KeyringError as exc:
+      raise RuntimeError(f'System keyring unavailable, cannot store the configuration master key: {exc}') from exc
     keyText = base64.b64encode(masterKey).decode('ascii')
     if QApplication.instance() is not None:
       dialog = QMessageBox()

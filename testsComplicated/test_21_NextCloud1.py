@@ -32,6 +32,8 @@ class TestNextcloud(unittest.TestCase):
 
     # go into a project
     dfProj  = backend.db.getView('viewDocType/x0')
+    if dfProj.empty:
+      self.fail('No project in project group "research": run testsComplicated/test_20_Start_NextCloud.py first')
     projID1 = list(dfProj['id'])[0]
     backend.changeHierarchy(projID1)
 

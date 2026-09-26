@@ -19,11 +19,17 @@ class TestNextcloud(unittest.TestCase):
     # setup Pasta
     print()
     backend = Backend('research')
-    projectID = list(backend.db.getView('viewDocType/x0')['id'])[0]
+    projectIDs = list(backend.db.getView('viewDocType/x0')['id'])
+    if not projectIDs:
+      self.fail('No project in project group "research": run testsComplicated/test_20_Start_NextCloud.py first')
+    projectID = projectIDs[0]
     backend.changeHierarchy(projectID)
 
     # get account details
-    instance = readNclink(next(backend.basePath.rglob('*.nclink')))['instance']
+    linkPath = next(backend.basePath.rglob('*.nclink'), None)
+    if linkPath is None:
+      self.fail('No .nclink file in project group "research": run testsComplicated/test_20 and test_21 first')
+    instance = readNclink(linkPath)['instance']
     credentials = loadConfiguration(backend.basePath/'.nextcloud_credentials.json')
     account = json.loads(credentials['addOnParameter']['nextcloud'][instance])
 
