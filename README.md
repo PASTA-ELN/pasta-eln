@@ -47,6 +47,13 @@ Open issue list:
 
 ### Repository maintenance items
 
+- Case-insensitive file handling
+  - Everything that matches file names, folder names or extensions has to be case-insensitive: `SETUP.EXE`, `Setup.Exe` and `setup.exe` must behave the same on all operating systems.
+  - Scan exclusions (`scanExcludePatterns`, branches `new_version` and `LLM_functions`) are matched case-sensitively on Linux, because `fnmatch.fnmatch()` follows the case rules of the operating system. The pattern `*.exe` therefore does not exclude `SETUP.EXE` on Linux, but it does on Windows. Affected on `new_version`: `pasta_eln/backend_worker/backend.py` line 355 (folders) and line 406 (files). Fix: compare `name.lower()` with `pattern.lower()`, and store patterns in lower case when they are saved in the configuration.
+  - The hard-coded scan rules are case-sensitive, too: the `trash_` prefix and `__pycache__` in `backend.py`, `_PastaExport` in `isPastaExport()` (`backend_worker/extractor.py`), and the `.pastaELN_ignore` marker file, which is found only with exactly this spelling on Linux.
+  - `checkDB()` does not use `scanExcludePatterns`, only the hard-coded rules. Excluded files that still exist on disk may therefore be reported as missing from the database. `checkDB()` should share one case-insensitive matching function with the scan.
+  - Already case-insensitive: extractor selection (`extractor_{extension.lower()}.py`) and the stored `fileExtension`.
+
 - Tutorial
   - Create an interactive tutorial runner as a separate program launched from the main program. It should use a read-only SQLite connection, define a clear busy-timeout/WAL strategy for concurrent access, and maintain its own JSON file to track tutorial progress.
   - Rewrite the tutorial content with more steps, details, screenshots, contextual help, and clear expected results.

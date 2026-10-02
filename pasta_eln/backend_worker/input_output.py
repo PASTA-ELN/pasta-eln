@@ -624,8 +624,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     # master node ro-crate-metadata.json
     graphMaster:list[dict[str,Any]] = []
     graphMisc:list[dict[str,Any]] = [{'@id': 'https://w3id.org/ro/crate/1.2', '@type': ['CreativeWork','Profile'],
-      'name': 'RO-Crate 1.2 Specification'},{'@id': 'https://purl.archive.org/purl/elnconsortium/eln-spec/1.2+202609',
-      '@type': ['CreativeWork','Profile'],'name': 'ELN-File Format 1.2+202609 Specification'},
+      'name': 'RO-Crate 1.2 Specification'},{'@id': 'https://purl.archive.org/purl/elnconsortium/eln-spec/1.2+20260923',
+      '@type': ['CreativeWork','Profile'],'name': 'ELN-File Format 1.2+20260923 Specification'},
       {'@id': 'https://creativecommons.org/licenses/by-nc-sa/4.0/', '@type': 'CreativeWork', 'name': 'CC BY-NC-SA 4.0',
       'description': 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International'}]
     masterNodeInfo = {'@id': 'ro-crate-metadata.json', '@type': 'CreativeWork', 'about': {'@id': './'},
@@ -658,7 +658,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       authorNodes.append({'@id':authorID})
     masterNodeRoot:dict[str,Any] = {'@id': './', '@type': 'Dataset', 'hasPart': [{'@id':i} for i in masterParts],
         'name': 'Exported from PASTA-ELN', 'description': 'Exported content from PASTA-ELN',
-        'conformsTo': [{'@id': 'https://w3id.org/ro/crate/1.2'},{'@id':'https://purl.archive.org/purl/elnconsortium/eln-spec/1.2+202609'}],
+        'conformsTo': [{'@id': 'https://w3id.org/ro/crate/1.2'},{'@id':'https://purl.archive.org/purl/elnconsortium/eln-spec/1.2+20260923'}],
         'license':{'@id': 'https://creativecommons.org/licenses/by-nc-sa/4.0/'}, 'datePublished':datetime.now().isoformat()}
     if authorNodes:
       masterNodeRoot = masterNodeRoot | {'creator': authorNodes, 'publisher': authorNodes[0]}
