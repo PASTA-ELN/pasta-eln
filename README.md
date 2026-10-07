@@ -36,17 +36,13 @@ Build the documentation with `make -C docs html`.
 
 For maintainer release work, `releaseVersion.py` provides a broader verification run; invoke it manually only.
 
-## Open issues
+## Issues
 
 Open issues are the union of
 1. [GitHub Issues](https://github.com/PASTA-ELN/pasta-eln/issues), which tracks actionable bugs, enhancements, and discussion; and
 2. this README section, which records repository-wide maintenance items that need visibility before or alongside an issue.
 
 Open issue list:
-
-
-### Repository maintenance items
-
 - Case-insensitive file handling
   - Everything that matches file names, folder names or extensions has to be case-insensitive: `SETUP.EXE`, `Setup.Exe` and `setup.exe` must behave the same on all operating systems.
   - Scan exclusions (`scanExcludePatterns`, branches `new_version` and `LLM_functions`) are matched case-sensitively on Linux, because `fnmatch.fnmatch()` follows the case rules of the operating system. The pattern `*.exe` therefore does not exclude `SETUP.EXE` on Linux, but it does on Windows. Affected on `new_version`: `pasta_eln/backend_worker/backend.py` line 355 (folders) and line 406 (files). Fix: compare `name.lower()` with `pattern.lower()`, and store patterns in lower case when they are saved in the configuration.
@@ -54,6 +50,7 @@ Open issue list:
   - `checkDB()` does not use `scanExcludePatterns`, only the hard-coded rules. Excluded files that still exist on disk may therefore be reported as missing from the database. `checkDB()` should share one case-insensitive matching function with the scan.
   - Already case-insensitive: extractor selection (`extractor_{extension.lower()}.py`) and the stored `fileExtension`.
 
+## Notes
 - Tutorial
   - Create an interactive tutorial runner as a separate program launched from the main program. It should use a read-only SQLite connection, define a clear busy-timeout/WAL strategy for concurrent access, and maintain its own JSON file to track tutorial progress.
   - Rewrite the tutorial content with more steps, details, screenshots, contextual help, and clear expected results.
