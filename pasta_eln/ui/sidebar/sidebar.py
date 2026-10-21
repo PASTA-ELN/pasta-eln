@@ -7,6 +7,7 @@ from PySide6.QtCore import Slot
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
 from pasta_eln.misc_tools import clearLayout
+from pasta_eln.ui.details.context import DetailContext
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, HSeparator, Label, Widget
 from pasta_eln.ui.sidebar.project_card import ProjectCard
@@ -68,6 +69,7 @@ class ProjectSidebar(Widget):
 
     # Signals
     self.comm.changeSidebar.connect(self.onSidebarChange)
+    self.comm.docTypesChanged.connect(self.onDocTypesChanged)
     self.comm.changeProject.connect(self.highlightActiveProject)
     self.comm.backendThread.worker.beSendTable.connect(self.onGetData)
 
@@ -81,6 +83,15 @@ class ProjectSidebar(Widget):
     if projectChoice not in ('', 'redraw'):
       self.comm.projectID = projectChoice
     self.paint()
+    self.comm.uiRequestTable.emit('x0', '', True)
+
+
+  @Slot()
+  def onDocTypesChanged(self) -> None:
+    """Reload projects after backend (re)initialization; select first project if none is open."""
+    if not self.comm.projectID:
+      self._initialProjectSelected = False
+      self.comm.changeDetails.emit(DetailContext())
     self.comm.uiRequestTable.emit('x0', '', True)
 
 

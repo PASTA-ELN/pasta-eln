@@ -245,7 +245,6 @@ class MainWindow(QMainWindow):
     elif commandType is Command.CHANGE_PG:
       self.comm.configuration['defaultProjectGroup'] = payload[0]
       saveConfiguration(self.comm.configuration)
-      self.comm.projectGroup = payload[0]
       self.comm.start(payload[0])
     elif commandType is Command.SYNC_SEND_ALL:
       self.comm.uiRequestTask.emit(Task.SYNC_ELAB, {'projGroup': self.comm.projectGroup, 'subtask': 'sA'})

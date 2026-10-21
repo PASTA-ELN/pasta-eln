@@ -74,6 +74,13 @@ class Body(QWidget):
     """
     iconColor         = self.comm.palette.getThemeColor('foreground', 'base')
     selectedIconColor = self.comm.palette.getThemeColor('primary', 'base')
+    # Remove tabs of a previous paint, e.g. before project group change
+    self._tableChangingInProgress = True
+    while self.tabWidget.count():
+      widget = self.tabWidget.widget(0)
+      self.tabWidget.removeTab(0)
+      widget.deleteLater()
+    self._tableChangingInProgress = False
     # Add Project View - Tab
     projectView = Project(self.comm)
     homeIndex = self.tabWidget.addTab(projectView,

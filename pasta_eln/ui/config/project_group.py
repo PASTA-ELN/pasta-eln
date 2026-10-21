@@ -183,8 +183,6 @@ class ProjectGroup(QDialog):
 
       saveConfiguration(self.configuration)
       self.comm.configuration = copy.deepcopy(self.configuration)
-      self.comm.commSendConfiguration.emit(self.comm.configuration, self.configuration['defaultProjectGroup'])
-      self.comm.projectGroup = self.configuration['defaultProjectGroup']
       self.comm.start(self.configuration['defaultProjectGroup'])
       self.callbackFinished(True)
     return

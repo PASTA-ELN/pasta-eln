@@ -131,6 +131,9 @@ class Communicate(QObject):
     Args:
       projectGroup (str): project group to use, if empty use the one from initialization
     """
+    if projectGroup and projectGroup != self.projectGroup:                    # project of old group is invalid
+      self.projectGroup = projectGroup
+      self.projectID = ''
     self.commSendConfiguration.emit(self.configuration, projectGroup or self.projectGroup)
 
 
