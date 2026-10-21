@@ -79,7 +79,8 @@ class Body(QWidget):
     while self.tabWidget.count():
       widget = self.tabWidget.widget(0)
       self.tabWidget.removeTab(0)
-      widget.deleteLater()
+      if widget is not None:
+        widget.deleteLater()
     self._tableChangingInProgress = False
     # Add Project View - Tab
     projectView = Project(self.comm)
