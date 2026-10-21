@@ -119,7 +119,7 @@ class Form(QDialog):
     self.docTypeComboBox                      = QComboBox()
     self.checkThreadTimer                     = QTimer(self)
     self.tagsAllList: list[str] = []
-    self.comboBoxDocTypeList:dict[str, tuple[QComboBox,str]] = {}# dict of docType:.. for links to other items
+    self.comboBoxDocTypeList:dict[str, list[tuple[QComboBox,str]]] = {}    # docType: comboBoxes linking to it
     self.projectTableData:pd.DataFrame|None = None
     self.showAdvanced = False
 
@@ -233,13 +233,13 @@ class Form(QDialog):
       self.projectTableData = data
       self._fillProjectComboBox(data)
     elif docType in self.comboBoxDocTypeList:
-      iComboBox, value = self.comboBoxDocTypeList[docType]
-      iComboBox.clear()
-      iComboBox.addItem('- no link -', userData='')
-      for iDocID, iName in data[['id','name']].values.tolist():
-        iComboBox.addItem(iName, userData=iDocID)
-        if iDocID == value:
-          iComboBox.setCurrentIndex(iComboBox.count()-1)
+      for iComboBox, value in self.comboBoxDocTypeList[docType]:
+        iComboBox.clear()
+        iComboBox.addItem('- no link -', userData='')
+        for iDocID, iName in data[['id','name']].values.tolist():
+          iComboBox.addItem(iName, userData=iDocID)
+          if iDocID == value:
+            iComboBox.setCurrentIndex(iComboBox.count()-1)
     else:
       logging.warning('Unknown docType in onGetTable: %s', docType)
 
@@ -478,9 +478,10 @@ class Form(QDialog):
               getattr(self, elementName).setCurrentText(value)
             else:                                                                        #choice among docType
               listDocType = dataHierarchyItem[0]['list'] or dataHierarchyItem[0]['docType']
-              if listDocType not in self.comboBoxDocTypeList:          # if listDocType already exists in dict
+              if listDocType not in self.comboBoxDocTypeList:                  # request table once per docType
+                self.comboBoxDocTypeList[listDocType] = []
                 self.comm.uiRequestTable.emit(listDocType, '', True)
-                self.comboBoxDocTypeList[listDocType] = (getattr(self, elementName), value)
+              self.comboBoxDocTypeList[listDocType].append((getattr(self, elementName), value))
             self.allUserElements.append((key,'ComboBox'))
           else:
             setattr(self, elementName, QLineEdit(value))
