@@ -13,6 +13,8 @@ from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.project.project import Project
 from pasta_eln.ui.table.table import TableView
 
+HIDDEN_TABLES = ('x0', 'x1')                     # tables of projects and folders: only shown when requested
+
 
 class Body(QWidget):
   """
@@ -79,13 +81,14 @@ class Body(QWidget):
     self.projectTabBar.markHomeTab(homeIndex)
     # Add Table Views - Tabs
     for doctype, docTypeDetails in self.comm.docTypesTitles.items():
-      if doctype[0] == 'x' or '/' in doctype:
+      if (doctype[0] == 'x' and doctype not in HIDDEN_TABLES) or '/' in doctype:
         continue
       tableView = TableView(self.comm, doctype)
       iconName = 'ri.asterisk' if docTypeDetails['icon'] == '' else docTypeDetails['icon']
       icon     = self.createIcon(iconName, iconColor, selectedIconColor)
       label    = docTypeDetails['title']
-      self.tabWidget.addTab(tableView, icon, label)
+      index    = self.tabWidget.addTab(tableView, icon, label)
+      self.tabWidget.setTabVisible(index, doctype not in HIDDEN_TABLES)
     for docType, iconName, label in (('_tags_', 'ri.price-tag-3-line', 'Tags'),
                                      ('-', 'ri.question-line', 'Unidentified')):
       tableView = TableView(self.comm, docType)
@@ -134,13 +137,12 @@ class Body(QWidget):
 
   @Slot(str, str, str)
   def onChangeTable(self, docType: str, _projectID: str, docID: str) -> None:
-    """Select the table tab targeted by a table-change request."""
-    if docType == 'x0':                         # to return to Home after large changes: e.g. project creation
-      self.tabWidget.setCurrentIndex(0)
-      return
+    """Select the table tab targeted by a table-change request; subtypes use the tab of their base type."""
     for index in range(self.tabWidget.count()):
       widget = self.tabWidget.widget(index)
-      if isinstance(widget, TableView) and widget.docType == docType:
+      if isinstance(widget, TableView) and widget.docType.split('/')[0] == docType.split('/')[0]:
+        widget.docType = docType                       # set before the table's own changeTable-slot compares it
+        self.tabWidget.setTabVisible(index, True)
         self._tableChangingInProgress = True
         self.tabWidget.setCurrentIndex(index)
         self._tableChangingInProgress = False
@@ -154,6 +156,10 @@ class Body(QWidget):
     Args:
       index: index of the now active tab after change.
     """
+    for otherIndex in range(self.tabWidget.count()):                    # hide project/folder lists when left
+      otherWidget = self.tabWidget.widget(otherIndex)
+      if otherIndex != index and isinstance(otherWidget, TableView) and otherWidget.docType in HIDDEN_TABLES:
+        self.tabWidget.setTabVisible(otherIndex, False)
     if self._tableChangingInProgress:
       return
     widget = self.tabWidget.widget(index)

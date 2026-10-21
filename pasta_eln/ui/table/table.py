@@ -46,7 +46,6 @@ class TableView(Widget):
     self.showAll = self.comm.configuration['GUI']['showHidden'] == 'Yes'
     self.filterRows: list[FilterRow] = []
     self.detailsDocID = ''
-    self.reloadComboBoxFlag = True                           # prevent combobox reloads after sub-type changes
     self.galleryDocumentIds: set[str] = set()
     self._stopSequentialEdit = False
     self.docIdToHighlight = ''
@@ -184,15 +183,15 @@ class TableView(Widget):
 
   def paint(self) -> None:
     """Rebuild the list after data, filtering, or visibility changes."""
-    if self.reloadComboBoxFlag and '/' not in self.docType:
-      self.subTypeCombo.blockSignals(True)
-      self.subTypeCombo.clear()
-      docTypeKeys = [key for key in self.comm.docTypesTitles if key.startswith(self.docType)]
-      titles = [self.comm.docTypesTitles[key]['title'] for key in docTypeKeys]
-      self.subTypeCombo.setVisible(len(titles) > 1)
-      self.subTypeCombo.addItems(titles)
-      self.subTypeCombo.blockSignals(False)
-    self.reloadComboBoxFlag = True
+    baseType = self.docType.split('/')[0]
+    titles = [value['title'] for key, value in self.comm.docTypesTitles.items() if key.split('/')[0] == baseType]
+    self.subTypeCombo.blockSignals(True)
+    self.subTypeCombo.clear()
+    self.subTypeCombo.setVisible(len(titles) > 1)
+    self.subTypeCombo.addItems(titles)
+    if self.docType in self.comm.docTypesTitles:
+      self.subTypeCombo.setCurrentText(self.comm.docTypesTitles[self.docType]['title'])
+    self.subTypeCombo.blockSignals(False)
 
     self.tableData, documentIds = self.filteredTableData()
     model = PandasTableModel(self.tableData, documentIds)
@@ -437,7 +436,6 @@ class TableView(Widget):
     if not matching:
       return
     docType = matching[0]
-    self.reloadComboBoxFlag = self.docType not in docType and docType not in self.docType
     self.docType = docType
     self.refresh()
 

@@ -132,7 +132,6 @@ class Communicate(QObject):
       projectGroup (str): project group to use, if empty use the one from initialization
     """
     self.commSendConfiguration.emit(self.configuration, projectGroup or self.projectGroup)
-    self.changeTable.emit('x0', '', '')                                  # show project table, without details
 
 
   def shutdownBackendThread(self) -> None:
