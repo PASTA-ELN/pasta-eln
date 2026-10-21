@@ -164,6 +164,18 @@ Troubleshooting Instructions
 **Error:** File on hard disk but not DB"
    **Solution** Scan the folder for new data.
 
+**Error:** (Linux) "attempt to write a readonly database" or "disk I/O error" while the data folder is on a network share (SMB / Samba)
+   **Solution**
+      - Do not open the share via the file manager (Nautilus, path starts with ``/run/user/.../gvfs/``). Mount it as CIFS with the ``nobrl`` option instead. This option disables server-side file locking, hence only one computer may use the data folder at a time. For example:
+
+        .. code-block:: bash
+
+           sudo mount -t cifs //server/share /mnt/share -o username=USER,uid=$(id -u),gid=$(id -g),nobrl
+
+      - Ensure that you have write permission on ``pastaELN.db`` in the data folder.
+      - If possible, keep the data folder on a local disk.
+
+
 **Error:** Other errors
    **Solution:** File a new issue on `github <https://github.com/PASTA-ELN/pasta-eln/issues>`__
       - Copy terminal output into the new issue.

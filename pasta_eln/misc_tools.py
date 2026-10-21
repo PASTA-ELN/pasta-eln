@@ -479,6 +479,36 @@ def getORCIDName(idString:str) -> tuple[str, str]:
   return first, last
 
 
+def testDataFolder(basePath:Path) -> list[str]:
+  """ Test if data folder is writable and not on a network mount that breaks SQLite
+  - does not open the database: a second open handle breaks SQLite on GVFS mounts
+
+  Args:
+    basePath (Path): data folder of the project group
+
+  Returns:
+    list: description of problems; empty if none found
+  """
+  problems = []
+  dbFile = basePath/'pastaELN.db'
+  if not os.access(basePath, os.W_OK) or (dbFile.exists() and not os.access(dbFile, os.W_OK)):
+    problems.append(f'No write permission for {dbFile}.')
+  mounts = Path('/proc/self/mounts')                                     # Linux only, others will have a None
+  if mounts.is_file():
+    realPath = basePath.resolve()
+    mountPoint, fsType, options = Path('/'), '', ['']
+    for line in mounts.read_text(encoding='utf-8').splitlines():
+      _, point, fType, opts = line.split()[:4]
+      pointPath = Path(point.replace('\\040', ' '))
+      if realPath.is_relative_to(pointPath) and len(pointPath.parts) >= len(mountPoint.parts):
+        mountPoint, fsType, options = pointPath, fType, opts.split(',')                  # deepest mount wins
+    if fsType == 'fuse.gvfsd-fuse':
+      problems.append('The data folder is on a network share opened by the file manager (GVFS). Mount it as CIFS instead.')
+    elif fsType in ('cifs', 'smb3') and 'nobrl' not in options:
+      problems.append('The data folder is on a CIFS network share that is mounted without the "nobrl" option.')
+  return problems
+
+
 def testNewPastaVersion(update:bool=False) -> bool:
   """ Test if this version is up to date with the latest version on pypi
   - variable largestVersionOnPypi is the latest NON-BETA version on pypi
