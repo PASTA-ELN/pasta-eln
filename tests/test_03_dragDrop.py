@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """TEST the project view: drag drop randomly items around """
-import logging, warnings, random
+import faulthandler, logging, warnings, random
 from pathlib import Path
 from typing import Any
 from anytree import PreOrderIter
@@ -105,6 +105,13 @@ class MainThreadRelay(QObject):
 
 def verify(qtbot, comm, projID, epoch):
   """ Output hierarchy and verify DB """
+  # Diagnostic for a rare CI failure (run 40391495939, Oct 2026): after a folder drag-drop the CHECK_DB report
+  # never arrived ("Signal not emitted after 30000 ms"), then "QThread: Destroyed while thread is still running".
+  # That pattern means the backend worker was blocked/busy; a worker exception would print a traceback and a
+  # teardown error instead. The DB from the CI artifact checks fine in milliseconds, so the cause is unknown.
+  # If it happens again: the stack dump printed ~5s before the timeout shows where the worker thread is stuck.
+  # Remove this (and the cancel below) once the cause is found and fixed.
+  faulthandler.dump_traceback_later(25)              # before the 30s signal timeouts: print stacks of all threads
   relay = MainThreadRelay(comm.backendThread.worker.beSendHierarchy)
   with qtbot.waitSignal(relay.received, timeout=30_000) as hierarchySignal:
     comm.uiRequestHierarchy.emit(projID, True)
@@ -118,6 +125,7 @@ def verify(qtbot, comm, projID, epoch):
   with qtbot.waitSignal(relay.received, timeout=30_000) as reportSignal:
     comm.uiRequestTask.emit(Task.CHECK_DB, {'style':'text'})
   relay.close()
+  faulthandler.cancel_dump_traceback_later()
   output = reportSignal.args[0][1]
   print(f'{"*"*40}\nCheckDB after drag-drop {epoch}\n{"*"*40}')
   print(output)
