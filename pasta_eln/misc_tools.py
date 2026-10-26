@@ -125,10 +125,10 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
             extractorsThis[linePart]='Default'
             if verboseDebug:
               print('  return', linePart)
-        linesWithUse = [i for i in lines if 'use(' in i]
+        linesWithUse = [i for i in lines if i.lstrip().startswith('def use(')]
         if len(linesWithUse)>1:
           extractorsThis = {}
-          errors[fileName] = 'ERROR two use( in the code'
+          errors[fileName] = 'ERROR two use() definitions in the code'
         if verboseDebug:
           print('Extractors', extractorsThis)
         ending = fileName.split('_')[1].split('.')[0]

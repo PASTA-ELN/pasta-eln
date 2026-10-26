@@ -11,7 +11,7 @@ import requests
 
 from pasta_eln.configuration_file import loadConfiguration
 from pasta_eln.misc_tools import loadNamedModule
-from testsComplicated.nextcloud_common import readNclink
+from nextcloud_common import readNclink
 
 
 MAX_AUTOMATIC_SIZE = 100 * 1024 * 1024  #100MB

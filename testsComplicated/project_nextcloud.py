@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QLabel, QLi
                                QVBoxLayout)
 
 from pasta_eln.configuration_file import loadConfiguration
-from testsComplicated.nextcloud_common import NextcloudBrowser, writeNclinks
+from nextcloud_common import NextcloudBrowser, writeNclinks
 
 description = 'Import files from Nextcloud'
 reqParameter:dict[str,str] = {}
