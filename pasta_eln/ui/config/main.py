@@ -36,7 +36,6 @@ class Configuration(QDialog):
     # GUI elements
     mainL = QVBoxLayout(self)
     self.tabW = QTabWidget(self)
-    self.tabW.currentChanged.connect(self.loadTab)
     mainL.addWidget(self.tabW)
     self.tabs:dict[str,QWidget] = {}                                        # to hold the actual tab instances
     self.placeholders = {}                                                       # to hold placeholder widgets
@@ -60,6 +59,8 @@ class Configuration(QDialog):
           self.tabW.setTabEnabled(self.tabW.indexOf(self.placeholders[tabName]), False)
     else:
       self.tabW.setCurrentIndex(0)
+    self.tabW.currentChanged.connect(self.loadTab)                  # connect after tabs exist: addTab emits currentChanged
+    self.loadTab(self.tabW.currentIndex())
 
 
   def loadTab(self, index:int) -> None:

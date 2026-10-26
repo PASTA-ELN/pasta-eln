@@ -5,7 +5,7 @@ from collections.abc import Callable
 from enum import Enum
 from typing import Any
 import qtawesome as qta
-from PySide6.QtWidgets import (QComboBox, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QToolButton,
+from PySide6.QtWidgets import (QComboBox, QDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QToolButton,
                                QVBoxLayout, QWidget)
 from ...backend_worker.dataverse import DataverseClient
 from ...backend_worker.zenodo import ZenodoClient
@@ -48,7 +48,6 @@ class ConfigurationRepositories(QDialog):
     leftSide = QGridLayout(leftSideW)
     leftSide.setSpacing(SPACE.M)
     center.addWidget(leftSideW)
-    leftSideW.setStyleSheet('border-right: 2px solid black;')
     leftSide.addWidget(QLabel('Zenodo'), 0, 0)
     leftSide.addWidget(QLabel('URL'), 1, 0)
     self.urlZenodo = QLineEdit(conf['zenodo']['url'])                                    # type: ignore[index]
@@ -75,6 +74,11 @@ class ConfigurationRepositories(QDialog):
     leftSide.addWidget(self.zenodoToggle, 2, 2)
     self.zenodoButton = Button('Verify', self, [Command.CHECK_ZENODO], tooltip='Verify Zenodo login details')
     leftSide.addWidget(self.zenodoButton, 3, 1)
+
+    separator = QFrame()
+    separator.setFrameShape(QFrame.Shape.VLine)
+    separator.setFrameShadow(QFrame.Shadow.Sunken)
+    center.addWidget(separator)
 
     rightSideW = QWidget()
     rightSide = QGridLayout(rightSideW)

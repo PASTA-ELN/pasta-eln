@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
 from pasta_eln.misc_tools import clearLayout
 from pasta_eln.ui.details.context import DetailContext
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, HSeparator, Label, Widget
+from pasta_eln.ui.gui_style import SPACE, Button, HSeparator, Label, Widget
 from pasta_eln.ui.sidebar.project_card import ProjectCard
 
 
@@ -39,9 +39,8 @@ class ProjectSidebar(Widget):
     self.headerL = QHBoxLayout(self.headerW)
     self.headerL.addWidget(self.headerLabel, stretch=1)
     self.showHiddenBtn = Button('', self, Command.TOGGLE_HIDDEN_PROJECTS, self.headerL,
-                                icon='fa5s.eye-slash', style=ButtonStyle.PRIMARY,
-                                tooltip='Hide/show hidden projects', checkable=True)
-    self.showHiddenBtn.setChecked(self.showHiddenProjects)
+                                icon='fa5s.eye-slash', tooltip='Hide/show hidden projects',
+                                iconSize='m', flat=True)
     self.paintHiddenProjectButton()
     self.headerL.addWidget(self.newProjectBtn)
     self.headerL.setContentsMargins(0, 0, 0, 0)
@@ -149,7 +148,7 @@ class ProjectSidebar(Widget):
     """Update the visibility toggle's icon and tooltip."""
     iconName = 'fa5s.eye' if self.showHiddenProjects else 'fa5s.eye-slash'
     tooltip = 'Hide/show hidden projects'
-    color = self.comm.palette.getThemeColor('primary', 'base')
+    color = self.comm.palette.getThemeColor('foreground', 'base')
     self.showHiddenBtn.setIcon(qta.icon(iconName, color=color))
     self.showHiddenBtn.setToolTip(tooltip)
 
@@ -158,7 +157,6 @@ class ProjectSidebar(Widget):
     """Handle commands emitted by the sidebar controls."""
     if command is Command.TOGGLE_HIDDEN_PROJECTS:
       self.showHiddenProjects = not self.showHiddenProjects
-      self.showHiddenBtn.setChecked(self.showHiddenProjects)
       self.paintHiddenProjectButton()
       self.paint()
     elif command is Command.CREATE_PROJECT:

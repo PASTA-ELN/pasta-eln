@@ -93,7 +93,7 @@ class Form(QDialog):
                           style=ButtonStyle.HIGHLIGHTED)
     self.saveShortcut = shortcut('Ctrl+Return', self, lambda: self.execute(Command.FORM_SAVE))
     if self.flagNewDoc:                                                                           #new dataset
-      self.saveNextBtn = Button('Save & Next', self, Command.FORM_SAVE_NEXT, buttonLineL,
+      self.saveNextBtn = Button('Save && Next', self, Command.FORM_SAVE_NEXT, buttonLineL,
                                 tooltip='Save this and handle next')
     self.mainL.addWidget(buttonLineW)
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")

@@ -43,6 +43,11 @@ Open issues are the union of
 2. this README section, which records repository-wide maintenance items that need visibility before or alongside an issue.
 
 Open issue list:
+- eLabFTW sync: project group must not be archived
+  - The project-group resource is archived to hide it from users. In recent eLabFTW versions (checked against 5.6.15), archived resources reject every change except "unarchive", so Pasta can no longer store the data hierarchy in the project group's `metadata` (`syncDocTypes()` in `backend_worker/elab_ftw_sync.py`), and the Verify button in the project-group configuration fails.
+  - Unarchive → change → re-archive is not a solution: in eLabFTW 5.6 only team admins (or whoever locked the resource) may unarchive, because archiving also locks the resource.
+  - Path forward: use a non-archived, visible project group. Members need write access, so eLabFTW cannot stop them from editing it in the web interface; Pasta has to tolerate and validate manual edits (e.g. a note in the body asking users not to change it).
+  - Reading the stored data hierarchy back from the project group is not implemented yet, but it is needed.
 - Case-insensitive file handling
   - Everything that matches file names, folder names or extensions has to be case-insensitive: `SETUP.EXE`, `Setup.Exe` and `setup.exe` must behave the same on all operating systems.
   - Scan exclusions (`scanExcludePatterns`, branches `new_version` and `LLM_functions`) are matched case-sensitively on Linux, because `fnmatch.fnmatch()` follows the case rules of the operating system. The pattern `*.exe` therefore does not exclude `SETUP.EXE` on Linux, but it does on Windows. Affected on `new_version`: `pasta_eln/backend_worker/backend.py` line 355 (folders) and line 406 (files). Fix: compare `name.lower()` with `pattern.lower()`, and store patterns in lower case when they are saved in the configuration.
@@ -53,4 +58,4 @@ Open issue list:
 ## Notes
 - Tutorial
   - Create an interactive tutorial runner as a separate program launched from the main program. It should use a read-only SQLite connection, define a clear busy-timeout/WAL strategy for concurrent access, and maintain its own JSON file to track tutorial progress.
-  - Rewrite the tutorial content with more steps, details, screenshots, contextual help, and clear expected results.
+  - Rewrite the tutorial content with more steps, details, screenshots, contextual help, and clear expected results

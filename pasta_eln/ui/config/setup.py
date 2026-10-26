@@ -50,7 +50,7 @@ class ConfigurationSetup(QWidget):
     footerL = QHBoxLayout()
     footerL.setContentsMargins(SPACE.L, SPACE.M, SPACE.L, 0)
     self.mainL.addLayout(footerL)
-    self.button1 = Button('Install & repair', self, [Command.ANALYSE], footerL,
+    self.button1 = Button('Install && repair', self, [Command.ANALYSE], footerL,
                           style=ButtonStyle.HIGHLIGHTED)
     self.button2 = Button('Finish setup', self, [Command.FINISHED], footerL,
                           style=ButtonStyle.HIGHLIGHTED)
