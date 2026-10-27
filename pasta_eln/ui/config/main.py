@@ -59,7 +59,7 @@ class Configuration(QDialog):
           self.tabW.setTabEnabled(self.tabW.indexOf(self.placeholders[tabName]), False)
     else:
       self.tabW.setCurrentIndex(0)
-    self.tabW.currentChanged.connect(self.loadTab)                  # connect after tabs exist: addTab emits currentChanged
+    self.tabW.currentChanged.connect(self.loadTab)                                  # connect after tabs exist
     self.loadTab(self.tabW.currentIndex())
 
 

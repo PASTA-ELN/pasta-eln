@@ -13,7 +13,7 @@ from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.project.project import Project
 from pasta_eln.ui.table.table import TableView
 
-HIDDEN_TABLES = ('x0', 'x1')                     # tables of projects and folders: only shown when requested
+HIDDEN_TABLES = ('x0', 'x1')                     # tables of projects and folders: only shown when global list
 
 
 class Body(QWidget):
@@ -149,7 +149,7 @@ class Body(QWidget):
     for index in range(self.tabWidget.count()):
       widget = self.tabWidget.widget(index)
       if isinstance(widget, TableView) and widget.docType.split('/')[0] == docType.split('/')[0]:
-        widget.docType = docType                       # set before the table's own changeTable-slot compares it
+        widget.docType = docType                     # set before the table's own changeTable-slot compares it
         self.tabWidget.setTabVisible(index, True)
         self._tableChangingInProgress = True
         self.tabWidget.setCurrentIndex(index)
@@ -164,7 +164,7 @@ class Body(QWidget):
     Args:
       index: index of the now active tab after change.
     """
-    for otherIndex in range(self.tabWidget.count()):                    # hide project/folder lists when left
+    for otherIndex in range(self.tabWidget.count()):                     # hide project/folder lists when left
       otherWidget = self.tabWidget.widget(otherIndex)
       if otherIndex != index and isinstance(otherWidget, TableView) and otherWidget.docType in HIDDEN_TABLES:
         self.tabWidget.setTabVisible(otherIndex, False)

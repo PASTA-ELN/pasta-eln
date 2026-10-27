@@ -501,7 +501,7 @@ def testDataFolder(basePath:Path) -> list[str]:
       _, point, fType, opts = line.split()[:4]
       pointPath = Path(point.replace('\\040', ' '))
       if realPath.is_relative_to(pointPath) and len(pointPath.parts) >= len(mountPoint.parts):
-        mountPoint, fsType, options = pointPath, fType, opts.split(',')                  # deepest mount wins
+        mountPoint, fsType, options = pointPath, fType, opts.split(',')                   # deepest mount wins
     if fsType == 'fuse.gvfsd-fuse':
       problems.append('The data folder is on a network share opened by the file manager (GVFS). Mount it as CIFS instead.')
     elif fsType in ('cifs', 'smb3') and 'nobrl' not in options:

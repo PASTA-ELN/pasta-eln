@@ -240,7 +240,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         elif value:                                                 #keep name, only prevent causes for errors
           doc[f'.{key}'] = value
       # change into Pasta's native format
-      if 'comment' in doc and doc['comment'] in (doc.get('name'), inputData['@id']): #drop export's fallback description
+      if 'comment' in doc and doc['comment'] in (doc.get('name'), inputData['@id']):
         del doc['comment']
       if isinstance(doc.get('comment',''), (dict,list)):
         if isinstance(doc['comment'], dict):
@@ -506,7 +506,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         docELN['@type'] = 'Dataset'
         docELN['@id'] = docELN['@id'] if docELN['@id'].endswith('/') else f"{docELN['@id']}/"
         mkDirectory(docELN['@id'][:-1])
-      if docELN['@type'] == 'Dataset':                                     #list contents, even if empty
+      if docELN['@type'] == 'Dataset':                                           #list contents, even if empty
         docELN.setdefault('hasPart', [])
       # move docSupp into separate nodes
       variableMeasuredIDs = []

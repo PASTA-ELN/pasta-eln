@@ -478,7 +478,7 @@ class Form(QDialog):
               getattr(self, elementName).setCurrentText(value)
             else:                                                                        #choice among docType
               listDocType = dataHierarchyItem[0]['list'] or dataHierarchyItem[0]['docType']
-              if listDocType not in self.comboBoxDocTypeList:                  # request table once per docType
+              if listDocType not in self.comboBoxDocTypeList:                 # request table once per docType
                 self.comboBoxDocTypeList[listDocType] = []
                 self.comm.uiRequestTable.emit(listDocType, '', True)
               self.comboBoxDocTypeList[listDocType].append((getattr(self, elementName), value))

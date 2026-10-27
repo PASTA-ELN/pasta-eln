@@ -6,8 +6,8 @@ import secrets
 from pathlib import Path
 from typing import Any
 import keyring
-from keyring.errors import KeyringError
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from keyring.errors import KeyringError
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox
 from .fixed_strings_json import configurationGUI
