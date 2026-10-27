@@ -8,6 +8,25 @@
 - Extractor item type does not work on Linux. [\#642](https://github.com/PASTA-ELN/pasta-eln/issues/642)
 - Links in tutorial do not work out-of-the-box. [\#639](https://github.com/PASTA-ELN/pasta-eln/issues/639)
 
+## [v3.3.1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.3.1) (2026-10-27)
+
+**Release source commit:** `644192dd17b839eb9c03d4db2cbc866045c22ccf`
+**Previous stable release:** `v3.3.0` (`f0538abaebe205ef08f87514291f5a7490917311`)
+
+### Improvements
+
+- ELN export now follows the ELN file format specification 1.2+202609 ([`c64a3810`](https://github.com/PASTA-ELN/pasta-eln/commit/c64a38103b5c604615dea2c8b122b7268fcdb596), [`2b820d31`](https://github.com/PASTA-ELN/pasta-eln/commit/2b820d311e1594cdd80df77edd5eced9bb259383))
+- PASTA-ELN now checks on Linux whether the data folder is on an SMB-mounted file system, which requires special mount options; the installation documentation has been updated accordingly ([`afbebb23`](https://github.com/PASTA-ELN/pasta-eln/commit/afbebb23d6445458e9af1c8b95fbb11c1b13d722))
+- Clearer error message when the system keyring is unavailable ([`8a538816`](https://github.com/PASTA-ELN/pasta-eln/commit/8a538816278f0d1d47bd6eed8679b2e361f241d2))
+
+### Bug fixes
+
+- Lists of projects, folders, and workflow subtypes work again (#649) ([`aa38ab54`](https://github.com/PASTA-ELN/pasta-eln/commit/aa38ab54a5c7de62cd4de8e38c48fae67a2217ec))
+- Switching project groups now changes the active project group instead of adding a list of icons (#650) ([`9ec6d41c`](https://github.com/PASTA-ELN/pasta-eln/commit/9ec6d41cbf5df61abca5de4f9199cfe529668ecf))
+- Forms can now contain multiple comboboxes for the same document type (#634) ([`0aa7f62f`](https://github.com/PASTA-ELN/pasta-eln/commit/0aa7f62f4b194343c849bda2573ed910fb2bdae7))
+- Nextcloud add-ons work again ([`a243d942`](https://github.com/PASTA-ELN/pasta-eln/commit/a243d9426c4ec35d1afc24b68fbbb4bb520757f7))
+- Fixed issues found during installation testing ([`37f83d16`](https://github.com/PASTA-ELN/pasta-eln/commit/37f83d161604fa3aca68dd32e4848f76e8427b09))
+
 ## [v3.3.0](https://github.com/PASTA-ELN/pasta-eln/tree/v3.3.0) (2026-09-24)
 
 **Release source commit:** `40fe64ffd238d681472a1dfe577dc4dd81eb542e`
