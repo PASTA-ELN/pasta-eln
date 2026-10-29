@@ -54,6 +54,8 @@ Open issue list:
   - The hard-coded scan rules are case-sensitive, too: the `trash_` prefix and `__pycache__` in `backend.py`, `_PastaExport` in `isPastaExport()` (`backend_worker/extractor.py`), and the `.pastaELN_ignore` marker file, which is found only with exactly this spelling on Linux.
   - `checkDB()` does not use `scanExcludePatterns`, only the hard-coded rules. Excluded files that still exist on disk may therefore be reported as missing from the database. `checkDB()` should share one case-insensitive matching function with the scan.
   - Already case-insensitive: extractor selection (`extractor_{extension.lower()}.py`) and the stored `fileExtension`.
+- Install dependabot according to ~/Dependabot.md
+
 
 ## Notes
 - Tutorial
