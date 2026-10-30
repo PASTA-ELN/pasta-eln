@@ -187,7 +187,7 @@ class DataverseClient(RepositoryClient):
     doi = f"{res['protocol']}:{res['authority']}/{res['identifier']}"
     reply = self.uploadFile(doi, filePath, 'ELN file', ['file'])
     if isinstance(reply, str):
-      return False, 'Error publishing the file'
+      return False, f'Error publishing the file: {reply}'
     return True, f'Published: {doi}, {res["persistentUrl"]}'
 
 

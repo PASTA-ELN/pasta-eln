@@ -4,10 +4,10 @@ from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QLabel, QListWidget, QListWidgetItem,
-                               QVBoxLayout)
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout, QLabel, QLineEdit, QListWidget,
+                               QListWidgetItem, QVBoxLayout)
 
-from pasta_eln.configuration_file import loadConfiguration
+from pasta_eln.configuration_file import loadConfiguration, saveConfiguration
 from nextcloud_common import NextcloudBrowser, writeNclinks
 
 description = 'Import files from Nextcloud'
@@ -100,6 +100,38 @@ class NextcloudDialog(QDialog):
     self.accept()
 
 
+def createCredentials(credentialsPath:Path, parent:Any=None) -> bool:
+  """Ask the user for one Nextcloud account and save it as encrypted credential file.
+  Args:
+    credentialsPath (Path): Credential file to create.
+    parent (Any): Optional Qt parent.
+  Returns:
+    bool: True when the file was saved.
+  """
+  dialog = QDialog(parent)
+  dialog.setWindowTitle('Nextcloud credentials')
+  fields = {'instance':QLineEdit(dialog), 'url':QLineEdit(dialog), 'loginName':QLineEdit(dialog),
+            'appPassword':QLineEdit(dialog)}
+  fields['instance'].setPlaceholderText('Short name, e.g. FZJ')
+  fields['url'].setPlaceholderText('https://nextcloud.example.org')
+  buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel, dialog)
+  buttons.accepted.connect(dialog.accept)
+  buttons.rejected.connect(dialog.reject)
+  layout = QFormLayout(dialog)
+  for label, field in zip(('Instance name', 'URL', 'Login name', 'App password'), fields.values()):
+    layout.addRow(label, field)
+  layout.addRow(buttons)
+  if dialog.exec() != QDialog.DialogCode.Accepted:
+    return False
+  values = {key:field.text().strip() for key, field in fields.items()}
+  if not all(values.values()):
+    return False
+  account = json.dumps({key:values[key] for key in ('url','loginName','appPassword')})
+  saveConfiguration({'type':'pasta nextcloud credential file', 'version':4,
+                     'addOnParameter':{'nextcloud':{values['instance']:account}}}, credentialsPath)
+  return True
+
+
 def main(comm:Any, hierStack:str, widget:Any, parameter:dict[str,Any]) -> bool:
   """Open the Nextcloud browser for a project.
   Args:
@@ -112,4 +144,7 @@ def main(comm:Any, hierStack:str, widget:Any, parameter:dict[str,Any]) -> bool:
   """
   backend = comm.backendThread.worker.backend
   projectPath = comm.basePath/backend.db.getDoc(hierStack)['branch'][0]['path']
+  credentialsPath = comm.basePath/'.nextcloud_credentials.json'
+  if not credentialsPath.is_file() and not createCredentials(credentialsPath, widget):
+    return False
   return NextcloudDialog(comm, hierStack, projectPath, widget).exec() == QDialog.DialogCode.Accepted

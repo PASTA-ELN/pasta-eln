@@ -205,6 +205,7 @@ class ConfigurationRepositories(QDialog):
                                                           'dataverse':self.dvDataverse.currentData()}
       saveConfiguration(self.comm.configuration)
       self.accept()
+      self.callbackFinished(False)
     elif command[0] is Command.HELP:
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/repositories.html')
     else:

@@ -67,8 +67,8 @@ class ZenodoClient(RepositoryClient):
     # Step 1: Create the deposition with metadata
     resp = requests.post(serverUrl, json=metadata, headers=self.headers1, timeout=10)
     if resp.status_code != 201:
-      logging.error('Creating deposition/dataset: %s %s %s', resp.json(), resp.status_code, resp.text, exc_info=True)
-      return False, 'Error creating the dataset'
+      logging.error('Creating deposition/dataset: %s %s', resp.status_code, resp.text)
+      return False, f'Error creating the dataset: {resp.text}'
     deposition = resp.json()
     persistentID = deposition['id']
     # print(f"Deposition created: {persistentID}")
@@ -82,15 +82,15 @@ class ZenodoClient(RepositoryClient):
       # Step 2: Upload a file
       resp = requests.post(fileUploadUrl, files=files, headers=self.headers2, timeout=10)
     if resp.status_code != 201:
-      logging.error('Uploading file: %s', resp.json(), exc_info=True)
-      return False, 'Error uploading the file'
+      logging.error('Uploading file: %s %s', resp.status_code, resp.text)
+      return False, f'Error uploading the file: {resp.text}'
     # print("File uploaded successfully:")
 
     # Step 3: Publish the deposition
     resp = requests.post(publishUrl, headers=self.headers1, timeout=10)
     if resp.status_code != 202:
-      logging.error('Publishing: %s', resp.json(), exc_info=True)
-      return False, 'Error publishing the dataset'
+      logging.error('Publishing: %s %s', resp.status_code, resp.text)
+      return False, f'Error publishing the dataset: {resp.text}'
     return True, f'Published: {resp.json()["doi"]}, {resp.json()["doi_url"]}'
 
 

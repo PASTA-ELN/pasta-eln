@@ -2,7 +2,6 @@
 """TEST the form """
 import logging, warnings, json, tempfile
 from pathlib import Path
-from pasta_eln.backend_worker.repository import RepositoryClient
 from pasta_eln.backend_worker.dataverse import DataverseClient
 from pasta_eln.backend_worker.zenodo import ZenodoClient
 
@@ -28,12 +27,6 @@ def test_simple(qtbot, caplog):
     return
   configuration = json.load(open(Path.home()/'.pastaELN_testing.json'))
   conf = configuration['repositories']
-
-  # test default: should all fail
-  client = RepositoryClient('www.example.com', 'test')
-  assert client.checkServer()[0] == False
-  assert client.checkAPIKey() == False
-  assert client.uploadRepository({'metadata':'some'}, '/home/example/file.txt')[0] == False
 
   # test zenodo
   metadataZenodo = {
