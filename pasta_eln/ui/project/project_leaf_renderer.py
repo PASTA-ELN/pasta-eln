@@ -125,10 +125,15 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         width2nd = min(widthImage, pixmap.width()+FRAME_SIZE)
         topLeft2nd     = option.rect.topRight()   - QPoint(width2nd+FRAME_SIZE+1,-FRAME_SIZE)
         painter.drawPixmap(topLeft2nd, pixmap)
-      elif self.docs.get(docID, {}).get('image','').startswith('<?xml'):
+      elif self.docs.get(docID, {}).get('image','').lstrip().startswith(('<?xml', '<svg')):
         topLeft2nd     = option.rect.topRight()   - QPoint(widthImage+FRAME_SIZE+1,-FRAME_SIZE)
+        target = QRect(topLeft2nd, bottomRight2nd)
+        svgSize = self.docs.get(docID, {}).get('svgSize', QSize())
+        if not svgSize.isEmpty():                                         # keep aspect ratio, right aligned
+          svgSize = svgSize.scaled(target.size(), Qt.AspectRatioMode.KeepAspectRatio)
+          target = QRect(target.right()-svgSize.width()+1, target.top(), svgSize.width(), svgSize.height())
         image = QSvgRenderer(bytearray(self.docs.get(docID, {}).get('image',''), encoding='utf-8'))
-        image.render(painter,    QRectF(topLeft2nd, bottomRight2nd))
+        image.render(painter,    QRectF(target))
     self.paintMenuButton(painter, option)
     return
 
@@ -236,7 +241,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         pixmap = self.imageFromDoc(doc)
         heightRightSide = pixmap.height()+2*FRAME_SIZE
       else:
-        heightRightSide = int(widthImage*3/4+2*FRAME_SIZE)
+        svgSize = QSvgRenderer(bytearray(doc['image'], encoding='utf-8')).defaultSize()
+        self.docs[doc['id']]['svgSize'] = svgSize
+        heightRightSide = int(widthImage*svgSize.height()/svgSize.width()+2*FRAME_SIZE) if not svgSize.isEmpty() \
+                          else int(widthImage*3/4+2*FRAME_SIZE)
     self.docs[doc['id']]['size']    = QSize(400, min(max(heightDetails,heightRightSide), guiStyle['projectItemHeight']))
     self.docs[doc['id']]['hidden']  = any(b for b in doc['branch'] if False in b['show'])
     self.docs[doc['id']]['markdown']= markdownStr
