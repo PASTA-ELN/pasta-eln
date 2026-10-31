@@ -17,6 +17,7 @@ from pasta_eln.ui.details.resize_image import ResizeImage
 from pasta_eln.ui.gui_actions import action as addAction
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, Label, Widget
+from pasta_eln.ui.message_dialog import showMessage
 
 
 class Details(Widget):
@@ -291,14 +292,19 @@ class Details(Widget):
       self.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST, {
         'fileName': str(sourcePath), 'style': '', 'recipe': '/'.join(self.data['type']), 'saveFig': str(destination),
       })
-    elif commandType is Command.OPEN_FOLDER:
+    elif commandType in (Command.OPEN_FOLDER, Command.OPEN_EXTERNAL):
       sourcePath = self.sourcePath()
-      if sourcePath is not None:
-        QDesktopServices.openUrl(QUrl.fromLocalFile(str(sourcePath if sourcePath.is_dir() else sourcePath.parent)))
-    elif commandType is Command.OPEN_EXTERNAL:
-      sourcePath = self.sourcePath()
-      if sourcePath is not None:
-        QDesktopServices.openUrl(QUrl.fromLocalFile(str(sourcePath)))
+      if sourcePath is None:
+        return
+      if commandType is Command.OPEN_FOLDER and not sourcePath.is_dir():
+        sourcePath = sourcePath.parent
+      if not sourcePath.exists():
+        errorMsg = f'The path does not exist:\n{sourcePath}'
+      elif not QDesktopServices.openUrl(QUrl.fromLocalFile(str(sourcePath))):
+        errorMsg = f'The operating system could not open:\n{sourcePath}\n\nCheck the default application for this type.'
+      else:
+        return
+      showMessage(self, 'Could not open', errorMsg, 'Critical')
     elif commandType is Command.HIDE_ITEM:
       self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID': self.docID})
       self.comm.changeDetails.emit(DetailContext())
