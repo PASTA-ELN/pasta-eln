@@ -275,7 +275,7 @@ class ExtractorManager:
       extractorPath (Path, None): path to the directory with extractors
       style (dict): style with a main-key that is / separated
       outputStyle (str): report in ['print','text','html'] including show images
-      saveFig (str): save figure to...; if given stop testing after generating image
+      saveFig (str): save figure to...; if given only report if saving succeeded, without image
 
     Returns:
       str, str: short summary or long report and image (as svg or base64 string)
@@ -311,9 +311,13 @@ class ExtractorManager:
       try:
         module  = loadNamedModule(extractorPath, pyFile[:-3])
         plt.clf()
+        mtimeBefore = Path(saveFig).stat().st_mtime if saveFig and Path(saveFig).is_file() else None
         content = module.use(filePath, style, saveFig or None )
         if saveFig:
-          return report, content.get('image','')
+          # the extractor has to write the file: it has full resolution/quality, the stored image is only a preview
+          if Path(saveFig).is_file() and Path(saveFig).stat().st_mtime!=mtimeBefore:
+            return outputString(outputStyle, 'info', f'Image saved to folder of data-file: {saveFig}'), ''
+          return outputString(outputStyle, 'error', f'Extractor {pyFile} did not save the image'), ''
       except Exception:
         success = False
         report += outputString(outputStyle, 'error', 'Python error in extractor')

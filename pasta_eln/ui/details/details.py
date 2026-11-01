@@ -289,8 +289,9 @@ class Details(Widget):
       imageType = image[11:14] if isinstance(image, str) and image.startswith('data:image/') and len(image) > 14 and image[14] == ';' \
         else (image[11:15] if isinstance(image, str) and image.startswith('data:image/') else 'svg')
       destination = sourcePath.parent / f'{sourcePath.stem}_PastaExport.{imageType.lower()}'
+      # rerun extractor to save at full resolution/quality; self.data['image'] is only a preview
       self.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST, {
-        'fileName': str(sourcePath), 'style': '', 'recipe': '/'.join(self.data['type']), 'saveFig': str(destination),
+        'fileName': str(sourcePath), 'style': 'html', 'recipe': '/'.join(self.data['type']), 'saveFig': str(destination),
       })
     elif commandType in (Command.OPEN_FOLDER, Command.OPEN_EXTERNAL):
       sourcePath = self.sourcePath()

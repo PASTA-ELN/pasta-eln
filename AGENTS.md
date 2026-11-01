@@ -23,7 +23,7 @@ pre-commit run --all-files
 make -C docs html
 ```
 
-Numbered `test_XX_` modules must retain their order. Run pytest and pylint outside the sandbox: tests use multiprocessing and pylint writes its cache under the user home. Use Qt's offscreen platform for headless GUI tests. Do not run `releaseVersion.py` routinely: it regenerates files and may prompt for release actions.
+Numbered `test_XX_` modules must retain their order. Run pytest and pylint outside the sandbox: tests use multiprocessing and pylint writes its cache under the user home. Use Qt's offscreen platform for headless GUI tests. `test_99_verifyAPIs.py` (OLS and other web lookups) is flaky: it often fails, especially on the first run, due to HTTP request time-outs; rerun before investigating. Do not run `releaseVersion.py` routinely: it regenerates files and may prompt for release actions.
 
 For coverage-guided iteration, use `python -c "import releaseVersion; raise SystemExit(0 if releaseVersion.runTests() else 1)"`. Inspect `htmlcov/index.html`, target useful uncovered regions with minimal reversible workflow steps in the appropriate numbered test, and retain changes only when coverage improves without regressions. Leave API-dependent paths to `testsComplicated/`; do not target copied third-party source or the human-only GUI entry point.
 
