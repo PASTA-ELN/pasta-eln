@@ -197,15 +197,15 @@ def image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,
     policy.setVerticalPolicy(QSizePolicy.Policy.Fixed)
     imageSVG.setSizePolicy(policy)
     imageSVG.load(bytearray(data, encoding='utf-8'))
-    if height > 0:
-      imageSVG.setMaximumSize(int(float(imageSVG.width()) / float(imageSVG.height()) * height), height)
-    if width > 0:
-      imageSVG.setMaximumSize(width, int(float(imageSVG.height()) / float(imageSVG.width()) * width))
-    if anyDimension > 0:
-      if imageSVG.height() > imageSVG.width():
-        imageSVG.setMaximumSize(int(float(imageSVG.width()) / float(imageSVG.height()) * anyDimension), anyDimension)
-      else:
-        imageSVG.setMaximumSize(anyDimension, int(float(imageSVG.height()) / float(imageSVG.width()) * anyDimension))
+    size = imageSVG.renderer().defaultSize()                    # intrinsic SVG size; widget size is not yet valid
+    if not size.isEmpty():
+      if height > 0:
+        size = size.scaled(10**6, height, Qt.AspectRatioMode.KeepAspectRatio)
+      if width > 0:
+        size = size.scaled(width, 10**6,  Qt.AspectRatioMode.KeepAspectRatio)
+      if anyDimension > 0:
+        size = size.scaled(anyDimension, anyDimension, Qt.AspectRatioMode.KeepAspectRatio)
+      imageSVG.setFixedSize(size)
     if layout is not None:
       layout.addWidget(imageSVG, alignment=Qt.AlignHCenter)                                     # type: ignore
     return imageSVG
