@@ -31,6 +31,7 @@ class Body(QWidget):
     super().__init__()
     self.comm = comm
     self._tableChangingInProgress = False
+    self._tabIconNames: dict[QWidget, str] = {}                    # icon of each tab, to recolor on theme change
 
     # Tabwidget (Contains Project- and Table-views)
     self.tabWidget = QTabWidget()
@@ -38,13 +39,7 @@ class Body(QWidget):
     self.tabWidget.setTabBar(self.projectTabBar)
     self.tabWidget.setMovable(True)
     self.tabWidget.setContentsMargins(0, 0, 0, 0)
-    self.tabWidget.setStyleSheet(f"""
-    QTabWidget::pane {{
-      border: none;
-      border-top: 1px solid {self.comm.palette.getThemeColor('border', 'base')};
-      margin: 0px;
-    }}
-    """)
+    self.styleTabWidget()
     # Splitter (for Tabwidget and Details)
     self.detailsW = Details(self.comm)     # Details (right sidebar, displaying the details of a single entry)
     self.splitter = QSplitter(handleWidth=3)
@@ -61,6 +56,7 @@ class Body(QWidget):
 
     # Signals
     self.comm.docTypesChanged.connect(self.paint)
+    self.comm.themeUpdated.connect(self.onThemeUpdated)
     self.comm.changeProject.connect(self.onChangeProject)
     self.comm.changeTable.connect(self.onChangeTable)
     self.tabWidget.currentChanged.connect(self.onTabChanged)
@@ -81,11 +77,13 @@ class Body(QWidget):
       self.tabWidget.removeTab(0)
       if widget is not None:
         widget.deleteLater()
+    self._tabIconNames.clear()
     self._tableChangingInProgress = False
     # Add Project View - Tab
     projectView = Project(self.comm)
     homeIndex = self.tabWidget.addTab(projectView,
                                       self.createIcon('ri.home-2-fill', iconColor, selectedIconColor), 'Home')
+    self._tabIconNames[projectView] = 'ri.home-2-fill'
     self.projectTabBar.markHomeTab(homeIndex)
     # Add Table Views - Tabs
     for doctype, docTypeDetails in self.comm.docTypesTitles.items():
@@ -96,12 +94,38 @@ class Body(QWidget):
       icon     = self.createIcon(iconName, iconColor, selectedIconColor)
       label    = docTypeDetails['title']
       index    = self.tabWidget.addTab(tableView, icon, label)
+      self._tabIconNames[tableView] = iconName
       self.tabWidget.setTabVisible(index, doctype not in HIDDEN_TABLES)
     for docType, iconName, label in (('_tags_', 'ri.price-tag-3-line', 'Tags'),
                                      ('-', 'ri.question-line', 'Unidentified')):
       tableView = TableView(self.comm, docType)
       icon = self.createIcon(iconName, iconColor, selectedIconColor)
       self.tabWidget.addTab(tableView, icon, label)
+      self._tabIconNames[tableView] = iconName
+
+
+  def styleTabWidget(self) -> None:
+    """Apply the theme colors to the tab widget's pane border and the separator behind the Home tab."""
+    self.tabWidget.setStyleSheet(f"""
+    QTabWidget::pane {{
+      border: none;
+      border-top: 1px solid {self.comm.palette.getThemeColor('border', 'base')};
+      margin: 0px;
+    }}
+    """)
+    self.projectTabBar.setSeparatorColor(self.comm.palette.getThemeColor('foreground', 'base'))
+
+
+  @Slot()
+  def onThemeUpdated(self) -> None:
+    """Recolor the tab icons and borders after the color theme changed, without recreating the tabs."""
+    self.styleTabWidget()
+    iconColor         = self.comm.palette.getThemeColor('foreground', 'base')
+    selectedIconColor = self.comm.palette.getThemeColor('primary', 'base')
+    for index in range(self.tabWidget.count()):
+      iconName = self._tabIconNames.get(self.tabWidget.widget(index))
+      if iconName is not None:
+        self.tabWidget.setTabIcon(index, self.createIcon(iconName, iconColor, selectedIconColor))
 
 
   def createIcon(self, iconName: str, color: str, selectedColor: str) -> QIcon:

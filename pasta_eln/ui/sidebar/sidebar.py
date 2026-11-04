@@ -2,7 +2,6 @@
 from __future__ import annotations
 from enum import Enum
 import pandas as pd
-import qtawesome as qta
 from PySide6.QtCore import Slot
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
@@ -70,6 +69,7 @@ class ProjectSidebar(Widget):
     self.comm.changeSidebar.connect(self.onSidebarChange)
     self.comm.docTypesChanged.connect(self.onDocTypesChanged)
     self.comm.changeProject.connect(self.highlightActiveProject)
+    self.comm.themeUpdated.connect(self.onThemeUpdated)
     self.comm.backendThread.worker.beSendTable.connect(self.onGetData)
 
     # CODE
@@ -148,9 +148,14 @@ class ProjectSidebar(Widget):
     """Update the visibility toggle's icon and tooltip."""
     iconName = 'fa5s.eye' if self.showHiddenProjects else 'fa5s.eye-slash'
     tooltip = 'Hide/show hidden projects'
-    color = self.comm.palette.getThemeColor('foreground', 'base')
-    self.showHiddenBtn.setIcon(qta.icon(iconName, color=color))
+    self.showHiddenBtn.setIconName(iconName)
     self.showHiddenBtn.setToolTip(tooltip)
+
+
+  @Slot()
+  def onThemeUpdated(self) -> None:
+    """Redraw the project cards in the colors of the new theme"""
+    self.paint()
 
 
   def execute(self, command: Command) -> None:

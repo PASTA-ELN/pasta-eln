@@ -87,6 +87,16 @@ class ProjectTabBar(QTabBar):
         return
 
 
+  def setSeparatorColor(self, separatorColor: str) -> None:
+    """Change the color of the separator, e.g., after a theme change
+
+    Args:
+      separatorColor (str): The new color of the separator
+    """
+    self._separatorColor = QColor(separatorColor)
+    self.update()
+
+
   def markHomeTab(self, index: int) -> None:
     """Mark the tab which must remain first in the tab bar. Called by body.py
 

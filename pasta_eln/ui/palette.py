@@ -42,11 +42,17 @@ class Palette:
       else:
         print(f"DEBUG: darkdetect.theme().lower()={autoTheme} is not recognized")
         self.qtheme = 'light'
+    self.savedQtheme = self.qtheme                       # qtheme can differ temporarily, e.g., during preview
+    self.leafShadow = '#55000000'                                                          # Transparent Black
+    self.updateColors()
+
+
+  def updateColors(self) -> None:
+    """Recompute the frequently used colors from the current theme."""
     self.primary = self.getThemeColor('primary', 'base')
     self.text = self.getThemeColor('foreground', 'base')
     self.leafX = self.getThemeColor('border', 'base')
     self.leafO = self.getThemeColor('background', 'popup')
-    self.leafShadow = '#55000000'                                                          # Transparent Black
 
 
   def setTheme(self, theme: str = '', saveTheme: bool = True) -> None:
@@ -73,12 +79,14 @@ class Palette:
     if theme not in ['dark', 'light', '']:
       print('Could not find Theme:', theme)
       return
-    if theme != '' and saveTheme:
-      self.qtheme = theme
-    if theme != '' and not saveTheme:
-      qdarktheme.setup_theme(theme, additional_qss=css, corner_shape=cornershape, custom_colors=customColors)
+    if theme == '':
+      self.qtheme = self.savedQtheme
     else:
-      qdarktheme.setup_theme(self.qtheme, additional_qss=css, corner_shape=cornershape, custom_colors=customColors)
+      self.qtheme = theme
+      if saveTheme:
+        self.savedQtheme = theme
+    qdarktheme.setup_theme(self.qtheme, additional_qss=css, corner_shape=cornershape, custom_colors=customColors)
+    self.updateColors()
     self.comm.themeUpdated.emit()
 
 
