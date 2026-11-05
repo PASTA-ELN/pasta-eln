@@ -359,10 +359,9 @@ class Backend(CliMixin):
           pathsInDbX.remove(path)
           continue
         if (self.basePath/path/'.id_pastaELN.json').is_file():                 # update branch: path and stack
-          with open(self.basePath/path/'.id_pastaELN.json', encoding='utf-8') as fIn:
-            doc = json.loads(fIn.read())
-            doc = self.db.getDoc(doc['id'])
-          if len(doc)==0:
+          docID = readIdFile(self.basePath/path/'.id_pastaELN.json').get('id', '')
+          doc = self.db.getDoc(docID) if docID else {}
+          if len(doc)==0:                               # unknown or invalid id file: drop it, rerun adds folder
             (self.basePath/path/'.id_pastaELN.json').unlink()
             rerunScanTree = True
             continue
@@ -528,25 +527,23 @@ class Backend(CliMixin):
               output += outputString(outputStyle, 'error', f'Folder "{path}" is used by several items: '
                                       f'{", ".join([i["id"] for i in listDocs])}')
             docDB   = self.db.getDoc(listDocs[0]['id'])
-            if (self.basePath/root/dirName/'.id_pastaELN.json').is_file():
-              with open(self.basePath/root/dirName/'.id_pastaELN.json',encoding='utf-8') as fIn:
-                docDisk = json.loads(fIn.read())
-                difference = diffDicts(docDisk,docDB)
-                if len(difference)>1:
-                  errorStr = outputString(outputStyle,'error',
-                    f'Content of "{path}/.id_pastaELN.json" (1) differs from database (2) for "{docDB["name"]}" '
-                    f'({docDB["id"]}):\n    {difference.replace(chr(10), chr(10)+"    ")}\n    '
-                    'Repair: overwrite the file on disk with the database content')
-                  if repair is None:
-                    output += errorStr
-                  elif repair(errorStr):
-                    with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
-                      json.dump(docDB, fOut)
-                  #use only for resetting the content in the .id_pastaELN.json
+            if docDisk:= readIdFile(self.basePath/root/dirName/'.id_pastaELN.json'):
+              difference = diffDicts(docDisk,docDB)
+              if len(difference)>1:
+                errorStr = outputString(outputStyle,'error',
+                  f'Content of "{path}/.id_pastaELN.json" (1) differs from database (2) for "{docDB["name"]}" '
+                  f'({docDB["id"]}):\n    {difference.replace(chr(10), chr(10)+"    ")}\n    '
+                  'Repair: overwrite the file on disk with the database content')
+                if repair is None:
+                  output += errorStr
+                elif repair(errorStr):
+                  with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
+                    json.dump(docDB, fOut)
+                #use only for resetting the content in the .id_pastaELN.json
             else:
               count += 1
               errorStr = outputString(outputStyle, 'error', f'Folder "{path}" of "{docDB["name"]}" ({docDB["id"]}) '
-                                      'has no .id_pastaELN.json file\n    Repair: create this file with the '
+                                      'has no valid .id_pastaELN.json file\n    Repair: create this file with the '
                                       'ID of the item')
               if repair is None:
                 output += errorStr
@@ -609,14 +606,29 @@ class Backend(CliMixin):
     report: dict[str, list[str]] = {'critical': [], 'warning': [], 'information': []}
     category = 'information'
     for line in output.splitlines():
-      text = re.sub(r'\x1b\[[0-9;]*m', '', line).strip()                                         #remove colors
+      text = re.sub(r'\x1b\[[0-9;]*m', '', line).strip()                                        #remove colors
       if not text or text.startswith('***') or text.startswith(('Green:', 'Blue:')):
         continue
       if text.startswith('**ERROR'):
         category, text = 'critical', text.removeprefix('**ERROR').strip()
       elif text.startswith(('**Warning', '**Unsure')):
         category, text = 'warning', text.removeprefix('**Warning').removeprefix('**Unsure').strip()
-      elif not line[:1].isspace():                                    #indented lines continue previous message
+      elif not line[:1].isspace():                                   #indented lines continue previous message
         category = 'information'
       report[category].append(text)
     return json.dumps(report)
+
+
+def readIdFile(fileName:Path) -> dict[str,Any]:
+  """Read a folder's .id_pastaELN.json
+  Args:
+    fileName (Path): path of the file
+  Returns:
+    dict: content; empty if the file is missing, empty or invalid
+  """
+  try:
+    content = json.loads(fileName.read_text(encoding='utf-8'))
+  except (OSError, ValueError):                                      # missing, unreadable, not UTF-8, no JSON
+    return {}
+  return content if isinstance(content, dict) else {}
+
