@@ -16,7 +16,7 @@ CONFIGURATION_FILE_NAME = '.pastaELN.json'
 CONFIGURATION_VERSION = 4
 NONCE_SIZE = 12
 
-def _masterKey() -> bytes:
+def masterKey() -> bytes:
   """Return the master key, creating and disclosing it once when absent.
   Returns:
     bytes: master key
@@ -28,26 +28,29 @@ def _masterKey() -> bytes:
   except KeyringError as exc:
     raise RuntimeError(f'System keyring unavailable, cannot read the configuration master key: {exc}') from exc
   if storedKey is None:
-    masterKey = secrets.token_bytes(32)
+    key = secrets.token_bytes(32)
+    keyText = base64.b64encode(key).decode('ascii')
     try:
-      keyring.set_password(keyringService, keyringAccount, base64.b64encode(masterKey).decode('ascii'))
+      keyring.set_password(keyringService, keyringAccount, keyText)
     except KeyringError as exc:
       raise RuntimeError(f'System keyring unavailable, cannot store the configuration master key: {exc}') from exc
-    keyText = base64.b64encode(masterKey).decode('ascii')
     if QApplication.instance() is not None:
       dialog = QMessageBox()
       dialog.setWindowTitle('PASTA-ELN recovery key')
-      dialog.setText('Copy and store this recovery key now. It will not be shown again.')
-      dialog.setInformativeText(keyText)
+      dialog.setText(f'Copy and store this recovery key now.\n\n{keyText}')  # main text: only it honors the flags
       dialog.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+      copyButton = dialog.addButton('Copy key and close', QMessageBox.ButtonRole.AcceptRole)
+      dialog.addButton(QMessageBox.StandardButton.Close)
       dialog.exec()
+      if dialog.clickedButton() is copyButton:
+        QApplication.clipboard().setText(keyText)
     else:
-      print(f'PASTA-ELN recovery key (shown once): {keyText}')
-    return masterKey
-  masterKey = base64.b64decode(storedKey, validate=True)
-  if len(masterKey) != 32:
+      print(f'PASTA-ELN recovery key: {keyText}')
+    return key
+  key = base64.b64decode(storedKey, validate=True)
+  if len(key) != 32:
     raise ValueError('Configuration master key must be 32 bytes')
-  return masterKey
+  return key
 
 
 def _secretPaths(configuration:dict[str, Any]) -> list[tuple[tuple[str, ...], str]]:
@@ -89,7 +92,7 @@ def saveConfiguration(configuration:dict[str, Any], fileName:Path|None=None) -> 
     for part in path[:-1]:
       target = target[part]
     if value:= target[path[-1]]:
-      cipher = cipher or AESGCM(_masterKey())
+      cipher = cipher or AESGCM(masterKey())
       nonce = secrets.token_bytes(NONCE_SIZE)
       ciphertext = cipher.encrypt(nonce, str(value).encode('utf-8'), aadPath.encode('utf-8'))
       target[path[-1]] = base64.b64encode(nonce + ciphertext).decode('ascii')
@@ -140,7 +143,7 @@ def loadConfiguration(fileName:Path|None=None) -> dict[str, Any]:
     for part in path[:-1]:
       target = target[part]
     if value:= target[path[-1]]:                                   # final path is the value that is encrypted
-      cipher = cipher or AESGCM(_masterKey())
+      cipher = cipher or AESGCM(masterKey())
       raw = base64.b64decode(value, validate=True)
       target[path[-1]] = cipher.decrypt(raw[:NONCE_SIZE], raw[NONCE_SIZE:], aadPath.encode('utf-8')).decode('utf-8')
   return configuration

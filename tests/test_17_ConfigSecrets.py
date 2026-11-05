@@ -131,7 +131,7 @@ class TestConfigSecrets(unittest.TestCase):
     self.fileName.write_text(json.dumps(legacy), encoding='utf-8')
     with patch('pasta_eln.configuration_file.QApplication.instance', return_value=object()), \
          patch('pasta_eln.configuration_file.QMessageBox.warning') as warning, \
-         patch('pasta_eln.configuration_file._masterKey', return_value=b'master-key-32-bytes-long-value!!'):
+         patch('pasta_eln.configuration_file.masterKey', return_value=b'master-key-32-bytes-long-value!!'):
       configuration_file.loadConfiguration(self.fileName)
     warning.assert_called_once()
     self.assertIn('Back up this JSON file', warning.call_args.args[2])
