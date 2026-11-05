@@ -4,7 +4,7 @@ from collections.abc import Callable
 from enum import Enum, auto
 from typing import Any, Final, Literal, Protocol
 import qtawesome as qta
-from PySide6.QtCore import QByteArray, QSize, Qt, Slot
+from PySide6.QtCore import QByteArray, QSize, Qt
 from PySide6.QtGui import QImage, QMouseEvent, QPixmap, QShortcut
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import QFrame, QLabel, QLayout, QPushButton, QSizePolicy, QVBoxLayout, QWidget
@@ -65,9 +65,6 @@ class Button(QPushButton):
       checkable (bool): Whether the button maintains a checked state.
     """
     super().__init__(label)
-    self.comm_ = getattr(widget, 'comm', None)  # trailing _ since QPushButton has palette() and style()
-    self.iconName = icon
-    self.style_ = style
     self.buttonIconSize = QSize(32,32) if iconSize=='l' else QSize(20,20)
     self.setAutoDefault(False)
     self.setDefault(style is ButtonStyle.HIGHLIGHTED)
@@ -80,35 +77,15 @@ class Button(QPushButton):
     if tooltip:
       self.setToolTip(tooltip)
     if icon is not None:
-      self.paintIcon()
+      color = widget.comm.palette.getThemeColor('foreground', 'base')
+      if style is ButtonStyle.HIGHLIGHTED:
+        color = widget.comm.palette.getThemeColor('background', 'base')
+      if style is ButtonStyle.PRIMARY:
+        color = widget.comm.palette.getThemeColor('primary', 'base')
+      self.setIcon(qta.icon(icon, color=color))
       self.setIconSize(self.buttonIconSize)
-      widget.comm.themeUpdated.connect(self.paintIcon)
     if layout is not None:
       layout.addWidget(self)
-
-
-  def setIconName(self, iconName: str) -> None:
-    """Change the icon of the button, keeping the color of its style
-
-    Args:
-      iconName (str): QtAwesome icon name
-    """
-    self.iconName = iconName
-    self.paintIcon()
-
-
-  @Slot()
-  def paintIcon(self) -> None:
-    """Draw the icon in the color of the current theme, e.g., after a theme change"""
-    if self.iconName is None or self.comm_ is None:
-      return
-    palette = self.comm_.palette
-    color = palette.getThemeColor('foreground', 'base')
-    if self.style_ is ButtonStyle.HIGHLIGHTED:
-      color = palette.getThemeColor('background', 'base')
-    if self.style_ is ButtonStyle.PRIMARY:
-      color = palette.getThemeColor('primary', 'base')
-    self.setIcon(qta.icon(self.iconName, color=color))
 
 
 class CollapsibleSection(QFrame):

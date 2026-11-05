@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Any
 from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot
-from PySide6.QtGui import QAction, QShowEvent, QStandardItem, QStandardItemModel
+from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QInputDialog, QLabel, QMenu, QTextEdit, QVBoxLayout, QWidget
 from ...backend_worker.worker import Task
 from ...fixed_strings_json import DO_NOT_RENDER
@@ -33,7 +33,6 @@ class Project(Widget):
     self.comm = comm
     self.comm.changeProject.connect(self.change)
     self.comm.changeDetails.connect(self.onDetailsChanged)
-    self.comm.themeUpdated.connect(self.onThemeUpdated)
     self.comm.backendThread.worker.beSendHierarchy.connect(self.onGetData)
     self.hierarchy = Node('__none__')
     self.docProj:dict[str,Any] = {}
@@ -56,7 +55,6 @@ class Project(Widget):
     self.btnVisibility:  Button | None     = None
     self.lineSep = 20
     self.metaRole = Qt.ItemDataRole.UserRole + 1
-    self.repaintOnShow = False                                       # theme changed while widget was hidden
 
 
   @Slot(Node, dict)
@@ -84,27 +82,6 @@ class Project(Widget):
     self.docIDHighlight = docID
     self.projID = projID
     self.comm.uiRequestHierarchy.emit(projID, self.showAll)
-
-
-  @Slot()
-  def onThemeUpdated(self) -> None:
-    """Redraw the project in the colors of the new theme; if hidden, as soon as it is shown again"""
-    if self.isHidden():
-      self.repaintOnShow = True
-    else:
-      self.paint()
-
-
-  def showEvent(self, event: QShowEvent) -> None:
-    """Catch up on a theme change that happened while hidden
-
-    Args:
-      event (QShowEvent): The show event
-    """
-    super().showEvent(event)
-    if self.repaintOnShow:
-      self.repaintOnShow = False
-      self.paint()
 
 
   def paint(self) -> None:
