@@ -1,9 +1,10 @@
 """ config tab on GUI / Appearance / Interface elements """
 from collections.abc import Callable
 from PySide6.QtWidgets import (QAbstractButton, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QGroupBox, QLabel,
-                               QVBoxLayout)
+                               QMessageBox, QVBoxLayout)
 from ...configuration_file import saveConfiguration
 from ...fixed_strings_json import configurationGUI
+from ...misc_tools import hardRestart
 from ..gui_communicate import Communicate
 
 
@@ -43,19 +44,20 @@ class ConfigurationGUI(QDialog):
     Save changes to hard-disk
     """
     if btn.text().endswith('Cancel'):
-      self.comm.palette.setTheme()
       self.reject()
       self.callbackFinished(False)
     else:
+      oldTheme = self.comm.configuration['GUI'].get('theme')
       for items in configurationGUI.values():
         for k in items.keys():
           try:
             self.comm.configuration['GUI'][k] = int(getattr(self, k).currentText())
           except Exception:
             self.comm.configuration['GUI'][k] = getattr(self, k).currentText()
-          if k == 'theme':
-            self.comm.palette.setTheme(getattr(self, k).currentText())
       saveConfiguration(self.comm.configuration)
+      if self.comm.configuration['GUI'].get('theme') != oldTheme and QMessageBox.question(self, 'Restart required',
+         'The color style is applied after a restart. Restart now?') == QMessageBox.StandardButton.Yes:
+        hardRestart()                               # theme colors are cached by many widgets: restart for all
       self.accept()
       self.callbackFinished(True)
     return
@@ -76,8 +78,6 @@ class ConfigurationGUI(QDialog):
     """
     widget = QComboBox()                                                     # pylint: disable=qt-local-widget
     labelWidget = QLabel(label)
-    if label == 'Color style':
-      widget.currentTextChanged.connect(lambda: self.comm.palette.setTheme(widget.currentText(), False))
     widget.addItems(itemList)
     widget.setCurrentText(default)
     layout.addRow(labelWidget, widget)
