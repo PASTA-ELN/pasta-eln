@@ -17,7 +17,7 @@ def outputString(fmt:str='print', level:str='info', message:str='') -> str:
     - formats can be union ('print,text')
   """
   prefixes = {'h2':f'{Bcolors.UNDERLINE}\n*** ','bold':f'{Bcolors.BOLD}\n*** ', \
-              'perfect':f'{Bcolors.OKGREEN}', 'ok':f'{Bcolors.OKBLUE}', 'unsure':f'{Bcolors.HEADER}',\
+              'perfect':f'{Bcolors.OKGREEN}', 'ok':f'{Bcolors.OKBLUE}', 'unsure':f'{Bcolors.HEADER}**Unsure',\
               'warning':f'{Bcolors.WARNING}**Warning','error':f'{Bcolors.FAIL}**ERROR '}
   if level=='info':
     txtOutput = message.strip()+'\n'

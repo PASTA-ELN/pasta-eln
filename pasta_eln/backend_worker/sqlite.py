@@ -10,6 +10,7 @@ import shutil
 import sqlite3
 from collections.abc import Callable
 from datetime import datetime
+from functools import partial
 from pathlib import Path
 from typing import Any
 import pandas as pd
@@ -1004,6 +1005,39 @@ class SqlLiteDB:
     Returns:
         str: output
     """
+    def label(docID:str) -> str:
+      """ Human readable label of an item: name, type and docID
+      Args:
+        docID (str): documunt-id
+      Returns:
+        str: "name" (type, docID)
+      """
+      self.cursor.execute('SELECT name, type FROM main WHERE id=?', (docID,))
+      row = self.cursor.fetchone()
+      return f'"{row[0]}" ({row[1]}, {docID})' if row else f'unknown item ({docID})'
+
+    def check(level:str, message:str, repairText:str='', fix:Callable[[],object] | None=None) -> str:
+      """ Report a problem; in repair mode: ask the user and repair
+
+      Args:
+        level (str): level of outputString
+        message (str): human readable description of the problem
+        repairText (str): what the repair will change
+        fix (function): function that does the repair; None if repair is not possible
+
+      Returns:
+        str: text for the report
+      """
+      if repairText:
+        message += f'\n    Repair: {repairText}'
+      text = outputString(outputStyle, level, message)
+      if repair is None or fix is None:
+        return text
+      if repair(text):
+        fix()
+        self.connection.commit()
+      return ''
+
     reply = ''
     if outputStyle=='html':
       reply += '<div align="right">'
@@ -1017,33 +1051,25 @@ class SqlLiteDB:
       reply += '</div>'
       reply+= outputString(outputStyle,'h2','List all database entries')
     lostAndFoundProjId   = ''
-    lostAndFoundProjPath = Path()
+    lostAndFoundProjPath = Path('LostAndFound')                                                 #by definition
+    lostAndFoundText     = 'move the item into project "Lost and Found"'
     if repair is not None:
       dfProjects = self.getView('viewDocType/x0')
       idProjects = dfProjects[dfProjects['name']=='Lost and Found']['id'].values
-      if len(idProjects)==0:
-        print('**Warning: manually create "LostAndFound" project to allow full repair')
+      if len(idProjects)>0:
+        lostAndFoundProjId = idProjects[0]
       else:
-        lostAndFoundProjId   = idProjects[0]
-        lostAndFoundProjPath = Path('LostAndFound')                                             #by definition
-    if not lostAndFoundProjId and repair is not None:
-      errorStr = outputString(outputStyle,'error','No Lost and Found project found. Some repair impossible. '\
-                                          'Repair: exit repair mode and manually create LostAndFound project.')
-      if repair is None:
-        reply+= errorStr
-      elif repair(errorStr):
-        return 'Repair aborted: no Lost and Found project found. Exit repair mode and create it manually.'
+        lostAndFoundText = ('not possible: no project "Lost and Found". Create it with tools command [cp] and '
+                           'repair again')
+        print('**Warning: no project "Lost and Found" exists. Items with missing parents cannot be repaired. '
+              'Create the project with tools command [cp] and repair again.')
     # tests
-    self.cursor.execute('SELECT main.id, main.name FROM main WHERE id NOT IN (SELECT id FROM branches)')
-    if res:= self.cursor.fetchall():
-      errorStr = outputString(outputStyle,'error', f'Items with no branch: {", ".join(str(i) for i in res)}')
-      if repair is None:
-        reply+= errorStr
-      elif repair(errorStr):
-        for docID, name in res:
-          self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
-            [docID, 0, f'{lostAndFoundProjId}/{docID}', 9999, '*', 'TT'])
-        self.connection.commit()
+    self.cursor.execute('SELECT id FROM main WHERE id NOT IN (SELECT id FROM branches)')
+    for (docID,) in self.cursor.fetchall():
+      reply+= check('error', f'{label(docID)} has no place in any project hierarchy (no branch)', lostAndFoundText,
+                    partial(self.cursor.execute, f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
+                            [docID, 0, f'{lostAndFoundProjId}/{docID}', 9999, '*', 'TT'])
+                    if lostAndFoundProjId else None)
 
     cmd = 'SELECT id, main.type, branches.stack, branches.path, branches.child, branches.show, main.name '\
           'FROM branches INNER JOIN main USING(id)'
@@ -1052,144 +1078,134 @@ class SqlLiteDB:
     reply += outputString(outputStyle,'info', f'Number of documents: {len(res)}')
     for row in res:
       try:
-        docID, docType, stack, path, child, _, name = row[0], row[1], row[2], row[3], row[4], row[5], row[6]
+        docID, docType, stack, path, child, _, name = row
       except ValueError:
-        reply+= outputString(outputStyle,'error','dch03a: branch data has strange list')
+        reply+= check('error', f'Hierarchy entry (branch) has an unexpected format: {row} [dch03a]')
+        continue
+      item = f'"{name}" ({docType}, {docID})'
+      if not docType:
+        reply+= check('unsure', f'Item has no type (removed data?): {item} [dch04b]')
         continue
       if docType.count('/')>5:
-        reply+= outputString(outputStyle,'error',f"dch04a: type has too many / {docID}")
-      if len(docType.split('/'))==0:
-        reply+= outputString(outputStyle,'unsure',f"dch04b: no type in (removed data?) {docID}")
-        continue
+        reply+= check('error', f'Type of {item} has more than 6 levels [dch04a]')
       if docType.startswith('x') and not docType.startswith(('x0','x1')):
-        errorStr = outputString(outputStyle,'error',f"dch04c: bad data type*: {docID} {docType}")
-        if repair is None:
-          reply+= errorStr
-        elif repair(errorStr):
-          self.cursor.execute("UPDATE main SET type='x1' WHERE id=?", (docID,))
+        reply+= check('error', f'Folder {item} has an invalid type "{docType}" [dch04c]', 'change the type to '
+                      '"x1" (folder)', partial(self.cursor.execute, "UPDATE main SET type='x1' WHERE id=?",
+                                               (docID,)))
       if not all(k.startswith('x-') for k in stack.split('/')[:-1]):
-        reply+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {docID}")
+        reply+= check('error', f'Some parents of {item} are not folders: {stack} [dch03]')
       if any(len(i)==0 for i in stack) and not docType.startswith('x0'):                    #if no inheritance
         if docType.startswith(('measurement','x')):
-          reply+= outputString(outputStyle,'warning',f"branch stack length = 0: no parent {docID}")
+          reply+= check('warning', f'{item} has no parent [dch07]')
         elif not minimal:
-          reply+= outputString(outputStyle,'ok',
-                                   f"branch stack length = 0: no parent for procedure/sample {docID}")
+          reply+= check('ok', f'{item} has no parent; this is fine for workflows and samples')
       try:
         dirNamePrefix = path.split(os.sep)[-1].split('_')[0]
         if dirNamePrefix.isdigit() and child!=int(dirNamePrefix) and docType.startswith('x'):#compare child-number to start of directory name
-          reply+= outputString(outputStyle,'error',f"dch05: child-number and dirName dont match {docID}")
+          reply+= check('error', f'Folder {item}: its position in the parent ({child}) does not match the number '
+                                 f'at the start of its folder name "{path}" [dch05]')
       except Exception:
         pass                                                                               #handled next lines
       if path is None:
         if docType.startswith('x'):
-          reply+= outputString(outputStyle,'error',f"dch06: branch path is None {docID}")
+          reply+= check('error', f'Folder {item} has no path on disk [dch06]')
         elif docType.startswith('measurement'):
           if not minimal:
-            reply+= outputString(outputStyle,'ok', f'measurement branch path is None=no data {docID}')
+            reply+= check('ok', f'Measurement {item} has no file')
         elif not minimal:
-          reply+= outputString(outputStyle,'perfect',f"procedure/sample with empty path {docID}")
+          reply+= check('perfect', f'{item} has no path; this is fine for workflows and samples')
       else:                                                                                  #if sensible path
         if len(stack.split('/')) != len(path.split('/')) and path!='*' and not path.startswith('http'):
           #check if length of path and stack coincide; ignore path=None=*
-          if docType.startswith('procedure'):
+          if docType.startswith('workflow'):
             if not minimal:
-              reply+= outputString(outputStyle,'perfect',
-                                       f"procedure: branch stack and path lengths not equal: {docID}: {name}")
+              reply+= check('perfect', f'Workflow {item}: number of parents and depth of its path differ; '
+                            'this is fine')
           else:
-            reply+= outputString(outputStyle,'unsure',
-              f"branch stack and path lengths not equal: {docID}: {name} {len(stack.split('/'))}"
-              f" {len(path.split(os.sep))}")
+            reply+= check('unsure', f'{item}: number of parents ({len(stack.split("/"))-1}) does not match depth '
+                                    f'of its path "{path}" ({len(path.split("/"))-1})')
         if path!='*' and not path.startswith('http'):
           for parentID in stack.split('/')[:-1]:        #check if all parents in doc have a corresponding path
             parentDoc = self.getDoc(parentID)
             if not parentDoc:
-              errorStr= outputString(outputStyle,'error',f"branch stack parent is bad: {docID}. Repair: move to lost and found.")
-              if repair is None:
-                reply+= errorStr
-              elif repair(errorStr):
-                tempDoc = {'name':name, 'type':['x0']}
-                pathNew = (lostAndFoundProjPath/createDirName(tempDoc, 0, lostAndFoundProjPath)).as_posix() if docID.startswith('x-')\
-                          else '*'
-                stackNew = f'{lostAndFoundProjId}/{docID}'
+              def moveToLostAndFound(d:str=docID, n:str=name, s:str=stack) -> None:
+                """Small function, only used when called
+                Args:
+                  d (str): docID
+                  n (str): name
+                  s (str): stack
+                """
+                tempDoc = {'name':n, 'type':['x0']}
+                pathNew = (lostAndFoundProjPath/createDirName(tempDoc, 0, lostAndFoundProjPath)).as_posix() \
+                          if d.startswith('x-') else '*'
                 self.cursor.execute('UPDATE branches SET path=?, stack=? WHERE id=? AND stack=?',
-                                    (pathNew, stackNew, docID, stack))
-                self.connection.commit()
+                                    (pathNew, f'{lostAndFoundProjId}/{d}', d, s))
+              reply+= check('error', f'Parent {parentID} of {item} does not exist', lostAndFoundText,
+                            moveToLostAndFound if lostAndFoundProjId else None)
               continue
             parentDocBranches = parentDoc['branch']
             onePathFound = any(path.startswith(parentBranch['path']) for parentBranch in parentDocBranches)
             if not onePathFound:
+              parentLabel = f'"{parentDoc["name"]}" ({parentID})'
               if docType.startswith('workflow'):
                 if not minimal:
-                  reply+= outputString(outputStyle,'perfect',
-                    f"dch08: workflow parent does not have corresponding path {docID} | parentID {parentID}")
+                  reply+= check('perfect', f'Workflow {item} is not stored inside the folder of its parent '
+                                           f'{parentLabel}; this is fine')
               else:
-                reply+= outputString(outputStyle,'unsure',
-                    f"dch08: parent does not have corresponding path {docID} | parentID {parentID}")
+                reply+= check('unsure', f'{item} is stored at "{path}", which is not inside the folder of its '
+                              f'parent {parentLabel} [dch08]')
 
     self.cursor.execute('SELECT id, idx FROM branches WHERE idx<0')
     for docID, idx in self.cursor.fetchall():
-      reply+= outputString(outputStyle,'error',f"branch idx is bad: {docID} idx: {idx}")
+      reply+= check('error', f'{label(docID)} has an invalid hierarchy index {idx}')
 
     self.cursor.execute("SELECT id, key FROM properties where key NOT LIKE '%.%'")
     for docID, key in self.cursor.fetchall():
-      reply+= outputString(outputStyle,'error',f"key is bad, miss .: {docID} idx: {key}")
+      reply+= check('error', f'Property "{key}" of {label(docID)} has no group (missing "."). '
+                             'Repair with tools command [rp1]')
     self.cursor.execute("SELECT id, key FROM properties where value LIKE ''")
     for docID, key in self.cursor.fetchall():
-      errorStr= outputString(outputStyle,'ok',f"value of this key is missing*: {docID} idx: {key}")
-      if repair is None:
-        reply+= errorStr
-      elif repair(errorStr):
-        self.cursor.execute('DELETE FROM properties WHERE id=? AND key=?', (docID, key))
-        self.connection.commit()
+      reply+= check('ok', f'Property "{key}" of {label(docID)} is empty', 'delete this empty property',
+                    partial(self.cursor.execute, 'DELETE FROM properties WHERE id=? AND key=?', (docID, key)))
 
-    cmd = 'SELECT branches.id, branches.path, main.shasum FROM branches JOIN main USING(id) '\
+    cmd = 'SELECT branches.id FROM branches JOIN main USING(id) '\
           "WHERE branches.path=='*' AND main.shasum!=''"
     self.cursor.execute(cmd)
-    for line in self.cursor.fetchall():
-      errorStr= outputString(outputStyle,'error',f"shasum!='' for item with no path docID:{line[0]}. Repair: remove shasum")
-      if repair is None:
-        reply+= errorStr
-      elif repair(errorStr):
-        self.cursor.execute("UPDATE main SET shasum='' WHERE id=?", (line[0],))
-        self.connection.commit()
+    for (docID,) in self.cursor.fetchall():
+      reply+= check('error', f'{label(docID)} has no file but a file checksum (shasum)', 'remove the checksum',
+                    partial(self.cursor.execute, "UPDATE main SET shasum='' WHERE id=?", (docID,)))
 
     #doc-type specific tests
     cmd = "SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'"
     self.cursor.execute(cmd)
-    if res:= [i[0] for i in self.cursor.fetchall() if i[1] is None]:
-      reply+= outputString(outputStyle,'warning',f"dch09: qrCode not in samples {res}")
-    self.cursor.execute("SELECT id, shasum, image, comment FROM main WHERE  type LIKE 'measurement%'")
-    for row in self.cursor.fetchall():
-      docID, shasum, image, _ = row
+    for docID in [i[0] for i in self.cursor.fetchall() if i[1] is None]:
+      reply+= check('warning', f'Sample {label(docID)} has an empty QR-code entry [dch09]')
+    self.cursor.execute("SELECT id, shasum, image FROM main WHERE  type LIKE 'measurement%'")
+    for docID, shasum, image in self.cursor.fetchall():
       if shasum is None:
-        reply+= outputString(outputStyle,'warning',f"dch10: shasum not in measurement {docID}")
+        reply+= check('warning', f'Measurement {label(docID)} has no file checksum (shasum) [dch10]')
       if image.startswith('data:image'):                                                      #for jpg and png
         try:
           imgData = base64.b64decode(image[22:])
           Image.open(io.BytesIO(imgData))                    #can convert, that is all that needs to be tested
         except Exception:
-          reply+= outputString(outputStyle,'error',f"dch12: jpg-image not valid {docID}")
+          reply+= check('error', f'Thumbnail of {label(docID)} is not a valid PNG/JPEG image [dch12]')
       elif image.startswith('<?xml'):
         #from https://stackoverflow.com/questions/63419010/check-if-an-image-file-is-a-valid-svg-file-in-python
         svgR = r'(?:<\?xml\b[^>]*>[^<]*)?(?:<!--.*?-->[^<]*)*(?:<svg|<!DOCTYPE svg)\b'
         svgRe = re.compile(svgR, re.DOTALL)
         if svgRe.match(image) is None:
-          reply+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
-      # elif image in ('', None):
-        # No more warnings if images are not present: happens often in propriatary binary files,... users see it
-        # comment = comment.replace('\n','..')
-        # reply+=outputString(outputStyle,'unsure',f"image does not exist {docID} image:{image} comment:{comment}")
+          reply+= check('error', f'Thumbnail of {label(docID)} is not a valid SVG image [dch13]')
       elif not image:
-        reply+= outputString(outputStyle,'info',f"dch14: empty image {docID}")
+        reply+= check('info', f'Measurement {label(docID)} has no thumbnail [dch14]')
       else:
-        reply+= outputString(outputStyle,'error',f"dch14: image not valid {docID} |{image}|")
+        reply+= check('error', f'Image of {label(docID)} has unknown format, starting with "{image[:30]}" [dch14]')
 
     #test hierarchy
     for projID in self.getView('viewDocType/x0')['id'].values:
       _, error = self.getHierarchy(projID, True)
       if error:
-        reply+= outputString(outputStyle,'error',f"dch15: project hierarchy invalid in project {projID}")
+        reply+= check('error', f'Hierarchy of project {label(projID)} is invalid [dch15]')
     if repair is not None:
       self.connection.commit()
     return reply

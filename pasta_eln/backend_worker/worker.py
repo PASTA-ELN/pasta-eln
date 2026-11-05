@@ -367,8 +367,7 @@ class BackendWorker(QObject):
 
     elif task is Task.SYNC_ELAB and set(data.keys())=={'projGroup','subtask'}:
       errorState = self.backend.checkDB(minimal=True)
-      errorState = errorState.replace('**ERROR  bch01: These paths of database not on filesystem(3):','')# ignore because large files not copied
-      if 'ERROR' in errorState:
+      if any('**ERROR' in line and '[bch01]' not in line for line in errorState.splitlines()):# ignore bch01: large files not copied
         self.beSendTaskReport.emit(task, 'Errors are present in the database. Fix them before uploading.', '', '')
       else:
         try:
