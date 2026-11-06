@@ -14,11 +14,12 @@ from ...misc_tools import callAddOn
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import createDirName
 from ..details.context import DetailContext, DetailOrigin
+from ..form.form import Form
 from ..gui_actions import action
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label, Widget
 from ..message_dialog import showMessage
-from .project_tree_view import TreeView, addFolderAndEdit
+from .project_tree_view import TreeView
 
 
 class Project(Widget):
@@ -283,13 +284,42 @@ class Project(Widget):
       self.showAll = not self.showAll
       self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
     elif commandType is Command.ADD_CHILD:
-      addFolderAndEdit(self.comm, [self.projID])
+      self.addFolderAndEdit([self.projID])
       self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
 
     elif commandType is Command.ADD_ON:
       callAddOn(payload[0], self.comm, self.projID, self)
     else:
       logging.error('Project menu unknown: %s',command, exc_info=True)
+    return
+
+
+  def addFolderAndEdit(self, hierStack:list[str]) -> None:
+    """Create a new folder below ``hierStack``; its edit form opens once the backend created it.
+
+    Args:
+      hierStack (list[str]): hierarchy stack of the parent
+    """
+    self.comm.backendThread.worker.beSendDoc.connect(self.onNewFolder)
+    self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':hierStack, 'docType':'x1', 'doc':{'name':'new item'}})
+    return
+
+
+  @Slot(dict)
+  def onNewFolder(self, doc:dict[str,Any]) -> None:
+    """Open the form for the newly created folder; delete the folder if the user cancels.
+    - must be a method of a GUI-thread QObject: a plain function would run in the backend thread
+
+    Args:
+      doc (dict): document sent by backend; unrelated docs are ignored
+    """
+    if doc.get('name')!='new item' or not doc.get('id','').startswith('x'):
+      return
+    self.comm.backendThread.worker.beSendDoc.disconnect(self.onNewFolder)
+    form = Form(self.comm, {'id':doc['id']})
+    if form.exec() == 0 and 'id' in form.doc:                       # no id: user saved via 'Duplicate item'
+      self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':doc['id'], 'stack':''})
+      self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
     return
 
 

@@ -1,6 +1,7 @@
 """The Toplevel Sidebar on the left that displays the projects to choose."""
 from __future__ import annotations
 from enum import Enum
+from typing import Any
 import pandas as pd
 import qtawesome as qta
 from PySide6.QtCore import Slot
@@ -8,6 +9,7 @@ from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
 from pasta_eln.misc_tools import clearLayout
 from pasta_eln.ui.details.context import DetailContext
+from pasta_eln.ui.form.form import Form
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import SPACE, Button, HSeparator, Label, Widget
 from pasta_eln.ui.sidebar.project_card import ProjectCard
@@ -160,8 +162,30 @@ class ProjectSidebar(Widget):
       self.paintHiddenProjectButton()
       self.paint()
     elif command is Command.CREATE_PROJECT:
-      self.comm.formDoc.emit({'type': ['x0'], '_projectID': self.comm.projectID})
+      worker = self.comm.backendThread.worker
+      worker.beSendDoc.connect(self.onNewProject)            # connect before form: backend may answer immediately
+      if Form(self.comm, {'type': ['x0'], '_projectID': self.comm.projectID}).exec() == 0:
+        try:                                                # 'Save && Next' may have created+opened one already
+          worker.beSendDoc.disconnect(self.onNewProject)
+        except RuntimeError:
+          pass
       self.comm.changeSidebar.emit('redraw')
+
+
+  @Slot(dict)
+  def onNewProject(self, doc: dict[str, Any]) -> None:
+    """Open the newly created project.
+    - must be a method of a GUI-thread QObject: a plain function would run in the backend thread
+
+    Args:
+      doc (dict): document sent by backend; unrelated docs are ignored
+    """
+    if doc.get('type') not in ('x0', ['x0']) or 'id' not in doc:     # saved docs have type flattened to 'x0'
+      return
+    self.comm.backendThread.worker.beSendDoc.disconnect(self.onNewProject)
+    self.comm.projectID = doc['id']
+    self.comm.changeProject.emit(doc['id'], '')
+    self.comm.changeSidebar.emit('redraw')
 
 
   def visibleProjects(self) -> pd.DataFrame:
