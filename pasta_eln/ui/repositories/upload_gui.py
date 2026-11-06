@@ -130,6 +130,7 @@ class UploadGUI(QDialog):
       Button('Upload to Dataverse', self, (Command.UPLOAD, False), buttonLineL,
              style=ButtonStyle.HIGHLIGHTED)
     Button('Cancel', self, (Command.CANCEL,), buttonLineL, tooltip='Discard changes')
+    self.adjustSize()                    # content arrives after exec() showed the empty dialog: grow to fit
 
 
   def execute(self, command:'tuple[Command, bool] | tuple[Command]') -> None:

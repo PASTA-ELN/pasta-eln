@@ -115,6 +115,7 @@ class DocTypeEditor(QDialog):
       dataSet = set(string.ascii_lowercase).difference(self.shortcuts).difference(reservedDocTypeShortcuts)
       self.row4.setValidator(QRegularExpressionValidator(f'^[{"".join(dataSet)}]$'))
     self.mainForm.addRow(QLabel('Shortcut'), self.row4)
+    self.adjustSize()                    # content may arrive after exec() showed the dialog: grow to fit
 
 
   def closeDialog(self, save:bool) -> None:
