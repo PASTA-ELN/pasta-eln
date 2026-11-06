@@ -111,6 +111,7 @@ class CollapsibleSection(QFrame):
 
     self.toggle = QPushButton(title)
     self.toggle.setCheckable(True)
+    self.toggle.setAutoDefault(False)                       # Enter in a dialog must not toggle the section
     self.toggle.setFlat(True)
     self.toggle.setIconSize(iconSize)
     titleStyle = ' font-weight: bold;' if boldTitle else ''

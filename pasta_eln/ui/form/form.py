@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 from PySide6.QtCore import QSize, Qt, QTimer, Slot
-from PySide6.QtGui import QRegularExpressionValidator
+from PySide6.QtGui import QKeyEvent, QRegularExpressionValidator
 from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QInputDialog, QLabel, QLayout, QLineEdit,
                                QMenu, QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTextEdit, QVBoxLayout, QWidget)
 from ...backend_worker.sqlite import MAIN_ORDER
@@ -27,6 +27,19 @@ from ..message_dialog import MessageDialog, showMessage
 from .flow_layout import FlowLayout
 from .form_section import FormSection
 from .text_editor import TextEditor
+
+
+class TagComboBox(QComboBox):
+  """Editable combobox where Enter confirms a tag and does not trigger the dialog's default button"""
+  def keyPressEvent(self, event: QKeyEvent) -> None:
+    """Handle key press and consume Enter/Return
+
+    Args:
+      event (QKeyEvent): key event
+    """
+    super().keyPressEvent(event)
+    if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+      event.accept()
 
 
 class Form(QDialog):
@@ -381,7 +394,7 @@ class Form(QDialog):
           tagsBarSubW.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
           self.tagsBarSubL = flow
           tagsBarMainL.addWidget(tagsBarSubW)
-          self.otherChoices = QComboBox()                             #part/combobox that allow user to select
+          self.otherChoices = TagComboBox()                           #part/combobox that allow user to select
           self.otherChoices.setToolTip('Select a tag or type a new one')
           self.otherChoices.setEditable(True)
           self.otherChoices.setMinimumWidth(80)
