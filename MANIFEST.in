@@ -1,7 +1,7 @@
 graft pasta_eln
 graft docs
 prune docs/build
-global-exclude *.py[cod]
+global-exclude *.py[cod] .mypy_cache/** .pytest_cache/** .ruff_cache/**
 
 include pasta_eln/Resources/ExampleMeasurements/*
 include pasta_eln/Resources/Icons/*
