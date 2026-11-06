@@ -530,9 +530,10 @@ class Backend(CliMixin):
             if docDisk:= readIdFile(self.basePath/root/dirName/'.id_pastaELN.json'):
               difference = diffDicts(docDisk,docDB)
               if len(difference)>1:
+                indented = difference.replace('\n', '\n    ')  # no backslash inside f-string: Python < 3.12
                 errorStr = outputString(outputStyle,'error',
                   f'Content of "{path}/.id_pastaELN.json" (1) differs from database (2) for "{docDB["name"]}" '
-                  f'({docDB["id"]}):\n    {difference.replace("\n", "\n    ")}\n    '
+                  f'({docDB["id"]}):\n    {indented}\n    '
                   'Repair: overwrite the file on disk with the database content')
                 if repair is None:
                   output += errorStr
