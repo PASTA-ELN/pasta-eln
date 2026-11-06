@@ -18,7 +18,7 @@ from ..gui_actions import action
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label, Widget
 from ..message_dialog import showMessage
-from .project_tree_view import TreeView
+from .project_tree_view import TreeView, addFolderAndEdit
 
 
 class Project(Widget):
@@ -283,7 +283,7 @@ class Project(Widget):
       self.showAll = not self.showAll
       self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
     elif commandType is Command.ADD_CHILD:
-      self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':[self.projID], 'docType':'x1', 'doc':{'name':'new item'}})
+      addFolderAndEdit(self.comm, [self.projID])
       self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
 
     elif commandType is Command.ADD_ON:

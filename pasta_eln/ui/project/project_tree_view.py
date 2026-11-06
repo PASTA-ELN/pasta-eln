@@ -8,6 +8,7 @@ from PySide6.QtGui import QContextMenuEvent, QDropEvent, QMouseEvent, QStandardI
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget
 from ...backend_worker.worker import Task
 from ...misc_tools import callAddOn
+from ..form.form import Form
 from ..gui_actions import action
 from ..gui_communicate import Communicate
 from ..message_dialog import showMessage
@@ -129,11 +130,10 @@ class TreeView(QTreeView):
     if command[0] is Command.ADD_ITEM:
       self.comm.formDoc.emit({'type': [command[1]], '_hierStack': hierStack})
     elif command[0] is Command.ADD_CHILD:
-      self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':hierStack, 'docType':'x1', 'doc':{'name':'new item'}})
+      addFolderAndEdit(self.comm, hierStack)
 
     elif command[0] is Command.ADD_SIBLING:
-      hierStack= hierStack[:-1]
-      self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':hierStack, 'docType':'x1', 'doc':{'name':'new item'}})
+      addFolderAndEdit(self.comm, hierStack[:-1])
 
     elif command[0] is Command.SHOW_DETAILS:
       gui    = item.data()['gui']
@@ -283,6 +283,28 @@ class TreeView(QTreeView):
     else:
       logging.error('Drop unknown data: %s', event.mimeData().formats(), exc_info=True)
     return
+
+
+def addFolderAndEdit(comm:Communicate, hierStack:list[str]) -> None:
+  """Create a new folder below ``hierStack`` and open its edit form once the backend created it.
+  - if the user cancels the form, the new folder is deleted again
+
+  Args:
+    comm (Communicate): communication layer
+    hierStack (list[str]): hierarchy stack of the parent
+  """
+  def onGetDoc(doc:dict[str,Any]) -> None:
+    """Open the form for the newly created folder; ignore unrelated docs."""
+    if doc.get('name')!='new item' or not doc.get('id','').startswith('x'):
+      return
+    comm.backendThread.worker.beSendDoc.disconnect(onGetDoc)
+    form = Form(comm, {'id':doc['id']})
+    if form.exec() == 0 and 'id' in form.doc:                       # no id: user saved via 'Duplicate item'
+      comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':doc['id'], 'stack':''})
+      comm.changeProject.emit(hierStack[0], '')
+  comm.backendThread.worker.beSendDoc.connect(onGetDoc)
+  comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':hierStack, 'docType':'x1', 'doc':{'name':'new item'}})
+  return
 
 
 class Command(Enum):

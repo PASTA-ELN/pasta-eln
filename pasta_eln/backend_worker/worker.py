@@ -338,6 +338,11 @@ class BackendWorker(QObject):
         oldPath = self.backend.basePath/branch['path']
         if not oldPath.exists():
           continue
+        if oldPath.is_dir() and {i.name for i in oldPath.iterdir()} <= {'.id_pastaELN.json'}:# empty folder: remove
+          (oldPath/'.id_pastaELN.json').unlink(missing_ok=True)
+          oldPath.rmdir()
+          renamedPaths.add(branch['path'])
+          continue
         newPath = oldPath.parent/f'trash_{oldPath.name}'
         nextIteration = 1
         while newPath.exists():
