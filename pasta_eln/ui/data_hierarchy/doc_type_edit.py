@@ -4,7 +4,7 @@ from collections.abc import Callable
 from enum import Enum, auto
 import pandas as pd
 import qtawesome as qta
-from PySide6.QtCore import Slot
+from PySide6.QtCore import QTimer, Slot
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 from ...fixed_strings_json import allIcons, reservedDocTypeShortcuts
@@ -115,7 +115,7 @@ class DocTypeEditor(QDialog):
       dataSet = set(string.ascii_lowercase).difference(self.shortcuts).difference(reservedDocTypeShortcuts)
       self.row4.setValidator(QRegularExpressionValidator(f'^[{"".join(dataSet)}]$'))
     self.mainForm.addRow(QLabel('Shortcut'), self.row4)
-    self.adjustSize()                         # content may arrive after exec() showed the dialog: grow to fit
+    QTimer.singleShot(0, self.adjustSize)     # children added to a visible dialog are shown queued: resize after
 
 
   def closeDialog(self, save:bool) -> None:
