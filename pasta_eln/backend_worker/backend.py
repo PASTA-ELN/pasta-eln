@@ -361,7 +361,7 @@ class Backend(CliMixin):
         if (self.basePath/path/'.id_pastaELN.json').is_file():                 # update branch: path and stack
           docID = readIdFile(self.basePath/path/'.id_pastaELN.json').get('id', '')
           doc = self.db.getDoc(docID) if docID else {}
-          if len(doc)==0:                               # unknown or invalid id file: drop it, rerun adds folder
+          if len(doc)==0:                             # unknown or invalid id file: drop it, rerun adds folder
             (self.basePath/path/'.id_pastaELN.json').unlink()
             rerunScanTree = True
             continue
@@ -532,7 +532,7 @@ class Backend(CliMixin):
               if len(difference)>1:
                 errorStr = outputString(outputStyle,'error',
                   f'Content of "{path}/.id_pastaELN.json" (1) differs from database (2) for "{docDB["name"]}" '
-                  f'({docDB["id"]}):\n    {difference.replace(chr(10), chr(10)+"    ")}\n    '
+                  f'({docDB["id"]}):\n    {difference.replace("\n", "\n    ")}\n    '
                   'Repair: overwrite the file on disk with the database content')
                 if repair is None:
                   output += errorStr

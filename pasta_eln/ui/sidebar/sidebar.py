@@ -163,9 +163,9 @@ class ProjectSidebar(Widget):
       self.paint()
     elif command is Command.CREATE_PROJECT:
       worker = self.comm.backendThread.worker
-      worker.beSendDoc.connect(self.onNewProject)            # connect before form: backend may answer immediately
+      worker.beSendDoc.connect(self.onNewProject)        # connect before form: backend may answer immediately
       if Form(self.comm, {'type': ['x0'], '_projectID': self.comm.projectID}).exec() == 0:
-        try:                                                # 'Save && Next' may have created+opened one already
+        try:                                              # 'Save && Next' may have created+opened one already
           worker.beSendDoc.disconnect(self.onNewProject)
         except RuntimeError:
           pass
@@ -180,7 +180,7 @@ class ProjectSidebar(Widget):
     Args:
       doc (dict): document sent by backend; unrelated docs are ignored
     """
-    if doc.get('type') not in ('x0', ['x0']) or 'id' not in doc:     # saved docs have type flattened to 'x0'
+    if doc.get('type') not in ('x0', ['x0']) or 'id' not in doc:      # saved docs have type flattened to 'x0'
       return
     self.comm.backendThread.worker.beSendDoc.disconnect(self.onNewProject)
     self.comm.projectID = doc['id']

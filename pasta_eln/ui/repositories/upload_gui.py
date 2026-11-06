@@ -4,7 +4,8 @@ from enum import Enum
 from typing import Any
 import qtawesome as qta
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import QCheckBox, QDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (QCheckBox, QDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout,
+                               QWidget)
 from ...backend_worker.worker import Task
 from ...configuration_file import saveConfiguration
 from ..gui_communicate import Communicate
@@ -130,7 +131,7 @@ class UploadGUI(QDialog):
       Button('Upload to Dataverse', self, (Command.UPLOAD, False), buttonLineL,
              style=ButtonStyle.HIGHLIGHTED)
     Button('Cancel', self, (Command.CANCEL,), buttonLineL, tooltip='Discard changes')
-    self.adjustSize()                    # content arrives after exec() showed the empty dialog: grow to fit
+    self.adjustSize()                      # content arrives after exec() showed the empty dialog: grow to fit
 
 
   def execute(self, command:'tuple[Command, bool] | tuple[Command]') -> None:

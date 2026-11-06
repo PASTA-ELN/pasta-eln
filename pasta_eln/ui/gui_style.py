@@ -197,7 +197,7 @@ def image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,
     policy.setVerticalPolicy(QSizePolicy.Policy.Fixed)
     imageSVG.setSizePolicy(policy)
     imageSVG.load(bytearray(data, encoding='utf-8'))
-    size = imageSVG.renderer().defaultSize()                    # intrinsic SVG size; widget size is not yet valid
+    size = imageSVG.renderer().defaultSize()
     if not size.isEmpty():
       if height > 0:
         size = size.scaled(10**6, height, Qt.AspectRatioMode.KeepAspectRatio)

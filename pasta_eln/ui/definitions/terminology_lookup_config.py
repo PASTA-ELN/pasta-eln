@@ -78,7 +78,7 @@ lookupConfig.append({
 lookupConfig.append({
     'name': 'ontology_lookup_service',
     'url': 'http://www.ebi.ac.uk/ols/api/search',
-    'timeout': 40,                                  # OLS search is occasionally slow
+    'timeout': 40,                                                           # OLS search is occasionally slow
     'timeout_retries': 1,
     'search_term_key': 'q',
     'request_params': {

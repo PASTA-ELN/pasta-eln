@@ -319,7 +319,7 @@ class Project(Widget):
       return
     self.comm.backendThread.worker.beSendDoc.disconnect(self.onNewFolder)
     form = Form(self.comm, {'id':doc['id']})
-    if form.exec() == 0 and 'id' in form.doc:                       # no id: user saved via 'Duplicate item'
+    if form.exec() == 0 and 'id' in form.doc:                         # no id: user saved via 'Duplicate item'
       self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':doc['id'], 'stack':''})
       self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
     return

@@ -2,8 +2,8 @@
 import base64
 import logging
 from typing import Any
-from PySide6.QtCore import (QAbstractItemModel, QEvent, QMargins, QModelIndex, QPersistentModelIndex, QPoint, QRect,
-                            QRectF, QSize, Qt, Signal, Slot)
+from PySide6.QtCore import (QAbstractItemModel, QEvent, QMargins, QModelIndex, QPersistentModelIndex, QPoint,
+                            QRect, QRectF, QSize, Qt, Signal, Slot)
 from PySide6.QtGui import QMouseEvent, QPainter, QPen, QPixmap, QStaticText, QTextDocument
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QAbstractItemView, QStyle, QStyledItemDelegate, QStyleOptionViewItem
@@ -129,7 +129,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         topLeft2nd     = option.rect.topRight()   - QPoint(widthImage+FRAME_SIZE+1,-FRAME_SIZE)
         target = QRect(topLeft2nd, bottomRight2nd)
         svgSize = self.docs.get(docID, {}).get('svgSize', QSize())
-        if not svgSize.isEmpty():                                         # keep aspect ratio, right aligned
+        if not svgSize.isEmpty():                                           # keep aspect ratio, right aligned
           svgSize = svgSize.scaled(target.size(), Qt.AspectRatioMode.KeepAspectRatio)
           target = QRect(target.right()-svgSize.width()+1, target.top(), svgSize.width(), svgSize.height())
         image = QSvgRenderer(bytearray(self.docs.get(docID, {}).get('image',''), encoding='utf-8'))
@@ -243,8 +243,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       else:
         svgSize = QSvgRenderer(bytearray(doc['image'], encoding='utf-8')).defaultSize()
         self.docs[doc['id']]['svgSize'] = svgSize
-        heightRightSide = int(widthImage*svgSize.height()/svgSize.width()+2*FRAME_SIZE) if not svgSize.isEmpty() \
-                          else int(widthImage*3/4+2*FRAME_SIZE)
+        heightRightSide = int(widthImage*3/4+2*FRAME_SIZE) if svgSize.isEmpty() \
+                          else int(widthImage*svgSize.height()/svgSize.width()+2*FRAME_SIZE)
     self.docs[doc['id']]['size']    = QSize(400, min(max(heightDetails,heightRightSide), guiStyle['projectItemHeight']))
     self.docs[doc['id']]['hidden']  = any(b for b in doc['branch'] if False in b['show'])
     self.docs[doc['id']]['markdown']= markdownStr

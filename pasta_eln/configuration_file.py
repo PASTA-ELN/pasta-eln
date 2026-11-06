@@ -37,7 +37,7 @@ def masterKey() -> bytes:
     if QApplication.instance() is not None:
       dialog = QMessageBox()
       dialog.setWindowTitle('PASTA-ELN recovery key')
-      dialog.setText(f'Copy and store this recovery key now.\n\n{keyText}')  # main text: only it honors the flags
+      dialog.setText(f'Copy and store this recovery key now.\n\n{keyText}')
       dialog.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
       copyButton = dialog.addButton('Copy key and close', QMessageBox.ButtonRole.AcceptRole)
       dialog.addButton(QMessageBox.StandardButton.Close)
