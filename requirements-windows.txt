@@ -1,5 +1,5 @@
 anytree==2.13.0
-certifi==2026.2.25
+certifi==2026.10.18
 cffi==2.0.0
 charset-normalizer==3.4.7
 colorama==0.4.6
