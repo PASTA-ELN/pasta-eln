@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Any
 from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot
-from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel
+from PySide6.QtGui import QAction, QResizeEvent, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QInputDialog, QLabel, QMenu, QTextEdit, QVBoxLayout, QWidget
 from ...backend_worker.worker import Task
 from ...fixed_strings_json import DO_NOT_RENDER
@@ -190,6 +190,8 @@ class Project(Widget):
     fgColor = self.comm.palette.get('secondaryText', 'color')
     self.allDetails.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
     self.allDetails.setReadOnly(True)
+    self.allDetails.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    self.allDetails.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     self.mainL.addWidget(self.allDetails)
     if sum(node.docType[0].startswith('x') for node in PreOrderIter(self.hierarchy)) <= 5:
       hint = 'Drag files onto a folder to add them.'
@@ -358,16 +360,16 @@ class Project(Widget):
     self.allDetails = None
 
 
-  def commentResize(self, _:Any) -> None:
+  def commentResize(self, event:QResizeEvent | None) -> None:
     """ called if comment is resized because widget initially/finally knows its size
-    - comment widget is hard coded size it depends on the rendered size
+    - comment widget height fits the rendered text, hence no scrollbars
     """
     if self.allDetails is None:
       return
-    self.allDetails.document().setTextWidth(self.width()-20)
-    height = int(self.allDetails.document().size().toTuple()[1])
-    self.allDetails.setMaximumHeight(height+12)
-    self.allDetails.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    if event is not None:                                        # None: direct call after painting the header
+      QTextEdit.resizeEvent(self.allDetails, event)                       # let QTextEdit re-wrap to new width
+    height = int(self.allDetails.document().size().height())
+    self.allDetails.setFixedHeight(height+2*self.allDetails.frameWidth())
     return
 
 
