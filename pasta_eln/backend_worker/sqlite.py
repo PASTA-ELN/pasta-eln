@@ -694,10 +694,10 @@ class SqlLiteDB:
       self.cursor.execute('DELETE FROM branches WHERE id=? AND (stack=? OR stack LIKE ?)',
                           (docID, stack, f'{stack}/%'))
       self.cursor.execute('SELECT idx FROM branches WHERE id=? ORDER BY idx', (docID,))
-      for idxNew, (idxOld,) in enumerate(self.cursor.fetchall()):              # keep idx contiguous: 0,1,...
+      for idxNew, (idxOld,) in enumerate(self.cursor.fetchall()):               # keep idx contiguous: 0,1,...
         self.cursor.execute('UPDATE branches SET idx=? WHERE id=? AND idx=?', (idxNew, docID, idxOld))
     self.cursor.execute('SELECT 1 FROM branches WHERE id=?', (docID,))
-    if not stack or self.cursor.fetchone() is None:                                       #remove everything
+    if not stack or self.cursor.fetchone() is None:                                         #remove everything
       doc.pop('image','')
       doc.pop('content','')
       for table in ('main', 'branches', 'properties', 'tags', 'qrCodes', 'attachments'):

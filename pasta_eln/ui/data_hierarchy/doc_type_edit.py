@@ -115,7 +115,7 @@ class DocTypeEditor(QDialog):
       dataSet = set(string.ascii_lowercase).difference(self.shortcuts).difference(reservedDocTypeShortcuts)
       self.row4.setValidator(QRegularExpressionValidator(f'^[{"".join(dataSet)}]$'))
     self.mainForm.addRow(QLabel('Shortcut'), self.row4)
-    QTimer.singleShot(0, self.adjustSize)     # children added to a visible dialog are shown queued: resize after
+    QTimer.singleShot(0, self.adjustSize)  # children added to a visible dialog are shown queued: resize after
 
 
   def closeDialog(self, save:bool) -> None:
