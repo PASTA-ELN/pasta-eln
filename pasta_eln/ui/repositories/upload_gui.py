@@ -3,7 +3,7 @@ import json
 from enum import Enum
 from typing import Any
 import qtawesome as qta
-from PySide6.QtCore import Qt, Slot
+from PySide6.QtCore import Qt, QTimer, Slot
 from PySide6.QtWidgets import (QCheckBox, QDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout,
                                QWidget)
 from ...backend_worker.worker import Task
@@ -68,7 +68,7 @@ class UploadGUI(QDialog):
     center.setSpacing(SPACE.L)
     center.setContentsMargins(0, SPACE.M, 0, SPACE.L)
     self.mainL.addWidget(centerW)
-    repositories = self.comm.configuration['repositories']
+    repositories = self.comm.configuration.get('repositories', {})
     leftSideW = QWidget(self)
     leftSide = QGridLayout(leftSideW)
     leftSide.setSpacing(10)
@@ -131,7 +131,7 @@ class UploadGUI(QDialog):
       Button('Upload to Dataverse', self, (Command.UPLOAD, False), buttonLineL,
              style=ButtonStyle.HIGHLIGHTED)
     Button('Cancel', self, (Command.CANCEL,), buttonLineL, tooltip='Discard changes')
-    self.adjustSize()                      # content arrives after exec() showed the empty dialog: grow to fit
+    QTimer.singleShot(0, self.adjustSize)  # children added to a visible dialog are shown queued: resize after
 
 
   def execute(self, command:'tuple[Command, bool] | tuple[Command]') -> None:
@@ -154,7 +154,7 @@ class UploadGUI(QDialog):
                   'category': self.leCategory.text(),
                   'additional': json.loads(self.leAdditional.text()),
                   'author': self.comm.configuration['authors'][0]}
-      repositories = self.comm.configuration['repositories']
+      repositories = self.comm.configuration.setdefault('repositories', {})
       repositories['category'] = self.leCategory.text()
       repositories['additional'] = json.loads(self.leAdditional.text())
       saveConfiguration(self.comm.configuration)

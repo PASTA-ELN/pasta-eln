@@ -109,24 +109,24 @@ class SqlLiteDB:
     return
 
 
-  def _flattenMetadata(self, data:dict[str,Any], parentKeys:str='', skipEmpty:bool=True) -> dict[str, tuple[Any, str, str, str]]:
+  def _flattenMetadata(self, data:dict[str,Any], parentKeys:str | None=None, skipEmpty:bool=True) -> dict[str, tuple[Any, str, str, str]]:
     """Flatten nested metadata into a key -> (value, unit, label, purl) map
     Different from misc_tools flatten which flattens a dict -> list; this one is only for changing sqlite-db
     Args:
       data (dict): hierarchical data
-      parentKeys (str): keys of parent, e.g. .userMetadata
+      parentKeys (str): keys of parent, e.g. .userMetadata; None=top level, ''=empty group (keys '.x')
       skipEmpty (bool): skip empty values, not for update
     Returns:
       dict: flattened data
     """
     flat: dict[str, tuple[Any, str, str, str]] = {}
-    prefix = f'{parentKeys}.' if parentKeys else ''
+    prefix = '' if parentKeys is None else f'{parentKeys}.'
     for key, value in data.items():
       key = str(key) if isinstance(key, int) else key
       if skipEmpty and not value:
         continue
       if isinstance(value, dict):
-        flat |= self._flattenMetadata(value, f'{prefix}{key}' if prefix else key, skipEmpty)
+        flat |= self._flattenMetadata(value, f'{prefix}{key}', skipEmpty)
         continue
       if isinstance(value, list) and not value:
         continue
@@ -683,16 +683,21 @@ class SqlLiteDB:
 
     Args:
       docID (string): id of document to remove
-      stack (str): stack of branch to delete, if there are multiple branches
+      stack (str): only remove branches at or below this stack; remove doc if no branch remains
 
     Returns:
       dict: document that was removed
     """
     doc = self.getDoc(docID)
-    if len(doc['branch'])>1 and stack:                                                 #only remove one branch
-      stack = stack[:-1] if stack.endswith('/') else stack
-      self.cursor.execute('DELETE FROM branches WHERE id=? AND stack LIKE ?', (docID, f'{stack}%'))
-    else:                                                                                   #remove everything
+    stack = stack.removesuffix('/')
+    if stack:
+      self.cursor.execute('DELETE FROM branches WHERE id=? AND (stack=? OR stack LIKE ?)',
+                          (docID, stack, f'{stack}/%'))
+      self.cursor.execute('SELECT idx FROM branches WHERE id=? ORDER BY idx', (docID,))
+      for idxNew, (idxOld,) in enumerate(self.cursor.fetchall()):              # keep idx contiguous: 0,1,...
+        self.cursor.execute('UPDATE branches SET idx=? WHERE id=? AND idx=?', (idxNew, docID, idxOld))
+    self.cursor.execute('SELECT 1 FROM branches WHERE id=?', (docID,))
+    if not stack or self.cursor.fetchone() is None:                                       #remove everything
       doc.pop('image','')
       doc.pop('content','')
       for table in ('main', 'branches', 'properties', 'tags', 'qrCodes', 'attachments'):
@@ -1161,8 +1166,9 @@ class SqlLiteDB:
 
     self.cursor.execute("SELECT id, key FROM properties where key NOT LIKE '%.%'")
     for docID, key in self.cursor.fetchall():
-      reply+= check('error', f'Property "{key}" of {label(docID)} has no group (missing "."). '
-                             'Repair with tools command [rp1]')
+      reply+= check('error', f'Property "{key}" of {label(docID)} has no group (missing ".")', f'rename to ".{key}"',
+                    partial(self.cursor.execute, "UPDATE OR REPLACE properties SET key='.'||key WHERE id=? AND key=?",
+                            (docID, key)))
     self.cursor.execute("SELECT id, key FROM properties where value LIKE ''")
     for docID, key in self.cursor.fetchall():
       reply+= check('ok', f'Property "{key}" of {label(docID)} is empty', 'delete this empty property',

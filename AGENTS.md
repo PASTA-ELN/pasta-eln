@@ -30,6 +30,7 @@ For coverage-guided iteration, use `python -c "import releaseVersion; raise Syst
 ## Engineering
 
 - Store paths in the database in POSIX notation (`Path.as_posix()`), never `str(Path)`, which yields backslashes on Windows and breaks path checks and data transfer between systems. Compare paths as `Path` objects, not as strings, since `os.walk` roots are OS-native.
+- `checkDB` levels (`outputString`): `perfect` (green) and `ok` (blue) are explained in the legend; `unsure`, `warning`, `error` get `**` prefixes; `info` has no prefix or color and is for plain statistics (e.g. number of documents). Report expected, harmless findings as `ok`, not `info`.
 - Use parameterized SQL. Treat SQLite data, user files, configuration, and repository uploads as durable; destructive changes require explicit validation and authorization.
 - Keep the README concise and user-facing; put detail in `docs/`. Update this file if commands, structure, or safety constraints change.
 

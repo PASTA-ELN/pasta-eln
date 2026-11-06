@@ -328,8 +328,7 @@ class BackendWorker(QObject):
         if len(branches)!=1:
           self.beSendTaskReport.emit(task, f'Cannot find location {data["stack"]} for item.', '', '')
           return
-        self.backend.db.cursor.execute('DELETE FROM branches WHERE stack=?', (data['stack'],))
-        self.backend.db.connection.commit()
+        self.backend.db.remove(data['docID'], data['stack'])
       # rename on disk
       renamedPaths = set()
       for branch in branches:
@@ -352,12 +351,11 @@ class BackendWorker(QObject):
           oldPath.rename(newPath)
           renamedPaths.add(branch['path'])
       # go through children, remove from DB: include hidden children
-      children = []
-      for branch in branches:
-        children.extend(self.backend.db.getView('viewHierarchy/viewHierarchyAll',
-                                                startKey='/'.join(branch['stack']+[data['docID']])))
-      for docID in {line['id'] for line in children if line['id']!=data['docID']}:
-        self.backend.db.remove(docID)
+      for branch in branches:              # only remove branches inside deleted subtree; keep those in other projects
+        prefix = '/'.join(branch['stack']+[data['docID']])
+        children = self.backend.db.getView('viewHierarchy/viewHierarchyAll', startKey=prefix)
+        for docID in {line['id'] for line in children if line['id']!=data['docID']}:
+          self.backend.db.remove(docID, prefix)
       # finish it
       if doc['type'][0]=='x0':
         self.beSendTable.emit(self.backend.db.getView('viewDocType/x0'), 'x0')
