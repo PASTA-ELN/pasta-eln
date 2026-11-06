@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout, QLabel, QLineEdit, QListWidget,
                                QListWidgetItem, QVBoxLayout)
 
+from pasta_eln.backend_worker.worker import Task
 from pasta_eln.configuration_file import loadConfiguration, saveConfiguration
 from nextcloud_common import NextcloudBrowser, writeNclinks
 
@@ -86,7 +87,7 @@ class NextcloudDialog(QDialog):
 
 
   def importSelected(self) -> None:
-    """Write pointers for selected files and refresh the project tree."""
+    """Write pointers for selected files, scan the project and refresh the project tree."""
     if self.browser is None:
       return
     names = [item.data(Qt.ItemDataRole.UserRole)['name'] for item in self.fileList.selectedItems()
@@ -96,7 +97,8 @@ class NextcloudDialog(QDialog):
       return
     selected = self.browser.selectFiles(names)
     writeNclinks(self.projectPath, self.instanceBox.currentText(), selected)
-    self.comm.uiRequestHierarchy.emit(self.projectID, True)
+    self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.projectID})          # add pointers to database
+    self.comm.changeProject.emit(self.projectID, '')
     self.accept()
 
 
