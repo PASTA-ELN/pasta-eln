@@ -631,4 +631,3 @@ def readIdFile(fileName:Path) -> dict[str,Any]:
   except (OSError, ValueError):                                      # missing, unreadable, not UTF-8, no JSON
     return {}
   return content if isinstance(content, dict) else {}
-
