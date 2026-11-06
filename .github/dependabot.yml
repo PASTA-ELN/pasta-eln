@@ -17,6 +17,8 @@ updates:
         versions: ['>=6.11']
       - dependency-name: PySide6_Essentials
         versions: ['>=6.11']
+      - dependency-name: shiboken6
+        versions: ['>=6.11']
 
   - package-ecosystem: github-actions
     directory: /
