@@ -293,7 +293,7 @@ class BackendWorker(QObject):
       if data['addToExisting']:
         docID = data['docID']
         path = targetName.relative_to(self.backend.basePath)
-        self.backend.db.cursor.execute('UPDATE branches SET path=? WHERE id=? AND idx=0', (str(path), docID))
+        self.backend.db.cursor.execute('UPDATE branches SET path=? WHERE id=? AND idx=0', (path.as_posix(), docID))
         self.backend.db.connection.commit()
         #rerun extractors
         oldDocType = doc['type']

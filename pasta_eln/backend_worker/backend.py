@@ -109,7 +109,7 @@ class Backend(CliMixin):
     # change content
     doc = self.addData('-edit-', doc)
     if doc['id'].startswith('x'):
-      pathStr = '' if self.cwd is None else str(self.cwd.relative_to(self.basePath))
+      pathStr = '' if self.cwd is None else self.cwd.relative_to(self.basePath).as_posix()
       self.db.updateChildrenOfParentsChanges(pathStr, doc['branch'][0]['path'], '/'.join(self.hierStack),'')
     self.cwd = self.basePath                                              #reset to sensible before continuing
     self.hierStack = []
@@ -365,7 +365,7 @@ class Backend(CliMixin):
             (self.basePath/path/'.id_pastaELN.json').unlink()
             rerunScanTree = True
             continue
-          if (self.basePath/doc['branch'][0]['path']).parent.as_posix()  == root and \
+          if (self.basePath/doc['branch'][0]['path']).parent == Path(root) and \
                doc['branch'][0]['stack']==hierStack:
             # special case: user wants to have a different directory name in same folder: then the child-number should not change
             childNum = doc['branch'][0]['child']
@@ -381,10 +381,12 @@ class Backend(CliMixin):
               if thisStack == ' '.join(item['key'].split(' ')[:-1]):            # remove last item from string
                 childNum += 1
             parentPath = Path(path).parent
-            newPath = str(parentPath/createDirName(doc, childNum, parentPath))#update,or create (if new doc, update ignored anyhow)
-            if (self.basePath/newPath).exists():                             # can be either file or directory
+            newPath = (parentPath/createDirName(doc, childNum, parentPath)).as_posix()#update,or create (if new doc, update ignored anyhow)
+            if path == newPath:
+              pass
+            elif (self.basePath/newPath).exists():                           # can be either file or directory
               logging.error('New path should not exist %s',newPath, exc_info=True)
-            elif path != newPath:
+            else:
               (self.basePath/path).rename(self.basePath/newPath)
           self.db.updateBranch(doc['id'], 0, childNum, hierStack, newPath)
         else:
