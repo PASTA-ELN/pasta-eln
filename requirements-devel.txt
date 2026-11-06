@@ -39,7 +39,7 @@ sourcery==1.43.0
 #pre-commit
 cfgv==3.5.0
 distlib==0.4.0
-filelock==3.29.0
+filelock==4.2.1
 identify==2.6.19
 nodeenv==1.10.0
 platformdirs==4.10.0
