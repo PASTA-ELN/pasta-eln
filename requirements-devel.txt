@@ -14,7 +14,7 @@ astroid==4.0.4
 dill==0.4.1
 isort==8.0.1
 mccabe==0.7.0
-pylint==4.0.5
+pylint==4.0.9
 tomlkit==0.15.0
 
 # sphinx
