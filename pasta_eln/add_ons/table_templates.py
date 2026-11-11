@@ -19,18 +19,19 @@ import json
 import re
 import time
 from datetime import datetime
-from enum import Enum
+from enum import Enum, auto
 from pathlib import Path
 from typing import Any, Callable
 import pandas as pd
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QHeaderView, QInputDialog, QLabel,
-                               QListWidget, QListWidgetItem, QMessageBox, QPushButton, QTableWidget, QTableWidgetItem,
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QHBoxLayout, QHeaderView,
+                               QInputDialog, QLabel, QListWidget, QListWidgetItem, QMessageBox, QTableWidget,
+                               QTableWidgetItem, QVBoxLayout, QWidget)
 from shiboken6 import isValid                                     # pylint: disable=no-name-in-module
 from pasta_eln import __version__
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.misc_tools import getDoc, isDocID
+from pasta_eln.ui.gui_style import Button
 from pasta_eln.ui.message_dialog import showMessage
 
 # The following two variables are mandatory
@@ -661,6 +662,9 @@ class TemplateDialog(QDialog):
       widget (QWidget): table widget
     """
     super().__init__(widget)
+    self.comm = comm
+    self.docIDs = docIDs
+    self.widget = widget
     self.success = False
     self.setWindowTitle('Templates')
     mainL = QVBoxLayout(self)
@@ -668,36 +672,49 @@ class TemplateDialog(QDialog):
                          'other people.')
     explanation.setWordWrap(True)
     mainL.addWidget(explanation)
-    actions = [(f'Export {len(docIDs)} item{"s" if len(docIDs)!=1 else ""} of the list as template…',
-                'Selected items of the list, or all items if none is selected',
-                lambda: exportItems(comm, docIDs, widget), bool(docIDs)),
-               ('Export item types…', 'Item types with their fields, units and descriptions',
-                lambda: exportItemTypes(comm, widget), True),
-               ('Import item types…', 'Preview of the differences before anything is changed',
-                lambda: importItemTypes(comm, widget), True),
-               ('New item from template…', 'The item is created in the current project',
-                lambda: newItem(comm, widget), True)]
-    self.buttons:list[QPushButton] = []
-    for label, tooltip, function, enabled in actions:
-      self.buttons.append(QPushButton(label))
-      self.buttons[-1].setToolTip(tooltip)
-      self.buttons[-1].setEnabled(enabled)
-      self.buttons[-1].clicked.connect(lambda _checked=False, function=function: self.run(function))
-      mainL.addWidget(self.buttons[-1])
-    buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
-    buttons.rejected.connect(self.reject)
-    mainL.addWidget(buttons)
+    self.buttons = [
+      Button(f'Export {len(docIDs)} item{"s" if len(docIDs)!=1 else ""} of the list as template…', self,
+             Command.EXPORT_ITEMS, mainL, icon='ri.upload-2-line',
+             tooltip='Selected items of the list, or all items if none is selected'),
+      Button('Export item types…', self, Command.EXPORT_ITEM_TYPES, mainL, icon='ri.upload-2-line',
+             tooltip='Item types with their fields, units and descriptions'),
+      Button('Import item types…', self, Command.IMPORT_ITEM_TYPES, mainL, icon='ri.download-2-line',
+             tooltip='Preview of the differences before anything is changed'),
+      Button('New item from template…', self, Command.NEW_ITEM, mainL, icon='ri.file-add-line',
+             tooltip='The item is created in the current project')]
+    self.buttons[0].setEnabled(bool(docIDs))
+    footer = QHBoxLayout()
+    footer.addStretch(1)
+    Button('Close', self, Command.CLOSE, footer)
+    mainL.addLayout(footer)
 
 
-  def run(self, function:Callable[[], bool]) -> None:
+  def execute(self, command:'Command') -> None:
     """ Execute an action and close the dialog
 
     Args:
-      function (Callable): action that returns its success
+      command (Command): action of the button
     """
-    self.success = bool(function())
+    if command is Command.CLOSE:
+      self.reject()
+      return
+    actions:dict[Command, Callable[[], bool]] = {
+      Command.EXPORT_ITEMS:      lambda: exportItems(self.comm, self.docIDs, self.widget),
+      Command.EXPORT_ITEM_TYPES: lambda: exportItemTypes(self.comm, self.widget),
+      Command.IMPORT_ITEM_TYPES: lambda: importItemTypes(self.comm, self.widget),
+      Command.NEW_ITEM:          lambda: newItem(self.comm, self.widget)}
+    self.success = bool(actions[command]())
     if isValid(self):                       # reloading the item types rebuilds the table and deletes this dialog
       self.done(int(self.success))
+
+
+class Command(Enum):
+  """ Commands of the main dialog """
+  EXPORT_ITEMS      = auto()
+  EXPORT_ITEM_TYPES = auto()
+  IMPORT_ITEM_TYPES = auto()
+  NEW_ITEM          = auto()
+  CLOSE             = auto()
 
 
 class ItemTypeSelectDialog(QDialog):
@@ -790,7 +807,20 @@ class ItemTypeImportDialog(QDialog):
 
 
   def accept(self) -> None:
-    """ Collect the selected actions """
-    self.importActions = {entry['docType']:comboBox.currentData() for entry, comboBox in
-                          zip(self.comparison, self.comboBoxes) if comboBox.currentData() is not ImportAction.SKIP}
+    """ Collect the selected actions; replacing item types has to be confirmed, since it removes fields """
+    actions = {entry['docType']:comboBox.currentData() for entry, comboBox in zip(self.comparison, self.comboBoxes)
+               if comboBox.currentData() is not ImportAction.SKIP}
+    replaced = [entry for entry in self.comparison if actions.get(entry['docType']) is ImportAction.REPLACE]
+    if replaced:
+      details = [f"- {entry['title']} ({entry['docType']}): " +
+                 (f"removes {', '.join(entry['removed'])}" if entry['removed'] else 'no field is removed')
+                 for entry in replaced]
+      answer = QMessageBox.question(self, 'Replace item types', 'Replace changes the name, icon, shortcut, fields and '
+                                    'descriptions of these item types to those of the template, and removes the fields '
+                                    'that are not in the template. The values of existing items are kept.\n\n' +
+                                    '\n'.join(details) + '\n\nReplace these item types?',
+                                    defaultButton=QMessageBox.StandardButton.No)
+      if answer != QMessageBox.StandardButton.Yes:
+        return
+    self.importActions = actions
     super().accept()
