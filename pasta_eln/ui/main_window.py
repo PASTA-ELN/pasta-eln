@@ -312,7 +312,7 @@ class MainWindow(QMainWindow):
     if task is Task.OPEN_EXTERNAL and path:
       QDesktopServices.openUrl(QUrl.fromLocalFile(path))
       return
-    if task in (Task.SCAN, Task.DROP_EXTERNAL):
+    if task in (Task.SCAN, Task.DROP_EXTERNAL, Task.SEND_REPOSITORY):
       self.comm.changeProject.emit(self.comm.projectID, '')
     elif task is Task.CHECK_DB:
       MessageDialog(self, 'Database verification', json.loads(reportText),

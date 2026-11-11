@@ -3,7 +3,7 @@ import json
 from enum import Enum
 from typing import Any
 import qtawesome as qta
-from PySide6.QtCore import Qt, QTimer, Slot
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import (QCheckBox, QDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout,
                                QWidget)
 from ...backend_worker.worker import Task
@@ -28,6 +28,7 @@ class UploadGUI(QDialog):
     self.comm.backendThread.worker.beSendDoc.connect(self.onGetData)
     self.docProject:dict[str,Any] = {}
     self.setWindowTitle('Upload project to repository')
+    self.setMinimumSize(985, 340)
 
     # GUI elements
     self.mainL = QVBoxLayout(self)
@@ -131,7 +132,6 @@ class UploadGUI(QDialog):
       Button('Upload to Dataverse', self, (Command.UPLOAD, False), buttonLineL,
              style=ButtonStyle.HIGHLIGHTED)
     Button('Cancel', self, (Command.CANCEL,), buttonLineL, tooltip='Discard changes')
-    QTimer.singleShot(0, self.adjustSize)  # children added to a visible dialog are shown queued: resize after
 
 
   def execute(self, command:'tuple[Command, bool] | tuple[Command]') -> None:
