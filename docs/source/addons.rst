@@ -126,6 +126,22 @@ Process data from tables:
 * Extract data directly from tables.
 * Use filenames from table items to generate scientific graphs.
 
+.. _itemTemplates:
+
+**Templates** (``table_templates.py``): templates are JSON files that share item types and items between project
+groups and with other people. Above a list, select **More > Table add-ons > Templates: import and export…**:
+
+* **Export items as template**: exports the selected items of the list, or all items if none is selected, together with
+  their item types. The template contains the keys and units of the items, and optionally their values, comment, and
+  tags. Links to other items and vendor/user metadata are left out.
+* **Export item types**: exports the selected item types with their fields, units, lists, and descriptions.
+* **Import item types**: a preview compares each item type of the template with the project group and offers the actions
+  **Add** (new item types), **Add missing fields** (existing fields stay unchanged), **Replace** (also removes fields
+  that are not in the template), and **Skip**. Nothing is changed before **Import** is selected.
+* **New item from template**: creates an item with the keys and values of the template in the current project. If the
+  item type is missing, import it first. Workflow items are created as Markdown file in the project, with the complete
+  content of the template.
+
 .. raw:: html
 
    <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
