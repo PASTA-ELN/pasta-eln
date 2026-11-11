@@ -42,6 +42,7 @@ The following table gives the shortest route to the most common tasks.
    Edit metadata,Select an item and choose **Edit** in the Details pane
    Configure data types,Use **Project group > Configure > Item type editor**
    Configure definitions,Use **Project group > Configure > Definitions editor**
+   Share item types and items,Use **More > Table add-ons > Templates** above a list
    Publish a project,Use **Project > Upload to repository**
 
 Project visibility and files
