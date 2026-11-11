@@ -24,10 +24,10 @@ from pathlib import Path
 from typing import Any, Callable
 import pandas as pd
 from PySide6.QtCore import Qt, Slot
-from shiboken6 import isValid
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QHeaderView, QInputDialog, QLabel,
                                QListWidget, QListWidgetItem, QMessageBox, QPushButton, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
+from shiboken6 import isValid                                     # pylint: disable=no-name-in-module
 from pasta_eln import __version__
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.misc_tools import getDoc, isDocID
