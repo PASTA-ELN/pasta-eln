@@ -21,9 +21,10 @@ import time
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 import pandas as pd
 from PySide6.QtCore import Qt, Slot
+from shiboken6 import isValid
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QHeaderView, QInputDialog, QLabel,
                                QListWidget, QListWidgetItem, QMessageBox, QPushButton, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
@@ -69,7 +70,8 @@ def main(comm:Any, data:pd.DataFrame, widget:QWidget, parameter:dict[str,Any]={}
   """
   docIDs = [] if data is None or 'docID' not in data else [i for i in data['docID'] if not i.startswith('x')]
   dialog = TemplateDialog(comm, docIDs, widget)
-  return bool(dialog.exec())
+  dialog.exec()
+  return dialog.success
 
 
 ######################################################################
@@ -659,6 +661,7 @@ class TemplateDialog(QDialog):
       widget (QWidget): table widget
     """
     super().__init__(widget)
+    self.success = False
     self.setWindowTitle('Templates')
     mainL = QVBoxLayout(self)
     explanation = QLabel('Templates are JSON files that share item types and items between project groups and with '
@@ -679,11 +682,22 @@ class TemplateDialog(QDialog):
       self.buttons.append(QPushButton(label))
       self.buttons[-1].setToolTip(tooltip)
       self.buttons[-1].setEnabled(enabled)
-      self.buttons[-1].clicked.connect(lambda _checked=False, function=function: self.done(int(bool(function()))))
+      self.buttons[-1].clicked.connect(lambda _checked=False, function=function: self.run(function))
       mainL.addWidget(self.buttons[-1])
     buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
     buttons.rejected.connect(self.reject)
     mainL.addWidget(buttons)
+
+
+  def run(self, function:Callable[[], bool]) -> None:
+    """ Execute an action and close the dialog
+
+    Args:
+      function (Callable): action that returns its success
+    """
+    self.success = bool(function())
+    if isValid(self):                       # reloading the item types rebuilds the table and deletes this dialog
+      self.done(int(self.success))
 
 
 class ItemTypeSelectDialog(QDialog):
