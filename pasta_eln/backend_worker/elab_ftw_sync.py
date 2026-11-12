@@ -14,9 +14,46 @@ from ..text_tools.html2markdown import html2markdown
 from ..text_tools.markdown2html import markdown2html  # type: ignore[attr-defined]
 from .backend import Backend
 from .elab_ftw_api import ElabFTWApi
+from .sqlite import DOC_TYPE_SCHEMA, DOC_TYPES
 
 # - consider hiding metadata.json (requires hiding the upload (state=2) and ability to read (it is even hidden in the API-read))
 #   - listing all uploads (incl. archived) is not possible in elab currently -> leave visible; change to invisible once in elab
+
+DATA_HIERARCHY_VERSION = 1
+PROJECT_GROUP_NOTICE = '<p>Managed by PASTA-ELN: do not edit the body or metadata of this resource.</p>'
+ELAB_STATE_ARCHIVED = 2
+
+
+def parseDataHierarchy(metadata:str|None) -> dict[str,list[list[Any]]]|None:
+  """ Validate the data hierarchy stored in the metadata of the eLabFTW project group
+  - users can edit the project group on the server, hence everything is checked
+
+  Args:
+    metadata (str): metadata of the project group as JSON string
+
+  Returns:
+    dict: {'docTypes': rows, 'docTypeSchema': rows} with rows in table-column order; None if invalid or old format
+  """
+  try:
+    data = json.loads(metadata or '')
+  except (TypeError, ValueError):
+    return None
+  if not isinstance(data, dict) or data.get('pastaDataHierarchy') != DATA_HIERARCHY_VERSION:
+    return None
+  result = {}
+  for table, columns in (('docTypes', DOC_TYPES), ('docTypeSchema', DOC_TYPE_SCHEMA)):
+    rows = data.get(table)
+    if not isinstance(rows, list) or \
+       not all(isinstance(row, dict) and row.keys() >= set(columns) and
+               all(row[c] is None or isinstance(row[c], (str, int, float)) for c in columns) for row in rows):
+      return None
+    result[table] = [[row[c] for c in columns] for row in rows]
+  docTypeKeys = [row[0] for row in result['docTypes']]
+  schemaKeys  = [tuple(row[:3]) for row in result['docTypeSchema']]         # primary key: docType, class, idx
+  if not {'x0', 'x1'} <= set(docTypeKeys) or len(set(docTypeKeys)) < len(docTypeKeys) or \
+     len(set(schemaKeys)) < len(schemaKeys):                      # projects and folders required; unique keys
+    return None
+  return result
 
 
 def cliCallback(api:ElabFTWApi , entry:str, idx:int) -> str:
@@ -137,7 +174,13 @@ class Pasta2Elab:
       report = []
       if progressCallback is not None:
         progressCallback('text', '### Start syncing with eLabFTW server\n#### Set up sync\nStart...')
-      self.syncDocTypes()                                                              # sync categories ~1sec
+      if not self.syncDocTypes():                                                      # sync categories ~1sec
+        message = (f'Cannot write to the project group {self.elabProjGroupID} on the server: it is archived '
+                   'or you do not have write access. Ask your admin.')
+        logging.error(message)
+        if progressCallback is not None:
+          progressCallback('append', f'\n\n**Error:** {message}')
+        return []
       self.createIdDict()
       if progressCallback is not None:
         progressCallback('append', 'Done\n#### Sync each item\nStart...')
@@ -159,30 +202,33 @@ class Pasta2Elab:
     return report
 
 
-  def syncDocTypes(self) -> None:
+  def syncDocTypes(self) -> bool:
     """ Synchronize document types between client and server
-    - save datahierarchy to server
+    - save data hierarchy to the project group on the server; local data hierarchy always wins
+
+    Returns:
+      bool: success; fails if the project group is archived or not writable
     """
-    #try body and metadata: compare, write
     docTypesElab  = {i['title']:i['id'] for i in self.api.readEntry('items_types')}
     docTypesPasta = {i.capitalize() for i in self.backend.db.dataHierarchy('','') if not i.startswith('x')} | \
                     {'Default','Folder','Project','ProjectGroup'}
     missingDocTypes = docTypesPasta.difference({'Measurement'}|docTypesElab.keys())
     for docType in missingDocTypes:                            # do not create measurements, use 'experiments'
       self.api.touchEntry('items_types', {'title': docType})
-    #verify nothing extraneous
-    if missingDocTypes:
-      docTypesElab  = {i['title']:i['id'] for i in self.api.readEntry('items_types')}
     # sync data-hierarchy
-    dataHierarchy = []
+    self.backend.db.cursor.execute(f"SELECT {', '.join(DOC_TYPES)} FROM docTypes")
+    docTypes = [dict(zip(DOC_TYPES, row)) for row in self.backend.db.cursor.fetchall()]
+    schema = []
     for docType in self.backend.db.dataHierarchy('',''):
-      dataHierarchy += copy.deepcopy([dict(i) for i in self.backend.db.dataHierarchy(docType,'meta')])
+      schema += copy.deepcopy([dict(i) for i in self.backend.db.dataHierarchy(docType,'meta')])
+    metadata = json.dumps({'pastaDataHierarchy':DATA_HIERARCHY_VERSION, 'docTypes':docTypes, 'docTypeSchema':schema})
     self.elabProjectGroupData = self.api.readEntry('items', self.elabProjGroupID)[0]
-    metadata = json.dumps(dataHierarchy)
     if self.elabProjectGroupData.get('metadata', '') != metadata:
-      self.api.updateEntry('items', self.elabProjGroupID, {'metadata':metadata})
+      if self.elabProjectGroupData.get('state') == ELAB_STATE_ARCHIVED or \
+         not self.api.updateEntry('items', self.elabProjGroupID, {'metadata':metadata}):
+        return False
       self.elabProjectGroupData['metadata'] = metadata
-    return
+    return True
 
 
   def createIdDict(self) -> None:

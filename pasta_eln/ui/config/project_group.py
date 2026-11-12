@@ -15,6 +15,8 @@ from PySide6.QtGui import QPixmap, QRegularExpressionValidator, Qt
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QGridLayout, QHBoxLayout, QLabel,
                                QLineEdit, QMessageBox, QSizePolicy, QSpacerItem, QTextEdit, QVBoxLayout, QWidget)
 from ...backend_worker.elab_ftw_api import ElabFTWApi
+from ...backend_worker.elab_ftw_sync import ELAB_STATE_ARCHIVED, PROJECT_GROUP_NOTICE, parseDataHierarchy
+from ...backend_worker.sqlite import DOC_TYPE_SCHEMA, DOC_TYPES
 from ...configuration_file import saveConfiguration
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label
@@ -106,6 +108,9 @@ class ProjectGroup(QDialog):
     self.formL.addWidget(QLabel('\tStorage block:'),       7, 0)
     self.serverProjectGroupLabel = QComboBox()
     self.formL.addWidget(self.serverProjectGroupLabel,     7, 1)
+    self.row5Button1 = Button('', self, [Command.LOAD_HIERARCHY], icon='ri.download-line',
+                              tooltip='Load data hierarchy from storage block', flat=True)
+    self.formL.addWidget(self.row5Button1,                 7, 2)
     self.row5Button2 = Button('Verify', self, [Command.TEST_SERVERPG], tooltip='Verify access to storage block')
     self.formL.addWidget(self.row5Button2,                 7, 3)
 
@@ -300,14 +305,45 @@ class ProjectGroup(QDialog):
       idxList = [i[1] for i in self.serverPG if i[0]==self.serverProjectGroupLabel.currentText()]
       if not idxList:
         return
-      idx = idxList[0]
-      currentBody = self.elabApi.readEntry('items',idx)[0]['body']
-      currentBody+= f'<br>Tested access by {self.configuration["userID"]} on {datetime.now().isoformat()} <br>'
-      if self.elabApi.updateEntry('items',idx, {'body':currentBody}):
+      entry = self.elabApi.readEntry('items',idxList[0])[0]
+      body = entry.get('body') or ''
+      body = body if PROJECT_GROUP_NOTICE in body else PROJECT_GROUP_NOTICE+body
+      body+= f'<br>Tested access by {self.configuration["userID"]} on {datetime.now().isoformat()} <br>'
+      if entry.get('state') == ELAB_STATE_ARCHIVED:
+        self.changeButtonOnTest(False, self.row5Button2, 'This storage block is archived and cannot be changed. '
+                                'Ask your eLabFTW admin.')
+      elif self.elabApi.updateEntry('items', idxList[0], {'body':body}):
         self.projectGroupTested = True
         self.changeButtonOnTest(True, self.row5Button2)
       else:
-        self.changeButtonOnTest(False, self.row5Button2, 'You do not have access to this project group')
+        self.changeButtonOnTest(False, self.row5Button2, 'You do not have write access to this storage block')
+
+    elif command[0] is Command.LOAD_HIERARCHY:
+      idxList = [i[1] for i in self.serverPG if i[0]==self.serverProjectGroupLabel.currentText()]
+      if self.elabApi is None or not idxList:
+        showMessage(self, 'Configuration error', 'Verify the API key and select a storage block first.')
+        return
+      if key != self.comm.projectGroup:
+        showMessage(self, 'Configuration error', f'Switch to project group "{key}", then load data hierarchy.')
+        return
+      hierarchy = parseDataHierarchy(self.elabApi.readEntry('items',idxList[0])[0].get('metadata'))
+      if hierarchy is None:
+        showMessage(self, 'Configuration error', 'The storage block has no valid data hierarchy. Some user has'
+                    ' to upload data to eLabFTW once.')
+        return
+      button = QMessageBox.question(self, 'Replace data hierarchy?', 'Do you want to replace the local data hierarchy '
+                                    f'by the one from the server ({len(hierarchy["docTypes"])} item types)?',
+                                    QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                    QMessageBox.StandardButton.No)
+      if button == QMessageBox.StandardButton.Yes:
+        self.comm.uiSendSQL.emit([
+          {'type':'one',  'cmd':'DELETE FROM docTypes'},
+          {'type':'many', 'cmd':f"INSERT INTO docTypes ({', '.join(DOC_TYPES)}) VALUES ({', '.join(['?']*len(DOC_TYPES))})",
+           'list':hierarchy['docTypes']},
+          {'type':'one',  'cmd':'DELETE FROM docTypeSchema'},
+          {'type':'many', 'cmd':f"INSERT INTO docTypeSchema ({', '.join(DOC_TYPE_SCHEMA)}) VALUES "
+                                f"({', '.join(['?']*len(DOC_TYPE_SCHEMA))})", 'list':hierarchy['docTypeSchema']}])
+        self.comm.start()
 
     elif command[0] is Command.CREATE_FOLDER:
       folder = self.commonFolder.text().strip()
@@ -404,3 +440,4 @@ class Command(Enum):
   CREATE_QRCODE= 8
   TEST_SERVERPG= 9
   CREATE_FOLDER= 10
+  LOAD_HIERARCHY=11
