@@ -26,6 +26,11 @@ DOC_TYPES      =['docType', 'PURL','title','icon','shortcut','view']
 DOC_TYPE_SCHEMA=['docType', 'class', 'idx', 'name', 'unit', 'mandatory', 'list']
 
 
+# saving an item adds missing definitions; empty label/PURL never replace existing ones (#667)
+UPSERT_DEFINITION = 'INSERT INTO definitions VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET ' \
+                    "long=COALESCE(NULLIF(excluded.long, ''), long), PURL=COALESCE(NULLIF(excluded.PURL, ''), PURL);"
+
+
 class SqlLiteDB:
   """
   Class for interaction with sqlite
@@ -376,8 +381,7 @@ class SqlLiteDB:
       return
     cmd = 'INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);'
     self.cursor.executemany(cmd, [(docID, k, v, u) for k, (v, u, _, _) in flat.items()])
-    cmdDef = 'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);'
-    self.cursor.executemany(cmdDef, [(k, l, p) for k, (_, _, l, p) in flat.items()])
+    self.cursor.executemany(UPSERT_DEFINITION, [(k, l, p) for k, (_, _, l, p) in flat.items()])
     self.connection.commit()
     return
 
@@ -529,7 +533,6 @@ class SqlLiteDB:
     if not flat and not dataOld:
       return changesDict
     cmdInsert = 'INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);'
-    cmdDef = 'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);'
     for key, (value, unit, label, purl) in flat.items():
       if key in dataOld:
         oldValue, oldUnit = dataOld[key]
@@ -539,7 +542,7 @@ class SqlLiteDB:
           changesDict[key] = oldValue
       else:
         self.cursor.execute(cmdInsert, [docID, key, value, unit])
-      self.cursor.execute(cmdDef, [key, label, purl])
+      self.cursor.execute(UPSERT_DEFINITION, [key, label, purl])
       if key in dataOld:
         del dataOld[key]
     if dataOld:
