@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import sys
+from collections import Counter
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -350,7 +351,7 @@ class Backend(CliMixin):
       # handle directories and prevent going into them if they should be ignored.
       ignoredFolders += [(Path(root)/i).relative_to(self.basePath).as_posix()
                          for i in dirs if (Path(root)/i/'.pastaELN_ignore').is_file()]
-      dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i not in ('__pycache__')
+      dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i != '__pycache__'
                  and not (Path(root)/i/'pyvenv.cfg').is_file()
                  and not (Path(root)/i/'.pastaELN_ignore').is_file()]
       for dirName in dirs[::-1]:                                                     # sorted forward in Linux
@@ -496,6 +497,11 @@ class Backend(CliMixin):
                                'the database')
         continue
       for root, dirs, files in os.walk(self.basePath/projDoc['branch'][0]['path']):
+        lowerNames = Counter(i.lower() for i in dirs+files)
+        if collisions := sorted(i for i in dirs+files if lowerNames[i.lower()]>1):
+          output += outputString(outputStyle, 'warning', f'Names in "{Path(root).relative_to(self.basePath).as_posix()}"'
+                                 f' differ only in case: {", ".join(collisions)}. Windows and macOS keep only one of '
+                                 'them, which can lose data when syncing. Rename them.')
         ignoreFolder = (Path(root)/'.pastaELN_ignore').is_file()
         if Path(root).name[0]=='.' or Path(root).name.startswith('trash_') or ignoreFolder:
           if ignoreFolder:
@@ -514,7 +520,7 @@ class Backend(CliMixin):
             pathsInDbData.remove(path)
         ignoredFolders.extend((Path(root)/i).relative_to(self.basePath).as_posix()
                               for i in dirs if (Path(root)/i/'.pastaELN_ignore').is_file())
-        dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i not in ('__pycache__')
+        dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i != '__pycache__'
                   and not (Path(root)/i/'pyvenv.cfg').is_file()
                   and not (Path(root)/i/'.pastaELN_ignore').is_file()]
         for dirName in dirs:

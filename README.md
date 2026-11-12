@@ -43,14 +43,9 @@ Open issues are the union of
 2. this README section, which records repository-wide maintenance items that need visibility before or alongside an issue.
 
 Open issue list:
-- Case-insensitive file handling
-  - Everything that matches file names, folder names or extensions has to be case-insensitive: `SETUP.EXE`, `Setup.Exe` and `setup.exe` must behave the same on all operating systems.
-  - Scan exclusions (`scanExcludePatterns`, branches `new_version` and `LLM_functions`) are matched case-sensitively on Linux, because `fnmatch.fnmatch()` follows the case rules of the operating system. The pattern `*.exe` therefore does not exclude `SETUP.EXE` on Linux, but it does on Windows. Affected on `new_version`: `pasta_eln/backend_worker/backend.py` line 355 (folders) and line 406 (files). Fix: compare `name.lower()` with `pattern.lower()`, and store patterns in lower case when they are saved in the configuration.
-  - The hard-coded scan rules are case-sensitive, too: the `trash_` prefix and `__pycache__` in `backend.py`, `_PastaExport` in `isPastaExport()` (`backend_worker/extractor.py`), and the `.pastaELN_ignore` marker file, which is found only with exactly this spelling on Linux.
-  - `checkDB()` does not use `scanExcludePatterns`, only the hard-coded rules. Excluded files that still exist on disk may therefore be reported as missing from the database. `checkDB()` should share one case-insensitive matching function with the scan.
-  - Already case-insensitive: extractor selection (`extractor_{extension.lower()}.py`) and the stored `fileExtension`.
-- Install dependabot according to ~/Dependabot.md
-
+- Case-insensitive scan exclusions (branches `new_version` and `LLM_functions`)
+  - `scanExcludePatterns` are matched case-sensitively on Linux, because `fnmatch.fnmatch()` follows the case rules of the operating system. The pattern `*.exe` therefore does not exclude `SETUP.EXE` on Linux, but it does on Windows, so the same data folder gives different databases. Affected on `new_version`: `pasta_eln/backend_worker/backend.py` line 355 (folders) and line 406 (files). Fix: compare `name.lower()` with `pattern.lower()`, and store patterns in lower case when they are saved in the configuration.
+  - `checkDB()` does not use `scanExcludePatterns`. Excluded files that still exist on disk may therefore be reported as missing from the database. `checkDB()` should share the matching function with the scan.
 
 ## Notes
 - Tutorial
