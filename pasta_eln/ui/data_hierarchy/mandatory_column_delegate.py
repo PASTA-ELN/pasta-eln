@@ -10,48 +10,52 @@
 
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QRect
 from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import (QApplication, QRadioButton, QStyle, QStyledItemDelegate, QStyleOptionButton,
-                               QStyleOptionViewItem, QWidget)
+from PySide6.QtWidgets import (QRadioButton, QStyle, QStyledItemDelegate, QStyleOptionButton, QStyleOptionViewItem,
+                               QWidget)
 
 
 class MandatoryColumnDelegate(QStyledItemDelegate):
   """
   Delegate for creating the radio buttons for the mandatory column in data hierarchy editor tables
   """
-  def paint(self,
-            painter: QPainter,
-            option: QStyleOptionViewItem,
-            index: QModelIndex | QPersistentModelIndex) -> None:
+  def __init__(self) -> None:
+    super().__init__()
+    self.radioButton = QRadioButton()
+    self.radioButton.ensurePolished()                                   # apply theme stylesheet to the template
+
+  def initStyleOption(self, option: QStyleOptionViewItem, index: QModelIndex | QPersistentModelIndex) -> None:
+    """Hide the raw 'T' value; the radio indicator shows it
+    Args:
+      option (QStyleOptionViewItem): option for this icon
+      index (CellIndex): number of the icon
     """
-    Draws the mandatory radio button within the cell represented by index
+    super().initStyleOption(option, index)
+    option.text = ''
+
+
+  def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex | QPersistentModelIndex
+            ) -> None:
+    """
+    Draws the mandatory radio indicator centered in the cell; the add-row stays empty
     Args:
       painter (QPainter): Painter instance for painting the button
       option (QStyleOptionViewItem): Style option for the cell represented by index
       index (Union[QModelIndex, QPersistentModelIndex]): Table cell index
-
     """
-    indexName = index.model().index(index.row(), 0)
-    if not indexName.data():
+    super().paint(painter, option, index)                                     # cell background, text hidden below
+    if not index.model().index(index.row(), 0).data():
       return
-    widget = option.widget
-    style = widget.style() if widget else QApplication.style()
+    style = self.radioButton.style()
     opt = QStyleOptionButton()
-    radioButton = QRadioButton()
-    optionRect = option.rect
-    opt.rect = QRect(int(optionRect.left() + optionRect.width() / 2 - 10),
-                     optionRect.top(),
-                     optionRect.width(),
-                     optionRect.height())
-    indexName = index.model().index(index.row(), 0)
-    isMandatory = index.data()=='T' and indexName.data()
-    opt.state = QStyle.StateFlag.State_On if isMandatory else QStyle.StateFlag.State_Off
-    style.drawControl(QStyle.ControlElement.CE_RadioButton, opt, painter, radioButton)
+    opt.initFrom(self.radioButton)
+    size     = style.pixelMetric(QStyle.PixelMetric.PM_ExclusiveIndicatorWidth, opt, self.radioButton)
+    opt.rect = QRect(0, 0, size, size)
+    opt.rect.moveCenter(option.rect.center())
+    opt.state |= QStyle.StateFlag.State_On if index.data()=='T' else QStyle.StateFlag.State_Off
+    style.drawPrimitive(QStyle.PrimitiveElement.PE_IndicatorRadioButton, opt, painter, self.radioButton)
 
 
-  def editorEvent(self,
-                  event: QEvent,
-                  model: QAbstractItemModel,
-                  option: QStyleOptionViewItem,
+  def editorEvent(self, event: QEvent, model: QAbstractItemModel, option: QStyleOptionViewItem,
                   index: QModelIndex | QPersistentModelIndex) -> bool:
     """
     In case of mouse click event, the model data is toggled for the respective table cell index
@@ -71,17 +75,7 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
     return super().editorEvent(event, model, option, index)
 
 
-  def createEditor(self,
-                   parent: QWidget,
-                   option: QStyleOptionViewItem,
-                   index: QModelIndex | QPersistentModelIndex) -> QWidget:
-    """
-    Disable the editor for the whole mandatory column by simply returning None
-    Args:
-      parent (QWidget): Parent table view
-      option (QStyleOptionViewItem): Style option for the cell represented by index
-      index (Union[QModelIndex, QPersistentModelIndex]): Cell index
-
-    Returns: None
-    """
+  def createEditor(self, _0: QWidget, _1: QStyleOptionViewItem,
+                   _2: QModelIndex | QPersistentModelIndex) -> QWidget:
+    """ Disable the editor for the whole mandatory column by simply returning None """
     return None                                                                   # type: ignore[return-value]

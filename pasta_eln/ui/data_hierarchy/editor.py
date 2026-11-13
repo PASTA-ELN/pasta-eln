@@ -22,31 +22,6 @@ COLUMN_WIDTH = [100,   250,          60,    80,         150,        200,        
 pd.options.mode.copy_on_write = True
 
 
-def _hasEditableName(index: QModelIndex) -> bool:
-  """Return whether a schema row represents an editable property."""
-  return bool(index.model().index(index.row(), 0).data())
-
-
-def _canDeleteRow(index: QModelIndex) -> bool:
-  """Keep the schema's required name, tags, and comment rows."""
-  return index.model().index(index.row(), 0).data() not in ['name', 'tags', 'comment']
-
-
-def _moveRowUp(model: QAbstractItemModel, index: QModelIndex) -> None:
-  """Exchange a schema row with the preceding row."""
-  for column in range(7):
-    top = model.index(index.row() - 1, column)
-    current = model.index(index.row(), column)
-    value = model.data(top)
-    model.setData(top, model.data(current))
-    model.setData(current, value)
-  model.layoutChanged.emit()
-
-
-def _deleteRow(model: QAbstractItemModel, index: QModelIndex) -> None:
-  """Remove the selected schema row."""
-  model.removeRow(index.row())
-
 class SchemeEditor(QDialog):
   """ dialog to edit docType schema """
   def __init__(self, comm:Communicate):
@@ -172,7 +147,8 @@ class SchemeEditor(QDialog):
       table.setAlternatingRowColors(True)
       table.setHorizontalHeaderLabels(COLUMN_NAMES)
       table.horizontalHeader().setStyleSheet('QHeaderView::section {padding: 1px; margin: 0px;}')
-      for idx, width in enumerate(COLUMN_WIDTH[:-1]):
+      table.horizontalHeader().setStretchLastSection(True)
+      for idx, width in enumerate(COLUMN_WIDTH):
         table.setColumnWidth(idx, width)
       for _,row in data.iterrows():
         idx = int(row['idx'])
@@ -198,8 +174,6 @@ class SchemeEditor(QDialog):
       self.closeButtons.append(Button('', self, (Command.DEL_GROUP, idx), icon='ri.close-line',
                                       tooltip='Remove group', flat=True))
       self.tabW.tabBar().setTabButton(idx, QTabBar.ButtonPosition.RightSide, self.closeButtons[-1])
-      header = table.horizontalHeader()
-      header.setStretchLastSection(True)
     self.tabW.addTab(self.newWidget, '+')
     return
 
@@ -372,6 +346,32 @@ class SchemeEditor(QDialog):
     """ Accept the dialog, stop the thread and disconnect signals """
     self.comm.backendThread.worker.beSendSQL.disconnect(self.onGetData)
     super().accept()
+
+
+def _hasEditableName(index: QModelIndex) -> bool:
+  """Return whether a schema row represents an editable property."""
+  return bool(index.model().index(index.row(), 0).data())
+
+
+def _canDeleteRow(index: QModelIndex) -> bool:
+  """Keep the schema's required name, tags, and comment rows."""
+  return _hasEditableName(index) and index.model().index(index.row(), 0).data() not in ['name', 'tags', 'comment']
+
+
+def _moveRowUp(model: QAbstractItemModel, index: QModelIndex) -> None:
+  """Exchange a schema row with the preceding row."""
+  for column in range(7):
+    top = model.index(index.row() - 1, column)
+    current = model.index(index.row(), column)
+    value = model.data(top)
+    model.setData(top, model.data(current))
+    model.setData(current, value)
+  model.layoutChanged.emit()
+
+
+def _deleteRow(model: QAbstractItemModel, index: QModelIndex) -> None:
+  """Remove the selected schema row."""
+  model.removeRow(index.row())
 
 
 class Command(Enum):

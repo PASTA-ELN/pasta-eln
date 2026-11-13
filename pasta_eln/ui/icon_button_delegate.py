@@ -31,8 +31,21 @@ class IconButtonDelegate(QStyledItemDelegate):
     self.onClick = onClick
     self.button = QPushButton()
 
+
+  def initStyleOption(self, option: QStyleOptionViewItem, index: CellIndex) -> None:
+    """Draw only the cell background; cell data stays hidden behind the button
+    Args:
+      option (QStyleOptionViewItem): option for this icon
+      index (CellIndex): number of the icon
+    """
+    super().initStyleOption(option, index)
+    option.text = ''
+    option.features &= ~QStyleOptionViewItem.ViewItemFeature.HasDisplay
+
+
   def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: CellIndex) -> None:
     """Draw the configured button when the row supports its action."""
+    super().paint(painter, option, index)                                     # cell background like other columns
     if not self.isVisible(index):                                                     # type: ignore[arg-type]
       return
     buttonOption = QStyleOptionButton()
