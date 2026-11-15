@@ -102,6 +102,8 @@ class Body(QWidget):
       tableView = TableView(self.comm, docType)
       icon = self.createIcon(iconName, iconColor, selectedIconColor)
       self.tabWidget.addTab(tableView, icon, label)
+    if self.comm.projectID:                                    # new project view is empty: reload open project
+      self.comm.changeProject.emit(self.comm.projectID, '')
 
 
   def createIcon(self, iconName: str, color: str, selectedColor: str) -> QIcon:

@@ -135,9 +135,9 @@ class SqlLiteDB:
         continue
       if isinstance(value, list) and not value:
         continue
-      if key.endswith(']') and ('[') in key:
-        unit = re.findall(r'\[\S+\]', key)[-1][1:-1]
-        label = key[:-len(unit)-2].strip()
+      if key.endswith(']') and key.rfind('[') > 0 and key[:key.rfind('[')].strip():         # 'Label [unit]'
+        unit  = key[key.rfind('[')+1:-1].strip()                     # unit may contain spaces or be empty
+        label = key[:key.rfind('[')].strip()
         key = camelCase(label)
         key = key[0].lower()+key[1:]
         flat[f'{prefix}{key}'] = (str(value), unit, label, '')

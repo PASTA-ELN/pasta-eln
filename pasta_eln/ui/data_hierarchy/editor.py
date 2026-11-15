@@ -64,7 +64,8 @@ class SchemeEditor(QDialog):
     docTypeL.addStretch(1)
     Button('', self, Command.NEW, docTypeL, icon='ri.add-line', tooltip='New item type', flat=True)
     Button('', self, Command.EDIT, docTypeL, icon='ri.edit-line', tooltip='Edit item type', flat=True)
-    Button('', self, Command.DEL, docTypeL, icon='ri.delete-bin-line', tooltip='Remove item type', flat=True)
+    self.delButton = Button('', self, Command.DEL, docTypeL, icon='ri.delete-bin-line', tooltip='Remove item type',
+                            flat=True)
 
     # tabs: empty
     self.tabW = QTabWidget(self)
@@ -114,6 +115,7 @@ class SchemeEditor(QDialog):
     if self.docType:
       self.finishDocType()
     self.docLabel= label
+    self.delButton.setEnabled(not str(self.selectDocType.currentData()).startswith('x'))   # project, folder: structural
     fittingDocTypes = [k for k,v in self.docTypesLabels if v==label]
     if not fittingDocTypes:                                        #nothing to save since docType just created
       self.df = pd.DataFrame(defaultDataHierarchyNode)
@@ -217,12 +219,13 @@ class SchemeEditor(QDialog):
 
   def closeDialog(self, save:bool) -> None:
     """Close the editor, optionally persisting the current item type."""
-    if not save:
-      self.reject()
-    else:
+    if save:
       self.finishDocType()
-      self.comm.start()
+    self.comm.start()                    # reload item types: deletions etc. are saved immediately, also on cancel
+    if save:
       self.accept()
+    else:
+      self.reject()
     return
 
 
@@ -246,12 +249,14 @@ class SchemeEditor(QDialog):
                                     QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.No:
         return
+      docType = self.selectDocType.currentData()
       self.comm.uiSendSQL.emit([
-        {'type':'one', 'cmd':f"DELETE FROM docTypes WHERE docType == '{self.selectDocType.currentData()}'"},
-        {'type':'one', 'cmd':f"DELETE FROM docTypeSchema WHERE docType == '{self.selectDocType.currentData()}'"}
+        {'type':'one', 'cmd':'DELETE FROM docTypes WHERE docType == ?',      'list':[docType]},
+        {'type':'one', 'cmd':'DELETE FROM docTypeSchema WHERE docType == ?', 'list':[docType]}
       ])
-      self.comm.commSendConfiguration.emit(self.comm.configuration, self.comm.projectGroup)#reset docTypes, etc.
-      self.selectDocType.clear()
+      self.docTypesLabels = [(k,v) for k,v in self.docTypesLabels if k!=docType]
+      self.docType = ''                                  # prevent finishDocType from re-saving the deleted type
+      self.selectDocType.removeItem(self.selectDocType.currentIndex())        # selects and loads the next type
     elif action is Command.DEL_GROUP:
       docLabel = str(self.docLabel)
       button = QMessageBox.question(self, 'Remove group?', 'Do you really want to remove this group?',
