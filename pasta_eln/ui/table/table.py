@@ -292,7 +292,7 @@ class TableView(Widget):
       answer = QMessageBox.warning(self, 'Remove selected items?', 'Remove the selected items everywhere?',
                                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                    QMessageBox.StandardButton.No)
-      if answer is QMessageBox.StandardButton.Yes:
+      if answer == QMessageBox.StandardButton.Yes:
         for docID in selected:
           self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID': docID, 'stack': ''})
         self.refresh()

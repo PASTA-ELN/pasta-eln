@@ -9,7 +9,7 @@ from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 from ...fixed_strings_json import allIcons, reservedDocTypeShortcuts
 from ..gui_communicate import Communicate
-from ..gui_style import SPACE, Button, ButtonStyle
+from ..gui_style import SPACE, Button, ButtonStyle, shortcut
 from ..message_dialog import showMessage
 
 
@@ -34,7 +34,7 @@ class DocTypeEditor(QDialog):
     mainL.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
     mainL.setSpacing(SPACE.S)
     self.mainForm = QFormLayout()
-    self.mainForm.setSpacing(0)
+    self.mainForm.setSpacing(SPACE.S)
     self.mainForm.setContentsMargins(0, 0, 0, 0)
     mainL.addLayout(self.mainForm)
     self.setWindowTitle('Edit item type properties')
@@ -47,6 +47,7 @@ class DocTypeEditor(QDialog):
     footerWidget = QWidget()
     footerWidget.setLayout(footer)
     mainL.addWidget(footerWidget)
+    self.saveShortcut = shortcut('Ctrl+Return', self, lambda: self.execute(Command.SAVE))
     # initialize communication if needed
     self.comm.uiSendSQL.emit([{'type':'get_df',
                                'cmd':'SELECT docType, shortcut from docTypes'}])

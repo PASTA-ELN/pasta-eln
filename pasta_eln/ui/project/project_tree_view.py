@@ -155,7 +155,7 @@ class TreeView(QTreeView):
       self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
 
     elif command[0] is Command.ADD_ON:
-      callAddOn(command[1], self.comm, item.data()['hierStack'], self)
+      callAddOn(command[1], self.comm, item.data()['hierStack'], self.aParentWidget)
     else:
       logging.error('Unknown context menu %s', command, exc_info=True)
     self.comm.uiRequestHierarchy.emit(self.aParentWidget.projID, self.aParentWidget.showAll)

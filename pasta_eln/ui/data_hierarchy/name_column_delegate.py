@@ -1,5 +1,5 @@
 """ NameColumnDelegate module used for the table views """
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QTimer
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate, QStyleOptionViewItem, QWidget
 
@@ -27,6 +27,18 @@ class NameColumnDelegate(QStyledItemDelegate):
     editor = QLineEdit(parent)                                               # pylint: disable=qt-local-widget
     editor.setValidator(QRegularExpressionValidator(r'[a-z][a-z0-9]+'))
     return editor
+
+
+  def setEditorData(self, editor:QWidget, index:QModelIndex | QPersistentModelIndex) -> None:
+    """ Fill the line edit with the name and put the cursor at its end, so the name can be edited, not replaced
+
+    Args:
+      editor (QWidget): Line edit created by createEditor
+      index (Union[QModelIndex, QPersistentModelIndex]): Cell index
+    """
+    super().setEditorData(editor, index)
+    if isinstance(editor, QLineEdit):                         # after Qt's own selectAll when opening the editor
+      QTimer.singleShot(0, editor, lambda: editor.end(False))
 
 
   def destroyEditor(self, editor:QWidget, index:QModelIndex | QPersistentModelIndex) -> None:

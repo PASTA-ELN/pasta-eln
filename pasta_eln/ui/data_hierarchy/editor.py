@@ -5,7 +5,6 @@ import pandas as pd
 from PySide6.QtCore import QAbstractItemModel, QModelIndex, Slot
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QInputDialog, QMessageBox, QTabBar, QTableWidget,
                                QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
-from ...fixed_strings_json import defaultDataHierarchyNode
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label
 from ..icon_button_delegate import IconButtonDelegate
@@ -117,13 +116,6 @@ class SchemeEditor(QDialog):
     self.docLabel= label
     self.delButton.setEnabled(not str(self.selectDocType.currentData()).startswith('x'))   # project, folder: structural
     fittingDocTypes = [k for k,v in self.docTypesLabels if v==label]
-    if not fittingDocTypes:                                        #nothing to save since docType just created
-      self.df = pd.DataFrame(defaultDataHierarchyNode)
-      self.df['docType'] = self.selectDocType.currentData()
-      self.df.drop(['PURL'], axis=1, inplace=True)
-      self.df.rename(columns={'query':'long'}, inplace=True)
-      self.paint()
-      return
     self.docType = fittingDocTypes[0]
     self.cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
           'docTypeSchema.unit, docTypeSchema.mandatory, docTypeSchema.list, definitions.long '\
@@ -337,6 +329,7 @@ class SchemeEditor(QDialog):
       docType (str): name of the new docType
     """
     if docType not in [self.selectDocType.itemData(i) for i in range(self.selectDocType.count())]:
+      self.docTypesLabels.append((docType, label))
       self.selectDocType.addItem(label, docType)
     self.selectDocType.setCurrentText(label)
     return
