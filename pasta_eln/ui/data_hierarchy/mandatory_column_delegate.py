@@ -21,7 +21,7 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
   def __init__(self) -> None:
     super().__init__()
     self.radioButton = QRadioButton()
-    self.radioButton.ensurePolished()                                   # apply theme stylesheet to the template
+    self.radioButton.ensurePolished()                                 # apply theme stylesheet to the template
 
   def initStyleOption(self, option: QStyleOptionViewItem, index: QModelIndex | QPersistentModelIndex) -> None:
     """Hide the raw 'T' value; the radio indicator shows it
@@ -42,7 +42,7 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
       option (QStyleOptionViewItem): Style option for the cell represented by index
       index (Union[QModelIndex, QPersistentModelIndex]): Table cell index
     """
-    super().paint(painter, option, index)                                     # cell background, text hidden below
+    super().paint(painter, option, index)                                 # cell background, text hidden below
     if not index.model().index(index.row(), 0).data():
       return
     style = self.radioButton.style()

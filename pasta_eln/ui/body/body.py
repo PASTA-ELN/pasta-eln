@@ -102,7 +102,7 @@ class Body(QWidget):
       tableView = TableView(self.comm, docType)
       icon = self.createIcon(iconName, iconColor, selectedIconColor)
       self.tabWidget.addTab(tableView, icon, label)
-    if self.comm.projectID:                                    # new project view is empty: reload open project
+    if self.comm.projectID:                                                     # new project id exist, reload
       self.comm.changeProject.emit(self.comm.projectID, '')
 
 

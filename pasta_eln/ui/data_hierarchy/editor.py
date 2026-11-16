@@ -114,7 +114,7 @@ class SchemeEditor(QDialog):
     if self.docType:
       self.finishDocType()
     self.docLabel= label
-    self.delButton.setEnabled(not str(self.selectDocType.currentData()).startswith('x'))   # project, folder: structural
+    self.delButton.setEnabled(not str(self.selectDocType.currentData()).startswith('x'))     # project, folder
     fittingDocTypes = [k for k,v in self.docTypesLabels if v==label]
     self.docType = fittingDocTypes[0]
     self.cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
@@ -213,7 +213,7 @@ class SchemeEditor(QDialog):
     """Close the editor, optionally persisting the current item type."""
     if save:
       self.finishDocType()
-    self.comm.start()                    # reload item types: deletions etc. are saved immediately, also on cancel
+    self.comm.start()                                # reload item types: deletions etc. are saved immediately
     if save:
       self.accept()
     else:
@@ -247,8 +247,8 @@ class SchemeEditor(QDialog):
         {'type':'one', 'cmd':'DELETE FROM docTypeSchema WHERE docType == ?', 'list':[docType]}
       ])
       self.docTypesLabels = [(k,v) for k,v in self.docTypesLabels if k!=docType]
-      self.docType = ''                                  # prevent finishDocType from re-saving the deleted type
-      self.selectDocType.removeItem(self.selectDocType.currentIndex())        # selects and loads the next type
+      self.docType = ''                                # prevent finishDocType from re-saving the deleted type
+      self.selectDocType.removeItem(self.selectDocType.currentIndex())       # selects and loads the next type
     elif action is Command.DEL_GROUP:
       docLabel = str(self.docLabel)
       button = QMessageBox.question(self, 'Remove group?', 'Do you really want to remove this group?',

@@ -45,7 +45,7 @@ class IconButtonDelegate(QStyledItemDelegate):
 
   def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: CellIndex) -> None:
     """Draw the configured button when the row supports its action."""
-    super().paint(painter, option, index)                                     # cell background like other columns
+    super().paint(painter, option, index)                                 # cell background like other columns
     if not self.isVisible(index):                                                     # type: ignore[arg-type]
       return
     buttonOption = QStyleOptionButton()

@@ -37,7 +37,7 @@ class NameColumnDelegate(QStyledItemDelegate):
       index (Union[QModelIndex, QPersistentModelIndex]): Cell index
     """
     super().setEditorData(editor, index)
-    if isinstance(editor, QLineEdit):                         # after Qt's own selectAll when opening the editor
+    if isinstance(editor, QLineEdit):                       # after Qt's own selectAll when opening the editor
       QTimer.singleShot(0, editor, lambda: editor.end(False))
 
 
