@@ -135,9 +135,9 @@ class DocTypeEditor(QDialog):
       icon     = '' if self.docType.startswith('x') else self.comboIcon.currentText()
       key      = '' if self.docType.startswith('x') else self.row4.text()
       if self.docType:                                                               # update existing docType
-        cmd = f"UPDATE docTypes SET title='{label}', shortcut='{key}', icon='{icon}' WHERE docType = "\
-              f"'{self.docType}'"
-        self.comm.uiSendSQL.emit([{'type':'one',  'cmd':cmd}])
+        self.comm.uiSendSQL.emit([{'type':'one',
+                                   'cmd':'UPDATE docTypes SET title=?, shortcut=?, icon=? WHERE docType=?',
+                                   'list':[label, key, icon, self.docType]}])
         docType = self.docType
       else:                                                  # create new docType, with default schema entries
         docType = self.row1.text()

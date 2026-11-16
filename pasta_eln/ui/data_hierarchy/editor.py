@@ -204,7 +204,7 @@ class SchemeEditor(QDialog):
     self.comm.uiSendSQL.emit([
       {'type':'many', 'cmd':'INSERT INTO definitions (key, long, PURL) VALUES (?, ?, "") ON CONFLICT(key) DO '
                             'UPDATE SET long = excluded.long;', 'list':listDef},
-      {'type':'one',  'cmd':f"DELETE FROM docTypeSchema WHERE docType == '{self.docType}'"},
+      {'type':'one',  'cmd':'DELETE FROM docTypeSchema WHERE docType == ?', 'list':[self.docType]},
       {'type':'df',   'table':'docTypeSchema', 'df':dfSchema}])
     return
 
@@ -256,8 +256,8 @@ class SchemeEditor(QDialog):
                                     QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:
         group = self.tabW.tabBar().tabText(command[1])                                   # type: ignore[index]
-        self.comm.uiSendSQL.emit([{'type':'one','cmd':
-          f"DELETE FROM docTypeSchema WHERE docType == '{self.docType}' AND class == '{group}'"}])
+        self.comm.uiSendSQL.emit([{'type':'one', 'cmd':'DELETE FROM docTypeSchema WHERE docType == ? AND class == ?',
+                                   'list':[self.docType, group]}])
         self.changeDocType(docLabel)
     elif action is Command.CANCEL:
       self.closeDialog(False)
