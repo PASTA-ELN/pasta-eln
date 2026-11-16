@@ -55,7 +55,7 @@ def main(comm, hierStack, widget, parameter={}):
         QMessageBox.critical(widget, 'Invalid CSV file', 'The item type does not exist in the PASTA-ELN database.')
         return False
     # Columns supported by PASTA-ELN: map CSV column -> document key
-    schema = [f'{i["class"]}.{i["name"]}' for i in comm.dataHierarchyNodes[docType]]
+    schema = [f'{i["class"]}.{i["name"]}' for i in comm.getDataHierarchyNode(docType.split('/'))]
     colMap = {'type':'type', 'image':'image'}
     for i in schema:                       # 'name'/'.name' -> 'name';  'url'/'.url' -> '.url';  'geometry.height'
         colMap[i] = colMap[i.lstrip('.')] = i[1:] if i[1:] in MAIN_ORDER+['tags','qrCodes'] else i

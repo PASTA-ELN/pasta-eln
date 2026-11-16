@@ -180,7 +180,7 @@ class Project(Widget):
     self.btnMore.setMenu(moreMenu)
 
     self.allDetails = QTextEdit(self)
-    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, self.comm.dataHierarchyNodes['x0'],
+    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, self.comm.getDataHierarchyNode(['x0']),
                                              self))
     if not self.docProj['gui'][0]:
       self.allDetails.hide()

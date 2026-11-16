@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot
 from ..backend_worker.worker import BackendThread, Task
+from ..fixed_strings_json import defaultDataHierarchyNode
 from ..misc_tools import getConfiguration
 from .palette import Palette
 from .wait_dialog import WaitDialog, Worker
@@ -122,6 +123,21 @@ class Communicate(QObject):
       data (list): list of nodes in the hierarchy for this docType
     """
     self.dataHierarchyNodes[docType] = data
+
+
+  def getDataHierarchyNode(self, docType:list[str]) -> list[Any]:
+    """ Get the fields of the most specific defined (sub-)docType, else the default fields
+    Args:
+      docType (list): document type of an item, e.g. ['measurement','image','crop'] or ['device/extension']
+
+    Returns:
+      list: nodes in the hierarchy for this docType
+    """
+    docType = '/'.join(docType).split('/')
+    for i in range(len(docType), 0, -1):
+      if nodes := self.dataHierarchyNodes.get('/'.join(docType[:i])):
+        return nodes
+    return defaultDataHierarchyNode
 
 
   def start(self, projectGroup:str='') -> None:

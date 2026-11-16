@@ -7,7 +7,7 @@ from PySide6.QtCore import (QAbstractItemModel, QEvent, QMargins, QModelIndex, Q
 from PySide6.QtGui import QMouseEvent, QPainter, QPen, QPixmap, QStaticText, QTextDocument
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QAbstractItemView, QStyle, QStyledItemDelegate, QStyleOptionViewItem
-from ...fixed_strings_json import DO_NOT_RENDER, defaultDataHierarchyNode
+from ...fixed_strings_json import DO_NOT_RENDER
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import markdownEqualizer
 from ..gui_communicate import Communicate
@@ -222,10 +222,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       return
     logging.debug('Renderer: onGetDoc %s %s %s', doc['id'], doc.get('type',[]), doc.get('hierStack',''))
     # ... after deleting project, its items cannot be found and it would give many false negatives
-    if doc['type'][0] not in self.comm.docTypesTitles:
-      dataHierarchyNode = defaultDataHierarchyNode
-    else:
-      dataHierarchyNode = self.comm.dataHierarchyNodes[doc['type'][0]]
+    dataHierarchyNode = self.comm.getDataHierarchyNode(doc['type'])
     textDoc = QTextDocument()
     markdownStr = doc2markdown(doc, DO_NOT_RENDER, dataHierarchyNode, self)
     textDoc.setMarkdown(markdownStr)

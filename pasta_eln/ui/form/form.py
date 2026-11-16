@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QIn
                                QMenu, QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTextEdit, QVBoxLayout, QWidget)
 from ...backend_worker.sqlite import MAIN_ORDER
 from ...backend_worker.worker import Task
-from ...fixed_strings_json import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
+from ...fixed_strings_json import SQLiteTranslationDict, minimalDocInForm
 from ...misc_tools import callAddOn, isDocID
 from ...text_tools.string_changes import createDirName, markdownEqualizer
 from .._context_menu import CommandMenu, executeContextMenu, initContextMenu
@@ -313,12 +313,8 @@ class Form(QDialog):
       self.splitter.setSizes([1, 1])
 
     # create data hierarchy node: data structure
-    if self.doc['type'][0] in self.comm.docTypesTitles:
-      self.dataHierarchyNodeRaw = self.comm.dataHierarchyNodes[self.doc['type'][0]]
-      self.dataHierarchyNode = copy.deepcopy([dict(i) for i in self.dataHierarchyNodeRaw])
-    else:
-      self.dataHierarchyNodeRaw = copy.deepcopy(defaultDataHierarchyNode)
-      self.dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
+    self.dataHierarchyNodeRaw = self.comm.getDataHierarchyNode(self.doc['type'])
+    self.dataHierarchyNode = copy.deepcopy([dict(i) for i in self.dataHierarchyNodeRaw])
     keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in self.dataHierarchyNode]
     keysDocOrg = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k])] if isinstance(self.doc[k], dict) else [f'.{k}']
                for k in self.doc if k not in MAIN_ORDER+['branch','qrCodes','tags']]
