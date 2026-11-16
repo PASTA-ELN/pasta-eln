@@ -274,10 +274,15 @@ class SchemeEditor(QDialog):
       group = self.tabW.tabBar().tabText(tabID)
       group = '' if group=='default' else group
       widget:QTableWidget = self.tabW.widget(tabID)                                 # type: ignore[assignment]
-      for row in range(widget.rowCount()-1):                   # -1: ignore last row as it is meant for adding
+      idx = 0
+      for row in range(widget.rowCount()):
+        nameItem = widget.item(row, 0)
+        if nameItem is None or not nameItem.text().strip():
+          continue                                  # empty rows (incl. the one for adding) are not properties
         df.at[lastRow, 'docType'] = self.docType
         df.at[lastRow, 'class']   = group
-        df.at[lastRow, 'idx']     = str(row)
+        df.at[lastRow, 'idx']     = str(idx)
+        idx += 1
         for col in range(6):
           item = widget.item(row,col)
           value = '' if item is None else item.text()

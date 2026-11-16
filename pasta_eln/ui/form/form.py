@@ -760,7 +760,7 @@ class Form(QDialog):
         newProjID = [self.projectComboBox.currentData()] if self.projectComboBox.currentData() else []
       # ---- if docType changed: save; no further save to db required ----
       if self.docTypeComboBox.currentData() != '' and self.docTypeComboBox.currentData() is not None:
-        self.doc['type'] = [self.docTypeComboBox.currentData()]
+        self.doc['type'] = self.docTypeComboBox.currentData().split('/')
 
       docBackup = copy.deepcopy(self.doc)                                           # for duplicate, save&next
       if self.groupEdit:                                                                        # group update
@@ -776,7 +776,7 @@ class Form(QDialog):
       else:                                                                               # create new dataset
         if newProjID==['NONE']:
           newProjID = []
-        self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':newProjID, 'docType':self.doc['type'][0],
+        self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':newProjID, 'docType':'/'.join(self.doc['type']),
                                                     'doc':self.doc})
       self.doc = docBackup
       #!!! NO updates / redraw here since one does not know from where form came
