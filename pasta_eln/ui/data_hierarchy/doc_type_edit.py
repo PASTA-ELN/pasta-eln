@@ -133,9 +133,9 @@ class DocTypeEditor(QDialog):
         showMessage(self, 'Item type error', 'The display label is required and must be unique.', 'Critical')
         return
       icon     = '' if self.docType.startswith('x') else self.comboIcon.currentText()
-      shortcut = '' if self.docType.startswith('x') else self.row4.text()
+      key      = '' if self.docType.startswith('x') else self.row4.text()
       if self.docType:                                                               # update existing docType
-        cmd = f"UPDATE docTypes SET title='{label}', shortcut='{shortcut}', icon='{icon}' WHERE docType = "\
+        cmd = f"UPDATE docTypes SET title='{label}', shortcut='{key}', icon='{icon}' WHERE docType = "\
               f"'{self.docType}'"
         self.comm.uiSendSQL.emit([{'type':'one',  'cmd':cmd}])
         docType = self.docType
@@ -145,7 +145,7 @@ class DocTypeEditor(QDialog):
           showMessage(self, 'Item type error', 'Item type name is not valid or already exists.', 'Critical')
           return
         self.comm.uiSendSQL.emit([{'type':'one', 'cmd':'INSERT INTO docTypes VALUES (?, ?, ?, ?, ?, ?)',
-                                   'list':[docType, '', label, icon, shortcut, '']},
+                                   'list':[docType, '', label, icon, key, '']},
                                   {'type':'one', 'cmd':'INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
                                    'list':[docType, '', '0', 'name', '', '', '']},
                                   {'type':'one', 'cmd':'INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
