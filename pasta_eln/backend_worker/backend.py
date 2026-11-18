@@ -183,7 +183,7 @@ class Backend(CliMixin):
         path = parentDirectory/createDirName(doc, childNum, self.cwd)#update,or create (if new doc, update ignored anyhow)
       else:
         #measurement, sample, procedure
-        shasum = ''
+        shasum = '' if edit else doc.get('shasum', '')            # new doc: reuse hash from scan, no rehash
         if '://' in doc['name']:                                                                 #make up name
           if localCopy:
             baseName  = Path(doc['name']).stem
@@ -417,7 +417,7 @@ class Backend(CliMixin):
           if len(view)==0:                                                        #not in database: create doc
             job = self.extractors.prepareJob(self.basePath/path, jobID=len(extractorJobs))
             if job is None:                                                # if no suitable extractor is there
-              self.addData('', {'name':path, 'type':['']}, hierStack, runExtractors=False)
+              self.addData('', {'name':path, 'type':[''], 'shasum':shasum}, hierStack, runExtractors=False)
             else:
               job |= {'path':path, 'hierStack':hierStack, 'shasum':shasum}
               extractorJobs.append(job)

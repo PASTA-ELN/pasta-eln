@@ -45,8 +45,17 @@ def genericHash(path:Path, forceFile:bool=False) -> str:
   if path.is_symlink():                                                                #if link, hash the link
     shasum = symlinkHash(path)
   elif path.is_file():                                                                             #Local file
+    size = path.stat().st_size
     with open(path, 'rb') as stream:
-      shasum = blobHash(stream, path.stat().st_size)
+      if size > 1024**3:                   # >1GB: hash size, first and last 16MB; own prefix never matches blobHash
+        from hashlib import sha1
+        hasher = sha1(f'blob-partial {size}\0'.encode('ascii'))
+        hasher.update(stream.read(16*1024**2))
+        stream.seek(-16*1024**2, os.SEEK_END)
+        hasher.update(stream.read())
+        shasum = hasher.hexdigest()
+      else:
+        shasum = blobHash(stream, size)
   return shasum
 
 
