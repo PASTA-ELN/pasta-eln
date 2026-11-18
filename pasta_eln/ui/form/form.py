@@ -764,6 +764,8 @@ class Form(QDialog):
           del self.doc['name']
         if not self.doc['tags']:
           del self.doc['tags']                                # remove empty tags to not overwrite already set
+        if not self.docTypeComboBox.currentData():            # keep each item's own (sub)type unless changed
+          del self.doc['type']
         self.doc = {k:v for k,v in self.doc.items() if v}                             # filter out empty items
         for docID in self.allDocIDsCopy:
           self.comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':self.doc|{'id':docID}, 'newProjID':newProjID})
