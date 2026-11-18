@@ -164,10 +164,10 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
           value = ', '.join([str(i) for i in value])
           markdown += f'{key.capitalize()}: {value}\n\n'
         if isinstance(value, tuple) and len(value)==4:
-          key = key if value[2] is None or value[2]=='' else value[2]
           if isDocID(value[0]):
-            valueString = 'Cannot resolve link'
+            valueString = value[2] or '☍ link to entry'
           else:
+            key = key if value[2] is None or value[2]=='' else value[2]
             valueString = f'{value[0]} {value[1]}'
             valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;**[&uArr;]({value[3]})**'
           markdown += f'{key.capitalize()}: {valueString}\n\n'
