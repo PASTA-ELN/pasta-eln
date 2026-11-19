@@ -16,7 +16,7 @@ class ResizeImage(QLabel):
       layout (QLayout | None): Optional layout that should receive this label
     """
     super().__init__()
-    self._sourcePixmap = QPixmap()
+    self.sourcePixmap = QPixmap()
     self._isSvg = False
     self._svgRenderer = None
     self.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -31,7 +31,7 @@ class ResizeImage(QLabel):
         if not success:
           logging.warning('Could not load image data with format %s', imageType)
           return
-        self._sourcePixmap = QPixmap.fromImage(imageW)
+        self.sourcePixmap = QPixmap.fromImage(imageW)
         if layout is not None:
           layout.addWidget(self)
         self._updatePixmap()
@@ -61,9 +61,9 @@ class ResizeImage(QLabel):
     if self._isSvg:
       self._renderSvg()
       return
-    if self._sourcePixmap.isNull():
+    if self.sourcePixmap.isNull():
       return
-    scaled = self._sourcePixmap.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatio,
+    scaled = self.sourcePixmap.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatio,
                                        Qt.TransformationMode.SmoothTransformation)
     super().setPixmap(scaled)
 

@@ -200,7 +200,7 @@ class Details(Widget):
         continue
       if key == 'image':
         image = ResizeImage(self.data['image'], self.contentPreviewL)
-        sourcePixmap = image.sourcePixmap()
+        sourcePixmap = image.sourcePixmap
         if not sourcePixmap.isNull():
           imageHeight = sourcePixmap.height() * self.contentPreviewW.width() // sourcePixmap.width()
           self.splitter.setSizes([imageHeight, self.splitter.height() - imageHeight])

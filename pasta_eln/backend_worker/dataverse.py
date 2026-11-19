@@ -1,6 +1,7 @@
 """ Client for communicating with Dataverse Server via REST API
 - Author: Jithu Murugan, Steffen Brinckmann
 """
+import copy
 from datetime import datetime
 from json import dumps
 from os.path import basename
@@ -100,12 +101,12 @@ class DataverseClient(RepositoryClient):
     Returns:
       A dictionary of dataset metadata with the persistent identifier for successful request, otherwise the error message is returned
     """
-    metadata = DATAVERSE_METADATA
+    metadata: dict[str, Any] = copy.deepcopy(DATAVERSE_METADATA)
     if 'license' in dsMetadata:
       metadata['datasetVersion']['license'] = dsMetadata['license']
     else:
       del metadata['datasetVersion']['license']
-    for _, metablock in metadata['datasetVersion']['metadataBlocks'].items():      # type:ignore[attr-defined]
+    for _, metablock in metadata['datasetVersion']['metadataBlocks'].items():
       fieldCopy = metablock['fields'].copy()
       del metablock['displayName']
       metablock['fields'].clear()
