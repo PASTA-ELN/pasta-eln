@@ -72,7 +72,7 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
     if not path.startswith('http'):
       path = (widget.comm.basePath/path).as_posix()                               # type: ignore[attr-defined]
     widget.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST,{'fileName':path,'recipe':'/'.join(widget.doc['type']),# type: ignore[attr-defined]
-                                                        'saveFig':str(saveFilePath), 'style':''})
+                                                        'saveFig':str(saveFilePath), 'style':'html'})
   elif command[0] is CommandMenu.HIDE:
     widget.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':widget.docID})        # type: ignore[attr-defined]
   elif command[0] is CommandMenu.CHANGE_EXTRACTOR:

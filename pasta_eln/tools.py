@@ -1,5 +1,6 @@
 #!/usr/bin/python3
-"""Command-line utility to administer a local installation and convert from PASTA-ELN version 2"""
+"""Command-line utility to administer a local installation and convert from PASTA-ELN version 2."""
+import base64
 import json
 import os
 import platform
@@ -12,7 +13,7 @@ from sqlite3 import IntegrityError
 from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.backend_worker.elab_ftw_sync import Pasta2Elab
 from pasta_eln.constants import defaultDocTypes, defaultSchema
-from pasta_eln.configuration_file import getConfiguration
+from pasta_eln.configuration_file import getConfiguration, masterKey
 from pasta_eln.text_tools.string_changes import outputString
 
 
@@ -50,6 +51,9 @@ class Tools:
     helpString += '  [s]can all projects\n'
     if command == 's':
       self.scanAllProjects()
+    helpString += '  [pk]ey: print the recovery key of the configuration\n'
+    if command == 'pk':
+      print(f'PASTA-ELN recovery key: {base64.b64encode(masterKey()).decode("ascii")}')
 
     helpString += 'Commands - update:\n'
     helpString += '  [u3] convert from one procedure to 3 workflows\n'

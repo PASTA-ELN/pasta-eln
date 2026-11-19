@@ -245,7 +245,6 @@ class MainWindow(QMainWindow):
           QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  QMessageBox.StandardButton.No)
       if confirmation == QMessageBox.StandardButton.Yes:
         self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID': self.comm.projectID, 'stack': self.comm.projectID})
-        self.comm.changeTable.emit('x0', '', '')
         self.comm.changeSidebar.emit('redraw')
         self.comm.changeDetails.emit(DetailContext())
     elif commandType is Command.EXIT:
@@ -259,7 +258,6 @@ class MainWindow(QMainWindow):
     elif commandType is Command.CHANGE_PG:
       self.comm.configuration['defaultProjectGroup'] = payload[0]
       saveConfiguration(self.comm.configuration)
-      self.comm.projectGroup = payload[0]
       self.comm.start(payload[0])
     elif commandType is Command.SYNC_SEND_ALL:
       self.comm.uiRequestTask.emit(Task.SYNC_ELAB, {'projGroup': self.comm.projectGroup, 'subtask': 'sA'})
@@ -327,7 +325,7 @@ class MainWindow(QMainWindow):
     if task is Task.OPEN_EXTERNAL and path:
       QDesktopServices.openUrl(QUrl.fromLocalFile(path))
       return
-    if task in (Task.SCAN, Task.DROP_EXTERNAL):
+    if task in (Task.SCAN, Task.DROP_EXTERNAL, Task.SEND_REPOSITORY):
       self.comm.changeProject.emit(self.comm.projectID, '')
     elif task is Task.CHECK_DB:
       MessageDialog(self, 'Database verification', json.loads(reportText),

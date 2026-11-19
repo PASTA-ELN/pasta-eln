@@ -7,7 +7,7 @@ from PySide6.QtCore import (QAbstractItemModel, QEvent, QMargins, QModelIndex, Q
 from PySide6.QtGui import QMouseEvent, QPainter, QPen, QPixmap, QStaticText, QTextDocument
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QAbstractItemView, QStyle, QStyledItemDelegate, QStyleOptionViewItem
-from ...constants import DO_NOT_RENDER, defaultDataHierarchyNode
+from ...constants import DO_NOT_RENDER
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import markdownEqualizer
 from ..gui_communicate import Communicate
@@ -134,10 +134,15 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         width2nd = min(widthImage, pixmap.width()+FRAME_SIZE)
         topLeft2nd     = option.rect.topRight()   - QPoint(width2nd+FRAME_SIZE+1,-FRAME_SIZE)
         painter.drawPixmap(topLeft2nd, pixmap)
-      elif self.docs.get(docID, {}).get('image','').startswith('<?xml'):
+      elif self.docs.get(docID, {}).get('image','').lstrip().startswith(('<?xml', '<svg')):
         topLeft2nd     = option.rect.topRight()   - QPoint(widthImage+FRAME_SIZE+1,-FRAME_SIZE)
+        target = QRect(topLeft2nd, bottomRight2nd)
+        svgSize = self.docs.get(docID, {}).get('svgSize', QSize())
+        if not svgSize.isEmpty():                                           # keep aspect ratio, right aligned
+          svgSize = svgSize.scaled(target.size(), Qt.AspectRatioMode.KeepAspectRatio)
+          target = QRect(target.right()-svgSize.width()+1, target.top(), svgSize.width(), svgSize.height())
         image = QSvgRenderer(bytearray(self.docs.get(docID, {}).get('image',''), encoding='utf-8'))
-        image.render(painter,    QRectF(topLeft2nd, bottomRight2nd))
+        image.render(painter,    QRectF(target))
     self.paintMenuButton(painter, option)
     return
 
@@ -204,10 +209,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       return
     logging.debug('Renderer: onGetDoc %s %s %s', doc['id'], doc.get('type',[]), doc.get('hierStack',''))
     # ... after deleting project, its items cannot be found and it would give many false negatives
-    if doc['type'][0] not in self.comm.docTypesTitles:
-      dataHierarchyNode = defaultDataHierarchyNode
-    else:
-      dataHierarchyNode = self.comm.dataHierarchyNodes[doc['type'][0]]
+    dataHierarchyNode = self.comm.getDataHierarchyNode(doc['type'])
     textDoc = QTextDocument()
     markdownStr = doc2markdown(doc, DO_NOT_RENDER, dataHierarchyNode)
     textDoc.setMarkdown(markdownStr)
@@ -223,7 +225,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         pixmap = self.imageFromDoc(doc)
         heightRightSide = pixmap.height()+2*FRAME_SIZE
       else:
-        heightRightSide = int(widthImage*3/4+2*FRAME_SIZE)
+        svgSize = QSvgRenderer(bytearray(doc['image'], encoding='utf-8')).defaultSize()
+        self.docs[doc['id']]['svgSize'] = svgSize
+        heightRightSide = int(widthImage*3/4+2*FRAME_SIZE) if svgSize.isEmpty() \
+                          else int(widthImage*svgSize.height()/svgSize.width()+2*FRAME_SIZE)
     self.docs[doc['id']]['size']    = QSize(400, min(max(heightDetails,heightRightSide), guiStyle['projectItemHeight']))
     self.docs[doc['id']]['hidden']  = any(b for b in doc['branch'] if False in b['show'])
     self.docs[doc['id']]['markdown']= markdownStr

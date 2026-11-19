@@ -119,16 +119,18 @@ def createChangelog(version: str) -> Path:
                               capture_output=True, text=True, check=True).stdout
   commits = []
   for record in commitText.split('\x1e'):
-    if not record.strip():
+    record = record.strip('\n')                          # str.strip() would also remove the \x1f separators
+    if not record:
       continue
-    commitHash, subject, body = record.strip().split('\x1f', 2)
+    commitHash, subject, body = record.split('\x1f', 2)
+    body = body.strip()
     changedFiles = subprocess.run(['git', 'diff-tree', '--no-commit-id', '--name-status', '-r', commitHash],
                                   capture_output=True, text=True, check=True).stdout.strip()
     commits.append(f'- {subject} ([`{commitHash[:8]}`](https://github.com/PASTA-ELN/pasta-eln/commit/{commitHash}))\n'
                    '  Commit body:\n'
-                   f'  {body.replace(chr(10), chr(10) + "  ")}\n'
-                   f'  Changed files:\n'
-                   f'  {changedFiles.replace(chr(10), chr(10) + "  ")}')
+                   f'  {body.replace(chr(10), f"{chr(10)}  ")}\n'
+                   '  Changed files:\n'
+                   f'  {changedFiles.replace(chr(10), f"{chr(10)}  ")}')
   if not commits:
     raise RuntimeError(f'No commits found between {previousTag} and {releaseHash}.')
   draftPath = Path(f'CHANGELOG_DRAFT_v{version}.md')
@@ -215,7 +217,11 @@ def newVersion(level:int=2) -> None:
       fileNew.append(line)
     with open(path,'w', encoding='utf-8') as fOut:
       fOut.write('\n'.join(fileNew)+'\n')
-  subprocess.run(['git', 'commit', '-a', '-m', 'update version numbers'], check=True)
+  changeCheck = subprocess.run(['git', 'diff', '--quiet', 'HEAD', '--'], check=False)
+  if changeCheck.returncode == 1:
+    subprocess.run(['git', 'commit', '-a', '-m', 'update version numbers'], check=True)
+  elif changeCheck.returncode != 0:
+    raise subprocess.CalledProcessError(changeCheck.returncode, changeCheck.args)
   # must not add entries to the changelog
   if re.fullmatch(r'\d+\.\d+\.\d+', version):
     draftPath = createChangelog(version)
@@ -225,7 +231,7 @@ def newVersion(level:int=2) -> None:
       raise RuntimeError('Release stopped before changelog publication.')
     changelogPath = Path('CHANGELOG.md')
     reviewedDraft = draftPath.read_text(encoding='utf-8').rstrip()
-    requiredMetadata = (f'## [v{version}]', r'\*\*Release source commit:\*\* `[0-9a-f]{40}`',
+    requiredMetadata = (re.escape(f'## [v{version}]'), r'\*\*Release source commit:\*\* `[0-9a-f]{40}`',
                         r'\*\*Previous stable release:\*\* `v\d+\.\d+\.\d+` \(`[0-9a-f]{40}`\)')
     if any(re.search(metadata, reviewedDraft) is None for metadata in requiredMetadata):
       raise RuntimeError(f'Reviewed changelog draft {draftPath} is missing required release metadata.')
@@ -236,7 +242,11 @@ def newVersion(level:int=2) -> None:
                              if stableHeading >= 0 else changelog.rstrip() + '\n\n' + insertion, encoding='utf-8')
     draftPath.unlink()
   addition = input('\n\nWhat do you want to add to the push message (do not use \' or \")? ')
-  subprocess.run(['git', 'commit', '-a', '-m', f'updated changelog; {addition}'], check=True)
+  changeCheck = subprocess.run(['git', 'diff', '--quiet', 'HEAD', '--'], check=False)
+  if changeCheck.returncode == 1:
+    subprocess.run(['git', 'commit', '-a', '-m', f'updated changelog; {addition}'], check=True)
+  elif changeCheck.returncode != 0:
+    raise subprocess.CalledProcessError(changeCheck.returncode, changeCheck.args)
   subprocess.run(['git', 'tag', '-a', f'v{version}', '-m', f'Version {version}; see CHANGELOG for details'], check=True)
   #push and publish
   print('\n\nWill bypass rule violation\n\n')
@@ -480,4 +490,6 @@ if __name__=='__main__':
 - Open new milestone on github and fill in few issues
 """)
     else:
-      print('You have to be on main branch to continue.')
+      print('Aborted: no new version created.')
+  else:
+    print('You have to be on main branch to continue.')

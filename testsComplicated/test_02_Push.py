@@ -2,8 +2,8 @@
 """TEST set up elabFTW server and test repetition of sync """
 import logging, warnings, unittest
 from pathlib import Path
-from pasta_eln.backendWorker.backend import Backend
-from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
+from pasta_eln.backend_worker.backend import Backend
+from pasta_eln.backend_worker.elab_ftw_sync import Pasta2Elab
 from .misc import verify, handleReport
 
 
@@ -44,12 +44,12 @@ class TestStringMethods(unittest.TestCase):
     sync = Pasta2Elab(self.be, 'research', True)
     sync.verbose = False
     report = sync.sync('sA')
-    handleReport(report, [15,0,0,0,0])
+    handleReport(report, [19,0,0,0,0])
 
     # sync again: nothing should change
     print('\n\n=============================\nSecond sync: everything the same since HARD SEND\n============================')
     report = sync.sync('sA')
-    handleReport(report, [15,0,0,0,0])
+    handleReport(report, [19,0,0,0,0])
 
     # verify
     verify(self.be)

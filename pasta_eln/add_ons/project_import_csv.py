@@ -4,7 +4,7 @@ THIS IS A VERY ADVANCED ADD-ON TUTORIAL
 This tutorial teaches
 - how to group import metadata
 """
-# This tutorial follows the conventional four-space indentation style
+# This tutorial follows the conventional four-space indentation style.
 # pylint: disable=bad-indentation
 from pathlib import Path
 import pandas as pd
@@ -25,7 +25,7 @@ reqParameter = {} #possibility for required parameters: like API-key, etc. {'API
 def main(comm, hierStack, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
-        comm (Communicate): Shared communication object
+        comm (Communicate): Shared communication object.
         hierStack (str): node in hierarchy to start the creation
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters
@@ -45,25 +45,27 @@ def main(comm, hierStack, widget, parameter={}):
     # verify the columns are correct
     colNames = list(df.columns)
     if 'type' not in colNames or 'name' not in colNames:
-        QMessageBox.critical(widget, 'Invalid CSV file', 'The CSV file must contain columns named "type" and "name".', 'Critical')
+        QMessageBox.critical(widget, 'Invalid CSV file', 'The CSV file must contain columns named "type" and "name".')
         return False
     if len(df['type'].unique()) > 1:
-        QMessageBox.critical(widget, 'Invalid CSV file', 'All items in the "type" column must have the same item type.', 'Critical')
+        QMessageBox.critical(widget, 'Invalid CSV file', 'All items in the "type" column must have the same item type.')
         return False
     docType = df['type'].unique()[0]
     if docType not in comm.docTypesTitles:
-        QMessageBox.critical(widget, 'Invalid CSV file', 'The item type does not exist in the PASTA-ELN database.', 'Critical')
+        QMessageBox.critical(widget, 'Invalid CSV file', 'The item type does not exist in the PASTA-ELN database.')
         return False
-    # Columns supported by PASTA-ELN
-    colPasta = [f'{i["class"]}.{i["name"]}' for i in comm.dataHierarchyNodes[docType]]
-    colPasta = [i[1:] if i[1:] in MAIN_ORDER+['tags','qrCodes'] else i for i in colPasta] + ['type']
+    # Columns supported by PASTA-ELN: map CSV column -> document key
+    schema = [f'{i["class"]}.{i["name"]}' for i in comm.getDataHierarchyNode(docType.split('/'))]
+    colPasta = {'type':'type', 'image':'image'}
+    for i in schema:                       # 'name'/'.name' -> 'name';  'url'/'.url' -> '.url';  'geometry.height'
+        colPasta[i] = colPasta[i.lstrip('.')] = i[1:] if i[1:] in MAIN_ORDER+['tags','qrCodes'] else i
     if set(colNames).difference(colPasta):
-        QMessageBox.critical(widget, 'Invalid CSV file', f'All columns must exist in the item type schema. Unknown columns: {set(colNames).difference(colPasta)}.', 'Critical')
+        QMessageBox.critical(widget, 'Invalid CSV file', f'All columns must exist in the item type schema. Unknown columns: {set(colNames).difference(colPasta)}.')
         return False
 
     # Loop all rows
     for _, row in df.iterrows():
-        data = row.to_dict()
+        data = {colPasta[k]: v for k, v in row.items() if pd.notna(v)}                       # skip empty cells
         del data['type']
         comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':hierStack.split('/'), 'docType':docType, 'doc':data})
 

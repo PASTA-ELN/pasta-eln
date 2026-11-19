@@ -290,7 +290,7 @@ def exampleData(force:bool=False, callbackPercent:Callable[[int],None] | None=No
 
   backend.addData('measurement', {
     #'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
-    'name'   :'https://download.samplelib.com/jpeg/sample-clouds-400x300.jpg',\
+    'name'   :'https://www.fz-juelich.de/en/ibg/ibg-1/images/research_groups/general/fz-juelich-logo/@@images/image-261-9d3b36703de5ad2157c50aa585e7d2bf.jpeg',\
     'comment':'- Remote image from samplelib. Used for testing and reference\n- This item links to a procedure that was used for its creation.'
               '\n- One can link to samples, etc. to create complex metadata\n- This item also has a rating', 'tags':['_3'],
     '.workflow/procedure':procedureID })
@@ -436,6 +436,36 @@ def getOS() -> str:
   inVirtualenv = getBasePrefixCompat != sys.prefix
   environment = sys.prefix if inVirtualenv else '_system_'
   return f'{operatingSys} {environment}'
+
+
+def testDataFolder(basePath:Path) -> list[str]:
+  """ Test if data folder is writable and not on a network mount that breaks SQLite
+  - does not open the database: a second open handle breaks SQLite on GVFS mounts
+
+  Args:
+    basePath (Path): data folder of the project group
+
+  Returns:
+    list: description of problems; empty if none found
+  """
+  problems = []
+  dbFile = basePath/'pastaELN.db'
+  if not os.access(basePath, os.W_OK) or (dbFile.exists() and not os.access(dbFile, os.W_OK)):
+    problems.append(f'No write permission for {dbFile}.')
+  mounts = Path('/proc/self/mounts')                                     # Linux only, others will have a None
+  if mounts.is_file():
+    realPath = basePath.resolve()
+    mountPoint, fsType, options = Path('/'), '', ['']
+    for line in mounts.read_text(encoding='utf-8').splitlines():
+      _, point, fType, opts = line.split()[:4]
+      pointPath = Path(point.replace('\\040', ' '))
+      if realPath.is_relative_to(pointPath) and len(pointPath.parts) >= len(mountPoint.parts):
+        mountPoint, fsType, options = pointPath, fType, opts.split(',')                   # deepest mount wins
+    if fsType == 'fuse.gvfsd-fuse':
+      problems.append('The data folder is on a network share opened by the file manager (GVFS). Mount it as CIFS instead.')
+    elif fsType in ('cifs', 'smb3') and 'nobrl' not in options:
+      problems.append('The data folder is on a CIFS network share that is mounted without the "nobrl" option.')
+  return problems
 
 
 def hardRestart() -> None:

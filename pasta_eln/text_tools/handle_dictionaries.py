@@ -165,7 +165,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
           continue
         if isinstance(value, tuple) and len(value)==4:
           if isDocID(value[0]):
-            valueString = 'Cannot resolve link'
+            valueString = value[2] or '☍ link to entry'
           else:
             key, valueString = tuple2text(key, value, 'markdown')
           markdown += f'{key.capitalize()}: {valueString}\n\n'

@@ -3,7 +3,8 @@ import json
 from enum import Enum
 from typing import Any
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import QCheckBox, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (QCheckBox, QDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout,
+                               QWidget)
 from ...backend_worker.worker import Task
 from ...configuration_file import saveConfiguration
 from ..gui_communicate import Communicate
@@ -26,6 +27,7 @@ class UploadGUI(QDialog):
     self.finished.connect(self._cleanup)
     self.docProject:dict[str,Any] = {}
     self.setWindowTitle('Upload project to repository')
+    self.setMinimumSize(985, 340)
 
     # GUI elements
     self.mainL = QVBoxLayout(self)
@@ -66,13 +68,12 @@ class UploadGUI(QDialog):
     center.setSpacing(SPACE.L)
     center.setContentsMargins(0, SPACE.M, 0, SPACE.L)
     self.mainL.addWidget(centerW)
-    repositories = self.comm.configuration['repositories']
+    repositories = self.comm.configuration.get('repositories', {})
     leftSideW = QWidget(self)
     leftSide = QGridLayout(leftSideW)
     leftSide.setSpacing(10)
     leftSide.setContentsMargins(0, 0, 20, 0)
     center.addWidget(leftSideW)
-    leftSideW.setStyleSheet('border-right: 2px solid black;')
     leftSide.setAlignment(Qt.AlignTop)                                            # type: ignore[attr-defined]
     leftSide.addWidget(Label('Metadata','h2'), 0, 0)
     leftSide.addWidget(QLabel('Title'), 1, 0)
@@ -91,6 +92,10 @@ class UploadGUI(QDialog):
     leftSide.addWidget(QLabel('Additional'), 5, 0)
     self.leAdditional = QLineEdit(json.dumps(repositories.get('additional',{})))
     leftSide.addWidget(self.leAdditional, 5, 1)
+    separator = QFrame()
+    separator.setFrameShape(QFrame.Shape.VLine)
+    separator.setFrameShadow(QFrame.Shadow.Sunken)
+    center.addWidget(separator)
 
     self.allDocTypes = [[k,v['title']] for k,v in self.comm.docTypesTitles.items()]
     projectString = ', '.join(i[1] for i in self.allDocTypes if i[0].startswith('x'))
@@ -144,11 +149,11 @@ class UploadGUI(QDialog):
       # collect metadata and save parts of it
       metadata = {'title': self.leTitle.text(),
                   'description': self.leDescription.text(),
-                  'keywords': [i.strip() for i in self.leKeywords.text().split(',')],
+                  'keywords': [i.strip() for i in self.leKeywords.text().split(',') if i.strip()],
                   'category': self.leCategory.text(),
                   'additional': json.loads(self.leAdditional.text()),
                   'author': self.comm.configuration['authors'][0]}
-      repositories = self.comm.configuration['repositories']
+      repositories = self.comm.configuration.setdefault('repositories', {})
       repositories['category'] = self.leCategory.text()
       repositories['additional'] = json.loads(self.leAdditional.text())
       saveConfiguration(self.comm.configuration)

@@ -26,7 +26,7 @@ class TerminologyLookupService:
   and the results (dict(information, iri)) are returned
   """
   def __init__(self) -> None:
-    self.sessionTimeout = 10                 # Timeout in seconds for the requests send to the lookup services
+    self.sessionTimeout = 20                 # Timeout in seconds for the requests send to the lookup services
 
 
   async def doLookup(self, searchTerm: str) -> list[dict[str, Any]]:
@@ -52,16 +52,23 @@ class TerminologyLookupService:
       Returns:
         dict[str, str] | None: Parsed service response, or ``None`` when the request fails
       """
-      try:
-        service['request_params'][service['search_term_key']] = searchTerm
-        response = requests.get(service['url'], params=service['request_params'], headers=service.get('header',{}),
-                                timeout=self.sessionTimeout)
-        if response.status_code == 200:
-          webResult = response.json()
-          return self.parseWebResult(searchTerm, webResult, service)
-        errors.append(f"Error querying {service['name']}: {response.status_code} {response.reason}")
-      except requests.RequestException as e:
-        errors.append(f"Exception querying {service['name']}: {str(e)}")
+      service['request_params'][service['search_term_key']] = searchTerm
+      retries = service.get('timeout_retries', 0)
+      for attempt in range(retries + 1):
+        try:
+          response = requests.get(service['url'], params=service['request_params'], headers=service.get('header',{}),
+                                  timeout=service.get('timeout', self.sessionTimeout))
+          if response.status_code == 200:
+            webResult = response.json()
+            return self.parseWebResult(searchTerm, webResult, service)
+          errors.append(f"Error querying {service['name']}: {response.status_code} {response.reason}")
+        except requests.Timeout as e:
+          if attempt < retries:
+            continue
+          errors.append(f"Exception querying {service['name']}: {str(e)}")
+        except requests.RequestException as e:
+          errors.append(f"Exception querying {service['name']}: {str(e)}")
+        break
       return None
 
     # Use ThreadPoolExecutor to run requests in parallel

@@ -158,12 +158,12 @@ def test_core_gui_workflow(qtbot, caplog):
     project = window.body.tabWidget.widget(0)
     assert isinstance(project, Project)
     qtbot.waitUntil(lambda: project.docProj.get('name') == 'PASTAs Example Project', timeout=30_000)
-    # Toggle project details and the full tree view through the visibility menu
+    # Toggle the project header and the full tree view through the visibility menu
     project.btnVisibility.click()
-    trigger_menu_action(project.btnVisibility.menu(), 'project details')
+    trigger_menu_action(project.btnVisibility.menu(), 'project header')
     capture_step(window, frames)
     project.btnVisibility.click()
-    trigger_menu_action(project.btnVisibility.menu(), 'project details')
+    trigger_menu_action(project.btnVisibility.menu(), 'project header')
     capture_step(window, frames)
     project.btnVisibility.click()
     trigger_menu_action(project.btnVisibility.menu(), 'view')
@@ -179,6 +179,25 @@ def test_core_gui_workflow(qtbot, caplog):
     # Visit the Tags list and return to the selected project
     trigger_menu_action(window.viewMenu, 'Tags')
     capture_step(window, frames)
+    # Visit the project, folder and procedure lists; project and folder tabs are only visible while used.
+    tabs = window.body.tabWidget
+    for docType in ('x0', 'x1'):
+      assert not tabs.isTabVisible(tabs.indexOf(table_for(window, docType)))
+    for title, docType in (('Projects', 'x0'), ('Folders', 'x1')):
+      trigger_menu_action(window.viewMenu, title)
+      listTable = table_for(window, docType)
+      assert tabs.currentWidget() is listTable and tabs.isTabVisible(tabs.indexOf(listTable))
+      qtbot.waitUntil(lambda listTable=listTable: not listTable.data.empty, timeout=30_000)
+      capture_step(window, frames)
+    assert not tabs.isTabVisible(tabs.indexOf(table_for(window, 'x0')))
+    trigger_menu_action(window.viewMenu, 'Procedures')
+    listTable = table_for(window, 'workflow/procedure')
+    assert tabs.currentWidget() is listTable
+    assert not tabs.isTabVisible(tabs.indexOf(table_for(window, 'x1')))
+    qtbot.waitUntil(lambda: listTable.subTypeCombo.currentText() == 'Procedures', timeout=30_000)
+    capture_step(window, frames)
+    trigger_menu_action(window.viewMenu, 'Workflows')
+    assert table_for(window, 'workflow') is listTable
     qtbot.wait(500)
     projectCard = window.sidebar.projectListL.itemAt(0).widget()
     assert isinstance(projectCard, ProjectCard)

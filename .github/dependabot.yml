@@ -1,0 +1,22 @@
+version: 2
+multi-ecosystem-groups:
+  all:
+    schedule:
+      interval: monthly
+    assignees: [SteffenBrinckmann]
+
+updates:
+  - package-ecosystem: pip
+    directory: /
+    patterns: ['*']
+    multi-ecosystem-group: all
+    ignore:
+      - dependency-name: sphinx     # sphinx 9.2 needs Python 3.13
+        versions: ['>=9.2']
+      - dependency-name: docutils   # sphinx 9.1 needs docutils<0.23
+        versions: ['>=0.23']
+
+  - package-ecosystem: github-actions
+    directory: /
+    patterns: ['*']
+    multi-ecosystem-group: all

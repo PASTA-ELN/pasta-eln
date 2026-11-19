@@ -1,0 +1,152 @@
+"""Project GUI add-on for selecting Nextcloud files as PASTA pointers."""
+import json
+from pathlib import Path
+from typing import Any
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout, QLabel, QLineEdit, QListWidget,
+                               QListWidgetItem, QVBoxLayout)
+
+from pasta_eln.backend_worker.worker import Task
+from pasta_eln.configuration_file import loadConfiguration, saveConfiguration
+from nextcloud_common import NextcloudBrowser, writeNclinks
+
+description = 'Import files from Nextcloud'
+reqParameter:dict[str,str] = {}
+
+
+class NextcloudDialog(QDialog):
+  """Dialog for browsing one Nextcloud account and selecting files."""
+
+  def __init__(self, comm:Any, projectID:str, projectPath:Path, parent:Any=None) -> None:
+    """Create the Nextcloud file browser.
+    Args:
+      comm (Any): PASTA GUI communication object.
+      projectID (str): Project receiving the pointers.
+      projectPath (Path): Project directory.
+      parent (Any): Optional Qt parent.
+    """
+    super().__init__(parent)
+    self.comm = comm
+    self.projectID = projectID
+    self.projectPath = projectPath
+    self.credentials = loadConfiguration(comm.basePath/'.nextcloud_credentials.json')
+    self.accounts = self.credentials['addOnParameter']['nextcloud']
+    self.browser:NextcloudBrowser|None = None
+    self.instanceBox = QComboBox(self)
+    self.fileList = QListWidget(self)
+    self.fileList.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
+    self.fileList.itemDoubleClicked.connect(self.onItemDoubleClicked)
+    self.status = QLabel(self)
+    self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, self)
+    self.buttons.accepted.connect(self.importSelected)
+    self.buttons.rejected.connect(self.reject)
+    layout = QVBoxLayout(self)
+    layout.addWidget(QLabel('Nextcloud instance:', self))
+    layout.addWidget(self.instanceBox)
+    layout.addWidget(self.fileList)
+    layout.addWidget(self.status)
+    layout.addWidget(self.buttons)
+    self.setWindowTitle('Import files from Nextcloud')
+    self.instanceBox.addItems(sorted(self.accounts))
+    self.instanceBox.currentTextChanged.connect(self.onInstanceChanged)
+    self.onInstanceChanged(self.instanceBox.currentText())
+
+
+  def onInstanceChanged(self, instance:str) -> None:
+    """Connect to the selected instance and show its root folder.
+    Args:
+      instance (str): Instance alias.
+    """
+    account = json.loads(self.accounts[instance])
+    self.browser = NextcloudBrowser(account)
+    self.refresh()
+
+
+  def refresh(self) -> None:
+    """Refresh entries in the browser's current folder."""
+    if self.browser is None:
+      return
+    self.fileList.clear()
+    for entry in self.browser.listFolder():
+      item = QListWidgetItem(('📁 ' if entry['isFolder'] else '')+entry['name'])
+      item.setData(Qt.ItemDataRole.UserRole, entry)
+      self.fileList.addItem(item)
+    self.status.setText(self.browser.currentPath)
+
+
+  def onItemDoubleClicked(self, item:QListWidgetItem) -> None:
+    """Enter a double-clicked folder.
+    Args:
+      item (QListWidgetItem): Activated list item.
+    """
+    entry = item.data(Qt.ItemDataRole.UserRole)
+    if entry['isFolder'] and self.browser is not None:
+      self.browser.openFolder(entry['name'])
+      self.refresh()
+
+
+  def importSelected(self) -> None:
+    """Write pointers for selected files, scan the project and refresh the project tree."""
+    if self.browser is None:
+      return
+    names = [item.data(Qt.ItemDataRole.UserRole)['name'] for item in self.fileList.selectedItems()
+             if not item.data(Qt.ItemDataRole.UserRole)['isFolder']]
+    if not names:
+      self.status.setText('Select at least one file.')
+      return
+    selected = self.browser.selectFiles(names)
+    writeNclinks(self.projectPath, self.instanceBox.currentText(), selected)
+    self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.projectID})          # add pointers to database
+    self.comm.changeProject.emit(self.projectID, '')
+    self.accept()
+
+
+def createCredentials(credentialsPath:Path, parent:Any=None) -> bool:
+  """Ask the user for one Nextcloud account and save it as encrypted credential file.
+  Args:
+    credentialsPath (Path): Credential file to create.
+    parent (Any): Optional Qt parent.
+  Returns:
+    bool: True when the file was saved.
+  """
+  dialog = QDialog(parent)
+  dialog.setWindowTitle('Nextcloud credentials')
+  fields = {'instance':QLineEdit(dialog), 'url':QLineEdit(dialog), 'loginName':QLineEdit(dialog),
+            'appPassword':QLineEdit(dialog)}
+  fields['instance'].setPlaceholderText('Short name, e.g. FZJ')
+  fields['url'].setPlaceholderText('https://nextcloud.example.org')
+  buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel, dialog)
+  buttons.accepted.connect(dialog.accept)
+  buttons.rejected.connect(dialog.reject)
+  layout = QFormLayout(dialog)
+  for label, field in zip(('Instance name', 'URL', 'Login name', 'App password'), fields.values()):
+    layout.addRow(label, field)
+  layout.addRow(buttons)
+  if dialog.exec() != QDialog.DialogCode.Accepted:
+    return False
+  values = {key:field.text().strip() for key, field in fields.items()}
+  if not all(values.values()):
+    return False
+  account = json.dumps({key:values[key] for key in ('url','loginName','appPassword')})
+  saveConfiguration({'type':'pasta nextcloud credential file', 'version':4,
+                     'addOnParameter':{'nextcloud':{values['instance']:account}}}, credentialsPath)
+  return True
+
+
+def main(comm:Any, hierStack:str, widget:Any, parameter:dict[str,Any]) -> bool:
+  """Open the Nextcloud browser for a project.
+  Args:
+    comm (Any): PASTA GUI communication object.
+    hierStack (str): Project document ID.
+    widget (Any): Parent widget.
+    parameter (dict[str, Any]): Add-on parameters.
+  Returns:
+    bool: True when the dialog completed successfully.
+  """
+  backend = comm.backendThread.worker.backend
+  projectPath = comm.basePath/backend.db.getDoc(hierStack)['branch'][0]['path']
+  credentialsPath = comm.basePath/'.nextcloud_credentials.json'
+  if not credentialsPath.is_file() and not createCredentials(credentialsPath, widget):
+    return False
+  return NextcloudDialog(comm, hierStack, projectPath, widget).exec() == QDialog.DialogCode.Accepted

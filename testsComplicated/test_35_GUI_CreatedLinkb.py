@@ -2,8 +2,8 @@ import logging
 import pytest
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.details.details import Details
-from pasta_eln.backendWorker.worker import Task
-from .test_34_GUI_Form import getTable
+from pasta_eln.backend_worker.worker import Task
+from tests.test_34_GUI_Form import getTable
 
 @pytest.mark.timeout(600)
 def test_simple(qtbot, caplog):

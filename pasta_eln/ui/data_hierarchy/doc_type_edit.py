@@ -9,7 +9,7 @@ from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 from ...constants import allIcons, reservedDocTypeShortcuts
 from ..gui_communicate import Communicate
-from ..gui_style import SPACE, Button, ButtonStyle
+from ..gui_style import SPACE, Button, ButtonStyle, shortcut
 from ..message_dialog import showMessage
 
 
@@ -35,10 +35,11 @@ class DocTypeEditor(QDialog):
     mainL.setContentsMargins(SPACE.M, SPACE.M, SPACE.M, SPACE.M)
     mainL.setSpacing(SPACE.S)
     self.mainForm = QFormLayout()
-    self.mainForm.setSpacing(0)
+    self.mainForm.setSpacing(SPACE.S)
     self.mainForm.setContentsMargins(0, 0, 0, 0)
     mainL.addLayout(self.mainForm)
     self.setWindowTitle('Edit item type properties')
+    self.setMinimumSize(456, 176)
     mainL.addStretch(1)
     footer = QHBoxLayout()
     footer.addStretch()
@@ -47,6 +48,7 @@ class DocTypeEditor(QDialog):
     footerWidget = QWidget()
     footerWidget.setLayout(footer)
     mainL.addWidget(footerWidget)
+    self.saveShortcut = shortcut('Ctrl+Return', self, lambda: self.execute(Command.SAVE))
     # initialize communication if needed
     self.comm.uiSendSQL.emit([{'type':'get_df',
                                'cmd':'SELECT docType, shortcut from docTypes'}])
@@ -128,15 +130,15 @@ class DocTypeEditor(QDialog):
       self.reject()
     else:
       label    = self.row2.text()
-      if not label or label in [v['title'] for _,v in self.comm.docTypesTitles.items()]:
+      if not label or label in [v['title'] for k,v in self.comm.docTypesTitles.items() if k!=self.docType]:
         showMessage(self, 'Item type error', 'The display label is required and must be unique.', 'Critical')
         return
       icon     = '' if self.docType.startswith('x') else self.comboIcon.currentText()
-      shortcut = '' if self.docType.startswith('x') else self.row4.text()
+      key      = '' if self.docType.startswith('x') else self.row4.text()
       if self.docType:                                                               # update existing docType
-        cmd = f"UPDATE docTypes SET title='{label}', shortcut='{shortcut}', icon='{icon}' WHERE docType = "\
-              f"'{self.docType}'"
-        self.comm.uiSendSQL.emit([{'type':'one',  'cmd':cmd}])
+        self.comm.uiSendSQL.emit([{'type':'one',
+                                   'cmd':'UPDATE docTypes SET title=?, shortcut=?, icon=? WHERE docType=?',
+                                   'list':[label, key, icon, self.docType]}])
         docType = self.docType
       else:                                                  # create new docType, with default schema entries
         docType = self.row1.text()
@@ -144,7 +146,7 @@ class DocTypeEditor(QDialog):
           showMessage(self, 'Item type error', 'Item type name is not valid or already exists.', 'Critical')
           return
         self.comm.uiSendSQL.emit([{'type':'one', 'cmd':'INSERT INTO docTypes VALUES (?, ?, ?, ?, ?, ?)',
-                                   'list':[docType, '', label, icon, shortcut, '']},
+                                   'list':[docType, '', label, icon, key, '']},
                                   {'type':'one', 'cmd':'INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',
                                    'list':[docType, '', '0', 'name', '', '', '']},
                                   {'type':'one', 'cmd':'INSERT INTO docTypeSchema VALUES (?, ?, ?, ?, ?, ?, ?)',

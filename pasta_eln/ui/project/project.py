@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Any
 from anytree import Node, PreOrderIter
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Slot
-from PySide6.QtGui import QAction, QStandardItem, QStandardItemModel
+from PySide6.QtGui import QAction, QResizeEvent, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QInputDialog, QLabel, QMenu, QTextEdit, QVBoxLayout, QWidget
 from ...backend_worker.worker import Task
 from ...constants import DO_NOT_RENDER
@@ -14,6 +14,7 @@ from ...addons import callAddOn
 from ...text_tools.handle_dictionaries import doc2markdown
 from ...text_tools.string_changes import createDirName
 from ..details.context import DetailContext, DetailOrigin
+from ..form.form import Form
 from ..gui_actions import action
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label, Widget
@@ -96,6 +97,7 @@ class Project(Widget):
     selectedIndex = None
     self.model = QStandardItemModel()
     self.tree = TreeView(self, self.comm, self.model)
+    self.model.setParent(self.tree)
     # self.tree.setSelectionBehavior(QAbstractItemView.SelectRows)
     # self.tree.setSelectionMode(QAbstractItemView.SingleSelection)
     self.model.itemChanged.connect(self.modelChanged)
@@ -160,9 +162,9 @@ class Project(Widget):
     self.btnVisibility = Button('View', self, layout=topLineL,
                                 icon='ri.eye-line', style=ButtonStyle.PRIMARY)
     visibilityMenu = QMenu(self)
-    self.actHideDetail = action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
+    self.actHideDetail = action('Compact project header',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
     menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
-    minimizeItems = 'Full view' if self.showDetailsAll else 'Compact view'
+    minimizeItems = 'Compact view' if self.showDetailsAll else 'Full view'
     action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
     action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
     self.actionFoldAll     = action( minimizeItems,    self, [Command.SHOW_DETAILS],     visibilityMenu)
@@ -181,15 +183,17 @@ class Project(Widget):
     self.btnMore.setMenu(moreMenu)
 
     self.allDetails = QTextEdit(self)
-    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, self.comm.dataHierarchyNodes['x0']))
+    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, self.comm.getDataHierarchyNode(['x0'])))
     if not self.comm.configuration['uiState']['showProjectDetails']:
       self.allDetails.hide()
-      self.actHideDetail.setText('Show project details')
+      self.actHideDetail.setText('Full project header')
     self.allDetails.resizeEvent = self.commentResize                                            # type: ignore
     bgColor = f"background-color: {self.comm.palette.getThemeColor('background', 'base')};"
     fgColor = self.comm.palette.get('secondaryText', 'color')
     self.allDetails.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
     self.allDetails.setReadOnly(True)
+    self.allDetails.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    self.allDetails.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     self.mainL.addWidget(self.allDetails)
     if sum(node.docType[0].startswith('x') for node in PreOrderIter(self.hierarchy)) <= 5:
       hint = 'Drag files onto a folder to add them.'
@@ -249,10 +253,10 @@ class Project(Widget):
       self.comm.saveUIState(showProjectDetails=not self.comm.configuration['uiState']['showProjectDetails'])
       if self.allDetails is not None and self.allDetails.isHidden():
         self.allDetails.show()
-        self.actHideDetail.setText('Hide project details')
+        self.actHideDetail.setText('Compact project header')
       elif self.allDetails is not None:
         self.allDetails.hide()
-        self.actHideDetail.setText('Show project details')
+        self.actHideDetail.setText('Full project header')
     elif commandType is Command.HIDE:
       self.comm.uiRequestTask.emit(Task.HIDE_SHOW, {'docID':self.projID})
       self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
@@ -272,29 +276,55 @@ class Project(Widget):
             continue
           docID    = meta['hierStack'].split('/')[-1]
           gui      = meta['gui']
-          gui[0]   = self.showDetailsAll
+          gui[0]   = not self.showDetailsAll
           subItem.setData({ **meta, **{'gui':gui}}, self.metaRole)
           self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
           recursiveRowIteration(subIndex)
       recursiveRowIteration(self.tree.model().index(-1,0))
       self.showDetailsAll = not self.showDetailsAll
       self.comm.saveUIState(showDetailsAll=self.showDetailsAll)
-      if self.showDetailsAll:
-        self.actionFoldAll.setText('Full view')
-      else:
-        self.actionFoldAll.setText('Compact view')
+      self.actionFoldAll.setText('Compact view' if self.showDetailsAll else 'Full view')
     elif commandType is Command.HIDE_SHOW_ITEMS:
       self.showAll = not self.showAll
       self.comm.saveUIState(showHiddenProjectTreeItems=self.showAll)
       self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
     elif commandType is Command.ADD_CHILD:
-      self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':[self.projID], 'docType':'x1', 'doc':{'name':'new item'}})
+      self.addFolderAndEdit([self.projID])
       self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
 
     elif commandType is Command.ADD_ON:
       callAddOn(payload[0], self.comm, self.projID, self)
     else:
       logging.error('Project menu unknown: %s',command, exc_info=True)
+    return
+
+
+  def addFolderAndEdit(self, hierStack:list[str]) -> None:
+    """Create a new folder below ``hierStack``; its edit form opens once the backend created it.
+
+    Args:
+      hierStack (list[str]): hierarchy stack of the parent
+    """
+    self.comm.backendThread.worker.beSendDoc.connect(self.onNewFolder)
+    self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':hierStack, 'docType':'x1', 'doc':{'name':'new item'}})
+    return
+
+
+  @Slot(dict)
+  def onNewFolder(self, doc:dict[str,Any]) -> None:
+    """Open the form for the newly created folder; delete the folder if the user cancels.
+    - must be a method of a GUI-thread QObject: a plain function would run in the backend thread
+
+    Args:
+      doc (dict): document sent by backend; unrelated docs are ignored
+    """
+    if doc.get('name')!='new item' or not doc.get('id','').startswith('x'):
+      return
+    self.comm.backendThread.worker.beSendDoc.disconnect(self.onNewFolder)
+    form = Form(self.comm, {'id':doc['id']})
+    if form.exec() == 0 and 'id' in form.doc:                         # no id: user saved via 'Duplicate item'
+      self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID':doc['id'], 'stack':''})
+      self.comm.uiRequestHierarchy.emit(self.projID, self.showAll)
     return
 
 
@@ -333,16 +363,16 @@ class Project(Widget):
     self.allDetails = None
 
 
-  def commentResize(self, _:Any) -> None:
+  def commentResize(self, event:QResizeEvent | None) -> None:
     """ called if comment is resized because widget initially/finally knows its size
-    - comment widget is hard coded size it depends on the rendered size
+    - comment widget height fits the rendered text, hence no scrollbars
     """
     if self.allDetails is None:
       return
-    self.allDetails.document().setTextWidth(self.width()-20)
-    height = int(self.allDetails.document().size().toTuple()[1])
-    self.allDetails.setMaximumHeight(height+12)
-    self.allDetails.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    if event is not None:                                        # None: direct call after painting the header
+      QTextEdit.resizeEvent(self.allDetails, event)                       # let QTextEdit re-wrap to new width
+    height = int(self.allDetails.document().size().height())
+    self.allDetails.setFixedHeight(height+2*self.allDetails.frameWidth())
     return
 
 

@@ -11,7 +11,7 @@ from collections import Counter
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 import pandas as pd
 from anytree import Node
 from PySide6.QtCore import QObject, QThread, Signal, Slot
@@ -215,7 +215,7 @@ class BackendWorker(QObject):
       if '_projectID' in data['doc']:
         del data['doc']['_projectID']
       doc.update(data['doc'])
-      doc = flatten(doc, True)                                                      # type: ignore[assignment]
+      doc = cast(dict[str, Any], flatten(doc, True))
       self.backend.editData(doc)
       self.beSendDoc.emit(self.backend.db.getDoc(data['doc']['id']))            # send updated doc back to GUI
 
@@ -308,7 +308,7 @@ class BackendWorker(QObject):
       if data['addToExisting']:
         docID = data['docID']
         path = targetName.relative_to(self.backend.basePath)
-        self.backend.db.cursor.execute('UPDATE branches SET path=? WHERE id=? AND idx=0', (str(path), docID))
+        self.backend.db.cursor.execute('UPDATE branches SET path=? WHERE id=? AND idx=0', (path.as_posix(), docID))
         self.backend.db.connection.commit()
         #rerun extractors
         oldDocType = doc['type']
@@ -343,8 +343,7 @@ class BackendWorker(QObject):
         if len(branches)!=1:
           self.beSendTaskReport.emit(task, f'Cannot find location {data["stack"]} for item.', '', '')
           return
-        self.backend.db.cursor.execute('DELETE FROM branches WHERE stack=?', (data['stack'],))
-        self.backend.db.connection.commit()
+        self.backend.db.remove(data['docID'], data['stack'])
       # rename on disk
       renamedPaths = set()
       for branch in branches:
@@ -352,6 +351,11 @@ class BackendWorker(QObject):
           continue
         oldPath = self.backend.basePath/branch['path']
         if not oldPath.exists():
+          continue
+        if oldPath.is_dir() and {i.name for i in oldPath.iterdir()} <= {'.id_pastaELN.json'}:# empty folder: remove
+          (oldPath/'.id_pastaELN.json').unlink(missing_ok=True)
+          oldPath.rmdir()
+          renamedPaths.add(branch['path'])
           continue
         newPath = oldPath.parent/f'trash_{oldPath.name}'
         nextIteration = 1
@@ -362,12 +366,11 @@ class BackendWorker(QObject):
           oldPath.rename(newPath)
           renamedPaths.add(branch['path'])
       # go through children, remove from DB: include hidden children
-      children = []
-      for branch in branches:
-        children.extend(self.backend.db.getView('viewHierarchy/viewHierarchyAll',
-                                                startKey='/'.join(branch['stack']+[data['docID']])))
-      for docID in {line['id'] for line in children if line['id']!=data['docID']}:
-        self.backend.db.remove(docID)
+      for branch in branches:              # only remove branches inside deleted subtree; keep those in other projects
+        prefix = '/'.join(branch['stack']+[data['docID']])
+        children = self.backend.db.getView('viewHierarchy/viewHierarchyAll', startKey=prefix)
+        for docID in {line['id'] for line in children if line['id']!=data['docID']}:
+          self.backend.db.remove(docID, prefix)
       # finish it
       if doc['type'][0]=='x0':
         self.beSendTable.emit(self.backend.db.getView('viewDocType/x0'), 'x0')
@@ -382,8 +385,7 @@ class BackendWorker(QObject):
 
     elif task is Task.SYNC_ELAB and set(data.keys())=={'projGroup','subtask'}:
       errorState = self.backend.checkDB(minimal=True)
-      errorState = errorState.replace('**ERROR  bch01: These paths of database not on filesystem(3):','')# ignore because large files not copied
-      if 'ERROR' in errorState:
+      if any('**ERROR' in line and '[bch01]' not in line for line in errorState.splitlines()):# ignore bch01: large files not copied
         self.beSendTaskReport.emit(task, 'Errors are present in the database. Fix them before uploading.', '', '')
       else:
         try:
@@ -518,8 +520,9 @@ class BackendWorker(QObject):
 
   def exit(self) -> None:
     """ Exit the worker thread """
-    if self.backend is not None:
-      self.deleteLater()
+    if self.backend.dbRaw is not None:
+      self.backend.exit()
+    self.deleteLater()
 
 
 class BackendThread(QThread):

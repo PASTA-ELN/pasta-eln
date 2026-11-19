@@ -10,12 +10,12 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 from PySide6.QtCore import QSize, Qt, QTimer, Slot
-from PySide6.QtGui import QRegularExpressionValidator
+from PySide6.QtGui import QKeyEvent, QRegularExpressionValidator
 from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QInputDialog, QLabel, QLayout, QLineEdit,
                                QMenu, QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTextEdit, QVBoxLayout, QWidget)
 from ...backend_worker.sqlite import MAIN_ORDER
 from ...backend_worker.worker import Task
-from ...constants import SQLiteTranslationDict, defaultDataHierarchyNode, minimalDocInForm
+from ...constants import SQLiteTranslationDict, minimalDocInForm
 from ...addons import callAddOn
 from ...text_tools.string_changes import createDirName, isDocID, markdownEqualizer
 from .._context_menu import CommandMenu, executeContextMenu, initContextMenu
@@ -26,6 +26,19 @@ from ..message_dialog import MessageDialog, showMessage
 from .flow_layout import FlowLayout
 from .form_section import FormSection
 from .text_editor import TextEditor
+
+
+class TagComboBox(QComboBox):
+  """Editable combobox where Enter confirms a tag and does not trigger the dialog's default button"""
+  def keyPressEvent(self, event: QKeyEvent) -> None:
+    """Handle key press and consume Enter/Return
+
+    Args:
+      event (QKeyEvent): key event
+    """
+    super().keyPressEvent(event)
+    if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+      event.accept()
 
 
 class Form(QDialog):
@@ -92,7 +105,7 @@ class Form(QDialog):
                           style=ButtonStyle.HIGHLIGHTED)
     self.saveShortcut = shortcut('Ctrl+Return', self, lambda: self.execute(Command.FORM_SAVE))
     if self.flagNewDoc:                                                                           #new dataset
-      self.saveNextBtn = Button('Save & Next', self, Command.FORM_SAVE_NEXT, buttonLineL,
+      self.saveNextBtn = Button('Save && Next', self, Command.FORM_SAVE_NEXT, buttonLineL,
                                 tooltip='Save this and handle next')
     self.mainL.addWidget(buttonLineW)
     self.setStyleSheet(f"QLineEdit, QComboBox {{ {self.comm.palette.get('secondaryText', 'color')} }}")
@@ -118,7 +131,7 @@ class Form(QDialog):
     self.docTypeComboBox                      = QComboBox()
     self.checkThreadTimer                     = QTimer(self)
     self.tagsAllList: list[str] = []
-    self.comboBoxDocTypeList:dict[str, tuple[QComboBox,str]] = {}# dict of docType:.. for links to other items
+    self.comboBoxDocTypeList:dict[str, list[tuple[QComboBox,str]]] = {}    # docType: comboBoxes linking to it
     self.projectTableData:pd.DataFrame|None = None
     self.showAdvanced = False
     self.autosavePath = Path.home()/'.pastaELN.temp'
@@ -232,13 +245,13 @@ class Form(QDialog):
       self.projectTableData = data
       self._fillProjectComboBox(data)
     elif docType in self.comboBoxDocTypeList:
-      iComboBox, value = self.comboBoxDocTypeList[docType]
-      iComboBox.clear()
-      iComboBox.addItem('- no link -', userData='')
-      for iDocID, iName in data[['id','name']].values.tolist():
-        iComboBox.addItem(iName, userData=iDocID)
-        if iDocID == value:
-          iComboBox.setCurrentIndex(iComboBox.count()-1)
+      for iComboBox, value in self.comboBoxDocTypeList[docType]:
+        iComboBox.clear()
+        iComboBox.addItem('- no link -', userData='')
+        for iDocID, iName in data[['id','name']].values.tolist():
+          iComboBox.addItem(iName, userData=iDocID)
+          if iDocID == value:
+            iComboBox.setCurrentIndex(iComboBox.count()-1)
     else:
       logging.warning('Unknown docType in onGetTable: %s', docType)
 
@@ -299,12 +312,8 @@ class Form(QDialog):
       self.splitter.setSizes([1, 1])
 
     # create data hierarchy node: data structure
-    if self.doc['type'][0] in self.comm.docTypesTitles:
-      self.dataHierarchyNodeRaw = self.comm.dataHierarchyNodes[self.doc['type'][0]]
-      self.dataHierarchyNode = copy.deepcopy([dict(i) for i in self.dataHierarchyNodeRaw])
-    else:
-      self.dataHierarchyNodeRaw = copy.deepcopy(defaultDataHierarchyNode)
-      self.dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
+    self.dataHierarchyNodeRaw = self.comm.getDataHierarchyNode(self.doc['type'])
+    self.dataHierarchyNode = copy.deepcopy([dict(i) for i in self.dataHierarchyNodeRaw])
     keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in self.dataHierarchyNode]
     keysDocOrg = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k])] if isinstance(self.doc[k], dict) else [f'.{k}']
                for k in self.doc if k not in MAIN_ORDER+['branch','qrCodes','tags']]
@@ -380,7 +389,7 @@ class Form(QDialog):
           tagsBarSubW.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
           self.tagsBarSubL = flow
           tagsBarMainL.addWidget(tagsBarSubW)
-          self.otherChoices = QComboBox()                             #part/combobox that allow user to select
+          self.otherChoices = TagComboBox()                           #part/combobox that allow user to select
           self.otherChoices.setToolTip('Select a tag or type a new one')
           self.otherChoices.setEditable(True)
           self.otherChoices.setMinimumWidth(80)
@@ -402,7 +411,7 @@ class Form(QDialog):
           labelL.setContentsMargins(0, 0, 0, 0)
           labelL.setSpacing(SPACE.S)
           labelL.addWidget(QLabel(key.capitalize()))
-          Button('Preview', self, [Command.FOCUS_AREA, key], labelL, checkable=True)
+          Button('Preview', self, [Command.PREVIEW, key], labelL, checkable=True)
           projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
           if 'form' in projectGroup.get('addOns',{}) and projectGroup['addOns']['form']:
             Button('Auto', self, Command.AUTO_COMMENT, labelL)
@@ -477,9 +486,10 @@ class Form(QDialog):
               getattr(self, elementName).setCurrentText(value)
             else:                                                                        #choice among docType
               listDocType = dataHierarchyItem[0]['list'] or dataHierarchyItem[0]['docType']
-              if listDocType not in self.comboBoxDocTypeList:          # if listDocType already exists in dict
+              if listDocType not in self.comboBoxDocTypeList:                 # request table once per docType
+                self.comboBoxDocTypeList[listDocType] = []
                 self.comm.uiRequestTable.emit(listDocType, '', True)
-                self.comboBoxDocTypeList[listDocType] = (getattr(self, elementName), value)
+              self.comboBoxDocTypeList[listDocType].append((getattr(self, elementName), value))
             self.allUserElements.append((key,'ComboBox'))
           else:
             setattr(self, elementName, QLineEdit(value))
@@ -632,9 +642,10 @@ class Form(QDialog):
       elif str(payload[0]).startswith('heading'):
         getattr(self, f'textEdit_{payload[1]}').insertPlainText('#' * int(str(payload[0])[-1]) +' Heading\n')
 
-    elif commandType is Command.FOCUS_AREA:
+    elif commandType is Command.PREVIEW:
       preview = getattr(self, f'textShow_{payload[0]}')
       preview.setVisible(not preview.isVisible())
+      getattr(self, f'buttonBarW_{payload[0]}').setVisible(preview.isVisible())
 
     elif commandType is Command.SHOW_ADVANCED:
       self.showAdvanced = True
@@ -737,7 +748,7 @@ class Form(QDialog):
         newProjID = [self.projectComboBox.currentData()] if self.projectComboBox.currentData() else []
       # ---- if docType changed: save; no further save to db required ----
       if self.docTypeComboBox.currentData() != '' and self.docTypeComboBox.currentData() is not None:
-        self.doc['type'] = [self.docTypeComboBox.currentData()]
+        self.doc['type'] = self.docTypeComboBox.currentData().split('/')
 
       docBackup = copy.deepcopy(self.doc)                                           # for duplicate, save&next
       if self.groupEdit:                                                                        # group update
@@ -745,6 +756,8 @@ class Form(QDialog):
           del self.doc['name']
         if not self.doc['tags']:
           del self.doc['tags']                                # remove empty tags to not overwrite already set
+        if not self.docTypeComboBox.currentData():            # keep each item's own (sub)type unless changed
+          del self.doc['type']
         self.doc = {k:v for k,v in self.doc.items() if v}                             # filter out empty items
         for docID in self.allDocIDsCopy:
           self.comm.uiRequestTask.emit(Task.EDIT_DOC, {'doc':self.doc|{'id':docID}, 'newProjID':newProjID})
@@ -753,7 +766,7 @@ class Form(QDialog):
       else:                                                                               # create new dataset
         if newProjID==['NONE']:
           newProjID = []
-        self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':newProjID, 'docType':self.doc['type'][0],
+        self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':newProjID, 'docType':'/'.join(self.doc['type']),
                                                     'doc':self.doc})
       self.doc = docBackup
       #!!! NO updates / redraw here since one does not know from where form came
@@ -889,7 +902,7 @@ class Form(QDialog):
 class Command(Enum):
   """ Commands used in this file """
   BUTTON_BAR     = 1
-  FOCUS_AREA     = 2
+  PREVIEW        = 2
   AUTO_COMMENT   = 3
   FORM_SAVE      = 4
   FORM_CANCEL    = 5

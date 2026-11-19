@@ -1,14 +1,17 @@
 """The Toplevel Sidebar on the left that displays the projects to choose"""
 from __future__ import annotations
 from enum import Enum
+from typing import Any
 import pandas as pd
 import qtawesome as qta
 from PySide6.QtCore import Slot
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
 from pasta_eln.ui.gui_style import clearLayout
+from pasta_eln.ui.details.context import DetailContext
+from pasta_eln.ui.form.form import Form
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, HSeparator, Label, Widget
+from pasta_eln.ui.gui_style import SPACE, Button, HSeparator, Label, Widget
 from pasta_eln.ui.sidebar.project_card import ProjectCard
 
 
@@ -38,9 +41,8 @@ class ProjectSidebar(Widget):
     self.headerL = QHBoxLayout(self.headerW)
     self.headerL.addWidget(self.headerLabel, stretch=1)
     self.showHiddenBtn = Button('', self, Command.TOGGLE_HIDDEN_PROJECTS, self.headerL,
-                                icon='fa5s.eye-slash', style=ButtonStyle.PRIMARY,
-                                tooltip='Hide/show hidden projects', checkable=True)
-    self.showHiddenBtn.setChecked(self.showHiddenProjects)
+                                icon='fa5s.eye-slash', tooltip='Hide/show hidden projects',
+                                iconSize='m', flat=True)
     self.paintHiddenProjectButton()
     self.headerL.addWidget(self.newProjectBtn)
     self.headerL.setContentsMargins(0, 0, 0, 0)
@@ -68,6 +70,7 @@ class ProjectSidebar(Widget):
 
     # Signals
     self.comm.changeSidebar.connect(self.onSidebarChange)
+    self.comm.docTypesChanged.connect(self.onDocTypesChanged)
     self.comm.changeProject.connect(self.highlightActiveProject)
     self.comm.backendThread.worker.beSendTable.connect(self.onGetData)
 
@@ -84,6 +87,15 @@ class ProjectSidebar(Widget):
     if projectChoice not in ('', 'redraw'):
       self.comm.projectID = projectChoice
     self.paint()
+    self.comm.uiRequestTable.emit('x0', '', True)
+
+
+  @Slot()
+  def onDocTypesChanged(self) -> None:
+    """Reload projects after backend (re)initialization; select first project if none is open."""
+    if not self.comm.projectID:
+      self._initialProjectSelected = False
+      self.comm.changeDetails.emit(DetailContext())
     self.comm.uiRequestTable.emit('x0', '', True)
 
 
@@ -145,13 +157,33 @@ class ProjectSidebar(Widget):
     if command is Command.TOGGLE_HIDDEN_PROJECTS:
       self.showHiddenProjects = not self.showHiddenProjects
       self.comm.saveUIState(showHiddenProjects=self.showHiddenProjects)
-      self.showHiddenBtn.setChecked(self.showHiddenProjects)
       self.paintHiddenProjectButton()
       self.paint()
     elif command is Command.CREATE_PROJECT:
-      self.comm.formDoc.emit({'type': ['x0'], '_projectID': self.comm.projectID})
-      self.comm.changeTable.emit('x0', self.comm.projectID, '')
+      worker = self.comm.backendThread.worker
+      worker.beSendDoc.connect(self.onNewProject)        # connect before form: backend may answer immediately
+      if Form(self.comm, {'type': ['x0'], '_projectID': self.comm.projectID}).exec() == 0:
+        try:                                              # 'Save && Next' may have created+opened one already
+          worker.beSendDoc.disconnect(self.onNewProject)
+        except RuntimeError:
+          pass
       self.comm.changeSidebar.emit('redraw')
+
+
+  @Slot(dict)
+  def onNewProject(self, doc: dict[str, Any]) -> None:
+    """Open the newly created project.
+    - must be a method of a GUI-thread QObject: a plain function would run in the backend thread
+
+    Args:
+      doc (dict): document sent by backend; unrelated docs are ignored
+    """
+    if doc.get('type') not in ('x0', ['x0']) or 'id' not in doc:      # saved docs have type flattened to 'x0'
+      return
+    self.comm.backendThread.worker.beSendDoc.disconnect(self.onNewProject)
+    self.comm.projectID = doc['id']
+    self.comm.changeProject.emit(doc['id'], '')
+    self.comm.changeSidebar.emit('redraw')
 
 
   def visibleProjects(self) -> pd.DataFrame:
@@ -189,7 +221,7 @@ class ProjectSidebar(Widget):
     """Update the visibility toggle's icon and tooltip"""
     iconName = 'fa5s.eye' if self.showHiddenProjects else 'fa5s.eye-slash'
     tooltip = 'Hide/show hidden projects'
-    color = self.comm.palette.getThemeColor('primary', 'base')
+    color = self.comm.palette.getThemeColor('foreground', 'base')
     self.showHiddenBtn.setIcon(qta.icon(iconName, color=color))
     self.showHiddenBtn.setToolTip(tooltip)
 

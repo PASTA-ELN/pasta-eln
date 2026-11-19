@@ -2,8 +2,8 @@
 """TEST the form """
 import logging, warnings
 from pathlib import Path
-from pasta_eln.backendWorker.backend import Backend
-from pasta_eln.backendWorker.elabFTWsync import Pasta2Elab
+from pasta_eln.backend_worker.backend import Backend
+from pasta_eln.backend_worker.elab_ftw_sync import Pasta2Elab
 from .misc import verify, handleReport
 
 
@@ -29,12 +29,11 @@ def test_simple(qtbot, caplog):
     return
   report = sync.sync('gA')
   print()
-  handleReport(report, [0,14,0,0,0])
+  handleReport(report, [0,18,0,0,0])
 
   # verify
   verify(backend)
-  output = backend.output('x0')
-  projID = output.split('|')[-1].strip()
+  projID = backend.db.getView('viewDocType/x0')['id'].values[0]
   backend.changeHierarchy(projID)
   print(backend.outputHierarchy(False, True))
 

@@ -3,14 +3,15 @@ import json
 import fnmatch
 import logging
 import os
+import re
 import sys
+from collections import Counter
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 from urllib import request
 from ..constants import DIR_META_FILE
 from ..configuration_file import getConfiguration
-from ..text_tools.string_changes import Bcolors
 from ..text_tools.handle_dictionaries import diffDicts, fillDocBeforeCreate
 from ..text_tools.string_changes import camelCase, createDirName, outputString
 from .extractor import ExtractorManager, isPastaExport, sha256File
@@ -113,7 +114,7 @@ class Backend(CliMixin):
     doc['childNum']= doc['branch'][0]['child']
     doc = self.addData('-edit-', doc, runExtractors=False)
     if doc['id'].startswith('x'):
-      pathStr = '' if self.cwd is None else str(self.cwd.relative_to(self.basePath))
+      pathStr = '' if self.cwd is None else self.cwd.relative_to(self.basePath).as_posix()
       self.db.updateChildrenOfParentsChanges(pathStr, doc['branch'][0]['path'], '/'.join(self.hierStack),'')
     self.cwd = self.basePath                                              #reset to sensible before continuing
     self.hierStack = []
@@ -186,7 +187,7 @@ class Backend(CliMixin):
         path = parentDirectory/createDirName(doc, childNum, self.cwd)#update,or create (if new doc, update ignored anyhow)
       else:
         #measurement, sample, procedure
-        dataHash = ''
+        dataHash = '' if edit else doc.get('dataHash', '')          # new doc: reuse hash from scan, no rehash
         if '://' in doc['name']:                                                                 #make up name
           if localCopy:
             baseName  = Path(doc['name']).stem
@@ -363,13 +364,13 @@ class Backend(CliMixin):
           pathsInDbX.remove(path)
           continue
         if (self.basePath/path/DIR_META_FILE).is_file():                 # update branch: path and stack
-          metadata = json.loads((self.basePath/path/DIR_META_FILE).read_text(encoding='utf-8'))
-          doc = self.db.getDoc(metadata['id'])
-          if len(doc)==0:
+          docID = readIdFile(self.basePath/path/DIR_META_FILE).get('id', '')
+          doc = self.db.getDoc(docID) if docID else {}
+          if len(doc)==0:                             # unknown or invalid id file: drop it, rerun adds folder
             (self.basePath/path/DIR_META_FILE).unlink()
             rerunScanTree = True
             continue
-          if (self.basePath/doc['branch'][0]['path']).parent.as_posix()  == root and \
+          if (self.basePath/doc['branch'][0]['path']).parent == Path(root) and \
                doc['branch'][0]['stack']==hierStack:
             # special case: user wants to have a different directory name in same folder: then the child-number should not change
             childNum = doc['branch'][0]['child']
@@ -385,10 +386,12 @@ class Backend(CliMixin):
               if thisStack == ' '.join(item['key'].split(' ')[:-1]):            # remove last item from string
                 childNum += 1
             parentPath = Path(path).parent
-            newPath = str(parentPath/createDirName(doc, childNum, parentPath))#update,or create (if new doc, update ignored anyhow)
-            if (self.basePath/newPath).exists():                             # can be either file or directory
+            newPath = (parentPath/createDirName(doc, childNum, parentPath)).as_posix()#update,or create (if new doc, update ignored anyhow)
+            if path == newPath:
+              pass
+            elif (self.basePath/newPath).exists():                           # can be either file or directory
               logging.error('New path should not exist %s',newPath, exc_info=True)
-            elif path != newPath:
+            else:
               (self.basePath/path).rename(self.basePath/newPath)
           self.db.updateBranch(doc['id'], 0, childNum, hierStack, newPath)
         else:
@@ -419,7 +422,7 @@ class Backend(CliMixin):
           if len(view)==0:                                                        #not in database: create doc
             job = self.extractors.prepareJob(self.basePath/path, jobID=len(extractorJobs))
             if job is None:                                                # if no suitable extractor is there
-              self.addData('', {'name':path, 'type':['']}, hierStack, runExtractors=False)
+              self.addData('', {'name':path, 'type':[''], 'dataHash':dataHash}, hierStack, runExtractors=False)
             else:
               job |= {'path':path, 'hierStack':hierStack, 'dataHash':dataHash}
               extractorJobs.append(job)
@@ -495,9 +498,15 @@ class Backend(CliMixin):
     for projI in viewProjects['id']:
       projDoc = self.db.getDoc(projI)
       if len(projDoc['branch'])==0:
-        output += outputString(outputStyle,'error','project view got screwed up')
+        output += outputString(outputStyle,'error',f'Project "{projDoc["name"]}" ({projI}) has no folder in '
+                               'the database')
         continue
       for root, dirs, files in os.walk(self.basePath/projDoc['branch'][0]['path']):
+        lowerNames = Counter(i.lower() for i in dirs+files)
+        if collisions := sorted(i for i in dirs+files if lowerNames[i.lower()]>1):
+          output += outputString(outputStyle, 'warning', f'Names in "{Path(root).relative_to(self.basePath).as_posix()}"'
+                                 f' differ only in case: {", ".join(collisions)}. Windows and macOS keep only one of '
+                                 'them, which can lose data when syncing. Rename them.')
         ignoreFolder = (Path(root)/'.pastaELN_ignore').is_file()
         if Path(root).name[0]=='.' or Path(root).name.startswith('trash_') or ignoreFolder:
           if ignoreFolder:
@@ -509,45 +518,51 @@ class Backend(CliMixin):
             continue
           path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
           if path not in pathsInDbData:
-            output += outputString(outputStyle, 'error', f'File   on disk but not DB (2): {path}')
+            output += outputString(outputStyle, 'error', f'File "{path}" is on disk but not in the database. '
+                                   'Scan the project to add it')
             count += 1
           else:
             pathsInDbData.remove(path)
         ignoredFolders.extend((Path(root)/i).relative_to(self.basePath).as_posix()
                               for i in dirs if (Path(root)/i/'.pastaELN_ignore').is_file())
-        dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i not in ('__pycache__')
+        dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i != '__pycache__'
                   and not (Path(root)/i/'pyvenv.cfg').is_file()
                   and not (Path(root)/i/'.pastaELN_ignore').is_file()]
         for dirName in dirs:
           path = (Path(root).relative_to(self.basePath) /dirName).as_posix()
           if path not in pathsInDbFolder:
-            output += outputString(outputStyle, 'error', f'Folder on disk but not DB    : {path}')
+            output += outputString(outputStyle, 'error', f'Folder "{path}" is on disk but not in the database')
             count += 1
           else:
             pathsInDbFolder.remove(path)
             listDocs = self.db.getView('viewHierarchy/viewPathsAll', preciseKey=path)
             if len(listDocs)!=1:
-              output += outputString(outputStyle, 'error', f'Path of folder is non-unique (1): {path} in '\
-                                      f'{" ".join([i["id"] for i in listDocs])}')
+              output += outputString(outputStyle, 'error', f'Folder "{path}" is used by several items: '
+                                      f'{", ".join([i["id"] for i in listDocs])}')
             docDB   = self.db.getDoc(listDocs[0]['id'])
-            metadataPath = self.basePath/root/dirName/DIR_META_FILE
-            if metadataPath.is_file():
-              docDisk = json.loads(metadataPath.read_text(encoding='utf-8'))
+            if docDisk:= readIdFile(self.basePath/root/dirName/DIR_META_FILE):
               difference = diffDicts(docDisk,docDB)
               if len(difference)>1:
-                errorStr = outputString(outputStyle,'error',f'disk(1) and db(2) content do not match*: {docDB["id"]}\n{difference}')
+                errorStr = outputString(outputStyle,'error',
+                  f'Content of "{path}/.id_pastaELN.json" (1) differs from database (2) for "{docDB["name"]}" '
+                  f'({docDB["id"]}):\n    {difference.replace("\n", "\n    ")}\n    '
+                  'Repair: overwrite the file on disk with the database content')
                 if repair is None:
                   output += errorStr
                 elif repair(errorStr):
-                  metadataPath.write_text(json.dumps(docDB, ensure_ascii=False), encoding='utf-8')
+                  (self.basePath/root/dirName/DIR_META_FILE).write_text(json.dumps(docDB, ensure_ascii=False),
+                                                                        encoding='utf-8')
                 #use only for resetting the content in the .id_pastaELN.json
             else:
               count += 1
-              errorStr = outputString(outputStyle, 'error', f'Folder has no .id_pastaELN.json:{path}')
+              errorStr = outputString(outputStyle, 'error', f'Folder "{path}" of "{docDB["name"]}" ({docDB["id"]}) '
+                                      'has no valid .id_pastaELN.json file\n    Repair: create this file with the '
+                                      'ID of the item')
               if repair is None:
                 output += errorStr
               elif repair(errorStr):
-                metadataPath.write_text(json.dumps({'id':docDB['id']}, ensure_ascii=False), encoding='utf-8')
+                (self.basePath/root/dirName/DIR_META_FILE).write_text(json.dumps({'id':docDB['id']},
+                                                                      ensure_ascii=False), encoding='utf-8')
     pathsInDbData =   [path for path in pathsInDbData if not any(path == folder or path.startswith(f'{folder}/')
                                                                 for folder in ignoredFolders)]
     pathsInDbFolder = [path for path in pathsInDbFolder if not any(path == folder or path.startswith(f'{folder}/')
@@ -556,29 +571,34 @@ class Backend(CliMixin):
     orphans+= [i for i in pathsInDbFolder if not (self.basePath/i).exists() ]
     if orphans:
       if repair is None:
-        output += outputString(outputStyle,'error','bch01: These paths of database not on filesystem(3):\n  - '+'\n  - '.join(orphans))
+        output += outputString(outputStyle,'error','Paths in the database that do not exist on disk [bch01]:\n'
+                               '  - ' + '\n  - '.join(orphans))
       else:
         for orphan in sorted(orphans):
           self.db.cursor.execute('SELECT main.name, main.type, branches.path, main.id, main.comment '
                                  'FROM main JOIN branches USING(id) WHERE branches.path=?', (orphan,))
           res = self.db.cursor.fetchall()
-          resString = '\n  '.join(str(i) for i in res)
-          if repair(f'Path of database not on filesystem:\n  {resString}. Repair: file-remove path; folder-create '
-                    'folder and .id_pastaELN'):
-            if res[0][1].startswith('x'):
+          if not res:
+            continue
+          name, docType, _, docID, _ = res[0]
+          repairText = 'create the folder and its .id_pastaELN.json file' if docType.startswith('x') else \
+                       'remove the link to the missing file; the item stays in the database'
+          if repair(outputString(outputStyle, 'error', f'"{name}" ({docType}, {docID}) points to "{orphan}", '
+                                 f'which does not exist on disk\n    Repair: {repairText}')):
+            if docType.startswith('x'):
               (self.basePath/orphan).mkdir(parents=True)
-              (self.basePath/orphan/DIR_META_FILE).write_text(json.dumps({'id':res[0][3]}, ensure_ascii=False),
+              (self.basePath/orphan/DIR_META_FILE).write_text(json.dumps({'id':docID}, ensure_ascii=False),
                                                               encoding='utf-8')
             else:
-              self.db.cursor.execute("UPDATE branches SET path='*' WHERE id=? AND path=?", (res[0][3], orphan))
+              self.db.cursor.execute("UPDATE branches SET path='*' WHERE id=? AND path=?", (docID, orphan))
               self.db.connection.commit()
     # identify trash_ files and trash_folders
     projLevelFolders = os.listdir(self.basePath)
     self.db.cursor.execute("SELECT branches.path FROM main JOIN branches USING(id) WHERE type=='x0'")
     projFolders = self.db.cursor.fetchall()
     if nonUsedFolders := set(projLevelFolders).difference([i[0] for i in projFolders]+['pastaELN.db']):
-      output += outputString(outputStyle,'warning','These files/folders in data folder are not used for projects:'+
-                            '\n  - '.join(['']+list(nonUsedFolders)) )
+      output += outputString(outputStyle,'warning','These files/folders in the data folder do not belong to '
+                             'any project:'+'\n  - '.join(['']+list(nonUsedFolders)) )
     numTrash = 0
     for projFolder in projFolders:
       for _, dirs, files in os.walk(self.basePath/projFolder[0]):
@@ -586,31 +606,41 @@ class Backend(CliMixin):
           if item.startswith('trash_'):
             numTrash += 1
     if numTrash>0:
-      output += outputString(outputStyle,'warning',f'There are {numTrash} trash_files and trash_folders')
+      output += outputString(outputStyle,'warning',f'There are {numTrash} trash files/folders (names start with '
+                             '"trash_")')
     # final summary
     if not minimal:
       output += outputString(outputStyle,'h2','File summary')
     if outputStyle == 'text':
-      output += 'Success\n' if not orphans and count==0 else 'Failure (* can be auto-repaired)\n'
+      output += 'Success: no problems found\n' if not orphans and count==0 else \
+                'Failure: problems found. Problems that list "Repair:" can be fixed with the repair command\n'
     if not jsonOutput:
       return output
     report: dict[str, list[str]] = {'critical': [], 'warning': [], 'information': []}
-    sections = output.split(Bcolors.ENDC) if Bcolors.ENDC else output.splitlines()
-    for section in sections:
-      sectionText = section.lstrip()
-      if (Bcolors.FAIL and Bcolors.FAIL in section) or sectionText.startswith('**ERROR '):
-        category = 'critical'
-      elif (Bcolors.WARNING and Bcolors.WARNING in section) or (Bcolors.HEADER and Bcolors.HEADER in section) or \
-            sectionText.startswith('**Warning '):
-        category = 'warning'
-      else:
+    category = 'information'
+    for line in output.splitlines():
+      text = re.sub(r'\x1b\[[0-9;]*m', '', line).strip()                                        #remove colors
+      if not text or text.startswith('***') or text.startswith(('Green:', 'Blue:')):
+        continue
+      if text.startswith('**ERROR'):
+        category, text = 'critical', text.removeprefix('**ERROR').strip()
+      elif text.startswith(('**Warning', '**Unsure')):
+        category, text = 'warning', text.removeprefix('**Warning').removeprefix('**Unsure').strip()
+      elif not line[:1].isspace():                                   #indented lines continue previous message
         category = 'information'
-        section = section.replace(Bcolors.FAIL, '').replace(Bcolors.WARNING, '').replace(Bcolors.HEADER, '') \
-                         .replace(Bcolors.OKBLUE, '').replace(Bcolors.OKGREEN, '').replace(Bcolors.BOLD, '') \
-                         .replace(Bcolors.UNDERLINE, '')
-        for message in section.splitlines():
-          message = message.strip().removeprefix('**ERROR ').removeprefix('**Warning ')
-          if not message or message.startswith('***') or message.startswith(('Green:', 'Blue:')):
-            continue
-          report[category].append(message)
+      report[category].append(text)
     return json.dumps(report, ensure_ascii=False)
+
+
+def readIdFile(fileName:Path) -> dict[str,Any]:
+  """Read a folder's .id_pastaELN.json
+  Args:
+    fileName (Path): path of the file
+  Returns:
+    dict: content; empty if the file is missing, empty or invalid
+  """
+  try:
+    content = json.loads(fileName.read_text(encoding='utf-8'))
+  except (OSError, ValueError):                                      # missing, unreadable, not UTF-8, no JSON
+    return {}
+  return content if isinstance(content, dict) else {}

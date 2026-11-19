@@ -60,7 +60,9 @@ class MessageDialog(QDialog):
       sectionsLayout.setContentsMargins(SPACE.S, SPACE.S, SPACE.S, SPACE.S)
       sectionsLayout.setSpacing(SPACE.S)
       for sectionTitle, sectionContent in text.items():
-        if isinstance(sectionContent, (dict, list)):
+        if isinstance(sectionContent, list) and all(isinstance(i, str) for i in sectionContent):
+          content = escape('\n'.join(sectionContent)).replace('\n', '<br>')          # lines, not JSON quoting
+        elif isinstance(sectionContent, (dict, list)):
           content = f'<pre>{escape(json.dumps(sectionContent, indent=2, ensure_ascii=False, default=str))}</pre>'
         else:
           content = escape(str(sectionContent)).replace('\n', '<br>')

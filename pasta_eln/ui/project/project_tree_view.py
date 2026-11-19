@@ -102,7 +102,7 @@ class TreeView(QTreeView):
       action('Add child folder',                   self, [Command.ADD_CHILD],      context)
     action('Add sibling folder',                   self, [Command.ADD_SIBLING],    context)
     context.addSeparator()
-    action('Hide/show item details',               self, [Command.SHOW_DETAILS], context)
+    action('Compact/Full item view',               self, [Command.SHOW_DETAILS],   context)
     if folder:
       projectGroup = self.comm.configuration['projectGroups'][self.comm.projectGroup]
       if projectAddOns := projectGroup.get('addOns',{}).get('project',''):
@@ -132,11 +132,10 @@ class TreeView(QTreeView):
     if command[0] is Command.ADD_ITEM:
       self.comm.formDoc.emit({'type': [command[1]], '_hierStack': hierStack})
     elif command[0] is Command.ADD_CHILD:
-      self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':hierStack, 'docType':'x1', 'doc':{'name':'new item'}})
+      self.aParentWidget.addFolderAndEdit(hierStack)
 
     elif command[0] is Command.ADD_SIBLING:
-      hierStack= hierStack[:-1]
-      self.comm.uiRequestTask.emit(Task.ADD_DOC, {'hierStack':hierStack, 'docType':'x1', 'doc':{'name':'new item'}})
+      self.aParentWidget.addFolderAndEdit(hierStack[:-1])
 
     elif command[0] is Command.SHOW_DETAILS:
       gui    = item.data()['gui']
@@ -159,7 +158,7 @@ class TreeView(QTreeView):
       self.comm.uiRequestTask.emit(Task.SET_GUI, {'docID':docID, 'gui':gui})
 
     elif command[0] is Command.ADD_ON:
-      callAddOn(command[1], self.comm, item.data()['hierStack'], self)
+      callAddOn(command[1], self.comm, item.data()['hierStack'], self.aParentWidget)
     else:
       logging.error('Unknown context menu %s', command, exc_info=True)
     self.comm.uiRequestHierarchy.emit(self.aParentWidget.projID, self.aParentWidget.showAll)

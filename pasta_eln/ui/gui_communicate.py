@@ -7,6 +7,7 @@ from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot
 from ..backend_worker.worker import BackendThread, Task
 from ..configuration_file import getConfiguration, saveConfiguration
+from ..constants import defaultDataHierarchyNode
 from .palette import Palette
 from .wait_dialog import WaitDialog, Worker
 
@@ -126,6 +127,21 @@ class Communicate(QObject):
     self.dataHierarchyNodes[docType] = data
 
 
+  def getDataHierarchyNode(self, docType:list[str]) -> list[Any]:
+    """ Get the fields of the most specific defined (sub-)docType, else the default fields
+    Args:
+      docType (list): document type of an item, e.g. ['measurement','image','crop'] or ['device/extension']
+
+    Returns:
+      list: nodes in the hierarchy for this docType
+    """
+    docType = '/'.join(docType).split('/')
+    for i in range(len(docType), 0, -1):
+      if nodes := self.dataHierarchyNodes.get('/'.join(docType[:i])):
+        return nodes
+    return defaultDataHierarchyNode
+
+
   def start(self, projectGroup:str='') -> None:
     """
     Start the backend thread
@@ -133,8 +149,10 @@ class Communicate(QObject):
     Args:
       projectGroup (str): project group to use, if empty use the one from initialization
     """
+    if projectGroup and projectGroup != self.projectGroup:                    # project of old group is invalid
+      self.projectGroup = projectGroup
+      self.projectID = ''
     self.commSendConfiguration.emit(self.configuration, projectGroup or self.projectGroup)
-    self.changeTable.emit('x0', '', '')                                  # show project table, without details
 
 
   def shutdownBackendThread(self) -> None:

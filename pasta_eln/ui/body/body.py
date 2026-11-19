@@ -13,6 +13,8 @@ from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.project.project import Project
 from pasta_eln.ui.table.table import TableView
 
+HIDDEN_TABLES = ('x0', 'x1')                     # tables of projects and folders: only shown when global list
+
 
 class Body(QWidget):
   """
@@ -72,6 +74,14 @@ class Body(QWidget):
     """
     iconColor         = self.comm.palette.getThemeColor('foreground', 'base')
     selectedIconColor = self.comm.palette.getThemeColor('primary', 'base')
+    # Remove tabs of a previous paint, e.g. before project group change
+    self._tableChangingInProgress = True
+    while self.tabWidget.count():
+      widget = self.tabWidget.widget(0)
+      self.tabWidget.removeTab(0)
+      if widget is not None:
+        widget.deleteLater()
+    self._tableChangingInProgress = False
     # Add Project View - Tab
     projectView = Project(self.comm)
     homeIndex = self.tabWidget.addTab(projectView,
@@ -79,18 +89,21 @@ class Body(QWidget):
     self.projectTabBar.markHomeTab(homeIndex)
     # Add Table Views - Tabs
     for doctype, docTypeDetails in self.comm.docTypesTitles.items():
-      if doctype[0] == 'x' or '/' in doctype:
+      if (doctype[0] == 'x' and doctype not in HIDDEN_TABLES) or '/' in doctype:
         continue
       tableView = TableView(self.comm, doctype)
       iconName = 'ri.asterisk' if docTypeDetails['icon'] == '' else docTypeDetails['icon']
       icon     = self.createIcon(iconName, iconColor, selectedIconColor)
       label    = docTypeDetails['title']
-      self.tabWidget.addTab(tableView, icon, label)
+      index    = self.tabWidget.addTab(tableView, icon, label)
+      self.tabWidget.setTabVisible(index, doctype not in HIDDEN_TABLES)
     for docType, iconName, label in (('_tags_', 'ri.price-tag-3-line', 'Tags'),
                                      ('-', 'ri.question-line', 'Unidentified')):
       tableView = TableView(self.comm, docType)
       icon = self.createIcon(iconName, iconColor, selectedIconColor)
       self.tabWidget.addTab(tableView, icon, label)
+    if self.comm.projectID:                                                     # new project id exist, reload
+      self.comm.changeProject.emit(self.comm.projectID, '')
 
 
   def createIcon(self, iconName: str, color: str, selectedColor: str) -> QIcon:
@@ -129,22 +142,23 @@ class Body(QWidget):
       projectID (str): from Signal: Which Project it was changed to
     """
     self.comm.changeDetails.emit(DetailContext())                                              # close details
+    self._tableChangingInProgress = True                    # Project reloads itself via changeProject
     self.tabWidget.setCurrentIndex(0)
+    self._tableChangingInProgress = False
 
 
   @Slot(str, str, str)
   def onChangeTable(self, docType: str, _projectID: str, docID: str) -> None:
-    """Select the table tab targeted by a table-change request
+    """Select the table tab targeted by a table-change request; subtypes use the tab of their base type
       Args:
         docType (str): document type to select or edit
         docID (str): document identifier
     """
-    if docType == 'x0':                         # to return to Home after large changes: e.g. project creation
-      self.tabWidget.setCurrentIndex(0)
-      return
     for index in range(self.tabWidget.count()):
       widget = self.tabWidget.widget(index)
-      if isinstance(widget, TableView) and widget.docType == docType:
+      if isinstance(widget, TableView) and widget.docType.split('/')[0] == docType.split('/')[0]:
+        widget.docType = docType                     # set before the table's own changeTable-slot compares it
+        self.tabWidget.setTabVisible(index, True)
         self._tableChangingInProgress = True
         self.tabWidget.setCurrentIndex(index)
         self._tableChangingInProgress = False
@@ -158,11 +172,17 @@ class Body(QWidget):
     Args:
       index (int): index of the now active tab after change
     """
+    for otherIndex in range(self.tabWidget.count()):                     # hide project/folder lists when left
+      otherWidget = self.tabWidget.widget(otherIndex)
+      if otherIndex != index and isinstance(otherWidget, TableView) and otherWidget.docType in HIDDEN_TABLES:
+        self.tabWidget.setTabVisible(otherIndex, False)
     if self._tableChangingInProgress:
       return
     widget = self.tabWidget.widget(index)
     if isinstance(widget, Project):
       self.comm.changeDetails.emit(DetailContext())                                            # close details
+      if widget.projID:                                      # reload: tables may have changed docs meanwhile
+        widget.change(widget.projID, '')
     elif isinstance(widget, TableView):
       docType = widget.docType
       self.comm.changeTable.emit(docType, '', '')

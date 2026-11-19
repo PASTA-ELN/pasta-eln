@@ -10,6 +10,7 @@ import shutil
 import sqlite3
 from collections.abc import Callable
 from datetime import datetime
+from functools import partial
 from pathlib import Path
 from typing import Any
 import pandas as pd
@@ -25,6 +26,11 @@ MAIN_ORDER     =['id'  ,'name','user','type','dateCreated','dateModified','gui',
 MAIN_TYPE      =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',    'TEXT', 'TEXT',   'TEXT',   'TEXT',     'TEXT',    'TEXT']
 DOC_TYPES      =['docType', 'PURL','title','icon','shortcut','view']
 DOC_TYPE_SCHEMA=['docType', 'class', 'idx', 'name', 'unit', 'mandatory', 'list']
+
+
+# saving an item adds missing definitions; empty label/PURL never replace existing ones (#667)
+UPSERT_DEFINITION = 'INSERT INTO definitions VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET ' \
+                    "long=COALESCE(NULLIF(excluded.long, ''), long), PURL=COALESCE(NULLIF(excluded.PURL, ''), PURL);"
 
 
 class SqlLiteDB:
@@ -428,8 +434,7 @@ class SqlLiteDB:
       return
     cmd = 'INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);'
     self.cursor.executemany(cmd, [(docID, k, v, u) for k, (v, u, _, _) in flat.items()])
-    cmdDef = 'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);'
-    self.cursor.executemany(cmdDef, [(k, l, p) for k, (_, _, l, p) in flat.items()])
+    self.cursor.executemany(UPSERT_DEFINITION, [(k, l, p) for k, (_, _, l, p) in flat.items()])
     self.connection.commit()
     return
 
@@ -564,7 +569,7 @@ class SqlLiteDB:
       if 'name' not in changesDict or changesDict['name']!='new item':#don't save initial change from new item
         self.cursor.execute('INSERT INTO changes VALUES (?,?,?)',
                             [docID, datetime.now().isoformat(), json.dumps(changesDict, ensure_ascii=False)])
-      self.connection.commit()
+    self.connection.commit()
     return mainOld | mainNew | {'branch':branchOld, '__version__':'short'}
 
 
@@ -582,7 +587,6 @@ class SqlLiteDB:
     if not flat and not dataOld:
       return changesDict
     cmdInsert = 'INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);'
-    cmdDef = 'INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);'
     for key, (value, unit, label, purl) in flat.items():
       if key in dataOld:
         oldValue, oldUnit = dataOld[key]
@@ -592,7 +596,7 @@ class SqlLiteDB:
           changesDict[key] = oldValue
       else:
         self.cursor.execute(cmdInsert, [docID, key, value, unit])
-      self.cursor.execute(cmdDef, [key, label, purl])
+      self.cursor.execute(UPSERT_DEFINITION, [key, label, purl])
       if key in dataOld:
         del dataOld[key]
     if dataOld:
@@ -600,47 +604,6 @@ class SqlLiteDB:
                               [(docID, key) for key in dataOld])
       changesDict |= {k:v for k,(v,_) in dataOld.items()}
     return changesDict
-
-
-  def _flattenMetadata(self, data:dict[str,Any], parentKeys:str='', skipEmpty:bool=True) -> dict[str, tuple[Any, str, str, str]]:
-    """Flatten nested metadata into a key -> (value, unit, label, purl) map
-    Different from handle_dictionaries.flatten which flattens a dict -> list; this one is only for changing sqlite-db
-    Args:
-      data (dict): hierarchical data
-      parentKeys (str): keys of parent, e.g. .userMetadata
-      skipEmpty (bool): skip empty values, not for update
-    Returns:
-      dict: flattened data
-    """
-    flat: dict[str, tuple[Any, str, str, str]] = {}
-    prefix = f'{parentKeys}.' if parentKeys else ''
-    for key, value in data.items():
-      key = str(key) if isinstance(key, int) else key
-      if skipEmpty and not value:
-        continue
-      if isinstance(value, dict):
-        flat |= self._flattenMetadata(value, f'{prefix}{key}' if prefix else key, skipEmpty)
-        continue
-      if isinstance(value, list) and not value:
-        continue
-      if key.endswith(']') and ('[') in key:
-        unit = re.findall(r'\[\S+\]', key)[-1][1:-1]
-        label = key[:-len(unit)-2].strip()
-        key = camelCase(label)
-        key = key[0].lower()+key[1:]
-        flat[f'{prefix}{key}'] = (str(value), unit, label, '')
-        continue
-      if isinstance(value, list) and isinstance(value[0], dict) and value[0].keys() >= {'key', 'value', 'unit'}:
-        for item in value:
-          itemKey = f'{prefix}{key}.{item["key"]}'
-          flat[itemKey] = (item['value'], item.get('unit', ''), item.get('label', ''), item.get('PURL', ''))
-        continue
-      if isinstance(value, tuple) and len(value)==4:
-        flat[f'{prefix}{key}'] = (value[0], value[1], value[2], value[3])
-        continue
-      if str(value)!='':
-        flat[f'{prefix}{key}'] = (str(value), '', '', '')
-    return flat
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:list[str]=[],
@@ -777,16 +740,21 @@ class SqlLiteDB:
 
     Args:
       docID (string): id of document to remove
-      stack (str): stack of branch to delete, if there are multiple branches
+      stack (str): only remove branches at or below this stack; remove doc if no branch remains
 
     Returns:
       dict: document that was removed
     """
     doc = self.getDoc(docID)
-    if len(doc['branch'])>1 and stack:                                                 #only remove one branch
-      stack = stack[:-1] if stack.endswith('/') else stack
-      self.cursor.execute('DELETE FROM branches WHERE id=? AND stack LIKE ?', (docID, f'{stack}%'))
-    else:                                                                                   #remove everything
+    stack = stack.removesuffix('/')
+    if stack:
+      self.cursor.execute('DELETE FROM branches WHERE id=? AND (stack=? OR stack LIKE ?)',
+                          (docID, stack, f'{stack}/%'))
+      self.cursor.execute('SELECT idx FROM branches WHERE id=? ORDER BY idx', (docID,))
+      for idxNew, (idxOld,) in enumerate(self.cursor.fetchall()):               # keep idx contiguous: 0,1,...
+        self.cursor.execute('UPDATE branches SET idx=? WHERE id=? AND idx=?', (idxNew, docID, idxOld))
+    self.cursor.execute('SELECT 1 FROM branches WHERE id=?', (docID,))
+    if not stack or self.cursor.fetchone() is None:                                         #remove everything
       doc.pop('image','')
       doc.pop('content','')
       for table in ('main', 'branches', 'properties', 'tags', 'qrCodes', 'attachments'):
@@ -873,7 +841,7 @@ class SqlLiteDB:
         params.append(f'{startKey}%')
       dfTags = pd.read_sql_query(cmd, self.connection, params=params, index_col='id').fillna('')
       dfTags = dfTags.groupby(['id'])['tag'].apply(lambda x: ', '.join(set(x))).reset_index().set_index('id')
-      dfTags.rename(columns={'tag':'tags' if 'tags' in viewColumns else '_tags'}, inplace=True)
+      dfTags = dfTags.rename(columns={'tag':'tags' if 'tags' in viewColumns else '_tags'})
       df = df.join(dfTags)
       if 'qrCodes' in viewColumns:
         cmd = 'SELECT main.id, qrCodes.qrCode FROM main INNER JOIN qrCodes USING(id) INNER JOIN branches '\
@@ -886,7 +854,7 @@ class SqlLiteDB:
           params.append(f'{startKey}%')
         dfQrCodes = pd.read_sql_query(cmd, self.connection, params=params, index_col='id').fillna('')
         dfQrCodes = dfQrCodes.groupby(['id'])['qrCode'].apply(', '.join).reset_index().set_index('id')
-        dfQrCodes.rename(columns={'qrCode':'qrCodes'}, inplace=True)
+        dfQrCodes = dfQrCodes.rename(columns={'qrCode':'qrCodes'})
         df = df.join(dfQrCodes)
       if metadataKeys := [column for column in viewColumns if column not in MAIN_ORDER+['tags']]:
         cmd = 'SELECT main.id, properties.key, properties.value FROM main INNER JOIN properties USING(id) '\
@@ -909,7 +877,7 @@ class SqlLiteDB:
       columnOrder += ['show']
       df = df.reset_index().reindex(columnOrder, axis=1)
       df = df.rename(columns={i:i[1:] for i in columnOrder if i.startswith('.') })
-      df = df.fillna('').astype('str')
+      df = df.astype(object).fillna('').astype('str')
       return df
     if thePath=='viewHierarchy/viewHierarchy':
       cmd = 'SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui, branches.idx, branches.path '\
@@ -1101,6 +1069,39 @@ class SqlLiteDB:
     Returns:
         str: output
     """
+    def label(docID:str) -> str:
+      """ Human readable label of an item: name, type and docID
+      Args:
+        docID (str): documunt-id
+      Returns:
+        str: "name" (type, docID)
+      """
+      self.cursor.execute('SELECT name, type FROM main WHERE id=?', (docID,))
+      row = self.cursor.fetchone()
+      return f'"{row[0]}" ({row[1]}, {docID})' if row else f'unknown item ({docID})'
+
+    def check(level:str, message:str, repairText:str='', fix:Callable[[],object] | None=None) -> str:
+      """ Report a problem; in repair mode: ask the user and repair
+
+      Args:
+        level (str): level of outputString
+        message (str): human readable description of the problem
+        repairText (str): what the repair will change
+        fix (function): function that does the repair; None if repair is not possible
+
+      Returns:
+        str: text for the report
+      """
+      if repairText:
+        message += f'\n    Repair: {repairText}'
+      text = outputString(outputStyle, level, message)
+      if repair is None or fix is None:
+        return text
+      if repair(text):
+        fix()
+        self.connection.commit()
+      return ''
+
     reply = ''
     if outputStyle=='html':
       reply += '<div align="right">'
@@ -1114,33 +1115,25 @@ class SqlLiteDB:
       reply += '</div>'
       reply+= outputString(outputStyle,'h2','List all database entries')
     lostAndFoundProjId   = ''
-    lostAndFoundProjPath = Path()
+    lostAndFoundProjPath = Path('LostAndFound')                                                 #by definition
+    lostAndFoundText     = 'move the item into project "Lost and Found"'
     if repair is not None:
       dfProjects = self.getView('viewDocType/x0')
       idProjects = dfProjects[dfProjects['name']=='Lost and Found']['id'].values
-      if len(idProjects)==0:
-        print('**Warning: manually create "LostAndFound" project to allow full repair')
+      if len(idProjects)>0:
+        lostAndFoundProjId = idProjects[0]
       else:
-        lostAndFoundProjId   = idProjects[0]
-        lostAndFoundProjPath = Path('LostAndFound')                                             #by definition
-    if not lostAndFoundProjId and repair is not None:
-      errorStr = outputString(outputStyle,'error','No Lost and Found project found. Some repair impossible. '\
-                                          'Repair: exit repair mode and manually create LostAndFound project.')
-      if repair is None:
-        reply+= errorStr
-      elif repair(errorStr):
-        return 'Repair aborted: no Lost and Found project found. Exit repair mode and create it manually.'
+        lostAndFoundText = ('not possible: no project "Lost and Found". Create it with tools command [cp] and '
+                           'repair again')
+        print('**Warning: no project "Lost and Found" exists. Items with missing parents cannot be repaired. '
+              'Create the project with tools command [cp] and repair again.')
     # tests
-    self.cursor.execute('SELECT main.id, main.name FROM main WHERE id NOT IN (SELECT id FROM branches)')
-    if res:= self.cursor.fetchall():
-      errorStr = outputString(outputStyle,'error', f'Items with no branch: {", ".join(str(i) for i in res)}')
-      if repair is None:
-        reply+= errorStr
-      elif repair(errorStr):
-        for docID, name in res:
-          self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
-            [docID, 0, f'{lostAndFoundProjId}/{docID}', 9999, '*', 'TT'])
-        self.connection.commit()
+    self.cursor.execute('SELECT id FROM main WHERE id NOT IN (SELECT id FROM branches)')
+    for (docID,) in self.cursor.fetchall():
+      reply+= check('error', f'{label(docID)} has no place in any project hierarchy (no branch)', lostAndFoundText,
+                    partial(self.cursor.execute, f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
+                            [docID, 0, f'{lostAndFoundProjId}/{docID}', 9999, '*', 'TT'])
+                    if lostAndFoundProjId else None)
 
     cmd = 'SELECT id, main.type, branches.stack, branches.path, branches.child, branches.show, main.name '\
           'FROM branches INNER JOIN main USING(id)'
@@ -1149,144 +1142,175 @@ class SqlLiteDB:
     reply += outputString(outputStyle,'info', f'Number of documents: {len(res)}')
     for row in res:
       try:
-        docID, docType, stack, path, child, _, name = row[0], row[1], row[2], row[3], row[4], row[5], row[6]
+        docID, docType, stack, path, child, _, name = row
       except ValueError:
-        reply+= outputString(outputStyle,'error','dch03a: branch data has strange list')
+        reply+= check('error', f'Hierarchy entry (branch) has an unexpected format: {row} [dch03a]')
+        continue
+      item = f'"{name}" ({docType}, {docID})'
+      if not docType:
+        reply+= check('unsure', f'Item has no type (removed data?): {item} [dch04b]')
         continue
       if docType.count('/')>5:
-        reply+= outputString(outputStyle,'error',f"dch04a: type has too many / {docID}")
-      if len(docType.split('/'))==0:
-        reply+= outputString(outputStyle,'unsure',f"dch04b: no type in (removed data?) {docID}")
-        continue
+        reply+= check('error', f'Type of {item} has more than 6 levels [dch04a]')
       if docType.startswith('x') and not docType.startswith(('x0','x1')):
-        errorStr = outputString(outputStyle,'error',f"dch04c: bad data type*: {docID} {docType}")
-        if repair is None:
-          reply+= errorStr
-        elif repair(errorStr):
-          self.cursor.execute("UPDATE main SET type='x1' WHERE id=?", (docID,))
+        reply+= check('error', f'Folder {item} has an invalid type "{docType}" [dch04c]', 'change the type to '
+                      '"x1" (folder)', partial(self.cursor.execute, "UPDATE main SET type='x1' WHERE id=?",
+                                               (docID,)))
       if not all(k.startswith('x-') for k in stack.split('/')[:-1]):
-        reply+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {docID}")
+        reply+= check('error', f'Some parents of {item} are not folders: {stack} [dch03]')
       if any(len(i)==0 for i in stack) and not docType.startswith('x0'):                    #if no inheritance
         if docType.startswith(('measurement','x')):
-          reply+= outputString(outputStyle,'warning',f"branch stack length = 0: no parent {docID}")
+          reply+= check('warning', f'{item} has no parent [dch07]')
         elif not minimal:
-          reply+= outputString(outputStyle,'ok',
-                                   f"branch stack length = 0: no parent for procedure/sample {docID}")
+          reply+= check('ok', f'{item} has no parent; this is fine for workflows and samples')
       try:
         dirNamePrefix = path.split(os.sep)[-1].split('_')[0]
         if dirNamePrefix.isdigit() and child!=int(dirNamePrefix) and docType.startswith('x'):#compare child-number to start of directory name
-          reply+= outputString(outputStyle,'error',f"dch05: child-number and dirName dont match {docID}")
+          reply+= check('error', f'Folder {item}: its position in the parent ({child}) does not match the number '
+                                 f'at the start of its folder name "{path}" [dch05]')
       except Exception:
         pass                                                                               #handled next lines
       if path is None:
         if docType.startswith('x'):
-          reply+= outputString(outputStyle,'error',f"dch06: branch path is None {docID}")
+          reply+= check('error', f'Folder {item} has no path on disk [dch06]')
         elif docType.startswith('measurement'):
           if not minimal:
-            reply+= outputString(outputStyle,'ok', f'measurement branch path is None=no data {docID}')
+            reply+= check('ok', f'Measurement {item} has no file')
         elif not minimal:
-          reply+= outputString(outputStyle,'perfect',f"procedure/sample with empty path {docID}")
+          reply+= check('perfect', f'{item} has no path; this is fine for workflows and samples')
       else:                                                                                  #if sensible path
         if len(stack.split('/')) != len(path.split('/')) and path!='*' and not path.startswith('http'):
           #check if length of path and stack coincide; ignore path=None=*
-          if docType.startswith('procedure'):
+          if docType.startswith('workflow'):
             if not minimal:
-              reply+= outputString(outputStyle,'perfect',
-                                       f"procedure: branch stack and path lengths not equal: {docID}: {name}")
+              reply+= check('perfect', f'Workflow {item}: number of parents and depth of its path differ; '
+                            'this is fine')
           else:
-            reply+= outputString(outputStyle,'unsure',
-              f"branch stack and path lengths not equal: {docID}: {name} {len(stack.split('/'))}"
-              f" {len(path.split(os.sep))}")
+            reply+= check('unsure', f'{item}: number of parents ({len(stack.split("/"))-1}) does not match depth '
+                                    f'of its path "{path}" ({len(path.split("/"))-1})')
         if path!='*' and not path.startswith('http'):
           for parentID in stack.split('/')[:-1]:        #check if all parents in doc have a corresponding path
             parentDoc = self.getDoc(parentID)
             if not parentDoc:
-              errorStr= outputString(outputStyle,'error',f"branch stack parent is bad: {docID}. Repair: move to lost and found.")
-              if repair is None:
-                reply+= errorStr
-              elif repair(errorStr):
-                tempDoc = {'name':name, 'type':['x0']}
-                pathNew = (lostAndFoundProjPath/createDirName(tempDoc, 0, lostAndFoundProjPath)).as_posix() if docID.startswith('x-')\
-                          else '*'
-                stackNew = f'{lostAndFoundProjId}/{docID}'
+              def moveToLostAndFound(d:str=docID, n:str=name, s:str=stack) -> None:
+                """Small function, only used when called
+                Args:
+                  d (str): docID
+                  n (str): name
+                  s (str): stack
+                """
+                tempDoc = {'name':n, 'type':['x0']}
+                pathNew = (lostAndFoundProjPath/createDirName(tempDoc, 0, lostAndFoundProjPath)).as_posix() \
+                          if d.startswith('x-') else '*'
                 self.cursor.execute('UPDATE branches SET path=?, stack=? WHERE id=? AND stack=?',
-                                    (pathNew, stackNew, docID, stack))
-                self.connection.commit()
+                                    (pathNew, f'{lostAndFoundProjId}/{d}', d, s))
+              reply+= check('error', f'Parent {parentID} of {item} does not exist', lostAndFoundText,
+                            moveToLostAndFound if lostAndFoundProjId else None)
               continue
             parentDocBranches = parentDoc['branch']
             onePathFound = any(path.startswith(parentBranch['path']) for parentBranch in parentDocBranches)
             if not onePathFound:
+              parentLabel = f'"{parentDoc["name"]}" ({parentID})'
               if docType.startswith('workflow'):
                 if not minimal:
-                  reply+= outputString(outputStyle,'perfect',
-                    f"dch08: workflow parent does not have corresponding path {docID} | parentID {parentID}")
+                  reply+= check('perfect', f'Workflow {item} is not stored inside the folder of its parent '
+                                           f'{parentLabel}; this is fine')
               else:
-                reply+= outputString(outputStyle,'unsure',
-                    f"dch08: parent does not have corresponding path {docID} | parentID {parentID}")
+                reply+= check('unsure', f'{item} is stored at "{path}", which is not inside the folder of its '
+                              f'parent {parentLabel} [dch08]')
 
     self.cursor.execute('SELECT id, idx FROM branches WHERE idx<0')
     for docID, idx in self.cursor.fetchall():
-      reply+= outputString(outputStyle,'error',f"branch idx is bad: {docID} idx: {idx}")
+      reply+= check('error', f'{label(docID)} has an invalid hierarchy index {idx}')
 
     self.cursor.execute("SELECT id, key FROM properties where key NOT LIKE '%.%'")
     for docID, key in self.cursor.fetchall():
-      reply+= outputString(outputStyle,'error',f"key is bad, miss .: {docID} idx: {key}")
+      reply+= check('error', f'Property "{key}" of {label(docID)} has no group (missing ".")', f'rename to ".{key}"',
+                    partial(self.cursor.execute, "UPDATE OR REPLACE properties SET key='.'||key WHERE id=? AND key=?",
+                            (docID, key)))
     self.cursor.execute("SELECT id, key FROM properties where value LIKE ''")
     for docID, key in self.cursor.fetchall():
-      errorStr= outputString(outputStyle,'ok',f"value of this key is missing*: {docID} idx: {key}")
-      if repair is None:
-        reply+= errorStr
-      elif repair(errorStr):
-        self.cursor.execute('DELETE FROM properties WHERE id=? AND key=?', (docID, key))
-        self.connection.commit()
-
-    cmd = 'SELECT branches.id, branches.path, main.dataHash FROM branches JOIN main USING(id) '\
+      reply+= check('ok', f'Property "{key}" of {label(docID)} is empty', 'delete this empty property',
+                    partial(self.cursor.execute, 'DELETE FROM properties WHERE id=? AND key=?', (docID, key)))
+    cmd = 'SELECT branches.id FROM branches JOIN main USING(id) '\
           "WHERE branches.path=='*' AND main.dataHash!=''"
     self.cursor.execute(cmd)
-    for line in self.cursor.fetchall():
-      errorStr= outputString(outputStyle,'error',f"dataHash!='' for item with no path docID:{line[0]}. Repair: remove dataHash")
-      if repair is None:
-        reply+= errorStr
-      elif repair(errorStr):
-        self.cursor.execute("UPDATE main SET dataHash='' WHERE id=?", (line[0],))
-        self.connection.commit()
+    for (docID,) in self.cursor.fetchall():
+      reply+= check('error', f'{label(docID)} has no file but a file checksum (dataHash)', 'remove the checksum',
+                    partial(self.cursor.execute, "UPDATE main SET dataHash='' WHERE id=?", (docID,)))
 
     #doc-type specific tests
     cmd = "SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'"
     self.cursor.execute(cmd)
-    if res:= [i[0] for i in self.cursor.fetchall() if i[1] is None]:
-      reply+= outputString(outputStyle,'warning',f"dch09: qrCode not in samples {res}")
-    self.cursor.execute("SELECT id, dataHash, image, comment FROM main WHERE  type LIKE 'measurement%'")
-    for row in self.cursor.fetchall():
-      docID, dataHash, image, _ = row
+    for docID in [i[0] for i in self.cursor.fetchall() if i[1] is None]:
+      reply+= check('warning', f'Sample {label(docID)} has an empty QR-code entry [dch09]')
+    self.cursor.execute("SELECT id, dataHash, image FROM main WHERE  type LIKE 'measurement%'")
+    for docID, dataHash, image in self.cursor.fetchall():
       if dataHash is None:
-        reply+= outputString(outputStyle,'warning',f"dch10: dataHash not in measurement {docID}")
+        reply+= check('warning', f'Measurement {label(docID)} has no file checksum (dataHash) [dch10]')
       if image.startswith('data:image'):                                                      #for jpg and png
         try:
           imgData = base64.b64decode(image[22:])
           Image.open(io.BytesIO(imgData))                    #can convert, that is all that needs to be tested
         except Exception:
-          reply+= outputString(outputStyle,'error',f"dch12: jpg-image not valid {docID}")
+          reply+= check('error', f'Thumbnail of {label(docID)} is not a valid PNG/JPEG image [dch12]')
       elif image.startswith('<?xml'):
         #from https://stackoverflow.com/questions/63419010/check-if-an-image-file-is-a-valid-svg-file-in-python
         svgR = r'(?:<\?xml\b[^>]*>[^<]*)?(?:<!--.*?-->[^<]*)*(?:<svg|<!DOCTYPE svg)\b'
         svgRe = re.compile(svgR, re.DOTALL)
         if svgRe.match(image) is None:
-          reply+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
-      # elif image in ('', None):
-        # No more warnings if images are not present: happens often in propriatary binary files,... users see it
-        # comment = comment.replace('\n','..')
-        # reply+=outputString(outputStyle,'unsure',f"image does not exist {docID} image:{image} comment:{comment}")
+          reply+= check('error', f'Thumbnail of {label(docID)} is not a valid SVG image [dch13]')
       elif not image:
-        reply+= outputString(outputStyle,'info',f"dch14: empty image {docID}")
+        reply+= check('info', f'Measurement {label(docID)} has no thumbnail [dch14]')
       else:
-        reply+= outputString(outputStyle,'error',f"dch14: image not valid {docID} |{image}|")
+        reply+= check('error', f'Image of {label(docID)} has unknown format, starting with "{image[:30]}" [dch14]')
 
     #test hierarchy
     for projID in self.getView('viewDocType/x0')['id'].values:
       _, error = self.getHierarchy(projID, True)
       if error:
-        reply+= outputString(outputStyle,'error',f"dch15: project hierarchy invalid in project {projID}")
+        reply+= check('error', f'Hierarchy of project {label(projID)} is invalid [dch15]')
     if repair is not None:
       self.connection.commit()
     return reply
+
+
+  def _flattenMetadata(self, data:dict[str,Any], parentKeys:str | None=None, skipEmpty:bool=True) -> dict[str, tuple[Any, str, str, str]]:
+    """Flatten nested metadata into a key -> (value, unit, label, purl) map
+    Different from handle_dictionaries.flatten which flattens a dict -> list; this one is only for changing sqlite-db
+    Args:
+      data (dict): hierarchical data
+      parentKeys (str): keys of parent, e.g. .userMetadata; None=top level, ''=empty group (keys '.x')
+      skipEmpty (bool): skip empty values, not for update
+    Returns:
+      dict: flattened data
+    """
+    flat: dict[str, tuple[Any, str, str, str]] = {}
+    prefix = '' if parentKeys is None else f'{parentKeys}.'
+    for key, value in data.items():
+      key = str(key) if isinstance(key, int) else key
+      if skipEmpty and not value:
+        continue
+      if isinstance(value, dict):
+        flat |= self._flattenMetadata(value, f'{prefix}{key}', skipEmpty)
+        continue
+      if isinstance(value, list) and not value:
+        continue
+      if key.endswith(']') and key.rfind('[') > 0 and key[:key.rfind('[')].strip():           # 'Label [unit]'
+        unit  = key[key.rfind('[')+1:-1].strip()                         # unit may contain spaces or be empty
+        label = key[:key.rfind('[')].strip()
+        key = camelCase(label)
+        key = key[0].lower()+key[1:]
+        flat[f'{prefix}{key}'] = (str(value), unit, label, '')
+        continue
+      if isinstance(value, list) and isinstance(value[0], dict) and value[0].keys() >= {'key', 'value', 'unit'}:
+        for item in value:
+          itemKey = f'{prefix}{key}.{item["key"]}'
+          flat[itemKey] = (item['value'], item.get('unit', ''), item.get('label', ''), item.get('PURL', ''))
+        continue
+      if isinstance(value, tuple) and len(value)==4:
+        flat[f'{prefix}{key}'] = (value[0], value[1], value[2], value[3])
+        continue
+      if str(value)!='':
+        flat[f'{prefix}{key}'] = (str(value), '', '', '')
+    return flat

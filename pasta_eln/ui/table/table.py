@@ -42,7 +42,6 @@ class TableView(Widget):
     self.showAll = self.comm.configuration['uiState']['showHiddenListItems']
     self.filterRows: list[FilterRow] = []
     self.detailsDocID = ''
-    self.reloadComboBoxFlag = True                           # prevent combobox reloads after sub-type changes
     self.galleryDocumentIds: set[str] = set()
     self._stopSequentialEdit = False
     self.docIdToHighlight = ''
@@ -104,6 +103,7 @@ class TableView(Widget):
     self.table.horizontalHeader().setStretchLastSection(True)
     self.table.horizontalHeader().setSectionsMovable(True)
     self.table.horizontalHeader().setSortIndicatorShown(True)
+    self.table.horizontalHeader().setHighlightSections(False)
     self.table.verticalHeader().hide()
     self.table.setSortingEnabled(True)
     self.table.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
@@ -182,15 +182,15 @@ class TableView(Widget):
     header = self.table.horizontalHeader()
     sortSection = header.sortIndicatorSection()
     sortOrder = header.sortIndicatorOrder()
-    if self.reloadComboBoxFlag and '/' not in self.docType:
-      self.subTypeCombo.blockSignals(True)
-      self.subTypeCombo.clear()
-      docTypeKeys = [key for key in self.comm.docTypesTitles if key.startswith(self.docType)]
-      titles = [self.comm.docTypesTitles[key]['title'] for key in docTypeKeys]
-      self.subTypeCombo.setVisible(len(titles) > 1)
-      self.subTypeCombo.addItems(titles)
-      self.subTypeCombo.blockSignals(False)
-    self.reloadComboBoxFlag = True
+    baseType = self.docType.split('/')[0]
+    titles = [value['title'] for key, value in self.comm.docTypesTitles.items() if key.split('/')[0] == baseType]
+    self.subTypeCombo.blockSignals(True)
+    self.subTypeCombo.clear()
+    self.subTypeCombo.setVisible(len(titles) > 1)
+    self.subTypeCombo.addItems(titles)
+    if self.docType in self.comm.docTypesTitles:
+      self.subTypeCombo.setCurrentText(self.comm.docTypesTitles[self.docType]['title'])
+    self.subTypeCombo.blockSignals(False)
 
     self.tableData, documentIds = self.filteredTableData()
     tagsById = self.data.set_index('id')['tags'].to_dict() if 'tags' in self.data else {}
@@ -299,7 +299,7 @@ class TableView(Widget):
       answer = QMessageBox.warning(self, 'Remove selected items?', 'Remove the selected items everywhere?',
                                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                    QMessageBox.StandardButton.No)
-      if answer is QMessageBox.StandardButton.Yes:
+      if answer == QMessageBox.StandardButton.Yes:
         for docID in selected:
           self.comm.uiRequestTask.emit(Task.DELETE_DOC, {'docID': docID, 'stack': ''})
         self.refresh()
@@ -444,7 +444,6 @@ class TableView(Widget):
     if not matching:
       return
     docType = matching[0]
-    self.reloadComboBoxFlag = self.docType not in docType and docType not in self.docType
     self.docType = docType
     self.refresh()
 
@@ -497,10 +496,10 @@ class TableView(Widget):
     if self.data.empty:
       return pd.DataFrame(), []
     base = self.data.copy()
-    base.fillna('-', inplace=True)
-    base.replace(['None', '', 'nan'], '-', inplace=True)
-    base.replace('True', 'Y', inplace=True)
-    base.mask(base.map(isDocID), 'oo', inplace=True)
+    base = base.fillna('-')
+    base = base.replace(['None', '', 'nan'], '-')
+    base = base.replace('True', 'Y')
+    base = base.mask(base.map(isDocID), 'oo')
     base = base.drop(columns=['id', 'show', '_tags'], errors='ignore').copy()
     if self.docType == '_tags_':
       base = base[base['tag'] != '_curated'].copy()

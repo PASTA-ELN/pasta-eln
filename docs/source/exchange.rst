@@ -26,7 +26,13 @@ Nextcloud server integration
 Synchronize via ElabFTW server
 ------------------------------
 
-(to be written)
+Pasta-ELN installations share data through a project group (called storage block in the configuration) on an elabFTW server.
+
+**Setup by the elabFTW admin**: create one resource of category *ProjectGroup* per project group. Do not archive it. All members need write access to it.
+
+**Setup by each user**: in **Other > Configuration > Project group**, enter the server address and API key, select the storage block and click **Verify**. Pasta-ELN adds a note to the body of the resource that asks users not to edit it.
+
+**Data hierarchy**: every synchronization saves the local data hierarchy (item types and their properties) in the metadata of the project group; the local data hierarchy always overwrites the server copy. To use the data hierarchy of the server, for example on a new installation, click the download button next to the storage block. This replaces the local data hierarchy after a confirmation. Manual edits of the server copy are validated; invalid copies are ignored and overwritten during the next synchronization.
 
 .. _dataverse1:
 

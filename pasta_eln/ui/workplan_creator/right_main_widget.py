@@ -29,7 +29,7 @@ class RightMainWidget(QWidget):
     self.headerLabel = Label('Current workplan', 'h1')
     self.workplanWidget = QWidget()
     self.workplanLayout = QVBoxLayout()
-    self.saveButton = QPushButton('Finish & save workplan')
+    self.saveButton = QPushButton('Finish && Save workplan')
 
     self.comm.addProcedure.connect(self.addProcedure)
     self.setAcceptDrops(True)

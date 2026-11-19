@@ -8,6 +8,152 @@
 - Extractor item type does not work on Linux. [\#642](https://github.com/PASTA-ELN/pasta-eln/issues/642)
 - Links in tutorial do not work out-of-the-box. [\#639](https://github.com/PASTA-ELN/pasta-eln/issues/639)
 
+## [v3.3.2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.3.2) (2026-11-19)
+
+**Release source commit:** `df2ef551ae6d6b0e3d87fb69266bbda51cd69388`
+**Previous stable release:** `v3.3.1` (`64895784cece3e37ca35db4ef551b086f710e5e3`)
+
+### New features
+
+- New child and sibling folders open directly in the edit form; cancelling the form deletes the new folder again. Empty folders are now removed from disk on deletion instead of being renamed to `trash_*` ([`2f1ff6a6`](https://github.com/PASTA-ELN/pasta-eln/commit/2f1ff6a620276fcca25758725ac4c3cf97f782dc), [`0aaea4d7`](https://github.com/PASTA-ELN/pasta-eln/commit/0aaea4d7529b81a539747a36b9c96748d8475c8c))
+- New projects created with the "+" button in the sidebar open automatically after saving ([`0aaea4d7`](https://github.com/PASTA-ELN/pasta-eln/commit/0aaea4d7529b81a539747a36b9c96748d8475c8c))
+- eLabFTW synchronization supports the requirements of eLabFTW version 5 and also synchronizes the data hierarchy ([`47d0a461`](https://github.com/PASTA-ELN/pasta-eln/commit/47d0a46129ff774c8e18c897461aaea38027f233))
+- Repository configuration: Nextcloud credentials can be created if they do not exist yet ([`778f5a3c`](https://github.com/PASTA-ELN/pasta-eln/commit/778f5a3cfca3216ea636b5c41d6a456d84b4542d))
+- On Linux, PASTA-ELN detects file names that differ only in upper/lower case, which would cause problems on Windows ([`5c438c26`](https://github.com/PASTA-ELN/pasta-eln/commit/5c438c26f50c06b2dd3bde956c505ac1ed51b10c))
+
+### Improvements
+
+- Terminology (OLS) lookups are more flexible ([`0c962741`](https://github.com/PASTA-ELN/pasta-eln/commit/0c962741efd1fcb1bd172303fb9cef14cfc85144))
+- Repository upload: clearer layout, more meaningful error messages, and saving repository data closes the entire configuration dialog ([`778f5a3c`](https://github.com/PASTA-ELN/pasta-eln/commit/778f5a3cfca3216ea636b5c41d6a456d84b4542d))
+- Item type editor: cleaner design, properties are easier to change, and adding a new item type no longer resets properties to the defaults ([`03defe45`](https://github.com/PASTA-ELN/pasta-eln/commit/03defe45c56675481732d769f27b311afaf49598), [`0fa49f76`](https://github.com/PASTA-ELN/pasta-eln/commit/0fa49f7644552e5d4bd39581aa69f396d1dc0a1f), [`7a620f83`](https://github.com/PASTA-ELN/pasta-eln/commit/7a620f83137d2346de065db9e3f675780666e13d))
+- Project view: updated layout; the project header fits its height to the text and no longer shows scrollbars ([`b95795aa`](https://github.com/PASTA-ELN/pasta-eln/commit/b95795aa8f400fbb6716ec88998ab601850cab69), [`185697b4`](https://github.com/PASTA-ELN/pasta-eln/commit/185697b4192edb76bfec5f1f5e754633127a624e))
+- Faster repainting of SVG previews in the project view, and more SVG files are recognized ([`5932bf9a`](https://github.com/PASTA-ELN/pasta-eln/commit/5932bf9af525522cbdaf4ec7c1dec071086285fb))
+- Window sizes are adjusted after creation ([`23579b50`](https://github.com/PASTA-ELN/pasta-eln/commit/23579b50673b4e9fa1cf64d848466ef9bdd2a119))
+- Changing the color style now offers to restart PASTA-ELN, since the new style is applied after a restart (#657) ([`bbea1400`](https://github.com/PASTA-ELN/pasta-eln/commit/bbea140076747cee4d8765744923c9959002736a))
+- "Verify database" reports errors as errors instead of information (#656) ([`ee35aa6c`](https://github.com/PASTA-ELN/pasta-eln/commit/ee35aa6c4561c459032223f61deac6f9b0c0278f))
+- The project view is reread after deleting items ([`f17d6c69`](https://github.com/PASTA-ELN/pasta-eln/commit/f17d6c6998b13be9e24cad438019330f9d336abe))
+- After item types are reloaded, the open project is reloaded as well ([`df47fa7e`](https://github.com/PASTA-ELN/pasta-eln/commit/df47fa7ef3021d1b4adfd993b7246d144851d48b))
+- Improved handling of large files (#645) ([`2aa0c0bc`](https://github.com/PASTA-ELN/pasta-eln/commit/2aa0c0bcd4ea484bfb6496c3d8d795f1d7368815))
+- Includes changes from the Tag der Forschungsdaten pre-test ([`a1e73847`](https://github.com/PASTA-ELN/pasta-eln/commit/a1e738472ba54b601104c6fcd2b735f5c4a40eda))
+
+### Bug fixes
+
+- Fixed a crash when creating a new folder ([`0aaea4d7`](https://github.com/PASTA-ELN/pasta-eln/commit/0aaea4d7529b81a539747a36b9c96748d8475c8c))
+- Fixed previews appearing in the wrong aspect ratio in the project view (#652) ([`5932bf9a`](https://github.com/PASTA-ELN/pasta-eln/commit/5932bf9af525522cbdaf4ec7c1dec071086285fb))
+- Fixed scaling of SVG images in the form ([`3c17c11b`](https://github.com/PASTA-ELN/pasta-eln/commit/3c17c11b83afffa2b10bca971ffd7cf39f020aa9))
+- Fixed the message when saving an image from the Details pane (#653) ([`99b7af2d`](https://github.com/PASTA-ELN/pasta-eln/commit/99b7af2d0e23bca11032fab9e583d481df38c439))
+- Added safeguards when opening the file browser from the Details pane (#654) ([`aec75ede`](https://github.com/PASTA-ELN/pasta-eln/commit/aec75eded765f126961dddd8e79bf175599cde96))
+- The recovery key can be copied and pasted when updating (#655) ([`9c75cbc7`](https://github.com/PASTA-ELN/pasta-eln/commit/9c75cbc7b14bd6bf106b08b1141dc0e1e941edac))
+- Pressing Enter to add a tag no longer closes the form ([`8c980ae1`](https://github.com/PASTA-ELN/pasta-eln/commit/8c980ae14d993476b14eb0f77856e25d137ffa87))
+- Fixed handling of an incomplete `.id_pastaELN.json` file in a folder ([`4b6d12e2`](https://github.com/PASTA-ELN/pasta-eln/commit/4b6d12e23f640e56669c102f4da15a6ec44d02d3))
+- Fixed issues caused by Windows using different path separators ([`85831fb2`](https://github.com/PASTA-ELN/pasta-eln/commit/85831fb205a0595a2db2f5ef5400bcb9a56d116d))
+- Fixed a syntax error on Python versions older than 3.12 ([`5d3b87d3`](https://github.com/PASTA-ELN/pasta-eln/commit/5d3b87d3270435e6bb9b9fd84bd237d19b6854a4))
+- Fixed resizing in the repository upload and item type editor dialogs ([`acc2cb58`](https://github.com/PASTA-ELN/pasta-eln/commit/acc2cb58b1c2d90dd77b95e082b74255530443fd))
+- Removing a project that shares a file with another project now removes only this project's branch and updates the remaining branches ([`7529f6cf`](https://github.com/PASTA-ELN/pasta-eln/commit/7529f6cffb4d9186a97bbee0e89bc77872671c70))
+- Fixed `status` being shown instead of `.status` ([`8fe821a4`](https://github.com/PASTA-ELN/pasta-eln/commit/8fe821a435c9c7711486ac15ffba40d5bc113110))
+- Fixed deletion of definitions when entering data (#667) ([`f1885951`](https://github.com/PASTA-ELN/pasta-eln/commit/f1885951b73c6b07fa053d66edeede38c670dc92))
+- Item type editor: removing a type no longer freezes the dialog or re-saves the deleted type; project and folder types can no longer be removed ([`df47fa7e`](https://github.com/PASTA-ELN/pasta-eln/commit/df47fa7ef3021d1b4adfd993b7246d144851d48b))
+- Item type editor no longer produces empty properties (#672) ([`4721010d`](https://github.com/PASTA-ELN/pasta-eln/commit/4721010de2ef37e6e66a2658082efe2e480e3670))
+- Fixed inheritance of standard key-value pairs (#673) ([`8986059a`](https://github.com/PASTA-ELN/pasta-eln/commit/8986059a73903b58ffb89e5b6ffb6b03dd8382b2))
+- Fixed resolved links being shown as "not resolved" (#675) ([`66bc2e70`](https://github.com/PASTA-ELN/pasta-eln/commit/66bc2e7092f255123551e1e036cedda248b24645))
+- The item type is no longer changed when the form is saved without changing it ([`f17d6c69`](https://github.com/PASTA-ELN/pasta-eln/commit/f17d6c6998b13be9e24cad438019330f9d336abe))
+- CSV import add-on: accepts default-group columns without leading dot and the image column, skips empty cells, and fixes message dialogs ([`df47fa7e`](https://github.com/PASTA-ELN/pasta-eln/commit/df47fa7ef3021d1b4adfd993b7246d144851d48b))
+- Units with spaces and empty units are accepted in `Label [unit]` keys ([`df47fa7e`](https://github.com/PASTA-ELN/pasta-eln/commit/df47fa7ef3021d1b4adfd993b7246d144851d48b))
+- Several small bug fixes ([`0fa49f76`](https://github.com/PASTA-ELN/pasta-eln/commit/0fa49f7644552e5d4bd39581aa69f396d1dc0a1f))
+
+### Maintenance
+
+- Updated runtime dependencies, including certifi, cryptography, matplotlib, requests, and urllib3 ([`f3250f8e`](https://github.com/PASTA-ELN/pasta-eln/commit/f3250f8e9b1eb1014eec484b47e535b1ba9d0ea1), [`e01d3982`](https://github.com/PASTA-ELN/pasta-eln/commit/e01d3982ca298587403df4ddff37f1db1bc5307b))
+
+## [v3.3.1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.3.1) (2026-10-27)
+
+**Release source commit:** `644192dd17b839eb9c03d4db2cbc866045c22ccf`
+**Previous stable release:** `v3.3.0` (`f0538abaebe205ef08f87514291f5a7490917311`)
+
+### Improvements
+
+- ELN export now follows the ELN file format specification 1.2+202609 ([`c64a3810`](https://github.com/PASTA-ELN/pasta-eln/commit/c64a38103b5c604615dea2c8b122b7268fcdb596), [`2b820d31`](https://github.com/PASTA-ELN/pasta-eln/commit/2b820d311e1594cdd80df77edd5eced9bb259383))
+- PASTA-ELN now checks on Linux whether the data folder is on an SMB-mounted file system, which requires special mount options; the installation documentation has been updated accordingly ([`afbebb23`](https://github.com/PASTA-ELN/pasta-eln/commit/afbebb23d6445458e9af1c8b95fbb11c1b13d722))
+- Clearer error message when the system keyring is unavailable ([`8a538816`](https://github.com/PASTA-ELN/pasta-eln/commit/8a538816278f0d1d47bd6eed8679b2e361f241d2))
+
+### Bug fixes
+
+- Lists of projects, folders, and workflow subtypes work again (#649) ([`aa38ab54`](https://github.com/PASTA-ELN/pasta-eln/commit/aa38ab54a5c7de62cd4de8e38c48fae67a2217ec))
+- Switching project groups now changes the active project group instead of adding a list of icons (#650) ([`9ec6d41c`](https://github.com/PASTA-ELN/pasta-eln/commit/9ec6d41cbf5df61abca5de4f9199cfe529668ecf))
+- Forms can now contain multiple comboboxes for the same document type (#634) ([`0aa7f62f`](https://github.com/PASTA-ELN/pasta-eln/commit/0aa7f62f4b194343c849bda2573ed910fb2bdae7))
+- Nextcloud add-ons work again ([`a243d942`](https://github.com/PASTA-ELN/pasta-eln/commit/a243d9426c4ec35d1afc24b68fbbb4bb520757f7))
+- Fixed issues found during installation testing ([`37f83d16`](https://github.com/PASTA-ELN/pasta-eln/commit/37f83d161604fa3aca68dd32e4848f76e8427b09))
+
+## [v3.3.0](https://github.com/PASTA-ELN/pasta-eln/tree/v3.3.0) (2026-09-24)
+
+**Release source commit:** `40fe64ffd238d681472a1dfe577dc4dd81eb542e`
+**Previous stable release:** `v3.2.3` (`0f2c7534418bcf69146620b065e5acd17ea9c581`)
+
+### New features
+
+- **New user interface:** redesigned sidebar, tabs, table, and Details pane; the form, configuration, and all other dialogs have been moved to the new design. ([`68cb14fa`](https://github.com/PASTA-ELN/pasta-eln/commit/68cb14faca84632eb98b416614df4e4c65a6746c)) ([`c7eb0f8e`](https://github.com/PASTA-ELN/pasta-eln/commit/c7eb0f8e4408b51dd85bad14ffa4f31b95f12751)) ([`9704ac0f`](https://github.com/PASTA-ELN/pasta-eln/commit/9704ac0f3ba94092b9d7f87366259def5a8867a5)) ([`d9ae7cdd`](https://github.com/PASTA-ELN/pasta-eln/commit/d9ae7cdd2bde3fb62988a35139ada34898728771)) ([`1ddcda9e`](https://github.com/PASTA-ELN/pasta-eln/commit/1ddcda9e24921bcae278217477af188a03f7bc51)) ([`8cc81e17`](https://github.com/PASTA-ELN/pasta-eln/commit/8cc81e1720833c10fdc1973321463af3b69aabee)) ([`26b4ea7c`](https://github.com/PASTA-ELN/pasta-eln/commit/26b4ea7cbef2bc19aedfb39fe3e7687371ec405c)) ([`a0b08261`](https://github.com/PASTA-ELN/pasta-eln/commit/a0b08261c53ade6ba15b450b8ea9bf81e5358d53)) ([`f68e077f`](https://github.com/PASTA-ELN/pasta-eln/commit/f68e077fd1618a87b40adf3cf50c06e9acef0866)) ([`0f9ff9c6`](https://github.com/PASTA-ELN/pasta-eln/commit/0f9ff9c68fb6d7797ff0a51658ec9fcf1f99bc2e)) ([`e6029d99`](https://github.com/PASTA-ELN/pasta-eln/commit/e6029d998f5aad2b68c9c77a140439b97a511338))
+- Actions for projects, Details, and the table are reorganized; the table has additional actions, and menus are tidied up (#587). ([`1e11cf6d`](https://github.com/PASTA-ELN/pasta-eln/commit/1e11cf6d53dff676d6492a3a473851b5a7a10ae7)) ([`c2971da3`](https://github.com/PASTA-ELN/pasta-eln/commit/c2971da3067724cba93a48f3d9ba050fa7d0001f)) ([`a8922eb2`](https://github.com/PASTA-ELN/pasta-eln/commit/a8922eb20af374d1acf6cb0a06941d6857ac80b5))
+- **Workplan Creator:** a new dialog, available from the menu bar, for assembling workplans from the procedures of the current project. Steps can be searched, arranged by drag and drop (with connecting arrows), and exported as a named workplan with sample information into the standard operating procedures. ([`4dbdbe17`](https://github.com/PASTA-ELN/pasta-eln/commit/4dbdbe172805540bd4302c3780894582477a519e)) ([`65509307`](https://github.com/PASTA-ELN/pasta-eln/commit/65509307920d41f15cfb5044dc7ca3799678f021)) ([`48413a98`](https://github.com/PASTA-ELN/pasta-eln/commit/48413a98d22b3d1cce84ee46f6ce80c6325d523e)) ([`b5a61381`](https://github.com/PASTA-ELN/pasta-eln/commit/b5a613814f4839329bc45383235f0ad8cb945979)) ([`1e2f6a2a`](https://github.com/PASTA-ELN/pasta-eln/commit/1e2f6a2adc119b9e05121609cb09795e317cbf62)) ([`7d410532`](https://github.com/PASTA-ELN/pasta-eln/commit/7d410532b9564e8c4061d28376b501ed923f78c5)) ([`d7928720`](https://github.com/PASTA-ELN/pasta-eln/commit/d7928720831a0d9c28ded279c4e6731e5c8de3b4)) ([`271c66cc`](https://github.com/PASTA-ELN/pasta-eln/commit/271c66cc4b742c46b9b1fbcfe5a1f36e521ff9bb)) ([`4dcac323`](https://github.com/PASTA-ELN/pasta-eln/commit/4dcac323c43ebff4c0bb64721f7de5da3de764d8)) ([`6baa1664`](https://github.com/PASTA-ELN/pasta-eln/commit/6baa1664ffd0a94e113c8146d852f45e71922d73)) ([`c8290faa`](https://github.com/PASTA-ELN/pasta-eln/commit/c8290faa841415f565ff050620cb91f9c847ad77)) ([`6709aee2`](https://github.com/PASTA-ELN/pasta-eln/commit/6709aee244dfa3461a0a6755028b096ac40cd39e)) ([`f3df87e9`](https://github.com/PASTA-ELN/pasta-eln/commit/f3df87e92ed01980ebd0241e7493d02fb502524a)) ([`f643b144`](https://github.com/PASTA-ELN/pasta-eln/commit/f643b144890f9a77a482bfbc108afa067e167567)) ([`17b52639`](https://github.com/PASTA-ELN/pasta-eln/commit/17b52639fbfdd55d4a04fd0b21b15778a08d4539))
+- Hidden projects can be shown or hidden from the sidebar, and each project card displays a hidden icon (#477). ([`6883903c`](https://github.com/PASTA-ELN/pasta-eln/commit/6883903c47a3374469f50abc6901bd4cce0cb760))
+- An indicator shows when an item has multiple branches (#451). ([`eda51e28`](https://github.com/PASTA-ELN/pasta-eln/commit/eda51e28be256dec9ed5ea3b72d5e10f8fe3c896))
+- Items can be added directly from the project view (#595). ([`324a206a`](https://github.com/PASTA-ELN/pasta-eln/commit/324a206abb2ad1ee32979ff995a8ca37a44524d5))
+- Measurement files can be imported via the menu (#441). ([`cc0e98d9`](https://github.com/PASTA-ELN/pasta-eln/commit/cc0e98d9cdcfd5383ab22b0e4a848594bf83f8ef))
+- Linked items can be navigated from the Details pane (#505). ([`0d6911df`](https://github.com/PASTA-ELN/pasta-eln/commit/0d6911df42de37128819bade837b82c06208c85e))
+- Folders, including their subfolders, can be excluded from scanning by placing a `.pastaELN_ignore` file in them. ([`05cb8932`](https://github.com/PASTA-ELN/pasta-eln/commit/05cb89321d241864377673e5445bed4b486f4f08))
+- Standardized user-facing terminology, labels, and messages, including item type names. ([`0869f28a`](https://github.com/PASTA-ELN/pasta-eln/commit/0869f28a55e0d36de25761f5000944e56a78445a)) ([`c7c3f47b`](https://github.com/PASTA-ELN/pasta-eln/commit/c7c3f47bc8272e987395d254ca746b24ca40dfe4)) ([`3cacc52a`](https://github.com/PASTA-ELN/pasta-eln/commit/3cacc52a588b37748baf3b3c6d28f28bfbab5e8c))
+
+### Improvements
+
+- **eLabFTW synchronization:**
+  - All five synchronization modes are supported. ([`f5f9c084`](https://github.com/PASTA-ELN/pasta-eln/commit/f5f9c084b4c81d8c5ddfc932a3cc9ddb1180845e))
+  - Faster communication by reusing a session and data, and by skipping entries that are already synchronized. ([`f5f9c084`](https://github.com/PASTA-ELN/pasta-eln/commit/f5f9c084b4c81d8c5ddfc932a3cc9ddb1180845e)) ([`13f4d769`](https://github.com/PASTA-ELN/pasta-eln/commit/13f4d769a77774192c3954adc7360041da44805a))
+  - Synchronization is no longer prevented when files, such as large files, are missing. ([`3335cceb`](https://github.com/PASTA-ELN/pasta-eln/commit/3335cceb14c551dc7be150e437e7943be2ab2b9c))
+  - Uploads have a maximum size, defaulting to 100 MB. ([`ffd486db`](https://github.com/PASTA-ELN/pasta-eln/commit/ffd486dbc215ec68d33fcbc10712964dd44e1814)) ([`02e1dc65`](https://github.com/PASTA-ELN/pasta-eln/commit/02e1dc651fa869563a9878968097ec2a70aeb991))
+  - Added a progress dialog for uploads, a cleaner upload message, and the synchronization runtime. ([`6adbb900`](https://github.com/PASTA-ELN/pasta-eln/commit/6adbb9000a588878d73088a2fbfa41fb65808c38)) ([`b3ea303a`](https://github.com/PASTA-ELN/pasta-eln/commit/b3ea303a3f9721d84b8cc4faec90ec5d3d210315)) ([`d2a0f663`](https://github.com/PASTA-ELN/pasta-eln/commit/d2a0f6639d3c36e98977afd70bb622977c66bc85))
+  - Improved error logging for synchronization. ([`8d6b5a0f`](https://github.com/PASTA-ELN/pasta-eln/commit/8d6b5a0f2c2938c0525371b3b7c788e1aa85a1ec))
+- Extractors run in parallel with a time limit. ([`02e1dc65`](https://github.com/PASTA-ELN/pasta-eln/commit/02e1dc651fa869563a9878968097ec2a70aeb991))
+- Add-on loading is centralized to prevent the wrong add-ons from being used. After changing add-ons, restart PASTA-ELN. ([`05c5008a`](https://github.com/PASTA-ELN/pasta-eln/commit/05c5008a66db15a1f9b77f821f4fc38f21945cd9)) ([`db07f128`](https://github.com/PASTA-ELN/pasta-eln/commit/db07f128f43c05d991d4edfb5e9ec0302c7b9f33))
+- Add-ons in the project view are sorted by name, and errors in add-ons print a traceback. ([`b3ea303a`](https://github.com/PASTA-ELN/pasta-eln/commit/b3ea303a3f9721d84b8cc4faec90ec5d3d210315)) ([`3e7647bb`](https://github.com/PASTA-ELN/pasta-eln/commit/3e7647bb760bfe69aa6fcc89b9738edc070f6821))
+- Before moving the configuration, PASTA-ELN asks whether to back it up. ([`7a626f75`](https://github.com/PASTA-ELN/pasta-eln/commit/7a626f7580befb8a7a17f6bb73badf5cb42be8d4))
+- Selecting an item in the project tree shows it in the Details pane, and clicking the item again closes it (#648). ([`d883caf3`](https://github.com/PASTA-ELN/pasta-eln/commit/d883caf37eec1e91905192c64e390b60cdab1db9)) ([`ef19db39`](https://github.com/PASTA-ELN/pasta-eln/commit/ef19db3961a2352ee9c5d3e17ec701ad31cd3008))
+- The three-dot menu appears only on hover. ([`14a8d455`](https://github.com/PASTA-ELN/pasta-eln/commit/14a8d4550b8eb54c63f3bbd5b7aebb08fc581fee))
+- Improved project view scrolling. ([`611d3bc1`](https://github.com/PASTA-ELN/pasta-eln/commit/611d3bc14fb9fcb4b9e6ef96d28b29c7f2772ceb))
+- The Details pane also shows unidentified item types; message dialogs are rendered more clearly. ([`95dfd06b`](https://github.com/PASTA-ELN/pasta-eln/commit/95dfd06b2d0bcd8c9417cfbf6f781e355edf42c1))
+- Improved the gallery, the database report style, and images in forms; improved the appearance of database verification. ([`0f028c7b`](https://github.com/PASTA-ELN/pasta-eln/commit/0f028c7b8d882ebd2d6458c6e764e645ada5f859)) ([`21684ec1`](https://github.com/PASTA-ELN/pasta-eln/commit/21684ec1d92d8f081305f08fca57ac7bbc719475))
+- Updated tree view colors, rounded corners less strongly, and adjusted spacing throughout the interface. ([`6d26504d`](https://github.com/PASTA-ELN/pasta-eln/commit/6d26504d9fa950b4ca0c1522539dec3e1318b73c)) ([`d8030d78`](https://github.com/PASTA-ELN/pasta-eln/commit/d8030d78981127db8206c606a60baf822bf0e78a)) ([`c278fd97`](https://github.com/PASTA-ELN/pasta-eln/commit/c278fd97bda8c162baeabda2f8335acd32eec978))
+- The default example now uses the FZJ logo. ([`7a984e90`](https://github.com/PASTA-ELN/pasta-eln/commit/7a984e90502356f47ea72c0f7ee5b83807771e9c))
+- Updated dependencies to eliminate known security vulnerabilities, including a PKCS#7 decryption issue. ([`44663805`](https://github.com/PASTA-ELN/pasta-eln/commit/44663805c628bdf0f3ed503a82b3dc22980f2acd)) ([`5589e855`](https://github.com/PASTA-ELN/pasta-eln/commit/5589e855f6c6b88e3e4805d1ec6baef7005db1ac))
+
+### Bug fixes
+
+- Fixed links not being shown correctly in Details. ([`40784f6a`](https://github.com/PASTA-ELN/pasta-eln/commit/40784f6a493d647c9d974b2657edacf80c897e7b))
+- Fixed Details extractor actions, and Details and form rendering for generated names and Markdown content; Details only crops non-HTML strings. ([`e82bf4fd`](https://github.com/PASTA-ELN/pasta-eln/commit/e82bf4fdfeaa18c645ad57e8000db10045daffdd)) ([`3dc28d33`](https://github.com/PASTA-ELN/pasta-eln/commit/3dc28d33f43d5f3aa470a07cd892f551afff95e1)) ([`db07f128`](https://github.com/PASTA-ELN/pasta-eln/commit/db07f128f43c05d991d4edfb5e9ec0302c7b9f33))
+- Fixed the tags table. ([`3dc28d33`](https://github.com/PASTA-ELN/pasta-eln/commit/3dc28d33f43d5f3aa470a07cd892f551afff95e1))
+- Fixed item visibility (#579). ([`02b2f201`](https://github.com/PASTA-ELN/pasta-eln/commit/02b2f2017f333a08e6745aae1d250393c8179d9f))
+- Fixed #643, #640, and #603. ([`db07f128`](https://github.com/PASTA-ELN/pasta-eln/commit/db07f128f43c05d991d4edfb5e9ec0302c7b9f33))
+- Fixed segmentation faults and crashes. ([`8db0220a`](https://github.com/PASTA-ELN/pasta-eln/commit/8db0220ae0a6f275b914ce571693821caf98b979)) ([`db07f128`](https://github.com/PASTA-ELN/pasta-eln/commit/db07f128f43c05d991d4edfb5e9ec0302c7b9f33)) ([`6709aee2`](https://github.com/PASTA-ELN/pasta-eln/commit/6709aee244dfa3461a0a6755028b096ac40cd39e)) ([`d8030d78`](https://github.com/PASTA-ELN/pasta-eln/commit/d8030d78981127db8206c606a60baf822bf0e78a))
+- Prevented a crash when connected but unable to resolve the URL while checking for a new version. ([`0882ad92`](https://github.com/PASTA-ELN/pasta-eln/commit/0882ad927171e59c0269bef85aed0b9f6a10320a))
+- The item type editor is now initialized with item type labels. ([`0882ad92`](https://github.com/PASTA-ELN/pasta-eln/commit/0882ad927171e59c0269bef85aed0b9f6a10320a))
+- Fixed a bug in the editor. ([`a356e062`](https://github.com/PASTA-ELN/pasta-eln/commit/a356e0622834dc5a24c4da1f9cdbbd573e38d2e4))
+- Fixed metadata plots that did not display. ([`dd552ebf`](https://github.com/PASTA-ELN/pasta-eln/commit/dd552ebfd0d1e2d5e8ab34e21f603e5b34597b16))
+- Removing a project also removes its hidden children. ([`dd552ebf`](https://github.com/PASTA-ELN/pasta-eln/commit/dd552ebfd0d1e2d5e8ab34e21f603e5b34597b16))
+- Rerunning an extractor now changes the item type correctly. ([`75bdb03b`](https://github.com/PASTA-ELN/pasta-eln/commit/75bdb03b9ba2b73089e6e6754329951a69c061f2))
+- Prevented apostrophes from corrupting stored properties. ([`093f60d6`](https://github.com/PASTA-ELN/pasta-eln/commit/093f60d6fa817bede1137fd6e186e45c70a853ab))
+- PASTA-ELN restarts after changing the project group. ([`093f60d6`](https://github.com/PASTA-ELN/pasta-eln/commit/093f60d6fa817bede1137fd6e186e45c70a853ab))
+- Fixed scanning after extractors were parallelized. ([`2ad9d8e6`](https://github.com/PASTA-ELN/pasta-eln/commit/2ad9d8e6fe6b07a81ef3dd8030d695e65c72f3c4))
+- Made deleting items in the table safer. ([`e902d225`](https://github.com/PASTA-ELN/pasta-eln/commit/e902d225f27ed07296d5b1b454976f89a93e07fe))
+- Fixed sending to and getting from eLabFTW, and re-pulling from eLabFTW. ([`97077c59`](https://github.com/PASTA-ELN/pasta-eln/commit/97077c59d53409b1a2c32bbc14238e55fd54ae32)) ([`43d424e4`](https://github.com/PASTA-ELN/pasta-eln/commit/43d424e46df498cda5bf673c28eb6cfcc3a6e84d))
+- Fixed updating the add-on list, and ensured that vendor and user metadata are handled as dictionaries. ([`95dfd06b`](https://github.com/PASTA-ELN/pasta-eln/commit/95dfd06b2d0bcd8c9417cfbf6f781e355edf42c1))
+- Fixed shortcuts. ([`5c273bfb`](https://github.com/PASTA-ELN/pasta-eln/commit/5c273bfbe04877048d4496737273a24bf8876318))
+- Improved alignment of right-aligned content. ([`5cf64107`](https://github.com/PASTA-ELN/pasta-eln/commit/5cf64107bac9e73d1af1ceee732b51c5a7be5b09)) ([`8ad2c68f`](https://github.com/PASTA-ELN/pasta-eln/commit/8ad2c68fff30215a5334ad633aa779c7dc5b6167)) ([`86ef438e`](https://github.com/PASTA-ELN/pasta-eln/commit/86ef438ef1abba09b7093418c6a43333cb47d4da)) ([`ff092dc0`](https://github.com/PASTA-ELN/pasta-eln/commit/ff092dc0d3c9472c91797eda1508dd6b7d08dd7f)) ([`f92c3ce7`](https://github.com/PASTA-ELN/pasta-eln/commit/f92c3ce70bee563a0e2216c0d500d43c16f8438d))
+- Removed an SVG warning. ([`889d3d9a`](https://github.com/PASTA-ELN/pasta-eln/commit/889d3d9a819d70919e18102f820d57662aadfb00))
+- Improved shutdown so that the backend is reliably closed. ([`269e276d`](https://github.com/PASTA-ELN/pasta-eln/commit/269e276d94e4018790a5e904722470cad84e192a)) ([`c36ce951`](https://github.com/PASTA-ELN/pasta-eln/commit/c36ce9513013ed01dfd2937e22724445256ec5d1))
+- Fixed centering of the main widget. ([`93bb8915`](https://github.com/PASTA-ELN/pasta-eln/commit/93bb8915a1e5a46454ce02506f35ef823ad64719))
+
+### Documentation
+
+- Updated the README and documentation, and added the design philosophy. ([`cb0213fc`](https://github.com/PASTA-ELN/pasta-eln/commit/cb0213fc315080fca0555e9a07fd4f0c4ae9ee2b)) ([`54885e3c`](https://github.com/PASTA-ELN/pasta-eln/commit/54885e3cfcc73783e698131a8ea8a9ca17c7042f)) ([`48993c97`](https://github.com/PASTA-ELN/pasta-eln/commit/48993c9706d764d0527a776bc86f3afb7a988c39))
+
 ## [v3.2.3b2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.2.3b2) (2026-03-10)
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.2.3b1...v3.2.3b2)
 

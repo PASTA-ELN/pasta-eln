@@ -8,7 +8,7 @@ from PySide6.QtCore import QUrl, Signal, Slot
 from PySide6.QtGui import QDesktopServices, QFontMetrics, QShowEvent, Qt
 from PySide6.QtWidgets import QHBoxLayout, QMenu, QMessageBox, QScrollArea, QSplitter, QTextEdit, QVBoxLayout, QWidget
 from pasta_eln.backend_worker.worker import Task
-from pasta_eln.constants import SORTED_DB_KEYS, defaultDataHierarchyNode
+from pasta_eln.constants import SORTED_DB_KEYS
 from pasta_eln.ui.gui_style import clearLayout
 from pasta_eln.text_tools.string_changes import createDirName
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin
@@ -21,6 +21,7 @@ from pasta_eln.ui.gui_actions import action as addAction
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, CollapsibleSection, Label, Widget
 from pasta_eln.ui.palette import nameColor
+from pasta_eln.ui.message_dialog import showMessage
 
 
 class Details(Widget):
@@ -135,7 +136,7 @@ class Details(Widget):
     Fill in the things that change between displaying different items
     """
     self.show()
-    dataHierarchyNode = self.comm.dataHierarchyNodes.get(self.data['type'][0], defaultDataHierarchyNode)
+    dataHierarchyNode = self.comm.getDataHierarchyNode(self.data['type'])
 
     # HEADER
     # Show the filename indicator when every stored path differs from the item name
@@ -152,11 +153,11 @@ class Details(Widget):
         differs = all(re.sub(r'^\d{3}_', '', filename).casefold() != name for filename in filenames)
     tooltip = ''
     if len(self.data['branch']) > 1:
-      tooltip = f'Item is stored in {len(self.data['branch'])} locations. Metadata, tags, comments, and preview are shared.\n\n'
+      tooltip = f"Item is stored in {len(self.data['branch'])} locations. Metadata, tags, comments, and preview are shared.\n\n"
     if differs or len(self.data['branch']) > 1:
       if filenames:
         tooltip += 'The local filenames are:\n' + '\n'.join(filenames)
-      self.titleLabel.setToolTip(tooltip)
+      self.titleLabel.setToolTip(f'<span style="font-size: 11pt;">{tooltip}</span>')
     else:
       self.titleLabel.setToolTip('')
     # create name that fits into the space by putting ... in the middle
@@ -198,7 +199,11 @@ class Details(Widget):
       if key == 'name':
         continue
       if key == 'image':
-        ResizeImage(self.data['image'], self.contentPreviewL)
+        image = ResizeImage(self.data['image'], self.contentPreviewL)
+        sourcePixmap = image.sourcePixmap()
+        if not sourcePixmap.isNull():
+          imageHeight = sourcePixmap.height() * self.contentPreviewW.width() // sourcePixmap.width()
+          self.splitter.setSizes([imageHeight, self.splitter.height() - imageHeight])
         self.contentPreviewW.show()
       elif key == 'content':
         self.contentText = QTextEdit()
@@ -302,8 +307,7 @@ class Details(Widget):
     if commandType is Command.EDIT:
       self.onEditButtonClicked()
     elif commandType is Command.OPEN_PROJECT:
-      stack = self.currentBranch().get('stack', [])
-      if stack:
+      if stack := self.currentBranch().get('stack', []):
         self.comm.changeProject.emit(stack[0], self.docID)
     elif commandType is Command.OPEN_LIST:
       self.comm.changeTable.emit(self.data['type'][0], '', self.docID)
@@ -323,17 +327,23 @@ class Details(Widget):
       imageType = image[11:14] if isinstance(image, str) and image.startswith('data:image/') and len(image) > 14 and image[14] == ';' \
         else (image[11:15] if isinstance(image, str) and image.startswith('data:image/') else 'svg')
       destination = sourcePath.parent / f'{sourcePath.stem}_PastaExport.{imageType.lower()}'
+      # rerun extractor to save at full resolution/quality; self.data['image'] is only a preview
       self.comm.uiRequestTask.emit(Task.EXTRACTOR_TEST, {
-        'fileName': str(sourcePath), 'style': '', 'recipe': '/'.join(self.data['type']), 'saveFig': str(destination),
+        'fileName': str(sourcePath), 'style': 'html', 'recipe': '/'.join(self.data['type']), 'saveFig': str(destination),
       })
-    elif commandType is Command.OPEN_FOLDER:
+    elif commandType in (Command.OPEN_FOLDER, Command.OPEN_EXTERNAL):
       sourcePath = self.sourcePath()
-      if sourcePath is not None:
-        QDesktopServices.openUrl(QUrl.fromLocalFile(str(sourcePath if sourcePath.is_dir() else sourcePath.parent)))
-    elif commandType is Command.OPEN_EXTERNAL:
-      sourcePath = self.sourcePath()
-      if sourcePath is not None:
-        QDesktopServices.openUrl(QUrl.fromLocalFile(str(sourcePath)))
+      if sourcePath is None:
+        return
+      if commandType is Command.OPEN_FOLDER and not sourcePath.is_dir():
+        sourcePath = sourcePath.parent
+      if not sourcePath.exists():
+        errorMsg = f'The path does not exist:\n{sourcePath}'
+      elif not QDesktopServices.openUrl(QUrl.fromLocalFile(str(sourcePath))):
+        errorMsg = f'The operating system could not open:\n{sourcePath}\n\nCheck the default application for this type.'
+      else:
+        return
+      showMessage(self, 'Could not open', errorMsg, 'Critical')
     elif commandType is Command.TOGGLE_SCAN:
       sourcePath = self.sourcePath()
       if sourcePath is None:

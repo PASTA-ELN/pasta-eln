@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools >= 43.0.0", "wheel"]
+requires = ["setuptools >= 84.2.1", "wheel"]
 
 [tool.codespell]
 skip = '.git,*.pdf,*.svg,*lookup*.json,*dataset-create-new-all-default-fields.json,*test_dataverse_edit_metadata_dialog.py'

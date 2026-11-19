@@ -12,7 +12,7 @@ from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 from pasta_eln import __version__
-from .installation_tools import hardRestart
+from .installation_tools import hardRestart, testDataFolder
 from .ui.gui_communicate import Communicate
 from .ui.main_window import MainWindow
 
@@ -47,6 +47,13 @@ def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
     print('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
   # end test coexistence
+  # Test if database in data folder can be written
+  if comm.configuration and (problems := testDataFolder(comm.basePath)):
+    logging.error('Data folder problems: %s', ' '.join(problems))
+    url = 'https://pasta-eln.github.io/pasta-eln/install.html#troubleshooting'
+    QMessageBox.warning(mainWindow, 'Data folder problem',
+                        f'{"<br>".join(problems)}<br><br>Saving data will likely fail. Solutions are described in the '
+                        f'<a href="{url}">troubleshooting instructions</a>.')
   # Test for new version
   if comm.configuration.get('GUI', {'checkForUpdates':'No'})['checkForUpdates']=='Yes' and not testNewPastaVersion(False):
     button = QMessageBox.question(mainWindow, 'Update?', 'There is a new PASTA-ELN version available. Do you want to update?',

@@ -2,7 +2,7 @@
 """TEST the project view: drag drop randomly items around """
 import logging, random
 from anytree import PreOrderIter
-from PySide6.QtCore import QModelIndex                         # pylint: disable=no-name-in-module
+from PySide6.QtCore import QModelIndex, QObject, Signal       # pylint: disable=no-name-in-module
 from pasta_eln.ui.project.project import Project
 from pasta_eln.ui.gui_communicate import Communicate
 from pasta_eln.backend_worker.worker import Task

@@ -9,7 +9,6 @@ from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, Slot
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QHBoxLayout, QInputDialog,
                                QListWidget, QListWidgetItem, QMessageBox, QTabBar, QTableWidget, QTableWidgetItem,
                                QTabWidget, QVBoxLayout, QWidget)
-from ...constants import defaultDataHierarchyNode
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label
 from ..icon_button_delegate import IconButtonDelegate
@@ -23,7 +22,6 @@ from .name_column_delegate import NameColumnDelegate
 #                0       1            2      3           4      5         6
 COLUMN_NAMES = ['name','description','unit','mandatory','item list','free list','move up','remove']
 COLUMN_WIDTH = [100,   250,          60,    80,         150,        200,        60,       50]
-pd.options.mode.copy_on_write = True
 
 # SQL strings for Export and Import
 TEMPLATE_EXPORT_QUERY = ('SELECT docTypes.docType, docTypes.title, docTypes.icon,  docTypes.shortcut, docTypes.view, '
@@ -31,7 +29,6 @@ TEMPLATE_EXPORT_QUERY = ('SELECT docTypes.docType, docTypes.title, docTypes.icon
     'docTypeSchema.list, definitions.long FROM docTypes JOIN docTypeSchema USING (docType)  LEFT JOIN definitions '
     'ON definitions.key = (docTypeSchema.class || "." || docTypeSchema.name)')
 TEMPLATE_IMPORT_COMPLETE_QUERY = 'SELECT 1 AS templateImportComplete'     # void query at end: shows all done
-
 
 class SchemeEditor(QDialog):
   """ dialog to edit docType schema """
@@ -76,7 +73,8 @@ class SchemeEditor(QDialog):
     docTypeL.addStretch(1)
     Button('', self, Command.NEW, docTypeL, icon='ri.add-line', tooltip='New item type', flat=True)
     Button('', self, Command.EDIT, docTypeL, icon='ri.edit-line', tooltip='Edit item type', flat=True)
-    Button('', self, Command.DEL, docTypeL, icon='ri.delete-bin-line', tooltip='Remove item type', flat=True)
+    self.delButton = Button('', self, Command.DEL, docTypeL, icon='ri.delete-bin-line', tooltip='Remove item type',
+                            flat=True)
     Button('', self, Command.IMPORT, docTypeL, icon='fa5s.download', tooltip='Import item type template', flat=True)
     Button('', self, Command.EXPORT, docTypeL, icon='fa5s.upload', tooltip='Export item type template', flat=True)
 
@@ -163,14 +161,8 @@ class SchemeEditor(QDialog):
     if self.docType:
       self.finishDocType()
     self.docLabel= label
+    self.delButton.setEnabled(not str(self.selectDocType.currentData()).startswith('x'))     # project, folder
     fittingDocTypes = [k for k,v in self.docTypesLabels if v==label]
-    if not fittingDocTypes:                                        #nothing to save since docType just created
-      self.df = pd.DataFrame(defaultDataHierarchyNode)
-      self.df['docType'] = self.selectDocType.currentData()
-      self.df.drop(['PURL'], axis=1, inplace=True)
-      self.df.rename(columns={'query':'long'}, inplace=True)
-      self.paint()
-      return
     self.docType = fittingDocTypes[0]
     self.cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
           'docTypeSchema.unit, docTypeSchema.mandatory, docTypeSchema.list, definitions.long '\
@@ -197,7 +189,8 @@ class SchemeEditor(QDialog):
       table.setAlternatingRowColors(True)
       table.setHorizontalHeaderLabels(COLUMN_NAMES)
       table.horizontalHeader().setStyleSheet('QHeaderView::section {padding: 1px; margin: 0px;}')
-      for idx, width in enumerate(COLUMN_WIDTH[:-1]):
+      table.horizontalHeader().setStretchLastSection(True)
+      for idx, width in enumerate(COLUMN_WIDTH):
         table.setColumnWidth(idx, width)
       for _,row in data.iterrows():
         idx = int(row['idx'])
@@ -223,8 +216,6 @@ class SchemeEditor(QDialog):
       self.closeButtons.append(Button('', self, (Command.DEL_GROUP, idx), icon='ri.close-line',
                                       tooltip='Remove group', flat=True))
       self.tabW.tabBar().setTabButton(idx, QTabBar.ButtonPosition.RightSide, self.closeButtons[-1])
-      header = table.horizontalHeader()
-      header.setStretchLastSection(True)
     self.tabW.addTab(self.newWidget, '+')
     return
 
@@ -246,7 +237,7 @@ class SchemeEditor(QDialog):
     dfDef = df[['class','name','description']]
     dfDef['key'] = dfDef['class']+'.'+dfDef['name']
     dfDef = dfDef.drop(['name','class'], axis=1)[['key','description']]
-    dfDef.rename(columns={'description':'long'}, inplace=True)
+    dfDef = dfDef.rename(columns={'description':'long'})
     nonUnique = dict(dfDef.groupby(['key'])['long'].apply(lambda x: len(np.unique(x))))
     if nonUniqueStr:= ', '.join(k for k,v in nonUnique.items() if v>1):
       button = QMessageBox.question(self, 'Flatten non-unique definitions?',
@@ -261,7 +252,7 @@ class SchemeEditor(QDialog):
     self.comm.uiSendSQL.emit([
       {'type':'many', 'cmd':'INSERT INTO definitions (key, long, PURL) VALUES (?, ?, "") ON CONFLICT(key) DO '
                             'UPDATE SET long = excluded.long;', 'list':listDef},
-      {'type':'one',  'cmd':f"DELETE FROM docTypeSchema WHERE docType == '{self.docType}'"},
+      {'type':'one',  'cmd':'DELETE FROM docTypeSchema WHERE docType == ?', 'list':[self.docType]},
       {'type':'df',   'table':'docTypeSchema', 'df':dfSchema}])
     return
 
@@ -271,12 +262,13 @@ class SchemeEditor(QDialog):
       Args:
         save (bool): whether to persist changes before closing
     """
-    if not save:
-      self.reject()
-    else:
+    if save:
       self.finishDocType()
-      self.comm.start()
+    self.comm.start()                                # reload item types: deletions etc. are saved immediately
+    if save:
       self.accept()
+    else:
+      self.reject()
     return
 
 
@@ -351,12 +343,14 @@ class SchemeEditor(QDialog):
                                     QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.No:
         return
+      docType = self.selectDocType.currentData()
       self.comm.uiSendSQL.emit([
-        {'type':'one', 'cmd':f"DELETE FROM docTypes WHERE docType == '{self.selectDocType.currentData()}'"},
-        {'type':'one', 'cmd':f"DELETE FROM docTypeSchema WHERE docType == '{self.selectDocType.currentData()}'"}
+        {'type':'one', 'cmd':'DELETE FROM docTypes WHERE docType == ?',      'list':[docType]},
+        {'type':'one', 'cmd':'DELETE FROM docTypeSchema WHERE docType == ?', 'list':[docType]}
       ])
-      self.comm.commSendConfiguration.emit(self.comm.configuration, self.comm.projectGroup)#reset docTypes, etc
-      self.selectDocType.clear()
+      self.docTypesLabels = [(k,v) for k,v in self.docTypesLabels if k!=docType]
+      self.docType = ''                                # prevent finishDocType from re-saving the deleted type
+      self.selectDocType.removeItem(self.selectDocType.currentIndex())       # selects and loads the next type
     elif action is Command.DEL_GROUP:
       docLabel = str(self.docLabel)
       button = QMessageBox.question(self, 'Remove group?', 'Do you really want to remove this group?',
@@ -364,8 +358,8 @@ class SchemeEditor(QDialog):
                                     QMessageBox.StandardButton.No)
       if button == QMessageBox.StandardButton.Yes:
         group = self.tabW.tabBar().tabText(command[1])                                   # type: ignore[index]
-        self.comm.uiSendSQL.emit([{'type':'one','cmd':
-          f"DELETE FROM docTypeSchema WHERE docType == '{self.docType}' AND class == '{group}'"}])
+        self.comm.uiSendSQL.emit([{'type':'one', 'cmd':'DELETE FROM docTypeSchema WHERE docType == ? AND class == ?',
+                                   'list':[self.docType, group]}])
         self.changeDocType(docLabel)
     elif action is Command.CANCEL:
       self.closeDialog(False)
@@ -385,10 +379,15 @@ class SchemeEditor(QDialog):
       group = self.tabW.tabBar().tabText(tabID)
       group = '' if group=='default' else group
       widget:QTableWidget = self.tabW.widget(tabID)                                 # type: ignore[assignment]
-      for row in range(widget.rowCount()-1):                   # -1: ignore last row as it is meant for adding
+      idx = 0
+      for row in range(widget.rowCount()):
+        nameItem = widget.item(row, 0)
+        if nameItem is None or not nameItem.text().strip():
+          continue                                  # empty rows (incl. the one for adding) are not properties
         df.at[lastRow, 'docType'] = self.docType
         df.at[lastRow, 'class']   = group
-        df.at[lastRow, 'idx']     = str(row)
+        df.at[lastRow, 'idx']     = str(idx)
+        idx += 1
         for col in range(6):
           item = widget.item(row,col)
           value = '' if item is None else item.text()
@@ -397,7 +396,7 @@ class SchemeEditor(QDialog):
           df.at[lastRow, COLUMN_NAMES[col]] = value
         lastRow += 1
     df['list'] = df['item list']+df['free list']
-    df.drop(['item list','free list'], axis=1, inplace=True)
+    df = df.drop(['item list','free list'], axis=1)
     return df
 
 
@@ -440,6 +439,7 @@ class SchemeEditor(QDialog):
       docType (str): name of the new docType
     """
     if docType not in [self.selectDocType.itemData(i) for i in range(self.selectDocType.count())]:
+      self.docTypesLabels.append((docType, label))
       self.selectDocType.addItem(label, docType)
     self.selectDocType.setCurrentText(label)
     return
@@ -481,7 +481,7 @@ def _canDeleteRow(index: QModelIndex) -> bool:
     Returns:
       bool: Whether the schema row may be deleted
   """
-  return index.model().index(index.row(), 0).data() not in ['name', 'tags', 'comment']
+  return _hasEditableName(index) and index.model().index(index.row(), 0).data() not in ['name', 'tags', 'comment']
 
 
 def _moveRowUp(model: QAbstractItemModel, index: QModelIndex) -> None:

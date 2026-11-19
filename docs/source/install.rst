@@ -13,7 +13,7 @@ Installation and Troubleshooting Instructions
    </div>
 
 **Overview**: Install Pasta-ELN on :ref:`Windows <windows_installation>`, :ref:`Linux <linux_installation>`, and :ref:`MacOS <macOS_installation>`.
-Pasta-ELN requires Python 3.10 or newer. General :ref:`Troubleshooting <troubleshooting>` tips are provided at the end.
+Pasta-ELN requires Python 3.12 or newer. General :ref:`Troubleshooting <troubleshooting>` tips are provided at the end.
 
 .. _windows_installation:
 
@@ -60,7 +60,7 @@ Manual Installation
 
 1. Download Anaconda: https://www.anaconda.com/download.
 2. Install with default settings.
-3. Create a new environment with Python 3.11.
+3. Create a new environment with Python 3.12.
 4. Copy-Paste following content:
 
     .. code-block:: bash
@@ -156,13 +156,25 @@ Troubleshooting Instructions
 
 **Error:** Installing Pasta-ELN leads to a syntax error
    **Solution**
-      - Verify that you use Python version 3.10 or newer. (execute 'python' on the command-shell)
+      - Verify that you use Python version 3.12 or newer. (execute 'python' on the command-shell)
       - Verify that you do not use conda. (Pasta-ELN installation spins up its own pip-environment.)
       - (Linux) Verify that you do not use a python environment inside another python environment. When you open a new terminal does it start with (...)?
 
 
 **Error:** File on hard disk but not DB"
    **Solution** Scan the folder for new data.
+
+**Error:** (Linux) "attempt to write a readonly database" or "disk I/O error" while the data folder is on a network share (SMB / Samba)
+   **Solution**
+      - Do not open the share via the file manager (Nautilus, path starts with ``/run/user/.../gvfs/``). Mount it as CIFS with the ``nobrl`` option instead. This option disables server-side file locking, hence only one computer may use the data folder at a time. For example:
+
+        .. code-block:: bash
+
+           sudo mount -t cifs //server/share /mnt/share -o username=USER,uid=$(id -u),gid=$(id -g),nobrl
+
+      - Ensure that you have write permission on ``pastaELN.db`` in the data folder.
+      - If possible, keep the data folder on a local disk.
+
 
 **Error:** Other errors
    **Solution:** File a new issue on `github <https://github.com/PASTA-ELN/pasta-eln/issues>`__
