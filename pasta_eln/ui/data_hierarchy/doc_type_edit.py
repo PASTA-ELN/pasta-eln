@@ -129,7 +129,7 @@ class DocTypeEditor(QDialog):
       self.reject()
     else:
       label    = self.row2.text()
-      if not label or label in [v['title'] for _,v in self.comm.docTypesTitles.items()]:
+      if not label or label in [v['title'] for k,v in self.comm.docTypesTitles.items() if k!=self.docType]:
         showMessage(self, 'Item type error', 'The display label is required and must be unique.', 'Critical')
         return
       icon     = '' if self.docType.startswith('x') else self.comboIcon.currentText()
