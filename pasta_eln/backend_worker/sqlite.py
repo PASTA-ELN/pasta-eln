@@ -97,7 +97,7 @@ class SqlLiteDB:
         continue
       for path, in paths:
         try:
-          hashes[docID] = sha256File(self.basePath/path)
+          hashes[docID] = sha256File(Path(path) if '://' in path else self.basePath/path)    # URL: hash content
           break
         except OSError:
           continue
