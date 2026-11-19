@@ -64,7 +64,7 @@ class ResizeImage(QLabel):
     if self.sourcePixmap.isNull():
       return
     scaled = self.sourcePixmap.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatio,
-                                       Qt.TransformationMode.SmoothTransformation)
+                                      Qt.TransformationMode.SmoothTransformation)
     super().setPixmap(scaled)
 
 
