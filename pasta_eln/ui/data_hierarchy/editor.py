@@ -18,7 +18,6 @@ from .name_column_delegate import NameColumnDelegate
 #                0       1            2      3           4      5         6
 COLUMN_NAMES = ['name','description','unit','mandatory','item list','free list','move up','remove']
 COLUMN_WIDTH = [100,   250,          60,    80,         150,        200,        60,       50]
-pd.options.mode.copy_on_write = True
 
 
 class SchemeEditor(QDialog):
@@ -189,7 +188,7 @@ class SchemeEditor(QDialog):
     dfDef = df[['class','name','description']]
     dfDef['key'] = dfDef['class']+'.'+dfDef['name']
     dfDef = dfDef.drop(['name','class'], axis=1)[['key','description']]
-    dfDef.rename(columns={'description':'long'}, inplace=True)
+    dfDef = dfDef.rename(columns={'description':'long'})
     nonUnique = dict(dfDef.groupby(['key'])['long'].apply(lambda x: len(np.unique(x))))
     if nonUniqueStr:= ', '.join(k for k,v in nonUnique.items() if v>1):
       button = QMessageBox.question(self, 'Flatten non-unique definitions?',
@@ -291,7 +290,7 @@ class SchemeEditor(QDialog):
           df.at[lastRow, COLUMN_NAMES[col]] = value
         lastRow += 1
     df['list'] = df['item list']+df['free list']
-    df.drop(['item list','free list'], axis=1, inplace=True)
+    df = df.drop(['item list','free list'], axis=1)
     return df
 
 

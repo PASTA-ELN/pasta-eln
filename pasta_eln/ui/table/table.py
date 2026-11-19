@@ -488,10 +488,10 @@ class TableView(Widget):
     if self.data.empty:
       return pd.DataFrame(), []
     base = self.data.copy()
-    base.fillna('-', inplace=True)
-    base.replace(['None', '', 'nan'], '-', inplace=True)
-    base.replace('True', 'Y', inplace=True)
-    base.mask(base.map(isDocID), 'oo', inplace=True)
+    base = base.fillna('-')
+    base = base.replace(['None', '', 'nan'], '-')
+    base = base.replace('True', 'Y')
+    base = base.mask(base.map(isDocID), 'oo')
     base = base.iloc[:, :-2].copy()
     if self.docType == '_tags_':
       base = base[base['tag'] != '_curated'].copy()

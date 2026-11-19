@@ -13,7 +13,7 @@ Installation and Troubleshooting Instructions
    </div>
 
 **Overview**: Install Pasta-ELN on :ref:`Windows <windows_installation>`, :ref:`Linux <linux_installation>`, and :ref:`MacOS <macOS_installation>`.
-Pasta-ELN requires Python 3.10 or newer. General :ref:`Troubleshooting <troubleshooting>` tips are provided at the end.
+Pasta-ELN requires Python 3.12 or newer. General :ref:`Troubleshooting <troubleshooting>` tips are provided at the end.
 
 .. _windows_installation:
 
@@ -60,7 +60,7 @@ Manual Installation
 
 1. Download Anaconda: https://www.anaconda.com/download.
 2. Install with default settings.
-3. Create a new environment with Python 3.11.
+3. Create a new environment with Python 3.12.
 4. Copy-Paste following content:
 
     .. code-block:: bash
@@ -156,7 +156,7 @@ Troubleshooting Instructions
 
 **Error:** Installing Pasta-ELN leads to a syntax error
    **Solution**
-      - Verify that you use Python version 3.10 or newer. (execute 'python' on the command-shell)
+      - Verify that you use Python version 3.12 or newer. (execute 'python' on the command-shell)
       - Verify that you do not use conda. (Pasta-ELN installation spins up its own pip-environment.)
       - (Linux) Verify that you do not use a python environment inside another python environment. When you open a new terminal does it start with (...)?
 

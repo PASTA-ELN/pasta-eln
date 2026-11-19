@@ -11,34 +11,9 @@ updates:
     patterns: ['*']
     multi-ecosystem-group: all
     ignore:
-      - dependency-name: PySide6
-        versions: ['>=6.11']
-      - dependency-name: PySide6_Addons
-        versions: ['>=6.11']
-      - dependency-name: PySide6_Essentials
-        versions: ['>=6.11']
-      - dependency-name: shiboken6
-        versions: ['>=6.11']
-      # Python 3.10 support (3.3.x): remove these holds when 3.10 is dropped after 3.3.2
-      - dependency-name: numpy
-        versions: ['>=2.3']
-      - dependency-name: pandas
-        versions: ['>=3.0']
-      - dependency-name: matplotlib
-        versions: ['>=3.11']
-      - dependency-name: contourpy
-        versions: ['>=1.3.3']
-      - dependency-name: fonttools
-        versions: ['>=4.66']
-      - dependency-name: pillow
-        versions: ['>=13.0']
-      - dependency-name: pycparser
-        versions: ['>=3.12']
-      - dependency-name: python-dateutil
-        versions: ['>=4.0']
-      - dependency-name: sphinx
-        versions: ['>=9.1']
-      - dependency-name: docutils   # sphinx 9.0 needs docutils<0.23
+      - dependency-name: sphinx     # sphinx 9.2 needs Python 3.13
+        versions: ['>=9.2']
+      - dependency-name: docutils   # sphinx 9.1 needs docutils<0.23
         versions: ['>=0.23']
 
   - package-ecosystem: github-actions

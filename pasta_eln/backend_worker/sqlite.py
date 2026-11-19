@@ -787,7 +787,7 @@ class SqlLiteDB:
           params.append(f'{startKey}%')
         dfTags = pd.read_sql_query(cmd, self.connection, params=params, index_col='id').fillna('')
         dfTags = dfTags.groupby(['id'])['tag'].apply(lambda x: ', '.join(set(x))).reset_index().set_index('id')
-        dfTags.rename(columns={'tag':'tags'}, inplace=True)
+        dfTags = dfTags.rename(columns={'tag':'tags'})
         df = df.join(dfTags)
       if 'qrCodes' in viewColumns:
         cmd = 'SELECT main.id, qrCodes.qrCode FROM main INNER JOIN qrCodes USING(id) INNER JOIN branches '\
@@ -800,7 +800,7 @@ class SqlLiteDB:
           params.append(f'{startKey}%')
         dfQrCodes = pd.read_sql_query(cmd, self.connection, params=params, index_col='id').fillna('')
         dfQrCodes = dfQrCodes.groupby(['id'])['qrCode'].apply(', '.join).reset_index().set_index('id')
-        dfQrCodes.rename(columns={'qrCode':'qrCodes'}, inplace=True)
+        dfQrCodes = dfQrCodes.rename(columns={'qrCode':'qrCodes'})
         df = df.join(dfQrCodes)
       if metadataKeys := [column for column in viewColumns if column not in MAIN_ORDER+['tags']]:
         cmd = 'SELECT main.id, properties.key, properties.value FROM main INNER JOIN properties USING(id) '\
@@ -820,7 +820,7 @@ class SqlLiteDB:
       columnOrder = [i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]+['show']
       df = df.reset_index().reindex(columnOrder, axis=1)
       df = df.rename(columns={i:i[1:] for i in columnOrder if i.startswith('.') })
-      df = df.fillna('').astype('str')
+      df = df.astype(object).fillna('').astype('str')
       return df
     if thePath=='viewHierarchy/viewHierarchy':
       cmd = 'SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui, branches.idx, branches.path '\

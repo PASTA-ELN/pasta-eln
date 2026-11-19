@@ -4,13 +4,11 @@ import hashlib
 import json
 import logging
 import shutil
-import sys
-import time
 import uuid
 from datetime import datetime
 from pathlib import Path, PurePosixPath
 from typing import Any
-from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
+from zipfile import ZIP_DEFLATED, ZipFile
 import requests
 from anytree import Node
 from pasta_eln import __version__, minisign
@@ -418,13 +416,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         fullPath = f'{dirNameGlobal}/{path[2:]}'
       else:
         fullPath = f'{dirNameGlobal}/{path}'
-      if sys.version_info >= (3, 11):
-        elnFile.mkdir(fullPath)
-      else:
-        dirInfo = ZipInfo(fullPath if fullPath.endswith('/') else f'{fullPath}/')
-        dirInfo.date_time = time.localtime(time.time())[:6]
-        dirInfo.external_attr = 0o40775 << 16                                                     # drwxrwxr-x
-        elnFile.writestr(dirInfo, '')
+      elnFile.mkdir(fullPath)
 
     def processNode(node:Node) -> str:
       """

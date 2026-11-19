@@ -112,7 +112,7 @@ class Editor(QDialog):
       data['defType'] = 'class'
       self.df0 = data.rename({'docType':'key', 'title':'long'}, axis=1)
     self.data = pd.concat([self.df0,self.df1])[['key','long','PURL','defType']]
-    self.data.rename({'long':'label'}, axis=1, inplace=True)
+    self.data = self.data.rename({'long':'label'}, axis=1)
     self.paint()
 
 

@@ -16,7 +16,7 @@ The full user and developer documentation is available at [PASTA-ELN documentati
 
 ## Quick start
 
-PASTA-ELN supports Python 3.10 and later.
+PASTA-ELN supports Python 3.12 and later.
 
 ```bash
 pip install -r requirements-linux.txt  # or requirements-windows.txt

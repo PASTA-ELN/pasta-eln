@@ -167,7 +167,7 @@ class DataAnalyse(QDialog):
   def refresh(self):
     """ repaint graph """
     try:
-      self.df.sort_values(self.xAxisCB.currentText(), inplace=True)
+      self.df = self.df.sort_values(self.xAxisCB.currentText())
     except KeyError:
       pass
     if self.xAxisCB.currentText() not in self.df.columns or \
