@@ -9,6 +9,7 @@ from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, Slot
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QHBoxLayout, QInputDialog,
                                QListWidget, QListWidgetItem, QMessageBox, QTabBar, QTableWidget, QTableWidgetItem,
                                QTabWidget, QVBoxLayout, QWidget)
+from ...backend_worker.sqlite import DOC_TYPE_SCHEMA
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label
 from ..icon_button_delegate import IconButtonDelegate
@@ -48,6 +49,8 @@ class SchemeEditor(QDialog):
     self.cmd     = ''
     self.pendingImport:list[tuple[str, str]] = []
     self.df      = pd.DataFrame()
+    self.parentRows = pd.DataFrame()             # schema of the nearest parent type: subtypes have all its rows
+    self.inherited:set[tuple[str,str]] = set()                                    # (group, name) of parentRows
     self.docTypesLabels = [(k,v['title']) for k,v in self.comm.docTypesTitles.items()]
     self.closeButtons:list[Button] = []                                                # close buttons of tabs
     self.setWindowTitle('Item type editor')
@@ -144,8 +147,17 @@ class SchemeEditor(QDialog):
           self.docTypesLabels[existingIndex] = (docType, title)
           self.selectDocType.setItemText(existingIndex, title)
       showMessage(self, 'Templates imported', f'Imported {len(importedTypes)} item types.', 'Information')
-    elif cmd==self.cmd:                                                            # Get one docType and paint
-      self.df = data
+    elif cmd==self.cmd:                               # Get one docType and its parent types, add inherited rows
+      parents = data[data['docType']!=self.docType]
+      if not parents.empty:                               # nearest parent type already contains all higher ones
+        parents = parents[parents['docType']==max(parents['docType'], key=len)]
+      self.parentRows = parents
+      self.inherited = set(zip(parents['class'], parents['name']))
+      own = data[data['docType']==self.docType]
+      missing = _missingRows(own, parents, self.docType)
+      if not missing.empty:                                                 # save inherited rows immediately
+        self.comm.uiSendSQL.emit([{'type':'df', 'table':'docTypeSchema', 'df':missing[DOC_TYPE_SCHEMA]}])
+      self.df = pd.concat([own, missing])
       self.paint()
 
 
@@ -164,10 +176,12 @@ class SchemeEditor(QDialog):
     self.delButton.setEnabled(not str(self.selectDocType.currentData()).startswith('x'))     # project, folder
     fittingDocTypes = [k for k,v in self.docTypesLabels if v==label]
     self.docType = fittingDocTypes[0]
+    parts = self.docType.split('/')
+    docTypes = ', '.join(f'"{"/".join(parts[:i])}"' for i in range(1, len(parts)+1))   # itself and parent types
     self.cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
           'docTypeSchema.unit, docTypeSchema.mandatory, docTypeSchema.list, definitions.long '\
           'FROM docTypeSchema LEFT JOIN definitions ON definitions.key = (docTypeSchema.class || "." || docTypeSchema.name) '\
-          f'WHERE docTypeSchema.docType=="{self.docType}"'
+          f'WHERE docTypeSchema.docType IN ({docTypes})'
     self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':self.cmd}])
 
 
@@ -207,7 +221,8 @@ class SchemeEditor(QDialog):
       table.setItemDelegateForColumn(5, self.listFreeDelegates[-1])
       self.iconButtonDelegates.append(IconButtonDelegate('fa5s.arrow-up', _hasEditableName, _moveRowUp))
       table.setItemDelegateForColumn(6, self.iconButtonDelegates[-1])
-      self.iconButtonDelegates.append(IconButtonDelegate('fa5s.trash', _canDeleteRow, _deleteRow))
+      self.iconButtonDelegates.append(IconButtonDelegate('fa5s.trash', lambda index, group=group: _canDeleteRow(index)
+          and (group, index.model().index(index.row(), 0).data()) not in self.inherited, _deleteRow))  # keep inherited
       table.setItemDelegateForColumn(7, self.iconButtonDelegates[-1])
       self.tabW.addTab(table, group or 'default')
     # define close buttons on some of the tabs
@@ -226,6 +241,7 @@ class SchemeEditor(QDialog):
     - either by selecting another docType or by pressing save
     """
     df = self.table2schema()
+    df = pd.concat([df, _missingRows(df, self.parentRows.rename(columns={'long':'description'}), self.docType)])
     # verification: uniqueness in names. etc
     unique = ( df.groupby('class')['name'].nunique() == df.groupby('class')['name'].count()  ).all()
     if not unique:
@@ -254,6 +270,12 @@ class SchemeEditor(QDialog):
                             'UPDATE SET long = excluded.long;', 'list':listDef},
       {'type':'one',  'cmd':'DELETE FROM docTypeSchema WHERE docType == ?', 'list':[self.docType]},
       {'type':'df',   'table':'docTypeSchema', 'df':dfSchema}])
+    self.comm.dataHierarchyNodes[self.docType] = dfSchema.to_dict('records')
+    for docType, nodes in self.comm.dataHierarchyNodes.items():                    # subtypes get all properties
+      if docType.startswith(f'{self.docType}/'):
+        if not (missing := _missingRows(pd.DataFrame(nodes), dfSchema, docType)[DOC_TYPE_SCHEMA]).empty:
+          self.comm.uiSendSQL.emit([{'type':'df', 'table':'docTypeSchema', 'df':missing}])
+          self.comm.dataHierarchyNodes[docType] = nodes + missing.to_dict('records')
     return
 
 
@@ -506,6 +528,23 @@ def _deleteRow(model: QAbstractItemModel, index: QModelIndex) -> None:
       index (QModelIndex): model index associated with the event
   """
   model.removeRow(index.row())
+
+
+def _missingRows(target:pd.DataFrame, source:pd.DataFrame, docType:str) -> pd.DataFrame:
+  """Rows of source whose group and name are missing in target, numbered after the rows of target in each group
+    Args:
+      target (pd.DataFrame): schema rows of the receiving item type
+      source (pd.DataFrame): schema rows of the parent item type
+      docType (str): receiving item type
+    Returns:
+      pd.DataFrame: rows to add to target
+  """
+  if source.empty:
+    return source
+  present = set(zip(target['class'], target['name']))
+  missing = source[[key not in present for key in zip(source['class'], source['name'])]]
+  offset = missing['class'].map(target['class'].value_counts()).fillna(0).astype(int)
+  return missing.assign(docType=docType, idx=(offset + missing.groupby('class').cumcount()).astype(str))
 
 
 def _validateItemTypeTemplate(template:Any) -> list[dict[str, Any]]:
