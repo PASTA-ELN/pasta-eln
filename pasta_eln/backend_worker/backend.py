@@ -336,7 +336,7 @@ class Backend(CliMixin):
     filesCountSum = sum(len(files) for (_, _, files) in os.walk(self.cwd))
     filesCount = 0
     ignoredFolders = []
-    excludePatterns = self.configuration.get('scanExcludePatterns', [])
+    excludePatterns = [i.lower() for i in self.configuration.get('scanExcludePatterns', [])]
     extractorJobs:list[dict[str,Any]] = []
     for root, dirs, files in os.walk(self.cwd, topdown=True):
       #find parent-document
@@ -353,7 +353,7 @@ class Backend(CliMixin):
       parentDoc = self.db.getDoc(parentID)
       hierStack = parentDoc['branch'][0]['stack']+[parentID]
       # handle directories and prevent going into them if they should be ignored
-      excludedDirs = [i for i in dirs if any(fnmatch.fnmatch(i, pattern) for pattern in excludePatterns)]
+      excludedDirs = [i for i in dirs if any(fnmatch.fnmatchcase(i.lower(), pattern) for pattern in excludePatterns)]
       dirs[:] = [i for i in dirs if i not in excludedDirs]
       ignoredFolders += [(Path(root)/i).relative_to(self.basePath).as_posix() for i in excludedDirs]
       ignoredFolders += [(Path(root)/i).relative_to(self.basePath).as_posix()
@@ -406,10 +406,12 @@ class Backend(CliMixin):
         filesCount += 1
         if progressBar is not None:
           progressBar(int(100*filesCount/filesCountSum))
-        if (any(fnmatch.fnmatch(fileName, pattern) for pattern in excludePatterns)
-            or isPastaExport(Path(root)/fileName)):
-          continue
         path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
+        if (any(fnmatch.fnmatchcase(fileName.lower(), pattern) for pattern in excludePatterns)
+            or isPastaExport(Path(root)/fileName)):
+          if path in pathsInDbData:                                       # keep the item that was once linked
+            pathsInDbData.remove(path)
+          continue
         if path in pathsInDbData:
           logging.info('Scan: file already in DB: %s',path)
           pathsInDbData.remove(path)
@@ -493,6 +495,7 @@ class Backend(CliMixin):
     inDbAll = self.db.getView('viewHierarchy/viewPathsAll')
     pathsInDbData = [i['key'] for i in inDbAll if i['value'][1][0][0]!='x']
     pathsInDbFolder = [i['key'] for i in inDbAll if i['value'][1][0][0]=='x']
+    excludePatterns = [i.lower() for i in self.configuration.get('scanExcludePatterns', [])]    # same as scan
     count = 0
     ignoredFolders:list[str] = []
     for projI in viewProjects['id']:
@@ -508,13 +511,14 @@ class Backend(CliMixin):
                                  f' differ only in case: {", ".join(collisions)}. Windows and macOS keep only one of '
                                  'them, which can lose data when syncing. Rename them.')
         ignoreFolder = (Path(root)/'.pastaELN_ignore').is_file()
-        if Path(root).name[0]=='.' or Path(root).name.startswith('trash_') or ignoreFolder:
+        if Path(root).name.startswith('trash_') or ignoreFolder:
           if ignoreFolder:
             ignoredFolders.append(Path(root).relative_to(self.basePath).as_posix())
           dirs[:] = []
           continue
         for fileName in files:
-          if fileName.startswith('.') or fileName.startswith('trash_') or isPastaExport(Path(root)/fileName):
+          if any(fnmatch.fnmatchcase(fileName.lower(), pattern) for pattern in excludePatterns) or \
+             isPastaExport(Path(root)/fileName):
             continue
           path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
           if path not in pathsInDbData:
@@ -525,8 +529,7 @@ class Backend(CliMixin):
             pathsInDbData.remove(path)
         ignoredFolders.extend((Path(root)/i).relative_to(self.basePath).as_posix()
                               for i in dirs if (Path(root)/i/'.pastaELN_ignore').is_file())
-        dirs[:] = [i for i in dirs if not i.startswith(('.','trash_')) and i != '__pycache__'
-                  and not (Path(root)/i/'pyvenv.cfg').is_file()
+        dirs[:] = [i for i in dirs if not any(fnmatch.fnmatchcase(i.lower(), pattern) for pattern in excludePatterns)
                   and not (Path(root)/i/'.pastaELN_ignore').is_file()]
         for dirName in dirs:
           path = (Path(root).relative_to(self.basePath) /dirName).as_posix()
