@@ -1,6 +1,5 @@
 """Input and output functions towards the ELN file format"""
 import copy
-import hashlib
 import json
 import logging
 import shutil
@@ -480,8 +479,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       # include content size, etc
       fullPath = backend.basePath/path
       if path is not None and fullPath.exists() and fullPath.is_file():
-        docELN['contentSize'] = str(fullPath.stat().st_size)
-        docELN['sha256'] = sha256File(fullPath)
+        docELN['sha256'], size = sha256File(fullPath)
+        docELN['contentSize'] = str(size)
         # copy data-files
         elnFile.write(str(fullPath), f'{dirNameGlobal}/{path}')
         docELN['@type'] = 'File'
@@ -489,11 +488,11 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         mkDirectory(docELN['@id'][:-1])
         docELN['@type'] = 'Dataset'
       elif path.startswith('http'):
-        response = requests.get(path, timeout=10)
-        if response.ok:
+        dataHash, size = sha256File(Path(path))
+        if dataHash:
           docELN['sdDatePublished'] = datetime.now().isoformat()
-          docELN['contentSize'] = str(response.headers['content-length'])
-          docELN['sha256']      = hashlib.sha256(response.content).hexdigest()
+          docELN['contentSize'] = str(size)
+          docELN['sha256']      = dataHash
         else:
           logging.info('Could not get file %s', path)
         docELN['@type'] = 'File'

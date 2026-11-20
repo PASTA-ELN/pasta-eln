@@ -91,19 +91,13 @@ class SqlLiteDB:
     hashes:dict[str, str] = {}
     for docID, in rows:
       paths = self.cursor.execute('SELECT path FROM branches WHERE id=? AND path!=\'*\'', (docID,)).fetchall()
-      if not paths:
-        logging.warning('Cannot migrate %s: data file is not reachable; dataHash was cleared.', docID)
-        hashes[docID] = ''
-        continue
+      hashes[docID] = ''
       for path, in paths:
-        try:
-          hashes[docID] = sha256File(Path(path) if '://' in path else self.basePath/path)    # URL: hash content
+        hashes[docID] = sha256File(Path(path) if '://' in path else self.basePath/path)[0]
+        if hashes[docID]:
           break
-        except OSError:
-          continue
-      if docID not in hashes:
+      if not hashes[docID]:
         logging.warning('Cannot migrate %s: data file is not reachable; dataHash was cleared.', docID)
-        hashes[docID] = ''
     try:
       databasePath = self.basePath/'pastaELN.db'
       backupPath = databasePath.with_name(

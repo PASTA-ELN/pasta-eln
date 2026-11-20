@@ -200,10 +200,9 @@ class Backend(CliMixin):
               path = Path(doc['name'])
           else:
             path = Path(doc['name'])
-            try:
-              dataHash = sha256File(path)
-            except Exception:
-              logging.error('bad01: fetch remote content failed. Data not added', exc_info=True)
+            dataHash = sha256File(path)[0]
+            if not dataHash:
+              logging.error('bad01: fetch remote content failed. Data not added: %s', doc['name'])
               return {'id':''}
         elif doc['name']!='' and (self.basePath/doc['name']).is_file():                          # file exists
           path = self.basePath/doc['name']
@@ -221,7 +220,7 @@ class Backend(CliMixin):
           dataHash = '-'
         if dataHash!='-' and path is not None:
           if dataHash == '':
-            dataHash = sha256File(path)
+            dataHash = sha256File(path)[0]
           view = self.db.getView('viewIdentify/viewDataHash', dataHash)
           if (len(view)==0 or forceNewImage) and runExtractors:       #measurement not in database: create doc
             self.extractors.use(path, dataHash, doc)                                      #create image/content
@@ -417,7 +416,7 @@ class Backend(CliMixin):
           pathsInDbData.remove(path)
         else:
           logging.info('Scan: add file to DB: %s',path)
-          dataHash = sha256File(self.basePath/path)
+          dataHash = sha256File(self.basePath/path)[0]
           if not dataHash:
             raise NameError(f'Filepath does not exist {self.basePath/path}')
           view = self.db.getView('viewIdentify/viewDataHash', dataHash)

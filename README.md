@@ -43,7 +43,6 @@ Open issues are the union of
 2. this README section, which records repository-wide maintenance items that need visibility before or alongside an issue.
 
 ### Repository maintenance items
-- ELN export reads each file completely into memory to compute its SHA-256 and size, so exporting projects with multi-GB files can run out of memory or crash (`pasta_eln/backend_worker/input_output.py`, local files and remote `response.content`). Fix: take the size from `stat()` and hash in chunks; stream remote files.
 - Add `path` and `location` columns to the "Select list columns" dialog (~25 lines). `location` shows the stack as project/folder names (e.g. `Pasta / Sicily`), not raw IDs. Items with several branches show all values comma-joined, like tags; `getView` currently keeps only the first branch (`df.index.duplicated(keep='first')`). Changes: `pasta_eln/ui/table/table_header.py` (offer both, save without `.` prefix); `getView` in `pasta_eln/backend_worker/sqlite.py` (exclude both from the properties query, one branches query with the hidden/project filters, one name lookup for all stack IDs).
 - Data-hierarchy should be a real data hierarchy: a class like device/instrument should have all properties of device; ensure/test in editor only
 - env-variable - migration guard: should be a GUI question

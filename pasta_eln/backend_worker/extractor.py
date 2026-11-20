@@ -85,8 +85,8 @@ class ExtractorManager:
     if not pyPath.is_file():
       return None
     return {'id':jobID, 'doc':doc, 'addOnPath':self.addOnPath, 'pyFile':pyFile, 'absFilePath':absFilePath,
-            'extension':extension, 'style':{'main':'/'.join(docType)}, 'dataHash':sha256File(absFilePath),
-            'extractorHash':sha256File(pyPath), 'saveFileName':None}
+            'extension':extension, 'style':{'main':'/'.join(docType)}, 'dataHash':sha256File(absFilePath)[0],
+            'extractorHash':sha256File(pyPath)[0], 'saveFileName':None}
 
 
   def applyResults(self, results:list[dict[str,Any]], jobs:list[dict[str,Any]]) -> list[tuple[dict[str,Any],dict[str,Any]]]:
@@ -309,8 +309,8 @@ class ExtractorManager:
         mtimeBefore = Path(saveFig).stat().st_mtime if saveFig and Path(saveFig).is_file() else None
         parameters = tuple(signature(module.use).parameters)
         if (getattr(module, 'PASTA_ELN_EXTRACTOR_API', -1) == 2  and parameters == ('filePath','style','saveFigure')):
-          dataHash = sha256File(filePath)
-          extractorHash = sha256File(extractorPath/pyFile)
+          dataHash = sha256File(filePath)[0]
+          extractorHash = sha256File(extractorPath/pyFile)[0]
 
           # assemble callback function with known content
           def saveExtractorFigure(image:Image.Image | None=None) -> None:
@@ -519,29 +519,24 @@ def runExtractorInSubprocess(job:dict[str,Any], connection:Any) -> None:
 
 
 # HASH FUNCTIONS
-def sha256File(path:Path) -> str:
-  """Return the SHA-256 digest of raw bytes in a reachable file
+def sha256File(path:Path) -> tuple[str,int]:
+  """Return the SHA-256 digest and size of a local file or URL; read in chunks to keep memory low
     Args:
-      path (Path): file path to process
+      path (Path): file path or URL to process
     Returns:
-      str: SHA-256 digest of the file contents
+      tuple: SHA-256 digest and size in bytes; ('', -1) if not reachable
   """
-  if str(path).startswith('http'):
-    req = request.Request(path.as_posix().replace(':/','://'), headers={'User-Agent': 'Mozilla/5.0'})
-    with request.urlopen(req, timeout=60) as stream:
-      return _sha256Stream(stream)
-  with open(path.resolve(), 'rb') as stream:
-    return _sha256Stream(stream)
-
-
-def _sha256Stream(stream:BinaryIO) -> str:
-  """Calculate a SHA-256 digest without loading the complete file
-    Args:
-      stream (BinaryIO): binary stream to hash
-    Returns:
-      str: SHA-256 digest of the stream contents
-  """
-  hasher = sha256()
-  while chunk := stream.read(65536):
-    hasher.update(chunk)
-  return hasher.hexdigest()
+  hasher, size = sha256(), 0
+  try:
+    if str(path).startswith('http'):
+      req = request.Request(path.as_posix().replace(':/','://'), headers={'User-Agent': 'Mozilla/5.0'})
+      stream:BinaryIO = request.urlopen(req, timeout=60)
+    else:
+      stream = open(path.resolve(), 'rb')                                       # pylint: disable=consider-using-with
+    with stream:
+      while chunk := stream.read(65536):
+        hasher.update(chunk)
+        size += len(chunk)
+  except OSError:                                                   # missing file, dead link, time-out
+    return '', -1
+  return hasher.hexdigest(), size
