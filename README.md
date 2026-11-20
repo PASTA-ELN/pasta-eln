@@ -55,12 +55,14 @@ Open issues are the union of
   - Add-on failures become {} in [`callAddOn()` (line 201)](/home/steffen/FZJ/PASTA/pasta-eln/pasta_eln/addons.py:201)
   - Auto-comment failures are suppressed in [`Form.execute()` (line 644)](/home/steffen/FZJ/PASTA/pasta-eln/pasta_eln/ui/form/form.py:644)
   - Download errors are only printed in [`callDataExtractor()` (line 227)](/home/steffen/FZJ/PASTA/pasta-eln/pasta_eln/addons.py:227)
-- Case-insensitive scan exclusions (branches `new_version` and `LLM_functions`)
+- Case-insensitive scan exclusions (branch `new_version`)
   - `scanExcludePatterns` are matched case-sensitively on Linux, because `fnmatch.fnmatch()` follows the case rules of the operating system. The pattern `*.exe` therefore does not exclude `SETUP.EXE` on Linux, but it does on Windows, so the same data folder gives different databases. Affected on `new_version`: `pasta_eln/backend_worker/backend.py` line 355 (folders) and line 406 (files). Fix: compare `name.lower()` with `pattern.lower()`, and store patterns in lower case when they are saved in the configuration.
   - `checkDB()` does not use `scanExcludePatterns`. Excluded files that still exist on disk may therefore be reported as missing from the database. `checkDB()` should share the matching function with the scan.
 - ELN export reads each file completely into memory to compute its SHA-256 and size, so exporting projects with multi-GB files can run out of memory or crash (`pasta_eln/backend_worker/input_output.py`, local files and remote `response.content`). Fix: take the size from `stat()` and hash in chunks; stream remote files.
 - Add `path` and `location` columns to the "Select list columns" dialog (~25 lines). `location` shows the stack as project/folder names (e.g. `Pasta / Sicily`), not raw IDs. Items with several branches show all values comma-joined, like tags; `getView` currently keeps only the first branch (`df.index.duplicated(keep='first')`). Changes: `pasta_eln/ui/table/table_header.py` (offer both, save without `.` prefix); `getView` in `pasta_eln/backend_worker/sqlite.py` (exclude both from the properties query, one branches query with the hidden/project filters, one name lookup for all stack IDs).
 - Data-hierarchy should be a real data hierarchy: a class like device/instrument should have all properties of device; ensure/test in editor only
+- env-variable - migration guard: should be a GUI question
+- Release beta version, only then address github issues
 
 ## Notes
 - Tutorial

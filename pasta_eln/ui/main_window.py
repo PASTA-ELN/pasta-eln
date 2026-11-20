@@ -1,5 +1,6 @@
 """ Graphical user interface houses all widgets """
 from __future__ import annotations
+import importlib.util
 import json
 import logging
 import sys
@@ -9,7 +10,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QEvent, QObject, Qt, QTimer, QUrl, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QKeyEvent, QPixmap
-from PySide6.QtWidgets import QApplication, QFileDialog, QLabel, QMainWindow, QMessageBox, QSplitter
+from PySide6.QtWidgets import QApplication, QDockWidget, QFileDialog, QLabel, QMainWindow, QMessageBox, QSplitter
 from pasta_eln import __version__
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.configuration_file import saveConfiguration
@@ -119,6 +120,16 @@ class MainWindow(QMainWindow):
     self.splitter.addWidget(self.body)
     self.splitter.splitterMoved.connect(self.onMainSplitterMoved)
     self.body.splitter.splitterMoved.connect(self.onDetailsSplitterMoved)
+    # Lab companion: only if configured by hand and the provider package is installed
+    llmConfiguration = self.comm.configuration.get('llm', {})
+    if llmConfiguration.get('model') and llmConfiguration.get('provider') in ('anthropic', 'openai') \
+        and importlib.util.find_spec(llmConfiguration['provider']):
+      from pasta_eln.lab_companion.main import LabCompanion
+      self.labCompanionDock = QDockWidget('Lab companion', self)
+      self.labCompanionDock.setObjectName('labCompanionDock')
+      self.labCompanionDock.setWidget(LabCompanion(self.comm, llmConfiguration))
+      self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.labCompanionDock)
+      helpMenu.addAction(self.labCompanionDock.toggleViewAction())
 
     self.paint()
     def _resizeSplitter() -> None:
