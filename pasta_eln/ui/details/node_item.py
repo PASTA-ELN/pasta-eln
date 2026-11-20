@@ -1,9 +1,7 @@
 """Graphics item representing one document in a relationship view"""
 from __future__ import annotations
-
 from typing import Any
-
-from PySide6.QtCore import QRectF, Signal, Qt
+from PySide6.QtCore import QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import QGraphicsItem, QGraphicsObject
 

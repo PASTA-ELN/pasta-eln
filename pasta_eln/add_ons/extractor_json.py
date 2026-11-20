@@ -8,7 +8,6 @@ Tutorial:
 import json
 import os
 
-
 PASTA_ELN_EXTRACTOR_API = 2
 
 

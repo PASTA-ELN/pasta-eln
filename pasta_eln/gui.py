@@ -1,8 +1,8 @@
 """ Main methods that start the gui """
-import logging
 import json
-import sys
+import logging
 import subprocess
+import sys
 from pathlib import Path
 from urllib import request
 import qdarktheme
@@ -42,7 +42,7 @@ def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
     application = QApplication.instance()
   comm = Communicate(projectGroup=projectGroup)
   mainWindow = MainWindow(comm)
-  if 'develop' in comm.configuration:                                       # developers: copy the log to the terminal
+  if 'develop' in comm.configuration:                               # developers: copy the log to the terminal
     consoleHandler = logging.StreamHandler()
     consoleHandler.setFormatter(logging.getLogger().handlers[0].formatter)
     logging.getLogger().addHandler(consoleHandler)

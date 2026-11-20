@@ -2,8 +2,8 @@
 """
 import logging
 from PySide6.QtWidgets import QMessageBox
-from pasta_eln.backend_worker.worker import Task
 from pasta_eln.addons import getHierarchy
+from pasta_eln.backend_worker.worker import Task
 
 # The following two variables are mandatory
 description  = 'Sort child items'  # short description shown in the menu

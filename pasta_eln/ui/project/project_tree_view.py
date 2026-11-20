@@ -6,8 +6,8 @@ from typing import Any
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QContextMenuEvent, QDropEvent, QMouseEvent, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QTreeView, QWidget
-from ...backend_worker.worker import Task
 from ...addons import callAddOn
+from ...backend_worker.worker import Task
 from ..gui_actions import action
 from ..gui_communicate import Communicate
 from ..message_dialog import showMessage
@@ -191,7 +191,7 @@ class TreeView(QTreeView):
       return None
     item = iterate(self.model().invisibleRootItem())                              # type: ignore[attr-defined]
     if item is not None:
-      parents: list[QModelIndex] = []                                     # list of parents, grandparents,
+      parents: list[QModelIndex] = []                                          # list of parents, grandparents
       parent = item.index().parent()
       while parent.isValid():
         parents.append(parent)

@@ -1,5 +1,6 @@
 """ Shared helpers for the GUI/backend tests """
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 from PySide6.QtCore import QObject, Qt, SignalInstance
 
 

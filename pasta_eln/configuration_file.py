@@ -11,7 +11,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from keyring.errors import KeyringError
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox
-from .constants import (configurationGUI, defaultConfiguration, defaultScanExcludePatterns, defaultUIState)
+from .constants import configurationGUI, defaultConfiguration, defaultScanExcludePatterns, defaultUIState
 
 
 def getConfiguration(defaultProjectGroup: str = '') -> tuple[dict[str, Any], str]:

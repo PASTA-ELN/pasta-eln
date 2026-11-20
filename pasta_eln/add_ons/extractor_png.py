@@ -21,6 +21,7 @@ import base64
 from io import BytesIO
 import numpy as np
 from PIL import Image, ImageFilter
+
 PASTA_ELN_EXTRACTOR_API = 2
 
 

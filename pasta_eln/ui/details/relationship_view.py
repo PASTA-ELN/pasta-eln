@@ -1,14 +1,12 @@
 """Qt relationship graph used by the Details pane"""
 from __future__ import annotations
-
 import math
 from collections import deque
 from typing import Any
-
 from PySide6.QtCore import QPointF, Qt, Slot
 from PySide6.QtGui import QColor, QPen
-from PySide6.QtWidgets import (QCheckBox, QGraphicsLineItem, QGraphicsScene,
-                               QGraphicsSimpleTextItem, QGraphicsView, QLabel, QSpinBox, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QCheckBox, QGraphicsLineItem, QGraphicsScene, QGraphicsSimpleTextItem, QGraphicsView,
+                               QLabel, QSpinBox, QVBoxLayout, QWidget)
 from pasta_eln.ui.details.node_item import NodeItem
 from pasta_eln.ui.gui_communicate import Communicate
 

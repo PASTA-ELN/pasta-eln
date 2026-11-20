@@ -1157,7 +1157,7 @@ class SqlLiteDB:
           reply+= check('warning', f'{item} has no parent [dch07]')
         elif not minimal:
           reply+= check('ok', f'{item} has no parent; this is fine for workflows and samples')
-      if path is not None:                                                                  #None: handled next lines
+      if path is not None:                                                           #None: handled next lines
         dirNamePrefix = path.split(os.sep)[-1].split('_')[0]
         if dirNamePrefix.isdigit() and child!=int(dirNamePrefix) and docType.startswith('x'):#compare child-number to start of directory name
           reply+= check('error', f'Folder {item}: its position in the parent ({child}) does not match the number '
@@ -1244,7 +1244,7 @@ class SqlLiteDB:
         try:
           imgData = base64.b64decode(image[22:])
           Image.open(io.BytesIO(imgData))                    #can convert, that is all that needs to be tested
-        except (ValueError, OSError):                       #bad base64: ValueError; not an image: OSError
+        except (ValueError, OSError):                           #bad base64: ValueError; not an image: OSError
           reply+= check('error', f'Thumbnail of {label(docID)} is not a valid PNG/JPEG image [dch12]')
       elif image.startswith('<?xml'):
         #from https://stackoverflow.com/questions/63419010/check-if-an-image-file-is-a-valid-svg-file-in-python

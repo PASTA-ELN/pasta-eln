@@ -70,7 +70,7 @@ class ConfigurationGUI(QDialog):
               self.comm.configuration['scanExcludePatterns'] = newList
             else:
               self.comm.configuration['GUI'][k] = int(widget.currentText())
-          except ValueError:                                                  # not a number: keep text
+          except ValueError:                                                         # not a number: keep text
             self.comm.configuration['GUI'][k] = getattr(self, k).currentText()
       saveConfiguration(self.comm.configuration)
       if self.comm.configuration['GUI'].get('theme') != oldTheme and QMessageBox.question(self, 'Restart required',

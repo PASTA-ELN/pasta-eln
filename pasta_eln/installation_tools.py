@@ -35,18 +35,20 @@ def createDefaultConfiguration(pathPasta:Path | None=None) -> dict[str,Any]:
   addOnDir = Path(__file__).parent/'add_ons'
   conf: dict[str, Any] = {
       'defaultProjectGroup': 'research',
-      'GUI': {key: value[1] for section in configurationGUI.values() for key, value in section.items()
-              if key != 'scanExcludePatterns'},
+      'GUI': {key: value[1] for section in configurationGUI.values()
+              for key, value in section.items() if key != 'scanExcludePatterns'},
       'projectGroups': {
           'research': {
               'local': {'database': 'research', 'path': str(pathPasta)},
               'remote': {},
               'addOnDir': str(addOnDir),
-              'addOns': {'project': {}, 'extractors':{}, 'table':{}}
-          }},
-      'version': CONFIGURATION_VERSION}
-  conf['uiState'] = dict(defaultUIState)
-  conf['scanExcludePatterns'] = list(defaultScanExcludePatterns)
+              'addOns': {'project': {}, 'extractors': {}, 'table': {}},
+          }
+      },
+      'version': CONFIGURATION_VERSION,
+      'uiState': dict(defaultUIState),
+      'scanExcludePatterns': list(defaultScanExcludePatterns),
+  }
   try:
     conf['userID']      = os.getlogin()
   except OSError:                                                                               #github action
@@ -472,7 +474,7 @@ def hardRestart() -> None:
   """Restart the installed or development application"""
   try:
     os.execv('pastaELN', [''])
-  except OSError:                                                                   # not installed: development
+  except OSError:                                                                 # not installed: development
     os.execv(sys.executable, [sys.executable, '-m', 'pasta_eln.gui'])
 
 

@@ -16,7 +16,7 @@ import pandas as pd
 from anytree import Node
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QMessageBox
-from ..text_tools.handle_dictionaries import flatten, expandDocID2tupleInDict
+from ..text_tools.handle_dictionaries import expandDocID2tupleInDict, flatten
 from ..text_tools.string_changes import createDirName
 from .backend import Backend
 from .dataverse import DataverseClient

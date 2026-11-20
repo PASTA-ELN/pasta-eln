@@ -4,8 +4,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 from PySide6.QtWidgets import QApplication, QDialog, QGroupBox, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
-from ...configuration_file import saveConfiguration
 from ...addons import loadNamedModule
+from ...configuration_file import saveConfiguration
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label, shortcut
 from ..message_dialog import showMessage
@@ -102,7 +102,7 @@ class ConfigurationAddOnParameter(QDialog):
             if helpText:
               Button('?', self, command=[helpText], layout=barL)
             self.allLineEdits.append((addonType,name,param,lineEdit))
-        except Exception:                                                   # boundary: add-ons are user code
+        except Exception:                                                    # boundary: add-ons are user code
           Label(f'{name}.py: Error occurred; please check add-on.', 'h4', groupLayout)
     else:
       showMessage(self, 'Help', command[0], 'Information')

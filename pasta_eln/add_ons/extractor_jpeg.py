@@ -8,6 +8,7 @@ import re
 from io import BytesIO
 import numpy as np
 from PIL import Image
+
 PASTA_ELN_EXTRACTOR_API = 2
 
 

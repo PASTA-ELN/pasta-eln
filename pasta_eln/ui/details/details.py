@@ -9,19 +9,18 @@ from PySide6.QtGui import QDesktopServices, QFontMetrics, QShowEvent, Qt
 from PySide6.QtWidgets import QHBoxLayout, QMenu, QMessageBox, QScrollArea, QSplitter, QTextEdit, QVBoxLayout, QWidget
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.constants import SORTED_DB_KEYS
-from pasta_eln.ui.gui_style import clearLayout
 from pasta_eln.text_tools.string_changes import createDirName
-from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.details.add_attachment_dialog import AddAttachmentDialog
 from pasta_eln.ui.details.attachment_view import AttachmentView
+from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.details.details_hier_item import DetailsHierItem
-from pasta_eln.ui.details.resize_image import ResizeImage
 from pasta_eln.ui.details.relationship_view import RelationshipView
+from pasta_eln.ui.details.resize_image import ResizeImage
 from pasta_eln.ui.gui_actions import action as addAction
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, CollapsibleSection, Label, Widget
-from pasta_eln.ui.palette import nameColor
+from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, CollapsibleSection, Label, Widget, clearLayout
 from pasta_eln.ui.message_dialog import showMessage
+from pasta_eln.ui.palette import nameColor
 
 
 class Details(Widget):

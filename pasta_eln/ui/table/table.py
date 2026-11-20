@@ -11,18 +11,18 @@ from PySide6.QtGui import QIcon, QImage, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (QComboBox, QFileDialog, QHBoxLayout, QListWidget, QListWidgetItem, QMenu, QMessageBox,
                                QTableView, QVBoxLayout, QWidget)
-from pasta_eln.backend_worker.worker import Task
 from pasta_eln.addons import callAddOn
+from pasta_eln.backend_worker.worker import Task
 from pasta_eln.text_tools.handle_dictionaries import isDocID
 from pasta_eln.ui.details.context import DetailContext, DetailOrigin
 from pasta_eln.ui.gui_actions import action
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.gui_style import SPACE, formatTag, Button, ButtonStyle, Widget
+from pasta_eln.ui.gui_style import SPACE, Button, ButtonStyle, Widget, formatTag
+from pasta_eln.ui.palette import nameColor
 from pasta_eln.ui.table.filter_row import FilterRow
 from pasta_eln.ui.table.pandas_table_model import PandasTableModel
 from pasta_eln.ui.table.table_header import TableHeader
 from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
-from pasta_eln.ui.palette import nameColor
 
 
 class TableView(Widget):

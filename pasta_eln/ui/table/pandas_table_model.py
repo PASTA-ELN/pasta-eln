@@ -1,9 +1,8 @@
 """A Qt table model that exposes a pandas DataFrame to a QTableView"""
-from typing import Any
+from typing import Any, override
 import pandas as pd
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt, Signal
-from PySide6.QtGui import QColor, QBrush
-from typing_extensions import override
+from PySide6.QtGui import QBrush, QColor
 
 
 class PandasTableModel(QAbstractTableModel):

@@ -1,7 +1,7 @@
 """ dialog to edit docType schema """
+import json
 from enum import Enum
 from functools import partial
-import json
 from pathlib import Path
 from typing import Any
 import numpy as np
@@ -30,7 +30,7 @@ TEMPLATE_EXPORT_QUERY = ('SELECT docTypes.docType, docTypes.title, docTypes.icon
     'docTypeSchema.class,  docTypeSchema.idx, docTypeSchema.name, docTypeSchema.unit,  docTypeSchema.mandatory, '
     'docTypeSchema.list, definitions.long FROM docTypes JOIN docTypeSchema USING (docType)  LEFT JOIN definitions '
     'ON definitions.key = (docTypeSchema.class || "." || docTypeSchema.name)')
-TEMPLATE_IMPORT_COMPLETE_QUERY = 'SELECT 1 AS templateImportComplete'     # void query at end: shows all done
+TEMPLATE_IMPORT_COMPLETE_QUERY = 'SELECT 1 AS templateImportComplete'      # void query at end: shows all done
 
 class SchemeEditor(QDialog):
   """ dialog to edit docType schema """
@@ -50,8 +50,8 @@ class SchemeEditor(QDialog):
     self.cmd     = ''
     self.pendingImport:list[tuple[str, str]] = []
     self.df      = pd.DataFrame()
-    self.parentRows = pd.DataFrame()             # schema of the nearest parent type: subtypes have all its rows
-    self.inherited:set[tuple[str,str]] = set()                                    # (group, name) of parentRows
+    self.parentRows = pd.DataFrame()           # schema of the nearest parent type: subtypes have all its rows
+    self.inherited:set[tuple[str,str]] = set()                                   # (group, name) of parentRows
     self.docTypesLabels = [(k,v['title']) for k,v in self.comm.docTypesTitles.items()]
     self.closeButtons:list[Button] = []                                                # close buttons of tabs
     self.setWindowTitle('Item type editor')
@@ -135,7 +135,7 @@ class SchemeEditor(QDialog):
           json.dump(template, templateFile, indent=2)
       except (OSError, TypeError, ValueError) as error:
         showMessage(self, 'File write error', f'Cannot write item type template: {error}', 'Critical')
-    elif cmd == TEMPLATE_IMPORT_COMPLETE_QUERY:               # all imports are done, communicate new schema
+    elif cmd == TEMPLATE_IMPORT_COMPLETE_QUERY:                 # all imports are done, communicate new schema
       importedTypes = self.pendingImport
       self.pendingImport = []
       self.comm.commSendConfiguration.emit(self.comm.configuration, self.comm.projectGroup, False)
@@ -148,15 +148,15 @@ class SchemeEditor(QDialog):
           self.docTypesLabels[existingIndex] = (docType, title)
           self.selectDocType.setItemText(existingIndex, title)
       showMessage(self, 'Templates imported', f'Imported {len(importedTypes)} item types.', 'Information')
-    elif cmd==self.cmd:                               # Get one docType and its parent types, add inherited rows
+    elif cmd==self.cmd:                             # Get one docType and its parent types, add inherited rows
       parents = data[data['docType']!=self.docType]
-      if not parents.empty:                               # nearest parent type already contains all higher ones
+      if not parents.empty:                             # nearest parent type already contains all higher ones
         parents = parents[parents['docType']==max(parents['docType'], key=len)]
       self.parentRows = parents
       self.inherited = set(zip(parents['class'], parents['name']))
       own = data[data['docType']==self.docType]
       missing = _missingRows(own, parents, self.docType)
-      if not missing.empty:                                                 # save inherited rows immediately
+      if not missing.empty:                                                  # save inherited rows immediately
         self.comm.uiSendSQL.emit([{'type':'df', 'table':'docTypeSchema', 'df':missing[DOC_TYPE_SCHEMA]}])
       self.df = pd.concat([own, missing])
       self.paint()
@@ -178,7 +178,7 @@ class SchemeEditor(QDialog):
     fittingDocTypes = [k for k,v in self.docTypesLabels if v==label]
     self.docType = fittingDocTypes[0]
     parts = self.docType.split('/')
-    docTypes = ', '.join(f'"{"/".join(parts[:i])}"' for i in range(1, len(parts)+1))   # itself and parent types
+    docTypes = ', '.join(f'"{"/".join(parts[:i])}"' for i in range(1, len(parts)+1)) # itself and parent types
     self.cmd = 'SELECT docTypeSchema.docType, docTypeSchema.class, docTypeSchema.idx, docTypeSchema.name, '\
           'docTypeSchema.unit, docTypeSchema.mandatory, docTypeSchema.list, definitions.long '\
           'FROM docTypeSchema LEFT JOIN definitions ON definitions.key = (docTypeSchema.class || "." || docTypeSchema.name) '\
@@ -272,7 +272,7 @@ class SchemeEditor(QDialog):
       {'type':'one',  'cmd':'DELETE FROM docTypeSchema WHERE docType == ?', 'list':[self.docType]},
       {'type':'df',   'table':'docTypeSchema', 'df':dfSchema}])
     self.comm.dataHierarchyNodes[self.docType] = dfSchema.to_dict('records')
-    for docType, nodes in self.comm.dataHierarchyNodes.items():                    # subtypes get all properties
+    for docType, nodes in self.comm.dataHierarchyNodes.items():                  # subtypes get all properties
       if docType.startswith(f'{self.docType}/'):
         if not (missing := _missingRows(pd.DataFrame(nodes), dfSchema, docType)[DOC_TYPE_SCHEMA]).empty:
           self.comm.uiSendSQL.emit([{'type':'df', 'table':'docTypeSchema', 'df':missing}])

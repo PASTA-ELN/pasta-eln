@@ -6,6 +6,7 @@ import os
 import tempfile
 import time
 import traceback
+import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -14,7 +15,6 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any
 from urllib import request
-import xml.etree.ElementTree as ET
 import matplotlib
 import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
@@ -534,6 +534,6 @@ def sha256File(path:Path) -> tuple[str,int]:
       while chunk := stream.read(65536):
         hasher.update(chunk)
         size += len(chunk)
-  except OSError:                                                   # missing file, dead link, time-out
+  except OSError:                                                          # missing file, dead link, time-out
     return '', -1
   return hasher.hexdigest(), size

@@ -99,7 +99,7 @@ def dict2ul(aDict:dict[str,Any], fmt:str='html') -> str:
     if isinstance(value,str) and value.startswith('{') and value.endswith('}'):
       try:
         value = json.loads(value.replace("'",'"'))
-      except ValueError:                                                     # not JSON: show as text
+      except ValueError:                                                              # not JSON: show as text
         pass
     if isinstance(value, dict):
       valueString = dict2ul(value, fmt)
@@ -269,7 +269,7 @@ def hierarchy(data: dict[str, Any]) -> dict[str, Any]:
   normalDict: dict[str, Any] = {}
   for flatKey, value in data.items():
     nestedSetDict(normalDict, tuple(flatKey.split('.')), value)
-  return dict2list(normalDict)  # type: ignore[return-value]
+  return dict2list(normalDict)                                                    # type: ignore[return-value]
 
 
 def expandDocID2tupleInDict(d:dict[str,Any], database:'SqlLiteDB') -> None:

@@ -12,10 +12,10 @@ from PySide6.QtCore import QSize, Qt, QTimer, Slot
 from PySide6.QtGui import QKeyEvent, QRegularExpressionValidator
 from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QInputDialog, QLabel, QLayout, QLineEdit,
                                QMenu, QMessageBox, QScrollArea, QSizePolicy, QSplitter, QTextEdit, QVBoxLayout, QWidget)
+from ...addons import callAddOn, waitForBackend
 from ...backend_worker.sqlite import MAIN_ORDER
 from ...backend_worker.worker import Task
 from ...constants import SQLiteTranslationDict, minimalDocInForm
-from ...addons import callAddOn, waitForBackend
 from ...text_tools.string_changes import createDirName, isDocID, markdownEqualizer
 from .._context_menu import CommandMenu, executeContextMenu, initContextMenu
 from ..gui_actions import action
@@ -138,7 +138,7 @@ class Form(QDialog):
     # Request data
     if not self.flagNewDoc:
       self.comm.backendThread.worker.beSendDoc.connect(self.onGetData)    # do not wait for data if not needed
-    self.comm.backendThread.worker.beSendTable.connect(self.onGetTable)          # tags, docTypes to link,
+    self.comm.backendThread.worker.beSendTable.connect(self.onGetTable)               # tags, docTypes to link
     for docID in self.allDocIDs:
       self.comm.uiRequestDoc.emit(docID)
     self.comm.uiRequestTable.emit('_tags_','', True)
@@ -652,7 +652,7 @@ class Form(QDialog):
 
     elif commandType is Command.AUTO_COMMENT:
       if (reply := callAddOn('form_auto', self.comm, self.doc, self)) is not None:
-        self.textEdit_comment.insertPlainText(f'\n{"-"*20}\n{reply}\n{"-"*20}\n')     # type: ignore[attr-defined]
+        self.textEdit_comment.insertPlainText(f'\n{"-"*20}\n{reply}\n{"-"*20}\n') # type: ignore[attr-defined]
 
     elif commandType is Command.FORM_CANCEL:
       if self.comm. configuration['GUI']['autosave'] == 'Yes':
@@ -669,10 +669,10 @@ class Form(QDialog):
 
     elif commandType in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT, Command.FORM_SAVE_DUPL):
       self.checkThreadTimer.stop()
-      if self.autosavePath.is_file():                               #if there is a temporary file
+      if self.autosavePath.is_file():                                            #if there is a temporary file
         content = json.loads(self.autosavePath.read_text(encoding='utf-8'))
-        if self.doc.get('id', '') in content:            #if there is an ID in content -> unique identifier?
-          del content[self.doc.get('id', '')]                                                # delete the ID
+        if self.doc.get('id', '') in content:              #if there is an ID in content -> unique identifier?
+          del content[self.doc.get('id', '')]                                                  # delete the ID
         self.autosavePath.write_text(json.dumps(content, ensure_ascii=False), encoding='utf-8')
 
       # loop through all the subitems
@@ -691,7 +691,7 @@ class Form(QDialog):
           return
         if key=='name':
           self.doc['name'] = getattr(self, elementName).text().strip()
-        elif key == 'tags':                                                          #tags are already saved
+        elif key == 'tags':                                                            #tags are already saved
         #     'image', 'metaVendor', 'metaUser' or not hasattr(self, f'key_{key}') and not hasattr(self, f'textEdit_{key}')):
           continue
         elif key == '.qrCodes':
@@ -748,7 +748,7 @@ class Form(QDialog):
           del self.doc['name']
         if not self.doc['tags']:
           del self.doc['tags']                                # remove empty tags to not overwrite already set
-        if not self.docTypeComboBox.currentData():            # keep each item's own (sub)type unless changed
+        if not self.docTypeComboBox.currentData():             # keep each item's own (sub)type unless changed
           del self.doc['type']
         self.doc = {k:v for k,v in self.doc.items() if v}                             # filter out empty items
         for docID in self.allDocIDsCopy:

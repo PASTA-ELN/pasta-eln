@@ -6,8 +6,7 @@ from enum import Enum
 from typing import Any
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit,
                                QVBoxLayout, QWidget)
-from ...configuration_file import saveConfiguration
-from ...configuration_file import getORCIDName, getRORIDLabel
+from ...configuration_file import getORCIDName, getRORIDLabel, saveConfiguration
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button
 

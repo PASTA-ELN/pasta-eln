@@ -1,6 +1,6 @@
 """ Python Backend: all operations with the filesystem are here """
-import json
 import fnmatch
+import json
 import logging
 import os
 import re
@@ -10,8 +10,8 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 from urllib import request
-from ..constants import DIR_META_FILE
 from ..configuration_file import getConfiguration
+from ..constants import DIR_META_FILE
 from ..text_tools.handle_dictionaries import diffDicts, fillDocBeforeCreate
 from ..text_tools.string_changes import camelCase, createDirName, outputString
 from .extractor import ExtractorManager, isPastaExport, sha256File
@@ -224,7 +224,7 @@ class Backend(CliMixin):
             dataHash = sha256File(path)[0]
           view = self.db.getView('viewIdentify/viewDataHash', dataHash)
           if (len(view)==0 or forceNewImage) and runExtractors:       #measurement not in database: create doc
-            self.extractors.use(path, dataHash, doc)                                      #create image/content
+            self.extractors.use(path, dataHash, doc)                                     #create image/content
             # All files should appear in database
             # if not 'image' in doc and not 'content' in doc and not 'otherELNName' in doc:  #did not get valuable data: extractor does not exit
             #   return ''
@@ -363,7 +363,7 @@ class Backend(CliMixin):
         if path in pathsInDbX:                                                      # path already in database
           pathsInDbX.remove(path)
           continue
-        if (self.basePath/path/DIR_META_FILE).is_file():                 # update branch: path and stack
+        if (self.basePath/path/DIR_META_FILE).is_file():                       # update branch: path and stack
           docID = readIdFile(self.basePath/path/DIR_META_FILE).get('id', '')
           doc = self.db.getDoc(docID) if docID else {}
           if len(doc)==0:                             # unknown or invalid id file: drop it, rerun adds folder

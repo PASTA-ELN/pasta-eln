@@ -7,11 +7,10 @@ import qtawesome as qta
 from PySide6.QtCore import Slot
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
-from pasta_eln.ui.gui_style import clearLayout
 from pasta_eln.ui.details.context import DetailContext
 from pasta_eln.ui.form.form import Form
 from pasta_eln.ui.gui_communicate import Communicate
-from pasta_eln.ui.gui_style import SPACE, Button, HSeparator, Label, Widget
+from pasta_eln.ui.gui_style import SPACE, Button, HSeparator, Label, Widget, clearLayout
 from pasta_eln.ui.sidebar.project_card import ProjectCard
 
 

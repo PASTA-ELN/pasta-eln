@@ -56,7 +56,7 @@ class LabCompanion(Widget):
 
     # Signals
     self.askShortcut = shortcut('Ctrl+Return', self, lambda: self.execute(Command.ASK))
-    self.askShortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)    # only while focus is in this panel
+    self.askShortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)   # only while focus is in this
     self.comm.changeDetails.connect(self.onDetailsChanged)
     self.comm.backendThread.worker.beSendDoc.connect(self.onGetData)
 
@@ -105,47 +105,48 @@ class LabCompanion(Widget):
     Args:
       command (Command): command to execute
     """
-    if command is Command.ASK:
-      question = self.question.toPlainText().strip()
-      if not question:
-        return
-      if not self.doc:
-        self.answer.setPlainText('Select an item first.')
-        return
-      # =========================================================================================
-      # IMAGES ARE REMOVED BEFORE SENDING: the 'image' field (base64 / SVG preview) is large and
-      # adds little. Everything else, including the full metaVendor, is sent to the provider.
-      # =========================================================================================
-      doc = {key: value for key, value in self.doc.items() if key != 'image'}
-      userText = f'Item:\n{json.dumps(doc, default=str)}\n\nQuestion:\n{question}'
-      provider, model = self.configuration['provider'], self.configuration['model']
-      baseURL = self.configuration.get('baseURL') or None
+    if command is not Command.ASK:
+      return
+    question = self.question.toPlainText().strip()
+    if not question:
+      return
+    if not self.doc:
+      self.answer.setPlainText('Select an item first.')
+      return
+    # =========================================================================================
+    # IMAGES ARE REMOVED BEFORE SENDING: the 'image' field (base64 / SVG preview) is large and
+    # adds little. Everything else, including the full metaVendor, is sent to the provider.
+    # =========================================================================================
+    doc = {key: value for key, value in self.doc.items() if key != 'image'}
+    userText = f'Item:\n{json.dumps(doc, default=str)}\n\nQuestion:\n{question}'
+    provider, model = self.configuration['provider'], self.configuration['model']
+    baseURL = self.configuration.get('baseURL') or None
 
-      def requestAnswer(progress: Callable[[str, str], None]) -> None:
-        """Send item and question to the provider; runs in the worker thread
+    def requestAnswer(progress: Callable[[str, str], None]) -> None:
+      """Send item and question to the provider; runs in the worker thread
 
         Args:
           progress (Callable): emits (kind, text) to the UI thread
         """
-        try:
-          if provider == 'anthropic':
-            import anthropic
-            response = anthropic.Anthropic().messages.create(
-              model=model, max_tokens=16000, system=SYSTEM_PROMPT,
-              messages=[{'role': 'user', 'content': userText}])
-            text = ''.join(block.text for block in response.content if block.type == 'text')
-            progress('answer', text or f'No answer (stop reason: {response.stop_reason})')
-          else:
-            import openai
-            completion = openai.OpenAI(base_url=baseURL).chat.completions.create(
-              model=model, messages=[{'role': 'system', 'content': SYSTEM_PROMPT},
-                                     {'role': 'user', 'content': userText}])
-            progress('answer', completion.choices[0].message.content or 'No answer')
-        except Exception as error:                     # network, authentication, model, and context errors
-          progress('error', f'{type(error).__name__}: {error}')
+      try:
+        if provider == 'anthropic':
+          import anthropic
+          response = anthropic.Anthropic().messages.create(
+            model=model, max_tokens=16000, system=SYSTEM_PROMPT,
+            messages=[{'role': 'user', 'content': userText}])
+          text = ''.join(block.text for block in response.content if block.type == 'text')
+          progress('answer', text or f'No answer (stop reason: {response.stop_reason})')
+        else:
+          import openai
+          completion = openai.OpenAI(base_url=baseURL).chat.completions.create(
+            model=model, messages=[{'role': 'system', 'content': SYSTEM_PROMPT},
+                                   {'role': 'user', 'content': userText}])
+          progress('answer', completion.choices[0].message.content or 'No answer')
+      except Exception as error:                          # network, authentication, model, and context errors
+        progress('error', f'{type(error).__name__}: {error}')
 
-      self.askButton.setEnabled(False)
-      self.answer.setPlainText('Waiting for answer…')
-      self.worker = Worker(requestAnswer)
-      self.worker.progress.connect(self.onAnswer)
-      self.worker.start()
+    self.askButton.setEnabled(False)
+    self.answer.setPlainText('Waiting for answer…')
+    self.worker = Worker(requestAnswer)
+    self.worker.progress.connect(self.onAnswer)
+    self.worker.start()

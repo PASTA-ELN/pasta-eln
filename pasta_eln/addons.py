@@ -2,7 +2,6 @@
 import hashlib
 import importlib
 import importlib.util
-from inspect import signature
 import logging
 import os
 import subprocess
@@ -10,6 +9,7 @@ import sys
 import tempfile
 import threading
 from collections.abc import Callable
+from inspect import signature
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -306,7 +306,7 @@ def getDoc(comm:Any, docID:str) -> dict[str, Any]:
     dict: document as dict
   """
   doc:dict[str, Any] = waitForBackend(comm.backendThread.worker.beSendDoc, lambda: comm.uiRequestDoc.emit(docID),
-                                      lambda iDoc: not iDoc or iDoc['id'] == docID)[0]   # {}: unknown docID
+                                      lambda iDoc: not iDoc or iDoc['id'] == docID)[0]     # {}: unknown docID
   return doc
 
 

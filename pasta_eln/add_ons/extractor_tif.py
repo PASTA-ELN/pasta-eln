@@ -4,6 +4,7 @@
 import base64
 from io import BytesIO
 from PIL import Image
+
 PASTA_ELN_EXTRACTOR_API = 2
 
 

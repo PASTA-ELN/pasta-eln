@@ -12,10 +12,10 @@ from PySide6.QtCore import QEvent, QObject, Qt, QTimer, QUrl, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QKeyEvent, QPixmap
 from PySide6.QtWidgets import QApplication, QDockWidget, QFileDialog, QLabel, QMainWindow, QMessageBox, QSplitter
 from pasta_eln import __version__
+from pasta_eln.addons import installPythonPackages, updateAddOnList
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.configuration_file import saveConfiguration
 from pasta_eln.constants import aboutMessage, shortcuts
-from pasta_eln.addons import installPythonPackages, updateAddOnList
 from pasta_eln.installation_tools import hardRestart
 from pasta_eln.ui.body.body import Body
 from pasta_eln.ui.config.main import Configuration

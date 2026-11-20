@@ -142,7 +142,7 @@ class Body(QWidget):
       projectID (str): from Signal: Which Project it was changed to
     """
     self.comm.changeDetails.emit(DetailContext())                                              # close details
-    self._tableChangingInProgress = True                    # Project reloads itself via changeProject
+    self._tableChangingInProgress = True                            # Project reloads itself via changeProject
     self.tabWidget.setCurrentIndex(0)
     self._tableChangingInProgress = False
 
@@ -181,7 +181,7 @@ class Body(QWidget):
     widget = self.tabWidget.widget(index)
     if isinstance(widget, Project):
       self.comm.changeDetails.emit(DetailContext())                                            # close details
-      if widget.projID:                                      # reload: tables may have changed docs meanwhile
+      if widget.projID:                                       # reload: tables may have changed docs meanwhile
         widget.change(widget.projID, '')
     elif isinstance(widget, TableView):
       docType = widget.docType

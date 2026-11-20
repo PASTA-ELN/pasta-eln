@@ -43,7 +43,6 @@ Open issues are the union of
 2. this README section, which records repository-wide maintenance items that need visibility before or alongside an issue.
 
 ### Repository maintenance items
-- Release beta version, only then address github issues
 
 ## Notes
 - Tutorial
