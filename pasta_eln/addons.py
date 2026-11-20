@@ -8,8 +8,9 @@ import os
 import subprocess
 import sys
 import tempfile
-import time
+import threading
 import traceback
+from collections.abc import Callable
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -18,7 +19,6 @@ import pandas as pd
 from anytree import Node
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QWidget
 from .configuration_file import loadConfiguration, saveConfiguration
 
@@ -263,6 +263,41 @@ def callDataExtractor(docID:str, comm:Any) -> Any:
   return None
 
 
+def waitForBackend(signal:Any, request:Callable[[], None], accept:Callable[..., bool],
+                   timeout:float=60.) -> tuple[Any, ...]:
+  """ Send a request to the backend worker and block until its matching answer arrives
+
+  The receiver is a plain function, hence it runs in the backend thread: wait with threading.Event
+
+  Args:
+    signal (SignalInstance): backend signal that carries the answer
+    request (Callable): emits the request to the backend
+    accept (Callable): receives the signal arguments, returns True for the matching answer
+    timeout (float): seconds to wait before raising TimeoutError
+
+  Returns:
+    tuple: arguments of the accepted signal
+  """
+  answer:list[tuple[Any, ...]] = []
+  received = threading.Event()
+  def receive(*args:Any) -> None:
+    """Store the first matching answer; runs in the backend thread
+    Args:
+      args (Any): signal arguments
+    """
+    if not received.is_set() and accept(*args):
+      answer.append(args)
+      received.set()
+  signal.connect(receive)
+  try:
+    request()
+    if not received.wait(timeout):
+      raise TimeoutError(f'Backend did not answer within {timeout:.0f} s')
+  finally:
+    signal.disconnect(receive)
+  return answer[0]
+
+
 def getHierarchy(comm:Any, docID:str, showAll:bool=True) -> tuple[Node, dict[str, Any]]:
   """ Helper for add-ons: get hierarchy of a project from backend
   Args:
@@ -273,25 +308,10 @@ def getHierarchy(comm:Any, docID:str, showAll:bool=True) -> tuple[Node, dict[str
   Returns:
     tuple: (hierarchy as anytree, project document as dict)
   """
-  hierarchyI = None
-  projDoc   = None
-  @Slot(Node, dict)
-  def receiveData(h:Node, doc:dict[str,Any]) -> None:
-    """Callback: store the hierarchy and project document returned by the backend signal
-
-    Args:
-      h (Node): Root node of the requested project hierarchy
-      doc (dict[str, Any]): Project document associated with that hierarchy
-    """
-    nonlocal hierarchyI
-    hierarchyI = h
-    nonlocal projDoc
-    projDoc   = doc
-  comm.backendThread.worker.beSendHierarchy.connect(receiveData)
-  comm.uiRequestHierarchy.emit(docID, showAll)
-  while hierarchyI is None or projDoc is None:
-    time.sleep(0.1)
-  return hierarchyI, projDoc
+  hierarchy, projDoc = waitForBackend(comm.backendThread.worker.beSendHierarchy,
+                                      lambda: comm.uiRequestHierarchy.emit(docID, showAll),
+                                      lambda _, doc: doc.get('id') == docID)
+  return hierarchy, projDoc
 
 
 def getDoc(comm:Any, docID:str) -> dict[str, Any]:
@@ -304,19 +324,8 @@ def getDoc(comm:Any, docID:str) -> dict[str, Any]:
   Returns:
     dict: document as dict
   """
-  doc = None
-  @Slot(dict)
-  def receiveData(iDoc:dict[str,Any]) -> None:
-    """ Slot to receive data
-    Args:
-      iDoc (dict): document
-    """
-    nonlocal doc
-    doc = iDoc
-  comm.backendThread.worker.beSendDoc.connect(receiveData)
-  comm.uiRequestDoc.emit(docID)
-  while doc is None:
-    time.sleep(0.1)
+  doc:dict[str, Any] = waitForBackend(comm.backendThread.worker.beSendDoc, lambda: comm.uiRequestDoc.emit(docID),
+                                      lambda iDoc: not iDoc or iDoc['id'] == docID)[0]   # {}: unknown docID
   return doc
 
 

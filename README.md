@@ -43,12 +43,6 @@ Open issues are the union of
 2. this README section, which records repository-wide maintenance items that need visibility before or alongside an issue.
 
 ### Repository maintenance items
-- Blocking polling in asynchronous UI paths
-  Some asynchronous backend requests are converted into synchronous calls by connecting a signal and repeatedly sleeping until a result appears. These loops have no timeout, cancellation, or failure path, and their temporary signal handlers are not disconnected. A missed signal or backend failure can therefore block indefinitely; repeated calls can also accumulate callbacks and return unrelated responses.
-  Examples:
-  - [`getHierarchy()` (line 266)](/home/steffen/FZJ/PASTA/pasta-eln/pasta_eln/addons.py:266)
-  - [`getDoc()` (line 297)](/home/steffen/FZJ/PASTA/pasta-eln/pasta_eln/addons.py:297)
-  - History loading in [`Form.execute()` (line 781)](/home/steffen/FZJ/PASTA/pasta-eln/pasta_eln/ui/form/form.py:781)
 - Broad and inconsistent exception handling: create and document a consistent exception handling
   The package contains many except Exception blocks, including paths that merely print, log, return an empty value, or silently pass. This erases distinctions between expected operational failures and programming defects. Callers cannot consistently determine whether an operation succeeded, and corrupted intermediate state may continue through the application after the original error context has been lost.
   Examples:

@@ -508,7 +508,7 @@ class BackendWorker(QObject):
       elif task['type']=='df':
         task['df'].to_sql(task['table'], self.backend.db.connection, if_exists='append', index=False, dtype='str')
       elif task['type']=='get_df':
-        df = pd.read_sql_query(task['cmd'], self.backend.db.connection).fillna('')
+        df = pd.read_sql_query(task['cmd'], self.backend.db.connection, params=task.get('list')).fillna('')
         self.beSendSQL.emit(task['cmd'], df)
       else:
         print('**ERROR unknown task command', task)

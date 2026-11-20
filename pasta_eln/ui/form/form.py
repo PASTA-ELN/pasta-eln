@@ -4,7 +4,6 @@ import copy
 import json
 import logging
 import re
-import time
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -16,7 +15,7 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QIn
 from ...backend_worker.sqlite import MAIN_ORDER
 from ...backend_worker.worker import Task
 from ...constants import SQLiteTranslationDict, minimalDocInForm
-from ...addons import callAddOn
+from ...addons import callAddOn, waitForBackend
 from ...text_tools.string_changes import createDirName, isDocID, markdownEqualizer
 from .._context_menu import CommandMenu, executeContextMenu, initContextMenu
 from ..gui_actions import action
@@ -795,23 +794,16 @@ class Form(QDialog):
       doc = copy.deepcopy(self.doc)
       if 'image' in doc:
         del doc['image']
-      # get history
-      history = None
-      @Slot(str,pd.DataFrame)
-      def receiveData(cmd:str, df:pd.DataFrame) -> None:
-        """ Slot to receive data
-        Args:
-          cmd (str): command
-          df (pd.DataFrame): dataframe
-        """
-        nonlocal history
-        history = {i[1]:i[2] for i in df.itertuples()}
-      self.comm.backendThread.worker.beSendSQL.connect(receiveData)
-      docID = self.doc['id']
-      sqlCmd = f"SELECT date, change FROM changes WHERE id=='{docID}'"
-      self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':sqlCmd}])
-      while history is None:
-        time.sleep(0.1)
+      # get history: forms are modal, hence the query text identifies the answer
+      sqlCmd = 'SELECT date, change FROM changes WHERE id==?'
+      try:
+        _, df = waitForBackend(self.comm.backendThread.worker.beSendSQL,
+                    lambda: self.comm.uiSendSQL.emit([{'type':'get_df', 'cmd':sqlCmd, 'list':[self.doc['id']]}]),
+                    lambda cmd, _: cmd == sqlCmd)
+      except TimeoutError as error:
+        showMessage(self, 'Error', str(error), 'Critical')
+        return
+      history = {i[1]:i[2] for i in df.itertuples()}
       MessageDialog(self, 'Details', {'current':doc,'history':history}, minWidth=600,
                     style='QScrollArea{min-height:400px}').exec()
 
