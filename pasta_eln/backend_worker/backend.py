@@ -57,13 +57,14 @@ class Backend(CliMixin):
     return self.dbRaw
 
 
-  def initialize(self, configuration:dict[str,Any]={}, projectGroupName:str='') -> None:
+  def initialize(self, configuration:dict[str,Any]={}, projectGroupName:str='', allowMigration:bool=False) -> None:
     """
     initialize or reinitialize server and define database
 
     Args:
         configuration (dict): configuration dictionary with database and other settings
         projectGroupName (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
+        allowMigration (bool): the user agreed to upgrade an old database
     """
     self.configuration = configuration
     self.projectGroup = projectGroupName
@@ -79,7 +80,7 @@ class Backend(CliMixin):
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database
-    self.dbRaw = SqlLiteDB(basePath=self.basePath)
+    self.dbRaw = SqlLiteDB(basePath=self.basePath, allowMigration=allowMigration)
     self.extractors = ExtractorManager(self.basePath, self.addOnPath, self.configuration['GUI']['maxExtractionDuration'],
                                        self.configuration['GUI']['maxExtractionMetadataSize'], self.db.dataHierarchy)
     # internal hierarchy structure

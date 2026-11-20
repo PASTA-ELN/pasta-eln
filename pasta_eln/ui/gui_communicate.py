@@ -1,10 +1,14 @@
 """ Communication class that sends signals between widgets and the backend worker"""
 import logging
 import os
+import sqlite3
 import sys
+from contextlib import closing
 from pathlib import Path
 from typing import Any
 from PySide6.QtCore import QObject, Signal, Slot
+from PySide6.QtWidgets import QMessageBox
+from ..backend_worker.sqlite import DATABASE_VERSION
 from ..backend_worker.worker import BackendThread, Task
 from ..configuration_file import getConfiguration, saveConfiguration
 from ..constants import defaultDataHierarchyNode
@@ -30,7 +34,7 @@ class Communicate(QObject):
   changeProject      = Signal(str, str)         # send docID,projectID from sidebar or main-table to projects
   stopSequentialEdit = Signal()                 # in sequential edit, stop if there is a cancel
   # send data or data-request to backend
-  commSendConfiguration = Signal(dict, str)     # send configuration and project-group-name to backend
+  commSendConfiguration = Signal(dict, str, bool)# send configuration, project-group-name, allowMigration to backend
   uiRequestDataHierarchy= Signal(str)           # get all entries in the data hierarchy for this docType
   uiRequestTable        = Signal(str, str, bool)# table: send docType, projectID, showAll to backend to get table
   uiRequestHierarchy    = Signal(str, bool)     # send project ID to backend
@@ -149,10 +153,24 @@ class Communicate(QObject):
     Args:
       projectGroup (str): project group to use, if empty use the one from initialization
     """
+    dbPath = Path(self.configuration['projectGroups'][projectGroup or self.projectGroup]['local']['path'])/'pastaELN.db'
+    allowMigration = False
+    if dbPath.is_file():
+      with closing(sqlite3.connect(f'{dbPath.as_uri()}?mode=ro', uri=True)) as connection:
+        databaseVersion = connection.execute('PRAGMA user_version').fetchone()[0]
+      if databaseVersion < DATABASE_VERSION:
+        allowMigration = QMessageBox.question(None, 'Upgrade database?',
+          'This database was created by an older PASTA-ELN version and has to be upgraded. All data files are '
+          'hashed again, which can take a while for large project groups. A backup copy is saved next to the '
+          'database first.\n\nUpgrade now?') == QMessageBox.StandardButton.Yes
+        if not allowMigration:
+          if not self.docTypesTitles:                                    # program start: no usable database
+            sys.exit(0)
+          return                                                                 # keep current project group
     if projectGroup and projectGroup != self.projectGroup:                    # project of old group is invalid
       self.projectGroup = projectGroup
       self.projectID = ''
-    self.commSendConfiguration.emit(self.configuration, projectGroup or self.projectGroup)
+    self.commSendConfiguration.emit(self.configuration, projectGroup or self.projectGroup, allowMigration)
 
 
   def shutdownBackendThread(self) -> None:

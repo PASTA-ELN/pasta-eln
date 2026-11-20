@@ -80,13 +80,14 @@ class BackendWorker(QObject):
 
 
   @Slot(dict,str)
-  def initialize(self, configuration:dict[str,Any], projectGroupName:str) -> None:
+  def initialize(self, configuration:dict[str,Any], projectGroupName:str, allowMigration:bool) -> None:
     """ Initialize the backend worker with the given configuration
     Args:
       configuration (dict): Configuration dictionary with database and other settings
       projectGroupName (str): Name of the project group to initialize
+      allowMigration (bool): the user agreed to upgrade an old database
     """
-    self.backend.initialize(configuration, projectGroupName)
+    self.backend.initialize(configuration, projectGroupName, allowMigration)
     docTypesTitlesIcons = {k:{'title':v} for k,v in self.backend.db.dataHierarchy('','title')}
     for k,v in self.backend.db.dataHierarchy('','icon'):
       docTypesTitlesIcons[k]['icon'] = v

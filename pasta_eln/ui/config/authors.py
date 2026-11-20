@@ -139,7 +139,7 @@ class ConfigurationAuthors(QDialog):
         self.author['organizations'][j]['rorid']        = self.userRorid.text().strip()
       self.comm.configuration['authors'][0] = self.author
       saveConfiguration(self.comm.configuration)
-      self.comm.commSendConfiguration.emit(self.comm.configuration, self.comm.projectGroup)
+      self.comm.commSendConfiguration.emit(self.comm.configuration, self.comm.projectGroup, False)
     self.callbackFinished(False)
     return
 

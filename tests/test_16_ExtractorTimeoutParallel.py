@@ -145,12 +145,11 @@ class TestExtractorTimeoutParallel(unittest.TestCase):
     connection.commit()
     connection.close()
 
-    with patch.dict('os.environ', {'PASTA_ELN_ALLOW_DATAHASH_MIGRATION':'0'}):
-      with self.assertRaisesRegex(RuntimeError, 'not safe for productive use'):
-        SqlLiteDB(basePath=migrationBase)
+    with self.assertRaisesRegex(RuntimeError, 'older PASTA-ELN version'):
+      SqlLiteDB(basePath=migrationBase)
     self.assertFalse(list(migrationBase.glob('*.pre-dataHash-migration-*.bak')))
 
-    database = SqlLiteDB(basePath=migrationBase)
+    database = SqlLiteDB(basePath=migrationBase, allowMigration=True)
     self.assertEqual(database.cursor.execute('PRAGMA user_version').fetchone()[0], 1)
     self.assertEqual(database.getDoc('m1')['dataHash'], hashlib.sha256(source.read_bytes()).hexdigest())
     columns = [row[1] for row in database.cursor.execute('PRAGMA table_info(main)')]

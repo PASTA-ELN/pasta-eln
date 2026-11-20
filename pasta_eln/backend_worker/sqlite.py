@@ -39,11 +39,12 @@ class SqlLiteDB:
   """
 
 
-  def __init__(self, resetDataHierarchy:bool=False, basePath:Path=Path()):
+  def __init__(self, resetDataHierarchy:bool=False, basePath:Path=Path(), allowMigration:bool=False):
     """
     Args:
       basePath (Path): path of project group
       resetDataHierarchy (bool): whether to reset the data hierarchy
+      allowMigration (bool): the user agreed to upgrade an old database
     """
     isNewDatabaseFile = not (basePath/'pastaELN.db').is_file()
     self.connection = sqlite3.connect(basePath/'pastaELN.db')
@@ -53,7 +54,7 @@ class SqlLiteDB:
     if isNewDatabaseFile:
       self.cursor.execute(f'PRAGMA user_version={DATABASE_VERSION}')
     elif databaseVersion != DATABASE_VERSION:
-      self.migrateDatabase(databaseVersion)
+      self.migrateDatabase(databaseVersion, allowMigration)
     self.dataHierarchyInit(resetDataHierarchy)
     # main table
     self.createSQLTable('main',            MAIN_ORDER,                                  'id', MAIN_TYPE)
@@ -75,18 +76,18 @@ class SqlLiteDB:
     return
 
 
-  def migrateDatabase(self, databaseVersion:int) -> None:
+  def migrateDatabase(self, databaseVersion:int, allowMigration:bool) -> None:
     """Migrate a version-0 database from Git SHA-1 to raw SHA-256 identities
       Args:
         databaseVersion (int): database version to migrate
+        allowMigration (bool): the user agreed to upgrade
     """
-    if os.environ.get('PASTA_ELN_ALLOW_DATAHASH_MIGRATION') != '1':
-      self.connection.close()
-      raise RuntimeError(
-          'This development migrates database identities. It is not safe for productive use. ' \
-          'Use a disposable database or set  PASTA_ELN_ALLOW_DATAHASH_MIGRATION=1 after making a backup.')
     if databaseVersion != 0:
       raise ValueError(f'Database version {databaseVersion} cannot be migrated to {DATABASE_VERSION}.')
+    if not allowMigration:
+      self.connection.close()
+      raise RuntimeError('This database was created by an older PASTA-ELN version. Open its project group in the '
+                         'PASTA-ELN GUI to upgrade it.')
     rows = self.cursor.execute("SELECT id FROM main WHERE shasum NOT IN ('', '-')").fetchall()
     hashes:dict[str, str] = {}
     for docID, in rows:

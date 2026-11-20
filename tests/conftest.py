@@ -1,6 +1,5 @@
 import logging
 import re
-import os
 from typing import Any
 from typing import Final
 
@@ -9,8 +8,7 @@ TEST_ORDER_PATTERN = re.compile(r'^test_(\d+)_')
 
 
 def pytest_configure():
-    """TEMPORARY SAFEGUARD: Allow tests that intentionally open legacy fixture databases to migrate them"""
-    os.environ.setdefault('PASTA_ELN_ALLOW_DATAHASH_MIGRATION', '1')
+    """Quiet noisy loggers"""
     for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
         logging.getLogger(package).setLevel(logging.WARNING)
 

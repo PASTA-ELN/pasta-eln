@@ -137,7 +137,7 @@ class SchemeEditor(QDialog):
     elif cmd == TEMPLATE_IMPORT_COMPLETE_QUERY:               # all imports are done, communicate new schema
       importedTypes = self.pendingImport
       self.pendingImport = []
-      self.comm.commSendConfiguration.emit(self.comm.configuration, self.comm.projectGroup)
+      self.comm.commSendConfiguration.emit(self.comm.configuration, self.comm.projectGroup, False)
       for docType, title in importedTypes:
         existingIndex = self.selectDocType.findData(docType)
         if existingIndex == -1:
