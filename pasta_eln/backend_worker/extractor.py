@@ -72,13 +72,9 @@ class ExtractorManager:
         req = request.Request(filePath.as_posix().replace(':/','://'), headers={'User-Agent': 'Mozilla/5.0'})
         with request.urlopen(req, timeout=60) as urlRequest:
           with open(absFilePath, 'wb') as f:
-            try:
-              f.write(urlRequest.read())
-            except Exception:
-              logging.error('Saving downloaded file to temporary disk', exc_info=True)
-              return None
+            f.write(urlRequest.read())
       except Exception:
-        logging.error('Could not download file from internet %s', filePath.as_posix())
+        logging.exception('Could not download file from internet %s', filePath.as_posix())
         return None
     else:
       if filePath.is_absolute():
@@ -289,6 +285,7 @@ class ExtractorManager:
       try:
         request.urlretrieve(filePath.as_posix().replace(':/','://'), tempFilePath)
       except Exception:
+        logging.exception('Could not download file from internet %s', filePath.as_posix())
         success = False
         report += outputString(outputStyle, 'error', 'Could not download file from internet')
         report += outputString(outputStyle, 'error', f'{htmlStr}download-error">website</a>')
@@ -353,7 +350,7 @@ class ExtractorManager:
     if success:
       try:
         _ = json.dumps(content, ensure_ascii=False)
-      except Exception:
+      except (TypeError, ValueError):
         report += outputString(outputStyle,'error','Extractor reply not json dumpable.')
     if success:
       for meta in ['metaVendor', 'metaUser']:
@@ -386,14 +383,14 @@ class ExtractorManager:
         if not isinstance(content['metaUser'], (dict,list)):
           raise TypeError(' Meta user: wrong type')
         report += 'User entries: '+str(len(content['metaUser']))+'.<br>'
-      except Exception:
+      except (TypeError, ValueError):
         report += outputString(outputStyle,'error', 'Some JSON format does not fit in metaUser')
         report += outputString(outputStyle, 'error', f'{htmlStr}metadata-error">website</a>')
         #iterate keys
         for key in content['metaUser']:
           try:
             _ = json.dumps(content['metaUser'][key], ensure_ascii=False)
-          except Exception:
+          except (TypeError, ValueError):
             report += outputString(outputStyle,'error',f'FAIL {key}:'+str(content['metaUser'][key])+' type:') + str(type(content['metaUser'][key]))
       if 'image' not in content:
         success = False

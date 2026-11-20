@@ -163,14 +163,10 @@ class Storage:
     Returns:
       dict[str, str]: Procedure default parameter values
     """
-    parameters: dict[str, str] = {}
     text = self.getProcedureText(procedureID)
     params = re.findall(r'\|[^|]+\|[^|]+\|', text)
-    try:
-      parameters = {s.split('|')[1]: s.split('|')[2] for s in params}
-    except Exception as e:
-      print(e)
-    return parameters
+    return {s.split('|')[1]: s.split('|')[2] for s in params}                    # regex guarantees both parts
+
 
   def getProcedureShortDescription(self, procedureID: str) -> str:
     """

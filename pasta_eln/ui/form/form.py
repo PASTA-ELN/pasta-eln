@@ -158,10 +158,9 @@ class Form(QDialog):
         if ret==QMessageBox.StandardButton.Yes:
           subContent = content[self.doc.get('id', '')]
           for key in subContent.keys():
-            try:
-              elementName = f'key_{[idx for idx, (k,_) in enumerate(self.allUserElements) if key==k][0]}'
-            except Exception:
+            if (idx := next((i for i, (k,_) in enumerate(self.allUserElements) if key==k), None)) is None:
               continue
+            elementName = f'key_{idx}'
             if key in ('comment', 'content'):
               getattr(self, f'textEdit_{key}').setPlainText(subContent[key])
             elif key in ('tags'):
@@ -501,7 +500,7 @@ class Form(QDialog):
           formLabelW.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse)
           section.formL.addRow(formLabelW, getattr(self, elementName))
         else:
-          print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(defaultValue)}")
+          logging.warning('dialogForm: unknown value type. key:%s, type:%s', key, type(defaultValue))
         if group in self.doc and row.name in self.doc[group]:
           del self.doc[group][row.name]
           if not self.doc[group]:
@@ -688,7 +687,6 @@ class Form(QDialog):
         group, subItem = key.split('.') if '.' in key else '', key
         if [i['mandatory'] for i in self.dataHierarchyNode if i['class']==group and i['name']==subItem] == ['T'] and \
           getattr(self, elementName).text().strip()=='':
-          print(f'**ERROR group:{group}| key:{key}| subItem:{subItem}: mandatory field is empty')
           showMessage(self, 'Item validation error', f'The created item must have a valid {subItem}.')
           return
         if key=='name':

@@ -1,6 +1,7 @@
 """ Table Header dialog: change which columns are shown and in which order """
 import copy
 import json
+import logging
 import shutil
 from collections.abc import Callable
 from datetime import datetime
@@ -389,7 +390,7 @@ class ProjectGroup(QDialog):
         self.execute([Command.TEST_APIKEY])
         self.execute([Command.TEST_SERVERPG])
     else:
-      print('Got some button, without definition', command)
+      logging.error('Got some button, without definition %s', command)
     return
 
 

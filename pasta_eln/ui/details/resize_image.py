@@ -35,8 +35,8 @@ class ResizeImage(QLabel):
         if layout is not None:
           layout.addWidget(self)
         self._updatePixmap()
-      except Exception as error:
-        logging.warning('Error processing base64-image %s', error)
+      except Exception:
+        logging.exception('Error processing base64-image')
     elif data.startswith('<?xml'):
       self._isSvg = True
       self._svgRenderer = QSvgRenderer(QByteArray(data.encode('utf-8')), self)

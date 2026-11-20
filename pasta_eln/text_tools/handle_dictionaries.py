@@ -45,7 +45,7 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     data['dateCreated']   = datetime.now().isoformat()
   data['dateModified']  = datetime.now().isoformat()
   if 'branch' not in data:
-    print('Empty branch in data')
+    logging.warning('Empty branch in data')
     data['branch'] = [{'stack':[], 'path':None, 'child':-1, 'show':[]}]
   if 'show' not in data['branch'] and isinstance(data['branch'], dict):
     data['branch']['show'] = [True]*(len(data['branch']['stack'])+1)
@@ -99,7 +99,7 @@ def dict2ul(aDict:dict[str,Any], fmt:str='html') -> str:
     if isinstance(value,str) and value.startswith('{') and value.endswith('}'):
       try:
         value = json.loads(value.replace("'",'"'))
-      except Exception:
+      except ValueError:                                                     # not JSON: show as text
         pass
     if isinstance(value, dict):
       valueString = dict2ul(value, fmt)
@@ -314,7 +314,6 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any], onlyEssentials:bool=True
       continue
     if key not in dict2Copy:
       if not shortVersion or key not in ('__version__','content','image','dataHash','extractorHash'):
-        print(shortVersion, key)
         outString += f'key not in dictionary 2: {key}' + '\n'
       continue
     if value != dict2Copy[key]:

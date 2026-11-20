@@ -7,7 +7,7 @@ import platform
 import re
 import shutil
 import sys
-import traceback
+import logging
 from collections.abc import Callable
 from sqlite3 import IntegrityError
 from pasta_eln.backend_worker.backend import Backend
@@ -368,7 +368,7 @@ class Tools:
       if platform.system()=='Windows':
         print('Try-Except unnecessary')
     except Exception:
-      pass
+      logging.exception('Could not reset %s', dirName)
     self.__setBackend__(self.projectGroup)
     return
 
@@ -415,16 +415,13 @@ class Tools:
     if self.backend is None:
       return
     key = input('Which key to repair, e.g. "chemistry" will become .chemistry? ')
-    self.backend.db.cursor.execute(f"SELECT id FROM properties where key == '{key}'")
-    res = self.backend.db.cursor.fetchall()
-    for idx, docID in enumerate(res):
-      docID = docID[0]
+    self.backend.db.cursor.execute('SELECT id FROM properties where key == ?', (key,))
+    for (docID,) in self.backend.db.cursor.fetchall():
       try:
-        self.backend.db.cursor.execute(f"UPDATE properties SET key='.{key}' WHERE id == '{docID}' and  key=='{key}'")
-      except Exception:
-        print(f"Error, could not change {docID} and {key}. Likely that combination exists already in properties. Repair manually")
-        if idx==0:
-          print(traceback.format_exc())
+        self.backend.db.cursor.execute('UPDATE properties SET key=? WHERE id == ? and key == ?',
+                                       (f'.{key}', docID, key))
+      except IntegrityError:
+        print(f"Error, cannot change {docID} and {key}. That combination exists already in properties. Repair")
     self.backend.db.connection.commit()
     print('Done')
     return

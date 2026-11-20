@@ -222,7 +222,6 @@ class BackendWorker(QObject):
         self.beSendDoc.emit(self.backend.db.getDoc(data['doc']['id']))            # send updated doc back to GUI
 
       elif task is Task.MOVE_LEAVES and set(data.keys())=={'docID','stackOld','stackNew','childOld','childNew'}:
-        verbose = False                                                                 # Convenient for testing
         doc = self.backend.db.getDoc(data['docID'])
         branchOldList= [i for i in doc['branch'] if i['stack']==data['stackOld']]
         if len(branchOldList)!=1:
@@ -244,26 +243,12 @@ class BackendWorker(QObject):
         siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]  #sorted by childNum 1st and docID 2nd
         # --- CHANGE ----
         # change new siblings
-        if verbose:
-          print('\n=============================================\nStep 1: before new siblings')
-          print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
         for idx, line in reversed(list(enumerate(siblingsNew))):
           shift = 1 if idx>=data['childNew'] else 0#shift those before the insertion point by 0 and those after by 1
           if line['id']==data['docID'] or line['value'][0]==idx+shift:#ignore this id & those that are correct already
             continue
-          if verbose:
-            print(f'  {line["id"]}: move: {idx} {shift}')
           self.backend.db.updateBranch(docID=line['id'], branch=line['value'][4], child=idx+shift)
-        if verbose:
-          siblingsNew = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackNew']))#sorted by docID
-          siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(data['stackNew'])+1]
-          childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
-          siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]#sorted by childNum 1st and docID 2nd
-          print('Step 2: after new siblings')
-          print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
         # change item in question
-        if verbose:
-          print(f'  manual move {data["childOld"]} -> {data["childNew"]}: {data["docID"]}')
         self.backend.db.updateBranch(docID=data['docID'], branch=-99, stack=data['stackNew'], path=pathNew,
                                      child=data['childNew'], stackOld=data['stackOld']+[data['docID']])
         # change old siblings
@@ -271,22 +256,10 @@ class BackendWorker(QObject):
         siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(data['stackOld'])+1]
         childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
         siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]#sorted by childNum 1st and docID 2nd
-        if verbose:
-          print('Step 3: before old siblings')
-          print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
         for idx, line in enumerate(siblingsOld):
           if line['value'][0]==idx:                  #ignore id in question and those that are correct already
             continue
-          if verbose:
-            print(f'  {line["id"]}: move: {idx}')
           self.backend.db.updateBranch(  docID=line['id'], branch=line['value'][4], child=idx)
-        if verbose:
-          siblingsOld = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackOld']))#sorted by docID
-          siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(data['stackOld'])+1]
-          childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
-          siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]#sorted by childNum 1st and docID 2nd
-          print('Step 4: end of function')
-          print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
 
       elif task is Task.DROP_EXTERNAL and set(data.keys())=={'docID','items','addToExisting'}:
         doc = self.backend.db.getDoc(data['docID'])
@@ -419,7 +392,7 @@ class BackendWorker(QObject):
       elif task is Task.SEND_REPOSITORY and set(data.keys())=={'projID','docTypes','repositories','metadata','uploadZenodo'}:
         tempELN = str(Path(tempfile.gettempdir())/'export.eln')
         res0 = exportELN(self.backend, [data['projID']], tempELN, data['docTypes'])
-        print('Export eln',res0)
+        logging.info('Export ELN %s', res0)
         repositories = data['repositories']
         if data['uploadZenodo']:                                                                         #Zenodo
           clientZ = ZenodoClient(repositories['zenodo']['url'], repositories['zenodo']['key'])
@@ -516,7 +489,7 @@ class BackendWorker(QObject):
         df = pd.read_sql_query(task['cmd'], self.backend.db.connection, params=task.get('list')).fillna('')
         self.beSendSQL.emit(task['cmd'], df)
       else:
-        print('**ERROR unknown task command', task)
+        logging.error('Unknown SQL task %s', task)
       if  task['type']=='one' and 'UPDATE properties' in task['cmd'] and 'id' in task['cmd']:#send from form during key-change
         docID = task['cmd'].split("id='")[1].split("'")[0]
         self.beSendDoc.emit(self.backend.db.getDoc(docID))                      # send updated doc back to GUI

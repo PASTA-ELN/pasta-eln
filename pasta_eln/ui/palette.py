@@ -1,5 +1,6 @@
 """Color palette allows easy colour access and manages the application theme"""
 
+import logging
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, TypeAlias, TypedDict, cast
 import darkdetect
@@ -63,7 +64,7 @@ class Palette:
       if autoTheme in ['light', 'dark']:
         self.qtheme = autoTheme
       else:
-        print(f"DEBUG: darkdetect.theme().lower()={autoTheme} is not recognized")
+        logging.warning('darkdetect theme %s is not recognized', autoTheme)
         self.qtheme = 'light'
     self.primary = self.getThemeColor('primary', 'base')
     self.text = self.getThemeColor('foreground', 'base')
@@ -94,7 +95,7 @@ class Palette:
     if theme == 'automatic':
       theme = darkdetect.theme().lower()
     if theme not in ['dark', 'light', '']:
-      print('Could not find Theme:', theme)
+      logging.warning('Could not find theme: %s', theme)
       return
     if theme != '' and saveTheme:
       self.qtheme = theme

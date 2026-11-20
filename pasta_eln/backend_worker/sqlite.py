@@ -940,8 +940,7 @@ class SqlLiteDB:
       results = self.cursor.fetchall()
       results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':i[2]} for i in results if i[1] is not None]
     else:
-      print('Not implemented view', thePath, startKey, preciseKey)
-      raise ValueError('Not implemented')
+      raise ValueError(f'Not implemented view {thePath} {startKey} {preciseKey}')
     return results
 
 
@@ -1125,7 +1124,7 @@ class SqlLiteDB:
       else:
         lostAndFoundText = ('not possible: no project "Lost and Found". Create it with tools command [cp] and '
                            'repair again')
-        print('**Warning: no project "Lost and Found" exists. Items with missing parents cannot be repaired. '
+        logging.warning('No project "Lost and Found" exists. Items with missing parents cannot be repaired. '
               'Create the project with tools command [cp] and repair again.')
     # tests
     self.cursor.execute('SELECT id FROM main WHERE id NOT IN (SELECT id FROM branches)')
@@ -1163,13 +1162,11 @@ class SqlLiteDB:
           reply+= check('warning', f'{item} has no parent [dch07]')
         elif not minimal:
           reply+= check('ok', f'{item} has no parent; this is fine for workflows and samples')
-      try:
+      if path is not None:                                                                  #None: handled next lines
         dirNamePrefix = path.split(os.sep)[-1].split('_')[0]
         if dirNamePrefix.isdigit() and child!=int(dirNamePrefix) and docType.startswith('x'):#compare child-number to start of directory name
           reply+= check('error', f'Folder {item}: its position in the parent ({child}) does not match the number '
                                  f'at the start of its folder name "{path}" [dch05]')
-      except Exception:
-        pass                                                                               #handled next lines
       if path is None:
         if docType.startswith('x'):
           reply+= check('error', f'Folder {item} has no path on disk [dch06]')
@@ -1252,7 +1249,7 @@ class SqlLiteDB:
         try:
           imgData = base64.b64decode(image[22:])
           Image.open(io.BytesIO(imgData))                    #can convert, that is all that needs to be tested
-        except Exception:
+        except (ValueError, OSError):                       #bad base64: ValueError; not an image: OSError
           reply+= check('error', f'Thumbnail of {label(docID)} is not a valid PNG/JPEG image [dch12]')
       elif image.startswith('<?xml'):
         #from https://stackoverflow.com/questions/63419010/check-if-an-image-file-is-a-valid-svg-file-in-python

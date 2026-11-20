@@ -1,5 +1,6 @@
 """ Upload for Zenodo and Dataverse """
 import json
+import logging
 from enum import Enum
 from typing import Any
 from PySide6.QtCore import Qt, Slot
@@ -161,7 +162,7 @@ class UploadGUI(QDialog):
                 'uploadZenodo':command[1], 'repositories': repositories, 'metadata': metadata})
       self.accept()
     else:
-      print('Got some button, without definition', command)
+      logging.error('Got some button, without definition %s', command)
     return
 
 

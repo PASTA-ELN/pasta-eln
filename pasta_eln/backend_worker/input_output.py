@@ -325,7 +325,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         # print(f'Replace {key} -entries using ids: {items}')
         try:
           docS[0][key] = [ [j for j in graph if j['@id']==i][0] for i in items]
-        except Exception:
+        except IndexError:
           # Causes for exception
           # - @id is a link to external IRI (http...). Hence it is not in the file
           # - the graph is not fully flattened: @id is in a leaf of a node but not a separate note
@@ -495,7 +495,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
           docELN['contentSize'] = str(response.headers['content-length'])
           docELN['sha256']      = hashlib.sha256(response.content).hexdigest()
         else:
-          print(f"Info: could not get file {path}")
+          logging.info('Could not get file %s', path)
         docELN['@type'] = 'File'
       elif '@type' not in docELN:                                                        #samples will be here
         docELN['@type'] = 'Dataset'
@@ -707,7 +707,7 @@ def validateSignature(fileName:str) -> bool:
   Returns:
     bool: success / failure of test
   """
-  print(f'Test signature of : {fileName}')
+  logging.info('Test signature of %s', fileName)
   with ZipFile(fileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     metadataJsonFile = [i for i in elnFile.namelist() if i.endswith(metadataFile)][0]
     with elnFile.open(metadataJsonFile) as fIn:
@@ -731,7 +731,7 @@ def validateSignature(fileName:str) -> bool:
           else:
             logging.error('remote and local key differ', exc_info=True)
             raise minisign.VerifyError
-      print('Signature is acceptable:\n',
+      logging.info('Signature is acceptable:\n%s',
             json.dumps(json.loads(signature.trusted_comment), indent=2, ensure_ascii=False))
       return True
     except minisign.VerifyError:

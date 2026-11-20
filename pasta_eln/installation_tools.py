@@ -49,7 +49,7 @@ def createDefaultConfiguration(pathPasta:Path | None=None) -> dict[str,Any]:
   conf['scanExcludePatterns'] = list(defaultScanExcludePatterns)
   try:
     conf['userID']      = os.getlogin()
-  except Exception:                                                                             #github action
+  except OSError:                                                                               #github action
     conf['userID']      = 'github_user'
   #create pastaDir if it does not exist
   if not pathPasta.is_dir():
@@ -356,13 +356,13 @@ def createShortcut() -> None:
         os.system(f'gio set {linkString} metadata::trusted true')                          #for ubuntu systems
         os.chmod(Path.home()/'Desktop'/'pastaELN.desktop', 0o775)
     except Exception:
-      pass
+      logging.exception('Could not create desktop shortcut')
     try:
       with open(Path.home()/'.local'/'share'/'applications'/'pastaELN.desktop','w', encoding='utf-8') as fOut:
         fOut.write(content)
         os.chmod(Path.home()/'.local'/'share'/'applications'/'pastaELN.desktop', 0o777)
     except Exception:
-      pass
+      logging.exception('Could not create application menu entry')
   elif platform.system()=='Windows':
     import winshell
     from win32com.client import Dispatch
@@ -472,7 +472,7 @@ def hardRestart() -> None:
   """Restart the installed or development application"""
   try:
     os.execv('pastaELN', [''])
-  except Exception:
+  except OSError:                                                                   # not installed: development
     os.execv(sys.executable, [sys.executable, '-m', 'pasta_eln.gui'])
 
 

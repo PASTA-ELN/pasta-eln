@@ -1,4 +1,5 @@
 """ Main class of config tab on parameters (e.g. API keys) for add-ons """
+import logging
 from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
@@ -86,10 +87,7 @@ class ConfigurationAddOnParameter(QDialog):
         try:
           module        = loadNamedModule(Path(self.comm.addOnPath), name)
           requiredParam = module.reqParameter
-          try:
-            helpText = module.helpText
-          except AttributeError:
-            helpText = ''
+          helpText      = getattr(module, 'helpText', '')
           if not requiredParam:
             groupbox.hide()
           for param, tooltip in requiredParam.items():                                  # loop over parameters
@@ -105,7 +103,7 @@ class ConfigurationAddOnParameter(QDialog):
             if helpText:
               Button('?', self, command=[helpText], layout=barL)
             self.allLineEdits.append((addonType,name,param,lineEdit))
-        except Exception:
+        except Exception:                                                   # boundary: add-ons are user code
           Label(f'{name}.py: Error occurred; please check add-on.', 'h4', groupLayout)
     else:
       showMessage(self, 'Help', command[0], 'Information')

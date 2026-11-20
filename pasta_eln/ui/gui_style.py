@@ -210,8 +210,8 @@ def image(data: str, layout: QLayout | None, width: int = -1, height: int = -1,
       if layout is not None:
         layout.addWidget(label, alignment=Qt.AlignHCenter)                                      # type: ignore
       return label
-    except Exception as error:
-      logging.warning('Error processing base64 image %s', error)
+    except Exception:
+      logging.exception('Error processing base64 image')
       return None
   if data.startswith('<?xml'):
     imageSVG = QSvgWidget()

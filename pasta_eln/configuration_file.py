@@ -2,6 +2,7 @@
 import base64
 import copy
 import json
+import logging
 import secrets
 from pathlib import Path
 from typing import Any
@@ -34,7 +35,7 @@ def getConfiguration(defaultProjectGroup: str = '') -> tuple[dict[str, Any], str
     uiState.setdefault(key, value)
   configuration.setdefault('scanExcludePatterns', list(defaultScanExcludePatterns))
   if configuration['version'] != CONFIGURATION_VERSION:
-    print(f'**Info: configuration file does not exist or version is != {CONFIGURATION_VERSION}')
+    logging.info('Configuration file does not exist or version is != %s', CONFIGURATION_VERSION)
     return {}, ''
   defaultProjectGroup = defaultProjectGroup or configuration['defaultProjectGroup']
   if defaultProjectGroup not in configuration['projectGroups']:

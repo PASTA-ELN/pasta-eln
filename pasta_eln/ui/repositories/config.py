@@ -1,4 +1,5 @@
 """ Config for Zenodo and Dataverse """
+import logging
 import re
 from collections.abc import Callable
 from enum import Enum
@@ -210,7 +211,7 @@ class ConfigurationRepositories(QDialog):
     elif command[0] is Command.HELP:
       QDesktopServices.openUrl(QUrl('https://pasta-eln.github.io/pasta-eln/repositories.html'))
     else:
-      print('Got some button, without definition', command)
+      logging.error('Got some button, without definition %s', command)
     return
 
 

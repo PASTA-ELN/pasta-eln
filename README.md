@@ -43,12 +43,6 @@ Open issues are the union of
 2. this README section, which records repository-wide maintenance items that need visibility before or alongside an issue.
 
 ### Repository maintenance items
-- Broad and inconsistent exception handling: create and document a consistent exception handling
-  The package contains many except Exception blocks, including paths that merely print, log, return an empty value, or silently pass. This erases distinctions between expected operational failures and programming defects. Callers cannot consistently determine whether an operation succeeded, and corrupted intermediate state may continue through the application after the original error context has been lost.
-  Examples:
-  - Add-on failures become {} in [`callAddOn()` (line 201)](/home/steffen/FZJ/PASTA/pasta-eln/pasta_eln/addons.py:201)
-  - Auto-comment failures are suppressed in [`Form.execute()` (line 644)](/home/steffen/FZJ/PASTA/pasta-eln/pasta_eln/ui/form/form.py:644)
-  - Download errors are only printed in [`callDataExtractor()` (line 227)](/home/steffen/FZJ/PASTA/pasta-eln/pasta_eln/addons.py:227)
 - Case-insensitive scan exclusions (branch `new_version`)
   - `scanExcludePatterns` are matched case-sensitively on Linux, because `fnmatch.fnmatch()` follows the case rules of the operating system. The pattern `*.exe` therefore does not exclude `SETUP.EXE` on Linux, but it does on Windows, so the same data folder gives different databases. Affected on `new_version`: `pasta_eln/backend_worker/backend.py` line 355 (folders) and line 406 (files). Fix: compare `name.lower()` with `pattern.lower()`, and store patterns in lower case when they are saved in the configuration.
   - `checkDB()` does not use `scanExcludePatterns`. Excluded files that still exist on disk may therefore be reported as missing from the database. `checkDB()` should share the matching function with the scan.

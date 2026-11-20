@@ -44,7 +44,6 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   if str(directory) not in sys.path:
     sys.path.insert(0, str(directory))                                                         # allow add-ons
   # Add-Ons
-  verboseDebug = False
   extractorsAll= {}
   otherAddOns:dict[str,dict[str,str]]  = {'project':{}, 'table':{} ,'definition':{} ,'form':{}}
   errors:dict[str,str] = {}
@@ -53,7 +52,6 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
     if fileName.endswith('.py') and fileName.startswith('extractor_'):
       #start with file
       with open(directory/fileName, encoding='utf-8') as fIn:
-        if verboseDebug: print('\n'+fileName)
         lines = fIn.readlines()
         try:
           module = loadNamedModule(directory, fileName[:-3])
@@ -76,15 +74,12 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
             header.append(line)
             continue
           if 'if' in line and '#:' in line:
-            if verboseDebug: print('line', line)
             specialType = line.split('==')[1].split(':')[0].strip(" '"+'"')
-            if verboseDebug: print('  special',specialType)
             extractorsThis[specialType] = line.split('#:')[1].strip()
             ifInFile = True
           elif 'else:' in line and '#:' in line:
             errors[fileName] = 'ERROR there should not be an else in the code'
           elif 'return' in line and 'recipe' in line and not ifInFile:
-            if verboseDebug: print('line', line)
             if line.count('recipe')==1:
               linePart = line.split('recipe')[1].strip()
               linePart = linePart.split(':')[1].split(',')[0].strip(" '"+'"')
@@ -99,14 +94,10 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
                 errors[fileName] = 'ERROR could not decipher code'
                 linePart=''
             extractorsThis[linePart]='Default'
-            if verboseDebug:
-              print('  return', linePart)
         linesWithUse = [i for i in lines if i.lstrip().startswith('def use(')]
         if len(linesWithUse)>1:
           extractorsThis = {}
           errors[fileName] = 'ERROR two use() definitions in the code'
-        if verboseDebug:
-          print('Extractors', extractorsThis)
         ending = fileName.split('_')[1].split('.')[0]
         extractorsAll[ending]=extractorsThis
     # header not used for now
@@ -236,10 +227,7 @@ def callDataExtractor(docID:str, comm:Any) -> Any:
     absFilePath = Path(tempfile.gettempdir())/filePath.name
     with request.urlopen(filePath.as_posix().replace(':/','://'), timeout=60) as urlRequest:
       with open(absFilePath, 'wb') as f:
-        try:
-          f.write(urlRequest.read())
-        except Exception:
-          print('Error saving downloaded file to temporary disk')
+        f.write(urlRequest.read())
   else:
     if filePath.is_absolute():
       filePath  = filePath.relative_to(comm.basePath)
@@ -251,8 +239,8 @@ def callDataExtractor(docID:str, comm:Any) -> Any:
     try:
       module = loadNamedModule(Path(comm.addOnPath), pyFile[:-3])
       return module.data(absFilePath, {})
-    except Exception as e:
-      logging.warning('CallDataExtractor: %s',e)
+    except Exception:                                                     # boundary: extractors are user code
+      logging.exception('CallDataExtractor: %s', pyFile)
   return None
 
 

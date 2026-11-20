@@ -197,10 +197,7 @@ class ElabFTWApi:
       data = {'comment':comment, 'file': ('thumbnail.jpg', base64.b64decode(content[22:]) , 'image/jpg')}
     elif fileName:
       with open(fileName,'rb') as fIn:
-        try:
-          mime = mimetypes.types_map[Path(fileName).suffix]
-        except Exception:
-          mime = 'application/octet-stream'
+        mime = mimetypes.types_map.get(Path(fileName).suffix, 'application/octet-stream')
         data = {'comment':comment, 'file': (Path(fileName).name, fIn.read(), mime)}
     elif jsonContent:
       data = {'comment':comment, 'file': ('do_not_change.json', jsonContent.encode(), 'text/json')}

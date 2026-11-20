@@ -196,7 +196,7 @@ class Backend(CliMixin):
             try:
               request.urlretrieve(doc['name'], path)
               doc['name'] = camelCase(baseName)+extension
-            except Exception:
+            except OSError:                                                       # download failed: keep link
               path = Path(doc['name'])
           else:
             path = Path(doc['name'])
