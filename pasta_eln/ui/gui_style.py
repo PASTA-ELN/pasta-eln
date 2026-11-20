@@ -311,8 +311,8 @@ def clearLayout(layout: QLayout, start: int = 0) -> None:
 def formatTag(tag: str) -> str:
   """Format internal rating tags for display in the tags table
   Args:
-    tag (str): tag to be formated
+    tag (str): tag to be formatted
   Returns:
-    str: formated string
+    str: formatted string
   """
   return '\u2605' * int(tag[1]) if re.fullmatch(r'_\d', tag) else tag
