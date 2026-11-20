@@ -244,7 +244,7 @@ def callDataExtractor(docID:str, comm:Any) -> Any:
   return None
 
 
-def waitForBackend(signal:Any, request:Callable[[], None], accept:Callable[..., bool],
+def waitForBackend(signal:Any, sendRequest:Callable[[], None], accept:Callable[..., bool],
                    timeout:float=60.) -> tuple[Any, ...]:
   """ Send a request to the backend worker and block until its matching answer arrives
 
@@ -252,7 +252,7 @@ def waitForBackend(signal:Any, request:Callable[[], None], accept:Callable[..., 
 
   Args:
     signal (SignalInstance): backend signal that carries the answer
-    request (Callable): emits the request to the backend
+    sendRequest (Callable): emits the request to the backend
     accept (Callable): receives the signal arguments, returns True for the matching answer
     timeout (float): seconds to wait before raising TimeoutError
 
@@ -271,7 +271,7 @@ def waitForBackend(signal:Any, request:Callable[[], None], accept:Callable[..., 
       received.set()
   signal.connect(receive)
   try:
-    request()
+    sendRequest()
     if not received.wait(timeout):
       raise TimeoutError(f'Backend did not answer within {timeout:.0f} s')
   finally:

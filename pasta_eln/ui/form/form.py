@@ -163,7 +163,7 @@ class Form(QDialog):
             elementName = f'key_{idx}'
             if key in ('comment', 'content'):
               getattr(self, f'textEdit_{key}').setPlainText(subContent[key])
-            elif key in ('tags'):
+            elif key == 'tags':
               self.doc[key] = subContent[key]
               self.updateTagsBar()
             elif isinstance(getattr(self, elementName), QLineEdit):
@@ -691,7 +691,7 @@ class Form(QDialog):
           return
         if key=='name':
           self.doc['name'] = getattr(self, elementName).text().strip()
-        elif key in ('tags'):                                                          #tags are already saved
+        elif key == 'tags':                                                          #tags are already saved
         #     'image', 'metaVendor', 'metaUser' or not hasattr(self, f'key_{key}') and not hasattr(self, f'textEdit_{key}')):
           continue
         elif key == '.qrCodes':

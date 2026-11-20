@@ -1,5 +1,4 @@
 """ Main class of config tab on parameters (e.g. API keys) for add-ons """
-import logging
 from collections.abc import Callable
 from enum import Enum
 from pathlib import Path

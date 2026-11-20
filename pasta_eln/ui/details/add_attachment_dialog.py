@@ -32,11 +32,11 @@ class AddAttachmentDialog(QDialog):
     for attachment in attachments:
       self.location.addItem(str(attachment['location']))
     self.location.currentIndexChanged.connect(self.updateItems)
-    self.updateItems(0)
     self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Ok)
     self.buttons.accepted.connect(self.accept)
     self.buttons.rejected.connect(self.reject)
     layout.addWidget(self.buttons)
+    self.updateItems(0)
 
 
   def updateItems(self, index: int) -> None:

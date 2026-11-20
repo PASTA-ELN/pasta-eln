@@ -12,7 +12,7 @@ from hashlib import sha256
 from inspect import signature
 from io import BytesIO
 from pathlib import Path
-from typing import Any, BinaryIO
+from typing import Any
 from urllib import request
 import xml.etree.ElementTree as ET
 import matplotlib
@@ -528,12 +528,9 @@ def sha256File(path:Path) -> tuple[str,int]:
   """
   hasher, size = sha256(), 0
   try:
-    if str(path).startswith('http'):
-      req = request.Request(path.as_posix().replace(':/','://'), headers={'User-Agent': 'Mozilla/5.0'})
-      stream:BinaryIO = request.urlopen(req, timeout=60)
-    else:
-      stream = open(path.resolve(), 'rb')                                       # pylint: disable=consider-using-with
-    with stream:
+    url = request.Request(path.as_posix().replace(':/','://'), headers={'User-Agent': 'Mozilla/5.0'}) \
+          if str(path).startswith('http') else None
+    with request.urlopen(url, timeout=60) if url else open(path.resolve(), 'rb') as stream:
       while chunk := stream.read(65536):
         hasher.update(chunk)
         size += len(chunk)

@@ -1,5 +1,6 @@
 """ dialog to edit docType schema """
 from enum import Enum
+from functools import partial
 import json
 from pathlib import Path
 from typing import Any
@@ -221,8 +222,8 @@ class SchemeEditor(QDialog):
       table.setItemDelegateForColumn(5, self.listFreeDelegates[-1])
       self.iconButtonDelegates.append(IconButtonDelegate('fa5s.arrow-up', _hasEditableName, _moveRowUp))
       table.setItemDelegateForColumn(6, self.iconButtonDelegates[-1])
-      self.iconButtonDelegates.append(IconButtonDelegate('fa5s.trash', lambda index, group=group: _canDeleteRow(index)
-          and (group, index.model().index(index.row(), 0).data()) not in self.inherited, _deleteRow))  # keep inherited
+      self.iconButtonDelegates.append(IconButtonDelegate('fa5s.trash', partial(_canDeleteRow, group=group,
+                                                                    inherited=self.inherited), _deleteRow))
       table.setItemDelegateForColumn(7, self.iconButtonDelegates[-1])
       self.tabW.addTab(table, group or 'default')
     # define close buttons on some of the tabs
@@ -496,14 +497,17 @@ def _hasEditableName(index: QModelIndex) -> bool:
   return bool(index.model().index(index.row(), 0).data())
 
 
-def _canDeleteRow(index: QModelIndex) -> bool:
-  """Keep the schema's required name, tags, and comment rows
+def _canDeleteRow(index: QModelIndex, group:str, inherited:set[tuple[str,str]]) -> bool:
+  """Keep the schema's required name, tags, and comment rows, and rows inherited from the parent item type
     Args:
       index (QModelIndex): model index associated with the event
+      group (str): group of the table
+      inherited (set): (group, name) of the inherited rows
     Returns:
       bool: Whether the schema row may be deleted
   """
-  return _hasEditableName(index) and index.model().index(index.row(), 0).data() not in ['name', 'tags', 'comment']
+  name = index.model().index(index.row(), 0).data()
+  return _hasEditableName(index) and name not in ['name', 'tags', 'comment'] and (group, name) not in inherited
 
 
 def _moveRowUp(model: QAbstractItemModel, index: QModelIndex) -> None:
