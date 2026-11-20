@@ -652,13 +652,8 @@ class Form(QDialog):
         self.advancedSection.show()
 
     elif commandType is Command.AUTO_COMMENT:
-      try:
-        text  = f'\n{"-"*20}\n'
-        text += callAddOn('form_auto', self.comm, self.doc, self)
-        text += f'\n{"-"*20}\n'
-        self.textEdit_comment.insertPlainText(text)                               # type: ignore[attr-defined]
-      except Exception:
-        pass
+      if (reply := callAddOn('form_auto', self.comm, self.doc, self)) is not None:
+        self.textEdit_comment.insertPlainText(f'\n{"-"*20}\n{reply}\n{"-"*20}\n')     # type: ignore[attr-defined]
 
     elif commandType is Command.FORM_CANCEL:
       if self.comm. configuration['GUI']['autosave'] == 'Yes':

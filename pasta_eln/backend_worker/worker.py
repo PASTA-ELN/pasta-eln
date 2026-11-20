@@ -47,6 +47,7 @@ class Task(Enum):
   CHECK_DB       = (16, 'Checking database integrity:')            #keys: style
   OPEN_EXTERNAL  = (17, '')                                        #keys: docID
   ADD_ATTACHMENT = (18, '')                                        #keys: docID, location, attachmentID, remark
+  ERROR          = (19, '')                                        #report of a failed task
 
   def __init__(self, num:int, msgWaitDialog:str='') -> None:
     """Initialize the task with a number and an optional message for the wait dialog
@@ -162,330 +163,334 @@ class BackendWorker(QObject):
       task (Task): Task to perform
       data (dict): Data required for the task
     """
-    if self.backend is None:
-      return
-    if task is Task.EXTRACTOR_TEST and set(data.keys())=={'fileName','style','recipe','saveFig'}:
-      report, image = self.backend.extractors.test(data['fileName'], style={'main':data['recipe']},
-                                                   outputStyle=data['style'], saveFig=data['saveFig'])
-      self.beSendTaskReport.emit(task, report, image, '')
-
-    elif task is Task.CHECK_DB and set(data.keys())=={'style'}:
-      report = self.backend.checkDB(outputStyle=data['style'])
-      self.beSendTaskReport.emit(task, report, '', '')
-
-    elif task is Task.SCAN         and set(data.keys())=={'docID'}:
-      for _ in range(2):                                                         #scan twice: convert, extract
-        self.backend.scanProject(None, data['docID'])
-      self.beSendTaskReport.emit(task, 'Scanning finished successfully', '', '')
-
-    elif task is Task.ADD_ATTACHMENT and set(data.keys())=={'docID', 'location', 'attachmentID', 'remark'}:
-      self.backend.db.addAttachment(data['docID'], data['location'], {'date': datetime.now().isoformat(),
-            'docID': data['attachmentID'], 'remark': data['remark'], 'user': self.backend.userID})
-      doc = self.backend.db.getDoc(data['docID'])
-      expandDocID2tupleInDict(doc, self.backend.db)
-      self.beSendDoc.emit(doc)
-
-    elif task is Task.ADD_DOC      and set(data.keys())=={'hierStack','docType','doc'}:
-      if data['hierStack'] and data['hierStack'][-1]:
-        parentID  = data['hierStack'][-1]
-        self.backend.cwd = Path(self.backend.db.getDoc(parentID)['branch'][0]['path'])
-      else:                                                                                          # project
-        self.backend.cwd = Path(self.backend.basePath)
-      if '_projectID' in data['doc']:
-        del data['doc']['_projectID']
-      self.backend.addData(data['docType'], data['doc'], data['hierStack'])
-      self.beSendDoc.emit(data['doc'])                                          # send updated doc back to GUI
-      if data['docType']=='x0':
-        self.beSendTable.emit(self.backend.db.getView('viewDocType/x0'), 'x0')
-
-    elif task is Task.EDIT_DOC      and set(data.keys())=={'doc','newProjID'}:
-      # update the path, if the project changed
-      if data['newProjID'] and 'branch' in data['doc'] and len(data['doc']['branch'][0]['stack'])>0 and \
-         data['doc']['branch'][0]['stack'][0]!=data['newProjID'][0]:                  #only if project changed
-        if data['doc']['branch'][0]['path'] is None:
-          newPath    = ''
-        else:
-          oldPath = self.backend.basePath/data['doc']['branch'][0]['path']
-          parentPath = self.backend.db.getDoc(data['newProjID'][0])['branch'][0]['path']
-          newPath = f'{parentPath}/{oldPath.name}'
-        data['doc']['branch'][0] = {'stack':[] if data['newProjID'][0]=='NONE' else [data['newProjID'][0]],
-                                    'path':newPath or None, 'child':9999, 'show':[True,True]}
-      # update the doc in the database
-      doc = self.backend.db.getDoc(data['doc']['id'])
-      if '_projectID' in data['doc']:
-        del data['doc']['_projectID']
-      doc.update(data['doc'])
-      doc = cast(dict[str, Any], flatten(doc, True))
-      self.backend.editData(doc)
-      self.beSendDoc.emit(self.backend.db.getDoc(data['doc']['id']))            # send updated doc back to GUI
-
-    elif task is Task.MOVE_LEAVES and set(data.keys())=={'docID','stackOld','stackNew','childOld','childNew'}:
-      verbose = False                                                                 # Convenient for testing
-      doc = self.backend.db.getDoc(data['docID'])
-      branchOldList= [i for i in doc['branch'] if i['stack']==data['stackOld']]
-      if len(branchOldList)!=1:
-        logging.error('Cannot move leaves: %s has no branch with stack %s', doc['id'], data['stackOld'], exc_info=True)
+    try:
+      if self.backend is None:
         return
-      branchOld = branchOldList[0]
-      if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
-        parentDir = Path(self.backend.db.getDoc(data['stackNew'][-1])['branch'][0]['path'])
-        if doc['type'][0][0]=='x':
-          dirNameNew= createDirName(doc, data['childNew'], parentDir)# create path name: do not create directory on disk yet
+      if task is Task.EXTRACTOR_TEST and set(data.keys())=={'fileName','style','recipe','saveFig'}:
+        report, image = self.backend.extractors.test(data['fileName'], style={'main':data['recipe']},
+                                                     outputStyle=data['style'], saveFig=data['saveFig'])
+        self.beSendTaskReport.emit(task, report, image, '')
+
+      elif task is Task.CHECK_DB and set(data.keys())=={'style'}:
+        report = self.backend.checkDB(outputStyle=data['style'])
+        self.beSendTaskReport.emit(task, report, '', '')
+
+      elif task is Task.SCAN         and set(data.keys())=={'docID'}:
+        for _ in range(2):                                                         #scan twice: convert, extract
+          self.backend.scanProject(None, data['docID'])
+        self.beSendTaskReport.emit(task, 'Scanning finished successfully', '', '')
+
+      elif task is Task.ADD_ATTACHMENT and set(data.keys())=={'docID', 'location', 'attachmentID', 'remark'}:
+        self.backend.db.addAttachment(data['docID'], data['location'], {'date': datetime.now().isoformat(),
+              'docID': data['attachmentID'], 'remark': data['remark'], 'user': self.backend.userID})
+        doc = self.backend.db.getDoc(data['docID'])
+        expandDocID2tupleInDict(doc, self.backend.db)
+        self.beSendDoc.emit(doc)
+
+      elif task is Task.ADD_DOC      and set(data.keys())=={'hierStack','docType','doc'}:
+        if data['hierStack'] and data['hierStack'][-1]:
+          parentID  = data['hierStack'][-1]
+          self.backend.cwd = Path(self.backend.db.getDoc(parentID)['branch'][0]['path'])
+        else:                                                                                          # project
+          self.backend.cwd = Path(self.backend.basePath)
+        if '_projectID' in data['doc']:
+          del data['doc']['_projectID']
+        self.backend.addData(data['docType'], data['doc'], data['hierStack'])
+        self.beSendDoc.emit(data['doc'])                                          # send updated doc back to GUI
+        if data['docType']=='x0':
+          self.beSendTable.emit(self.backend.db.getView('viewDocType/x0'), 'x0')
+
+      elif task is Task.EDIT_DOC      and set(data.keys())=={'doc','newProjID'}:
+        # update the path, if the project changed
+        if data['newProjID'] and 'branch' in data['doc'] and len(data['doc']['branch'][0]['stack'])>0 and \
+           data['doc']['branch'][0]['stack'][0]!=data['newProjID'][0]:                  #only if project changed
+          if data['doc']['branch'][0]['path'] is None:
+            newPath    = ''
+          else:
+            oldPath = self.backend.basePath/data['doc']['branch'][0]['path']
+            parentPath = self.backend.db.getDoc(data['newProjID'][0])['branch'][0]['path']
+            newPath = f'{parentPath}/{oldPath.name}'
+          data['doc']['branch'][0] = {'stack':[] if data['newProjID'][0]=='NONE' else [data['newProjID'][0]],
+                                      'path':newPath or None, 'child':9999, 'show':[True,True]}
+        # update the doc in the database
+        doc = self.backend.db.getDoc(data['doc']['id'])
+        if '_projectID' in data['doc']:
+          del data['doc']['_projectID']
+        doc.update(data['doc'])
+        doc = cast(dict[str, Any], flatten(doc, True))
+        self.backend.editData(doc)
+        self.beSendDoc.emit(self.backend.db.getDoc(data['doc']['id']))            # send updated doc back to GUI
+
+      elif task is Task.MOVE_LEAVES and set(data.keys())=={'docID','stackOld','stackNew','childOld','childNew'}:
+        verbose = False                                                                 # Convenient for testing
+        doc = self.backend.db.getDoc(data['docID'])
+        branchOldList= [i for i in doc['branch'] if i['stack']==data['stackOld']]
+        if len(branchOldList)!=1:
+          logging.error('Cannot move leaves: %s has no branch with stack %s', doc['id'], data['stackOld'], exc_info=True)
+          return
+        branchOld = branchOldList[0]
+        if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
+          parentDir = Path(self.backend.db.getDoc(data['stackNew'][-1])['branch'][0]['path'])
+          if doc['type'][0][0]=='x':
+            dirNameNew= createDirName(doc, data['childNew'], parentDir)# create path name: do not create directory on disk yet
+          else:
+            dirNameNew= Path(branchOld['path']).name                                              # use old name
+          pathNew = (parentDir / dirNameNew).as_posix()
         else:
-          dirNameNew= Path(branchOld['path']).name                                              # use old name
-        pathNew = (parentDir / dirNameNew).as_posix()
-      else:
-        pathNew = branchOld['path']
-      siblingsNew = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackNew']))#sorted by docID
-      siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(data['stackNew'])+1]
-      childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
-      siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]  #sorted by childNum 1st and docID 2nd
-      # --- CHANGE ----
-      # change new siblings
-      if verbose:
-        print('\n=============================================\nStep 1: before new siblings')
-        print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
-      for idx, line in reversed(list(enumerate(siblingsNew))):
-        shift = 1 if idx>=data['childNew'] else 0#shift those before the insertion point by 0 and those after by 1
-        if line['id']==data['docID'] or line['value'][0]==idx+shift:#ignore this id & those that are correct already
-          continue
-        if verbose:
-          print(f'  {line["id"]}: move: {idx} {shift}')
-        self.backend.db.updateBranch(docID=line['id'], branch=line['value'][4], child=idx+shift)
-      if verbose:
+          pathNew = branchOld['path']
         siblingsNew = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackNew']))#sorted by docID
         siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(data['stackNew'])+1]
         childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
-        siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]#sorted by childNum 1st and docID 2nd
-        print('Step 2: after new siblings')
-        print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
-      # change item in question
-      if verbose:
-        print(f'  manual move {data["childOld"]} -> {data["childNew"]}: {data["docID"]}')
-      self.backend.db.updateBranch(docID=data['docID'], branch=-99, stack=data['stackNew'], path=pathNew,
-                                   child=data['childNew'], stackOld=data['stackOld']+[data['docID']])
-      # change old siblings
-      siblingsOld = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackOld']))#sorted by docID
-      siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(data['stackOld'])+1]
-      childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
-      siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]#sorted by childNum 1st and docID 2nd
-      if verbose:
-        print('Step 3: before old siblings')
-        print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
-      for idx, line in enumerate(siblingsOld):
-        if line['value'][0]==idx:                  #ignore id in question and those that are correct already
-          continue
+        siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]  #sorted by childNum 1st and docID 2nd
+        # --- CHANGE ----
+        # change new siblings
         if verbose:
-          print(f'  {line["id"]}: move: {idx}')
-        self.backend.db.updateBranch(  docID=line['id'], branch=line['value'][4], child=idx)
-      if verbose:
+          print('\n=============================================\nStep 1: before new siblings')
+          print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
+        for idx, line in reversed(list(enumerate(siblingsNew))):
+          shift = 1 if idx>=data['childNew'] else 0#shift those before the insertion point by 0 and those after by 1
+          if line['id']==data['docID'] or line['value'][0]==idx+shift:#ignore this id & those that are correct already
+            continue
+          if verbose:
+            print(f'  {line["id"]}: move: {idx} {shift}')
+          self.backend.db.updateBranch(docID=line['id'], branch=line['value'][4], child=idx+shift)
+        if verbose:
+          siblingsNew = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackNew']))#sorted by docID
+          siblingsNew = [i for i in siblingsNew if len(i['key'].split('/'))==len(data['stackNew'])+1]
+          childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsNew)]
+          siblingsNew = [x for _, x in sorted(zip(childNums, siblingsNew))]#sorted by childNum 1st and docID 2nd
+          print('Step 2: after new siblings')
+          print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsNew]))
+        # change item in question
+        if verbose:
+          print(f'  manual move {data["childOld"]} -> {data["childNew"]}: {data["docID"]}')
+        self.backend.db.updateBranch(docID=data['docID'], branch=-99, stack=data['stackNew'], path=pathNew,
+                                     child=data['childNew'], stackOld=data['stackOld']+[data['docID']])
+        # change old siblings
         siblingsOld = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackOld']))#sorted by docID
         siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(data['stackOld'])+1]
         childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
         siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]#sorted by childNum 1st and docID 2nd
-        print('Step 4: end of function')
-        print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
-
-    elif task is Task.DROP_EXTERNAL and set(data.keys())=={'docID','items','addToExisting'}:
-      doc = self.backend.db.getDoc(data['docID'])
-      if data['addToExisting']:
-        parentDoc = self.backend.db.getDoc(doc['branch'][0]['stack'][-1])
-        targetFolder = self.backend.basePath/parentDoc['branch'][0]['path']
-      else:
-        targetFolder = Path(self.backend.basePath/doc['branch'][0]['path'])
-      for item in data['items']:
-        itemPath = Path(item)
-        targetName = targetFolder/itemPath.name
-        idx = 1
-        while targetName.exists():
-          targetName = targetFolder/ (itemPath.stem+f'_{idx}'+itemPath.suffix)
-          idx += 1
-        if itemPath.is_dir():
-          shutil.copytree(itemPath, targetName)
-        else:
-          shutil.copy(itemPath, targetName)
-      reply = ''
-      if data['addToExisting']:
-        docID = data['docID']
-        path = targetName.relative_to(self.backend.basePath)
-        self.backend.db.cursor.execute('UPDATE branches SET path=? WHERE id=? AND idx=0', (path.as_posix(), docID))
-        self.backend.db.connection.commit()
-        #rerun extractors
-        oldDocType = doc['type']
-        self.backend.extractors.use(targetName, '', doc)
-        if doc['type'][0] == oldDocType[0]:
-          del doc['branch']                                                                      #don't update
-          self.backend.db.updateDoc(doc, docID)
-        else:
-          self.backend.db.remove( docID )
-          del doc['id']
-          doc['name'] = doc['branch'][0]['path']
-          self.backend.addData('/'.join(doc['type']), doc, doc['branch'][0]['stack'])
-      else:
-        # scan
-        for _ in range(2):                                                       #scan twice: convert, extract
-          reply += self.backend.scanProject(None, data['docID'], targetFolder.relative_to(self.backend.basePath))
-      msg = 'Import finished successfully.'
-      if reply:
-        msg += f' <p style="color:red;">{reply}</p>'
-      self.beSendTaskReport.emit(task, msg, '', '')
-
-    elif task is Task.DELETE_DOC   and  set(data.keys())=={'docID','stack'}:
-      # delete doc: possibly a folder or a project or a measurement
-      # delete database and rename folder
-      # - stack (str) includes the docID itself
-      doc = self.backend.db.getDoc(data['docID'])
-      if len(doc['branch'])==1 or not data['stack']:
-        branches = doc['branch']
-        doc = self.backend.db.remove(data['docID'])
-      else:
-        branches = [i for i in doc['branch'] if '/'.join(i['stack']+[data['docID']])==data['stack']]
-        if len(branches)!=1:
-          self.beSendTaskReport.emit(task, f'Cannot find location {data["stack"]} for item.', '', '')
-          return
-        self.backend.db.remove(data['docID'], data['stack'])
-      # rename on disk
-      renamedPaths = set()
-      for branch in branches:
-        if branch.get('path', None) is None or branch['path'] in renamedPaths:
-          continue
-        oldPath = self.backend.basePath/branch['path']
-        if not oldPath.exists():
-          continue
-        if oldPath.is_dir() and {i.name for i in oldPath.iterdir()} <= {'.id_pastaELN.json'}:# empty folder: remove
-          (oldPath/'.id_pastaELN.json').unlink(missing_ok=True)
-          oldPath.rmdir()
-          renamedPaths.add(branch['path'])
-          continue
-        newPath = oldPath.parent/f'trash_{oldPath.name}'
-        nextIteration = 1
-        while newPath.exists():
-          newPath = oldPath.parent/f'trash_{oldPath.name}_{nextIteration}'
-          nextIteration += 1
-        if oldPath != newPath:
-          oldPath.rename(newPath)
-          renamedPaths.add(branch['path'])
-      # go through children, remove from DB: include hidden children
-      for branch in branches:              # only remove branches inside deleted subtree; keep those in other projects
-        prefix = '/'.join(branch['stack']+[data['docID']])
-        children = self.backend.db.getView('viewHierarchy/viewHierarchyAll', startKey=prefix)
-        for docID in {line['id'] for line in children if line['id']!=data['docID']}:
-          self.backend.db.remove(docID, prefix)
-      # finish it
-      if doc['type'][0]=='x0':
-        self.beSendTable.emit(self.backend.db.getView('viewDocType/x0'), 'x0')
-
-    elif task is Task.EXPORT_ELN and set(data.keys())=={'fileName','projID','docTypes'}:
-      report = exportELN(self.backend, [data['projID']], data['fileName'], data['docTypes'])
-      self.beSendTaskReport.emit(task, report, '', '')
-
-    elif task is Task.IMPORT_ELN and set(data.keys())=={'fileName','projID'}:
-      report, statistics = importELN(self.backend, data['fileName'], data['projID'])
-      self.beSendTaskReport.emit(task, f'{report}\n{json.dumps(statistics, indent=2, ensure_ascii=False)}', '', '')
-
-    elif task is Task.SYNC_ELAB and set(data.keys())=={'projGroup','subtask'}:
-      errorState = self.backend.checkDB(minimal=True)
-      if any('**ERROR' in line and '[bch01]' not in line for line in errorState.splitlines()):# ignore bch01: large files not copied
-        self.beSendTaskReport.emit(task, 'Errors are present in the database. Fix them before uploading.', '', '')
-      else:
-        try:
-          sync = Pasta2Elab(self.backend, data['projGroup'])
-          if hasattr(sync, 'api') and sync.api.url:                             #if hostname and api-key given
-            timeStart = time.perf_counter()
-            stats = sync.sync(data['subtask'], progressCallback=self.beSendProgress.emit)
-            logging.debug('elabFTW sync stats: %s', stats)
-            statsCount = Counter([i[1] for i in stats])
-            if errorCount:= sum(count for code, count in statsCount.items() if code < 0):
-              headline = f'<b>Partial success:</b> Synchronized with server, but {errorCount} item(s) failed.'
-            else:
-              headline = '<b>Success:</b> Synchronized with server.'
-            runtime = time.perf_counter() - timeStart
-            runtimeText = f'{runtime:.1f} s' if runtime < 60 else f'{runtime//60:.0f} min {runtime%60:.1f} s'
-            headline += f'<br>Runtime: {runtimeText}'
-            msg = '<br>'.join(f'{label}: {statsCount[k]}' for k, label in MERGE_LABELS.items()
-                              if statsCount.get(k, 0))
-            self.beSendTaskReport.emit(task, f'<p>{headline}<br><br><b>Items per action:</b><br>{msg}</p>', '', '')
-          else:                                                                                  #if not given
-            self.beSendTaskReport.emit(task, 'Specify a server address and API key in the configuration.', '', '')
-        except ConnectionError as e:
-          logging.error('Connection-Error connecting to elabFTW server')
-          self.beSendTaskReport.emit(task, f'Error: Connection error to eLabFTW server\n{e}', '', '')
-
-    elif task is Task.SEND_TBL_COLUMN and set(data.keys())=={'docType','newList'}:
-      self.backend.db.dataHierarchyChangeView(data['docType'], data['newList'])
-
-    elif task is Task.SEND_REPOSITORY and set(data.keys())=={'projID','docTypes','repositories','metadata','uploadZenodo'}:
-      tempELN = str(Path(tempfile.gettempdir())/'export.eln')
-      res0 = exportELN(self.backend, [data['projID']], tempELN, data['docTypes'])
-      print('Export eln',res0)
-      repositories = data['repositories']
-      if data['uploadZenodo']:                                                                         #Zenodo
-        clientZ = ZenodoClient(repositories['zenodo']['url'], repositories['zenodo']['key'])
-        metadataZ = clientZ.prepareMetadata(data['metadata'])
-        res = clientZ.uploadRepository(metadataZ, tempELN)
-      else:                                                                                         #Dataverse
-        clientD = DataverseClient(repositories['dataverse']['url'], repositories['dataverse']['key'],
-                                repositories['dataverse']['dataverse'])
-        metadataD = clientD.prepareMetadata(data['metadata'])
-        res = clientD.uploadRepository(metadataD, tempELN)
-      # update project with upload details
-      if res[0]:
-        docProject = self.backend.db.getDoc(data['projID'])
-        docProject['.repository_upload'] = f'{datetime.now().strftime("%Y-%m-%d")} {res[1]}'
-        docProject['branch'] = docProject['branch'][0] | {'op':'u'}
-        self.backend.db.updateDoc(docProject, data['projID'])
-        msg = 'Upload completed successfully.\nSaved upload information to the project.'
-      else:
-        msg = f'Upload failed: {res[1]}'
-      self.beSendTaskReport.emit(task, msg, '', '')
-
-    elif task is Task.EXTRACTOR_RERUN and set(data.keys())=={'docIDs','recipe'}:
-      extractorJobs:list[dict[str,Any]] = []
-      for docID in data['docIDs']:
-        doc = self.backend.db.getDoc(docID)
-        #any path is good since the file is the same everywhere; data-changed by reference
-        if doc['branch'][0]['path'] is not None:
-          if data['recipe']:
-            doc['type'] = data['recipe'].split('/')
-          oldDocType = doc['type']
-          doc['type'] = ['']                                        # Allow extractor to determine new docType
-          if doc['branch'][0]['path'].startswith('http'):
-            path = Path(doc['branch'][0]['path'])
-          else:
-            path = self.backend.basePath/doc['branch'][0]['path']
-          job = self.backend.extractors.prepareJob(path, doc['type'], len(extractorJobs))
-          if job is None:
+        if verbose:
+          print('Step 3: before old siblings')
+          print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
+        for idx, line in enumerate(siblingsOld):
+          if line['value'][0]==idx:                  #ignore id in question and those that are correct already
             continue
-          job |= {'doc':doc, 'docID':docID, 'oldDocType':oldDocType}
-          extractorJobs.append(job)
-      for job, doc in self.backend.extractors.applyResults(self.backend.extractors.runJobs(extractorJobs), extractorJobs):
-        if doc['type'][0] == job['oldDocType'][0]:
-          del doc['branch']                                                                      #don't update
-          self.backend.db.updateDoc(doc, job['docID'])
+          if verbose:
+            print(f'  {line["id"]}: move: {idx}')
+          self.backend.db.updateBranch(  docID=line['id'], branch=line['value'][4], child=idx)
+        if verbose:
+          siblingsOld = self.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(data['stackOld']))#sorted by docID
+          siblingsOld = [i for i in siblingsOld if len(i['key'].split('/'))==len(data['stackOld'])+1]
+          childNums   = [f"{i['value'][0]:05d}{i['id']}{idx}" for idx,i in enumerate(siblingsOld)]
+          siblingsOld = [x for _, x in sorted(zip(childNums, siblingsOld))]#sorted by childNum 1st and docID 2nd
+          print('Step 4: end of function')
+          print('\n'.join([f'{i["value"][0]} {i["id"]} {i["value"][2]}' for i in siblingsOld]))
+
+      elif task is Task.DROP_EXTERNAL and set(data.keys())=={'docID','items','addToExisting'}:
+        doc = self.backend.db.getDoc(data['docID'])
+        if data['addToExisting']:
+          parentDoc = self.backend.db.getDoc(doc['branch'][0]['stack'][-1])
+          targetFolder = self.backend.basePath/parentDoc['branch'][0]['path']
         else:
-          branch = doc['branch'][0]
-          self.backend.db.remove( job['docID'] )
-          del doc['id']
-          doc['name'] = branch['path']
-          self.backend.addData('/'.join(doc['type']), doc, branch['stack'], runExtractors=False)
-      self.beSendTaskReport.emit(task, 'Extractors re-ran successfully', '', '')
+          targetFolder = Path(self.backend.basePath/doc['branch'][0]['path'])
+        for item in data['items']:
+          itemPath = Path(item)
+          targetName = targetFolder/itemPath.name
+          idx = 1
+          while targetName.exists():
+            targetName = targetFolder/ (itemPath.stem+f'_{idx}'+itemPath.suffix)
+            idx += 1
+          if itemPath.is_dir():
+            shutil.copytree(itemPath, targetName)
+          else:
+            shutil.copy(itemPath, targetName)
+        reply = ''
+        if data['addToExisting']:
+          docID = data['docID']
+          path = targetName.relative_to(self.backend.basePath)
+          self.backend.db.cursor.execute('UPDATE branches SET path=? WHERE id=? AND idx=0', (path.as_posix(), docID))
+          self.backend.db.connection.commit()
+          #rerun extractors
+          oldDocType = doc['type']
+          self.backend.extractors.use(targetName, '', doc)
+          if doc['type'][0] == oldDocType[0]:
+            del doc['branch']                                                                      #don't update
+            self.backend.db.updateDoc(doc, docID)
+          else:
+            self.backend.db.remove( docID )
+            del doc['id']
+            doc['name'] = doc['branch'][0]['path']
+            self.backend.addData('/'.join(doc['type']), doc, doc['branch'][0]['stack'])
+        else:
+          # scan
+          for _ in range(2):                                                       #scan twice: convert, extract
+            reply += self.backend.scanProject(None, data['docID'], targetFolder.relative_to(self.backend.basePath))
+        msg = 'Import finished successfully.'
+        if reply:
+          msg += f' <p style="color:red;">{reply}</p>'
+        self.beSendTaskReport.emit(task, msg, '', '')
 
-    elif task is Task.OPEN_EXTERNAL and set(data.keys())=={'docID'}:
-      doc   = self.backend.db.getDoc(data['docID'])
-      if doc['branch'][0]['path'] is None:
-        QMessageBox.critical(None, 'Local file error', 'This item has no local file.')
+      elif task is Task.DELETE_DOC   and  set(data.keys())=={'docID','stack'}:
+        # delete doc: possibly a folder or a project or a measurement
+        # delete database and rename folder
+        # - stack (str) includes the docID itself
+        doc = self.backend.db.getDoc(data['docID'])
+        if len(doc['branch'])==1 or not data['stack']:
+          branches = doc['branch']
+          doc = self.backend.db.remove(data['docID'])
+        else:
+          branches = [i for i in doc['branch'] if '/'.join(i['stack']+[data['docID']])==data['stack']]
+          if len(branches)!=1:
+            self.beSendTaskReport.emit(task, f'Cannot find location {data["stack"]} for item.', '', '')
+            return
+          self.backend.db.remove(data['docID'], data['stack'])
+        # rename on disk
+        renamedPaths = set()
+        for branch in branches:
+          if branch.get('path', None) is None or branch['path'] in renamedPaths:
+            continue
+          oldPath = self.backend.basePath/branch['path']
+          if not oldPath.exists():
+            continue
+          if oldPath.is_dir() and {i.name for i in oldPath.iterdir()} <= {'.id_pastaELN.json'}:# empty folder: remove
+            (oldPath/'.id_pastaELN.json').unlink(missing_ok=True)
+            oldPath.rmdir()
+            renamedPaths.add(branch['path'])
+            continue
+          newPath = oldPath.parent/f'trash_{oldPath.name}'
+          nextIteration = 1
+          while newPath.exists():
+            newPath = oldPath.parent/f'trash_{oldPath.name}_{nextIteration}'
+            nextIteration += 1
+          if oldPath != newPath:
+            oldPath.rename(newPath)
+            renamedPaths.add(branch['path'])
+        # go through children, remove from DB: include hidden children
+        for branch in branches:              # only remove branches inside deleted subtree; keep those in other projects
+          prefix = '/'.join(branch['stack']+[data['docID']])
+          children = self.backend.db.getView('viewHierarchy/viewHierarchyAll', startKey=prefix)
+          for docID in {line['id'] for line in children if line['id']!=data['docID']}:
+            self.backend.db.remove(docID, prefix)
+        # finish it
+        if doc['type'][0]=='x0':
+          self.beSendTable.emit(self.backend.db.getView('viewDocType/x0'), 'x0')
+
+      elif task is Task.EXPORT_ELN and set(data.keys())=={'fileName','projID','docTypes'}:
+        report = exportELN(self.backend, [data['projID']], data['fileName'], data['docTypes'])
+        self.beSendTaskReport.emit(task, report, '', '')
+
+      elif task is Task.IMPORT_ELN and set(data.keys())=={'fileName','projID'}:
+        report, statistics = importELN(self.backend, data['fileName'], data['projID'])
+        self.beSendTaskReport.emit(task, f'{report}\n{json.dumps(statistics, indent=2, ensure_ascii=False)}', '', '')
+
+      elif task is Task.SYNC_ELAB and set(data.keys())=={'projGroup','subtask'}:
+        errorState = self.backend.checkDB(minimal=True)
+        if any('**ERROR' in line and '[bch01]' not in line for line in errorState.splitlines()):# ignore bch01: large files not copied
+          self.beSendTaskReport.emit(task, 'Errors are present in the database. Fix them before uploading.', '', '')
+        else:
+          try:
+            sync = Pasta2Elab(self.backend, data['projGroup'])
+            if hasattr(sync, 'api') and sync.api.url:                             #if hostname and api-key given
+              timeStart = time.perf_counter()
+              stats = sync.sync(data['subtask'], progressCallback=self.beSendProgress.emit)
+              logging.debug('elabFTW sync stats: %s', stats)
+              statsCount = Counter([i[1] for i in stats])
+              if errorCount:= sum(count for code, count in statsCount.items() if code < 0):
+                headline = f'<b>Partial success:</b> Synchronized with server, but {errorCount} item(s) failed.'
+              else:
+                headline = '<b>Success:</b> Synchronized with server.'
+              runtime = time.perf_counter() - timeStart
+              runtimeText = f'{runtime:.1f} s' if runtime < 60 else f'{runtime//60:.0f} min {runtime%60:.1f} s'
+              headline += f'<br>Runtime: {runtimeText}'
+              msg = '<br>'.join(f'{label}: {statsCount[k]}' for k, label in MERGE_LABELS.items()
+                                if statsCount.get(k, 0))
+              self.beSendTaskReport.emit(task, f'<p>{headline}<br><br><b>Items per action:</b><br>{msg}</p>', '', '')
+            else:                                                                                  #if not given
+              self.beSendTaskReport.emit(task, 'Specify a server address and API key in the configuration.', '', '')
+          except ConnectionError as e:
+            logging.error('Connection-Error connecting to elabFTW server')
+            self.beSendTaskReport.emit(task, f'Error: Connection error to eLabFTW server\n{e}', '', '')
+
+      elif task is Task.SEND_TBL_COLUMN and set(data.keys())=={'docType','newList'}:
+        self.backend.db.dataHierarchyChangeView(data['docType'], data['newList'])
+
+      elif task is Task.SEND_REPOSITORY and set(data.keys())=={'projID','docTypes','repositories','metadata','uploadZenodo'}:
+        tempELN = str(Path(tempfile.gettempdir())/'export.eln')
+        res0 = exportELN(self.backend, [data['projID']], tempELN, data['docTypes'])
+        print('Export eln',res0)
+        repositories = data['repositories']
+        if data['uploadZenodo']:                                                                         #Zenodo
+          clientZ = ZenodoClient(repositories['zenodo']['url'], repositories['zenodo']['key'])
+          metadataZ = clientZ.prepareMetadata(data['metadata'])
+          res = clientZ.uploadRepository(metadataZ, tempELN)
+        else:                                                                                         #Dataverse
+          clientD = DataverseClient(repositories['dataverse']['url'], repositories['dataverse']['key'],
+                                  repositories['dataverse']['dataverse'])
+          metadataD = clientD.prepareMetadata(data['metadata'])
+          res = clientD.uploadRepository(metadataD, tempELN)
+        # update project with upload details
+        if res[0]:
+          docProject = self.backend.db.getDoc(data['projID'])
+          docProject['.repository_upload'] = f'{datetime.now().strftime("%Y-%m-%d")} {res[1]}'
+          docProject['branch'] = docProject['branch'][0] | {'op':'u'}
+          self.backend.db.updateDoc(docProject, data['projID'])
+          msg = 'Upload completed successfully.\nSaved upload information to the project.'
+        else:
+          msg = f'Upload failed: {res[1]}'
+        self.beSendTaskReport.emit(task, msg, '', '')
+
+      elif task is Task.EXTRACTOR_RERUN and set(data.keys())=={'docIDs','recipe'}:
+        extractorJobs:list[dict[str,Any]] = []
+        for docID in data['docIDs']:
+          doc = self.backend.db.getDoc(docID)
+          #any path is good since the file is the same everywhere; data-changed by reference
+          if doc['branch'][0]['path'] is not None:
+            if data['recipe']:
+              doc['type'] = data['recipe'].split('/')
+            oldDocType = doc['type']
+            doc['type'] = ['']                                        # Allow extractor to determine new docType
+            if doc['branch'][0]['path'].startswith('http'):
+              path = Path(doc['branch'][0]['path'])
+            else:
+              path = self.backend.basePath/doc['branch'][0]['path']
+            job = self.backend.extractors.prepareJob(path, doc['type'], len(extractorJobs))
+            if job is None:
+              continue
+            job |= {'doc':doc, 'docID':docID, 'oldDocType':oldDocType}
+            extractorJobs.append(job)
+        for job, doc in self.backend.extractors.applyResults(self.backend.extractors.runJobs(extractorJobs), extractorJobs):
+          if doc['type'][0] == job['oldDocType'][0]:
+            del doc['branch']                                                                      #don't update
+            self.backend.db.updateDoc(doc, job['docID'])
+          else:
+            branch = doc['branch'][0]
+            self.backend.db.remove( job['docID'] )
+            del doc['id']
+            doc['name'] = branch['path']
+            self.backend.addData('/'.join(doc['type']), doc, branch['stack'], runExtractors=False)
+        self.beSendTaskReport.emit(task, 'Extractors re-ran successfully', '', '')
+
+      elif task is Task.OPEN_EXTERNAL and set(data.keys())=={'docID'}:
+        doc   = self.backend.db.getDoc(data['docID'])
+        if doc['branch'][0]['path'] is None:
+          QMessageBox.critical(None, 'Local file error', 'This item has no local file.')
+        else:
+          path  = Path(self.backend.basePath)/doc['branch'][0]['path']
+          self.beSendTaskReport.emit(task, '', '', str(path))
+
+      elif task is Task.SET_GUI    and set(data.keys())=={'docID','gui'}:
+        self.backend.db.setGUI(data['docID'], data['gui'])
+
+      elif task is Task.HIDE_SHOW    and set(data.keys())=={'docID'}:
+        self.backend.db.hideShow(data['docID'])
+
       else:
-        path  = Path(self.backend.basePath)/doc['branch'][0]['path']
-        self.beSendTaskReport.emit(task, '', '', str(path))
-
-    elif task is Task.SET_GUI    and set(data.keys())=={'docID','gui'}:
-      self.backend.db.setGUI(data['docID'], data['gui'])
-
-    elif task is Task.HIDE_SHOW    and set(data.keys())=={'docID'}:
-      self.backend.db.hideShow(data['docID'])
-
-    else:
-      logging.error('Got task, which I do not understand %s %s', task, data.keys(), exc_info=True)
+        logging.error('Got task, which I do not understand %s %s', task, data.keys(), exc_info=True)
+    except Exception as error:                     # boundary: close the wait dialog and tell the user
+      logging.exception('Task %s failed', task.name)
+      self.beSendTaskReport.emit(Task.ERROR, f'{task.name} failed: {error}\n\nDetails are in the log file.', '', '')
 
 
   @Slot(list)

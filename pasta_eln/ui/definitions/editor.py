@@ -126,11 +126,9 @@ class Editor(QDialog):
         self.data = importedData.rename({'description':'label'}, axis=1)[['key', 'label', 'PURL', 'defType']]
         self.paint()
     elif command is Command.ADDON:
-      try:
-        self.data = callAddOn('definition_autofill', self.comm, self.data, self)
+      if (data := callAddOn('definition_autofill', self.comm, self.data, self)) is not None:
+        self.data = data
         self.paint()
-      except Exception:
-        pass
     elif command is Command.CANCEL:
       self.reject()
     elif command is Command.SAVE:

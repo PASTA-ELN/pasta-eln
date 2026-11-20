@@ -94,8 +94,4 @@ class Worker(QThread):
 
   def run(self) -> None:
     """Runs the assigned function, providing a callback for progress updates"""
-    try:
-      self.taskFunction(self.progress.emit)                                # Pass progress emitter as callback
-    except Exception:
-      pass
-    return
+    self.taskFunction(self.progress.emit)                                  # Pass progress emitter as callback

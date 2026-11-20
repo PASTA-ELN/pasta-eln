@@ -9,7 +9,6 @@ import subprocess
 import sys
 import tempfile
 import threading
-import traceback
 from collections.abc import Callable
 from pathlib import Path
 from types import ModuleType
@@ -19,7 +18,7 @@ import pandas as pd
 from anytree import Node
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QMessageBox, QWidget
 from .configuration_file import loadConfiguration, saveConfiguration
 
 
@@ -207,21 +206,15 @@ def callAddOn(name:str, comm:Any, content:Any, widget:QWidget) -> Any:
     widget (QWidget): widget to be used
 
   Returns:
-    Any: result of the add-on
+    Any: result of the add-on; None if it failed
   """
-  module      = loadNamedModule(Path(comm.addOnPath), name)
-  parameter   = comm.configuration.get('addOnParameter', {})
   try:
-    subParameter = parameter[name]
-  except KeyError:
-    print('**Info: No parameter for this add-on')
-    subParameter = {}
-  try:
-    content = module.main(comm, content, widget, subParameter)
-  except Exception:
-    traceback.print_exc()
-    content = {}
-  return content
+    module = loadNamedModule(Path(comm.addOnPath), name)
+    return module.main(comm, content, widget, comm.configuration.get('addOnParameter', {}).get(name, {}))
+  except Exception as error:                                                 # boundary: add-ons are user code
+    logging.exception('Add-on %s failed', name)
+    QMessageBox.critical(widget, 'Add-on error', f'Add-on "{name}" failed: {error}\n\nDetails are in the log file.')
+    return None
 
 
 def callDataExtractor(docID:str, comm:Any) -> Any:

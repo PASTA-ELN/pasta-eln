@@ -3,7 +3,6 @@ import logging
 import json
 import sys
 import subprocess
-import traceback
 from pathlib import Path
 from urllib import request
 import qdarktheme
@@ -33,6 +32,8 @@ def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
                       datefmt='%m-%d %H:%M:%S')
   for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib','pudb']:
     logging.getLogger(package).setLevel(logging.WARNING)
+  # uncaught exceptions, also from Qt slots and the backend thread, go to the log file
+  sys.excepthook = lambda excType, value, tb: logging.critical('Uncaught exception', exc_info=(excType, value, tb))
   logging.info('Start PASTA GUI')
   # remainder
   if not QApplication.instance():
@@ -41,11 +42,14 @@ def mainGUI(projectGroup:str='') -> tuple[QCoreApplication | None, MainWindow]:
     application = QApplication.instance()
   comm = Communicate(projectGroup=projectGroup)
   mainWindow = MainWindow(comm)
+  if 'develop' in comm.configuration:                                       # developers: copy the log to the terminal
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(logging.getLogger().handlers[0].formatter)
+    logging.getLogger().addHandler(consoleHandler)
   logging.getLogger().setLevel(getattr(logging, comm.configuration.get('GUI',{'loggingLevel':'DEBUG'})['loggingLevel']))
   import qtawesome as qta  # qtawesome and matplot cannot coexist
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
-    print('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
   # end test coexistence
   # Test if database in data folder can be written
   if comm.configuration and (problems := testDataFolder(comm.basePath)):
@@ -71,14 +75,10 @@ def startMain(projectGroup:str='') -> None:
     projectGroup (str): project group to load
   """
   qdarktheme.enable_hi_dpi()
-  try:
-    app, window = mainGUI(projectGroup=projectGroup)
-    window.show()
-    if app:
-      app.exec()
-  except Exception as e:
-    traceback.print_exc()
-    logging.error('Error in mainGUI: %s', e, exc_info=True)
+  app, window = mainGUI(projectGroup=projectGroup)                      # exceptions: logged by sys.excepthook
+  window.show()
+  if app:
+    app.exec()
 
 
 def testNewPastaVersion(update: bool = False) -> bool:
@@ -91,7 +91,7 @@ def testNewPastaVersion(update: bool = False) -> bool:
   try:
     with request.urlopen('https://pypi.org/pypi/pasta-eln/json') as response:
       data = json.loads(response.read())
-  except Exception:
+  except OSError:                                                                  # offline: treat as current
     return True
   if update:
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pasta-eln'])

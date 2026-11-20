@@ -77,7 +77,7 @@ def configuration(command:str, pathData:str) -> str:
     pathPasta.mkdir(exist_ok=True)
   try:
     conf = loadConfiguration()
-  except Exception:
+  except FileNotFoundError:
     output += '**INFO configuration file does not exist\n'
     conf = createDefaultConfiguration(pathPasta) if command == 'repair' else {}
 
