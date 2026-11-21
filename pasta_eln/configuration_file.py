@@ -4,6 +4,7 @@ import copy
 import json
 import logging
 import secrets
+import uuid
 from pathlib import Path
 from typing import Any
 import keyring
@@ -11,6 +12,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from keyring.errors import KeyringError
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox
+from . import minisign
 from .constants import configurationGUI, defaultConfiguration, defaultScanExcludePatterns, defaultUIState
 
 
@@ -37,6 +39,11 @@ def getConfiguration(defaultProjectGroup: str = '') -> tuple[dict[str, Any], str
   if configuration['version'] != CONFIGURATION_VERSION:
     logging.info('Configuration file does not exist or version is != %s', CONFIGURATION_VERSION)
     return {}, ''
+  if not configuration['signingKeyPair']:                           # first start: key that signs .eln exports
+    keyPair = minisign.KeyPair.generate()
+    configuration['signingKeyPair'] = {'id':str(uuid.uuid4()), 'secret':bytes(keyPair.secret_key).decode(),
+                                       'public':bytes(keyPair.public_key).decode()}
+    saveConfiguration(configuration)
   defaultProjectGroup = defaultProjectGroup or configuration['defaultProjectGroup']
   if defaultProjectGroup not in configuration['projectGroups']:
     possibleGroups = list(configuration['projectGroups'].keys())

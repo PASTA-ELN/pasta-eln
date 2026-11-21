@@ -3,7 +3,6 @@ import copy
 import json
 import logging
 import shutil
-import uuid
 from datetime import datetime
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -11,7 +10,6 @@ from zipfile import ZIP_DEFLATED, ZipFile
 import requests
 from anytree import Node
 from pasta_eln import __version__, minisign
-from ..configuration_file import saveConfiguration
 from ..constants import DIR_META_FILE
 from ..text_tools.handle_dictionaries import flatten, isDocID
 from ..text_tools.html2markdown import html2markdown
@@ -669,12 +667,6 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     logging.info('Undefined NON-PropertyValue identifiers:\n%s',undefinedNonProperty)
 
     #sign file
-    if 'signingKeyPair' not in backend.configuration or not backend.configuration['signingKeyPair']:
-      #create a key-pair of secret and public key and save it locally
-      keyPairRaw = minisign.KeyPair.generate()
-      keyPair    = {'id':str(uuid.uuid4()), 'secret':bytes(keyPairRaw.secret_key).decode(), 'public':bytes(keyPairRaw.public_key).decode()}
-      backend.configuration['signingKeyPair'] = keyPair
-      saveConfiguration(backend.configuration)
     keyPair = backend.configuration['signingKeyPair']
     secretKey = minisign.SecretKey.from_bytes(keyPair['secret'].encode())
     comment   = {'pubkey_url':f'https://raw.githubusercontent.com/PASTA-ELN/Signatures/main/{keyPair["id"]}.pub',
