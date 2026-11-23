@@ -23,7 +23,8 @@ class TableHeader(QDialog):
     super().__init__()
     self.comm = comm
     self.docType = docType
-    self.available = {column.removeprefix('.') for column in MAIN_ORDER} | {'tags', 'qrCodes'}
+    self.available = {'name', 'tags', 'comment', 'content', 'dateCreated', 'dateModified', 'user', 'image', 'qrCodes',
+                      'location'}                                                    # expert columns stay out
     self.selected: list[str] = []
     self.propertyGroups: dict[str, list[str]] = {}
     self.viewQuery = f'SELECT view FROM docTypes WHERE docType LIKE "{docType}%"'
@@ -164,7 +165,7 @@ class TableHeader(QDialog):
 
   def save(self) -> None:
     """Persist the selected column order and close the dialog"""
-    mainColumns = set(MAIN_ORDER) | {'tags', 'qrCodes'}
+    mainColumns = set(MAIN_ORDER) | {'tags', 'qrCodes', 'location'}
     columns = [column if column in mainColumns or '.' in column else f'.{column}' for column in self.selected]
     self.comm.uiRequestTask.emit(Task.SEND_TBL_COLUMN, {'docType': self.docType, 'newList': columns})
     self.accept()

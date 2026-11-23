@@ -851,7 +851,24 @@ class SqlLiteDB:
         dfQrCodes = dfQrCodes.groupby(['id'])['qrCode'].apply(', '.join).reset_index().set_index('id')
         dfQrCodes = dfQrCodes.rename(columns={'qrCode':'qrCodes'})
         df = df.join(dfQrCodes)
-      if metadataKeys := [column for column in viewColumns if column not in MAIN_ORDER+['tags']]:
+      if 'location' in viewColumns:
+        # several branches: comma-join like tags
+        cmd = 'SELECT main.id, branches.stack FROM main INNER JOIN branches USING(id) '\
+              'WHERE main.type LIKE ?'
+        params = [f'{docType}%']
+        if not allFlag:
+          cmd += r" and NOT branches.show LIKE '%F%'"
+        if startKey:
+          cmd += ' AND branches.stack LIKE ?'
+          params.append(f'{startKey}%')
+        dfBranches = pd.read_sql_query(cmd, self.connection, params=params).fillna('')
+        stacks = dfBranches['stack'].str.split('/').str[:-1]                        # stack ends with the item
+        stackIDs = list({docID for stack in stacks for docID in stack})
+        names = dict(self.cursor.execute(f"SELECT id, name FROM main WHERE id IN ({', '.join('?'*len(stackIDs))})",
+                                         stackIDs).fetchall())
+        dfBranches['location'] = stacks.map(lambda stack: ' / '.join(names.get(docID, docID) for docID in stack))
+        df = df.join(dfBranches.groupby('id')[['location']].agg(lambda x: ', '.join(i for i in x if i)))
+      if metadataKeys := [column for column in viewColumns if column not in MAIN_ORDER+['tags', 'location']]:
         # links to other items show the name of the linked item
         cmd = "SELECT main.id, properties.key, COALESCE('\u260D ' || linked.name, properties.value) AS value "\
               'FROM main INNER JOIN properties USING(id) INNER JOIN branches USING(id) '\
