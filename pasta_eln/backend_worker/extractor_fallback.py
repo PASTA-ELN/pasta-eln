@@ -73,13 +73,13 @@ def use(filePath:Path, style:dict[str,Any], saveFigure:Any) -> dict[str,Any]:
                 'file size [bytes]':fileStat.st_size,
                 'modified at':datetime.fromtimestamp(fileStat.st_mtime, tz=timezone.utc).isoformat()}
   try:
-    image = Image.open(filePath) if mimeType.media == 'image' else None
+    image: Image.Image|None = Image.open(filePath) if mimeType.media == 'image' else None
   except OSError:                                        # Pillow cannot read all images, e.g. SVG, camera raw
     image = None
   if image is not None:
     metaVendor |= {'width [px]':image.size[0], 'height [px]':image.size[1], 'mode':image.mode,
                    'frames':getattr(image, 'n_frames', 1)}
-    metaVendor |= {k:v for k,v in image.info.items() if isinstance(v, (str, int, float))}
+    metaVendor |= {k:v for k,v in image.info.items() if isinstance(k, str) and isinstance(v, (str, int, float))}
     image = image.convert('RGBA')
     saveFigure(image.convert('RGB'))                                                       # JPEG has no alpha
     image.thumbnail((MAX_SIZE, MAX_SIZE))

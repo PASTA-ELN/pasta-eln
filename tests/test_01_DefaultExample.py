@@ -86,9 +86,9 @@ class TestStringMethods(unittest.TestCase):
 
     output = self.be.output('measurement')
     self.assertIn('https://www.fz-juelich.de/en/ibg/ibg-... | _3   | - Remote image from samplelib. Used f... |            measurement/image | Y     |        ', output)
-    self.assertIn('simple.csv |      | # These .csv files use the simple con... | measurement/csv/linesAndDots | Y     |        |                                    | m-', output)
+    self.assertIn('simple.csv |      | # These .csv files use the simple con... | measurement/csv/linesAndDots | Y     |        |                    | m-', output)
     self.assertIn('simple.png |      | # File with two locations', output)
-    self.assertIn('- The sam... |            measurement/image | Y     |        |                                    | m-', output)
+    self.assertIn('- The sam... |            measurement/image | Y     |        |                    | m-', output)
 
     #Verify DB
     output = self.be.checkDB(outputStyle='text')
