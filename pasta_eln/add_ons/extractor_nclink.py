@@ -5,14 +5,11 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urljoin
 from xml.etree import ElementTree
-
 import requests
-
+from pasta_eln.add_ons.nextcloud_common import TIMEOUT, readNclink, shortError
+from pasta_eln.addons import loadNamedModule
 from pasta_eln.backend_worker.extractor_fallback import findExtractor
 from pasta_eln.configuration_file import loadConfiguration
-from pasta_eln.addons import loadNamedModule
-from pasta_eln.add_ons.nextcloud_common import TIMEOUT, readNclink, shortError
-
 
 PASTA_ELN_EXTRACTOR_API = 2
 MAX_AUTOMATIC_SIZE = 100 * 1024 * 1024                                                                # 100 MB

@@ -301,9 +301,8 @@ class TableView(Widget):
         self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs': selected, 'recipe': ''})
         self.refresh()
     elif commandType is Command.EXPORT_ELN and selected:                                  # with their docType
-      fileName = QFileDialog.getSaveFileName(self, 'Export selected items as ELN', str(Path.home()),
-                                             'ELN file (*.eln)')[0]
-      if fileName:
+      if fileName := QFileDialog.getSaveFileName(self, 'Export selected items as ELN', str(Path.home()),
+                                                 'ELN file (*.eln)')[0]:
         self.comm.uiRequestTask.emit(Task.EXPORT_ELN, {'fileName': fileName, 'docIDs': selected,
                                                        'docTypes': [self.docType]})
     elif commandType is Command.DELETE and selected:

@@ -19,8 +19,8 @@ from pasta_eln.constants import aboutMessage, shortcuts
 from pasta_eln.installation_tools import hardRestart
 from pasta_eln.ui.body.body import Body
 from pasta_eln.ui.config.main import Configuration
-from pasta_eln.ui.data_hierarchy.editor import SchemeEditor
 from pasta_eln.ui.data_hierarchy.doc_types_eln import importDocTypes
+from pasta_eln.ui.data_hierarchy.editor import SchemeEditor
 from pasta_eln.ui.definitions.editor import Editor as DefinitionsEditor
 from pasta_eln.ui.details.context import DetailContext
 from pasta_eln.ui.form.form import Form

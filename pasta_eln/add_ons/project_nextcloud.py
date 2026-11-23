@@ -2,15 +2,13 @@
 import json
 from pathlib import Path
 from typing import Any
-
 import requests
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout, QLabel, QLineEdit, QListWidget,
                                QListWidgetItem, QVBoxLayout)
-
+from pasta_eln.add_ons.nextcloud_common import NextcloudBrowser, shortError, writeNclinks
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.configuration_file import loadConfiguration, saveConfiguration
-from pasta_eln.add_ons.nextcloud_common import NextcloudBrowser, shortError, writeNclinks
 
 description = 'Import files from Nextcloud'
 reqParameter:dict[str,str] = {}

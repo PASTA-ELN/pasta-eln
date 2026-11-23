@@ -44,8 +44,8 @@ def importDocTypes(comm:Any, widget:QWidget, fileName:str='') -> list[tuple[str,
   if not fileName:
     fileName = QFileDialog.getOpenFileName(widget, 'Import item types from ELN', str(Path.home()),
                                            'ELN file (*.eln)')[0]
-    if not fileName:
-      return []
+  if not fileName:
+    return []
   # read content from file
   try:
     with ZipFile(fileName) as elnFile:
@@ -252,8 +252,7 @@ class DocTypeImportDialog(QDialog):
     """ Collect the selected actions; replacing docTypes has to be confirmed, since it removes fields """
     actions = {entry['docType']:comboBox.currentData() for entry, comboBox in zip(self.comparison, self.comboBoxes)
                if comboBox.currentData() is not ImportAction.SKIP}
-    replaced = [entry for entry in self.comparison if actions.get(entry['docType']) is ImportAction.REPLACE]
-    if replaced:
+    if replaced := [entry for entry in self.comparison if actions.get(entry['docType']) is ImportAction.REPLACE]:
       details = [f"- {entry['title']} ({entry['docType']}): " +
                  (f"removes {', '.join(entry['removed'])}" if entry['removed'] else 'no field is removed')
                  for entry in replaced]

@@ -284,9 +284,8 @@ class SchemeEditor(QDialog):
       if selectDialog.exec():                                                         # ELN file without items
         selected = selectDialog.selected
         defaultName = selected[0].replace('/', '_') if len(selected)==1 else 'item_types'
-        fileName = QFileDialog.getSaveFileName(self, 'Export item types as ELN',
-                                               str(Path.home()/f'{defaultName}.eln'), 'ELN file (*.eln)')[0]
-        if fileName:
+        if fileName := QFileDialog.getSaveFileName(self, 'Export item types as ELN',
+                                                   str(Path.home()/f'{defaultName}.eln'), 'ELN file (*.eln)')[0]:
           self.comm.uiRequestTask.emit(Task.EXPORT_ELN, {'fileName':fileName, 'docIDs':[], 'docTypes':selected})
     elif action is Command.EDIT:
       dialog = DocTypeEditor(self.comm, self.selectDocType.currentData())

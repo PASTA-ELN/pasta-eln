@@ -20,9 +20,9 @@ import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
 from PIL import Image, PngImagePlugin
 from ..addons import loadNamedModule
-from .extractor_fallback import findExtractor
 from ..text_tools.handle_dictionaries import truncateMetadata
 from ..text_tools.string_changes import outputString
+from .extractor_fallback import findExtractor
 
 matplotlib.use('Agg')
 matplotlib.rcParams['svg.fonttype'] = 'none'

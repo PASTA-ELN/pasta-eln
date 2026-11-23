@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote, unquote, urljoin
 from xml.etree import ElementTree
-
 import requests
 
 NLINK_FORMAT = 'pasta-nextcloud-link/1'
