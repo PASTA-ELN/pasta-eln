@@ -41,7 +41,7 @@ class Task(Enum):
   EXTRACTOR_TEST = (10, 'Testing extractor:')                      #keys: fileName, style, recipe, saveFig
   EXTRACTOR_RERUN= (11, 'Rerun extractors:')                       #keys: docIDs, recipe
   SYNC_ELAB      = (12, 'Sync data to eLabFTW server:')            #keys: projGroup, subtask
-  EXPORT_ELN     = (13, 'Exporting to ELN:')                       #keys: fileName, projID, docTypes
+  EXPORT_ELN     = (13, 'Exporting to ELN:')    #keys: fileName, projID, docTypes | fileName, docIDs, docTypes
   IMPORT_ELN     = (14, 'Importing an ELN file:')                  #keys: fileName, projID
   SEND_REPOSITORY= (15, 'Uploading project to repository:')        #keys: projID, docTypes,repositories,metadata,uploadZenodo
   CHECK_DB       = (16, 'Checking database integrity:')            #keys: style
@@ -353,6 +353,11 @@ class BackendWorker(QObject):
 
       elif task is Task.EXPORT_ELN and set(data.keys())=={'fileName','projID','docTypes'}:
         report = exportELN(self.backend, [data['projID']], data['fileName'], data['docTypes'])
+        self.beSendTaskReport.emit(task, report, '', '')
+
+      elif task is Task.EXPORT_ELN and set(data.keys())=={'fileName','docIDs','docTypes'}:
+        report = exportELN(self.backend, [], data['fileName'], self.backend.db.dataHierarchy('','')+['-'],
+                           docIDs=data['docIDs'], extraDocTypes=data['docTypes'])
         self.beSendTaskReport.emit(task, report, '', '')
 
       elif task is Task.IMPORT_ELN and set(data.keys())=={'fileName','projID'}:

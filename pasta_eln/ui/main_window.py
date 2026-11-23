@@ -20,6 +20,7 @@ from pasta_eln.installation_tools import hardRestart
 from pasta_eln.ui.body.body import Body
 from pasta_eln.ui.config.main import Configuration
 from pasta_eln.ui.data_hierarchy.editor import SchemeEditor
+from pasta_eln.ui.data_hierarchy.doc_types_eln import importDocTypes
 from pasta_eln.ui.definitions.editor import Editor as DefinitionsEditor
 from pasta_eln.ui.details.context import DetailContext
 from pasta_eln.ui.form.form import Form
@@ -246,6 +247,7 @@ class MainWindow(QMainWindow):
     elif commandType is Command.IMPORT_ELN:
       fileName = QFileDialog.getOpenFileName(self, 'Import ELN file', str(Path.home()), '*.eln')[0]
       if fileName != '':
+        importDocTypes(self.comm, self, fileName)                       # docTypes that differ from this group
         self.comm.uiRequestTask.emit(Task.IMPORT_ELN, {'fileName': fileName, 'projID': self.comm.projectID})
         self.comm.changeProject.emit(self.comm.projectID, '')
     elif commandType is Command.REPOSITORY:

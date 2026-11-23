@@ -275,7 +275,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         for data in variableMeasured:
           propertyID = data['propertyID'] if '.' in data['propertyID'] and ' ' not in data['propertyID'] else f"imported.{camelCase(data['propertyID'])}"
           # print('propertyID', propertyID, elnName)
-          doc[propertyID] = (data['value'], data.get('unitText',''), data.get('description',''), data.get('mentions',''))
+          doc[propertyID] = (data['value'], data.get('unitText',''), data.get('description',''), data.get('identifier',''))
       # final cleaning
       for key, value in doc.items():
         if isinstance(value, list) and len(value)>0 and isinstance(value[0], dict):
@@ -385,13 +385,57 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
 
 
 
+def docTypesToGraph(cursor:Any, docTypes:set[str]) -> list[dict[str,Any]]:
+  """ DocTypes as contextual entities of an ELN file: not in hasPart, hence not imported as items
+
+  Args:
+    cursor (sqlite3.Cursor): cursor of the database
+    docTypes (set): docTypes of the exported items; their parent types are added since subtypes inherit fields
+
+  Returns:
+    list: DefinedTermSet node per docType, DefinedTerm node per field, PropertyValue nodes for the settings
+  """
+  nodes:list[dict[str,Any]] = []
+  knownDocTypes = {row[0]:row[1:] for row in
+                cursor.execute('SELECT docType, PURL, title, icon, shortcut, view FROM docTypes').fetchall()}
+  definitions = {row[0]:row[1:] for row in
+                 cursor.execute('SELECT key, long, PURL FROM definitions').fetchall()}
+  # settings without schema.org property (icon, shortcut, view, list) are PropertyValue nodes
+  allDocTypes = {'/'.join(i.split('/')[:depth]) for i in docTypes for depth in range(1, i.count('/')+2)}
+  for docType in sorted(i for i in allDocTypes.intersection(knownDocTypes) if not i.startswith('x')):
+    purl, title, icon, shortcut, view = knownDocTypes[docType]
+    typeID = f'#itemtype-{docType}'
+    fieldRefs = []
+    for group, name, unit, mandatory, choices in cursor.execute('SELECT class, name, unit, mandatory, list '
+        'FROM docTypeSchema WHERE docType=? ORDER BY class, CAST(idx AS INTEGER)', (docType,)).fetchall():
+      longText, fieldPURL = definitions.get(f'{group}.{name}', ('', ''))
+      fieldID = f'{typeID}/{group}.{name}'.replace(' ','_')
+      fieldSettings = {'list':choices} if choices else {}
+      nodes += [{'@id':f'{fieldID}#{k}', '@type':'PropertyValue', 'propertyID':k, 'name':k, 'value':v}
+                for k, v in fieldSettings.items()]
+      field = {'@id':fieldID, '@type':'DefinedTerm', 'termCode':f'{group}.{name}', 'name':name,
+               'description':longText, 'unitText':unit, 'valueRequired':mandatory=='T', 'sameAs':fieldPURL,
+               'inDefinedTermSet':{'@id':typeID},
+               'additionalProperty':[{'@id':f'{fieldID}#{k}'} for k in fieldSettings]}
+      nodes.append({k:v for k,v in field.items() if v})
+      fieldRefs.append({'@id':fieldID})
+    typeSettings = {k:v for k, v in {'icon':icon, 'shortcut':shortcut, 'view':view}.items() if v}
+    nodes += [{'@id':f'{typeID}#{k}', '@type':'PropertyValue', 'propertyID':k, 'name':k, 'value':v}
+              for k, v in typeSettings.items()]
+    docTypeNode = {'@id':typeID, '@type':'DefinedTermSet', 'identifier':docType, 'name':title, 'sameAs':purl,
+                'hasDefinedTerm':fieldRefs, 'additionalProperty':[{'@id':f'{typeID}#{k}'} for k in typeSettings]}
+    nodes.append({k:v for k,v in docTypeNode.items() if v})
+  return nodes
+
+
 ##########################################
 ###               EXPORT               ###
 ##########################################
 
-def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[str], verbose:bool=False) -> str:
+def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[str], verbose:bool=False,
+              docIDs:list[str] | None=None, extraDocTypes:list[str] | None=None) -> str:
   """
-  export eln to file
+  export eln to file; it includes the docTypes of the exported items
 
   Args:
     backend (backend): PASTA backend instance
@@ -399,6 +443,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     fileName (str): fileName which to use for saving
     dTypes (list): list of strings which should be included in the output, alongside folders x0 & x1
     verbose (bool): verbose
+    docIDs (list): items that are exported directly, without their project
+    extraDocTypes (list): docTypes that are exported in addition to those of the exported items
 
   Returns:
     str: report of exportation
@@ -409,6 +455,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
   dirNameGlobal = fileName.split('/')[-1][:-4]
   with ZipFile(fileName, 'w', compression=ZIP_DEFLATED) as elnFile:
     graph: list[dict[str,Any]] = []
+    exportedDocTypes = set(extraDocTypes or [])
+    dirNameProject = ''                                       # items exported without project are at the root
 
     def mkDirectory(path:str) -> None:
       """ create directory in zip file
@@ -455,6 +503,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       hasPart = []
       if (node.docType[0] not in dTypes) and node.docType[0][0]!='x':
         return ''
+      exportedDocTypes.add('/'.join(docDB['type']))
       for child in node.children:
         res = processNode(child)
         if res:
@@ -462,13 +511,13 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       if node.docType[0][0]=='x' and hasPart:
         docELN['hasPart'] = [{'@id':i} for i in hasPart]
       # include path and @id
-      if docDB['type'][0] == 'x0':
+      if docDB['type'][0] == 'x0' or node.parent is None:
         branch   = docDB['branch'][0]
       else:
         branch   = [i for i in docDB['branch'] if node.parent.id in i['stack']][0]
       path =  f"{branch['path']}/" if docDB['type'][0][0]=='x' else branch['path']
       if path is None:
-        path = f"{dirNameProject}/{docDB['id']}"
+        path = f"{dirNameProject}/{docDB['id']}".lstrip('/')
       if path.startswith('http'):
         docELN['@id'] = path
         docELN['url'] = path
@@ -584,6 +633,9 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       listHier, _ = backend.db.getHierarchy(projectID, allItems=False)#error not handled since should not occur during export
       processNode(listHier)
       masterParts.append(f'./{dirNameProject}/')
+    dirNameProject = ''
+    for docID in docIDs or []:
+      masterParts.append(processNode(Node(docID, id=docID, docType=backend.db.getDoc(docID)['type'])))
 
     # all items have to appear in hasPart of ./ -> masterParts are changed
     # https://github.com/TheELNConsortium/TheELNFileFormat/issues/98
@@ -639,10 +691,12 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         if affiliationId not in [i['@id'] for i in graphMaster]:
           graphMaster.append({'@id':affiliationId, '@type':'Organization', 'name':affiliation['organization']})
         affiliationNodes.append({'@id':affiliationId})
-      authorID = f"#author_{author['first']}_{author['last']}".replace(' ','_')
-      graphMaster.append({'@id':authorID, '@type':'Person', 'name': f"{author['first']} {author['last']}", 'givenName': author['first'], 'familyName': author['last'],
-                          'honorificPrefix': author['title'], 'email': author['email'], 'identifier': f"https://orcid.org/{author['orcid']}",
-                          'worksFor': affiliationNodes})
+      authorID = f"https://orcid.org/{author['orcid']}" if author['orcid'] else \
+                 f"#author_{author['first']}_{author['last']}".replace(' ','_')
+      person = {'@id':authorID, '@type':'Person', 'name': f"{author['first']} {author['last']}",
+                'givenName': author['first'], 'familyName': author['last'], 'honorificPrefix': author['title'],
+                'email': author['email'], 'worksFor': affiliationNodes}
+      graphMaster.append({k:v for k,v in person.items() if v})
       authorNodes.append({'@id':authorID})
     masterNodeRoot:dict[str,Any] = {'@id': './', '@type': 'Dataset', 'hasPart': [{'@id':i} for i in masterParts],
         'name': 'Exported from PASTA-ELN', 'description': 'Exported content from PASTA-ELN',
@@ -651,6 +705,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     if authorNodes:
       masterNodeRoot = masterNodeRoot | {'creator': authorNodes, 'publisher': authorNodes[0]}
     graphMaster.append(masterNodeRoot)
+    graphMisc += docTypesToGraph(backend.db.cursor, exportedDocTypes)                           # add docTypes
 
     #finalize file
     index['@graph'] = graphMaster+graph+graphMisc
@@ -666,23 +721,24 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     undefinedNonProperty = '  -'+'\n  -'.join([i[0] for i in possDefined if i[2]=='' and i[1]!='PropertyValue' and i[0] not in ('./','ro-crate-metadata.json')])
     logging.info('Undefined NON-PropertyValue identifiers:\n%s',undefinedNonProperty)
 
-    #sign file
-    keyPair = backend.configuration['signingKeyPair']
-    secretKey = minisign.SecretKey.from_bytes(keyPair['secret'].encode())
-    comment   = {'pubkey_url':f'https://raw.githubusercontent.com/PASTA-ELN/Signatures/main/{keyPair["id"]}.pub',
-                 'name': f"{backend.configuration['authors'][0]['title']} {backend.configuration['authors'][0]['first']} {backend.configuration['authors'][0]['last']}",
-                 'email': backend.configuration['authors'][0]['email'],
-                 'orcid': backend.configuration['authors'][0]['orcid']}
-    signature = secretKey.sign(metadataJson.encode(), trusted_comment=json.dumps(comment, ensure_ascii=False))
-    elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json.minisig', bytes(signature).decode())
-    elnFile.writestr(f'{dirNameGlobal}/ro-crate.pubkey', keyPair['public'])
+    #sign file: optional
+    if keyPair := backend.configuration.get('signingKeyPair'):
+      secretKey = minisign.SecretKey.from_bytes(keyPair['secret'].encode())
+      comment   = {'pubkey_url':f'https://raw.githubusercontent.com/PASTA-ELN/Signatures/main/{keyPair["id"]}.pub',
+                   'name': f"{backend.configuration['authors'][0]['title']} {backend.configuration['authors'][0]['first']} {backend.configuration['authors'][0]['last']}",
+                   'email': backend.configuration['authors'][0]['email'],
+                   'orcid': backend.configuration['authors'][0]['orcid']}
+      signature = secretKey.sign(metadataJson.encode(), trusted_comment=json.dumps(comment, ensure_ascii=False))
+      elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json.minisig', bytes(signature).decode())
+      elnFile.writestr(f'{dirNameGlobal}/ro-crate.pubkey', keyPair['public'])
   # end writing zip file
 
   # temporary json output
   if verbose:
     with open(f'{fileName[:-3]}json', 'w', encoding='utf-8') as fOut:
       fOut.write(metadataJson)
-  return f'Success: exported {len(graph)} nodes into file {fileName}. '\
+  numDocTypes = sum(i['@type']=='DefinedTermSet' for i in graphMisc)
+  return f'Success: exported {len(graph)} nodes and {numDocTypes} item types into file {fileName}. '\
     'Count of defined nodes: {n1}, count of undefined properties: {n2}, count of undefined others: {n3}'.format(
     n1=len(definedStr.split('\n')),
     n2=len(undefinedProperty.split('\n')),

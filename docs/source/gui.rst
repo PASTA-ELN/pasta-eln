@@ -42,7 +42,6 @@ The following table gives the shortest route to the most common tasks.
    Edit metadata,Select an item and choose **Edit** in the Details pane
    Configure data types,Use **Project group > Configure > Item type editor**
    Configure definitions,Use **Project group > Configure > Definitions editor**
-   Share item types and items,Use **More > Table add-ons > Templates** above a list
    Publish a project,Use **Project > Upload to repository**
 
 Project visibility and files
@@ -66,8 +65,6 @@ Important and advanced actions
 
 Some operations affect stored data or external services:
 
-* **Project > Export project to .eln** and **Import .eln into project** exchange
-  complete project packages.
 * **Project > Delete current project** permanently removes the project from the
   database and should be used only after checking the project selection.
 * **Project group > Synchronize** exchanges data with a configured elabFTW
@@ -108,4 +105,6 @@ Open **Other > Configuration** to change the following:
 
 The **Item type editor** and **Definitions editor** are intended for users who
 maintain a project group's data structure. Changes to these settings affect
-forms and list columns for subsequent use.
+forms and list columns for subsequent use. The item type editor exports and
+imports item types as ELN files without items; the import previews the
+differences before it changes anything.

@@ -1,21 +1,20 @@
 """ dialog to edit docType schema """
-import json
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import Any
 import numpy as np
 import pandas as pd
-from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, Slot
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog, QHBoxLayout, QInputDialog,
-                               QListWidget, QListWidgetItem, QMessageBox, QTabBar, QTableWidget, QTableWidgetItem,
-                               QTabWidget, QVBoxLayout, QWidget)
+from PySide6.QtCore import QAbstractItemModel, QModelIndex, Slot
+from PySide6.QtWidgets import (QComboBox, QDialog, QFileDialog, QHBoxLayout, QInputDialog, QMessageBox, QTabBar,
+                               QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
 from ...backend_worker.sqlite import DOC_TYPE_SCHEMA
+from ...backend_worker.worker import Task
 from ..gui_communicate import Communicate
 from ..gui_style import SPACE, Button, ButtonStyle, Label
 from ..icon_button_delegate import IconButtonDelegate
 from ..message_dialog import showMessage
 from .doc_type_edit import DocTypeEditor
+from .doc_types_eln import DocTypeSelectDialog, importDocTypes
 from .list_free_delegate import ListFreeDelegate
 from .list_item_delegate import ListItemDelegate
 from .mandatory_column_delegate import MandatoryColumnDelegate
@@ -25,12 +24,6 @@ from .name_column_delegate import NameColumnDelegate
 COLUMN_NAMES = ['name','description','unit','mandatory','item list','free list','move up','remove']
 COLUMN_WIDTH = [100,   250,          60,    80,         150,        200,        60,       50]
 
-# SQL strings for Export and Import
-TEMPLATE_EXPORT_QUERY = ('SELECT docTypes.docType, docTypes.title, docTypes.icon,  docTypes.shortcut, docTypes.view, '
-    'docTypeSchema.class,  docTypeSchema.idx, docTypeSchema.name, docTypeSchema.unit,  docTypeSchema.mandatory, '
-    'docTypeSchema.list, definitions.long FROM docTypes JOIN docTypeSchema USING (docType)  LEFT JOIN definitions '
-    'ON definitions.key = (docTypeSchema.class || "." || docTypeSchema.name)')
-TEMPLATE_IMPORT_COMPLETE_QUERY = 'SELECT 1 AS templateImportComplete'      # void query at end: shows all done
 
 class SchemeEditor(QDialog):
   """ dialog to edit docType schema """
@@ -48,7 +41,6 @@ class SchemeEditor(QDialog):
     self.docType = ''
     self.docLabel= ''
     self.cmd     = ''
-    self.pendingImport:list[tuple[str, str]] = []
     self.df      = pd.DataFrame()
     self.parentRows = pd.DataFrame()           # schema of the nearest parent type: subtypes have all its rows
     self.inherited:set[tuple[str,str]] = set()                                   # (group, name) of parentRows
@@ -79,8 +71,10 @@ class SchemeEditor(QDialog):
     Button('', self, Command.EDIT, docTypeL, icon='ri.edit-line', tooltip='Edit item type', flat=True)
     self.delButton = Button('', self, Command.DEL, docTypeL, icon='ri.delete-bin-line', tooltip='Remove item type',
                             flat=True)
-    Button('', self, Command.IMPORT, docTypeL, icon='fa5s.download', tooltip='Import item type template', flat=True)
-    Button('', self, Command.EXPORT, docTypeL, icon='fa5s.upload', tooltip='Export item type template', flat=True)
+    Button('', self, Command.IMPORT, docTypeL, icon='fa5s.download', tooltip='Import item types from ELN file',
+           flat=True)
+    Button('', self, Command.EXPORT, docTypeL, icon='fa5s.upload', tooltip='Export item types as ELN file',
+           flat=True)
 
     # tabs: empty
     self.tabW = QTabWidget(self)
@@ -113,42 +107,7 @@ class SchemeEditor(QDialog):
       cmd (str): command that was sent
       data (pd.DataFrame): DataFrame containing the data
     """
-    if cmd == TEMPLATE_EXPORT_QUERY:                  # Save all item types and their schemas as one JSON file
-      if data.empty:
-        return
-      fileName = QFileDialog.getSaveFileName(self, 'Save item type templates', str(Path.home()),
-                                            'PASTA item type templates (*.pasta-templates.json)')[0]
-      if not fileName:
-        return
-      if not fileName.endswith('.pasta-templates.json'):
-        fileName += '.pasta-templates.json'
-      docTypes = []
-      for docType, group in data.groupby('docType', sort=False):
-        metadata = group.iloc[0]
-        schema = group[['docType', 'class', 'idx', 'name', 'unit', 'mandatory', 'list', 'long']]
-        docTypes.append({'docType': docType, 'title': metadata['title'], 'icon': metadata['icon'],
-                         'shortcut': metadata['shortcut'], 'view': metadata['view'],
-                         'schema': schema.fillna('').to_dict(orient='records')})
-      template = {'format': 'PASTA-ELN item type templates', 'version': 1, 'docTypes': docTypes}
-      try:
-        with open(fileName, 'w', encoding='utf-8') as templateFile:
-          json.dump(template, templateFile, indent=2)
-      except (OSError, TypeError, ValueError) as error:
-        showMessage(self, 'File write error', f'Cannot write item type template: {error}', 'Critical')
-    elif cmd == TEMPLATE_IMPORT_COMPLETE_QUERY:                 # all imports are done, communicate new schema
-      importedTypes = self.pendingImport
-      self.pendingImport = []
-      self.comm.commSendConfiguration.emit(self.comm.configuration, self.comm.projectGroup, False)
-      for docType, title in importedTypes:
-        existingIndex = self.selectDocType.findData(docType)
-        if existingIndex == -1:
-          self.docTypesLabels.append((docType, title))
-          self.selectDocType.addItem(title, docType)
-        else:
-          self.docTypesLabels[existingIndex] = (docType, title)
-          self.selectDocType.setItemText(existingIndex, title)
-      showMessage(self, 'Templates imported', f'Imported {len(importedTypes)} item types.', 'Information')
-    elif cmd==self.cmd:                             # Get one docType and its parent types, add inherited rows
+    if cmd==self.cmd:                               # Get one docType and its parent types, add inherited rows
       parents = data[data['docType']!=self.docType]
       if not parents.empty:                             # nearest parent type already contains all higher ones
         parents = parents[parents['docType']==max(parents['docType'], key=len)]
@@ -306,57 +265,29 @@ class SchemeEditor(QDialog):
     if action is Command.NEW:
       dialog = DocTypeEditor(self.comm, '', self.createdNewDocType)
       dialog.exec()
-    elif action is Command.IMPORT: # Load templates and let the user choose which item types to add/ overwrite
-      fileName = QFileDialog.getOpenFileName(self, 'Load item type template', str(Path.home()),
-                                            'PASTA item type templates (*.pasta-templates.json *.json)')[0]
-      if not fileName:
-        return
-      try:
-        with open(fileName, encoding='utf-8') as templateFile:
-          template = json.load(templateFile)
-        itemTypes = _validateItemTypeTemplate(template)
-      except (OSError, TypeError, ValueError, json.JSONDecodeError) as error:
-        QMessageBox.critical(self, 'Import failed', f'Cannot load item type template: {error}')
-        return
-      # Let user choose which to add: create dialog on the fly
-      choices = QListWidget(self)
-      for itemType in itemTypes:
-        existing = itemType['docType'] in self.comm.docTypesTitles
-        suffix = ' - overwrite existing' if existing else ''
-        item = QListWidgetItem(f"{itemType['title']} ({itemType['docType']}){suffix}", choices)
-        item.setData(Qt.ItemDataRole.UserRole, itemType['docType'])
-        if not existing:                                        # only auto-select those that do not overwrite
-          item.setCheckState(Qt.CheckState.Checked)
-      selection = QDialog(self)
-      selection.setWindowTitle('Select item types to import')
-      layout = QVBoxLayout(selection)
-      layout.addWidget(choices)
-      buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Ok)
-      buttons.accepted.connect(selection.accept)
-      buttons.rejected.connect(selection.reject)
-      layout.addWidget(buttons)
-      if selection.exec() != QDialog.DialogCode.Accepted:                                   # return if Cancel
-        return
-      # Import
-      selected = {choices.item(row).data(Qt.ItemDataRole.UserRole) for row in range(choices.count())
-                  if choices.item(row).checkState() == Qt.CheckState.Checked}
-      selectedTypes = [itemType for itemType in itemTypes if itemType['docType'] in selected]
-      if not selectedTypes:
-        return
-      self.pendingImport = [(itemType['docType'], itemType['title']) for itemType in selectedTypes]
-      self.comm.uiSendSQL.emit([task for itemType in selectedTypes for task in [
-          {'type': 'one', 'cmd': 'INSERT INTO docTypes VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(docType) DO UPDATE SET '
-            'PURL=excluded.PURL, title=excluded.title, icon=excluded.icon, shortcut=excluded.shortcut, view=excluded.view',
-          'list': [itemType['docType'], '', itemType['title'], itemType['icon'], itemType['shortcut'], itemType['view']]},
-          {'type': 'one', 'cmd': 'DELETE FROM docTypeSchema WHERE docType=?', 'list': [itemType['docType']]},
-          {'type': 'df', 'table': 'docTypeSchema', 'df': pd.DataFrame(itemType['schema']).drop(columns=['long'])},
-          {'type': 'many', 'cmd': 'INSERT INTO definitions (key, long, PURL) VALUES (?, ?, "") ON CONFLICT(key) '
-           'DO UPDATE SET long = excluded.long;',
-           'list': [(f"{row['class']}.{row['name']}", row['long']) for row in itemType['schema']]}]] \
-            + [{'type': 'get_df', 'cmd': TEMPLATE_IMPORT_COMPLETE_QUERY}])
-
-    elif action is Command.EXPORT:                                         # Request all item types for export
-      self.comm.uiSendSQL.emit([{'type': 'get_df', 'cmd': TEMPLATE_EXPORT_QUERY}])
+    elif action is Command.IMPORT:
+      self.finishDocType()                                       # save edits: the import may change this type
+      if imported := importDocTypes(self.comm, self):
+        self.docType = ''                                   # do not save the old table over the imported type
+        for docType, title in imported:
+          if (index := self.selectDocType.findData(docType)) == -1:
+            self.docTypesLabels.append((docType, title))
+            self.selectDocType.addItem(title, docType)
+          else:
+            self.docTypesLabels[index] = (docType, title)
+            self.selectDocType.setItemText(index, title)
+        self.docType = ''                                     # renaming the current type may have reloaded it
+        self.changeDocType(self.selectDocType.currentText())                        # show the imported fields
+    elif action is Command.EXPORT:
+      self.finishDocType()                                             # export what is shown, including edits
+      selectDialog = DocTypeSelectDialog(self.comm, self.docType)
+      if selectDialog.exec():                                                         # ELN file without items
+        selected = selectDialog.selected
+        defaultName = selected[0].replace('/', '_') if len(selected)==1 else 'item_types'
+        fileName = QFileDialog.getSaveFileName(self, 'Export item types as ELN',
+                                               str(Path.home()/f'{defaultName}.eln'), 'ELN file (*.eln)')[0]
+        if fileName:
+          self.comm.uiRequestTask.emit(Task.EXPORT_ELN, {'fileName':fileName, 'docIDs':[], 'docTypes':selected})
     elif action is Command.EDIT:
       dialog = DocTypeEditor(self.comm, self.selectDocType.currentData())
       dialog.exec()
@@ -549,56 +480,3 @@ def _missingRows(target:pd.DataFrame, source:pd.DataFrame, docType:str) -> pd.Da
   missing = source[[key not in present for key in zip(source['class'], source['name'])]]
   offset = missing['class'].map(target['class'].value_counts()).fillna(0).astype(int)
   return missing.assign(docType=docType, idx=(offset + missing.groupby('class').cumcount()).astype(str))
-
-
-def _validateItemTypeTemplate(template:Any) -> list[dict[str, Any]]:
-  """Validate one item-type template and return valid
-
-  Args:
-    template (Any): Parsed JSON value from an item-type template file
-
-  Returns:
-    The validated item-type records
-
-  Raises:
-    ValueError: If the template cannot be imported safely
-  """
-  # define local
-  templateSchemeColumns = {'docType', 'class', 'idx', 'name', 'unit', 'mandatory', 'list', 'long'}
-  expected = {'docType', 'title', 'icon', 'shortcut', 'view', 'schema'}
-  # start testing
-  if not isinstance(template, dict):
-    raise ValueError('Template must be a JSON object')
-  docTypes = template.get('docTypes')
-  if (template.get('format') != 'PASTA-ELN item type templates' or template.get('version') != 1
-      or not isinstance(docTypes, list)):
-    raise ValueError('Unsupported template format')
-  seenDocTypes:set[str] = set()
-  for itemType in docTypes:
-    if not isinstance(itemType, dict) or set(itemType) != expected:
-      raise ValueError('Template item type has invalid fields')
-    if not all(isinstance(itemType[key], str) for key in ('docType', 'title', 'icon', 'shortcut', 'view')):
-      raise ValueError('Template metadata is invalid')
-    docType = itemType['docType']
-    if not docType or not itemType['title'] or len(itemType['shortcut']) > 1 or docType in seenDocTypes:
-      raise ValueError('Template item type has invalid or duplicate metadata')
-    seenDocTypes.add(docType)
-    schema = itemType['schema']
-    if not isinstance(schema, list) or not schema:
-      raise ValueError(f'Item type {docType} has no schema')
-    schemaKeys:set[tuple[str, str]] = set()
-    schemaNames:set[tuple[str, str]] = set()
-    for row in schema:
-      if not isinstance(row, dict) or set(row) != templateSchemeColumns:
-        raise ValueError(f'Item type {docType} has invalid schema fields')
-      if not all(isinstance(row[column], str) for column in templateSchemeColumns):
-        raise ValueError(f'Item type {docType} has invalid schema values')
-      if row['docType'] != docType or not row['name'] or not row['idx'].isdigit() or row['mandatory'] not in {'', 'T'}:
-        raise ValueError(f'Item type {docType} has invalid schema values')
-      schemaKey = (row['class'], row['idx'])
-      schemaName = (row['class'], row['name'])
-      if schemaKey in schemaKeys or schemaName in schemaNames:
-        raise ValueError(f'Item type {docType} has duplicate schema fields')
-      schemaKeys.add(schemaKey)
-      schemaNames.add(schemaName)
-  return docTypes

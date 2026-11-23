@@ -68,6 +68,7 @@ class TableView(Widget):
     self.sequentialEditAction = action('Edit sequentially', self, Command.SEQUENTIAL_EDIT, self.actionMenu)
     self.toggleHiddenAction = action('Hide/show selected items', self, Command.TOGGLE_HIDDEN, self.actionMenu)
     self.rerunExtractorsAction = action('Rerun extractors', self, Command.RERUN_EXTRACTORS, self.actionMenu)
+    action('Export selected items as ELN…', self, Command.EXPORT_ELN, self.actionMenu)
     self.deleteAction = action('Remove selected items…', self, Command.DELETE, self.actionMenu)
 
     self.viewButton = Button('View', self, layout=self.buttonbarL, icon='ri.eye-line', style=ButtonStyle.PRIMARY)
@@ -295,6 +296,12 @@ class TableView(Widget):
       if selected:
         self.comm.uiRequestTask.emit(Task.EXTRACTOR_RERUN, {'docIDs': selected, 'recipe': ''})
         self.refresh()
+    elif commandType is Command.EXPORT_ELN and selected:                                  # with their docType
+      fileName = QFileDialog.getSaveFileName(self, 'Export selected items as ELN', str(Path.home()),
+                                             'ELN file (*.eln)')[0]
+      if fileName:
+        self.comm.uiRequestTask.emit(Task.EXPORT_ELN, {'fileName': fileName, 'docIDs': selected,
+                                                       'docTypes': [self.docType]})
     elif commandType is Command.DELETE and selected:
       answer = QMessageBox.warning(self, 'Remove selected items?', 'Remove the selected items everywhere?',
                                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
@@ -589,3 +596,4 @@ class Command(Enum):
   EXPORT_CSV = 11
   ADD_ON = 12
   CHANGE_COLUMNS = 13
+  EXPORT_ELN = 14
