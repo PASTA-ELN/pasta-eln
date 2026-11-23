@@ -20,6 +20,7 @@ import matplotlib.axes as mpaxes
 import matplotlib.pyplot as plt
 from PIL import Image, PngImagePlugin
 from ..addons import loadNamedModule
+from .extractor_fallback import findExtractor
 from ..text_tools.handle_dictionaries import truncateMetadata
 from ..text_tools.string_changes import outputString
 
@@ -60,7 +61,7 @@ class ExtractorManager:
       jobID (Any): Identifier used to map returned results back to the job list
 
     Returns:
-      dict, None: Extractor job dictionary, or None if no matching extractor exists or download failed
+      dict, None: Extractor job dictionary, or None if download failed; without an add-on, the fallback extractor
     """
     docType = [''] if docType is None else docType
     docName = filePath.relative_to(self.basePath).as_posix() if filePath.is_absolute() else filePath.as_posix()
@@ -80,13 +81,10 @@ class ExtractorManager:
       if filePath.is_absolute():
         filePath = filePath.relative_to(self.basePath)
       absFilePath = self.basePath/filePath
-    pyFile = f'extractor_{extension.lower()}.py'
-    pyPath = self.addOnPath/pyFile
-    if not pyPath.is_file():
-      return None
-    return {'id':jobID, 'doc':doc, 'addOnPath':self.addOnPath, 'pyFile':pyFile, 'absFilePath':absFilePath,
+    addOnPath, pyFile = findExtractor(absFilePath, self.addOnPath)
+    return {'id':jobID, 'doc':doc, 'addOnPath':addOnPath, 'pyFile':pyFile, 'absFilePath':absFilePath,
             'extension':extension, 'style':{'main':'/'.join(docType)}, 'dataHash':sha256File(absFilePath)[0],
-            'extractorHash':sha256File(pyPath)[0], 'saveFileName':None}
+            'extractorHash':sha256File(addOnPath/pyFile)[0], 'saveFileName':None}
 
 
   def applyResults(self, results:list[dict[str,Any]], jobs:list[dict[str,Any]]) -> list[tuple[dict[str,Any],dict[str,Any]]]:
@@ -292,16 +290,12 @@ class ExtractorManager:
         return report, ''
       filePath = tempFilePath
     report += outputString(outputStyle, 'info', f'Check file: {str(filePath)}')
-    extension = filePath.suffix[1:]
-    pyFile = f'extractor_{extension.lower()}.py'
-    if extractorPath is None:
-      extractorPath = self.addOnPath
+    extractorPath, pyFile = findExtractor(filePath, self.addOnPath if extractorPath is None else extractorPath)
     #start testing
-    if (extractorPath/pyFile).is_file():
-      report += outputString(outputStyle, 'info', f'Use extractor: {str(extractorPath / pyFile)}.')
+    if pyFile == 'extractor_fallback.py':
+      report += outputString(outputStyle, 'warning', f'No suitable extractor was found: use {pyFile}')
     else:
-      success = False
-      report += outputString(outputStyle, 'error', f'No suitable extractor was found: {pyFile}')
+      report += outputString(outputStyle, 'info', f'Use extractor: {str(extractorPath / pyFile)}.')
     if success:
       try:
         module  = loadNamedModule(extractorPath, pyFile[:-3])

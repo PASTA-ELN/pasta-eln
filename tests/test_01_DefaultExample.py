@@ -50,9 +50,9 @@ class TestStringMethods(unittest.TestCase):
     This is another example subtask | x1
     simple.png | measurement/image
   Data files | x1
-    story.odt | -
+    story.odt | -/binary
     simple.png | measurement/image
-    example.tif | measurement/image
+    example.tif | -/image
     https://www.fz-juelich.de/en/ibg/ibg-1/images/research_groups/general/fz-juelich-logo/@@images/image-261-9d3b36703de5ad2157c50aa585e7d2bf.jpeg | measurement/image
     simple.csv | measurement/csv/linesAndDots
   procedure.md | workflow/procedure/markdown

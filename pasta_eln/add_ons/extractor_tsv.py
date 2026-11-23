@@ -30,6 +30,7 @@ def use(filePath, style, saveFigure):
     firstLine = fIn.readline()
   data = np.loadtxt(filePath, delimiter='\t')     # use numpy to get data
   style['main'] = 'measurement/tsv/lines'
+  metaUser, metaVendor = {}, {}                                           # for files other than tensile tests
 
   # metadata
   if firstLine.strip() == '# strain [%], stress [MPa]':  #easy way to include extractors for multiple files into one

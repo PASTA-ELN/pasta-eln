@@ -8,6 +8,7 @@ from xml.etree import ElementTree
 
 import requests
 
+from pasta_eln.backend_worker.extractor_fallback import findExtractor
 from pasta_eln.configuration_file import loadConfiguration
 from pasta_eln.addons import loadNamedModule
 from pasta_eln.add_ons.nextcloud_common import TIMEOUT, readNclink, shortError
@@ -94,8 +95,8 @@ def use(filePath:Path, style:dict[str,Any], saveFigure:Any) -> dict[str,Any]:
       for chunk in response.iter_content(1024*1024):
         if chunk:
           stream.write(chunk)
-    extractorPath = Path(__file__).parent/f'extractor_{localPath.suffix[1:].lower()}.py'
-    if extractorPath.is_file() and extractorPath != Path(__file__):
+    extractorPath = Path().joinpath(*findExtractor(localPath, Path(__file__).parent))       # fallback if none
+    if extractorPath != Path(__file__):
       extractor = loadNamedModule(extractorPath.parent, extractorPath.stem)
       extracted = extractor.use(localPath, style, saveFigure)
       extracted.setdefault('metaVendor', {}).update(result['metaVendor'])
