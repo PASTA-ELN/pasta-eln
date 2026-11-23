@@ -3,7 +3,6 @@ PASTA-ELN Documentation
 
 .. raw:: html
 
-   <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
    <div class="three-columns">
       <div style="flex: 12;">
          <h2>PASTA-ELN | The favorite ELN<br>for experimental scientists</h2>
@@ -17,7 +16,6 @@ PASTA-ELN provides a streamlined and locally installed electronic labnotebook (E
 
 .. raw:: html
 
-   <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
    <div class="three-columns">
       <div class="column">
          <div class="heading">Use cases</div>
@@ -65,7 +63,7 @@ PASTA-ELN provides a streamlined and locally installed electronic labnotebook (E
          </a>
       </div>
    </div>
-   <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.min.js"></script>
    <script>
    lucide.createIcons();
    </script>

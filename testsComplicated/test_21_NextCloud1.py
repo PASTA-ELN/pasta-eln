@@ -7,8 +7,8 @@ from pathlib import Path
 from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.configuration_file import saveConfiguration
 
-from testsComplicated.nextcloud_common import readNclink, writeNclink
-from testsComplicated.extractor_nclink import use
+from pasta_eln.add_ons.nextcloud_common import readNclink, writeNclink
+from pasta_eln.add_ons.extractor_nclink import use
 
 class TestNextcloud(unittest.TestCase):
   """Test Nextcloud access, link creation, and extraction."""
@@ -48,7 +48,7 @@ class TestNextcloud(unittest.TestCase):
     self.assertEqual(link['name'], targetFile['name'])
 
     # 3. Verify only - not in production: Exercise the extractor.
-    result = use(linkPath, {'main':''})
+    result = use(linkPath, {'main':''}, print)
     self.assertIn('metaVendor', result)
     self.assertIn('metaUser', result)
 

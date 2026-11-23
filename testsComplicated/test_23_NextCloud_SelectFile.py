@@ -7,7 +7,7 @@ from pathlib import Path
 from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.configuration_file import loadConfiguration
 
-from testsComplicated.nextcloud_common import NextcloudBrowser, readNclink, writeNclinks
+from pasta_eln.add_ons.nextcloud_common import NextcloudBrowser, readNclink, writeNclinks
 
 
 class TestNextcloud(unittest.TestCase):

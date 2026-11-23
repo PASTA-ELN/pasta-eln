@@ -4,8 +4,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-from testsComplicated import project_nextcloud
-from testsComplicated.nextcloud_common import readNclink
+from pasta_eln.add_ons import project_nextcloud
+from pasta_eln.add_ons.nextcloud_common import readNclink
 
 
 class SignalSpy:

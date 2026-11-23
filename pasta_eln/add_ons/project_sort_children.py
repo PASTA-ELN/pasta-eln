@@ -1,6 +1,7 @@
 """example add-on: sort direct children of node
 """
 import logging
+from anytree import find
 from PySide6.QtWidgets import QMessageBox
 from pasta_eln.addons import getHierarchy
 from pasta_eln.backend_worker.worker import Task
@@ -14,7 +15,7 @@ def main(comm, hierStack, widget, parameter={}):
   """ main function: has to exist and is called by the menu
   Args:
     comm (Communicate): Shared communication object
-    hierStack (str): node in hierarchy to start the creation
+    hierStack (str): path of document IDs 'projectID/.../folderID'; sort children of the last folder
     widget (QWidget): allows to create new gui dialogs
     parameter (dict): ability to pass parameters
 
@@ -34,7 +35,8 @@ def main(comm, hierStack, widget, parameter={}):
   # Issue: previous sorting steps influence later steps. Hence after one sorting step, always get the updated order and look for changes
   # One could use a 'while True' loop but that would risk erroneous endless loops. Better, max. number and then user has to sort again
   for idx in range(maxNumberSorting):
-    hierarchy, _ = getHierarchy(comm, hierStack)
+    hierarchy, _ = getHierarchy(comm, hierStackI[0])
+    hierarchy = find(hierarchy, lambda node: node.id == hierStackI[-1])
     noChange = True
     for revIdx, node in enumerate(sorted(hierarchy.children, key=lambda n: n.name.lower(), reverse=ascendingFlag)):
       idx = len(hierarchy.children) - 1 - revIdx

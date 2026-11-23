@@ -16,7 +16,7 @@ import base64
 import re
 from io import BytesIO
 from pathlib import Path
-from anytree import PreOrderIter
+from anytree import PreOrderIter, find
 from PIL import Image
 from PySide6.QtGui import QTextDocument  # This is used for html-markdown conversion: works fine here
 from PySide6.QtWidgets import QFileDialog
@@ -42,7 +42,7 @@ def main(comm, hierStack, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
         comm (Communicate): Shared communication object
-        hierStack (str): node in hierarchy to start the creation
+        hierStack (str): path of document IDs 'projectID/.../folderID'; report on the last folder
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters
 
@@ -56,7 +56,9 @@ def main(comm, hierStack, widget, parameter={}):
             return False
     else:
         res = parameter['fileNames']
-    hierarchy, _ = getHierarchy(comm, hierStack.split('/')[0])
+    stack = hierStack.split('/')
+    hierarchy, _ = getHierarchy(comm, stack[0])
+    hierarchy = find(hierarchy, lambda node: node.id == stack[-1])
     qtDocument = QTextDocument()   #used for markdown -> html conversion
 
     out = ''

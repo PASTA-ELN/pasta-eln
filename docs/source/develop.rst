@@ -39,17 +39,6 @@ While PASTA-ELN is designed for reliability, errors may occur. Advanced users ca
 3. Identify and delete the document with lesser quality data. **Proceed carefully to avoid data loss**.
 4. Record the deleted and remaining document IDs for future reference.
 
-**Convert couchdb to sqlite version**
-
-Use "python -m pasta_eln.tools"
-
-1. Convert to sqlite database: 'c'
-2. Update local file structure: 't'
-3. Repair dates in sqlite database: 'r'
-4. Verify current state: 'v'
-5. Use repair on . errors: 'rp1'
-6. File errors can be repaired by scanning
-
 More information
 ----------------
 

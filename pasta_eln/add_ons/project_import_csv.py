@@ -26,7 +26,7 @@ def main(comm, hierStack, widget, parameter={}):
     """ main function: has to exist and is called by the menu
     Args:
         comm (Communicate): Shared communication object.
-        hierStack (str): node in hierarchy to start the creation
+        hierStack (str): path of document IDs 'projectID/.../folderID'; items go into the last folder
         widget (QWidget): allows to create new gui dialogs
         parameter (dict): ability to pass parameters
 

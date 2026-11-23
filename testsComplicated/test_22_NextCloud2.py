@@ -17,8 +17,8 @@ import requests
 from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.configuration_file import loadConfiguration, saveConfiguration
 
-from testsComplicated.extractor_nclink import use
-from testsComplicated.nextcloud_common import readNclink
+from pasta_eln.add_ons.extractor_nclink import use
+from pasta_eln.add_ons.nextcloud_common import readNclink
 
 
 class TestNextcloud(unittest.TestCase):
@@ -61,7 +61,7 @@ class TestNextcloud(unittest.TestCase):
     linkPath.write_text(json.dumps(staleLink, ensure_ascii=False, sort_keys=True)+'\n', encoding='utf-8')
     try:
       with self.assertRaisesRegex(ValueError, 'nextcloudETag'):
-        use(linkPath, {'main':''})
+        use(linkPath, {'main':''}, print)
     finally:
       linkPath.write_bytes(pointerBytes)
 
@@ -70,7 +70,7 @@ class TestNextcloud(unittest.TestCase):
     credentialsPath.rename(backupPath)
     try:
       with self.assertRaises(FileNotFoundError):
-        use(linkPath, {'main':''})
+        use(linkPath, {'main':''}, print)
     finally:
       backupPath.rename(credentialsPath)
 
@@ -80,7 +80,7 @@ class TestNextcloud(unittest.TestCase):
     saveConfiguration(credentials, credentialsPath)
     try:
       with self.assertRaises(requests.RequestException):
-        use(linkPath, {'main':''})
+        use(linkPath, {'main':''}, print)
     finally:
       credentialsPath.write_bytes(credentialsBytes)
 

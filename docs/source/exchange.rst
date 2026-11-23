@@ -19,7 +19,11 @@ Exchange Data with Other Tools
 Nextcloud server integration
 ----------------------------
 
-(to be written)
+The add-on **Import files from Nextcloud** links files on a Nextcloud server into a project without copying them. Right-click a folder and select **Project add-ons > Import files from Nextcloud**, or use the project's **More** menu for the project folder. Double-click to open Nextcloud folders, select files, and click **OK**. PASTA-ELN writes one small pointer file (``<name>.nclink``) per selected file and scans the folder.
+
+**Credentials**: on first use, a dialog asks for an instance name, the server URL, the login name, and an app password. Create the app password in Nextcloud under **Personal settings > Security > Devices & sessions**. PASTA-ELN stores the credentials encrypted in ``.nextcloud_credentials.json`` in the data folder. For servers with a self-signed certificate, set ``"verify": false`` in that file.
+
+**Extraction**: during a scan, PASTA-ELN finds the remote file by its Nextcloud file ID, also after it was moved or renamed. If the file content changed since the import, the extraction reports an error. Files up to 100 MB are downloaded temporarily and processed by the extractor for their file type; larger files receive only the Nextcloud metadata.
 
 .. _elabFTW:
 
@@ -97,7 +101,7 @@ Comparison of Zenodo and Dataverse Terms
    :widths: 30, 70
    :header-rows: 1
 
-   Zenodo, Dataverse
+   Dataverse, Zenodo
    author, creators
    datasetContact, Not required (optionally in creators or omitted)
    dsDescription, description

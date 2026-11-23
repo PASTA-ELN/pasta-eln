@@ -10,6 +10,7 @@ import requests
 NLINK_FORMAT = 'pasta-nextcloud-link/1'
 DAV = '{DAV:}'
 OC = '{http://owncloud.org/ns}'
+TIMEOUT = (5, 60)                            # (connect, read) seconds: fail fast if the server is unreachable
 
 
 def writeNclink(directory:Path, instance:str, targetFile:dict[str,Any]) -> Path:
@@ -31,6 +32,20 @@ def writeNclink(directory:Path, instance:str, targetFile:dict[str,Any]) -> Path:
   return linkPath
 
 
+def shortError(error:requests.RequestException) -> str:
+  """Summarize a failed Nextcloud request in one line.
+  Args:
+    error (requests.RequestException): failed request
+  Returns:
+    str: message for the user
+  """
+  if isinstance(error, requests.exceptions.SSLError):
+    return 'Nextcloud certificate is invalid (e.g. self-signed): set "verify": false in .nextcloud_credentials.json'
+  if isinstance(error, requests.exceptions.HTTPError) and error.response is not None:
+    return f'Nextcloud refused the request: {error.response.status_code} {error.response.reason}'
+  return f'Cannot connect to Nextcloud: {type(error).__name__}'
+
+
 def readNclink(linkPath:Path) -> dict[str,Any]:
   """Read and identify a Nextcloud pointer file.
   Args:
@@ -50,16 +65,18 @@ def readNclink(linkPath:Path) -> dict[str,Any]:
 class NextcloudBrowser:
   """Browse and select files from one authenticated Nextcloud account."""
 
-  def __init__(self, account:dict[str,Any]) -> None:
+  def __init__(self, account:dict[str,Any], verify:bool=True) -> None:
     """Connect to a Nextcloud account at its root folder.
 
     Args:
       account (dict[str, Any]): URL, login name, and app password.
+      verify (bool): verify the server certificate; false for self-signed servers.
     """
     self.session = requests.Session()
     self.session.auth = (account['loginName'], account['appPassword'])
+    self.session.verify = verify
     self.baseURL = account['url'].rstrip('/')
-    response = self.session.get(f'{self.baseURL}/ocs/v1.php/cloud/user', params={'format':'json'}, timeout=30,
+    response = self.session.get(f'{self.baseURL}/ocs/v1.php/cloud/user', params={'format':'json'}, timeout=TIMEOUT,
                                 headers={'OCS-APIRequest':'true', 'Accept':'application/json'})
     response.raise_for_status()
     userID = str(response.json()['ocs']['data']['id'])
@@ -76,7 +93,7 @@ class NextcloudBrowser:
              '<d:prop><d:displayname/><d:resourcetype/><d:getcontentlength/><d:getcontenttype/><d:getetag/>'
              '<oc:fileid/></d:prop></d:propfind>')
     response = self.session.request('PROPFIND', urljoin(f'{self.baseURL}/', self.currentPath), data=query.encode('utf-8'),
-                                    headers={'Content-Type':'application/xml', 'Depth':'1'}, timeout=60)
+                                    headers={'Content-Type':'application/xml', 'Depth':'1'}, timeout=TIMEOUT)
     response.raise_for_status()
     entries:list[dict[str,Any]] = []
     for item in ElementTree.fromstring(response.content).findall(f'{DAV}response'):
@@ -126,7 +143,7 @@ class NextcloudBrowser:
              '<d:prop><oc:fileid/></d:prop><d:literal>'
              f'{fileID}</d:literal></d:eq></d:where></d:basicsearch></d:searchrequest>')
     response = self.session.request('SEARCH', f'{self.baseURL}/remote.php/dav/', data=query.encode('utf-8'),
-                                    headers={'Content-Type':'application/xml'}, timeout=60)
+                                    headers={'Content-Type':'application/xml'}, timeout=TIMEOUT)
     response.raise_for_status()
     for item in ElementTree.fromstring(response.content).findall(f'{DAV}response'):
       href = item.findtext(f'{DAV}href')

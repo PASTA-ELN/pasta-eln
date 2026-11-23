@@ -36,7 +36,8 @@ by the scientific instrument or its vendor, such as acquisition settings.
 interpreting the scientific data, such as tensile strength. Technical
 provenance is stored separately in the database.
 
-PASTA-ELN includes extractors for CSV, JPEG, JSON, MD, and PNG files. PNG and JPEG extractors serve as examples for custom development.
+PASTA-ELN includes extractors for CSV, JPEG/JPG, JSON, LOG, MD, PNG, PY, TIF, and TSV files, and for NCLINK
+pointers to :ref:`Nextcloud <nextcloud>` files. The PNG and CSV extractors serve as examples for custom development.
 
 Testing and Optimizing Extractors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -89,63 +90,43 @@ Troubleshooting Extractor Issues
   meta_vendor = {"detector": {"calibration_a": 4, "calibration_b": 1}, "settings": "high"}
   try:
     json.dumps(meta_vendor)
-  except Exception e:
+  except Exception as e:
     print(e)
-
-**Matplotlib Image Conversion**: Convert Matplotlib axes to SVG:
-
-.. code-block:: python
-
-  from io import StringIO
-
-  figfile = StringIO()
-  plt.savefig(figfile, format="svg")
-  image = figfile.getvalue()
-
-**Pillow Image Conversion**: Convert Matplotlib axes to base64-encoded images:
-
-.. code-block:: python
-
-  from io import BytesIO
-  import base64
-
-  figfile = BytesIO()
-  image.save(figfile, format="PNG")
-  image_data = base64.b64encode(figfile.getvalue()).decode()
-  image = "data:image/png;base64," + image_data
 
 File Format Information and Extractor Development
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Understanding file formats is crucial for developing extractors. Refer to:
 
-* [Wikipedia: List of filename extensions](https://en.wikipedia.org/wiki/List_of_filename_extensions_(alphabetical))
-* [Wikipedia: Chemical file formats](https://en.wikipedia.org/wiki/Chemical_file_format)
-* [Wikipedia: List of file formats](https://en.wikipedia.org/wiki/List_of_file_formats)
+* `Wikipedia: List of filename extensions <https://en.wikipedia.org/wiki/List_of_filename_extensions_(alphabetical)>`_
+* `Wikipedia: Chemical file formats <https://en.wikipedia.org/wiki/Chemical_file_format>`_
+* `Wikipedia: List of file formats <https://en.wikipedia.org/wiki/List_of_file_formats>`_
 
 .. raw:: html
-
-   <a href="index.html" class="back-button" style="flex: 1; height: 25px;"><b>&larr; Back</b></a>
 
 .. _otherAddOns:
 
 Other Add-ons
 -------------
 
-Other add-ons enhance functionality and may include API keys for external services.
+Other add-ons enhance functionality. Settings they require, such as API keys, are entered in **Other > Configuration > Add-on parameters**.
 
 Project Add-ons
 ^^^^^^^^^^^^^^^
 
-Generate reports, presentations, and drafts for scientific papers using the project's hierarchical structure. A default example includes a customizable HTML-based report.
+Project add-ons act on the selected folder: right-click a folder and select **Project add-ons**, or use the
+project's **More** menu for the project folder. PASTA-ELN includes:
+
+* **Create HTML report** of the folder and its content.
+* **Import CSV file**: create one item per row in the folder.
+* **Sort child items** of the folder by name.
+* **Import files from Nextcloud**: see :ref:`Nextcloud server integration <nextcloud>`.
 
 Table Add-ons
 ^^^^^^^^^^^^^
 
-Process data from tables:
-
-* Extract data directly from tables.
-* Use filenames from table items to generate scientific graphs.
+Table add-ons process the items of a table; open them via **More > Table add-ons**. **Analyze metadata** plots
+metadata of the items, and **Analyze data** plots the data in their files.
 
 .. raw:: html
 

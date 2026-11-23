@@ -3,13 +3,14 @@ import json
 from pathlib import Path
 from typing import Any
 
+import requests
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout, QLabel, QLineEdit, QListWidget,
                                QListWidgetItem, QVBoxLayout)
 
 from pasta_eln.backend_worker.worker import Task
 from pasta_eln.configuration_file import loadConfiguration, saveConfiguration
-from nextcloud_common import NextcloudBrowser, writeNclinks
+from pasta_eln.add_ons.nextcloud_common import NextcloudBrowser, shortError, writeNclinks
 
 description = 'Import files from Nextcloud'
 reqParameter:dict[str,str] = {}
@@ -48,6 +49,7 @@ class NextcloudDialog(QDialog):
     layout.addWidget(self.status)
     layout.addWidget(self.buttons)
     self.setWindowTitle('Import files from Nextcloud')
+    self.resize(800, 600)
     self.instanceBox.addItems(sorted(self.accounts))
     self.instanceBox.currentTextChanged.connect(self.onInstanceChanged)
     self.onInstanceChanged(self.instanceBox.currentText())
@@ -59,7 +61,13 @@ class NextcloudDialog(QDialog):
       instance (str): Instance alias.
     """
     account = json.loads(self.accounts[instance])
-    self.browser = NextcloudBrowser(account)
+    try:
+      self.browser = NextcloudBrowser(account, self.credentials.get('verify', True))
+    except requests.RequestException as error:
+      self.browser = None
+      self.fileList.clear()
+      self.status.setText(shortError(error))
+      return
     self.refresh()
 
 
@@ -87,7 +95,7 @@ class NextcloudDialog(QDialog):
 
 
   def importSelected(self) -> None:
-    """Write pointers for selected files, scan the project and refresh the project tree."""
+    """Write pointers for selected files and scan/refresh the project tree."""
     if self.browser is None:
       return
     names = [item.data(Qt.ItemDataRole.UserRole)['name'] for item in self.fileList.selectedItems()
@@ -97,7 +105,7 @@ class NextcloudDialog(QDialog):
       return
     selected = self.browser.selectFiles(names)
     writeNclinks(self.projectPath, self.instanceBox.currentText(), selected)
-    self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.projectID})          # add pointers to database
+    self.comm.uiRequestTask.emit(Task.SCAN, {'docID':self.projectID})               # add pointers to database
     self.comm.changeProject.emit(self.projectID, '')
     self.accept()
 
@@ -129,7 +137,7 @@ def createCredentials(credentialsPath:Path, parent:Any=None) -> bool:
   if not all(values.values()):
     return False
   account = json.dumps({key:values[key] for key in ('url','loginName','appPassword')})
-  saveConfiguration({'type':'pasta nextcloud credential file', 'version':4,
+  saveConfiguration({'type':'pasta nextcloud credential file', 'version':4, 'verify':True,
                      'addOnParameter':{'nextcloud':{values['instance']:account}}}, credentialsPath)
   return True
 
@@ -138,15 +146,19 @@ def main(comm:Any, hierStack:str, widget:Any, parameter:dict[str,Any]) -> bool:
   """Open the Nextcloud browser for a project.
   Args:
     comm (Any): PASTA GUI communication object.
-    hierStack (str): Project document ID.
+    hierStack (str): Path of document IDs 'projectID/.../folderID'; files go into the last folder.
     widget (Any): Parent widget.
     parameter (dict[str, Any]): Add-on parameters.
   Returns:
     bool: True when the dialog completed successfully.
   """
   backend = comm.backendThread.worker.backend
-  projectPath = comm.basePath/backend.db.getDoc(hierStack)['branch'][0]['path']
+  stack = hierStack.split('/')
+  doc = backend.db.getDoc(stack[-1])
+  if not doc or not doc.get('branch'):
+    return False
+  targetPath = comm.basePath/doc['branch'][0]['path']
   credentialsPath = comm.basePath/'.nextcloud_credentials.json'
   if not credentialsPath.is_file() and not createCredentials(credentialsPath, widget):
     return False
-  return NextcloudDialog(comm, hierStack, projectPath, widget).exec() == QDialog.DialogCode.Accepted
+  return NextcloudDialog(comm, stack[0], targetPath, widget).exec() == QDialog.DialogCode.Accepted
