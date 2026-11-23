@@ -102,8 +102,6 @@ Understanding file formats is crucial for developing extractors. Refer to:
 * `Wikipedia: Chemical file formats <https://en.wikipedia.org/wiki/Chemical_file_format>`_
 * `Wikipedia: List of file formats <https://en.wikipedia.org/wiki/List_of_file_formats>`_
 
-.. raw:: html
-
 .. _otherAddOns:
 
 Other Add-ons
