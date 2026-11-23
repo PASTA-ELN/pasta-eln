@@ -54,6 +54,8 @@ def use(filePath, style, saveFigure):
 
   # THIS IS THE IMPORTANT PART OF THE EXTRACTOR
   data = pd.read_csv(filePath, delimiter=delimiter, skiprows=skipRows-1)     # use pandas to get data
+  if data.shape[1]<2:                                                        # only one column: use the row number as x
+    data.insert(0, 'row', range(len(data)))
   # reduce the number of rows
   if len(data)>maxLength:
     skipNumber = int(len(data)/maxLength)+1        #only take any k-th item
@@ -73,12 +75,12 @@ def use(filePath, style, saveFigure):
   plt.ylabel('value [m]')                                                    # the units are an example for this tutorial and should be changed
   try:
     if data.shape[0]>1:
-      sampleFrequency = 1.0 / (data.iloc[1,0]-data.iloc[0,0])                  # a simple equation to calculate the sample frequency
+      sampleFrequency = float(1.0 / (data.iloc[1,0]-data.iloc[0,0]))                # a simple equation to calculate the sample frequency
     else: #if only one line in file
       sampleFrequency = 1.0
   except Exception:
     sampleFrequency = -1.0
-  maxYData        = data.iloc[:,1].max()
+  maxYData        = float(pd.to_numeric(data.iloc[:,1], errors='coerce').max())  # metadata must be plain Python: float, not numpy int64
   metaUser = {'Sample frequency [Hz]':sampleFrequency,                       # this is the easy way to denote metadata as scientists often use. Internally it is converted appropriately
               'Maximum y-data [m]':   maxYData}
   metaVendor = {}                                                            # this is translated metadata from the vendor of the instrument: since we don't know anything, leave it blank

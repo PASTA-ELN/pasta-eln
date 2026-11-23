@@ -333,19 +333,22 @@ class ExtractorManager:
       if 'style' in content:
         possibleDocTypes = [] if self.dataHierarchy is None else [i for i in self.dataHierarchy('', '') if i[0]!='x']
         matches = [i for i in possibleDocTypes if content['style']['main'].startswith(i)]
-        if matches or content['style']['main'] in {'', '-'}:
+        if matches or content['style']['main'].split('/')[0] in {'', '-'}:                 # '-': unidentified
           report += outputString(outputStyle, 'info', 'Style is valid: '+content['style']['main']+'.')
-          contentLength = len(json.dumps(content, ensure_ascii=False))
+          contentLength = len(json.dumps(content, ensure_ascii=False, default=str))
           report += outputString(outputStyle, 'info', f'Extracted size: {contentLength // 1024} kB.')
         else:
-          report += outputString(outputStyle, 'error', 'Style does not follow doctype in dataHierarchy.')
+          report += outputString(outputStyle, 'error',
+                                 f"Style does not follow doctype in dataHierarchy: {content['style']['main']}")
       else:
         report += outputString(outputStyle,'error','Style not included in extractor.')
     if success:
       try:
         _ = json.dumps(content, ensure_ascii=False)
-      except (TypeError, ValueError):
-        report += outputString(outputStyle,'error','Extractor reply not json dumpable.')
+      except (TypeError, ValueError) as error:
+        success = False
+        where = ', '.join(getattr(error, '__notes__', []))               # e.g. when serializing dict item 'x'
+        report += outputString(outputStyle,'error',f'Extractor reply not json dumpable: {error} {where}')
     if success:
       for meta in ['metaVendor', 'metaUser']:
         if meta in content:
@@ -386,9 +389,9 @@ class ExtractorManager:
             _ = json.dumps(content['metaUser'][key], ensure_ascii=False)
           except (TypeError, ValueError):
             report += outputString(outputStyle,'error',f'FAIL {key}:'+str(content['metaUser'][key])+' type:') + str(type(content['metaUser'][key]))
-      if 'image' not in content:
+      if 'image' not in content and 'content' not in content:
         success = False
-        report += outputString(outputStyle,'error','Image does not exist')
+        report += outputString(outputStyle,'error','Neither image nor content exists')
     if success and isinstance(content.get('image',''),Image.Image):
       success = False
       report += outputString(outputStyle,'error','Image is a PIL image: not a base64 string')
@@ -407,7 +410,7 @@ class ExtractorManager:
       # print('  figfile = StringIO()')
       # print('plt.savefig(figfile, format="svg")')
       # print('image = figfile.getvalue()')
-    if success and isinstance(content.get('image',''), str):#show content
+    if success and isinstance(content.get('image'), str):#show content
       size = len(content['image'])
       report += outputString(outputStyle, 'info', f'Image size: {str(size // 1024)} kB.')
     if outputStyle=='print':
