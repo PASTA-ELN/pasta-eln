@@ -2,6 +2,8 @@
 from __future__ import annotations
 import csv
 import logging
+import operator
+import re
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -23,6 +25,8 @@ from pasta_eln.ui.table.filter_row import FilterRow
 from pasta_eln.ui.table.pandas_table_model import PandasTableModel
 from pasta_eln.ui.table.table_header import TableHeader
 from pasta_eln.ui.workplan_creator.workplan_creator_dialog import WorkplanCreatorDialog
+
+NUMBER = r'([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)'                              # number in filters and table cells
 
 
 class TableView(Widget):
@@ -516,7 +520,14 @@ class TableView(Widget):
       value = filterRow.text.text()
       header = filterRow.column.currentText()
       if value and header in base.columns:
-        base = base[base[header].astype(str).str.contains(value, case=False, regex=False, na=False)]
+        cells = base[header].astype(str)
+        if comparison := re.fullmatch(rf'\s*(>=|<=|>|<)\s*{NUMBER}\s*', value):                 # e.g. '>= 15'
+          compare = {'>=':operator.ge, '<=':operator.le, '>':operator.gt, '<':operator.lt}[comparison[1]]
+          numbers = pd.to_numeric(cells.str.extract(rf'^\s*{NUMBER}', expand=False), errors='coerce')
+          mask = compare(numbers, float(comparison[2]))                                 # '1998-05-01' -> 1998
+        else:
+          mask = cells.str.contains(value, case=False, regex=False, na=False)
+        base = base[~mask if filterRow.invert.isChecked() else mask]
         documentIds = documentIds.loc[base.index]
     return base.reset_index(drop=True), documentIds.to_list()
 

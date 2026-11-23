@@ -80,6 +80,11 @@ because they apply only to that item type. Links to other items show the name
 of the linked item, e.g. ``☍ Microscope A``: filter for this name to find all
 items linked to it. Links whose target no longer exists show ``oo``.
 
+A filter keeps rows whose cell contains the filter text. Filter text such as
+``>= 15`` or ``< 2000`` compares the leading number of each cell instead, so
+``< 2000`` also finds dates before the year 2000; combine two filters for a
+range. The invert button next to a filter keeps the non-matching rows.
+
 Skipping folders during scans
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
