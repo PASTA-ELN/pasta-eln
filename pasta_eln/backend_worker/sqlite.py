@@ -852,8 +852,11 @@ class SqlLiteDB:
         dfQrCodes = dfQrCodes.rename(columns={'qrCode':'qrCodes'})
         df = df.join(dfQrCodes)
       if metadataKeys := [column for column in viewColumns if column not in MAIN_ORDER+['tags']]:
-        cmd = 'SELECT main.id, properties.key, properties.value FROM main INNER JOIN properties USING(id) '\
-              f"INNER JOIN branches USING(id) WHERE main.type LIKE ? AND ({' OR '.join('properties.key=?' for _ in metadataKeys)})"
+        # links to other items show the name of the linked item
+        cmd = "SELECT main.id, properties.key, COALESCE('\u260D ' || linked.name, properties.value) AS value "\
+              'FROM main INNER JOIN properties USING(id) INNER JOIN branches USING(id) '\
+              'LEFT JOIN main AS linked ON linked.id = properties.value '\
+              f"WHERE main.type LIKE ? AND ({' OR '.join('properties.key=?' for _ in metadataKeys)})"
         params = [f'{docType}%', *metadataKeys]
         if not allFlag:
           cmd += r" and NOT branches.show LIKE '%F%'"

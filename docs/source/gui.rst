@@ -76,7 +76,9 @@ Some operations affect stored data or external services:
 For table-specific operations such as filtering, CSV export, sequential editing,
 or rerunning extractors, use the **Actions**, **View**, and **More** menus above
 the relevant list. These controls are intentionally kept close to the list
-because they apply only to that item type.
+because they apply only to that item type. Links to other items show the name
+of the linked item, e.g. ``☍ Microscope A``: filter for this name to find all
+items linked to it. Links whose target no longer exists show ``oo``.
 
 Skipping folders during scans
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
