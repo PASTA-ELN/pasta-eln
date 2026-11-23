@@ -2,7 +2,7 @@
 requires = ["setuptools >= 84.2.1", "wheel"]
 
 [tool.codespell]
-skip = '.git,*.pdf,*.svg,*lookup*.json,*dataset-create-new-all-default-fields.json,*test_dataverse_edit_metadata_dialog.py'
+skip = '.git,*/Resources/mime,*.pdf,*.svg,*lookup*.json,*dataset-create-new-all-default-fields.json,*test_dataverse_edit_metadata_dialog.py'
 # for shortcuts like [l]ist
 ignore-regex = '\[[a-z]\][a-z]+'
 #
