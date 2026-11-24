@@ -6,6 +6,7 @@ from typing import Any
 
 from pasta_eln.add_ons import project_nextcloud
 from pasta_eln.add_ons.nextcloud_common import readNclink
+from pasta_eln.backend_worker.worker import Task
 
 
 class SignalSpy:
@@ -26,7 +27,7 @@ class SignalSpy:
 class FakeBrowser:
   """Small in-memory browser used to test the Qt workflow."""
 
-  def __init__(self, account:dict[str,str]) -> None:
+  def __init__(self, account:dict[str,str], verify:bool=True) -> None:
     self.currentPath = '/'
     self.entries = [
       {'name':'folder', 'isFolder':True},
@@ -73,7 +74,7 @@ def test_nextcloud_dialog_browses_and_writes_multiple_files(qtbot, monkeypatch, 
   projectPath.mkdir()
   backend = SimpleNamespace(db=SimpleNamespace(getDoc=lambda projectID: {'branch':[{'path':'project'}]}))
   comm = SimpleNamespace(basePath=tmp_path, backendThread=SimpleNamespace(worker=SimpleNamespace(backend=backend)),
-                         uiRequestHierarchy=SignalSpy())
+                         uiRequestTask=SignalSpy(), changeProject=SignalSpy())
   dialog = project_nextcloud.NextcloudDialog(comm, 'x0-test', projectPath)
   qtbot.addWidget(dialog)
 
@@ -85,4 +86,5 @@ def test_nextcloud_dialog_browses_and_writes_multiple_files(qtbot, monkeypatch, 
 
   assert readNclink(projectPath/'a.txt.nclink')['fileId'] == '2'
   assert readNclink(projectPath/'b.txt.nclink')['fileId'] == '3'
-  assert comm.uiRequestHierarchy.calls == [('x0-test', True)]
+  assert comm.uiRequestTask.calls == [(Task.SCAN, {'docID':'x0-test'})]
+  assert comm.changeProject.calls == [('x0-test', '')]

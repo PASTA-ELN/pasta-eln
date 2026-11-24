@@ -12,8 +12,6 @@ import json
 import unittest
 from pathlib import Path
 
-import requests
-
 from pasta_eln.backend_worker.backend import Backend
 from pasta_eln.configuration_file import loadConfiguration, saveConfiguration
 
@@ -38,12 +36,12 @@ class TestNextcloud(unittest.TestCase):
 
     # A standard rerun keeps the existing document and pointer hash.
     projectID = before['branch'][0]['stack'][0]
-    backend.extractors.addOnPath = Path(__file__).parent
+    backend.extractors.addOnPath = Path(__file__).parent.parent/'pasta_eln'/'add_ons'
     backend.scanProject(None, projectID)
     view = backend.db.getView('viewHierarchy/viewPathsAll', preciseKey=relativePath)
     after = backend.db.getDoc(view[0]['id'])
     self.assertEqual(after['id'], before['id'])
-    self.assertEqual(after['shasum'], before['shasum'])
+    self.assertEqual(after['dataHash'], before['dataHash'])
     self.assertEqual(after['name'], link['name'])
 
     # Credentials retain their plaintext type but not their secrets.
@@ -79,7 +77,7 @@ class TestNextcloud(unittest.TestCase):
     credentials['addOnParameter']['nextcloud'][link['instance']] = json.dumps(account)
     saveConfiguration(credentials, credentialsPath)
     try:
-      with self.assertRaises(requests.RequestException):
+      with self.assertRaisesRegex(ConnectionError, '401'):
         use(linkPath, {'main':''}, print)
     finally:
       credentialsPath.write_bytes(credentialsBytes)

@@ -50,7 +50,7 @@ class TestNextcloud(unittest.TestCase):
     linkPath = writeNclinks(backend.cwd, instance, selectedFiles)[0]
     self.assertEqual(readNclink(linkPath)['fileId'], '3531434')
 
-    backend.extractors.addOnPath = Path(__file__).parent
+    backend.extractors.addOnPath = Path(__file__).parent.parent/'pasta_eln'/'add_ons'
     backend.scanProject(None, projectID)
     view = backend.db.getView('viewHierarchy/viewPathsAll')
     item = next(i for i in view if 'Image Data.csv.nclink' in i['key'])

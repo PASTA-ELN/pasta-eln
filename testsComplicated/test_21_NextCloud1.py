@@ -53,7 +53,7 @@ class TestNextcloud(unittest.TestCase):
     self.assertIn('metaUser', result)
 
     # 4. Scan
-    backend.extractors.addOnPath = Path(__file__).parent
+    backend.extractors.addOnPath = Path(__file__).parent.parent/'pasta_eln'/'add_ons'
     backend.scanProject(None, projID1)
 
     # 5. Check scan is correct
