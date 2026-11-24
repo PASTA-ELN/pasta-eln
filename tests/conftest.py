@@ -1,5 +1,8 @@
 import logging
+import os
 import re
+import tempfile
+from pathlib import Path
 from typing import Any
 from typing import Final
 
@@ -8,7 +11,12 @@ TEST_ORDER_PATTERN = re.compile(r'^test_(\d+)_')
 
 
 def pytest_configure():
-    """Quiet noisy loggers"""
+    """Use a temporary home with its own configuration, never the user's; quiet noisy loggers"""
+    tempHome = tempfile.mkdtemp(prefix='pastaTestHome')
+    os.environ['HOME'] = os.environ['USERPROFILE'] = tempHome              # Path.home(): Linux/macOS, Windows
+    from pasta_eln.configuration_file import saveConfiguration
+    from pasta_eln.installation_tools import createDefaultConfiguration
+    saveConfiguration(createDefaultConfiguration(Path(__file__).parent.parent/'test_data'))
     for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
         logging.getLogger(package).setLevel(logging.WARNING)
 
