@@ -322,7 +322,8 @@ class Pasta2Elab:
             flagNothingChanged = False
             break
         elif isinstance(v, list):
-          if set(v) != {i for i in docClient[k] if not re.match(r'^_\d$', i)}:
+          other = [i for i in docClient[k] if not (isinstance(i, str) and re.match(r'^_\d$', i))]
+          if (set(v) != set(other)) if all(isinstance(i, str) for i in v+other) else v != other:
             flagNothingChanged = False
             break
         elif v != docClient[k]:
@@ -353,7 +354,8 @@ class Pasta2Elab:
           flagServerChange = True
           docOther[k] = docServer[k]
       elif isinstance(v, list):
-        if set(v) != {i for i in docOther[k] if not re.match(r'^_\d$', i)}:
+        other = [i for i in docOther[k] if not (isinstance(i, str) and re.match(r'^_\d$', i))]
+        if (set(v) != set(other)) if all(isinstance(i, str) for i in v+other) else v != other:
           flagServerChange = True
           docOther[k] = docServer[k]
     if flagServerChange:
@@ -556,6 +558,9 @@ class Pasta2Elab:
     """
     # print(json.dumps(elab, indent=2))
     comment = html2markdown(elab.get('body','')).strip()
+    delimiter = 'DO NOT CHANGE THIS DELIMITER between content (top) and comment (bottom)'
+    if delimiter in comment:                                           # content comes from file, keep comment
+      comment = comment.split(delimiter)[-1].lstrip('*_').strip()
     # User is not allowed to change dates: ignore these dates from the server
     tags = [] if elab.get('tags','') is None else elab.get('tags','').split('|')
     doc = {'name': elab.get('title',''), 'tags':tags, 'comment':comment}

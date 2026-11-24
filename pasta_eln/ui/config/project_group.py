@@ -291,7 +291,7 @@ class ProjectGroup(QDialog):
           # success
           self.row4Button2.setTestResult(True)
           self.elabApi   = ElabFTWApi(url, config['remote']['key'])
-          response = self.elabApi.readEntry('items?q=category%3AProjectGroup&archived=on')
+          response = self.elabApi.readEntry('items?q=category%3AProjectGroup&state=1,2')
           if not response:
             showMessage(self, 'Configuration error', 'Please ask your database admin to add your project group or groups.')
           self.serverPG = {(i['title'],i['id'],i['canread'],i['canwrite']) for i in response}
