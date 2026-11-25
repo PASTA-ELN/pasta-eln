@@ -38,3 +38,16 @@ def test_findExtractor(tmp_path:Path) -> None:
   assert fallback.findExtractor(tmp_path/'page.htm', tmp_path) == (tmp_path, 'extractor_html.py')
   assert fallback.findExtractor(tmp_path/'image', tmp_path) == (tmp_path, 'extractor_png.py')
   assert fallback.findExtractor(tmp_path/'data.weird', tmp_path)[1] == 'extractor_fallback.py'
+
+
+def test_getType(tmp_path:Path) -> None:
+  """Text content wins when neither name nor magic decides: executable bit, name tie"""
+  fallback = loadNamedModule(Path(__file__).parent.parent/'pasta_eln'/'backend_worker', 'extractor_fallback')
+  (tmp_path/'job.inp').write_text('*heading\nnodes\n', encoding='utf-8')
+  (tmp_path/'job.inp').chmod(0o755)
+  (tmp_path/'world.ts').write_text("/* magic: C source */\nimport {x} from './y'\n", encoding='utf-8')
+  (tmp_path/'blob.inp').write_bytes(b'\0\1\2'*100)
+  (tmp_path/'blob.inp').chmod(0o755)
+  assert str(fallback.getType(tmp_path/'job.inp')) == 'text/plain'
+  assert str(fallback.getType(tmp_path/'world.ts')) == 'text/plain'
+  assert str(fallback.getType(tmp_path/'blob.inp')) == 'application/executable'

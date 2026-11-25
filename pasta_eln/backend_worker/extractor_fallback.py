@@ -32,6 +32,23 @@ def isText(mimeType:Mime.MIMEtype) -> bool:
   return mimeType.media == 'text' or any(isText(parent) for parent in mimeType.inherits_from())
 
 
+def getType(filePath:Path) -> Mime.MIMEtype:
+  """File type: name first, then content; text content wins if neither the name nor magic decides
+  - pyxdg alone: the executable bit gives application/executable; a name tie the first type, e.g. '.ts' video
+  Args:
+    filePath (Path): full path file name
+  Returns:
+    MIMEtype: file type
+  """
+  mimeType = Mime.get_type2(str(filePath))                             # loads the database: before Mime.globs
+  matches = Mime.globs.all_matches(str(filePath))
+  best = max((weight for _, weight in matches), default=0)
+  if (sum(weight == best for _, weight in matches) != 1 and not isText(mimeType) and filePath.is_file()
+      and Mime.get_type_by_contents(str(filePath)) != mimeType and Mime.is_text_file(str(filePath))):
+    return Mime.text
+  return mimeType
+
+
 def findExtractor(filePath:Path, addOnPath:Path) -> tuple[Path, str]:
   """Extractor for a file: by its extension, else by the extensions of its file type, else this fallback
   - e.g. 'photo.jpg' -> image/jpeg -> '*.jpeg' -> extractor_jpeg.py; a PNG without extension -> extractor_png.py
@@ -44,7 +61,7 @@ def findExtractor(filePath:Path, addOnPath:Path) -> tuple[Path, str]:
   pyFile = f'extractor_{filePath.suffix[1:].lower()}.py'
   if (addOnPath/pyFile).is_file():
     return addOnPath, pyFile
-  mimeType = Mime.get_type2(str(filePath))                             # loads the database: before Mime.globs
+  mimeType = getType(filePath)
   globs = sorted(Mime.globs.allglobs.get(mimeType, ()), key=lambda i: (-i[0], i[1]))
   for _, pattern, _ in globs:
     pyFile = f'extractor_{pattern[2:].lower()}.py'
@@ -65,7 +82,7 @@ def use(filePath:Path, style:dict[str,Any], saveFigure:Any) -> dict[str,Any]:
   filePath = Path(filePath)
   # ponytail: pyxdg's checking order skips the longest-glob rule and checks low-priority magic first;
   #   modama's mime.py fixes both, if wrong types show up
-  mimeType = Mime.get_type2(str(filePath))
+  mimeType = getType(filePath)
   with open(DATABASE/'mime'/'comments', encoding='utf-8') as fIn:
     names = dict(line.rstrip('\n').split('\t', 1) for line in fIn)
   fileStat = filePath.stat()
