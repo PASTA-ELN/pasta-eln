@@ -91,6 +91,8 @@ def use(filePath:Path, style:dict[str,Any], saveFigure:Any) -> dict[str,Any]:
                 'modified at':datetime.fromtimestamp(fileStat.st_mtime, tz=timezone.utc).isoformat()}
   try:
     image: Image.Image|None = Image.open(filePath) if mimeType.media == 'image' else None
+    if image is not None:
+      image.load()                       # Pillow opens lazily: e.g. WMF, EMF open, but load only on Windows
   except OSError:                                        # Pillow cannot read all images, e.g. SVG, camera raw
     image = None
   if image is not None:
